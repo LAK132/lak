@@ -113,16 +113,14 @@ namespace lak
                         << L")" LAK_SGR_RESET
 #  endif
 #  define CHECKPOINT()                                                        \
-    lak::debugger.std_err(                                                    \
-      TO_STRING("CHECKPOINT" << DEBUG_LINE_FILE), TO_STRING("\n"));
+    lak::debugger.std_err(TO_STRING("CHECKPOINT" << DEBUG_LINE_FILE),         \
+                          TO_STRING("\n"));
 #  define DEBUG(x)                                                            \
-    lak::debugger.std_out(                                                    \
-      TO_STRING("DEBUG" << DEBUG_LINE_FILE << ": "),                          \
-      TO_STRING(std::hex << x << "\n"));
+    lak::debugger.std_out(TO_STRING("DEBUG" << DEBUG_LINE_FILE << ": "),      \
+                          TO_STRING(std::hex << x << "\n"));
 #  define WDEBUG(x)                                                           \
-    lak::debugger.std_out(                                                    \
-      WTO_STRING(L"DEBUG" << WDEBUG_LINE_FILE << L": "),                      \
-      WTO_STRING(std::hex << x << L"\n"));
+    lak::debugger.std_out(WTO_STRING(L"DEBUG" << WDEBUG_LINE_FILE << L": "),  \
+                          WTO_STRING(std::hex << x << L"\n"));
 #endif
 
 #define ABORT()                                                               \
@@ -138,46 +136,39 @@ namespace lak
 #  define FATAL(x) ABORT()
 #elif defined(_WIN32)
 #  define WARNING(x)                                                          \
-    lak::debugger.std_err(                                                    \
-      TO_STRING("WARNING" << DEBUG_LINE_FILE << ": "),                        \
-      TO_STRING(std::hex << x << "\n"));
+    lak::debugger.std_err(TO_STRING("WARNING" << DEBUG_LINE_FILE << ": "),    \
+                          TO_STRING(std::hex << x << "\n"));
 #  define WWARNING(x)                                                         \
     lak::debugger.std_err(                                                    \
       WTO_STRING(L"WARNING" << WDEBUG_LINE_FILE << L": "),                    \
       WTO_STRING(std::hex << x << L"\n"));
 #  define ERROR(x)                                                            \
-    lak::debugger.std_err(                                                    \
-      TO_STRING("ERROR" << DEBUG_LINE_FILE << ": "),                          \
-      TO_STRING(std::hex << x << "\n"));
+    lak::debugger.std_err(TO_STRING("ERROR" << DEBUG_LINE_FILE << ": "),      \
+                          TO_STRING(std::hex << x << "\n"));
 #  define WERROR(x)                                                           \
-    lak::debugger.std_err(                                                    \
-      WTO_STRING(L"ERROR" << WDEBUG_LINE_FILE << L": "),                      \
-      WTO_STRING(std::hex << x << L"\n"));
+    lak::debugger.std_err(WTO_STRING(L"ERROR" << WDEBUG_LINE_FILE << L": "),  \
+                          WTO_STRING(std::hex << x << L"\n"));
 #  define FATAL(x)                                                            \
     {                                                                         \
-      lak::debugger.std_err(                                                  \
-        TO_STRING("FATAL" << DEBUG_LINE_FILE << ": "),                        \
-        TO_STRING(std::hex << x << "\n"));                                    \
+      lak::debugger.std_err(TO_STRING("FATAL" << DEBUG_LINE_FILE << ": "),    \
+                            TO_STRING(std::hex << x << "\n"));                \
       ABORT();                                                                \
     }
 #else
 #  define WARNING(x)                                                          \
     lak::debugger.std_err(                                                    \
-      TO_STRING(                                                              \
-        LAK_YELLOW LAK_BOLD "WARNING" LAK_SGR_RESET LAK_YELLOW                \
-        << DEBUG_LINE_FILE << ": "),                                          \
+      TO_STRING(LAK_YELLOW LAK_BOLD "WARNING" LAK_SGR_RESET LAK_YELLOW        \
+                << DEBUG_LINE_FILE << ": "),                                  \
       TO_STRING(std::hex << x << "\n"));
 #  define WWARNING(x)                                                         \
     lak::debugger.std_err(                                                    \
-      WTO_STRING(                                                             \
-        L"" LAK_YELLOW LAK_BOLD "WARNING" LAK_SGR_RESET LAK_YELLOW            \
-        << WDEBUG_LINE_FILE << L": "),                                        \
+      WTO_STRING(L"" LAK_YELLOW LAK_BOLD "WARNING" LAK_SGR_RESET LAK_YELLOW   \
+                 << WDEBUG_LINE_FILE << L": "),                               \
       WTO_STRING(std::hex << x << L"\n"));
 #  define ERROR(x)                                                            \
     lak::debugger.std_err(                                                    \
-      TO_STRING(                                                              \
-        LAK_BRIGHT_RED LAK_BOLD "ERROR" LAK_SGR_RESET LAK_BRIGHT_RED          \
-        << DEBUG_LINE_FILE << ": "),                                          \
+      TO_STRING(LAK_BRIGHT_RED LAK_BOLD "ERROR" LAK_SGR_RESET LAK_BRIGHT_RED  \
+                << DEBUG_LINE_FILE << ": "),                                  \
       TO_STRING(std::hex << x << "\n"));
 #  define WERROR(x)                                                           \
     lak::debugger.std_err(                                                    \

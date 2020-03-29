@@ -4,8 +4,8 @@
 
 namespace lak
 {
-  void debugger_t::std_out(
-    const std::string &line_info, const std::string &str)
+  void debugger_t::std_out(const std::string &line_info,
+                           const std::string &str)
   {
     stream << scoped_indenter::str() << line_info << str;
     if (live_output_enabled && !live_errors_only)
@@ -19,8 +19,8 @@ namespace lak
     }
   }
 
-  void debugger_t::std_err(
-    const std::string &line_info, const std::string &str)
+  void debugger_t::std_err(const std::string &line_info,
+                           const std::string &str)
   {
     stream << scoped_indenter::str() << line_info << str;
     if (live_output_enabled)

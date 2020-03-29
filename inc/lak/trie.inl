@@ -10,8 +10,8 @@ namespace lak
                str.substr(0, prefix.size()) == prefix;
       }
 
-      std::string longest_common_prefix(
-        const std::string &str1, const std::string &str2)
+      std::string longest_common_prefix(const std::string &str1,
+                                        const std::string &str2)
       {
         return std::string(
           str1.begin(),
@@ -121,11 +121,10 @@ namespace lak
   }
 
   template<typename T>
-  trie<T>::trie(
-    std::string &&k,
-    std::optional<T> &&v,
-    std::string &&m,
-    std::vector<trie> &&n)
+  trie<T>::trie(std::string &&k,
+                std::optional<T> &&v,
+                std::string &&m,
+                std::vector<trie> &&n)
   : _key(std::move(k)),
     _value(std::move(v)),
     _map(std::move(m)),
@@ -219,13 +218,13 @@ namespace lak
   }
 
   template<typename T>
-  std::pair<trie<T> *, std::string> trie<T>::find(
-    trie *node, std::string_view key)
+  std::pair<trie<T> *, std::string> trie<T>::find(trie *node,
+                                                  std::string_view key)
   {
     for (;;)
     {
-      if (
-        key.empty() || !impl::is_prefix(key, node->_key) || key == node->_key)
+      if (key.empty() || !impl::is_prefix(key, node->_key) ||
+          key == node->_key)
       {
         return {node, std::string(key)};
       }

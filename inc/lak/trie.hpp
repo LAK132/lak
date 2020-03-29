@@ -59,11 +59,10 @@ namespace lak
 
     trie(std::string &&k, std::string &&m, std::vector<trie> &&n);
 
-    trie(
-      std::string &&k,
-      std::optional<T> &&v,
-      std::string &&m,
-      std::vector<trie> &&n);
+    trie(std::string &&k,
+         std::optional<T> &&v,
+         std::string &&m,
+         std::vector<trie> &&n);
 
     trie *internal_try_emplace(const std::string &key);
 
@@ -71,8 +70,8 @@ namespace lak
 
     static trie merge(trie &&node1, trie &&node2);
 
-    static std::pair<trie *, std::string> find(
-      trie *node, std::string_view key);
+    static std::pair<trie *, std::string> find(trie *node,
+                                               std::string_view key);
   };
 }
 
