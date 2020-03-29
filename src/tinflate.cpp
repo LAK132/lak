@@ -89,41 +89,37 @@ namespace tinf
     }
   }
 
-  error_t tinflate(
-    const std::vector<uint8_t> &compressed,
-    std::deque<uint8_t> &output,
-    uint32_t *crc)
+  error_t tinflate(const std::vector<uint8_t> &compressed,
+                   std::deque<uint8_t> &output,
+                   uint32_t *crc)
   {
     decompression_state_t state;
     return tinflate(
       compressed.cbegin(), compressed.cend(), output, state, crc);
   }
 
-  error_t tinflate(
-    typename std::vector<uint8_t>::const_iterator begin,
-    typename std::vector<uint8_t>::const_iterator end,
-    std::deque<uint8_t> &output,
-    uint32_t *crc)
+  error_t tinflate(typename std::vector<uint8_t>::const_iterator begin,
+                   typename std::vector<uint8_t>::const_iterator end,
+                   std::deque<uint8_t> &output,
+                   uint32_t *crc)
   {
     decompression_state_t state;
     return tinflate(begin, end, output, state, crc);
   }
 
-  error_t tinflate(
-    const std::vector<uint8_t> &compressed,
-    std::deque<uint8_t> &output,
-    decompression_state_t &state,
-    uint32_t *crc)
+  error_t tinflate(const std::vector<uint8_t> &compressed,
+                   std::deque<uint8_t> &output,
+                   decompression_state_t &state,
+                   uint32_t *crc)
   {
     return tinflate(compressed.begin(), compressed.end(), output, state, crc);
   }
 
-  error_t tinflate(
-    typename std::vector<uint8_t>::const_iterator begin,
-    typename std::vector<uint8_t>::const_iterator end,
-    std::deque<uint8_t> &output,
-    decompression_state_t &state,
-    uint32_t *crc)
+  error_t tinflate(typename std::vector<uint8_t>::const_iterator begin,
+                   typename std::vector<uint8_t>::const_iterator end,
+                   std::deque<uint8_t> &output,
+                   decompression_state_t &state,
+                   uint32_t *crc)
   {
     state.begin = begin;
     state.end   = end;
@@ -146,9 +142,8 @@ namespace tinf
     const ptrdiff_t size = state.end - state.begin;
     if (size <= 0) return error_t::OUT_OF_DATA;
 
-    if (
-      state.state == state_t::INITIAL ||
-      state.state == state_t::PARTIAL_ZLIB_HEADER)
+    if (state.state == state_t::INITIAL ||
+        state.state == state_t::PARTIAL_ZLIB_HEADER)
     {
       uint16_t zlibHeader;
       if (size == 0)
@@ -190,8 +185,8 @@ namespace tinf
     return error_t::OK;
   }
 
-  error_t tinflate_block(
-    std::deque<uint8_t> &output, decompression_state_t &state)
+  error_t tinflate_block(std::deque<uint8_t> &output,
+                         decompression_state_t &state)
   {
     uint32_t icrc = ~state.crc;
 
@@ -338,10 +333,9 @@ namespace tinf
                 state.codelenLen[codelenOrder[state.counter]] = 0;
             }
 
-            if (
-              gen_huffman_table(
-                19, state.codelenLen, false, state.codelenTable) !=
-              error_t::OK)
+            if (gen_huffman_table(
+                  19, state.codelenLen, false, state.codelenTable) !=
+                error_t::OK)
             {
               state.crc = ~icrc & 0xFFFFFFFFUL;
               return error_t::HUFFMAN_TABLE_GEN_FAILED;
@@ -418,17 +412,14 @@ namespace tinf
               state.state = state_t::READ_LENGTHS;
             }
 
-            if (
-              gen_huffman_table(
-                state.literalCount,
-                state.literalLen,
-                false,
-                state.literalTable) != error_t::OK ||
-              gen_huffman_table(
-                state.distanceCount,
-                state.distanceLen,
-                true,
-                state.distanceTable) != error_t::OK)
+            if (gen_huffman_table(state.literalCount,
+                                  state.literalLen,
+                                  false,
+                                  state.literalTable) != error_t::OK ||
+                gen_huffman_table(state.distanceCount,
+                                  state.distanceLen,
+                                  true,
+                                  state.distanceTable) != error_t::OK)
             {
               state.crc = ~icrc & 0xFFFFFFFFUL;
               return error_t::HUFFMAN_TABLE_GEN_FAILED;
@@ -572,11 +563,10 @@ namespace tinf
     return error_t::OK;
   }
 
-  error_t gen_huffman_table(
-    uint32_t symbols,
-    const uint8_t *lengths,
-    bool allowNoSymbols,
-    int16_t *table)
+  error_t gen_huffman_table(uint32_t symbols,
+                            const uint8_t *lengths,
+                            bool allowNoSymbols,
+                            int16_t *table)
   {
     uint16_t lengthCount[16] = {0};
     uint16_t totalCount      = 0;

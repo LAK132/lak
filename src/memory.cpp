@@ -10,11 +10,10 @@ namespace lak
     namespace impl
     {
       template<typename INT>
-      INT read_int(
-        const uint8_t *mem,
-        const memory::endian_t endian,
-        size_t *position,
-        const INT def = 0)
+      INT read_int(const uint8_t *mem,
+                   const memory::endian_t endian,
+                   size_t *position,
+                   const INT def = 0)
       {
         if (mem == nullptr) return def;
 
@@ -39,11 +38,10 @@ namespace lak
       }
 
       template<typename CHAR>
-      std::basic_string<CHAR> read_string(
-        const uint8_t *begin,
-        const uint8_t *end,
-        const memory::endian_t endian,
-        size_t *position)
+      std::basic_string<CHAR> read_string(const uint8_t *begin,
+                                          const uint8_t *end,
+                                          const memory::endian_t endian,
+                                          size_t *position)
       {
         if (begin == nullptr || end == nullptr || begin == end)
           return std::basic_string<CHAR>();
@@ -77,11 +75,10 @@ namespace lak
       }
 
       template<typename INT>
-      void write_int(
-        uint8_t *mem,
-        const INT val,
-        const memory::endian_t endian,
-        size_t *position)
+      void write_int(uint8_t *mem,
+                     const INT val,
+                     const memory::endian_t endian,
+                     size_t *position)
       {
         if (mem == nullptr) return;
 
@@ -104,12 +101,11 @@ namespace lak
       }
 
       template<typename CHAR>
-      void write_string(
-        uint8_t *mem,
-        const std::basic_string<CHAR> str,
-        const bool terminate,
-        const memory::endian_t endian,
-        size_t *position)
+      void write_string(uint8_t *mem,
+                        const std::basic_string<CHAR> str,
+                        const bool terminate,
+                        const memory::endian_t endian,
+                        size_t *position)
       {
         if (mem == nullptr) return;
 

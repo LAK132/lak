@@ -155,40 +155,35 @@ namespace tinf
 
   const char *error_name(error_t error);
 
-  error_t tinflate(
-    const std::vector<uint8_t> &compressed,
-    std::deque<uint8_t> &output,
-    uint32_t *crc = nullptr);
+  error_t tinflate(const std::vector<uint8_t> &compressed,
+                   std::deque<uint8_t> &output,
+                   uint32_t *crc = nullptr);
 
-  error_t tinflate(
-    typename std::vector<uint8_t>::const_iterator begin,
-    typename std::vector<uint8_t>::const_iterator end,
-    std::deque<uint8_t> &output,
-    uint32_t *crc = nullptr);
+  error_t tinflate(typename std::vector<uint8_t>::const_iterator begin,
+                   typename std::vector<uint8_t>::const_iterator end,
+                   std::deque<uint8_t> &output,
+                   uint32_t *crc = nullptr);
 
-  error_t tinflate(
-    const std::vector<uint8_t> &compressed,
-    std::deque<uint8_t> &output,
-    decompression_state_t &state,
-    uint32_t *crc = nullptr);
+  error_t tinflate(const std::vector<uint8_t> &compressed,
+                   std::deque<uint8_t> &output,
+                   decompression_state_t &state,
+                   uint32_t *crc = nullptr);
 
-  error_t tinflate(
-    typename std::vector<uint8_t>::const_iterator begin,
-    typename std::vector<uint8_t>::const_iterator end,
-    std::deque<uint8_t> &output,
-    decompression_state_t &state,
-    uint32_t *crc = nullptr);
+  error_t tinflate(typename std::vector<uint8_t>::const_iterator begin,
+                   typename std::vector<uint8_t>::const_iterator end,
+                   std::deque<uint8_t> &output,
+                   decompression_state_t &state,
+                   uint32_t *crc = nullptr);
 
   error_t tinflate_header(decompression_state_t &state);
 
-  error_t tinflate_block(
-    std::deque<uint8_t> &output, decompression_state_t &state);
+  error_t tinflate_block(std::deque<uint8_t> &output,
+                         decompression_state_t &state);
 
-  error_t gen_huffman_table(
-    uint32_t symbols,
-    const uint8_t *lengths,
-    bool allow_no_symbols,
-    int16_t *table);
+  error_t gen_huffman_table(uint32_t symbols,
+                            const uint8_t *lengths,
+                            bool allow_no_symbols,
+                            int16_t *table);
 }
 
 #endif // LAK_TINFLATE_HPP
