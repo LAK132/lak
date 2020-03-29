@@ -47,6 +47,8 @@ namespace lak
     auto cursor() -> decltype(_data.begin());
     auto cursor() const -> decltype(_data.begin());
 
+    inline operator const std::vector<uint8_t> &() const { return _data; }
+
     size_t size() const;
     size_t remaining() const;
     uint8_t *data();
