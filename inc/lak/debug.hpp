@@ -1,24 +1,20 @@
 #ifndef LAK_DEBUG_HPP
-#define LAK_DEBUG_HPP
+#  include "lak/strconv.hpp"
 
-#ifdef _WIN32
-// Windows needs to seriously fuck off
-#  undef ERROR
+#  include <cstdlib>
+#  include <filesystem>
+#  include <iostream>
+#  include <sstream>
 #endif
 
-#include "lak/strconv.hpp"
-
-#include <cstdlib>
-#include <filesystem>
-#include <iostream>
-#include <sstream>
-
+#undef TO_STRING
 #define TO_STRING(x)                                                          \
   [&] {                                                                       \
     std::stringstream _debug_stream;                                          \
     _debug_stream << x;                                                       \
     return _debug_stream.str();                                               \
   }()
+#undef WTO_STRING
 #define WTO_STRING(x)                                                         \
   [&] {                                                                       \
     std::wstringstream _debug_stream;                                         \
@@ -26,6 +22,7 @@
     return lak::strconv_ascii(_debug_stream.str());                           \
   }()
 
+#ifndef LAK_DEBUG_HPP
 namespace lak
 {
   struct debugger_t
@@ -68,7 +65,10 @@ namespace lak
 
   extern debugger_t debugger;
 }
+#endif
 
+#undef TRY
+#undef CATCH
 #if defined(NDEBUG)
 #  define TRY      try
 #  define CATCH(X) catch (X)
@@ -81,19 +81,26 @@ namespace lak
     catch (X)
 #endif
 
+#undef STRINGIFY_EX
 #define STRINGIFY_EX(x) #x
-#define STRINGIFY(x)    STRINGIFY_EX(x)
+#undef STRINGIFY
+#define STRINGIFY(x) STRINGIFY_EX(x)
 
-#define LAK_ESC        "\x1B"
-#define LAK_CSI        LAK_ESC "["
-#define LAK_SGR(x)     LAK_CSI STRINGIFY(x) "m"
-#define LAK_SGR_RESET  LAK_SGR(0)
-#define LAK_BOLD       LAK_SGR(1)
-#define LAK_FAINT      LAK_SGR(2)
-#define LAK_ITALIC     LAK_SGR(3)
-#define LAK_YELLOW     LAK_SGR(33)
-#define LAK_BRIGHT_RED LAK_SGR(91)
+#ifndef LAK_DEBUG_HPP
+#  define LAK_ESC        "\x1B"
+#  define LAK_CSI        LAK_ESC "["
+#  define LAK_SGR(x)     LAK_CSI STRINGIFY(x) "m"
+#  define LAK_SGR_RESET  LAK_SGR(0)
+#  define LAK_BOLD       LAK_SGR(1)
+#  define LAK_FAINT      LAK_SGR(2)
+#  define LAK_ITALIC     LAK_SGR(3)
+#  define LAK_YELLOW     LAK_SGR(33)
+#  define LAK_BRIGHT_RED LAK_SGR(91)
+#endif
 
+#undef CHECKPOINT
+#undef DEBUG
+#undef WDEBUG
 #if defined(NOLOG)
 #  define CHECKPOINT()
 #  define DEBUG(x)
@@ -123,11 +130,17 @@ namespace lak
                           WTO_STRING(std::hex << x << L"\n"));
 #endif
 
+#undef ABORT
 #define ABORT()                                                               \
   {                                                                           \
     lak::debugger.abort();                                                    \
   }
 
+#undef WARNING
+#undef WWARNING
+#undef ERROR
+#undef WERROR
+#undef FATAL
 #if defined(NOLOG)
 #  define WARNING(x)
 #  define WWARNING(x)
@@ -187,6 +200,9 @@ namespace lak
     }
 #endif
 
+#undef ASSERT
+#undef ASSERTF
+#undef NOISY_ABORT
 #define ASSERT(x)                                                             \
   {                                                                           \
     if (!(x))                                                                 \
@@ -207,4 +223,6 @@ namespace lak
     ABORT();                                                                  \
   }
 
-#endif // LAK_DEBUG_HPP
+#ifndef LAK_DEBUG_HPP
+#  define LAK_DEBUG_HPP
+#endif
