@@ -4,6 +4,8 @@
 
 namespace lak
 {
+  void terminate_handler() { ABORT(); }
+
   void debugger_t::std_out(const std::string &line_info,
                            const std::string &str)
   {
