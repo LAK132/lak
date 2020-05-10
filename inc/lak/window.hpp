@@ -47,16 +47,16 @@ namespace lak
 
   void core_quit();
 
+  enum struct graphics_mode
+  {
+    None     = 0,
+    Software = 1,
+    OpenGL   = 2,
+    Vulkan   = 3
+  };
+
   struct window
   {
-  public:
-    enum struct graphics_mode
-    {
-      None     = 0,
-      Software = 1,
-      OpenGL   = 2,
-    };
-
   private:
     struct window_impl;
     std::unique_ptr<window_impl> _impl;

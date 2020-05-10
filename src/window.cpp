@@ -141,10 +141,8 @@ namespace lak
   {
     switch (_graphics_mode)
     {
-      case lak::window::graphics_mode::OpenGL:
-        SDL_GL_SwapWindow(_impl->wnd);
-        break;
-      case lak::window::graphics_mode::Software:
+      case lak::graphics_mode::OpenGL: SDL_GL_SwapWindow(_impl->wnd); break;
+      case lak::graphics_mode::Software:
         ASSERT(SDL_UpdateWindowSurface(_impl->wnd) == 0);
         break;
     }
