@@ -41,7 +41,7 @@ namespace lak
     {
       if (_shader != 0)
       {
-        glDeleteProgram(_shader);
+        glDeleteShader(_shader);
         _shader = 0;
       }
       return *this;
