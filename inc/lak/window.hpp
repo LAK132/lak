@@ -113,6 +113,8 @@ namespace lak
 
     // Update back buffer.
     void swap();
+
+    SDL_Window *sdl_window() const;
   };
 
   uint64_t performance_frequency();
