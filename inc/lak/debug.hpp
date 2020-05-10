@@ -25,6 +25,9 @@
 #ifndef LAK_DEBUG_HPP
 namespace lak
 {
+  // Use std::set_terminate(lak::terminate_handler); to enable
+  void terminate_handler();
+
   struct debugger_t
   {
     std::stringstream stream;
