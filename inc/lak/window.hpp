@@ -105,7 +105,7 @@ namespace lak
       int minor            = 2;
     };
 
-    bool init_opengl(opengl_settings settings);
+    bool init_opengl(const opengl_settings &settings);
     void stop_opengl();
 
     bool init_software();
@@ -124,6 +124,20 @@ namespace lak
   // Yield this thread until the target framerate is achieved.
   uint64_t yield_frame(const uint64_t last_counter,
                        const uint32_t target_framerate);
+}
+
+#include <ostream>
+
+static std::ostream &operator<<(std::ostream &strm, lak::graphics_mode mode)
+{
+  switch (mode)
+  {
+    case lak::graphics_mode::OpenGL: strm << "OpenGL"; break;
+    case lak::graphics_mode::Software: strm << "Software"; break;
+    case lak::graphics_mode::Vulkan: strm << "Vulkan"; break;
+    default: strm << "None"; break;
+  }
+  return strm;
 }
 
 #endif

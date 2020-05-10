@@ -28,6 +28,8 @@ namespace lak
       SDL_GLContext sdl_gl;
     };
 
+    uint32_t flags = 0;
+
     SDL_DisplayMode display_mode;
     SDL_Window *wnd          = nullptr;
     graphics_context context = {nullptr};
@@ -47,41 +49,47 @@ namespace lak
       return;
     }
 
-    const int display = 0;
-    SDL_GetCurrentDisplayMode(display, &_impl->display_mode);
-
-    _impl->wnd = SDL_CreateWindow(_title.c_str(),
-                                  SDL_WINDOWPOS_CENTERED,
-                                  SDL_WINDOWPOS_CENTERED,
-                                  _size.x,
-                                  _size.y,
-                                  flags);
-
-    if (!_impl->wnd) ERROR("Failed to create window");
+    _impl->flags = flags;
   }
 
   void window::close()
   {
     if (_impl)
     {
-      if (_graphics_mode == graphics_mode::OpenGL && _impl->context.sdl_gl)
-        stop_opengl();
-      else if (_graphics_mode == graphics_mode::Software && _impl->context.ptr)
-        stop_software();
-
-      SDL_DestroyWindow(_impl->wnd);
-
-      _impl.reset();
+      switch (_graphics_mode)
+      {
+        case graphics_mode::OpenGL: stop_opengl(); break;
+        case graphics_mode::Software: stop_software(); break;
+      }
     }
   }
 
-  bool window::init_opengl(opengl_settings settings)
+  bool window::init_opengl(const window::opengl_settings &settings)
   {
     ASSERT(_impl);
     if (!_impl) return false;
 
     ASSERT(_graphics_mode == graphics_mode::None);
     if (_graphics_mode != graphics_mode::None) return false;
+
+    const int display = 0;
+    SDL_GetCurrentDisplayMode(display, &_impl->display_mode);
+
+    // :TODO: SDL2 documentation says this should be called *after*
+    // SDL_GL_SetAttribute but that's causing the screen to stay perminently
+    // black?
+    _impl->wnd = SDL_CreateWindow(_title.c_str(),
+                                  SDL_WINDOWPOS_CENTERED,
+                                  SDL_WINDOWPOS_CENTERED,
+                                  _size.x,
+                                  _size.y,
+                                  _impl->flags | SDL_WINDOW_OPENGL);
+
+    if (!_impl->wnd)
+    {
+      ERROR("Failed to create window");
+      return false;
+    }
 
 #define SET_ATTRIB(A, B)                                                      \
   if (SDL_GL_SetAttribute(A, B))                                              \
@@ -129,8 +137,9 @@ namespace lak
     ASSERT(_impl);
     ASSERT(_impl->context.sdl_gl);
     SDL_GL_DeleteContext(_impl->context.sdl_gl);
-    _impl->context.sdl_gl = nullptr;
-    _graphics_mode        = graphics_mode::None;
+    SDL_DestroyWindow(_impl->wnd);
+    _impl.reset();
+    _graphics_mode = graphics_mode::None;
   }
 
   bool window::init_software()
@@ -141,15 +150,38 @@ namespace lak
     ASSERT(_graphics_mode == graphics_mode::None);
     if (_graphics_mode != graphics_mode::None) return false;
 
+    const int display = 0;
+    SDL_GetCurrentDisplayMode(display, &_impl->display_mode);
+
+    _impl->wnd = SDL_CreateWindow(_title.c_str(),
+                                  SDL_WINDOWPOS_CENTERED,
+                                  SDL_WINDOWPOS_CENTERED,
+                                  _size.x,
+                                  _size.y,
+                                  _impl->flags);
+
+    if (!_impl->wnd)
+    {
+      ERROR("Failed to create window");
+      return false;
+    }
+
     _graphics_mode = graphics_mode::Software;
 
     return true;
   }
 
-  void window::stop_software() { _graphics_mode = graphics_mode::None; }
+  void window::stop_software()
+  {
+    ASSERT(_impl);
+    SDL_DestroyWindow(_impl->wnd);
+    _impl.reset();
+    _graphics_mode = graphics_mode::None;
+  }
 
   void window::swap()
   {
+    ASSERT(_impl);
     switch (_graphics_mode)
     {
       case lak::graphics_mode::OpenGL: SDL_GL_SwapWindow(_impl->wnd); break;
