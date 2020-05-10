@@ -40,7 +40,7 @@ namespace lak
 
     std::string str();
 
-    void abort();
+    [[noreturn]] void abort();
 
     std::filesystem::path save();
 
