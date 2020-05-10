@@ -148,6 +148,11 @@ namespace lak
     }
   }
 
+  SDL_Window *window::sdl_window() const
+  {
+    return _impl ? _impl->wnd : nullptr;
+  }
+
   uint64_t performance_frequency() { return SDL_GetPerformanceFrequency(); }
 
   uint64_t performance_counter() { return SDL_GetPerformanceCounter(); }
