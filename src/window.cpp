@@ -133,7 +133,18 @@ namespace lak
     _graphics_mode        = graphics_mode::None;
   }
 
-  bool window::init_software() { return false; }
+  bool window::init_software()
+  {
+    ASSERT(_impl);
+    if (!_impl) return false;
+
+    ASSERT(_graphics_mode == graphics_mode::None);
+    if (_graphics_mode != graphics_mode::None) return false;
+
+    _graphics_mode = graphics_mode::Software;
+
+    return true;
+  }
 
   void window::stop_software() { _graphics_mode = graphics_mode::None; }
 
