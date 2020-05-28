@@ -11,10 +11,13 @@
 #endif
 
 // Implement these basic_window_* functions in your program.
-void basic_window_init(int argc, char **argv, lak::window &window);
+void basic_window_preinit(int argc, char **argv);
+void basic_window_init(lak::window &window);
 void basic_window_handle_event(SDL_Event &event, lak::window &window);
 void basic_window_loop(lak::window &window, uint64_t counter_delta);
 void basic_window_quit(lak::window &window);
+uint32_t basic_window_target_framerate = 60;
+lak::window::opengl_settings basic_window_opengl_settings;
 
 void MessageCallback(GLenum source,
                      GLenum type,
@@ -82,6 +85,8 @@ int main(int argc, char **argv)
 
   /* --- Window initialisation --- */
 
+  basic_window_preinit(argc, argv);
+
   lak::core_init();
 
   auto window = lak::window(APP_NAME, {720, 480}, SDL_WINDOW_RESIZABLE);
@@ -91,7 +96,7 @@ int main(int argc, char **argv)
   /* --- Graphics initialisation --- */
 
   // :TODO: Add a way to selected a prefered graphics mode
-  if (window.init_opengl(lak::window::opengl_settings()))
+  if (window.init_opengl(basic_window_opengl_settings))
   {
     glViewport(0, 0, window.size().x, window.size().y);
     glClearColor(0.0f, 0.3125f, 0.3125f, 1.0f);
@@ -112,11 +117,11 @@ int main(int argc, char **argv)
     FATAL("Failed to start any known graphics mode");
   }
 
-  basic_window_init(argc, argv, window);
+  basic_window_init(window);
 
-  const uint32_t framerate = 60;
-  uint64_t last_counter    = lak::performance_counter();
-  uint64_t counter_delta   = lak::performance_frequency() / framerate;
+  uint64_t last_counter = lak::performance_counter();
+  uint64_t counter_delta =
+    lak::performance_frequency() / basic_window_target_framerate;
 
   for (bool running = true; running;)
   {
@@ -162,10 +167,15 @@ int main(int argc, char **argv)
 
     window.swap();
 
-    const auto counter = lak::yield_frame(last_counter, framerate);
-    counter_delta      = counter - last_counter;
-    last_counter       = counter;
+    const auto counter =
+      lak::yield_frame(last_counter, basic_window_target_framerate);
+    counter_delta = counter - last_counter;
+    last_counter  = counter;
   }
+
+#ifndef NDEBUG
+  glDisable(GL_DEBUG_OUTPUT);
+#endif
 
   basic_window_quit(window);
 
