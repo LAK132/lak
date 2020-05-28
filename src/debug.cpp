@@ -48,8 +48,7 @@ namespace lak
         << "Saving crash log to '" << lak::debugger.save()
         << "'.\nPlease forward the crash log onto the developer so they can "
            "attempt to fix the issues that caused this crash.\n";
-    std::cerr << "Press enter to continue...\n";
-    getchar();
+    PAUSE();
     std::abort();
   }
 
