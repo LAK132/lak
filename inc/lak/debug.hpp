@@ -1,4 +1,5 @@
 #ifndef LAK_DEBUG_HPP
+#  include "lak/compiler.hpp"
 #  include "lak/strconv.hpp"
 
 #  include <cstdlib>
