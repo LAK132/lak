@@ -42,7 +42,8 @@ namespace lak
 
   void debugger_t::abort()
   {
-    std::cerr << "Something went wrong! Aborting...\n";
+    DEBUG_BREAK();
+    std::cerr << "Something went wrong!\n";
     if (!crash_path.empty())
       std::cerr
         << "Saving crash log to '" << lak::debugger.save()
