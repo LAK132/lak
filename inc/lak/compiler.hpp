@@ -9,7 +9,7 @@
 #  define DEBUG_BREAK()
 #elif defined(_MSC_VER)
 #  define force_inline  inline __forceinline
-#  define DEBUG_BREAK() DebugBreak()
+#  define DEBUG_BREAK() __debugbreak()
 #else
 #  define force_inline inline
 #  define DEBUG_BREAK()
