@@ -70,6 +70,14 @@ namespace lak
 }
 #endif
 
+#undef STRINGIFY_EX
+#define STRINGIFY_EX(x) #x
+#undef STRINGIFY
+#define STRINGIFY(x) STRINGIFY_EX(x)
+
+#undef LINE_TRACE_STR
+#define LINE_TRACE_STR __FILE__ ":" STRINGIFY(__LINE__)
+
 #undef TRY
 #undef CATCH
 #if defined(NDEBUG)
@@ -84,11 +92,6 @@ namespace lak
     catch (X)
 #endif
 
-#undef STRINGIFY_EX
-#define STRINGIFY_EX(x) #x
-#undef STRINGIFY
-#define STRINGIFY(x) STRINGIFY_EX(x)
-
 #ifndef LAK_DEBUG_HPP
 #  define LAK_ESC        "\x1B"
 #  define LAK_CSI        LAK_ESC "["
@@ -102,7 +105,9 @@ namespace lak
 #endif
 
 #undef CHECKPOINT
+#undef DEBUG_LINE_FILE
 #undef DEBUG
+#undef WDEBUG_LINE_FILE
 #undef WDEBUG
 #if defined(NOLOG)
 #  define CHECKPOINT()
@@ -110,17 +115,11 @@ namespace lak
 #  define WDEBUG(x)
 #else
 #  if defined(_WIN32)
-#    define DEBUG_LINE_FILE                                                   \
-      "(" << __FILE__ << ":" << std::dec << __LINE__ << ")"
-#    define WDEBUG_LINE_FILE                                                  \
-      L"(" << __FILE__ << L":" << std::dec << __LINE__ << L")"
+#    define DEBUG_LINE_FILE  "(" LINE_TRACE_STR ")"
+#    define WDEBUG_LINE_FILE L"(" LINE_TRACE_STR ")"
 #  else
-#    define DEBUG_LINE_FILE                                                   \
-      LAK_FAINT "(" << __FILE__ << ":" << std::dec << __LINE__                \
-                    << ")" LAK_SGR_RESET
-#    define WDEBUG_LINE_FILE                                                  \
-      L"" LAK_FAINT "(" << __FILE__ << L":" << std::dec << __LINE__           \
-                        << L")" LAK_SGR_RESET
+#    define DEBUG_LINE_FILE  LAK_FAINT "(" LINE_TRACE_STR ")" LAK_SGR_RESET
+#    define WDEBUG_LINE_FILE L"" LAK_FAINT "(" LINE_TRACE_STR ")" LAK_SGR_RESET
 #  endif
 #  define CHECKPOINT()                                                        \
     lak::debugger.std_err(TO_STRING("CHECKPOINT" << DEBUG_LINE_FILE),         \
