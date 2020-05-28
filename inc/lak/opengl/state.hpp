@@ -34,7 +34,7 @@ namespace lak
       return false;
     }
 
-    template<size_t S>
+    template<size_t S = 1>
     auto get_boolean(GLenum target)
     {
       if constexpr (S == 1)
@@ -51,7 +51,7 @@ namespace lak
       }
     }
 
-    template<size_t S>
+    template<size_t S = 1>
     auto get_int(GLenum target)
     {
       if constexpr (S == 1)
@@ -68,7 +68,7 @@ namespace lak
       }
     }
 
-    template<size_t S>
+    template<size_t S = 1>
     auto get_uint(GLenum target)
     {
       if constexpr (S == 1)
@@ -85,7 +85,7 @@ namespace lak
       }
     }
 
-    template<size_t S>
+    template<size_t S = 1>
     auto get_enum(GLenum target)
     {
       if constexpr (S == 1)
@@ -102,7 +102,7 @@ namespace lak
       }
     }
 
-    template<size_t S>
+    template<size_t S = 1>
     auto get_int64(GLenum target)
     {
       if constexpr (S == 1)
@@ -119,7 +119,7 @@ namespace lak
       }
     }
 
-    template<size_t S>
+    template<size_t S = 1>
     auto get_uint64(GLenum target)
     {
       if constexpr (S == 1)
@@ -136,7 +136,7 @@ namespace lak
       }
     }
 
-    template<size_t S>
+    template<size_t S = 1>
     auto get_float(GLenum target)
     {
       if constexpr (S == 1)
@@ -153,7 +153,7 @@ namespace lak
       }
     }
 
-    template<size_t S>
+    template<size_t S = 1>
     auto get_double(GLenum target)
     {
       if constexpr (S == 1)
