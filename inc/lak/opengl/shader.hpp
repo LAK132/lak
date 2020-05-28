@@ -3,6 +3,9 @@
 
 #include "lak/opengl/texture.hpp"
 
+#include "lak/span.hpp"
+
+#include <memory>
 #include <optional>
 #include <string>
 
@@ -18,10 +21,14 @@ namespace lak
 
     public:
       shader() = default;
-      shader(const std::string &code, GLenum shader_type);
       shader(shader &&other);
       ~shader();
       shader &operator=(shader &&other);
+
+      shader(const shader &other) = delete;
+      shader &operator=(const shader &other) = delete;
+
+      static shader create(const std::string &code, GLenum shader_type);
 
       shader &clear();
 
@@ -40,6 +47,29 @@ namespace lak
       shader operator""_compute_shader(const char *str, size_t);
     }
 
+    struct shader_attribute
+    {
+      GLuint position;
+      GLint size;
+      // GL_FLOAT, GL_FLOAT_VEC2, GL_FLOAT_VEC3, GL_FLOAT_VEC4,
+      // GL_FLOAT_MAT2, GL_FLOAT_MAT3 or GL_FLOAT_MAT4.
+      GLenum type;
+      std::string name;
+    };
+
+    struct shader_uniform
+    {
+      GLuint position;
+      GLint size;
+      // There are a lot more types that this can be compared to
+      // shader_attribute, see
+      // https://www.khronos.org/registry/OpenGL-Refpages/gl4/html/glGetActiveUniform.xhtml
+      GLenum type;
+      std::string name;
+    };
+
+    struct program;
+    using shared_program = std::shared_ptr<program>;
     struct program
     {
     private:
@@ -47,22 +77,56 @@ namespace lak
 
     public:
       program() = default;
-      program(const shader &vertex, const shader &fragment);
       program(program &&other);
       ~program();
       program &operator=(program &&other);
 
-      program &init();
+      program(const program &other) = delete;
+      program &operator=(const program &other) = delete;
+
+      static program create();
+      static program create(const shader &vertex, const shader &fragment);
+
+      static shared_program create_shared();
+      static shared_program create_shared(const shader &vertex,
+                                          const shader &fragment);
+
       program &attach(const shader &shader);
       program &link();
       program &clear();
+      program &use();
 
       inline operator bool() const { return _program != 0; }
+      inline operator GLuint() const { return _program; }
+      inline operator GLint() const { return (GLint)_program; }
       inline GLuint get() const { return _program; }
       std::optional<std::string> link_error() const;
 
-      GLint uniform_location(const GLchar *name) const;
-      GLint attrib_location(const GLchar *name) const;
+      std::vector<shader_attribute> attributes() const;
+      std::vector<shader_uniform> uniforms() const;
+
+      shader_attribute attribute(GLuint attr) const;
+      shader_uniform uniform(GLuint unif) const;
+
+      std::optional<GLuint> attrib_location(const GLchar *name) const;
+      std::optional<GLuint> uniform_location(const GLchar *name) const;
+
+      shader_attribute assert_attribute(const GLchar *name) const;
+      shader_uniform assert_uniform(const GLchar *name) const;
+
+      GLuint assert_attrib_location(const GLchar *name) const;
+      GLuint assert_uniform_location(const GLchar *name) const;
+
+      const program &set_uniform(
+        GLuint unif,
+        lak::span<const void> data,
+        GLsizei count       = 1 /* only used for array type */,
+        GLboolean transpose = GL_FALSE) const;
+      const program &assert_set_uniform(
+        const GLchar *name,
+        lak::span<const void> data,
+        GLsizei count       = 1 /* only used for array type */,
+        GLboolean transpose = GL_FALSE) const;
     };
   }
 }
