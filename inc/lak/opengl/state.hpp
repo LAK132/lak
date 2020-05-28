@@ -169,6 +169,32 @@ namespace lak
         return result;
       }
     }
+
+    template<GLenum PNAME>
+    auto get_program_value(GLuint program)
+    {
+      static_assert(
+        PNAME == GL_DELETE_STATUS || PNAME == GL_LINK_STATUS ||
+          PNAME == GL_VALIDATE_STATUS || PNAME == GL_INFO_LOG_LENGTH ||
+          PNAME == GL_ATTACHED_SHADERS || PNAME == GL_ACTIVE_ATTRIBUTES ||
+          PNAME == GL_ACTIVE_ATTRIBUTE_MAX_LENGTH ||
+          PNAME == GL_ACTIVE_UNIFORMS || PNAME == GL_ACTIVE_UNIFORM_MAX_LENGTH,
+        "PNAME must be a valid argument for glGetProgramiv");
+
+      if constexpr (PNAME == GL_DELETE_STATUS || PNAME == GL_LINK_STATUS ||
+                    PNAME == GL_VALIDATE_STATUS)
+      {
+        GLboolean result;
+        glGetProgramiv(program, PNAME, (GLint *)&result);
+        return result;
+      }
+      else
+      {
+        GLuint result;
+        glGetProgramiv(program, PNAME, (GLint *)&result);
+        return result;
+      }
+    }
   }
 }
 
