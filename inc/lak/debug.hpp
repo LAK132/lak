@@ -104,6 +104,19 @@ namespace lak
 #  define LAK_BRIGHT_RED LAK_SGR(91)
 #endif
 
+#undef PAUSE
+#undef PAUSEF
+#define PAUSE()                                                               \
+  {                                                                           \
+    std::cerr << "Press enter to continue...\n";                              \
+    getchar();                                                                \
+  }
+#define PAUSEF(str)                                                           \
+  {                                                                           \
+    std::cerr << str << "\nPress enter to continue...\n";                     \
+    getchar();                                                                \
+  }
+
 #undef CHECKPOINT
 #undef DEBUG_LINE_FILE
 #undef DEBUG
