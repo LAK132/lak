@@ -44,9 +44,10 @@ namespace lak
   {
     std::cerr << "Something went wrong! Aborting...\n";
     if (!crash_path.empty())
-      std::cerr << "Saving crash log to '" << lak::debugger.save() << "'.\n";
-    std::cerr << "Please forward the crash log onto the developer so they can "
-                 "attempt to fix the issues that caused this crash.\n";
+      std::cerr
+        << "Saving crash log to '" << lak::debugger.save()
+        << "'.\nPlease forward the crash log onto the developer so they can "
+           "attempt to fix the issues that caused this crash.\n";
     std::cerr << "Press enter to continue...\n";
     getchar();
     std::abort();
