@@ -58,7 +58,7 @@ namespace lak
 
     inline constexpr T &operator[](size_t index) const noexcept
     {
-      ASSERT(index < SIZE);
+      ASSERTF(index < SIZE, index << " > " << SIZE);
       return _data[index];
     }
 
@@ -76,7 +76,7 @@ namespace lak
     {
       if constexpr (count == lak::dynamic_extent)
       {
-        ASSERT(offset + count <= size());
+        ASSERTF(offset + count <= size(), offset + count << " > " << size());
         return {begin() + offset, count};
       }
       else
@@ -90,12 +90,12 @@ namespace lak
     {
       if (count == lak::dynamic_extent)
       {
-        ASSERT(offset <= size());
+        ASSERTF(offset <= size(), offset << " > " << size());
         return {begin() + offset, size() - offset};
       }
       else
       {
-        ASSERT(offset + count <= size());
+        ASSERTF(offset + count <= size(), offset + count << " > " << size());
         return {begin() + offset, count};
       }
     }
@@ -108,7 +108,7 @@ namespace lak
     }
     inline constexpr span<T, lak::dynamic_extent> first(size_t count) const
     {
-      ASSERT(count <= size());
+      ASSERTF(count <= size(), count << " > " << size());
       return {begin(), count};
     }
 
@@ -120,7 +120,7 @@ namespace lak
     }
     inline constexpr span<T, lak::dynamic_extent> last(size_t count) const
     {
-      ASSERT(count <= size());
+      ASSERTF(count <= size(), count << " > " << size());
       return {begin() + (size() - count), count};
     }
   };
@@ -277,7 +277,7 @@ namespace lak
 
     inline constexpr T &operator[](size_t index) const noexcept
     {
-      ASSERT(index < _size);
+      ASSERTF(index < size(), index << " >= " << size());
       return _data[index];
     }
 
@@ -293,7 +293,7 @@ namespace lak
     template<size_t offset, size_t count = lak::dynamic_extent>
     inline constexpr span<T, count> subspan() const
     {
-      ASSERT(offset + count <= size());
+      ASSERTF(offset + count <= size(), offset + count << " > " << size());
       if constexpr (count == lak::dynamic_extent)
       {
         return {begin() + offset, count};
@@ -308,12 +308,12 @@ namespace lak
     {
       if (count == lak::dynamic_extent)
       {
-        ASSERT(offset <= size());
+        ASSERTF(offset <= size(), offset << " > " << size());
         return {begin() + offset, size() - offset};
       }
       else
       {
-        ASSERT(offset + count <= size());
+        ASSERTF(offset + count <= size(), offset + count << " > " << size());
         return {begin() + offset, count};
       }
     }
@@ -321,24 +321,24 @@ namespace lak
     template<size_t count>
     inline constexpr span<T, count> first() const
     {
-      ASSERT(count <= size());
+      ASSERTF(count <= size(), count << " > " << size());
       return {begin()};
     }
     inline constexpr span<T, lak::dynamic_extent> first(size_t count) const
     {
-      ASSERT(count <= size());
+      ASSERTF(count <= size(), count << " > " << size());
       return {begin(), count};
     }
 
     template<size_t count>
     inline constexpr span<T, count> last() const
     {
-      ASSERT(count <= size());
+      ASSERTF(count <= size(), count << " > " << size());
       return {begin() + (size() - count)};
     }
     inline constexpr span<T, lak::dynamic_extent> last(size_t count) const
     {
-      ASSERT(count <= size());
+      ASSERTF(count <= size(), count << " > " << size());
       return {begin() + (size() - count), count};
     }
   };
