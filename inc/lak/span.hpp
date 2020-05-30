@@ -25,10 +25,18 @@ namespace lak
     constexpr span(const span &) = default;
     constexpr span &operator=(const span &) = default;
 
-    template<typename U>
+    template<
+      typename U,
+      std::enable_if_t<!std::is_void_v<std::remove_const_t<U>>, int> = 0>
     inline constexpr span(
       const span<U, (SIZE * sizeof(T)) / sizeof(U)> &other) noexcept
-    : _data(static_cast<T>(other._data))
+    : _data(static_cast<T *>(other.data()))
+    {
+    }
+    template<typename U,
+             std::enable_if_t<std::is_void_v<std::remove_const_t<U>>, int> = 0>
+    inline constexpr span(const span<U, SIZE * sizeof(T)> &other) noexcept
+    : _data(static_cast<T *>(other.data()))
     {
     }
 
@@ -169,7 +177,7 @@ namespace lak
     constexpr span &operator=(const span &) = default;
 
     inline constexpr span(const span<void, SIZE> &other) noexcept
-    : _data(other._data)
+    : _data(other.data())
     {
     }
 
@@ -221,8 +229,12 @@ namespace lak
 
     template<typename U, size_t S>
     inline constexpr span(const span<U, S> &other) noexcept
-    : _data(static_cast<T>(other._data)), _size(other.size())
+    : _data(static_cast<T *>(other.data()))
     {
+      if constexpr (std::is_void_v<std::remove_const_t<U>>)
+        _size = other.size() / sizeof(T);
+      else
+        _size = other.size();
     }
 
     inline constexpr span(
@@ -395,7 +407,7 @@ namespace lak
     constexpr span &operator=(const span &) = default;
 
     inline constexpr span(const span<void> &other) noexcept
-    : _data(other._data), _size(other._size)
+    : _data(other.data()), _size(other.size())
     {
     }
 
