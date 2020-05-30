@@ -20,7 +20,7 @@
   [&] {                                                                       \
     std::wstringstream _debug_stream;                                         \
     _debug_stream << x;                                                       \
-    return lak::strconv_ascii(_debug_stream.str());                           \
+    return lak::to_astring(_debug_stream.str());                              \
   }()
 
 #ifndef LAK_DEBUG_HPP
