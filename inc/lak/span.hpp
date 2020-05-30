@@ -62,6 +62,59 @@ namespace lak
     }
     inline constexpr T *begin() const noexcept { return _data; }
     inline constexpr T *end() const noexcept { return _data + SIZE; }
+
+    template<size_t offset, size_t count = lak::dynamic_extent>
+    inline constexpr span<T, count> subspan() const
+    {
+      if constexpr (count == lak::dynamic_extent)
+      {
+        ASSERT(offset + count <= size());
+        return {begin() + offset, count};
+      }
+      else
+      {
+        static_assert(offset + count <= SIZE, "subspan too large");
+        return {begin() + offset};
+      }
+    }
+    inline constexpr span<T, lak::dynamic_extent> subspan(
+      size_t offset, size_t count = lak::dynamic_extent) const
+    {
+      if (count == lak::dynamic_extent)
+      {
+        ASSERT(offset <= size());
+        return {begin() + offset, size() - offset};
+      }
+      else
+      {
+        ASSERT(offset + count <= size());
+        return {begin() + offset, count};
+      }
+    }
+
+    template<size_t count>
+    inline constexpr span<T, count> first() const
+    {
+      static_assert(count <= SIZE, "subspan too large");
+      return {begin()};
+    }
+    inline constexpr span<T, lak::dynamic_extent> first(size_t count) const
+    {
+      ASSERT(count <= size());
+      return {begin(), count};
+    }
+
+    template<size_t count>
+    inline constexpr span<T, count> last() const
+    {
+      static_assert(count <= SIZE, "subspan too large");
+      return {begin() + (size() - count)};
+    }
+    inline constexpr span<T, lak::dynamic_extent> last(size_t count) const
+    {
+      ASSERT(count <= size());
+      return {begin() + (size() - count), count};
+    }
   };
 
   template<size_t SIZE>
@@ -224,6 +277,58 @@ namespace lak
     }
     inline constexpr T *begin() const noexcept { return _data; }
     inline constexpr T *end() const noexcept { return _data + _size; }
+
+    template<size_t offset, size_t count = lak::dynamic_extent>
+    inline constexpr span<T, count> subspan() const
+    {
+      ASSERT(offset + count <= size());
+      if constexpr (count == lak::dynamic_extent)
+      {
+        return {begin() + offset, count};
+      }
+      else
+      {
+        return {begin() + offset};
+      }
+    }
+    inline constexpr span<T, lak::dynamic_extent> subspan(
+      size_t offset, size_t count = lak::dynamic_extent) const
+    {
+      if (count == lak::dynamic_extent)
+      {
+        ASSERT(offset <= size());
+        return {begin() + offset, size() - offset};
+      }
+      else
+      {
+        ASSERT(offset + count <= size());
+        return {begin() + offset, count};
+      }
+    }
+
+    template<size_t count>
+    inline constexpr span<T, count> first() const
+    {
+      ASSERT(count <= size());
+      return {begin()};
+    }
+    inline constexpr span<T, lak::dynamic_extent> first(size_t count) const
+    {
+      ASSERT(count <= size());
+      return {begin(), count};
+    }
+
+    template<size_t count>
+    inline constexpr span<T, count> last() const
+    {
+      ASSERT(count <= size());
+      return {begin() + (size() - count)};
+    }
+    inline constexpr span<T, lak::dynamic_extent> last(size_t count) const
+    {
+      ASSERT(count <= size());
+      return {begin() + (size() - count), count};
+    }
   };
 
   template<>
