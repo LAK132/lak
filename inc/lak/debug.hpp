@@ -230,7 +230,7 @@ namespace lak
   {                                                                           \
     if (!(x))                                                                 \
     {                                                                         \
-      FATAL("Assertion '" STRINGIFY(x) "' failed: " str);                     \
+      FATAL("Assertion '" STRINGIFY(x) "' failed: " << str);                  \
     }                                                                         \
   }
 #define NOISY_ABORT()                                                         \
