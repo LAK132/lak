@@ -1,87 +1,128 @@
 #ifndef LAK_STRCONV_HPP
 #define LAK_STRCONV_HPP
 
+// This library assumes that char only holds 7bit ASCII characters, and that
+// wchar_t will hold Unicode characters. wchar_t encoding is determined based
+// on its size.
+
 #include "string.hpp"
 
 #include <type_traits>
 
 namespace lak
 {
-  template<typename FROM>
-  struct string_conv_iterator
+  template<typename CHAR>
+  struct codepoint_iterator
   {
   private:
-    using _string   = std::basic_string<FROM>;
-    using _iterator = typename _string::const_iterator;
-    _iterator _begin;
-    _iterator _end;
-    char32_t _current = 0;
+    span<const CHAR> _data;
+    char32_t _current;
 
   public:
-    string_conv_iterator(const _string &str)
-    : _begin(str.begin()), _end(str.end())
+    inline constexpr codepoint_iterator(span<const CHAR> str) noexcept
+    : _data(str)
     {
       operator++();
     }
-    char32_t operator*() const { return _current; }
-    string_conv_iterator &operator++();
+
+    inline constexpr const char32_t &operator*() const noexcept
+    {
+      return _current;
+    }
+
+    inline constexpr codepoint_iterator &operator++() noexcept
+    {
+      auto len = character_length(_data);
+      _current = len ? codepoint(_data) : 0;
+      _data    = _data.subspan(len);
+      return *this;
+    }
+
+    inline constexpr bool operator==(char32_t c) const noexcept
+    {
+      return _current == c;
+    }
+
+    inline constexpr bool operator!=(char32_t c) const noexcept
+    {
+      return _current != c;
+    }
   };
 
-  using ascii_code_iterator_t = string_conv_iterator<char>;
-  using wide_code_iterator_t  = string_conv_iterator<wchar_t>;
-  using utf8_code_iterator_t  = string_conv_iterator<char8_t>;
-  using utf16_code_iterator_t = string_conv_iterator<char16_t>;
-  using utf32_code_iterator_t = string_conv_iterator<char32_t>;
+  extern template struct codepoint_iterator<char>;
+  extern template struct codepoint_iterator<wchar_t>;
+  extern template struct codepoint_iterator<char8_t>;
+  extern template struct codepoint_iterator<char16_t>;
+  extern template struct codepoint_iterator<char32_t>;
 
-  extern template struct string_conv_iterator<char>;
-  extern template struct string_conv_iterator<wchar_t>;
-  extern template struct string_conv_iterator<char8_t>;
-  extern template struct string_conv_iterator<char16_t>;
-  extern template struct string_conv_iterator<char32_t>;
+  template<typename CHAR>
+  struct codepoint_range
+  {
+  private:
+    span<const CHAR> _data;
 
-  void append_code(std::string &str, const char32_t code);
-  void append_code(std::wstring &str, const char32_t code);
-  void append_code(std::u8string &str, const char32_t code);
-  void append_code(std::u16string &str, const char32_t code);
-  void append_code(std::u32string &str, const char32_t code);
+  public:
+    inline constexpr codepoint_range(span<const CHAR> str) noexcept
+    : _data(str)
+    {
+    }
+
+    inline constexpr codepoint_range(
+      const std::basic_string<CHAR> &str) noexcept
+    : _data(str.c_str(), str.size())
+    {
+    }
+
+    inline constexpr codepoint_iterator<CHAR> begin() const noexcept
+    {
+      return {_data};
+    }
+
+    inline constexpr char32_t end() const noexcept { return 0; }
+  };
+
+  extern template struct codepoint_range<char>;
+  extern template struct codepoint_range<wchar_t>;
+  extern template struct codepoint_range<char8_t>;
+  extern template struct codepoint_range<char16_t>;
+  extern template struct codepoint_range<char32_t>;
 
   template<typename TO, typename FROM>
   std::basic_string<TO> strconv(const std::basic_string<FROM> &str)
   {
     std::basic_string<TO> result;
 
-    for (auto it = string_conv_iterator<FROM>(str); *it != 0; ++it)
-      append_code(result, *it);
+    for (const auto &c : codepoint_range(str)) append_codepoint(result, c);
 
     return result;
   }
 
   template<typename FROM>
-  inline std::string strconv_ascii(const std::basic_string<FROM> &str)
+  inline std::string to_astring(const std::basic_string<FROM> &str)
   {
     return strconv<char>(str);
   }
 
   template<typename FROM>
-  inline std::wstring strconv_wide(const std::basic_string<FROM> &str)
+  inline std::wstring to_wstring(const std::basic_string<FROM> &str)
   {
     return strconv<wchar_t>(str);
   }
 
   template<typename FROM>
-  inline std::u8string strconv_u8(const std::basic_string<FROM> &str)
+  inline std::u8string to_u8string(const std::basic_string<FROM> &str)
   {
     return strconv<char8_t>(str);
   }
 
   template<typename FROM>
-  inline std::u16string strconv_u16(const std::basic_string<FROM> &str)
+  inline std::u16string to_u16string(const std::basic_string<FROM> &str)
   {
     return strconv<char16_t>(str);
   }
 
   template<typename FROM>
-  inline std::u32string strconv_u32(const std::basic_string<FROM> &str)
+  inline std::u32string to_u32string(const std::basic_string<FROM> &str)
   {
     return strconv<char32_t>(str);
   }
