@@ -5,8 +5,8 @@
 
 namespace lak
 {
-  /////////////////////////////////////////////////////////////////////////////
-  // remove_refs_ptrs
+  /* --- remove_refs_ptrs --- */
+
   template<typename T>
   struct remove_refs_ptrs
   {
@@ -30,8 +30,8 @@ namespace lak
   template<typename T>
   using remove_refs_ptrs_t = typename remove_refs_ptrs<T>::type;
 
-  /////////////////////////////////////////////////////////////////////////////
-  // is_function
+  /* --- is_function --- */
+
   template<typename T>
   struct is_function : std::is_function<lak::remove_refs_ptrs_t<T>>
   {
@@ -40,4 +40,4 @@ namespace lak
   static constexpr bool is_function_v = is_function<T>::value;
 }
 
-#endif // LAK_TYPE_UTILS_HPP
+#endif

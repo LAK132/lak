@@ -20,7 +20,7 @@ namespace lak
 
   void core_quit() { SDL_Quit(); }
 
-  struct window::window_impl
+  struct window_impl
   {
     union graphics_context
     {
@@ -35,13 +35,15 @@ namespace lak
     graphics_context context = {nullptr};
   };
 
+  template std::unique_ptr<window_impl>;
+
   window::window(const std::string &title, vec2u32_t size, uint32_t flags)
   : _title(title), _size(size)
   {
     ASSERT(size.x > 0);
     ASSERT(size.y > 0);
 
-    _impl = std::make_unique<lak::window::window_impl>();
+    _impl = std::make_unique<lak::window_impl>();
 
     if (!_impl)
     {
@@ -51,6 +53,8 @@ namespace lak
 
     _impl->flags = flags;
   }
+
+  window::~window() { close(); }
 
   void window::close()
   {

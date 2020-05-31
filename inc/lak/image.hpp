@@ -1,7 +1,7 @@
 #ifndef LAK_IMAGE_HPP
 #define LAK_IMAGE_HPP
 
-#include <lak/vec.hpp>
+#include "lak/vec.hpp"
 
 #include <cstring>
 #include <vector>

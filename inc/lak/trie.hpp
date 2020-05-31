@@ -1,7 +1,7 @@
 #ifndef LAK_TRIE_HPP
 #define LAK_TRIE_HPP
 
-#include "string.hpp"
+#include "lak/string.hpp"
 
 #include <assert.h>
 #include <optional>

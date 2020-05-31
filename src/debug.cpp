@@ -6,39 +6,105 @@ namespace lak
 {
   void terminate_handler() { ABORT(); }
 
-  void debugger_t::std_out(const std::string &line_info,
+  void debugger_t::std_out(const std::u8string &line_info,
                            const std::string &str)
   {
-    stream << scoped_indenter::str() << line_info << str;
+    const auto indent = scoped_indenter::u8str();
+    stream << indent << line_info << lak::to_u8string(str);
     if (live_output_enabled && !live_errors_only)
     {
-      std::cout << scoped_indenter::str();
+      std::cout << reinterpret_cast<const char *>(indent.c_str());
       if (line_info_enabled)
       {
-        std::cout << line_info;
+        std::cout << reinterpret_cast<const char *>(line_info.c_str());
       }
       std::cout << str << std::flush;
     }
   }
 
-  void debugger_t::std_err(const std::string &line_info,
-                           const std::string &str)
+  void debugger_t::std_out(const std::u8string &line_info,
+                           const std::wstring &str)
   {
-    stream << scoped_indenter::str() << line_info << str;
-    if (live_output_enabled)
+    const auto indent = scoped_indenter::u8str();
+    stream << indent << line_info << lak::to_u8string(str);
+    if (live_output_enabled && !live_errors_only)
     {
-      std::cerr << scoped_indenter::str();
+      std::wcout << lak::to_wstring(indent);
       if (line_info_enabled)
       {
-        std::cerr << line_info;
+        std::wcout << lak::to_wstring(line_info);
       }
-      std::cerr << str << std::flush;
+      std::wcout << str << std::flush;
+    }
+  }
+
+  void debugger_t::std_out(const std::u8string &line_info,
+                           const std::u8string &str)
+  {
+    const auto indent = scoped_indenter::u8str();
+    stream << indent << line_info << str;
+    if (live_output_enabled && !live_errors_only)
+    {
+      std::wcout << lak::to_wstring(indent);
+      if (line_info_enabled)
+      {
+        std::wcout << lak::to_wstring(line_info);
+      }
+      std::wcout << lak::to_wstring(str) << std::flush;
+    }
+  }
+
+  void debugger_t::std_err(const std::u8string &line_info,
+                           const std::string &str)
+  {
+    const auto indent = scoped_indenter::u8str();
+    stream << indent << line_info << lak::to_u8string(str);
+    if (live_output_enabled)
+    {
+      std::cout << reinterpret_cast<const char *>(indent.c_str());
+      if (line_info_enabled)
+      {
+        std::cout << reinterpret_cast<const char *>(line_info.c_str());
+      }
+      std::cout << str << std::flush;
+    }
+  }
+
+  void debugger_t::std_err(const std::u8string &line_info,
+                           const std::wstring &str)
+  {
+    const auto indent = scoped_indenter::u8str();
+    stream << indent << line_info << lak::to_u8string(str);
+    if (live_output_enabled)
+    {
+      std::wcout << lak::to_wstring(indent);
+      if (line_info_enabled)
+      {
+        std::wcout << lak::to_wstring(line_info);
+      }
+      std::wcout << str << std::flush;
+    }
+  }
+
+  void debugger_t::std_err(const std::u8string &line_info,
+                           const std::u8string &str)
+  {
+    const auto indent = scoped_indenter::u8str();
+    stream << indent << line_info << str;
+    if (live_output_enabled)
+    {
+      std::wcout << lak::to_wstring(indent);
+      if (line_info_enabled)
+      {
+        std::wcout << lak::to_wstring(line_info);
+      }
+      std::wcout << lak::to_wstring(str) << std::flush;
     }
   }
 
   void debugger_t::clear() { stream.clear(); }
 
-  std::string debugger_t::str() { return stream.str(); }
+  std::u8string debugger_t::str() { return stream.str(); }
 
   void debugger_t::abort()
   {
@@ -60,7 +126,8 @@ namespace lak
     if (!path.string().empty())
     {
       std::ofstream file(path, std::ios::out | std::ios::trunc);
-      if (file.is_open()) file << str();
+      if (file.is_open())
+        file << reinterpret_cast<const char *>(str().c_str());
     }
 
     std::error_code ec;
@@ -72,14 +139,14 @@ namespace lak
 
   scoped_indenter::scoped_indenter(const std::string &name)
   {
-    debugger.std_out("", name + " {\n");
+    debugger.std_out(lak::to_u8string(""), name + " {\n");
     ++debug_indent;
   }
 
   scoped_indenter::~scoped_indenter()
   {
     --debug_indent;
-    debugger.std_out("", "}\n");
+    debugger.std_out(lak::to_u8string(""), "}\n");
   }
 
   std::string scoped_indenter::str()
@@ -95,6 +162,16 @@ namespace lak
     std::wstring s;
     for (size_t i = debug_indent; i-- > 0;)
       s += ((debug_indent - i) & 1) ? L"| " : L": ";
+    return s;
+  }
+
+  std::u8string scoped_indenter::u8str()
+  {
+    static const std::u8string bar = lak::to_u8string("| ");
+    static const std::u8string dot = lak::to_u8string(": ");
+    std::u8string s;
+    for (size_t i = debug_indent; i-- > 0;)
+      s += ((debug_indent - i) & 1) ? bar : dot;
     return s;
   }
 
