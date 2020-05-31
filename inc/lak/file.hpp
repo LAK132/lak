@@ -1,7 +1,7 @@
 #ifndef LAK_FILE_HPP
 #define LAK_FILE_HPP
 
-#include "string.hpp"
+#include "lak/string.hpp"
 
 #include <filesystem>
 #include <tuple>

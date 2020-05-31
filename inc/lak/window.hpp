@@ -36,6 +36,8 @@ int main()
 #ifndef LAK_WINDOW_HPP
 #define LAK_WINDOW_HPP
 
+#include <SDL/SDL.h>
+
 #include <lak/string.hpp>
 #include <lak/vec.hpp>
 
@@ -55,10 +57,12 @@ namespace lak
     Vulkan   = 3
   };
 
+  struct window_impl;
+  extern template std::unique_ptr<window_impl>;
+
   struct window
   {
   private:
-    struct window_impl;
     std::unique_ptr<window_impl> _impl;
 
     std::string _title;
@@ -69,7 +73,7 @@ namespace lak
 
   public:
     window(const std::string &title, vec2u32_t size, uint32_t flags);
-    inline ~window() { close(); };
+    ~window();
 
     void close();
 

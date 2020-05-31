@@ -1,7 +1,6 @@
 #ifndef LAK_SPAN_HPP
 #define LAK_SPAN_HPP
 
-#include "lak/debug.hpp"
 #include "lak/stdint.hpp"
 
 #include <array>
@@ -33,6 +32,7 @@ namespace lak
     : _data(static_cast<T *>(other.data()))
     {
     }
+
     template<typename U,
              std::enable_if_t<std::is_void_v<std::remove_const_t<U>>, int> = 0>
     inline constexpr span(const span<U, SIZE * sizeof(T)> &other) noexcept
@@ -46,6 +46,7 @@ namespace lak
     : _data(array.data())
     {
     }
+
     template<size_t N>
     inline constexpr span(
       std::array<std::remove_const_t<T>, SIZE> &array) noexcept
@@ -54,75 +55,34 @@ namespace lak
     }
 
     inline constexpr span(T (&data)[SIZE]) noexcept : _data(data) {}
-    explicit inline constexpr span(T *data) noexcept : _data(data) {}
 
-    inline constexpr T &operator[](size_t index) const noexcept
-    {
-      ASSERTF(index < SIZE, index << " > " << SIZE);
-      return _data[index];
-    }
+    inline constexpr T &operator[](size_t index) const noexcept;
 
-    inline constexpr T *data() const noexcept { return _data; }
-    inline constexpr size_t size() const noexcept { return SIZE; }
-    inline constexpr size_t size_bytes() const noexcept
-    {
-      return SIZE * sizeof(T);
-    }
-    inline constexpr T *begin() const noexcept { return _data; }
-    inline constexpr T *end() const noexcept { return _data + SIZE; }
+    inline constexpr T *data() const noexcept;
+
+    inline constexpr size_t size() const noexcept;
+
+    inline constexpr size_t size_bytes() const noexcept;
+
+    inline constexpr T *begin() const noexcept;
+
+    inline constexpr T *end() const noexcept;
 
     template<size_t offset, size_t count = lak::dynamic_extent>
-    inline constexpr span<T, count> subspan() const
-    {
-      if constexpr (count == lak::dynamic_extent)
-      {
-        ASSERTF(offset + count <= size(), offset + count << " > " << size());
-        return {begin() + offset, count};
-      }
-      else
-      {
-        static_assert(offset + count <= SIZE, "subspan too large");
-        return {begin() + offset};
-      }
-    }
+    inline constexpr span<T, count> subspan() const;
+
     inline constexpr span<T, lak::dynamic_extent> subspan(
-      size_t offset, size_t count = lak::dynamic_extent) const
-    {
-      if (count == lak::dynamic_extent)
-      {
-        ASSERTF(offset <= size(), offset << " > " << size());
-        return {begin() + offset, size() - offset};
-      }
-      else
-      {
-        ASSERTF(offset + count <= size(), offset + count << " > " << size());
-        return {begin() + offset, count};
-      }
-    }
+      size_t offset, size_t count = lak::dynamic_extent) const;
 
     template<size_t count>
-    inline constexpr span<T, count> first() const
-    {
-      static_assert(count <= SIZE, "subspan too large");
-      return {begin()};
-    }
-    inline constexpr span<T, lak::dynamic_extent> first(size_t count) const
-    {
-      ASSERTF(count <= size(), count << " > " << size());
-      return {begin(), count};
-    }
+    inline constexpr span<T, count> first() const;
+
+    inline constexpr span<T, lak::dynamic_extent> first(size_t count) const;
 
     template<size_t count>
-    inline constexpr span<T, count> last() const
-    {
-      static_assert(count <= SIZE, "subspan too large");
-      return {begin() + (size() - count)};
-    }
-    inline constexpr span<T, lak::dynamic_extent> last(size_t count) const
-    {
-      ASSERTF(count <= size(), count << " > " << size());
-      return {begin() + (size() - count), count};
-    }
+    inline constexpr span<T, count> last() const;
+
+    inline constexpr span<T, lak::dynamic_extent> last(size_t count) const;
   };
 
   template<size_t SIZE>
@@ -155,11 +115,12 @@ namespace lak
     inline constexpr span(T (&data)[SIZE / sizeof(T)]) noexcept : _data(data)
     {
     }
-    explicit inline constexpr span(void *data) noexcept : _data(data) {}
 
-    inline constexpr void *data() const noexcept { return _data; }
-    inline constexpr size_t size() const noexcept { return SIZE; }
-    inline constexpr size_t size_bytes() const noexcept { return SIZE; }
+    inline constexpr void *data() const noexcept;
+
+    inline constexpr size_t size() const noexcept;
+
+    inline constexpr size_t size_bytes() const noexcept;
   };
 
   template<size_t SIZE>
@@ -192,6 +153,7 @@ namespace lak
     : _data(array.data())
     {
     }
+
     template<typename T>
     inline constexpr span(
       const std::array<T, SIZE / sizeof(T)> &array) noexcept
@@ -203,11 +165,12 @@ namespace lak
     inline constexpr span(T (&data)[SIZE / sizeof(T)]) noexcept : _data(data)
     {
     }
-    explicit inline constexpr span(const void *data) noexcept : _data(data) {}
 
-    inline constexpr const void *data() const noexcept { return _data; }
-    inline constexpr size_t size() const noexcept { return SIZE; }
-    inline constexpr size_t size_bytes() const noexcept { return SIZE; }
+    inline constexpr const void *data() const noexcept;
+
+    inline constexpr size_t size() const noexcept;
+
+    inline constexpr size_t size_bytes() const noexcept;
   };
 
   /* --- Runtime sized spans --- */
@@ -242,6 +205,7 @@ namespace lak
     : _data(vector.data()), _size(vector.size())
     {
     }
+
     inline constexpr span(std::vector<std::remove_const_t<T>> &vector) noexcept
     : _data(vector.data()), _size(vector.size())
     {
@@ -253,6 +217,7 @@ namespace lak
     : _data(array.data()), _size(N)
     {
     }
+
     template<size_t N>
     inline constexpr span(
       std::array<std::remove_const_t<T>, N> &array) noexcept
@@ -270,77 +235,39 @@ namespace lak
     inline constexpr span(T (&data)[SIZE]) noexcept : _data(data), _size(SIZE)
     {
     }
+
     inline constexpr span(T *data, size_t size) noexcept
     : _data(data), _size(size)
     {
     }
 
-    inline constexpr T &operator[](size_t index) const noexcept
-    {
-      ASSERTF(index < size(), index << " >= " << size());
-      return _data[index];
-    }
+    inline constexpr T &operator[](size_t index) const noexcept;
 
-    inline constexpr T *data() const noexcept { return _data; }
-    inline constexpr size_t size() const noexcept { return _size; }
-    inline constexpr size_t size_bytes() const noexcept
-    {
-      return _size * sizeof(T);
-    }
-    inline constexpr T *begin() const noexcept { return _data; }
-    inline constexpr T *end() const noexcept { return _data + _size; }
+    inline constexpr T *data() const noexcept;
+
+    inline constexpr size_t size() const noexcept;
+
+    inline constexpr size_t size_bytes() const noexcept;
+
+    inline constexpr T *begin() const noexcept;
+
+    inline constexpr T *end() const noexcept;
 
     template<size_t offset, size_t count = lak::dynamic_extent>
-    inline constexpr span<T, count> subspan() const
-    {
-      ASSERTF(offset + count <= size(), offset + count << " > " << size());
-      if constexpr (count == lak::dynamic_extent)
-      {
-        return {begin() + offset, count};
-      }
-      else
-      {
-        return {begin() + offset};
-      }
-    }
+    inline constexpr span<T, count> subspan() const;
+
     inline constexpr span<T, lak::dynamic_extent> subspan(
-      size_t offset, size_t count = lak::dynamic_extent) const
-    {
-      if (count == lak::dynamic_extent)
-      {
-        ASSERTF(offset <= size(), offset << " > " << size());
-        return {begin() + offset, size() - offset};
-      }
-      else
-      {
-        ASSERTF(offset + count <= size(), offset + count << " > " << size());
-        return {begin() + offset, count};
-      }
-    }
+      size_t offset, size_t count = lak::dynamic_extent) const;
 
     template<size_t count>
-    inline constexpr span<T, count> first() const
-    {
-      ASSERTF(count <= size(), count << " > " << size());
-      return {begin()};
-    }
-    inline constexpr span<T, lak::dynamic_extent> first(size_t count) const
-    {
-      ASSERTF(count <= size(), count << " > " << size());
-      return {begin(), count};
-    }
+    inline constexpr span<T, count> first() const;
+
+    inline constexpr span<T, lak::dynamic_extent> first(size_t count) const;
 
     template<size_t count>
-    inline constexpr span<T, count> last() const
-    {
-      ASSERTF(count <= size(), count << " > " << size());
-      return {begin() + (size() - count)};
-    }
-    inline constexpr span<T, lak::dynamic_extent> last(size_t count) const
-    {
-      ASSERTF(count <= size(), count << " > " << size());
-      return {begin() + (size() - count), count};
-    }
+    inline constexpr span<T, count> last() const;
+
+    inline constexpr span<T, lak::dynamic_extent> last(size_t count) const;
   };
 
   template<>
@@ -381,14 +308,17 @@ namespace lak
     : _data(data), _size(SIZE * sizeof(T))
     {
     }
+
     inline constexpr span(void *data, size_t size) noexcept
     : _data(data), _size(size)
     {
     }
 
-    inline constexpr void *data() const noexcept { return _data; }
-    inline constexpr size_t size() const noexcept { return _size; }
-    inline constexpr size_t size_bytes() const noexcept { return _size; }
+    inline constexpr void *data() const noexcept;
+
+    inline constexpr size_t size() const noexcept;
+
+    inline constexpr size_t size_bytes() const noexcept;
   };
 
   template<>
@@ -422,6 +352,7 @@ namespace lak
     : _data(vector.data()), _size(sizeof(T) * vector.size())
     {
     }
+
     template<typename T>
     inline constexpr span(const std::vector<T> &vector) noexcept
     : _data(vector.data()), _size(sizeof(T) * vector.size())
@@ -433,6 +364,7 @@ namespace lak
     : _data(array.data()), _size(sizeof(T) * N)
     {
     }
+
     template<typename T, size_t N>
     inline constexpr span(const std::array<T, N> &array) noexcept
     : _data(array.data()), _size(sizeof(T) * N)
@@ -450,14 +382,17 @@ namespace lak
     : _data(data), _size(SIZE * sizeof(T))
     {
     }
+
     inline constexpr span(const void *data, size_t size) noexcept
     : _data(data), _size(size)
     {
     }
 
-    inline constexpr const void *data() const noexcept { return _data; }
-    inline constexpr size_t size() const noexcept { return _size; }
-    inline constexpr size_t size_bytes() const noexcept { return _size; }
+    inline constexpr const void *data() const noexcept;
+
+    inline constexpr size_t size() const noexcept;
+
+    inline constexpr size_t size_bytes() const noexcept;
   };
 
   template<typename T>
@@ -479,5 +414,7 @@ namespace lak
   template<typename T>
   span(T *, size_t) -> span<T, dynamic_extent>;
 }
+
+#include "lak/span.inl"
 
 #endif

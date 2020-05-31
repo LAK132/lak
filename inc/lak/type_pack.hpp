@@ -1,20 +1,20 @@
 #ifndef LAK_TYPE_PACK_HPP
 #define LAK_TYPE_PACK_HPP
 
-#include "optional.hpp"
-#include "type_utils.hpp"
+#include "lak/optional.hpp"
+#include "lak/type_utils.hpp"
 
 namespace lak
 {
-  /////////////////////////////////////////////////////////////////////////////
-  // type_pack
+  /* --- type_pack --- */
+
   template<typename... TYPES>
   struct type_pack
   {
   };
 
-  /////////////////////////////////////////////////////////////////////////////
-  // prepend_to_pack
+  /* --- prepend_to_pack --- */
+
   template<typename T, typename PACK>
   struct prepend_to_pack;
   template<typename T, typename... TYPES>
@@ -25,8 +25,8 @@ namespace lak
   template<typename T, typename PACK>
   using prepend_to_pack_t = typename prepend_to_pack<T, PACK>::type;
 
-  /////////////////////////////////////////////////////////////////////////////
-  // append_to_pack
+  /* --- append_to_pack --- */
+
   template<typename PACK, typename T>
   struct append_to_pack;
   template<typename... TYPES, typename T>
@@ -37,8 +37,8 @@ namespace lak
   template<typename PACK, typename T>
   using append_to_pack_t = typename append_to_pack<PACK, T>::type;
 
-  /////////////////////////////////////////////////////////////////////////////
-  // concat_packs
+  /* --- concat_packs --- */
+
   template<typename... PACKS>
   struct concat_packs;
   template<>
@@ -65,8 +65,8 @@ namespace lak
   template<typename... PACKS>
   using concat_packs_t = typename concat_packs<PACKS...>::type;
 
-  /////////////////////////////////////////////////////////////////////////////
-  // remove_from_pack
+  /* --- remove_from_pack --- */
+
   template<typename T, typename PACK>
   struct remove_from_pack;
   template<typename T>
@@ -84,8 +84,8 @@ namespace lak
   template<typename T, typename PACK>
   using remove_from_pack_t = typename remove_from_pack<T, PACK>::type;
 
-  /////////////////////////////////////////////////////////////////////////////
-  // unique_pack
+  /* --- unique_pack --- */
+
   template<typename PACK>
   struct unique_pack;
   template<>
@@ -108,8 +108,8 @@ namespace lak
   template<typename PACK>
   using unique_pack_t = typename unique_pack<PACK>::type;
 
-  /////////////////////////////////////////////////////////////////////////////
-  // pack_from_function
+  /* --- pack_from_function --- */
+
   template<typename FUNC>
   struct pack_from_function;
   template<typename FUNC>
@@ -125,8 +125,8 @@ namespace lak
   template<typename FUNC>
   using pack_from_function_t = typename pack_from_function<FUNC>::type;
 
-  /////////////////////////////////////////////////////////////////////////////
-  // create_from_pack
+  /* --- create_from_pack --- */
+
   template<template<typename...> typename T, typename PACK>
   struct create_from_pack;
   template<template<typename...> typename T, typename... TYPES>
@@ -138,4 +138,4 @@ namespace lak
   using create_from_pack_t = typename create_from_pack<T, PACK>::type;
 }
 
-#endif // LAK_TYPE_PACK_HPP
+#endif

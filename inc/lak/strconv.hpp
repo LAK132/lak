@@ -1,13 +1,12 @@
-#ifndef LAK_STRCONV_HPP
-#define LAK_STRCONV_HPP
-
 // This library assumes that char only holds 7bit ASCII characters, and that
 // wchar_t will hold Unicode characters. wchar_t encoding is determined based
 // on its size.
 
-#include "string.hpp"
+#ifndef LAK_STRCONV_HPP
+#define LAK_STRCONV_HPP
 
-#include <type_traits>
+#include "lak/span.hpp"
+#include "lak/string.hpp"
 
 namespace lak
 {
@@ -25,28 +24,13 @@ namespace lak
       operator++();
     }
 
-    inline constexpr const char32_t &operator*() const noexcept
-    {
-      return _current;
-    }
+    inline constexpr const char32_t &operator*() const noexcept;
 
-    inline constexpr codepoint_iterator &operator++() noexcept
-    {
-      auto len = character_length(_data);
-      _current = len ? codepoint(_data) : 0;
-      _data    = _data.subspan(len);
-      return *this;
-    }
+    inline constexpr codepoint_iterator &operator++() noexcept;
 
-    inline constexpr bool operator==(char32_t c) const noexcept
-    {
-      return _current == c;
-    }
+    inline constexpr bool operator==(char32_t c) const noexcept;
 
-    inline constexpr bool operator!=(char32_t c) const noexcept
-    {
-      return _current != c;
-    }
+    inline constexpr bool operator!=(char32_t c) const noexcept;
   };
 
   extern template struct codepoint_iterator<char>;
@@ -73,12 +57,9 @@ namespace lak
     {
     }
 
-    inline constexpr codepoint_iterator<CHAR> begin() const noexcept
-    {
-      return {_data};
-    }
+    inline constexpr codepoint_iterator<CHAR> begin() const noexcept;
 
-    inline constexpr char32_t end() const noexcept { return 0; }
+    inline constexpr char32_t end() const noexcept;
   };
 
   extern template struct codepoint_range<char>;
@@ -88,44 +69,44 @@ namespace lak
   extern template struct codepoint_range<char32_t>;
 
   template<typename TO, typename FROM>
-  std::basic_string<TO> strconv(const std::basic_string<FROM> &str)
-  {
-    std::basic_string<TO> result;
+  inline std::basic_string<TO> strconv(const std::basic_string<FROM> &str);
+  template<typename FROM>
+  inline std::string to_astring(const std::basic_string<FROM> &str);
+  template<typename FROM>
+  inline std::wstring to_wstring(const std::basic_string<FROM> &str);
+  template<typename FROM>
+  inline std::u8string to_u8string(const std::basic_string<FROM> &str);
+  template<typename FROM>
+  inline std::u16string to_u16string(const std::basic_string<FROM> &str);
+  template<typename FROM>
+  inline std::u32string to_u32string(const std::basic_string<FROM> &str);
 
-    for (const auto &c : codepoint_range(str)) append_codepoint(result, c);
-
-    return result;
-  }
+  template<typename TO, typename FROM>
+  inline std::basic_string<TO> strconv(span<const FROM> str);
+  template<typename FROM>
+  inline std::string to_astring(span<const FROM> str);
+  template<typename FROM>
+  inline std::wstring to_wstring(span<const FROM> str);
+  template<typename FROM>
+  inline std::u8string to_u8string(span<const FROM> str);
+  template<typename FROM>
+  inline std::u16string to_u16string(span<const FROM> str);
+  template<typename FROM>
+  inline std::u32string to_u32string(span<const FROM> str);
 
   template<typename FROM>
-  inline std::string to_astring(const std::basic_string<FROM> &str)
-  {
-    return strconv<char>(str);
-  }
-
+  inline std::string to_astring(const FROM *str);
   template<typename FROM>
-  inline std::wstring to_wstring(const std::basic_string<FROM> &str)
-  {
-    return strconv<wchar_t>(str);
-  }
-
+  inline std::wstring to_wstring(const FROM *str);
   template<typename FROM>
-  inline std::u8string to_u8string(const std::basic_string<FROM> &str)
-  {
-    return strconv<char8_t>(str);
-  }
-
+  inline std::u8string to_u8string(const FROM *str);
   template<typename FROM>
-  inline std::u16string to_u16string(const std::basic_string<FROM> &str)
-  {
-    return strconv<char16_t>(str);
-  }
-
+  inline std::u16string to_u16string(const FROM *str);
   template<typename FROM>
-  inline std::u32string to_u32string(const std::basic_string<FROM> &str)
-  {
-    return strconv<char32_t>(str);
-  }
+  inline std::u32string to_u32string(const FROM *str);
+
 }
 
-#endif // LAK_STRCONV_HPP
+#include "lak/strconv.inl"
+
+#endif

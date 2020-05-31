@@ -1,8 +1,45 @@
-#include "lak/string.hpp"
+#include "lak/unicode.hpp"
 #include "lak/debug.hpp"
 
 namespace lak
 {
+  /* --- string_length --- */
+
+  size_t string_length(const char *str)
+  {
+    size_t length = 0;
+    while (*(str++) != 0) ++length;
+    return length;
+  }
+
+  size_t string_length(const wchar_t *str)
+  {
+    size_t length = 0;
+    while (*(str++) != 0) ++length;
+    return length;
+  }
+
+  size_t string_length(const char8_t *str)
+  {
+    size_t length = 0;
+    while (*(str++) != 0) ++length;
+    return length;
+  }
+
+  size_t string_length(const char16_t *str)
+  {
+    size_t length = 0;
+    while (*(str++) != 0) ++length;
+    return length;
+  }
+
+  size_t string_length(const char32_t *str)
+  {
+    size_t length = 0;
+    while (*(str++) != 0) ++length;
+    return length;
+  }
+
   /* --- character_length --- */
 
   uint8_t character_length(const std::string &str, size_t offset)
@@ -42,7 +79,7 @@ namespace lak
 
   uint8_t character_length(span<const char> str)
   {
-    if (str.size() >= 1 && str[0] < 0x80)
+    if (str.size() >= 1 && str[0] <= 0x7F)
     {
       return 1;
     }
@@ -73,8 +110,7 @@ namespace lak
 
   uint8_t character_length(span<const char8_t> str)
   {
-    if (str.size() >= 1 &&
-        (str[0] < 0x80 || (str[0] & 0b1100'0000U) == 0b0100'0000U))
+    if (str.size() >= 1 && (str[0] & 0b1000'0000U) == 0b0000'0000U)
     {
       return 1;
     }

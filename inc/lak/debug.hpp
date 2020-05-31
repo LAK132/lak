@@ -1,6 +1,8 @@
 #ifndef LAK_DEBUG_HPP
 #  include "lak/compiler.hpp"
+#  include "lak/os.hpp"
 #  include "lak/strconv.hpp"
+#  include "lak/string.hpp"
 
 #  include <cstdlib>
 #  include <filesystem>
@@ -15,13 +17,23 @@
     _debug_stream << x;                                                       \
     return _debug_stream.str();                                               \
   }()
-#undef WTO_STRING
-#define WTO_STRING(x)                                                         \
+#undef TO_U8STRING
+#define TO_U8STRING(x)                                                        \
+  [&] {                                                                       \
+    std::stringstream _debug_stream;                                          \
+    _debug_stream << x;                                                       \
+    return std::u8string(                                                     \
+      reinterpret_cast<const char8_t *>(_debug_stream.str().c_str()));        \
+  }()
+#undef TO_WSTRING
+#define TO_WSTRING(x)                                                         \
   [&] {                                                                       \
     std::wstringstream _debug_stream;                                         \
     _debug_stream << x;                                                       \
-    return lak::to_astring(_debug_stream.str());                              \
+    return _debug_stream.str();                                               \
   }()
+#undef WTO_U8STRING
+#define WTO_U8STRING(x) [&] { return lak::to_u8string(TO_WSTRING(x)); }()
 
 #ifndef LAK_DEBUG_HPP
 namespace lak
@@ -31,15 +43,19 @@ namespace lak
 
   struct debugger_t
   {
-    std::stringstream stream;
+    std::basic_stringstream<char8_t> stream;
 
-    void std_out(const std::string &line_info, const std::string &str);
+    void std_out(const std::u8string &line_info, const std::string &str);
+    void std_out(const std::u8string &line_info, const std::wstring &str);
+    void std_out(const std::u8string &line_info, const std::u8string &str);
 
-    void std_err(const std::string &line_info, const std::string &str);
+    void std_err(const std::u8string &line_info, const std::string &str);
+    void std_err(const std::u8string &line_info, const std::wstring &str);
+    void std_err(const std::u8string &line_info, const std::u8string &str);
 
     void clear();
 
-    std::string str();
+    std::u8string str();
 
     [[noreturn]] void abort();
 
@@ -61,8 +77,8 @@ namespace lak
     ~scoped_indenter();
 
     static std::string str();
-
     static std::wstring wstr();
+    static std::u8string u8str();
   };
 
   extern size_t debug_indent;
@@ -128,7 +144,7 @@ namespace lak
 #  define DEBUG(x)
 #  define WDEBUG(x)
 #else
-#  if defined(_WIN32)
+#  if defined(LAK_OS_WINDOWS)
 #    define DEBUG_LINE_FILE  "(" LINE_TRACE_STR ")"
 #    define WDEBUG_LINE_FILE L"(" LINE_TRACE_STR ")"
 #  else
@@ -136,20 +152,29 @@ namespace lak
 #    define WDEBUG_LINE_FILE L"" LAK_FAINT "(" LINE_TRACE_STR ")" LAK_SGR_RESET
 #  endif
 #  define CHECKPOINT()                                                        \
-    lak::debugger.std_err(TO_STRING("CHECKPOINT" << DEBUG_LINE_FILE),         \
-                          TO_STRING("\n"));
+    lak::debugger.std_out(TO_U8STRING("CHECKPOINT" << DEBUG_LINE_FILE),       \
+                          TO_U8STRING("\n"));
 #  define DEBUG(x)                                                            \
-    lak::debugger.std_out(TO_STRING("DEBUG" << DEBUG_LINE_FILE << ": "),      \
-                          TO_STRING(std::hex << x << "\n"));
+    lak::debugger.std_out(TO_U8STRING("DEBUG" << DEBUG_LINE_FILE << ": "),    \
+                          TO_U8STRING(std::hex << x << "\n"));
 #  define WDEBUG(x)                                                           \
-    lak::debugger.std_out(WTO_STRING(L"DEBUG" << WDEBUG_LINE_FILE << L": "),  \
-                          WTO_STRING(std::hex << x << L"\n"));
+    lak::debugger.std_out(TO_U8STRING("DEBUG" << DEBUG_LINE_FILE << ": "),    \
+                          TO_WSTRING(std::hex << x << L"\n"));
 #endif
 
 #undef ABORT
+#undef NOISY_ABORT
 #define ABORT()                                                               \
   {                                                                           \
     lak::debugger.abort();                                                    \
+  }
+#define NOISY_ABORT()                                                         \
+  {                                                                           \
+    DEBUG_BREAK();                                                            \
+    std::cerr << reinterpret_cast<const char *>(                              \
+                   lak::debugger.stream.str().c_str())                        \
+              << "\n";                                                        \
+    ABORT();                                                                  \
   }
 
 #undef WARNING
@@ -163,62 +188,76 @@ namespace lak
 #  define ERROR(x)
 #  define WERROR(x)
 #  define FATAL(x) ABORT()
-#elif defined(_WIN32)
+#elif defined(LAK_OS_WINDOWS)
 #  define WARNING(x)                                                          \
-    lak::debugger.std_err(TO_STRING("WARNING" << DEBUG_LINE_FILE << ": "),    \
-                          TO_STRING(std::hex << x << "\n"));
+    lak::debugger.std_err(TO_U8STRING("WARNING" << DEBUG_LINE_FILE << ": "),  \
+                          TO_U8STRING(std::hex << x << "\n"));
 #  define WWARNING(x)                                                         \
-    lak::debugger.std_err(                                                    \
-      WTO_STRING(L"WARNING" << WDEBUG_LINE_FILE << L": "),                    \
-      WTO_STRING(std::hex << x << L"\n"));
+    lak::debugger.std_err(TO_U8STRING("WARNING" << WDEBUG_LINE_FILE << ": "), \
+                          TO_WSTRING(std::hex << x << L"\n"));
 #  define ERROR(x)                                                            \
-    lak::debugger.std_err(TO_STRING("ERROR" << DEBUG_LINE_FILE << ": "),      \
-                          TO_STRING(std::hex << x << "\n"));
+    lak::debugger.std_err(TO_U8STRING("ERROR" << DEBUG_LINE_FILE << ": "),    \
+                          TO_U8STRING(std::hex << x << "\n"));
 #  define WERROR(x)                                                           \
-    lak::debugger.std_err(WTO_STRING(L"ERROR" << WDEBUG_LINE_FILE << L": "),  \
-                          WTO_STRING(std::hex << x << L"\n"));
+    lak::debugger.std_err(TO_U8STRING("ERROR" << DEBUG_LINE_FILE << ": "),    \
+                          TO_WSTRING(std::hex << x << L"\n"));
 #  define FATAL(x)                                                            \
     {                                                                         \
-      lak::debugger.std_err(TO_STRING("FATAL" << DEBUG_LINE_FILE << ": "),    \
-                            TO_STRING(std::hex << x << "\n"));                \
+      lak::debugger.std_err(TO_U8STRING("FATAL" << DEBUG_LINE_FILE << ": "),  \
+                            TO_U8STRING(std::hex << x << "\n"));              \
+      ABORT();                                                                \
+    }
+#  define WFATAL(x)                                                           \
+    {                                                                         \
+      lak::debugger.std_err(TO_U8STRING("FATAL" << DEBUG_LINE_FILE << ": "),  \
+                            TO_WSTRING(std::hex << x << L"\n"));              \
       ABORT();                                                                \
     }
 #else
 #  define WARNING(x)                                                          \
     lak::debugger.std_err(                                                    \
-      TO_STRING(LAK_YELLOW LAK_BOLD "WARNING" LAK_SGR_RESET LAK_YELLOW        \
-                << DEBUG_LINE_FILE << ": "),                                  \
-      TO_STRING(std::hex << x << "\n"));
+      TO_U8STRING(LAK_YELLOW LAK_BOLD "WARNING" LAK_SGR_RESET LAK_YELLOW      \
+                  << DEBUG_LINE_FILE << ": "),                                \
+      TO_U8STRING(std::hex << x << "\n"));
 #  define WWARNING(x)                                                         \
     lak::debugger.std_err(                                                    \
-      WTO_STRING(L"" LAK_YELLOW LAK_BOLD "WARNING" LAK_SGR_RESET LAK_YELLOW   \
-                 << WDEBUG_LINE_FILE << L": "),                               \
-      WTO_STRING(std::hex << x << L"\n"));
+      TO_U8STRING("" LAK_YELLOW LAK_BOLD "WARNING" LAK_SGR_RESET LAK_YELLOW   \
+                  << WDEBUG_LINE_FILE << ": "),                               \
+      TO_WSTRING(std::hex << x << L"\n"));
 #  define ERROR(x)                                                            \
     lak::debugger.std_err(                                                    \
-      TO_STRING(LAK_BRIGHT_RED LAK_BOLD "ERROR" LAK_SGR_RESET LAK_BRIGHT_RED  \
-                << DEBUG_LINE_FILE << ": "),                                  \
-      TO_STRING(std::hex << x << "\n"));
+      TO_U8STRING(                                                            \
+        LAK_BRIGHT_RED LAK_BOLD "ERROR" LAK_SGR_RESET LAK_BRIGHT_RED          \
+        << DEBUG_LINE_FILE << ": "),                                          \
+      TO_U8STRING(std::hex << x << "\n"));
 #  define WERROR(x)                                                           \
     lak::debugger.std_err(                                                    \
-      WTO_STRING(                                                             \
-        L"" LAK_BRIGHT_RED LAK_BOLD "ERROR" LAK_SGR_RESET LAK_BRIGHT_RED      \
-        << WDEBUG_LINE_FILE << L": "),                                        \
-      WTO_STRING(std::hex << x << L"\n"));
+      TO_U8STRING(                                                            \
+        "" LAK_BRIGHT_RED LAK_BOLD "ERROR" LAK_SGR_RESET LAK_BRIGHT_RED       \
+        << WDEBUG_LINE_FILE << ": "),                                         \
+      TO_WSTRING(std::hex << x << L"\n"));
 #  define FATAL(x)                                                            \
     {                                                                         \
       lak::debugger.std_err(                                                  \
-        TO_STRING(                                                            \
+        TO_U8STRING(                                                          \
           LAK_BRIGHT_RED LAK_BOLD "FATAL" LAK_SGR_RESET LAK_BRIGHT_RED        \
           << DEBUG_LINE_FILE << ": "),                                        \
-        TO_STRING(std::hex << x << "\n"));                                    \
+        TO_U8STRING(std::hex << x << "\n"));                                  \
+      ABORT();                                                                \
+    }
+#  define WFATAL(x)                                                           \
+    {                                                                         \
+      lak::debugger.std_err(                                                  \
+        TO_U8STRING(                                                          \
+          LAK_BRIGHT_RED LAK_BOLD "FATAL" LAK_SGR_RESET LAK_BRIGHT_RED        \
+          << DEBUG_LINE_FILE << ": "),                                        \
+        TO_WSTRING(std::hex << x << L"\n"));                                  \
       ABORT();                                                                \
     }
 #endif
 
 #undef ASSERT
 #undef ASSERTF
-#undef NOISY_ABORT
 #define ASSERT(x)                                                             \
   {                                                                           \
     if (!(x))                                                                 \
@@ -233,12 +272,6 @@ namespace lak
       FATAL("Assertion '" STRINGIFY(x) "' failed: " << str);                  \
     }                                                                         \
   }
-#define NOISY_ABORT()                                                         \
-  {                                                                           \
-    std::cerr << lak::debugger.stream.str() << "\n";                          \
-    ABORT();                                                                  \
-  }
-
 #ifndef LAK_DEBUG_HPP
 #  define LAK_DEBUG_HPP
 #endif

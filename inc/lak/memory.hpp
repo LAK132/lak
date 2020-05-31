@@ -1,7 +1,7 @@
 #ifndef LAK_MEMORY_HPP
 #define LAK_MEMORY_HPP
 
-#include "string.hpp"
+#include "lak/string.hpp"
 
 #include <stdint.h>
 #include <vector>
