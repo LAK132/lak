@@ -104,7 +104,6 @@ namespace lak
   inline std::u16string to_u16string(const FROM *str);
   template<typename FROM>
   inline std::u32string to_u32string(const FROM *str);
-
 }
 
 #include "lak/strconv.inl"
