@@ -24,11 +24,11 @@ namespace lak
   uint8_t character_length(const std::u8string &str, size_t offset);
   uint8_t character_length(const std::u16string &str, size_t offset);
   uint8_t character_length(const std::u32string &str, size_t offset);
-  uint8_t character_length(span<const char, dynamic_extent> str);
-  uint8_t character_length(span<const wchar_t, dynamic_extent> str);
-  uint8_t character_length(span<const char8_t, dynamic_extent> str);
-  uint8_t character_length(span<const char16_t, dynamic_extent> str);
-  uint8_t character_length(span<const char32_t, dynamic_extent> str);
+  uint8_t character_length(span<const char> str);
+  uint8_t character_length(span<const wchar_t> str);
+  uint8_t character_length(span<const char8_t> str);
+  uint8_t character_length(span<const char16_t> str);
+  uint8_t character_length(span<const char32_t> str);
 
   // Returns the Unicode character code representing the first/offset
   // character. Returns NUL on error (use character_length to get more
@@ -38,17 +38,19 @@ namespace lak
   char32_t codepoint(const std::u8string &str, size_t offset);
   char32_t codepoint(const std::u16string &str, size_t offset);
   char32_t codepoint(const std::u32string &str, size_t offset);
-  char32_t codepoint(span<const char, dynamic_extent> str);
-  char32_t codepoint(span<const wchar_t, dynamic_extent> str);
-  char32_t codepoint(span<const char8_t, dynamic_extent> str);
-  char32_t codepoint(span<const char16_t, dynamic_extent> str);
-  char32_t codepoint(span<const char32_t, dynamic_extent> str);
+  char32_t codepoint(span<const char> str);
+  char32_t codepoint(span<const wchar_t> str);
+  char32_t codepoint(span<const char8_t> str);
+  char32_t codepoint(span<const char16_t> str);
+  char32_t codepoint(span<const char32_t> str);
 
   void append_codepoint(std::string &str, char32_t code);
   void append_codepoint(std::wstring &str, char32_t code);
   void append_codepoint(std::u8string &str, char32_t code);
   void append_codepoint(std::u16string &str, char32_t code);
   void append_codepoint(std::u32string &str, char32_t code);
+
+  bool is_whitespace(char32_t c);
 }
 
 #endif
