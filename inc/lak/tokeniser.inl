@@ -103,7 +103,7 @@ namespace lak
     size_t count = 0;
 
     // Continue scanning until we run out of non-whitespace character.
-    for (const auto &[c, len] : codepoint_range(_n_currentext))
+    for (const auto &[c, len] : codepoint_range(_next))
     {
       if (is_whitespace(c)) break;
 
