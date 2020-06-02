@@ -3,13 +3,23 @@
 namespace lak
 {
   template<typename CHAR>
-  tokeniser<CHAR> &tokeniser<CHAR>::operator++()
+  tokeniser<CHAR> &tokeniser<CHAR>::operator++() noexcept
   {
-    _current = _data.subspan(_current.end() - _data.begin());
+    _current = peek();
+    _next    = {};
+    return *this;
+  }
+
+  template<typename CHAR>
+  span<const CHAR> tokeniser<CHAR>::peek() const noexcept
+  {
+    if (_next.size() > 0) return _next;
+
+    _next = _data.subspan(_current.end() - _data.begin());
 
     std::vector<char32_t> buffer;
     buffer.reserve(_longest_operator);
-    const CHAR *buffer_begin = _current.begin();
+    const CHAR *buffer_begin = _next.begin();
 
     auto match = [&, this]() -> lak::span<const CHAR> {
       ASSERT(buffer.size());
@@ -29,7 +39,7 @@ namespace lak
 
           if (match)
           {
-            if (buffer_begin <= _current.begin())
+            if (buffer_begin <= _next.begin())
             {
               // We matched an operator.
               return {buffer_begin, buf.size()};
@@ -38,8 +48,8 @@ namespace lak
             {
               // We hit an operator part way through a token. Return the token
               // up to the operator.
-              return {_current.begin(),
-                      static_cast<size_t>(buffer_begin - _current.begin())};
+              return {_next.begin(),
+                      static_cast<size_t>(buffer_begin - _next.begin())};
             }
           }
         }
@@ -77,49 +87,153 @@ namespace lak
     };
 
     // Scan until we find the first non-whitespace character.
-    for (const auto &[c, len] : codepoint_range(_current))
+    for (const auto &[c, len] : codepoint_range(_next))
     {
       if (!is_whitespace(c)) break;
 
       if (auto m = match_operator(c); m.size() > 0)
       {
-        _current = m;
-        return *this;
+        _next = m;
+        return _next;
       }
 
-      _current = _current.subspan(len);
+      _next = _next.subspan(len);
     }
 
     size_t count = 0;
 
     // Continue scanning until we run out of non-whitespace character.
-    for (const auto &[c, len] : codepoint_range(_current))
+    for (const auto &[c, len] : codepoint_range(_n_currentext))
     {
       if (is_whitespace(c)) break;
 
       if (auto m = match_operator(c); m.size() > 0)
       {
-        _current = m;
-        return *this;
+        _next = m;
+        return _next;
       }
 
       count += len;
     }
 
-    _current = _current.first(count);
+    _next = _next.first(count);
 
     // Flush out the buffer.
     while (buffer.size() > 0)
     {
       if (auto m = match(); m.size() > 0)
       {
-        _current = m;
-        return *this;
+        _next = m;
+        return _next;
       }
 
       buffer.erase(buffer.begin());
     }
 
-    return *this;
+    return _next;
+  }
+
+  template<typename CHAR>
+  span<const CHAR> tokeniser<CHAR>::until(char32_t codepoint) noexcept
+  {
+    _current = _data.subspan(_current.end() - _data.begin());
+    _next    = {};
+
+    size_t count = 0;
+
+    for (const auto &[c, len] : codepoint_range(_current))
+    {
+      if (c == codepoint) break;
+      count += len;
+    }
+
+    _current = _current.first(count);
+
+    return _current;
+  }
+
+  template<typename CHAR>
+  span<const CHAR> tokeniser<CHAR>::until(span<const char32_t> str) noexcept
+  {
+    ASSERT(str.size() > 0);
+
+    _current = _data.subspan(_current.end() - _data.begin());
+    _next    = {};
+
+    size_t count           = 0;
+    size_t pre_match_count = 0;
+    size_t match_len       = 0;
+
+    for (const auto &[c, len] : codepoint_range(_current))
+    {
+      if (c == str[match_len])
+      {
+        ++match_len;
+      }
+      else
+      {
+        pre_match_count = count;
+        match_len       = 0;
+      }
+
+      ASSERT(match_len <= str.size());
+
+      if (match_len == str.size()) break;
+
+      count += len;
+    }
+
+    _current = _current.first(pre_match_count);
+
+    return _current;
+  }
+
+  template<typename CHAR>
+  span<const CHAR> tokeniser<CHAR>::skip(char32_t codepoint) noexcept
+  {
+    _current = _data.subspan(_current.end() - _data.begin());
+    _next    = {};
+
+    size_t count = 0;
+
+    for (const auto &[c, len] : codepoint_range(_current))
+    {
+      count += len;
+      if (c == codepoint) break;
+    }
+
+    _current = _current.first(count);
+
+    return _current;
+  }
+
+  template<typename CHAR>
+  span<const CHAR> tokeniser<CHAR>::skip(span<const char32_t> str) noexcept
+  {
+    ASSERT(str.size() > 0);
+
+    _current = _data.subspan(_current.end() - _data.begin());
+    _next    = {};
+
+    size_t count     = 0;
+    size_t match_len = 0;
+
+    for (const auto &[c, len] : codepoint_range(_current))
+    {
+      count += len;
+
+      if (c == str[match_len])
+        ++match_len;
+      else
+        match_len = 0;
+
+      ASSERT(match_len <= str.size());
+
+      if (match_len == str.size()) break;
+    }
+
+    _current = _current.first(count);
+
+    return _current;
   }
 }
