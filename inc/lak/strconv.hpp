@@ -8,6 +8,8 @@
 #include "lak/span.hpp"
 #include "lak/string.hpp"
 
+#include <tuple>
+
 namespace lak
 {
   template<typename CHAR>
@@ -15,7 +17,7 @@ namespace lak
   {
   private:
     span<const CHAR> _data;
-    char32_t _current;
+    std::pair<char32_t, uint8_t> _current;
 
   public:
     inline constexpr codepoint_iterator(span<const CHAR> str) noexcept
@@ -24,7 +26,8 @@ namespace lak
       operator++();
     }
 
-    inline constexpr const char32_t &operator*() const noexcept;
+    inline constexpr const std::pair<char32_t, uint8_t> &operator*()
+      const noexcept;
 
     inline constexpr codepoint_iterator &operator++() noexcept;
 

@@ -77,7 +77,7 @@ namespace lak
     };
 
     // Scan until we find the first non-whitespace character.
-    for (const auto &c : codepoint_range(_current))
+    for (const auto &[c, len] : codepoint_range(_current))
     {
       if (!is_whitespace(c)) break;
 
@@ -87,13 +87,13 @@ namespace lak
         return *this;
       }
 
-      _current = _current.subspan(1);
+      _current = _current.subspan(len);
     }
 
     size_t count = 0;
 
     // Continue scanning until we run out of non-whitespace character.
-    for (const auto &c : codepoint_range(_current))
+    for (const auto &[c, len] : codepoint_range(_current))
     {
       if (is_whitespace(c)) break;
 
@@ -103,7 +103,7 @@ namespace lak
         return *this;
       }
 
-      ++count;
+      count += len;
     }
 
     _current = _current.first(count);
