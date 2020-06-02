@@ -16,6 +16,7 @@ namespace lak
     std::vector<std::u32string> _operators;
     size_t _longest_operator;
     span<const CHAR> _current;
+    mutable span<const CHAR> _next;
 
   public:
     inline tokeniser(span<const CHAR> str,
@@ -34,24 +35,47 @@ namespace lak
     {
     }
 
-    inline const tokeniser &begin() const noexcept { return *this; }
+    inline tokeniser &begin() noexcept { return *this; }
 
     inline nullptr_t end() const noexcept { return nullptr; }
 
-    inline const span<const CHAR> &operator*() const { return _current; }
-
-    tokeniser &operator++();
-
-    inline span<const CHAR> peek() const { return _current; }
-
-    inline span<const CHAR> pop()
+    inline const span<const CHAR> &operator*() const noexcept
     {
-      auto rtn = _current;
-      operator++();
-      return rtn;
+      return _current;
     }
 
-    inline void reset()
+    tokeniser &operator++() noexcept;
+
+    // Peek at the next token.
+    span<const CHAR> peek() const noexcept;
+
+    // Scan until codepoint is found (exclusive).
+    span<const CHAR> until(char32_t codepoint) noexcept;
+    // If you're tokenising something like:
+    //  R"delimiter(this is a string)delimiter";
+    // You can mark `R"` as an operator, then do `until(U'(')` to get
+    // "delimiter".
+    // This may also be useful for skipping comments:
+    //  # this is a comment [newline]
+    // Marking `#` as an operator will allow you do to `until(U'\n')` to scan
+    // until it reaches the end of the line (or end of the file).
+
+    // Scan until str is found (exclusive).
+    span<const CHAR> until(span<const char32_t> str) noexcept;
+    // Useful for tokenising something like multiline comments:
+    //  /*
+    //  this is a multiline comment
+    //  */
+    // Once the operator `/*` is found, you can do `until(U"*/")` to scan until
+    // the end of the comment (or end of the file) is found.
+
+    // Scan until codepoint is found (inclusive).
+    span<const CHAR> skip(char32_t codepoint) noexcept;
+
+    // Scan until str is found (inclusive).
+    span<const CHAR> skip(span<const char32_t> str) noexcept;
+
+    inline void reset() noexcept
     {
       _current = {_data.begin(), 0};
       operator++();
@@ -66,6 +90,8 @@ namespace lak
     {
       return _current.size() != 0;
     }
+
+    operator bool() const noexcept { return _current.size() != 0; }
   };
 
   extern template struct tokeniser<char>;
