@@ -3,8 +3,8 @@
 namespace lak
 {
   template<typename CHAR>
-  inline constexpr const char32_t &codepoint_iterator<CHAR>::operator*()
-    const noexcept
+  inline constexpr const std::pair<char32_t, uint8_t>
+    &codepoint_iterator<CHAR>::operator*() const noexcept
   {
     return _current;
   }
@@ -13,9 +13,9 @@ namespace lak
   inline constexpr codepoint_iterator<CHAR>
     &codepoint_iterator<CHAR>::operator++() noexcept
   {
-    auto len = character_length(_data);
-    _current = len ? codepoint(_data) : 0;
-    _data    = _data.subspan(len);
+    _current.second = character_length(_data);
+    _current.first  = _current.second ? codepoint(_data) : 0;
+    _data           = _data.subspan(_current.second);
     return *this;
   }
 
@@ -23,14 +23,14 @@ namespace lak
   inline constexpr bool codepoint_iterator<CHAR>::operator==(
     char32_t c) const noexcept
   {
-    return _current == c;
+    return _current.first == c;
   }
 
   template<typename CHAR>
   inline constexpr bool codepoint_iterator<CHAR>::operator!=(
     char32_t c) const noexcept
   {
-    return _current != c;
+    return _current.first != c;
   }
 
   extern template struct codepoint_iterator<char>;
@@ -63,7 +63,8 @@ namespace lak
   {
     std::basic_string<TO> result;
 
-    for (const auto &c : codepoint_range(str)) append_codepoint(result, c);
+    for (const auto &[c, len] : codepoint_range(str))
+      append_codepoint(result, c);
 
     return result;
   }
@@ -103,7 +104,8 @@ namespace lak
   {
     std::basic_string<TO> result;
 
-    for (const auto &c : codepoint_range(str)) append_codepoint(result, c);
+    for (const auto &[c, len] : codepoint_range(str))
+      append_codepoint(result, c);
 
     return result;
   }
