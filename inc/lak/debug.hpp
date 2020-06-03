@@ -1,5 +1,6 @@
 #ifndef LAK_DEBUG_HPP
 #  include "lak/compiler.hpp"
+#  include "lak/macro_utils.hpp"
 #  include "lak/os.hpp"
 #  include "lak/strconv.hpp"
 #  include "lak/string.hpp"
@@ -86,14 +87,6 @@ namespace lak
   extern debugger_t debugger;
 }
 #endif
-
-#undef STRINGIFY_EX
-#define STRINGIFY_EX(x) #x
-#undef STRINGIFY
-#define STRINGIFY(x) STRINGIFY_EX(x)
-
-#undef LINE_TRACE_STR
-#define LINE_TRACE_STR __FILE__ ":" STRINGIFY(__LINE__)
 
 #undef TRY
 #undef CATCH
