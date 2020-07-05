@@ -186,7 +186,9 @@ namespace lak
   };
 
   using vec2f_t   = vec2<float>;
+  using vec2c_t   = vec2<signed char>;
   using vec2i_t   = vec2<int>;
+  using vec2l_t   = vec2<long>;
   using vec2s_t   = vec2<size_t>;
   using vec2i8_t  = vec2<int8_t>;
   using vec2u8_t  = vec2<uint8_t>;
@@ -366,7 +368,9 @@ namespace lak
   };
 
   using vec3f_t   = vec3<float>;
+  using vec3c_t   = vec3<signed char>;
   using vec3i_t   = vec3<int>;
+  using vec3l_t   = vec3<long>;
   using vec3s_t   = vec3<size_t>;
   using vec3i8_t  = vec3<int8_t>;
   using vec3u8_t  = vec3<uint8_t>;
@@ -565,7 +569,9 @@ namespace lak
   };
 
   using vec4f_t   = vec4<float>;
+  using vec4c_t   = vec4<signed char>;
   using vec4i_t   = vec4<int>;
+  using vec4l_t   = vec4<long>;
   using vec4s_t   = vec4<size_t>;
   using vec4i8_t  = vec4<int8_t>;
   using vec4u8_t  = vec4<uint8_t>;
