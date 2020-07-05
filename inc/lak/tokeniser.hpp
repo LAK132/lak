@@ -1,13 +1,27 @@
 #ifndef LAK_TOKENISER_HPP
 #define LAK_TOKENISER_HPP
 
-#include "span.hpp"
-#include "string.hpp"
+#include "lak/span.hpp"
+#include "lak/string.hpp"
+#include "lak/vec.hpp"
 
 #include <vector>
 
 namespace lak
 {
+  struct codepoint_position
+  {
+    // Measured in codepoints not source characters.
+    size_t line   = 1;
+    size_t column = 1;
+  };
+
+  struct token_position
+  {
+    codepoint_position begin = {};
+    codepoint_position end   = {};
+  };
+
   template<typename CHAR>
   struct tokeniser
   {
@@ -15,8 +29,26 @@ namespace lak
     span<const CHAR> _data;
     std::vector<std::u32string> _operators;
     size_t _longest_operator;
+
     span<const CHAR> _current;
+    token_position _current_position;
+
     mutable span<const CHAR> _next;
+    mutable token_position _next_position;
+
+    void internal_start_next() const noexcept
+    {
+      _next                = _data.subspan(_current.end() - _data.begin());
+      _next_position.begin = _next_position.end = _current_position.end;
+    }
+
+    void internal_pump() noexcept
+    {
+      _current             = _next;
+      _current_position    = _next_position;
+      _next_position.begin = _next_position.end;
+      _next                = _data.subspan(_current.end() - _data.begin(), 0);
+    }
 
   public:
     inline tokeniser(span<const CHAR> str,
@@ -38,6 +70,17 @@ namespace lak
     inline tokeniser &begin() noexcept { return *this; }
 
     inline nullptr_t end() const noexcept { return nullptr; }
+
+    inline token_position position() const noexcept
+    {
+      return _current_position;
+    }
+
+    inline token_position peek_position() const noexcept
+    {
+      peek();
+      return _next_position;
+    }
 
     inline const span<const CHAR> &operator*() const noexcept
     {
@@ -77,18 +120,19 @@ namespace lak
 
     inline void reset() noexcept
     {
-      _current = {_data.begin(), 0};
+      _current = _next  = {_data.begin(), 0};
+      _current_position = _next_position = token_position();
       operator++();
     }
 
     inline bool operator==(nullptr_t) const noexcept
     {
-      return _current.size() == 0;
+      return _current.begin() >= _data.begin();
     }
 
     inline bool operator!=(nullptr_t) const noexcept
     {
-      return _current.size() != 0;
+      return _current.begin() < _data.begin();
     }
 
     operator bool() const noexcept { return _current.size() != 0; }
