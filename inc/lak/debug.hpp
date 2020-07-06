@@ -250,12 +250,30 @@ namespace lak
 #endif
 
 #undef ASSERT
+#undef ASSERT_EQUAL
+#undef ASSERT_NOT_EQUAL
 #undef ASSERTF
 #define ASSERT(x)                                                             \
   {                                                                           \
     if (!(x))                                                                 \
     {                                                                         \
       FATAL("Assertion '" STRINGIFY(x) "' failed");                           \
+    }                                                                         \
+  }
+#define ASSERT_EQUAL(x, y)                                                    \
+  {                                                                           \
+    if (!((x) == (y)))                                                        \
+    {                                                                         \
+      FATAL("Assertion '" STRINGIFY(x == y) "' failed: " << x                 \
+                                                         << " != " << y);     \
+    }                                                                         \
+  }
+#define ASSERT_NOT_EQUAL(x, y)                                                \
+  {                                                                           \
+    if (!((x) != (y)))                                                        \
+    {                                                                         \
+      FATAL("Assertion '" STRINGIFY(x != y) "' failed: " << x                 \
+                                                         << " == " << y);     \
     }                                                                         \
   }
 #define ASSERTF(x, str)                                                       \
