@@ -15,6 +15,8 @@
 #  include <xcb/xcb.h>
 #endif
 
+#include "lak/buffer.hpp"
+#include "lak/debug.hpp"
 #include "lak/vec.hpp"
 
 namespace lak
@@ -55,8 +57,12 @@ namespace lak
 #endif
   };
 
-  bool create_window(const platform_instance &i, window_handle *w);
-  bool destroy_window(const platform_instance &i, window_handle *w);
+  struct window;
+
+  bool create_window(const platform_instance &i,
+                     window_handle *wh,
+                     window *w = nullptr);
+  bool destroy_window(const platform_instance &i, window_handle *wh);
 
   struct window
   {
@@ -65,13 +71,33 @@ namespace lak
     window_handle _handle;
 
   public:
-    inline window(const platform_instance &i) : _platform_instance(i)
+#ifdef LAK_USE_WINAPI
+    mutable lak::buffer<MSG, 0x100> _platform_events;
+    mutable bool _moving   = false;
+    mutable bool _resizing = false;
+    mutable POINT _cursor_start;
+    mutable RECT _window_start;
+    enum
     {
-      create_window(_platform_instance, &_handle);
+      top    = 1 << 1,
+      bottom = 1 << 2,
+      left   = 1 << 3,
+      right  = 1 << 4
+    };
+    mutable unsigned char _side = 0;
+#endif
+
+    inline window(const platform_instance &i)
+    : _platform_instance(i), _handle()
+    {
+      create_window(_platform_instance, &_handle, this);
     }
     inline ~window() { destroy_window(_platform_instance, &_handle); }
 
-    inline const auto &platform_handle() { return _handle.platform_handle; }
+    inline const auto &platform_handle() const
+    {
+      return _handle.platform_handle;
+    }
   };
 
   enum struct event_type
@@ -153,8 +179,15 @@ namespace lak
 #endif
   };
 
-  bool next_event(const platform_instance &i, event *e);
-  bool peek_event(const platform_instance &i, event *e);
+  bool next_thread_event(const platform_instance &i, event *e);
+  bool peek_thread_event(const platform_instance &i, event *e);
+
+  bool next_window_event(const platform_instance &i,
+                         const window &w,
+                         event *e);
+  bool peek_window_event(const platform_instance &i,
+                         const window &w,
+                         event *e);
 }
 
 #endif

@@ -1,3 +1,9 @@
+#ifndef WIN32_MEAN_AND_LEAN
+#  define WIN32_MEAN_AND_LEAN
+#endif
+#ifndef NOMINMAX
+#  define NOMINMAX
+#endif
 #include <windowsx.h>
 #include <wingdi.h>
 
@@ -15,57 +21,49 @@ EXTERN_C IMAGE_DOS_HEADER __ImageBase;
 
 thread_local bool peek_message_is_safe = true;
 
-// FIFO queue
-static const size_t thread_events_max_size                   = 0x10000;
-thread_local MSG thread_events_queue[thread_events_max_size] = {};
-thread_local size_t thread_events_pos                        = 0;
-thread_local size_t thread_events_size                       = 0;
-
-void push_event(const MSG &msg)
-{
-  const size_t new_event_index =
-    (thread_events_pos + thread_events_size) % thread_events_max_size;
-  auto &event = thread_events_queue[new_event_index];
-  lak::memcpy(&event, &msg);
-  if (thread_events_size < thread_events_max_size)
-    ++thread_events_size;
-  else
-    thread_events_pos = (thread_events_pos + 1) % thread_events_max_size;
-}
-
-bool peek_event(MSG *event)
-{
-  if (thread_events_size == 0) return false;
-
-  lak::memcpy(event, &thread_events_queue[thread_events_pos]);
-
-  return true;
-}
-
-bool pop_event(MSG *event)
-{
-  if (!peek_event(event)) return false;
-
-  --thread_events_size;
-  thread_events_pos = (thread_events_pos + 1) % thread_events_max_size;
-
-  return true;
-}
-
 LRESULT CALLBACK WndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 {
-  switch (Msg)
+  lak::window *window =
+    reinterpret_cast<lak::window *>(GetWindowLongPtrW(hWnd, GWLP_USERDATA));
+
+  if (Msg == WM_CREATE)
   {
-    case WM_CREATE:
-    case WM_DESTROY:
-    case WM_CLOSE: push_event(MSG{hWnd, Msg, wParam, lParam}); return 0;
-    case WM_SYSCOMMAND:
-      if (WPARAM w = wParam & 0xFFF0; w == SC_MOVE || w == SC_SIZE)
-      {
-        push_event(MSG{hWnd, Msg, wParam, lParam});
+    // Get the lak::window this ptr.
+    const CREATESTRUCTW *create =
+      reinterpret_cast<const CREATESTRUCTW *>(lParam);
+
+    window = reinterpret_cast<lak::window *>(create->lpCreateParams);
+
+    SetWindowLongPtrW(hWnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(window));
+
+    // This must be called after SetWindowLongPtrW in order for the change to
+    // take effect.
+    SetWindowPos(hWnd,
+                 NULL,
+                 0,
+                 0,
+                 0,
+                 0,
+                 SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
+  }
+
+  if (window)
+  {
+    switch (Msg)
+    {
+      case WM_CREATE:
+      case WM_DESTROY:
+      case WM_CLOSE:
+        window->_platform_events.push_back(MSG{hWnd, Msg, wParam, lParam});
         return 0;
-      }
-      break;
+      case WM_SYSCOMMAND:
+        if (WPARAM w = wParam & 0xFFF0; w == SC_MOVE || w == SC_SIZE)
+        {
+          window->_platform_events.push_back(MSG{hWnd, Msg, wParam, lParam});
+          return 0;
+        }
+        break;
+    }
   }
   return DefWindowProcW(hWnd, Msg, wParam, lParam);
 }
@@ -145,7 +143,8 @@ bool lak::platform_disconnect(lak::platform_instance *handle)
 }
 
 bool lak::create_window(const platform_instance &instance,
-                        lak::window_handle *window)
+                        lak::window_handle *window,
+                        lak::window *lwindow)
 {
   HWND hwnd =
     CreateWindowExW(0,                                   /* styles */
@@ -159,7 +158,7 @@ bool lak::create_window(const platform_instance &instance,
                     nullptr,                             /* parent */
                     nullptr,                             /* menu */
                     instance.handle,                     /* hInstance */
-                    nullptr                              /* user data */
+                    lwindow                              /* user data */
     );
 
   if (hwnd == nullptr)
@@ -370,73 +369,239 @@ void translate_event(const MSG &msg, lak::event *event)
   }
 }
 
-// :TODO: If this ends up being for a windows that is about to get destroyed,
-// this message should be zeroed out.
-thread_local MSG previous_event = {};
-
-bool lak::next_event(const lak::platform_instance &instance, lak::event *event)
+// :TODO: Call this from handle_size_move_event but also let the other
+// functions call this when they don't get any events out of the queue.
+bool handle_size_move(const lak::window &window)
 {
-  MSG msg = {};
-  if (!pop_event(&msg))
+  if (window._moving)
   {
-    // there was no events stashed from the window proc.
-
-    // Delaying dispatch until the next time through here should let us handle
-    // WM_PAINT correctly after the call to next_event.
-    if (previous_event.message)
+    POINT cursor;
+    ASSERT(GetCursorPos(&cursor) != 0);
+    const RECT &rect = window._window_start;
+    MoveWindow(window.platform_handle(),
+               rect.left + cursor.x - window._cursor_start.x,
+               rect.top + cursor.y - window._cursor_start.y,
+               rect.right - rect.left,
+               rect.bottom - rect.top,
+               TRUE);
+    return true;
+  }
+  else if (window._resizing)
+  {
+    POINT cursor;
+    ASSERT(GetCursorPos(&cursor) != 0);
+    const RECT &rect = window._window_start;
+    RECT diff        = {0, 0, 0, 0};
+    if (window._side & window.left)
     {
-      DispatchMessageW(&previous_event);
+      diff.left  = cursor.x - window._cursor_start.x;
+      diff.right = -diff.left;
     }
-
-    const HWND window     = NULL;
-    const UINT filter_min = 0;
-    const UINT filter_max = 0;
-
-    if (!PeekMessageW(&msg, window, filter_min, filter_max, PM_REMOVE))
+    if (window._side & window.top)
     {
-      lak::memset(&previous_event, 0);
-      return false;
+      diff.top    = cursor.y - window._cursor_start.y;
+      diff.bottom = -diff.top;
     }
-
-    TranslateMessage(&msg);
-
-    lak::memcpy(&previous_event, &msg);
+    if (window._side & window.right)
+    {
+      diff.right = cursor.x - window._cursor_start.x;
+    }
+    if (window._side & window.bottom)
+    {
+      diff.bottom = cursor.y - window._cursor_start.y;
+    }
+    MoveWindow(window.platform_handle(),
+               rect.left + diff.left,
+               rect.top + diff.top,
+               std::max(0L, (rect.right - rect.left) + diff.right),
+               std::max(0L, (rect.bottom - rect.top) + diff.bottom),
+               TRUE);
+    return true;
   }
 
-  // :TODO: if we get WM_SYSCOMMAND with SC_MOVE or SC_SIZE then don't return
-  // mouse events until we get a message telling us the user has let go of the
-  // nonclient area.
+  return false;
+}
 
-  if (msg.message == WM_DESTROY && msg.hwnd == previous_event.hwnd)
-    lak::memset(&previous_event, 0);
+// Returns true if the event has handled by this function.
+bool handle_size_move_event(const lak::window &window, const MSG &msg)
+{
+  switch (msg.message)
+  {
+    case WM_SYSCOMMAND:
+    {
+      switch (msg.wParam & 0xFFF0)
+      {
+        case SC_SIZE:
+        {
+          switch (msg.wParam & 0xF)
+          {
+            case 0x1: window._side = window.left; break;
+            case 0x2: window._side = window.right; break;
+            case 0x3: window._side = window.top; break;
+            case 0x4: window._side = window.top | window.left; break;
+            case 0x5: window._side = window.top | window.right; break;
+            case 0x6: window._side = window.bottom; break;
+            case 0x7: window._side = window.bottom | window.left; break;
+            case 0x8: window._side = window.bottom | window.right; break;
+            default:
+              FATAL("Invalid side");
+              window._side = 0;
+              break;
+          }
+
+          // screen coords.
+          ASSERT(GetWindowRect(msg.hwnd, &window._window_start) != 0);
+          ASSERT(GetCursorPos(&window._cursor_start) != 0);
+          window._resizing = true;
+          return true;
+        }
+
+        case SC_MOVE:
+        {
+          // screen coords.
+          ASSERT(GetWindowRect(msg.hwnd, &window._window_start) != 0);
+          ASSERT(GetCursorPos(&window._cursor_start) != 0);
+          window._moving = true;
+          return true;
+        }
+      }
+      return true;
+    }
+
+    case WM_LBUTTONUP:
+    case WM_NCLBUTTONUP:
+      if (window._moving || window._resizing)
+      {
+        window._moving   = false;
+        window._resizing = false;
+        return true;
+      }
+      break;
+
+    case WM_MOUSEMOVE:
+    case WM_MOUSELEAVE:
+    case WM_MOUSEHOVER:
+    case WM_NCMOUSEMOVE:
+    case WM_NCMOUSELEAVE:
+    case WM_NCMOUSEHOVER: return handle_size_move(window);
+  }
+
+  return false;
+}
+
+bool next_event(const lak::platform_instance &instance,
+                const lak::window *lwindow,
+                HWND window,
+                lak::event *event,
+                MSG *previous = nullptr)
+{
+  // Delaying dispatch until the next time through here should let us handle
+  // WM_PAINT correctly after the call to next_event.
+  if (previous && previous->message)
+  {
+    DispatchMessageW(previous);
+  }
+
+  const UINT filter_min = 0;
+  const UINT filter_max = 0;
+
+  MSG msg = {};
+  do
+  {
+    if (!PeekMessageW(&msg, window, filter_min, filter_max, PM_REMOVE))
+    {
+      if (lwindow) handle_size_move(*lwindow);
+
+      if (previous) lak::memset(previous, 0);
+      return false;
+    }
+    // Skip all messages handled by handle_size_move_event.
+  } while (lwindow && handle_size_move_event(*lwindow, msg));
+
+  TranslateMessage(&msg);
+
+  if (previous)
+  {
+    if (msg.message == WM_DESTROY)
+      lak::memset(previous, 0);
+    else
+      lak::memcpy(previous, &msg);
+  }
 
   translate_event(msg, event);
 
   return true;
 }
 
-bool lak::peek_event(const lak::platform_instance &instance, lak::event *event)
+bool peek_event(const lak::platform_instance &instance,
+                HWND window,
+                lak::event *event)
 {
+  const UINT filter_min = 0;
+  const UINT filter_max = 0;
+
   MSG msg = {};
-  if (!peek_event(&msg))
+  if (!PeekMessageW(&msg, window, filter_min, filter_max, 0))
   {
-    // there was no events stashed from the window proc.
-
-    const HWND window     = NULL;
-    const UINT filter_min = 0;
-    const UINT filter_max = 0;
-
-    if (!PeekMessageW(&msg, window, filter_min, filter_max, 0))
-    {
-      return false;
-    }
+    return false;
   }
 
-  // :TODO: if we get WM_SYSCOMMAND with SC_MOVE or SC_SIZE then don't return
-  // mouse events until we get a message telling us the user has let go of the
-  // nonclient area.
-
   translate_event(msg, event);
+
+  return true;
+}
+
+// :TODO: If this ends up being for a windows that is about to get destroyed,
+// this message should be zeroed out.
+thread_local MSG previous_event = {};
+
+bool lak::next_thread_event(const lak::platform_instance &instance,
+                            lak::event *event)
+{
+  return next_event(
+    instance, nullptr, reinterpret_cast<HWND>(-1), event, &previous_event);
+}
+
+bool lak::peek_thread_event(const lak::platform_instance &instance,
+                            lak::event *event)
+{
+  return peek_event(instance, reinterpret_cast<HWND>(-1), event);
+}
+
+bool lak::next_window_event(const lak::platform_instance &instance,
+                            const lak::window &window,
+                            lak::event *event)
+{
+  MSG *msg = window._platform_events.front();
+  if (!msg)
+    return next_event(
+      instance, &window, window.platform_handle(), event, &previous_event);
+
+  // Skip all messages handled by handle_size_move_event.
+  while (handle_size_move_event(window, *msg))
+  {
+    window._platform_events.pop_front();
+    msg = window._platform_events.front();
+    if (!msg)
+      return next_event(
+        instance, &window, window.platform_handle(), event, &previous_event);
+  }
+
+  translate_event(*msg, event);
+
+  window._platform_events.pop_front();
+
+  return true;
+}
+
+bool lak::peek_window_event(const lak::platform_instance &instance,
+                            const lak::window &window,
+                            lak::event *event)
+{
+  MSG *msg = window._platform_events.front();
+  if (!msg) return peek_event(instance, window.platform_handle(), event);
+
+  translate_event(*msg, event);
 
   return true;
 }
