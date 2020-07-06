@@ -1,20 +1,5 @@
 #include "lak/events.hpp"
-
-bool lak::platform_connect(lak::platform_instance *handle)
-{
-  handle->handle = xcb_connection(NULL, NULL);
-  return static_cast<bool>(handle->handle);
-}
-
-bool lak::platform_disconnect(lak::platform_instance *handle)
-{
-  xcb_disconnect(handle->handle);
-  return true;
-}
-
-bool lak::create_window(lak::window_handle *window) {}
-
-bool lak::destroy_window(lak::window_handle *window) {}
+#include "lak/debug.hpp"
 
 bool lak::next_event(const lak::platform_instance &handle, lak::event *event)
 {
@@ -55,4 +40,10 @@ bool lak::next_event(const lak::platform_instance &handle, lak::event *event)
   }
 
   return true;
+}
+
+bool lak::peek_thread_event(const lak::platform_instance &instance,
+                            lak::event *event)
+{
+  return false;
 }

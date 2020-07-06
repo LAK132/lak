@@ -1,27 +1,5 @@
 #include "lak/events.hpp"
-#include "lak/memmanip.hpp"
-
-bool lak::platform_connect(lak::platform_instance *handle)
-{
-  handle->handle = XOpenDisplay(NULL);
-  if (!handle->handle) return false;
-  handle->wm_delete_window =
-    XInterAtom(handle->handle, "WM_DELETE_WINDOW", False);
-  // When we construct a window we need to `XSetWMProtocols(display, window,
-  // &wm_delete_window, 1);` on it.
-  return true;
-}
-
-bool lak::platform_disconnect(lak::platform_instance *handle)
-{
-  XCloseDisplay(handle->handle);
-  handle->wm_delete_window = None;
-  return true;
-}
-
-bool lak::create_window(lak::window_handle *window) {}
-
-bool lak::destroy_window(lak::window_handle *window) {}
+#include "lak/debug.hpp"
 
 bool lak::next_event(const lak::platform_instance &handle, lak::event *event)
 {
@@ -152,4 +130,10 @@ bool lak::next_event(const lak::platform_instance &handle, lak::event *event)
   }
 
   return true;
+}
+
+bool lak::peek_thread_event(const lak::platform_instance &instance,
+                            lak::event *event)
+{
+  return false;
 }

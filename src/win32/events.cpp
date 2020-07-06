@@ -10,6 +10,7 @@
 #include "lak/debug.hpp"
 #include "lak/events.hpp"
 #include "lak/memmanip.hpp"
+#include "lak/window.hpp"
 
 EXTERN_C IMAGE_DOS_HEADER __ImageBase;
 #define HINST_THISCOMPONENT ((HINSTANCE)&__ImageBase)
@@ -19,174 +20,7 @@ EXTERN_C IMAGE_DOS_HEADER __ImageBase;
 
 #include <thread>
 
-thread_local bool peek_message_is_safe = true;
-
-LRESULT CALLBACK WndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
-{
-  lak::window *window =
-    reinterpret_cast<lak::window *>(GetWindowLongPtrW(hWnd, GWLP_USERDATA));
-
-  if (Msg == WM_CREATE)
-  {
-    // Get the lak::window this ptr.
-    const CREATESTRUCTW *create =
-      reinterpret_cast<const CREATESTRUCTW *>(lParam);
-
-    window = reinterpret_cast<lak::window *>(create->lpCreateParams);
-
-    SetWindowLongPtrW(hWnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(window));
-
-    // This must be called after SetWindowLongPtrW in order for the change to
-    // take effect.
-    SetWindowPos(hWnd,
-                 NULL,
-                 0,
-                 0,
-                 0,
-                 0,
-                 SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
-  }
-
-  if (window)
-  {
-    switch (Msg)
-    {
-      case WM_CREATE:
-      case WM_DESTROY:
-      case WM_CLOSE:
-        window->_platform_events.push_back(MSG{hWnd, Msg, wParam, lParam});
-        return 0;
-      case WM_SYSCOMMAND:
-        if (WPARAM w = wParam & 0xFFF0; w == SC_MOVE || w == SC_SIZE)
-        {
-          window->_platform_events.push_back(MSG{hWnd, Msg, wParam, lParam});
-          return 0;
-        }
-        break;
-    }
-  }
-  return DefWindowProcW(hWnd, Msg, wParam, lParam);
-}
-
-void ErrorPopup(LPWSTR lpszFunction)
-{
-  // Retrieve the system error message for the last-error code
-
-  LPVOID lpMsgBuf;
-  LPVOID lpDisplayBuf;
-  DWORD dw = GetLastError();
-
-  FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM |
-                   FORMAT_MESSAGE_IGNORE_INSERTS,           /* dwFlags */
-                 NULL,                                      /* lpSource */
-                 dw,                                        /* dwMessageId */
-                 MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), /* dwLanguageId */
-                 (LPWSTR)&lpMsgBuf,                         /* lpBuffer */
-                 0,                                         /* nSize */
-                 NULL                                       /* Arguments */
-  );
-
-  // Display the error message and exit the process
-
-  lpDisplayBuf = (LPVOID)LocalAlloc(
-    LMEM_ZEROINIT,
-    (lstrlenW((LPCWSTR)lpMsgBuf) + lstrlenW((LPCWSTR)lpszFunction) + 40) *
-      sizeof(WCHAR));
-
-  StringCchPrintfW((LPWSTR)lpDisplayBuf,
-                   LocalSize(lpDisplayBuf) / sizeof(TCHAR),
-                   L"%s failed with error %d: %s",
-                   lpszFunction,
-                   dw,
-                   lpMsgBuf);
-
-  MessageBoxW(NULL, (LPCWSTR)lpDisplayBuf, L"Error", MB_OK);
-
-  LocalFree(lpMsgBuf);
-  LocalFree(lpDisplayBuf);
-  // ExitProcess(dw);
-}
-
-bool lak::platform_connect(lak::platform_instance *handle)
-{
-  lak::memset(handle, 0);
-  handle->handle = HINST_THISCOMPONENT;
-
-  handle->window_class             = WNDCLASSW{};
-  handle->window_class.lpfnWndProc = &WndProc;
-  handle->window_class.hInstance   = handle->handle;
-  handle->window_class.hIcon =
-    LoadIconW(handle->handle, MAKEINTRESOURCEW(IDI_APPLICATION));
-  handle->window_class.hCursor =
-    LoadCursorW(NULL, MAKEINTRESOURCEW(IDC_ARROW));
-  handle->window_class.lpszClassName = L"lak's window class";
-
-  handle->window_class_atom = RegisterClassW(&handle->window_class);
-  if (!handle->window_class_atom)
-  {
-    lak::memset(handle, 0);
-    ErrorPopup(L"RegiserClassW");
-    // :TODO: get a proper error message from windows?
-    return false;
-  }
-
-  return true;
-}
-
-bool lak::platform_disconnect(lak::platform_instance *handle)
-{
-  if (!UnregisterClassW(handle->window_class.lpszClassName, handle->handle))
-  {
-    ErrorPopup(L"UnregisterClassW");
-    return false;
-  }
-  lak::memset(handle, 0);
-  return true;
-}
-
-bool lak::create_window(const platform_instance &instance,
-                        lak::window_handle *window,
-                        lak::window *lwindow)
-{
-  HWND hwnd =
-    CreateWindowExW(0,                                   /* styles */
-                    instance.window_class.lpszClassName, /* class name */
-                    L"insert window name here",          /* window name */
-                    WS_OVERLAPPEDWINDOW,                 /* style */
-                    CW_USEDEFAULT,                       /* x */
-                    CW_USEDEFAULT,                       /* y */
-                    960,                                 /* width */
-                    720,                                 /* height */
-                    nullptr,                             /* parent */
-                    nullptr,                             /* menu */
-                    instance.handle,                     /* hInstance */
-                    lwindow                              /* user data */
-    );
-
-  if (hwnd == nullptr)
-  {
-    ErrorPopup(L"CreateWindowExW");
-    return false;
-  }
-
-  ShowWindow(hwnd, SW_SHOWNORMAL);
-
-  window->platform_handle = hwnd;
-
-  return true;
-}
-
-bool lak::destroy_window(const platform_instance &instance,
-                         lak::window_handle *window)
-{
-  if (!DestroyWindow(window->platform_handle))
-  {
-    ErrorPopup(L"Destroywindow");
-    return false;
-  }
-  window->platform_handle = NULL;
-  return true;
-}
+void win32_error_popup(LPWSTR lpszFunction);
 
 void translate_event(const MSG &msg, lak::event *event)
 {
@@ -491,17 +325,20 @@ bool handle_size_move_event(const lak::window &window, const MSG &msg)
   return false;
 }
 
+// :TODO: If this ends up being for a windows that is about to get destroyed,
+// this message should be zeroed out.
+thread_local MSG previous_event = {};
+
 bool next_event(const lak::platform_instance &instance,
                 const lak::window *lwindow,
                 HWND window,
-                lak::event *event,
-                MSG *previous = nullptr)
+                lak::event *event)
 {
   // Delaying dispatch until the next time through here should let us handle
   // WM_PAINT correctly after the call to next_event.
-  if (previous && previous->message)
+  if (previous_event.message)
   {
-    DispatchMessageW(previous);
+    DispatchMessageW(&previous_event);
   }
 
   const UINT filter_min = 0;
@@ -514,7 +351,7 @@ bool next_event(const lak::platform_instance &instance,
     {
       if (lwindow) handle_size_move(*lwindow);
 
-      if (previous) lak::memset(previous, 0);
+      lak::memset(&previous_event, 0);
       return false;
     }
     // Skip all messages handled by handle_size_move_event.
@@ -522,13 +359,10 @@ bool next_event(const lak::platform_instance &instance,
 
   TranslateMessage(&msg);
 
-  if (previous)
-  {
-    if (msg.message == WM_DESTROY)
-      lak::memset(previous, 0);
-    else
-      lak::memcpy(previous, &msg);
-  }
+  if (msg.message == WM_DESTROY)
+    lak::memset(&previous_event, 0);
+  else
+    lak::memcpy(&previous_event, &msg);
 
   translate_event(msg, event);
 
@@ -553,57 +387,14 @@ bool peek_event(const lak::platform_instance &instance,
   return true;
 }
 
-// :TODO: If this ends up being for a windows that is about to get destroyed,
-// this message should be zeroed out.
-thread_local MSG previous_event = {};
-
 bool lak::next_thread_event(const lak::platform_instance &instance,
                             lak::event *event)
 {
-  return next_event(
-    instance, nullptr, reinterpret_cast<HWND>(-1), event, &previous_event);
+  return next_event(instance, nullptr, reinterpret_cast<HWND>(-1), event);
 }
 
 bool lak::peek_thread_event(const lak::platform_instance &instance,
                             lak::event *event)
 {
   return peek_event(instance, reinterpret_cast<HWND>(-1), event);
-}
-
-bool lak::next_window_event(const lak::platform_instance &instance,
-                            const lak::window &window,
-                            lak::event *event)
-{
-  MSG *msg = window._platform_events.front();
-  if (!msg)
-    return next_event(
-      instance, &window, window.platform_handle(), event, &previous_event);
-
-  // Skip all messages handled by handle_size_move_event.
-  while (handle_size_move_event(window, *msg))
-  {
-    window._platform_events.pop_front();
-    msg = window._platform_events.front();
-    if (!msg)
-      return next_event(
-        instance, &window, window.platform_handle(), event, &previous_event);
-  }
-
-  translate_event(*msg, event);
-
-  window._platform_events.pop_front();
-
-  return true;
-}
-
-bool lak::peek_window_event(const lak::platform_instance &instance,
-                            const lak::window &window,
-                            lak::event *event)
-{
-  MSG *msg = window._platform_events.front();
-  if (!msg) return peek_event(instance, window.platform_handle(), event);
-
-  translate_event(*msg, event);
-
-  return true;
 }

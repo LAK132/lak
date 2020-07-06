@@ -36,19 +36,14 @@ int main()
 #ifndef LAK_WINDOW_HPP
 #define LAK_WINDOW_HPP
 
-#include <SDL/SDL.h>
+#include "lak/events.hpp"
+#include "lak/platform.hpp"
 
-#include <lak/string.hpp>
-#include <lak/vec.hpp>
-
-#include <memory>
+#include "lak/string.hpp"
+#include "lak/vec.hpp"
 
 namespace lak
 {
-  void core_init();
-
-  void core_quit();
-
   enum struct graphics_mode
   {
     None     = 0,
@@ -57,69 +52,106 @@ namespace lak
     Vulkan   = 3
   };
 
-  struct window_impl;
-  extern template std::unique_ptr<window_impl>;
-
-  struct window
+  struct window_handle
   {
-  private:
-    std::unique_ptr<window_impl> _impl;
+#ifdef LAK_USE_WINAPI
+    HWND platform_handle = NULL;
+#endif
 
-    std::string _title;
+#ifdef LAK_USE_XLIB
+    Window *platform_handle = NULL;
+#endif
 
-    vec2u32_t _size = {0, 0};
+#ifdef LAK_USE_XCB
+    xcb_window_t platform_handle = {};
+#endif
 
-    graphics_mode _graphics_mode = graphics_mode::None;
-
-  public:
-    window(const std::string &title, vec2u32_t size, uint32_t flags);
-    ~window();
-
-    void close();
-
-    window()          = default;
-    window(window &&) = default;
-    window &operator=(window &&) = default;
-
-    inline operator bool() { return _impl.operator bool(); }
-
-    inline vec2u32_t size() const { return _size; }
-    inline window &set_size(vec2u32_t size)
-    {
-      _size = size;
-      return *this;
-    }
-
-    inline const std::string &title() const { return _title; }
-    inline window &set_title(const std::string &title)
-    {
-      _title = title;
-      return *this;
-    }
-
-    inline graphics_mode graphics() const { return _graphics_mode; }
-
-    struct opengl_settings
-    {
-      bool double_buffered = false;
-      uint8_t depth_size   = 24;
-      uint8_t colour_size  = 8;
-      uint8_t stencil_size = 8;
-      int major            = 3;
-      int minor            = 2;
-    };
-
-    bool init_opengl(const opengl_settings &settings);
-    void stop_opengl();
-
-    bool init_software();
-    void stop_software();
-
-    // Update back buffer.
-    void swap();
-
-    SDL_Window *sdl_window() const;
+#ifdef LAK_USE_SDL
+    SDL_Window *platform_handle  = NULL;
+    SDL_GLContext opengl_context = NULL;
+#endif
   };
+
+  struct window;
+
+  /* --- create/destroy window --- */
+
+  bool create_software_window(const lak::platform_instance &i,
+                              lak::window_handle *wh,
+                              lak::window *w = nullptr);
+  bool destroy_software_window(const lak::platform_instance &i,
+                               lak::window_handle *wh);
+  bool swap_software_window(const lak::platform_instance &i,
+                            const lak::window_handle &w);
+
+  struct opengl_settings
+  {
+    bool double_buffered = false;
+    uint8_t depth_size   = 24;
+    uint8_t colour_size  = 8;
+    uint8_t stencil_size = 8;
+    int major            = 3;
+    int minor            = 2;
+  };
+
+  bool create_opengl_window(const lak::platform_instance &i,
+                            const lak::opengl_settings &s,
+                            lak::window_handle *wh,
+                            lak::window *w = nullptr);
+  bool destroy_opengl_window(const lak::platform_instance &i,
+                             lak::window_handle *wh);
+  bool swap_opengl_window(const lak::platform_instance &i,
+                          const lak::window_handle &w);
+
+  struct vulkan_settings
+  {
+  };
+
+  bool create_vulkan_window(const lak::platform_instance &i,
+                            const lak::vulkan_settings &s,
+                            lak::window_handle *wh,
+                            lak::window *w = nullptr);
+  bool destroy_vulkan_window(const lak::platform_instance &i,
+                             lak::window_handle *wh);
+  bool swap_vulkan_window(const lak::platform_instance &i,
+                          const lak::window_handle &w);
+
+  /* --- window state --- */
+
+  std::wstring window_title(const lak::platform_instance &i,
+                            const lak::window_handle &w);
+
+  bool set_window_title(const lak::platform_instance &i,
+                        const lak::window_handle &w,
+                        const std::wstring &s);
+
+  lak::vec2l_t window_size(const lak::platform_instance &i,
+                           const lak::window_handle &w);
+
+  lak::vec2l_t window_drawable_size(const lak::platform_instance &i,
+                                    const lak::window_handle &w);
+
+  bool set_window_size(const lak::platform_instance &i,
+                       const lak::window_handle &w,
+                       lak::vec2l_t s);
+
+  /* --- window events --- */
+
+  bool next_window_event(const lak::platform_instance &i,
+                         const lak::window_handle &w,
+                         lak::event *e);
+  bool peek_window_event(const lak::platform_instance &i,
+                         const lak::window_handle &w,
+                         lak::event *e);
+
+  bool next_window_event(const lak::platform_instance &i,
+                         const lak::window &w,
+                         lak::event *e);
+  bool peek_window_event(const lak::platform_instance &i,
+                         const lak::window &w,
+                         lak::event *e);
+
+  /* --- performance --- */
 
   uint64_t performance_frequency();
 
@@ -128,6 +160,129 @@ namespace lak
   // Yield this thread until the target framerate is achieved.
   uint64_t yield_frame(const uint64_t last_counter,
                        const uint32_t target_framerate);
+
+  /* --- window wrapper class --- */
+
+  struct window
+  {
+  private:
+    const lak::platform_instance &_platform_instance;
+    lak::window_handle _handle;
+    lak::graphics_mode _graphics_mode;
+
+  public:
+    // :TODO: should this be moved into window_handle?
+#ifdef LAK_USE_WINAPI
+    mutable lak::buffer<MSG, 0x100> _platform_events;
+    mutable bool _moving   = false;
+    mutable bool _resizing = false;
+    mutable POINT _cursor_start;
+    mutable RECT _window_start;
+    enum
+    {
+      top    = 1 << 1,
+      bottom = 1 << 2,
+      left   = 1 << 3,
+      right  = 1 << 4
+    };
+    mutable unsigned char _side = 0;
+#endif
+
+    inline window(const lak::platform_instance &i)
+    : _platform_instance(i),
+      _handle(),
+      _graphics_mode(lak::graphics_mode::Software)
+    {
+      if (!lak::create_software_window(_platform_instance, &_handle, this))
+        _graphics_mode = lak::graphics_mode::None;
+    }
+
+    inline window(const lak::platform_instance &i,
+                  const lak::opengl_settings &s)
+    : _platform_instance(i),
+      _handle(),
+      _graphics_mode(lak::graphics_mode::OpenGL)
+    {
+      if (!lak::create_opengl_window(_platform_instance, s, &_handle, this))
+        _graphics_mode = lak::graphics_mode::None;
+    }
+
+    inline window(const lak::platform_instance &i,
+                  const lak::vulkan_settings &s)
+    : _platform_instance(i),
+      _handle(),
+      _graphics_mode(lak::graphics_mode::Vulkan)
+    {
+      if (!lak::create_vulkan_window(_platform_instance, s, &_handle, this))
+        _graphics_mode = lak::graphics_mode::None;
+    }
+
+    inline ~window()
+    {
+      switch (_graphics_mode)
+      {
+        case lak::graphics_mode::Software:
+          lak::destroy_software_window(_platform_instance, &_handle);
+          break;
+        case lak::graphics_mode::OpenGL:
+          lak::destroy_opengl_window(_platform_instance, &_handle);
+          break;
+        case lak::graphics_mode::Vulkan:
+          lak::destroy_vulkan_window(_platform_instance, &_handle);
+          break;
+      }
+    }
+
+    inline lak::graphics_mode graphics() const { return _graphics_mode; }
+
+    inline const auto &platform_handle() const
+    {
+      return _handle.platform_handle;
+    }
+
+    inline std::wstring title() const
+    {
+      return lak::window_title(_platform_instance, _handle);
+    }
+
+    inline window &set_title(const std::wstring &title)
+    {
+      lak::set_window_title(_platform_instance, _handle, title);
+      return *this;
+    }
+
+    inline lak::vec2l_t size() const
+    {
+      return lak::window_size(_platform_instance, _handle);
+    }
+
+    inline lak::vec2l_t drawable_size() const
+    {
+      return lak::window_drawable_size(_platform_instance, _handle);
+    }
+
+    inline window &set_size(lak::vec2l_t size)
+    {
+      lak::set_window_size(_platform_instance, _handle, size);
+      return *this;
+    }
+
+    // Update back buffer.
+    inline bool swap()
+    {
+      switch (_graphics_mode)
+      {
+        case lak::graphics_mode::Software:
+          return lak::swap_software_window(_platform_instance, _handle);
+
+        case lak::graphics_mode::OpenGL:
+          return lak::swap_opengl_window(_platform_instance, _handle);
+
+        case lak::graphics_mode::Vulkan:
+          return lak::swap_vulkan_window(_platform_instance, _handle);
+      }
+    }
+  };
 }
 
 #include <ostream>
