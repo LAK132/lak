@@ -289,4 +289,17 @@ namespace lak
   {
     return _size;
   }
+
+  template<typename T>
+  span<T> string_view(T *str)
+  {
+    return {str, lak::string_length(str)};
+  }
+
+  template<typename CHAR>
+  span<const CHAR> string_view(const std::basic_string<CHAR> &str)
+  {
+    auto begin = str.c_str();
+    return {begin, begin + str.size()};
+  }
 }
