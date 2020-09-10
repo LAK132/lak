@@ -421,6 +421,22 @@ namespace lak
 
   template<typename CHAR>
   span<const CHAR> string_view(const std::basic_string<CHAR> &str);
+
+  template<typename T>
+  bool operator==(span<T> a, span<T> b);
+
+  template<typename T>
+  bool operator!=(span<T> a, span<T> b);
+
+  // Find the subspan of source that is equal to sub.
+  template<typename T>
+  span<T> find_subspan(span<T> source, span<T> sub);
+
+  template<typename T>
+  void rotate_left(span<T> data, size_t distance = 1);
+
+  template<typename T>
+  void rotate_right(span<T> data, size_t distance = 1);
 }
 
 #include "lak/span.inl"

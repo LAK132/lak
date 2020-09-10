@@ -302,4 +302,64 @@ namespace lak
     auto begin = str.c_str();
     return {begin, begin + str.size()};
   }
+
+  template<typename T>
+  bool operator==(span<T> a, span<T> b)
+  {
+    if (a.size() != b.size()) return false;
+    for (size_t i = 0; i < a.size(); ++i)
+      if (a[i] != b[i]) return false;
+    return true;
+  }
+
+  template<typename T>
+  bool operator!=(span<T> a, span<T> b)
+  {
+    return !(a == b);
+  }
+
+  template<typename T>
+  span<T> find_subspan(span<T> source, span<T> subspan)
+  {
+    while (source.size() > subspan.size())
+    {
+      if (auto s = source.first(subspan.size()); subspan == s) return s;
+      source = source.subspan(1);
+    }
+    return {};
+  }
+
+  template<typename T>
+  void rotate_left(span<T> data, size_t distance)
+  {
+    if (data.size() == 0) return;
+
+    const size_t offset = distance % data.size();
+
+    if (offset == 0) return;
+
+    const size_t count = data.size() - offset;
+
+    for (size_t i = 0; i < count; ++i)
+    {
+      std::swap(data[i], data[i + offset]);
+    }
+  }
+
+  template<typename T>
+  void rotate_right(span<T> data, size_t distance)
+  {
+    if (data.size() == 0) return;
+
+    const size_t offset = distance % data.size();
+
+    if (offset == 0) return;
+
+    const size_t count = data.size() - offset;
+
+    for (size_t i = count; i-- > 0;)
+    {
+      std::swap(data[i], data[i + offset]);
+    }
+  }
 }
