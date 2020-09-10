@@ -413,6 +413,14 @@ namespace lak
 
   template<typename T>
   span(T *, size_t) -> span<T, dynamic_extent>;
+
+  /* --- helper functions --- */
+
+  template<typename T>
+  span<T> string_view(T *str);
+
+  template<typename CHAR>
+  span<const CHAR> string_view(const std::basic_string<CHAR> &str);
 }
 
 #include "lak/span.inl"

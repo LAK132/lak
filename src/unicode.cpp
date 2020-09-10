@@ -42,42 +42,7 @@ namespace lak
 
   /* --- character_length --- */
 
-  uint8_t character_length(const std::string &str, size_t offset)
-  {
-    ASSERT(offset < str.size());
-    return character_length(
-      span<const char>(str.c_str() + offset, str.size() - offset));
-  }
-
-  uint8_t character_length(const std::wstring &str, size_t offset)
-  {
-    ASSERT(offset < str.size());
-    return character_length(
-      span<const wchar_t>(str.c_str() + offset, str.size() - offset));
-  }
-
-  uint8_t character_length(const std::u8string &str, size_t offset)
-  {
-    ASSERT(offset < str.size());
-    return character_length(
-      span<const char8_t>(str.c_str() + offset, str.size() - offset));
-  }
-
-  uint8_t character_length(const std::u16string &str, size_t offset)
-  {
-    ASSERT(offset < str.size());
-    return character_length(
-      span<const char16_t>(str.c_str() + offset, str.size() - offset));
-  }
-
-  uint8_t character_length(const std::u32string &str, size_t offset)
-  {
-    ASSERT(offset < str.size());
-    return character_length(
-      span<const char32_t>(str.c_str() + offset, str.size() - offset));
-  }
-
-  uint8_t character_length(span<const char> str)
+  uint8_t character_length(lak::span<const char> str)
   {
     if (str.size() >= 1 && str[0] <= 0x7F)
     {
@@ -85,30 +50,17 @@ namespace lak
     }
     else
     {
-      if (str.size()) FATAL("Bad encoding (" << (size_t)str[0] << ")");
+      if (str.size()) WARNING("Bad encoding (" << (size_t)str[0] << ")");
       return 0;
     }
   }
 
-  uint8_t character_length(span<const wchar_t> str)
+  uint8_t character_length(lak::span<const wchar_t> str)
   {
-    static_assert(sizeof(wchar_t) == sizeof(char8_t) ||
-                    sizeof(wchar_t) == sizeof(char16_t) ||
-                    sizeof(wchar_t) == sizeof(char32_t),
-                  "wchar_t is not a known size.");
-
-    if constexpr (sizeof(wchar_t) == sizeof(char8_t))
-      return character_length(
-        {reinterpret_cast<const char8_t *>(str.begin()), str.size()});
-    else if constexpr (sizeof(wchar_t) == sizeof(char16_t))
-      return character_length(
-        {reinterpret_cast<const char16_t *>(str.begin()), str.size()});
-    else
-      return character_length(
-        {reinterpret_cast<const char32_t *>(str.begin()), str.size()});
+    return lak::character_length(lak::span<const wchar_unicode_t>(str));
   }
 
-  uint8_t character_length(span<const char8_t> str)
+  uint8_t character_length(lak::span<const char8_t> str)
   {
     if (str.size() >= 1 && (str[0] & 0b1000'0000U) == 0b0000'0000U)
     {
@@ -134,12 +86,12 @@ namespace lak
     }
     else
     {
-      if (str.size()) FATAL("Bad encoding (" << (size_t)str[0] << ")");
+      if (str.size()) WARNING("Bad encoding (" << (size_t)str[0] << ")");
       return 0;
     }
   }
 
-  uint8_t character_length(span<const char16_t> str)
+  uint8_t character_length(lak::span<const char16_t> str)
   {
     if (str.size() >= 1 &&
         (str[0] & 0b1111'1000'0000'0000U) != 0b1101'1000'0000'0000U)
@@ -154,12 +106,12 @@ namespace lak
     }
     else
     {
-      if (str.size()) FATAL("Bad encoding (" << (size_t)str[0] << ")");
+      if (str.size()) WARNING("Bad encoding (" << (size_t)str[0] << ")");
       return 0;
     }
   }
 
-  uint8_t character_length(span<const char32_t> str)
+  uint8_t character_length(lak::span<const char32_t> str)
   {
     if (str.size() >= 1 && str[0] < 0x110000 &&
         (str[0] & 0b1111'1000'0000'0000U) != 0b1101'1000'0000'0000U)
@@ -168,49 +120,14 @@ namespace lak
     }
     else
     {
-      if (str.size()) FATAL("Bad encoding (" << (size_t)str[0] << ")");
+      if (str.size()) WARNING("Bad encoding (" << (size_t)str[0] << ")");
       return 0;
     }
   }
 
   /* --- codepoint --- */
 
-  char32_t codepoint(const std::string &str, size_t offset)
-  {
-    ASSERT(offset < str.size());
-    return codepoint(
-      span<const char>(str.c_str() + offset, str.size() - offset));
-  }
-
-  char32_t codepoint(const std::wstring &str, size_t offset)
-  {
-    ASSERT(offset < str.size());
-    return codepoint(
-      span<const wchar_t>(str.c_str() + offset, str.size() - offset));
-  }
-
-  char32_t codepoint(const std::u8string &str, size_t offset)
-  {
-    ASSERT(offset < str.size());
-    return codepoint(
-      span<const char8_t>(str.c_str() + offset, str.size() - offset));
-  }
-
-  char32_t codepoint(const std::u16string &str, size_t offset)
-  {
-    ASSERT(offset < str.size());
-    return codepoint(
-      span<const char16_t>(str.c_str() + offset, str.size() - offset));
-  }
-
-  char32_t codepoint(const std::u32string &str, size_t offset)
-  {
-    ASSERT(offset < str.size());
-    return codepoint(
-      span<const char32_t>(str.c_str() + offset, str.size() - offset));
-  }
-
-  char32_t codepoint(span<const char> str)
+  char32_t codepoint(lak::span<const char> str)
   {
     if (str.size() >= 1 && str[0] < 0x80)
     {
@@ -223,25 +140,12 @@ namespace lak
     }
   }
 
-  char32_t codepoint(span<const wchar_t> str)
+  char32_t codepoint(lak::span<const wchar_t> str)
   {
-    static_assert(sizeof(wchar_t) == sizeof(char8_t) ||
-                    sizeof(wchar_t) == sizeof(char16_t) ||
-                    sizeof(wchar_t) == sizeof(char32_t),
-                  "wchar_t is not a known size.");
-
-    if constexpr (sizeof(wchar_t) == sizeof(char8_t))
-      return codepoint(
-        {reinterpret_cast<const char8_t *>(str.begin()), str.size()});
-    else if constexpr (sizeof(wchar_t) == sizeof(char16_t))
-      return codepoint(
-        {reinterpret_cast<const char16_t *>(str.begin()), str.size()});
-    else
-      return codepoint(
-        {reinterpret_cast<const char32_t *>(str.begin()), str.size()});
+    return lak::codepoint(lak::span<const wchar_unicode_t>(str));
   }
 
-  char32_t codepoint(span<const char8_t> str)
+  char32_t codepoint(lak::span<const char8_t> str)
   {
     if (str.size() >= 1 &&
         (str[0] < 0x80 || (str[0] & 0b1100'0000U) == 0b0100'0000U))
@@ -279,7 +183,7 @@ namespace lak
     }
   }
 
-  char32_t codepoint(span<const char16_t> str)
+  char32_t codepoint(lak::span<const char16_t> str)
   {
     if (str.size() >= 1 &&
         (str[0] & 0b1111'1000'0000'0000U) != 0b1101'1000'0000'0000U)
@@ -301,7 +205,7 @@ namespace lak
     }
   }
 
-  char32_t codepoint(span<const char32_t> str)
+  char32_t codepoint(lak::span<const char32_t> str)
   {
     if (str.size() >= 1 && str[0] < 0x110000 &&
         (str[0] & 0b1111'1000'0000'0000U) != 0b1101'1000'0000'0000U)
@@ -315,107 +219,101 @@ namespace lak
     }
   }
 
-  /* --- append_codepoint --- */
+  /* --- from_codepoint --- */
 
-  void append_codepoint(std::string &str, const char32_t code)
-  {
-    if (code <= 0x7F) str += static_cast<char>(code);
-  }
-
-  void append_codepoint(std::wstring &str, const char32_t code)
-  {
-    static_assert(sizeof(wchar_t) == sizeof(char8_t) ||
-                    sizeof(wchar_t) == sizeof(char16_t) ||
-                    sizeof(wchar_t) == sizeof(char32_t),
-                  "wchar_t is not a known size.");
-
-    if constexpr (sizeof(wchar_t) == sizeof(char8_t))
-    {
-      if (code <= 0x7FU)
-      {
-        str += static_cast<wchar_t>(code);
-      }
-      else if (code >= 0x80U && code <= 0x7FFU)
-      {
-        str += 0xC0U | static_cast<wchar_t>(code >> 6);
-        str += 0x80U | static_cast<wchar_t>(code & 0x3FU);
-      }
-      else if (code >= 0x800U && code <= 0xFFFFU)
-      {
-        str += 0xE0U | static_cast<wchar_t>(code >> 12);
-        str += 0x80U | static_cast<wchar_t>((code >> 6) & 0x3FU);
-        str += 0x80U | static_cast<wchar_t>(code & 0x3FU);
-      }
-      else if (code >= 0x10000U && code <= 0x10FFFFU)
-      {
-        str += 0xF0U | static_cast<wchar_t>(code >> 18);
-        str += 0x80U | static_cast<wchar_t>((code >> 12) & 0x3FU);
-        str += 0x80U | static_cast<wchar_t>((code >> 6) & 0x3FU);
-        str += 0x80U | static_cast<wchar_t>(code & 0x3FU);
-      }
-    }
-    else if constexpr (sizeof(wchar_t) == sizeof(char16_t))
-    {
-      if (code <= 0xFFFFU)
-      {
-        str += static_cast<wchar_t>(code);
-      }
-      else
-      {
-        const auto _code = code - 0x010000U;
-        str += static_cast<wchar_t>(0xD800U | ((_code >> 10) & 0x3FFU));
-        str += static_cast<wchar_t>(0xDC00U | (_code & 0x3FFU));
-      }
-    }
-    else
-    {
-      str += static_cast<wchar_t>(code);
-    }
-  }
-
-  void append_codepoint(std::u8string &str, const char32_t code)
+  lak::span<char> from_codepoint(lak::codepoint_buffer<char> c, char32_t code)
   {
     if (code <= 0x7FU)
     {
-      str += static_cast<char8_t>(code);
-    }
-    else if (code >= 0x80U && code <= 0x7FFU)
-    {
-      str += 0xC0U | static_cast<char8_t>(code >> 6);
-      str += 0x80U | static_cast<char8_t>(code & 0x3FU);
-    }
-    else if (code >= 0x800U && code <= 0xFFFFU)
-    {
-      str += 0xE0U | static_cast<char8_t>(code >> 12);
-      str += 0x80U | static_cast<char8_t>((code >> 6) & 0x3FU);
-      str += 0x80U | static_cast<char8_t>(code & 0x3FU);
-    }
-    else if (code >= 0x10000U && code <= 0x10FFFFU)
-    {
-      str += 0xF0U | static_cast<char8_t>(code >> 18);
-      str += 0x80U | static_cast<char8_t>((code >> 12) & 0x3FU);
-      str += 0x80U | static_cast<char8_t>((code >> 6) & 0x3FU);
-      str += 0x80U | static_cast<char8_t>(code & 0x3FU);
-    }
-  }
-
-  void append_codepoint(std::u16string &str, const char32_t code)
-  {
-    if (code <= 0xFFFFU)
-    {
-      str += static_cast<char16_t>(code);
+      c[0] = static_cast<char>(code);
+      return c;
     }
     else
     {
-      const auto _code = code - 0x01000U;
-      str += static_cast<char16_t>(0xD800U | ((_code >> 10) & 0x3FFU));
-      str += static_cast<char16_t>(0xDC00U | (_code & 0x3FFU));
+      // Codepoint is outside the ASCII range
+      c[0] = '\0';
+      return c.first(0);
     }
   }
 
-  void append_codepoint(std::u32string &str, const char32_t code)
+  lak::span<wchar_t> from_codepoint(lak::codepoint_buffer<wchar_t> c,
+                                    char32_t code)
   {
-    str += code;
+    return lak::span<wchar_t>(
+      lak::from_codepoint(lak::codepoint_buffer<wchar_unicode_t>(c), code));
+  }
+
+  lak::span<char8_t> from_codepoint(lak::codepoint_buffer<char8_t> c,
+                                    char32_t code)
+  {
+    if (code <= 0x7FU)
+    {
+      c[0] = static_cast<char8_t>(code);
+      c[1] = c[2] = c[3] = u8'\0';
+      return c.first(1);
+    }
+    else if (code >= 0x80U && code <= 0x07FFU)
+    {
+      c[0] = 0xC0U | static_cast<char8_t>(code >> 6);
+      c[1] = 0x80U | static_cast<char8_t>(code & 0x3FU);
+      c[2] = c[3] = u8'\0';
+      return c.first(2);
+    }
+    else if (code >= 0x0800U && code <= 0xFFFFU)
+    {
+      c[0] = 0xE0U | static_cast<char8_t>(code >> 12);
+      c[1] = 0x80U | static_cast<char8_t>((code >> 6) & 0x3FU);
+      c[2] = 0x80U | static_cast<char8_t>(code & 0x3FU);
+      c[3] = u8'\0';
+      return c.first(3);
+    }
+    else if (code >= 0x00010000U && code <= 0x00010FFFFU)
+    {
+      c[0] = 0xF0U | static_cast<char8_t>(code >> 18);
+      c[1] = 0x80U | static_cast<char8_t>((code >> 12) & 0x3FU);
+      c[2] = 0x80U | static_cast<char8_t>((code >> 6) & 0x3FU);
+      c[3] = 0x80U | static_cast<char8_t>(code & 0x3FU);
+      return c;
+    }
+    else
+    {
+      // Invalid codepoint
+      FATAL("Bad encoding (" << (size_t)code << ")");
+      c[0] = c[1] = c[2] = c[3] = u8'\0';
+      return c.first(0);
+    }
+  }
+
+  lak::span<char16_t> from_codepoint(lak::codepoint_buffer<char16_t> c,
+                                     char32_t code)
+  {
+    if (code <= 0xD7FF || (code >= 0xE000 && code <= 0xFFFFU))
+    {
+      c[0] = static_cast<char16_t>(code);
+      c[1] = u'\0';
+      return c.first(1);
+    }
+    else if (code <= 0x0010FFFF)
+    {
+      const char32_t _code = code - 0x00010000U;
+      c[0] = static_cast<char16_t>(0xD800U | ((_code >> 10) & 0x03FFU));
+      c[1] = static_cast<char16_t>(0xDC00U | (_code & 0x03FFU));
+      return c;
+    }
+    else
+    {
+      // Invalid codepoint
+      FATAL("Bad encoding (" << (size_t)code << ")");
+      c[0] = c[1] = u'\0';
+      return c.first(0);
+    }
+  }
+
+  lak::span<char32_t> from_codepoint(lak::codepoint_buffer<char32_t> c,
+                                     char32_t code)
+  {
+    c[0] = code;
+    return c;
   }
 
   bool is_whitespace(char32_t c)
