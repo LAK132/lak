@@ -9,8 +9,7 @@ namespace lak
   template<typename CHAR>
   lak::span<const CHAR> string_view(const std::basic_string<CHAR> &str)
   {
-    auto begin = str.c_str();
-    return {begin, begin + str.length()};
+    return {str.c_str(), str.length()};
   }
 
   template<typename CHAR>
