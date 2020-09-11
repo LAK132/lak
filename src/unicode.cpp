@@ -346,3 +346,37 @@ namespace lak
       ;
   }
 }
+
+std::ostream &operator<<(std::ostream &strm, lak::span<const char> str)
+{
+  for (const auto &c : str) strm << c;
+  return strm;
+}
+
+std::ostream &operator<<(std::ostream &strm, lak::span<const wchar_t> str)
+{
+  for (const auto &c : str) strm << c;
+  return strm;
+}
+
+std::ostream &operator<<(std::ostream &strm, lak::span<const char8_t> str)
+{
+#if __cplusplus <= 201703L
+  for (const auto &c : str) strm << static_cast<char>(c);
+#else
+  for (const auto &c : str) strm << c;
+#endif
+  return strm;
+}
+
+std::ostream &operator<<(std::ostream &strm, lak::span<const char16_t> str)
+{
+  for (const auto &c : str) strm << c;
+  return strm;
+}
+
+std::ostream &operator<<(std::ostream &strm, lak::span<const char32_t> str)
+{
+  for (const auto &c : str) strm << c;
+  return strm;
+}
