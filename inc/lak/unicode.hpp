@@ -63,6 +63,18 @@ namespace lak
   bool is_whitespace(char32_t c);
 }
 
+#include <ostream>
+
+std::ostream &operator<<(std::ostream &strm, lak::span<const char> str);
+
+std::ostream &operator<<(std::ostream &strm, lak::span<const wchar_t> str);
+
+std::ostream &operator<<(std::ostream &strm, lak::span<const char8_t> str);
+
+std::ostream &operator<<(std::ostream &strm, lak::span<const char16_t> str);
+
+std::ostream &operator<<(std::ostream &strm, lak::span<const char32_t> str);
+
 #include "lak/unicode.inl"
 
 #endif
