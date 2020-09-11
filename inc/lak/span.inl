@@ -82,7 +82,9 @@ namespace lak
   inline constexpr span<T, count> span<T, SIZE>::first() const
   {
     static_assert(count <= SIZE, "subspan too large");
-    return {begin()};
+    lak::span<T, count> result;
+    result._data = begin();
+    return result;
   }
 
   template<typename T, size_t SIZE>
@@ -288,19 +290,6 @@ namespace lak
     const noexcept
   {
     return _size;
-  }
-
-  template<typename T>
-  span<T> string_view(T *str)
-  {
-    return {str, lak::string_length(str)};
-  }
-
-  template<typename CHAR>
-  span<const CHAR> string_view(const std::basic_string<CHAR> &str)
-  {
-    auto begin = str.c_str();
-    return {begin, begin + str.size()};
   }
 
   template<typename T>

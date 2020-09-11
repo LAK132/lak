@@ -27,16 +27,17 @@ namespace lak
     template<
       typename U,
       std::enable_if_t<!std::is_void_v<std::remove_const_t<U>>, int> = 0>
-    inline constexpr span(
+    explicit inline constexpr span(
       const span<U, (SIZE * sizeof(T)) / sizeof(U)> &other) noexcept
-    : _data(static_cast<T *>(other.data()))
+    : _data(reinterpret_cast<T *>(other.data()))
     {
     }
 
     template<typename U,
              std::enable_if_t<std::is_void_v<std::remove_const_t<U>>, int> = 0>
-    inline constexpr span(const span<U, SIZE * sizeof(T)> &other) noexcept
-    : _data(static_cast<T *>(other.data()))
+    explicit inline constexpr span(
+      const span<U, SIZE * sizeof(T)> &other) noexcept
+    : _data(reinterpret_cast<T *>(other.data()))
     {
     }
 
@@ -190,9 +191,15 @@ namespace lak
     constexpr span(const span &) = default;
     constexpr span &operator=(const span &) = default;
 
+    template<size_t S>
+    inline constexpr span(const span<T, S> &other) noexcept
+    : _data(other.data()), _size(other.size())
+    {
+    }
+
     template<typename U, size_t S>
-    inline constexpr span(const span<U, S> &other) noexcept
-    : _data(static_cast<T *>(other.data()))
+    explicit inline constexpr span(const span<U, S> &other) noexcept
+    : _data(reinterpret_cast<T *>(other.data()))
     {
       if constexpr (std::is_void_v<std::remove_const_t<U>>)
         _size = other.size() / sizeof(T);
@@ -415,12 +422,6 @@ namespace lak
   span(T *, size_t) -> span<T, dynamic_extent>;
 
   /* --- helper functions --- */
-
-  template<typename T>
-  span<T> string_view(T *str);
-
-  template<typename CHAR>
-  span<const CHAR> string_view(const std::basic_string<CHAR> &str);
 
   template<typename T>
   bool operator==(span<T> a, span<T> b);
