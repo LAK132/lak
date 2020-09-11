@@ -3,6 +3,22 @@
 namespace lak
 {
   template<typename CHAR>
+  void tokeniser<CHAR>::internal_start_next() const noexcept
+  {
+    _next                = _data.subspan(_current.end() - _data.begin());
+    _next_position.begin = _next_position.end = _current_position.end;
+  }
+
+  template<typename CHAR>
+  void tokeniser<CHAR>::internal_pump() noexcept
+  {
+    _current             = _next;
+    _current_position    = _next_position;
+    _next_position.begin = _next_position.end;
+    _next                = _data.subspan(_current.end() - _data.begin(), 0);
+  }
+
+  template<typename CHAR>
   tokeniser<CHAR> &tokeniser<CHAR>::operator++() noexcept
   {
     peek();
@@ -29,49 +45,49 @@ namespace lak
 
       for (const auto &op : _operators)
       {
+        ASSERT(!op.empty());
+
         if (buffer.size() < op.size()) continue;
 
         // Get the first subspan of buffer that is equal in length to op.
-        if (auto buf = lak::span(buffer).first(op.size());
-            buf.size() > 0 && buf.size() == op.size())
+        auto buf = lak::span(buffer).first(op.size());
+
+        // Check if this subspan is lexically equal to op.
+        bool match          = true;
+        buffer_position.end = buffer_position.begin;
+        for (size_t i = 0; match && i < buf.size(); ++i)
         {
-          // Check if this subspan is lexically equal to op.
-          bool match          = true;
-          buffer_position.end = buffer_position.begin;
-          for (size_t i = 0; match && i < buf.size(); ++i)
-          {
-            if (buf[i] != op[i]) match = false;
+          if (buf[i] != op[i]) match = false;
 
-            if (buf[i] == U'\n')
-            {
-              ++buffer_position.end.line;
-              buffer_position.end.column = 1;
-            }
-            else
-            {
-              ++buffer_position.end.column;
-            }
+          if (buf[i] == U'\n')
+          {
+            ++buffer_position.end.line;
+            buffer_position.end.column = 1;
           }
-
-          if (match)
+          else
           {
-            if (buffer_begin <= _next.begin())
-            {
-              // We matched an operator.
-              _next          = {buffer_begin, buf.size()};
-              _next_position = buffer_position;
-              return true;
-            }
-            else
-            {
-              // We hit an operator part way through a token. Return the token
-              // up to the operator.
-              _next = {_next.begin(),
-                       static_cast<size_t>(buffer_begin - _next.begin())};
+            ++buffer_position.end.column;
+          }
+        }
 
-              _next_position = buffer_position;
-              return true;
-            }
+        if (match)
+        {
+          if (buffer_begin <= _next.begin())
+          {
+            // We matched an operator.
+            _next          = {buffer_begin, buf.size()};
+            _next_position = buffer_position;
+            return true;
+          }
+          else
+          {
+            // We hit an operator part way through a token. Return the token
+            // up to the operator.
+            _next = {_next.begin(),
+                     static_cast<size_t>(buffer_begin - _next.begin())};
+
+            _next_position = buffer_position;
+            return true;
           }
         }
       }
@@ -92,9 +108,9 @@ namespace lak
       }
       else
       {
-        ASSERT(buffer.size() == _longest_operator);
+        ASSERT_EQUAL(buffer.size(), _longest_operator);
 
-        for (size_t i = 1; i < buffer.size(); ++i) buffer[i - 1] = buffer[i];
+        lak::rotate_left(lak::span(buffer));
 
         buffer.back() = c;
 
@@ -325,4 +341,15 @@ namespace lak
 
     return _current;
   }
+
+  template<typename CHAR>
+  inline void tokeniser<CHAR>::reset() noexcept
+  {
+    _current          = _data.first(0);
+    _next             = _current;
+    _current_position = token_position();
+    _next_position    = _current_position;
+    operator++();
+  }
+
 }

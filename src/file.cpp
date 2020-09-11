@@ -111,13 +111,13 @@ namespace lak
     {
       if (lstat(proc_str, &sb) == -1)
       {
-        ERROR("Failed to lstat " << proc_str);
+        ERROR("Failed to lstat ", proc_str);
         return {};
       }
 
       if (sb.st_size < 0)
       {
-        ERROR("Bad stat size " << sb.st_size);
+        ERROR("Bad stat size ", sb.st_size);
         return {};
       }
 
@@ -129,7 +129,7 @@ namespace lak
 
       if (_read < 0)
       {
-        ERROR("Failed to read link (0x" << _read << ")");
+        ERROR("Failed to read link (", _read, ")");
         return {};
       }
 
@@ -178,7 +178,7 @@ namespace lak
       ec.clear();
       entry = fs::directory_entry(folder, ec);
     }
-    if (ec) WARNING(path << ": " << ec.message());
+    if (ec) WARNING(path, ": ", ec.message());
     return {normalised(folder), normalised(file)};
   }
 
