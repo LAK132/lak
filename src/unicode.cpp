@@ -50,7 +50,7 @@ namespace lak
     }
     else
     {
-      if (str.size()) WARNING("Bad encoding (" << (size_t)str[0] << ")");
+      if (str.size()) WARNING("Bad encoding (", (size_t)str[0], ")");
       return 0;
     }
   }
@@ -86,7 +86,7 @@ namespace lak
     }
     else
     {
-      if (str.size()) WARNING("Bad encoding (" << (size_t)str[0] << ")");
+      if (str.size()) WARNING("Bad encoding (", (size_t)str[0], ")");
       return 0;
     }
   }
@@ -106,7 +106,7 @@ namespace lak
     }
     else
     {
-      if (str.size()) WARNING("Bad encoding (" << (size_t)str[0] << ")");
+      if (str.size()) WARNING("Bad encoding (", (size_t)str[0], ")");
       return 0;
     }
   }
@@ -120,7 +120,7 @@ namespace lak
     }
     else
     {
-      if (str.size()) WARNING("Bad encoding (" << (size_t)str[0] << ")");
+      if (str.size()) WARNING("Bad encoding (", (size_t)str[0], ")");
       return 0;
     }
   }
@@ -135,7 +135,7 @@ namespace lak
     }
     else
     {
-      if (str.size()) FATAL("Bad encoding (" << (size_t)str[0] << ")");
+      if (str.size()) FATAL("Bad encoding (", (size_t)str[0], ")");
       return 0;
     }
   }
@@ -178,7 +178,7 @@ namespace lak
     }
     else
     {
-      if (str.size()) FATAL("Bad encoding (" << (size_t)str[0] << ")");
+      if (str.size()) FATAL("Bad encoding (", (size_t)str[0], ")");
       return 0;
     }
   }
@@ -200,7 +200,7 @@ namespace lak
     }
     else
     {
-      if (str.size()) FATAL("Bad encoding (" << (size_t)str[0] << ")");
+      if (str.size()) FATAL("Bad encoding (", (size_t)str[0], ")");
       return 0;
     }
   }
@@ -214,7 +214,7 @@ namespace lak
     }
     else
     {
-      if (str.size()) FATAL("Bad encoding (" << (size_t)str[0] << ")");
+      if (str.size()) FATAL("Bad encoding (", (size_t)str[0], ")");
       return 0;
     }
   }
@@ -278,7 +278,7 @@ namespace lak
     else
     {
       // Invalid codepoint
-      FATAL("Bad encoding (" << (size_t)code << ")");
+      FATAL("Bad encoding (", (size_t)code, ")");
       c[0] = c[1] = c[2] = c[3] = u8'\0';
       return c.first(0);
     }
@@ -303,7 +303,7 @@ namespace lak
     else
     {
       // Invalid codepoint
-      FATAL("Bad encoding (" << (size_t)code << ")");
+      FATAL("Bad encoding (", (size_t)code, ")");
       c[0] = c[1] = u'\0';
       return c.first(0);
     }

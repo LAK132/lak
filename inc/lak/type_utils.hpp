@@ -5,6 +5,67 @@
 
 namespace lak
 {
+  /* --- type_identity --- */
+
+  template<typename T>
+  struct type_identity
+  {
+    using type = T;
+  };
+
+  /* --- remove_const --- */
+
+  template<typename T>
+  struct remove_const : public type_identity<T>
+  {
+  };
+  template<typename T>
+  struct remove_const<const T> : public type_identity<T>
+  {
+  };
+  template<typename T>
+  using remove_const_t = typename remove_const<T>::type;
+
+  /* --- remove_volatile --- */
+
+  template<typename T>
+  struct remove_volatile : public type_identity<T>
+  {
+  };
+  template<typename T>
+  struct remove_volatile<volatile T> : public type_identity<T>
+  {
+  };
+  template<typename T>
+  using remove_volatile_t = typename remove_volatile<T>::type;
+
+  /* --- remove_cv --- */
+
+  template<typename T>
+  using remove_cv_t = remove_const_t<remove_volatile_t<T>>;
+
+  /* --- remove_reference --- */
+
+  template<typename T>
+  struct remove_reference : public type_identity<T>
+  {
+  };
+  template<typename T>
+  struct remove_reference<T &> : public type_identity<T>
+  {
+  };
+  template<typename T>
+  struct remove_reference<T &&> : public type_identity<T>
+  {
+  };
+  template<typename T>
+  using remove_reference_t = typename remove_reference<T>::type;
+
+  /* --- remove_cvref --- */
+
+  template<typename T>
+  using remove_cvref_t = remove_cv_t<remove_reference_t<T>>;
+
   /* --- remove_refs_ptrs --- */
 
   template<typename T>

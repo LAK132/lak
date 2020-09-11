@@ -4,6 +4,7 @@
 #  include "lak/os.hpp"
 #  include "lak/strconv.hpp"
 #  include "lak/string.hpp"
+#  include "lak/type_utils.hpp"
 
 #  include <cstdlib>
 #  include <filesystem>
@@ -85,6 +86,47 @@ namespace lak
   extern size_t debug_indent;
 
   extern debugger_t debugger;
+
+  template<typename CHAR, typename... ARGS>
+  std::basic_string<CHAR> streamify(const ARGS &... args)
+  {
+#  if __cplusplus <= 201703L
+    std::basic_stringstream<
+      std::conditional_t<std::is_same_v<CHAR, char8_t>, char, CHAR>>
+      strm;
+#  else
+    std::basic_stringstream<CHAR> strm;
+#  endif
+    strm << std::hex << std::noshowbase << std::uppercase;
+
+    auto streamer = [&strm](const auto &arg) {
+      if constexpr (std::is_integral_v<lak::remove_cvref_t<decltype(arg)>>)
+      {
+        strm << "0x" << arg;
+      }
+#  if __cplusplus <= 201703L
+      else if constexpr (std::is_same_v<lak::u8string,
+                                        lak::remove_cvref_t<decltype(arg)>>)
+      {
+        strm << reinterpret_cast<const char *>(arg.c_str());
+      }
+#  endif
+      else
+      {
+        strm << arg;
+      }
+    };
+
+    (streamer(args), ...);
+
+#  if __cplusplus <= 201703L
+    if constexpr (std::is_same_v<CHAR, char8_t>)
+      return lak::u8string(
+        reinterpret_cast<const char8_t *>(strm.str().c_str()));
+    else
+#  endif
+      return strm.str();
+  }
 }
 #endif
 
@@ -134,8 +176,8 @@ namespace lak
 #undef WDEBUG
 #if defined(NOLOG)
 #  define CHECKPOINT()
-#  define DEBUG(x)
-#  define WDEBUG(x)
+#  define DEBUG(...)
+#  define WDEBUG(...)
 #else
 #  if defined(LAK_OS_WINDOWS)
 #    define DEBUG_LINE_FILE  "(" LINE_TRACE_STR ")"
@@ -145,14 +187,15 @@ namespace lak
 #    define WDEBUG_LINE_FILE L"" LAK_FAINT "(" LINE_TRACE_STR ")" LAK_SGR_RESET
 #  endif
 #  define CHECKPOINT()                                                        \
-    lak::debugger.std_out(TO_U8STRING("CHECKPOINT" << DEBUG_LINE_FILE),       \
-                          TO_U8STRING("\n"));
-#  define DEBUG(x)                                                            \
+    lak::debugger.std_out(                                                    \
+      TO_U8STRING("CHECKPOINT" << DEBUG_LINE_FILE),                           \
+      lak::u8string(reinterpret_cast<const char8_t *>("\n")));
+#  define DEBUG(...)                                                          \
     lak::debugger.std_out(TO_U8STRING("DEBUG" << DEBUG_LINE_FILE << ": "),    \
-                          TO_U8STRING(std::hex << x << "\n"));
-#  define WDEBUG(x)                                                           \
+                          lak::streamify<char8_t>(__VA_ARGS__, "\n"));
+#  define WDEBUG(...)                                                         \
     lak::debugger.std_out(TO_U8STRING("DEBUG" << DEBUG_LINE_FILE << ": "),    \
-                          TO_WSTRING(std::hex << x << L"\n"));
+                          lak::streamify<wchar_t>(__VA_ARGS__, "\n"));
 #endif
 
 #undef ABORT
@@ -176,75 +219,75 @@ namespace lak
 #undef WERROR
 #undef FATAL
 #if defined(NOLOG)
-#  define WARNING(x)
-#  define WWARNING(x)
-#  define ERROR(x)
-#  define WERROR(x)
-#  define FATAL(x) ABORT()
+#  define WARNING(...)
+#  define WWARNING(...)
+#  define ERROR(...)
+#  define WERROR(...)
+#  define FATAL(...) ABORT()
 #elif defined(LAK_OS_WINDOWS)
-#  define WARNING(x)                                                          \
+#  define WARNING(...)                                                        \
     lak::debugger.std_err(TO_U8STRING("WARNING" << DEBUG_LINE_FILE << ": "),  \
-                          TO_U8STRING(std::hex << x << "\n"));
-#  define WWARNING(x)                                                         \
+                          lak::streamify<char8_t>(__VA_ARGS__, "\n"));
+#  define WWARNING(...)                                                       \
     lak::debugger.std_err(TO_U8STRING("WARNING" << WDEBUG_LINE_FILE << ": "), \
-                          TO_WSTRING(std::hex << x << L"\n"));
-#  define ERROR(x)                                                            \
+                          lak::streamify<wchar_t>(__VA_ARGS__, "\n"));
+#  define ERROR(...)                                                          \
     lak::debugger.std_err(TO_U8STRING("ERROR" << DEBUG_LINE_FILE << ": "),    \
-                          TO_U8STRING(std::hex << x << "\n"));
-#  define WERROR(x)                                                           \
+                          lak::streamify<char8_t>(__VA_ARGS__, "\n"));
+#  define WERROR(...)                                                         \
     lak::debugger.std_err(TO_U8STRING("ERROR" << DEBUG_LINE_FILE << ": "),    \
-                          TO_WSTRING(std::hex << x << L"\n"));
-#  define FATAL(x)                                                            \
+                          lak::streamify<wchar_t>(__VA_ARGS__, "\n"));
+#  define FATAL(...)                                                          \
     {                                                                         \
       lak::debugger.std_err(TO_U8STRING("FATAL" << DEBUG_LINE_FILE << ": "),  \
-                            TO_U8STRING(std::hex << x << "\n"));              \
+                            lak::streamify<char8_t>(__VA_ARGS__, "\n"));      \
       ABORT();                                                                \
     }
-#  define WFATAL(x)                                                           \
+#  define WFATAL(...)                                                         \
     {                                                                         \
       lak::debugger.std_err(TO_U8STRING("FATAL" << DEBUG_LINE_FILE << ": "),  \
-                            TO_WSTRING(std::hex << x << L"\n"));              \
+                            lak::streamify<wchar_t>(__VA_ARGS__, "\n"));      \
       ABORT();                                                                \
     }
 #else
-#  define WARNING(x)                                                          \
+#  define WARNING(...)                                                        \
     lak::debugger.std_err(                                                    \
       TO_U8STRING(LAK_YELLOW LAK_BOLD "WARNING" LAK_SGR_RESET LAK_YELLOW      \
                   << DEBUG_LINE_FILE << ": "),                                \
-      TO_U8STRING(std::hex << x << "\n"));
-#  define WWARNING(x)                                                         \
+      lak::streamify<char8_t>(__VA_ARGS__, "\n"));
+#  define WWARNING(...)                                                       \
     lak::debugger.std_err(                                                    \
       TO_U8STRING("" LAK_YELLOW LAK_BOLD "WARNING" LAK_SGR_RESET LAK_YELLOW   \
                   << WDEBUG_LINE_FILE << ": "),                               \
-      TO_WSTRING(std::hex << x << L"\n"));
-#  define ERROR(x)                                                            \
+      lak::streamify<wchar_t>(__VA_ARGS__, "\n"));
+#  define ERROR(...)                                                          \
     lak::debugger.std_err(                                                    \
       TO_U8STRING(                                                            \
         LAK_BRIGHT_RED LAK_BOLD "ERROR" LAK_SGR_RESET LAK_BRIGHT_RED          \
         << DEBUG_LINE_FILE << ": "),                                          \
-      TO_U8STRING(std::hex << x << "\n"));
-#  define WERROR(x)                                                           \
+      lak::streamify<char8_t>(__VA_ARGS__, "\n"));
+#  define WERROR(...)                                                         \
     lak::debugger.std_err(                                                    \
       TO_U8STRING(                                                            \
         "" LAK_BRIGHT_RED LAK_BOLD "ERROR" LAK_SGR_RESET LAK_BRIGHT_RED       \
         << WDEBUG_LINE_FILE << ": "),                                         \
-      TO_WSTRING(std::hex << x << L"\n"));
-#  define FATAL(x)                                                            \
+      lak::streamify<wchar_t>(__VA_ARGS__, "\n"));
+#  define FATAL(...)                                                          \
     {                                                                         \
       lak::debugger.std_err(                                                  \
         TO_U8STRING(                                                          \
           LAK_BRIGHT_RED LAK_BOLD "FATAL" LAK_SGR_RESET LAK_BRIGHT_RED        \
           << DEBUG_LINE_FILE << ": "),                                        \
-        TO_U8STRING(std::hex << x << "\n"));                                  \
+        lak::streamify<char8_t>(__VA_ARGS__, "\n"));                          \
       ABORT();                                                                \
     }
-#  define WFATAL(x)                                                           \
+#  define WFATAL(...)                                                         \
     {                                                                         \
       lak::debugger.std_err(                                                  \
         TO_U8STRING(                                                          \
           LAK_BRIGHT_RED LAK_BOLD "FATAL" LAK_SGR_RESET LAK_BRIGHT_RED        \
           << DEBUG_LINE_FILE << ": "),                                        \
-        TO_WSTRING(std::hex << x << L"\n"));                                  \
+        lak::streamify<wchar_t>(__VA_ARGS__, "\n"));                          \
       ABORT();                                                                \
     }
 #endif
@@ -264,25 +307,24 @@ namespace lak
   {                                                                           \
     if (!((x) == (y)))                                                        \
     {                                                                         \
-      FATAL("Assertion '" STRINGIFY(x == y) "' failed: " << x                 \
-                                                         << " != " << y);     \
+      FATAL("Assertion '" STRINGIFY(x == y) "' failed: ", x, " != ", y);      \
     }                                                                         \
   }
 #define ASSERT_NOT_EQUAL(x, y)                                                \
   {                                                                           \
     if (!((x) != (y)))                                                        \
     {                                                                         \
-      FATAL("Assertion '" STRINGIFY(x != y) "' failed: " << x                 \
-                                                         << " == " << y);     \
+      FATAL("Assertion '" STRINGIFY(x != y) "' failed: ", x, " == ", y);      \
     }                                                                         \
   }
 #define ASSERTF(x, str)                                                       \
   {                                                                           \
     if (!(x))                                                                 \
     {                                                                         \
-      FATAL("Assertion '" STRINGIFY(x) "' failed: " << str);                  \
+      FATAL("Assertion '" STRINGIFY(x) "' failed: ", TO_U8STRING(str));       \
     }                                                                         \
   }
+
 #ifndef LAK_DEBUG_HPP
 #  define LAK_DEBUG_HPP
 #endif

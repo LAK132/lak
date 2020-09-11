@@ -36,25 +36,26 @@ namespace lak
     mutable span<const CHAR> _next;
     mutable token_position _next_position;
 
-    void internal_start_next() const noexcept
-    {
-      _next                = _data.subspan(_current.end() - _data.begin());
-      _next_position.begin = _next_position.end = _current_position.end;
-    }
+    void internal_start_next() const noexcept;
 
-    void internal_pump() noexcept
-    {
-      _current             = _next;
-      _current_position    = _next_position;
-      _next_position.begin = _next_position.end;
-      _next                = _data.subspan(_current.end() - _data.begin(), 0);
-    }
+    void internal_pump() noexcept;
 
   public:
     inline tokeniser(span<const CHAR> str,
                      const std::vector<std::u32string> &operators) noexcept
     : _data(str), _operators(operators), _longest_operator(0)
     {
+      for (auto it = _operators.begin(); it != _operators.end();)
+      {
+        if (it->empty())
+        {
+          WARNING("Empty operator (", it - _operators.begin(), ")");
+          it = _operators.erase(it);
+        }
+        else
+          ++it;
+      }
+
       for (const auto &op : _operators)
         if (op.size() > _longest_operator) _longest_operator = op.size();
 
@@ -63,7 +64,7 @@ namespace lak
 
     inline tokeniser(const std::basic_string<CHAR> &str,
                      const std::vector<std::u32string> &operators) noexcept
-    : tokeniser(span(str.c_str(), str.size()), operators)
+    : tokeniser(lak::string_view(str), operators)
     {
     }
 
@@ -118,21 +119,16 @@ namespace lak
     // Scan until str is found (inclusive).
     span<const CHAR> skip(span<const char32_t> str) noexcept;
 
-    inline void reset() noexcept
-    {
-      _current = _next  = {_data.begin(), 0};
-      _current_position = _next_position = token_position();
-      operator++();
-    }
+    void reset() noexcept;
 
     inline bool operator==(nullptr_t) const noexcept
     {
-      return _current.begin() >= _data.begin();
+      return _current.begin() >= _data.end();
     }
 
     inline bool operator!=(nullptr_t) const noexcept
     {
-      return _current.begin() < _data.begin();
+      return _current.begin() < _data.end();
     }
 
     operator bool() const noexcept { return _current.size() != 0; }
@@ -143,6 +139,12 @@ namespace lak
   extern template struct tokeniser<char8_t>;
   extern template struct tokeniser<char16_t>;
   extern template struct tokeniser<char32_t>;
+
+  using atokeniser   = tokeniser<char>;
+  using wtokeniser   = tokeniser<wchar_t>;
+  using u8tokeniser  = tokeniser<char8_t>;
+  using u16tokeniser = tokeniser<char16_t>;
+  using u32tokeniser = tokeniser<char32_t>;
 }
 
 #include "tokeniser.inl"
