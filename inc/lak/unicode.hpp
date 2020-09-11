@@ -16,6 +16,11 @@ namespace lak
   size_t string_length(const char16_t *str);
   size_t string_length(const char32_t *str);
 
+  template<typename CHAR>
+  lak::span<CHAR> string_view(CHAR *str);
+  template<typename CHAR>
+  lak::span<const CHAR> string_view(const std::basic_string<CHAR> &str);
+
   // Returns the length of the multi-byte first/offset character (always 1 for
   // non-multi-byte string types). Returns 0 if character has a bad encoding
   // or the string is empty.

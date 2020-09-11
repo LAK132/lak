@@ -105,6 +105,8 @@ namespace lak
     struct stat sb;
     std::vector<char> path;
 
+    size_t read = 0;
+
     do
     {
       if (lstat(proc_str, &sb) == -1)
@@ -113,18 +115,28 @@ namespace lak
         return {};
       }
 
-      path.resize(sb.st_size + 1);
-
-      auto read = readlink(proc_str, path.data(), path.size());
-
-      if (read < 0)
+      if (sb.st_size < 0)
       {
-        ERROR("Failed to read link");
+        ERROR("Bad stat size " << sb.st_size);
         return {};
       }
-    } while (read > sb.st_size);
 
-    path[read + 1] = 0;
+      size_t st_size = static_cast<size_t>(sb.st_size);
+
+      if (st_size > path.size()) path.resize(st_size + 1);
+
+      ssize_t _read = readlink(proc_str, path.data(), path.size());
+
+      if (_read < 0)
+      {
+        ERROR("Failed to read link (0x" << _read << ")");
+        return {};
+      }
+
+      read = static_cast<size_t>(_read);
+    } while (read > static_cast<size_t>(sb.st_size));
+
+    if (read + 1 < path.size()) path[read + 1] = 0;
 
     return fs::path(path.data());
 
