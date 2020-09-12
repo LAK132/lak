@@ -24,6 +24,12 @@ namespace lak
     constexpr span(const span &) = default;
     constexpr span &operator=(const span &) = default;
 
+    template<typename U, std::enable_if_t<std::is_same_v<const U, T>, int> = 0>
+    inline constexpr span(const span<U, SIZE> &other) noexcept
+    : _data(other.data())
+    {
+    }
+
     template<
       typename U,
       std::enable_if_t<!std::is_void_v<std::remove_const_t<U>>, int> = 0>
@@ -197,7 +203,21 @@ namespace lak
     {
     }
 
-    template<typename U, size_t S>
+    template<typename U,
+             size_t S,
+             std::enable_if_t<std::is_same_v<const U, T>, int> = 0>
+    inline constexpr span(const span<U, S> &other) noexcept
+    : _data(reinterpret_cast<T *>(other.data()))
+    {
+      if constexpr (std::is_void_v<std::remove_const_t<U>>)
+        _size = other.size() / sizeof(T);
+      else
+        _size = other.size();
+    }
+
+    template<typename U,
+             size_t S,
+             std::enable_if_t<!std::is_same_v<const U, T>, int> = 0>
     explicit inline constexpr span(const span<U, S> &other) noexcept
     : _data(reinterpret_cast<T *>(other.data()))
     {
