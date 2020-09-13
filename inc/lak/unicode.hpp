@@ -10,6 +10,7 @@
 
 namespace lak
 {
+  // Length of the null terminated string not including the null terminator.
   size_t string_length(const char *str);
   size_t string_length(const wchar_t *str);
   size_t string_length(const char8_t *str);
@@ -19,7 +20,7 @@ namespace lak
   template<typename CHAR>
   lak::span<CHAR> string_view(CHAR *str);
   template<typename CHAR>
-  lak::span<const CHAR> string_view(const std::basic_string<CHAR> &str);
+  lak::span<const CHAR> string_view(const lak::string<CHAR> &str);
 
   // Returns the length of the multi-byte first/offset character (always 1 for
   // non-multi-byte string types). Returns 0 if character has a bad encoding
@@ -30,7 +31,7 @@ namespace lak
   uint8_t character_length(lak::span<const char16_t> str);
   uint8_t character_length(lak::span<const char32_t> str);
   template<typename CHAR>
-  uint8_t character_length(const std::basic_string<CHAR> &str, size_t offset);
+  uint8_t character_length(const lak::string<CHAR> &str, size_t offset);
 
   // Returns the Unicode character code representing the first/offset
   // character. Returns NUL on error (use character_length to get more
@@ -41,10 +42,13 @@ namespace lak
   char32_t codepoint(lak::span<const char16_t> str);
   char32_t codepoint(lak::span<const char32_t> str);
   template<typename CHAR>
-  uint8_t codepoint(const std::basic_string<CHAR> &str, size_t offset);
+  char32_t codepoint(const lak::string<CHAR> &str, size_t offset);
 
   template<typename CHAR>
   using codepoint_buffer = lak::span<CHAR, chars_per_codepoint_v<CHAR>>;
+
+  template<typename CHAR>
+  uint8_t codepoint_length(char32_t code);
 
   lak::span<char> from_codepoint(lak::codepoint_buffer<char> buffer,
                                  char32_t code);
@@ -58,22 +62,26 @@ namespace lak
                                      char32_t code);
 
   template<typename CHAR>
-  void append_codepoint(std::basic_string<CHAR> &str, char32_t code);
+  void append_codepoint(lak::string<CHAR> &str, char32_t code);
 
   bool is_whitespace(char32_t c);
 }
 
 #include <ostream>
 
-std::ostream &operator<<(std::ostream &strm, lak::span<const char> str);
+std::ostream &operator<<(std::ostream &strm, const lak::span<const char> &str);
 
-std::ostream &operator<<(std::ostream &strm, lak::span<const wchar_t> str);
+std::ostream &operator<<(std::ostream &strm,
+                         const lak::span<const wchar_t> &str);
 
-std::ostream &operator<<(std::ostream &strm, lak::span<const char8_t> str);
+std::ostream &operator<<(std::ostream &strm,
+                         const lak::span<const char8_t> &str);
 
-std::ostream &operator<<(std::ostream &strm, lak::span<const char16_t> str);
+std::ostream &operator<<(std::ostream &strm,
+                         const lak::span<const char16_t> &str);
 
-std::ostream &operator<<(std::ostream &strm, lak::span<const char32_t> str);
+std::ostream &operator<<(std::ostream &strm,
+                         const lak::span<const char32_t> &str);
 
 #include "lak/unicode.inl"
 

@@ -59,7 +59,7 @@ bool lak::swap_vulkan_window(const lak::platform_instance &instance,
   return false;
 }
 
-std::wstring lak::window_title(const lak::platform_instance &instance,
+lak::wstring lak::window_title(const lak::platform_instance &instance,
                                const lak::window_handle &window)
 {
   return {};
@@ -67,7 +67,7 @@ std::wstring lak::window_title(const lak::platform_instance &instance,
 
 bool lak::set_window_title(const lak::platform_instance &instance,
                            const lak::window_handle &window,
-                           const std::wstring &str)
+                           const lak::wstring &str)
 {
   return false;
 }

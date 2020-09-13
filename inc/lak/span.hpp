@@ -268,6 +268,8 @@ namespace lak
     {
     }
 
+    explicit inline constexpr span(T *begin, T *end) noexcept;
+
     inline constexpr T &operator[](size_t index) const noexcept;
 
     inline constexpr T *data() const noexcept;
@@ -441,24 +443,45 @@ namespace lak
   template<typename T>
   span(T *, size_t) -> span<T, dynamic_extent>;
 
+  template<typename T>
+  span(T *, T *) -> span<T, dynamic_extent>;
+
+  template<typename T>
+  struct is_span
+  {
+    static constexpr bool value = false;
+  };
+
+  template<typename T, size_t S>
+  struct is_span<lak::span<T, S>>
+  {
+    static constexpr bool value = true;
+  };
+
+  template<typename T>
+  inline constexpr bool is_span_v = is_span<T>::value;
+
   /* --- helper functions --- */
-
-  template<typename T>
-  bool operator==(span<T> a, span<T> b);
-
-  template<typename T>
-  bool operator!=(span<T> a, span<T> b);
 
   // Find the subspan of source that is equal to sub.
   template<typename T>
-  span<T> find_subspan(span<T> source, span<T> sub);
+  lak::span<T> find_subspan(lak::span<T> source, lak::span<T> sub);
 
   template<typename T>
-  void rotate_left(span<T> data, size_t distance = 1);
+  void rotate_left(lak::span<T> data, size_t distance = 1);
 
   template<typename T>
-  void rotate_right(span<T> data, size_t distance = 1);
+  void rotate_right(lak::span<T> data, size_t distance = 1);
+
+  template<typename T>
+  size_t compare(lak::span<const T> a, lak::span<const T> b);
 }
+
+template<typename T>
+bool operator==(lak::span<T> a, lak::span<T> b);
+
+template<typename T>
+bool operator!=(lak::span<T> a, lak::span<T> b);
 
 #include "lak/span.inl"
 

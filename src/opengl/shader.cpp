@@ -20,7 +20,7 @@ namespace lak
       return *this;
     }
 
-    shader shader::create(const std::string &code, GLenum shader_type)
+    shader shader::create(const lak::astring &code, GLenum shader_type)
     {
       shader shdr;
       shdr._type         = shader_type;
@@ -169,7 +169,7 @@ namespace lak
         glGetProgramInfoLog(_program, msgSize, nullptr, msg.data());
         ASSERT(lak::opengl::check_error());
         msg[msgSize] = 0;
-        return std::make_optional(std::string(msg.data()));
+        return std::make_optional(lak::astring(msg.data()));
       }
       return std::nullopt;
     }

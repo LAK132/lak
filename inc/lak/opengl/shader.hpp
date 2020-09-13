@@ -28,7 +28,7 @@ namespace lak
       shader(const shader &other) = delete;
       shader &operator=(const shader &other) = delete;
 
-      static shader create(const std::string &code, GLenum shader_type);
+      static shader create(const lak::astring &code, GLenum shader_type);
 
       shader &clear();
 
@@ -54,7 +54,7 @@ namespace lak
       // GL_FLOAT, GL_FLOAT_VEC2, GL_FLOAT_VEC3, GL_FLOAT_VEC4,
       // GL_FLOAT_MAT2, GL_FLOAT_MAT3 or GL_FLOAT_MAT4.
       GLenum type;
-      std::string name;
+      lak::astring name;
     };
 
     struct shader_uniform
@@ -65,7 +65,7 @@ namespace lak
       // shader_attribute, see
       // https://www.khronos.org/registry/OpenGL-Refpages/gl4/html/glGetActiveUniform.xhtml
       GLenum type;
-      std::string name;
+      lak::astring name;
     };
 
     struct program;

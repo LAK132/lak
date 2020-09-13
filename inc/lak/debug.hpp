@@ -2,9 +2,7 @@
 #  include "lak/compiler.hpp"
 #  include "lak/macro_utils.hpp"
 #  include "lak/os.hpp"
-#  include "lak/strconv.hpp"
 #  include "lak/string.hpp"
-#  include "lak/type_utils.hpp"
 
 #  include <cstdlib>
 #  include <filesystem>
@@ -24,7 +22,7 @@
   [&] {                                                                       \
     std::stringstream _debug_stream;                                          \
     _debug_stream << x;                                                       \
-    return std::u8string(                                                     \
+    return lak::u8string(                                                     \
       reinterpret_cast<const char8_t *>(_debug_stream.str().c_str()));        \
   }()
 #undef TO_WSTRING
@@ -47,17 +45,17 @@ namespace lak
   {
     std::basic_stringstream<char8_t> stream;
 
-    void std_out(const std::u8string &line_info, const std::string &str);
-    void std_out(const std::u8string &line_info, const std::wstring &str);
-    void std_out(const std::u8string &line_info, const std::u8string &str);
+    void std_out(const lak::u8string &line_info, const lak::astring &str);
+    void std_out(const lak::u8string &line_info, const lak::wstring &str);
+    void std_out(const lak::u8string &line_info, const lak::u8string &str);
 
-    void std_err(const std::u8string &line_info, const std::string &str);
-    void std_err(const std::u8string &line_info, const std::wstring &str);
-    void std_err(const std::u8string &line_info, const std::u8string &str);
+    void std_err(const lak::u8string &line_info, const lak::astring &str);
+    void std_err(const lak::u8string &line_info, const lak::wstring &str);
+    void std_err(const lak::u8string &line_info, const lak::u8string &str);
 
     void clear();
 
-    std::u8string str();
+    lak::u8string str();
 
     [[noreturn]] void abort();
 
@@ -74,13 +72,13 @@ namespace lak
 
   struct scoped_indenter
   {
-    scoped_indenter(const std::string &name);
+    scoped_indenter(const lak::astring &name);
 
     ~scoped_indenter();
 
-    static std::string str();
-    static std::wstring wstr();
-    static std::u8string u8str();
+    static lak::astring str();
+    static lak::wstring wstr();
+    static lak::u8string u8str();
   };
 
   extern size_t debug_indent;
@@ -88,45 +86,7 @@ namespace lak
   extern debugger_t debugger;
 
   template<typename CHAR, typename... ARGS>
-  std::basic_string<CHAR> streamify(const ARGS &... args)
-  {
-#  if __cplusplus <= 201703L
-    std::basic_stringstream<
-      std::conditional_t<std::is_same_v<CHAR, char8_t>, char, CHAR>>
-      strm;
-#  else
-    std::basic_stringstream<CHAR> strm;
-#  endif
-    strm << std::hex << std::noshowbase << std::uppercase;
-
-    auto streamer = [&strm](const auto &arg) {
-      if constexpr (std::is_integral_v<lak::remove_cvref_t<decltype(arg)>>)
-      {
-        strm << "0x" << arg;
-      }
-#  if __cplusplus <= 201703L
-      else if constexpr (std::is_same_v<lak::u8string,
-                                        lak::remove_cvref_t<decltype(arg)>>)
-      {
-        strm << reinterpret_cast<const char *>(arg.c_str());
-      }
-#  endif
-      else
-      {
-        strm << arg;
-      }
-    };
-
-    (streamer(args), ...);
-
-#  if __cplusplus <= 201703L
-    if constexpr (std::is_same_v<CHAR, char8_t>)
-      return lak::u8string(
-        reinterpret_cast<const char8_t *>(strm.str().c_str()));
-    else
-#  endif
-      return strm.str();
-  }
+  lak::string<CHAR> streamify(const ARGS &... args);
 }
 #endif
 
@@ -142,18 +102,6 @@ namespace lak
     {                                                                         \
     }                                                                         \
     catch (X)
-#endif
-
-#ifndef LAK_DEBUG_HPP
-#  define LAK_ESC        "\x1B"
-#  define LAK_CSI        LAK_ESC "["
-#  define LAK_SGR(x)     LAK_CSI STRINGIFY(x) "m"
-#  define LAK_SGR_RESET  LAK_SGR(0)
-#  define LAK_BOLD       LAK_SGR(1)
-#  define LAK_FAINT      LAK_SGR(2)
-#  define LAK_ITALIC     LAK_SGR(3)
-#  define LAK_YELLOW     LAK_SGR(33)
-#  define LAK_BRIGHT_RED LAK_SGR(91)
 #endif
 
 #undef PAUSE
@@ -295,7 +243,13 @@ namespace lak
 #undef ASSERT
 #undef ASSERT_EQUAL
 #undef ASSERT_NOT_EQUAL
+#undef ASSERT_GREATER
+#undef ASSERT_GREATER_OR_EQUAL
 #undef ASSERTF
+#undef ASSERTF_EQUAL
+#undef ASSERTF_NOT_EQUAL
+#undef ASSERTF_GREATER
+#undef ASSERTF_GREATER_OR_EQUAL
 #define ASSERT(x)                                                             \
   {                                                                           \
     if (!(x))                                                                 \
@@ -307,14 +261,32 @@ namespace lak
   {                                                                           \
     if (!((x) == (y)))                                                        \
     {                                                                         \
-      FATAL("Assertion '" STRINGIFY(x == y) "' failed: ", x, " != ", y);      \
+      FATAL(                                                                  \
+        "Assertion '" STRINGIFY(x == y) "' failed: '", x, "' != '", y, "'");  \
     }                                                                         \
   }
 #define ASSERT_NOT_EQUAL(x, y)                                                \
   {                                                                           \
     if (!((x) != (y)))                                                        \
     {                                                                         \
-      FATAL("Assertion '" STRINGIFY(x != y) "' failed: ", x, " == ", y);      \
+      FATAL(                                                                  \
+        "Assertion '" STRINGIFY(x != y) "' failed: '", x, "' == '", y, "'");  \
+    }                                                                         \
+  }
+#define ASSERT_GREATER(x, y)                                                  \
+  {                                                                           \
+    if (!((x) > (y)))                                                         \
+    {                                                                         \
+      FATAL(                                                                  \
+        "Assertion '" STRINGIFY(x > y) "' failed: '", x, "' <= '", y, "'");   \
+    }                                                                         \
+  }
+#define ASSERT_GREATER_OR_EQUAL(x, y)                                         \
+  {                                                                           \
+    if (!((x) >= (y)))                                                        \
+    {                                                                         \
+      FATAL(                                                                  \
+        "Assertion '" STRINGIFY(x >= y) "' failed: '", x, "' < '", y, "'");   \
     }                                                                         \
   }
 #define ASSERTF(x, str)                                                       \
@@ -324,7 +296,56 @@ namespace lak
       FATAL("Assertion '" STRINGIFY(x) "' failed: ", TO_U8STRING(str));       \
     }                                                                         \
   }
+#define ASSERTF_EQUAL(x, y, str)                                              \
+  {                                                                           \
+    if (!((x) == (y)))                                                        \
+    {                                                                         \
+      FATAL("Assertion '" STRINGIFY(x == y) "' failed: '",                    \
+            x,                                                                \
+            "' != '",                                                         \
+            y,                                                                \
+            "': ",                                                            \
+            TO_U8STRING(str));                                                \
+    }                                                                         \
+  }
+#define ASSERTF_NOT_EQUAL(x, y, str)                                          \
+  {                                                                           \
+    if (!((x) != (y)))                                                        \
+    {                                                                         \
+      FATAL("Assertion '" STRINGIFY(x != y) "' failed: '",                    \
+            x,                                                                \
+            "' == '",                                                         \
+            y,                                                                \
+            "': ",                                                            \
+            TO_U8STRING(str));                                                \
+    }                                                                         \
+  }
+#define ASSERTF_GREATER(x, y, str)                                            \
+  {                                                                           \
+    if (!((x) > (y)))                                                         \
+    {                                                                         \
+      FATAL("Assertion '" STRINGIFY(x > y) "' failed: '",                     \
+            x,                                                                \
+            "' <= '",                                                         \
+            y,                                                                \
+            "': ",                                                            \
+            TO_U8STRING(str));                                                \
+    }                                                                         \
+  }
+#define ASSERTF_GREATER_OR_EQUAL(x, y, str)                                   \
+  {                                                                           \
+    if (!((x) >= (y)))                                                        \
+    {                                                                         \
+      FATAL("Assertion '" STRINGIFY(x >= y) "' failed: '",                    \
+            x,                                                                \
+            "' < '",                                                          \
+            y,                                                                \
+            "': ",                                                            \
+            TO_U8STRING(str));                                                \
+    }                                                                         \
+  }
 
 #ifndef LAK_DEBUG_HPP
 #  define LAK_DEBUG_HPP
+#  include "lak/debug.inl"
 #endif
