@@ -3,10 +3,10 @@
 #include <iostream>
 
 template<typename T>
-void print_trie(const lak::trie<T> &trie, std::string key = "");
+void print_trie(const lak::trie<T> &trie, lak::astring key = "");
 
 template<typename T>
-void print_trie(const lak::trie<T> &trie, std::string key)
+void print_trie(const lak::trie<T> &trie, lak::astring key)
 {
   key += trie.key();
 
@@ -20,7 +20,7 @@ void print_trie(const lak::trie<T> &trie, std::string key)
 
 int main()
 {
-  lak::trie<std::string> trie;
+  lak::trie<lak::astring> trie;
   std::cout << "\n\n";
 
   trie.try_emplace("", "first");

@@ -74,28 +74,28 @@ namespace lak
     memory &write(const memory &other);
 
     // ASCII
-    std::string read_string(size_t max_len = SIZE_MAX);
-    std::string read_string_exact(size_t exact_len);
-    std::string peek_string(size_t max_len = SIZE_MAX) const;
-    memory &write_string(const std::string &str, bool terminate = false);
+    lak::astring read_astring(size_t max_len = SIZE_MAX);
+    lak::astring read_astring_exact(size_t exact_len);
+    lak::astring peek_astring(size_t max_len = SIZE_MAX) const;
+    memory &write_astring(const lak::astring &str, bool terminate = false);
 
     // UTF-8
-    std::u8string read_u8string(size_t max_len = SIZE_MAX);
-    std::u8string read_u8string_exact(size_t exact_len);
-    std::u8string peek_u8string(size_t max_len = SIZE_MAX) const;
-    memory &write_u8string(const std::u8string &str, bool terminate = false);
+    lak::u8string read_u8string(size_t max_len = SIZE_MAX);
+    lak::u8string read_u8string_exact(size_t exact_len);
+    lak::u8string peek_u8string(size_t max_len = SIZE_MAX) const;
+    memory &write_u8string(const lak::u8string &str, bool terminate = false);
 
     // UTF-16
-    std::u16string read_u16string(size_t max_len = SIZE_MAX);
-    std::u16string read_u16string_exact(size_t exact_len);
-    std::u16string peek_u16string(size_t max_len = SIZE_MAX) const;
-    memory &write_u16string(const std::u16string &str, bool terminate = false);
+    lak::u16string read_u16string(size_t max_len = SIZE_MAX);
+    lak::u16string read_u16string_exact(size_t exact_len);
+    lak::u16string peek_u16string(size_t max_len = SIZE_MAX) const;
+    memory &write_u16string(const lak::u16string &str, bool terminate = false);
 
     // UTF-32
-    std::u32string read_u32string(size_t max_len = SIZE_MAX);
-    std::u32string read_u32string_exact(size_t exact_len);
-    std::u32string peek_u32string(size_t max_len = SIZE_MAX) const;
-    memory &write_u32string(const std::u32string &str, bool terminate = false);
+    lak::u32string read_u32string(size_t max_len = SIZE_MAX);
+    lak::u32string read_u32string_exact(size_t exact_len);
+    lak::u32string peek_u32string(size_t max_len = SIZE_MAX) const;
+    memory &write_u32string(const lak::u32string &str, bool terminate = false);
 
     uint8_t read_u8(const uint8_t def = 0);
     uint8_t peek_u8(const uint8_t def = 0) const;

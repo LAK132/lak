@@ -115,18 +115,18 @@ bool lak::swap_vulkan_window(const lak::platform_instance &instance,
   return false;
 }
 
-std::wstring lak::window_title(const lak::platform_instance &instance,
+lak::wstring lak::window_title(const lak::platform_instance &instance,
                                const lak::window_handle &window)
 {
   std::vector<wchar_t> str;
   str.resize(GetWindowTextLengthW(window.platform_handle) + 1);
   GetWindowTextW(window.platform_handle, str.data(), str.size());
-  return std::wstring(str.data());
+  return lak::wstring(str.data());
 }
 
 bool lak::set_window_title(const lak::platform_instance &instance,
                            const lak::window_handle &window,
-                           const std::wstring &str)
+                           const lak::wstring &str)
 {
   return SetWindowTextW(window.platform_handle, str.c_str());
 }

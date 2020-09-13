@@ -1,355 +1,443 @@
+#include "lak/defer.hpp"
+
 #include <tuple>
 
-namespace lak
+template<typename CHAR>
+bool lak::token<CHAR>::operator==(const token &other) const
 {
-  template<typename CHAR>
-  void tokeniser<CHAR>::internal_start_next() const noexcept
+  return source == other.source && position == other.position;
+}
+
+template<typename CHAR>
+bool lak::token<CHAR>::operator!=(const token &other) const
+{
+  return !operator==(other);
+}
+
+template<typename CHAR>
+std::ostream &operator<<(std::ostream &strm, const lak::token<CHAR> &token)
+{
+  return strm << std::dec << "{source: " << token.source
+              << ", position: " << token.position << "}";
+}
+
+template<typename CHAR>
+std::optional<lak::token<CHAR>> lak::token_buffer<CHAR>::match(
+  lak::span<const lak::u32string> operators, const lak::token<CHAR> &token)
+{
+  ASSERT(_buffer.size());
+
+  for (const auto &op : operators)
   {
-    _next                = _data.subspan(_current.end() - _data.begin());
-    _next_position.begin = _next_position.end = _current_position.end;
-  }
+    ASSERT(!op.empty());
 
-  template<typename CHAR>
-  void tokeniser<CHAR>::internal_pump() noexcept
-  {
-    _current             = _next;
-    _current_position    = _next_position;
-    _next_position.begin = _next_position.end;
-    _next                = _data.subspan(_current.end() - _data.begin(), 0);
-  }
+    if (_buffer.size() < op.size()) continue;
 
-  template<typename CHAR>
-  tokeniser<CHAR> &tokeniser<CHAR>::operator++() noexcept
-  {
-    peek();
-    internal_pump();
-    return *this;
-  }
+    if (lak::span<const char32_t>(_buffer).first(op.size()) ==
+        lak::string_view(op))
+    {
+      // :TRICKY: token.position.end may not be corrent here!
 
-  template<typename CHAR>
-  span<const CHAR> tokeniser<CHAR>::peek() const noexcept
-  {
-    if (_next.size() > 0 || _next.begin() == _data.end()) return _next;
-
-    // _next is currently empty, move its end to the end of _data.
-    internal_start_next();
-
-    std::vector<char32_t> buffer;
-    buffer.reserve(_longest_operator);
-    const CHAR *buffer_begin = _next.begin();
-    // Set by match_operator.
-    token_position buffer_position = _next_position;
-
-    auto match = [&, this]() -> bool {
-      ASSERT(buffer.size());
-
-      for (const auto &op : _operators)
+      // token.source is tracking the entire length of the current token,
+      // whereas buffer_source_begin is only tracking where the next
+      // operator might be starting from. This means that
+      // buffer_source_begin can be between token.source.begin() and
+      // token.source.end() if _longest_operator is less than
+      // token.source.size(). This also means that buffer_source_begin can
+      // be before token.source.begin() if _longest_operator is greater
+      // than token.source.size() (this should only happen while skipping
+      // whitespace at the start of the token).
+      if (token.source.begin() < _buffer_token.source.begin())
       {
-        ASSERT(!op.empty());
+        // We hit the start of an operator part way through a token.
+        // Return the token up to the operator.
 
-        if (buffer.size() < op.size()) continue;
-
-        // Get the first subspan of buffer that is equal in length to op.
-        auto buf = lak::span(buffer).first(op.size());
-
-        // Check if this subspan is lexically equal to op.
-        bool match          = true;
-        buffer_position.end = buffer_position.begin;
-        for (size_t i = 0; match && i < buf.size(); ++i)
-        {
-          if (buf[i] != op[i]) match = false;
-
-          if (buf[i] == U'\n')
-          {
-            ++buffer_position.end.line;
-            buffer_position.end.column = 1;
-          }
-          else
-          {
-            ++buffer_position.end.column;
-          }
-        }
-
-        if (match)
-        {
-          if (buffer_begin <= _next.begin())
-          {
-            // We matched an operator.
-            _next          = {buffer_begin, buf.size()};
-            _next_position = buffer_position;
-            return true;
-          }
-          else
-          {
-            // We hit an operator part way through a token. Return the token
-            // up to the operator.
-            _next = {_next.begin(),
-                     static_cast<size_t>(buffer_begin - _next.begin())};
-
-            _next_position = buffer_position;
-            return true;
-          }
-        }
-      }
-
-      // No matches.
-      return false;
-    };
-
-    auto match_operator = [&, this](char32_t c, uint8_t len) -> bool {
-      if (_longest_operator < 1) return false;
-
-      if (buffer.size() < _longest_operator)
-      {
-        buffer.push_back(c);
-
-        if (buffer.size() == _longest_operator)
-          if (match()) return true;
+        return lak::token<CHAR>{
+          lak::span(token.source.begin(), _buffer_token.source.begin()),
+          lak::token_position{token.position.begin,
+                              _buffer_token.position.begin}};
       }
       else
       {
-        ASSERT_EQUAL(buffer.size(), _longest_operator);
+        // _buffer_token.source.begin() <= token.source.begin()
 
-        lak::rotate_left(lak::span(buffer));
+        // We matched an operator.
 
-        buffer.back() = c;
+        lak::codepoint_position end_position = _buffer_token.position.begin;
 
-        ++buffer_begin;
-
-        if (c == U'\n')
+        size_t converted_length = 0;
+        for (const auto &c : op)
         {
-          ++buffer_position.begin.line;
-          buffer_position.begin.column = 1;
-        }
-        else
-        {
-          ++buffer_position.begin.column;
+          converted_length += lak::codepoint_length<CHAR>(c);
+          end_position += c;
         }
 
-        if (match()) return true;
+        if (_buffer_token.source.begin() == token.source.begin())
+          ASSERT_EQUAL(_buffer_token.position.begin, token.position.begin);
+
+        return lak::token<CHAR>{
+          lak::span(_buffer_token.source.begin(), converted_length),
+          lak::token_position{_buffer_token.position.begin, end_position}};
       }
-
-      // No matches.
-      return false;
-    };
-
-    // Scan until we find the first non-whitespace character.
-    for (const auto &[c, len] : codepoint_range(_next))
-    {
-      if (!is_whitespace(c)) break;
-
-      if (match_operator(c, len)) return _next;
-
-      if (c == U'\n')
-      {
-        ++_next_position.begin.line;
-        _next_position.begin.column = 1;
-      }
-      else
-      {
-        ++_next_position.begin.column;
-      }
-
-      _next = _next.subspan(len);
     }
+  }
 
-    _next_position.end = _next_position.begin;
+  // No matches.
+  return std::nullopt;
+}
 
-    size_t count = 0;
+template<typename CHAR>
+void lak::token_buffer<CHAR>::operator++()
+{
+  if (_max_size == 0) return;
 
-    // Continue scanning until we run out of non-whitespace character.
-    for (const auto &[c, len] : codepoint_range(_next))
-    {
-      if (is_whitespace(c)) break;
+  ASSERT_EQUAL(_buffer_token.source.begin(),
+               _buffer_token.position.begin.find(_source).begin());
 
-      if (match_operator(c, len)) return _next;
+  auto pre_buffer       = _buffer; // this is a full buffer copy.
+  auto pre_buffer_token = _buffer_token;
 
-      if (c == U'\n')
-      {
-        ++_next_position.end.line;
-        _next_position.end.column = 1;
-      }
-      else
-      {
-        ++_next_position.end.column;
-      }
+  auto remaining = lak::span(_buffer_token.source.end(), _source.end());
 
-      count += len;
-    }
+  auto next_len            = lak::character_length(remaining);
+  const char32_t next_code = lak::codepoint(remaining);
 
-    _next = _next.first(count);
+  ASSERT_GREATER_OR_EQUAL(_max_size, _buffer.size());
+  if (_buffer.size() == _max_size) --*this;
 
-    // Flush out the buffer.
-    while (buffer.size() > 0)
-    {
-      if (match()) return _next;
+  if (remaining.size() == 0) return;
+  ASSERT_GREATER(next_len, 0);
 
-      buffer.erase(buffer.begin());
-    }
+  _buffer.push_back(next_code);
+  _buffer_token.source = lak::span(_buffer_token.source.begin(),
+                                   _buffer_token.source.end() + next_len);
+  _buffer_token.position.end += next_code;
 
+  if (pre_buffer.size() > 0)
+  {
+    auto u8buffer = lak::to_u8string(lak::span(_buffer));
+    auto u8source = lak::to_u8string(_buffer_token.source);
+    ASSERT_EQUAL(u8buffer, u8source);
+
+    auto max_buffer = std::max(pre_buffer.size(), _buffer.size());
+    auto buffcmp    = lak::compare<char32_t>(pre_buffer, _buffer);
+    ASSERTF_GREATER(max_buffer,
+                    buffcmp,
+                    "'" << lak::to_astring(lak::span(pre_buffer)) << "' '"
+                        << lak::to_astring(lak::span(_buffer)) << "'");
+    ASSERT_NOT_EQUAL(pre_buffer_token.source, _buffer_token.source);
+    ASSERT_NOT_EQUAL(pre_buffer_token.position, _buffer_token.position);
+  }
+}
+
+template<typename CHAR>
+void lak::token_buffer<CHAR>::operator--()
+{
+  ASSERT(_buffer.size());
+  ASSERT(_buffer_token.source.size());
+
+  ASSERT_EQUAL(_buffer_token.source.begin(),
+               _buffer_token.position.begin.find(_source).begin());
+
+  const char32_t front = _buffer.front();
+
+  ASSERT_EQUAL(lak::codepoint_length<CHAR>(front),
+               lak::character_length(_buffer_token.source));
+
+  _buffer.erase(_buffer.begin());
+
+  _buffer_token.source =
+    _buffer_token.source.subspan(lak::codepoint_length<CHAR>(front));
+
+  _buffer_token.position.begin += front;
+
+  // ASSERT_EQUAL(_buffer_token.source.begin(),
+  //              _buffer_token.position.begin.find(_source).begin());
+}
+
+template<typename CHAR>
+void lak::tokeniser<CHAR>::internal_pump() noexcept
+{
+  _current             = _next;
+  _next.source         = lak::span(_next.source.end(), size_t(0));
+  _next.position.begin = _next.position.end;
+
+  ASSERT_EQUAL(_next.source.begin(), _current.source.end());
+  ASSERT_EQUAL(_next.position.begin, _current.position.end);
+}
+
+template<typename CHAR>
+lak::tokeniser<CHAR> &lak::tokeniser<CHAR>::operator++() noexcept
+{
+  peek();
+  internal_pump();
+  return *this;
+}
+
+template<typename CHAR>
+lak::token<CHAR> lak::tokeniser<CHAR>::peek() const noexcept
+{
+  if (_next.source.size() > 0 || _next.source.begin() == _data.end())
     return _next;
-  }
 
-  template<typename CHAR>
-  span<const CHAR> tokeniser<CHAR>::until(char32_t codepoint) noexcept
+  // _next is currently empty, move its end to the end of _data.
+  _next.source = lak::span(_next.source.begin(), _data.end());
+
+  ASSERT_EQUAL(_current.source.end(), _next.source.begin());
+
+  lak::token_buffer<CHAR> buffer(_data, _longest_operator, _next);
+
+  // Scan until we find the first non-whitespace character.
+  for (const auto &[c, len] : lak::codepoint_range(_next.source))
   {
-    internal_start_next();
+    if (!lak::is_whitespace(c)) break;
 
-    size_t count = 0;
+    ASSERT_EQUAL(
+      _next.source.size(),
+      lak::span(buffer._buffer_token.source.begin(), buffer._source.end())
+        .size());
 
-    for (const auto &[c, len] : codepoint_range(_next))
+    if (auto match = buffer.match(_operators, _next); match)
     {
-      if (c == codepoint) break;
-
-      count += len;
-
-      if (c == U'\n')
+      if (_next.source.begin() == match->source.begin())
       {
-        ++_next_position.end.line;
-        _next_position.end.column = 1;
+        ASSERT_EQUAL(_next.position.begin, match->position.begin);
       }
       else
       {
-        ++_next_position.end.column;
+        ASSERT_NOT_EQUAL(_next.position.begin, match->position.begin);
       }
+      _next = *match;
+      return _next;
     }
 
-    _next = _next.first(count);
+    auto before = buffer.source();
+    ++buffer;
+    ASSERT_NOT_EQUAL(before, buffer.source());
 
-    internal_pump();
+    _next.position.begin += c;
 
-    return _current;
+    _next.source = _next.source.subspan(len);
   }
 
-  template<typename CHAR>
-  span<const CHAR> tokeniser<CHAR>::until(span<const char32_t> str) noexcept
+  auto whitespace_begin = _next;
+  DEFER(ASSERT_EQUAL(whitespace_begin.source.begin(), _next.source.begin()));
+  DEFER(ASSERT_EQUAL(whitespace_begin.position.begin, _next.position.begin));
+
+  _next.position.end = _next.position.begin;
+
+  size_t count = 0;
+
+  // Continue scanning until we run out of non-whitespace characters.
+  for (const auto &[c, len] : lak::codepoint_range(_next.source))
   {
-    ASSERT(str.size() > 0);
+    if (lak::is_whitespace(c)) break;
 
-    internal_start_next();
+    ASSERT_EQUAL(_next.source.begin() + count,
+                 buffer._buffer_token.source.begin());
 
-    size_t count                = 0;
-    size_t pre_match_count      = 0;
-    size_t match_len            = 0;
-    codepoint_position end_line = _next_position.end;
-
-    for (const auto &[c, len] : codepoint_range(_next))
+    if (auto match = buffer.match(_operators, _next); match)
     {
-      if (c == str[match_len])
+      if (_next.source.begin() == match->source.begin())
       {
-        ++match_len;
+        ASSERT_EQUAL(_next.position.begin, match->position.begin);
       }
       else
       {
-        pre_match_count    = count;
-        match_len          = 0;
-        _next_position.end = end_line;
+        ASSERT_NOT_EQUAL(_next.position.begin, match->position.begin);
       }
-
-      ASSERT(match_len <= str.size());
-
-      if (match_len == str.size()) break;
-
-      count += len;
-
-      if (c == U'\n')
-      {
-        ++end_line.line;
-        end_line.column = 1;
-      }
-      else
-      {
-        ++end_line.column;
-      }
+      _next = *match;
+      return _next;
     }
 
-    _next = _next.first(pre_match_count);
+    auto before = buffer.source();
+    ++buffer;
+    ASSERT_NOT_EQUAL(before, buffer.source());
 
-    internal_pump();
+    _next.position.end += c;
 
-    return _current;
+    count += len;
   }
 
-  template<typename CHAR>
-  span<const CHAR> tokeniser<CHAR>::skip(char32_t codepoint) noexcept
+  _next.source = _next.source.first(count);
+
+  // Flush out the buffer.
+  while (buffer.buffer().size() > 0)
   {
-    internal_start_next();
-
-    size_t count = 0;
-
-    for (const auto &[c, len] : codepoint_range(_next))
+    if (auto match = buffer.match(_operators, _next); match)
     {
-      count += len;
-
-      if (c == U'\n')
-      {
-        ++_next_position.end.line;
-        _next_position.end.column = 1;
-      }
-      else
-      {
-        ++_next_position.end.column;
-      }
-
-      if (c == codepoint) break;
+      ASSERT_EQUAL(match->source.begin(), _next.source.begin());
+      ASSERT_GREATER(match->source.end(), _next.source.begin());
+      ASSERT_GREATER(_next.source.end(), match->source.end());
+      _next = *match;
+      return _next;
     }
 
-    _next = _next.first(count);
-
-    internal_pump();
-
-    return _current;
+    --buffer;
   }
 
-  template<typename CHAR>
-  span<const CHAR> tokeniser<CHAR>::skip(span<const char32_t> str) noexcept
+  return _next;
+}
+
+template<typename CHAR>
+lak::token<CHAR> lak::tokeniser<CHAR>::until(char32_t codepoint) noexcept
+{
+  _next.source = lak::span(_next.source.begin(), _data.end());
+
+  size_t count = 0;
+
+  for (const auto &[c, len] : codepoint_range(_next.source))
   {
-    ASSERT(str.size() > 0);
+    if (c == codepoint) break;
 
-    internal_start_next();
+    count += len;
 
-    size_t count     = 0;
-    size_t match_len = 0;
-
-    for (const auto &[c, len] : codepoint_range(_next))
+    if (c == U'\n')
     {
-      count += len;
+      ++_next.position.end.line;
+      _next.position.end.column = 1;
+    }
+    else
+    {
+      ++_next.position.end.column;
+    }
+  }
 
-      if (c == U'\n')
-      {
-        ++_next_position.end.line;
-        _next_position.end.column = 1;
-      }
-      else
-      {
-        ++_next_position.end.column;
-      }
+  _next.source = _next.source.first(count);
 
-      if (c == str[match_len])
-        ++match_len;
-      else
-        match_len = 0;
+  internal_pump();
 
-      ASSERT(match_len <= str.size());
+  return _current;
+}
 
-      if (match_len == str.size()) break;
+template<typename CHAR>
+lak::token<CHAR> lak::tokeniser<CHAR>::until(
+  lak::span<const char32_t> str) noexcept
+{
+  ASSERT(str.size() > 0);
+
+  _next.source = lak::span(_next.source.begin(), _data.end());
+
+  size_t count                = 0;
+  size_t pre_match_count      = 0;
+  size_t match_len            = 0;
+  codepoint_position end_line = _next.position.end;
+
+  for (const auto &[c, len] : codepoint_range(_next.source))
+  {
+    if (c == str[match_len])
+    {
+      ++match_len;
+    }
+    else
+    {
+      pre_match_count    = count;
+      match_len          = 0;
+      _next.position.end = end_line;
     }
 
-    _next = _next.first(count);
+    ASSERT(match_len <= str.size());
 
-    internal_pump();
+    if (match_len == str.size()) break;
 
-    return _current;
+    count += len;
+
+    if (c == U'\n')
+    {
+      ++end_line.line;
+      end_line.column = 1;
+    }
+    else
+    {
+      ++end_line.column;
+    }
   }
 
-  template<typename CHAR>
-  inline void tokeniser<CHAR>::reset() noexcept
+  _next.source = _next.source.first(pre_match_count);
+
+  internal_pump();
+
+  return _current;
+}
+
+template<typename CHAR>
+lak::token<CHAR> lak::tokeniser<CHAR>::skip(char32_t codepoint) noexcept
+{
+  _next.source = lak::span(_next.source.begin(), _data.end());
+
+  size_t count = 0;
+
+  for (const auto &[c, len] : codepoint_range(_next.source))
   {
-    _current          = _data.first(0);
-    _next             = _current;
-    _current_position = token_position();
-    _next_position    = _current_position;
-    operator++();
+    count += len;
+
+    if (c == U'\n')
+    {
+      ++_next.position.end.line;
+      _next.position.end.column = 1;
+    }
+    else
+    {
+      ++_next.position.end.column;
+    }
+
+    if (c == codepoint) break;
   }
 
+  _next.source = _next.source.first(count);
+
+  internal_pump();
+
+  return _current;
+}
+
+template<typename CHAR>
+lak::token<CHAR> lak::tokeniser<CHAR>::skip(
+  lak::span<const char32_t> str) noexcept
+{
+  ASSERT(str.size() > 0);
+
+  _next.source = lak::span(_next.source.begin(), _data.end());
+
+  size_t count     = 0;
+  size_t match_len = 0;
+
+  for (const auto &[c, len] : codepoint_range(_next.source))
+  {
+    count += len;
+
+    if (c == U'\n')
+    {
+      ++_next.position.end.line;
+      _next.position.end.column = 1;
+    }
+    else
+    {
+      ++_next.position.end.column;
+    }
+
+    if (c == str[match_len])
+      ++match_len;
+    else
+      match_len = 0;
+
+    ASSERT(match_len <= str.size());
+
+    if (match_len == str.size()) break;
+  }
+
+  _next.source = _next.source.first(count);
+
+  internal_pump();
+
+  return _current;
+}
+
+template<typename CHAR>
+inline void lak::tokeniser<CHAR>::reset() noexcept
+{
+  _current.source   = _data.first(0);
+  _current.position = token_position{};
+  _next             = _current;
+  operator++();
 }

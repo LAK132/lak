@@ -16,11 +16,17 @@ namespace lak
   struct codepoint_iterator
   {
   private:
-    span<const CHAR> _data;
+    lak::span<const CHAR> _data;
     std::pair<char32_t, uint8_t> _current;
 
   public:
-    inline constexpr codepoint_iterator(span<const CHAR> str) noexcept
+    inline constexpr codepoint_iterator(lak::span<CHAR> str) noexcept
+    : _data(str)
+    {
+      operator++();
+    }
+
+    inline constexpr codepoint_iterator(lak::span<const CHAR> str) noexcept
     : _data(str)
     {
       operator++();
@@ -46,16 +52,19 @@ namespace lak
   struct codepoint_range
   {
   private:
-    span<const CHAR> _data;
+    lak::span<const CHAR> _data;
 
   public:
-    inline constexpr codepoint_range(span<const CHAR> str) noexcept
+    inline constexpr codepoint_range(lak::span<CHAR> str) noexcept : _data(str)
+    {
+    }
+
+    inline constexpr codepoint_range(lak::span<const CHAR> str) noexcept
     : _data(str)
     {
     }
 
-    inline constexpr codepoint_range(
-      const std::basic_string<CHAR> &str) noexcept
+    inline constexpr codepoint_range(const lak::string<CHAR> &str) noexcept
     : _data(str.c_str(), str.size())
     {
     }
@@ -72,41 +81,41 @@ namespace lak
   extern template struct codepoint_range<char32_t>;
 
   template<typename TO, typename FROM>
-  inline std::basic_string<TO> strconv(const std::basic_string<FROM> &str);
+  inline lak::string<TO> strconv(const lak::string<FROM> &str);
   template<typename FROM>
-  inline std::string to_astring(const std::basic_string<FROM> &str);
+  inline lak::astring to_astring(const lak::string<FROM> &str);
   template<typename FROM>
-  inline std::wstring to_wstring(const std::basic_string<FROM> &str);
+  inline lak::wstring to_wstring(const lak::string<FROM> &str);
   template<typename FROM>
-  inline std::u8string to_u8string(const std::basic_string<FROM> &str);
+  inline lak::u8string to_u8string(const lak::string<FROM> &str);
   template<typename FROM>
-  inline std::u16string to_u16string(const std::basic_string<FROM> &str);
+  inline lak::u16string to_u16string(const lak::string<FROM> &str);
   template<typename FROM>
-  inline std::u32string to_u32string(const std::basic_string<FROM> &str);
+  inline lak::u32string to_u32string(const lak::string<FROM> &str);
 
   template<typename TO, typename FROM>
-  inline std::basic_string<TO> strconv(span<const FROM> str);
+  inline lak::string<TO> strconv(lak::span<FROM> str);
   template<typename FROM>
-  inline std::string to_astring(span<const FROM> str);
+  inline lak::astring to_astring(lak::span<FROM> str);
   template<typename FROM>
-  inline std::wstring to_wstring(span<const FROM> str);
+  inline lak::wstring to_wstring(lak::span<FROM> str);
   template<typename FROM>
-  inline std::u8string to_u8string(span<const FROM> str);
+  inline lak::u8string to_u8string(lak::span<FROM> str);
   template<typename FROM>
-  inline std::u16string to_u16string(span<const FROM> str);
+  inline lak::u16string to_u16string(lak::span<FROM> str);
   template<typename FROM>
-  inline std::u32string to_u32string(span<const FROM> str);
+  inline lak::u32string to_u32string(lak::span<FROM> str);
 
   template<typename FROM>
-  inline std::string to_astring(const FROM *str);
+  inline lak::astring to_astring(const FROM *str);
   template<typename FROM>
-  inline std::wstring to_wstring(const FROM *str);
+  inline lak::wstring to_wstring(const FROM *str);
   template<typename FROM>
-  inline std::u8string to_u8string(const FROM *str);
+  inline lak::u8string to_u8string(const FROM *str);
   template<typename FROM>
-  inline std::u16string to_u16string(const FROM *str);
+  inline lak::u16string to_u16string(const FROM *str);
   template<typename FROM>
-  inline std::u32string to_u32string(const FROM *str);
+  inline lak::u32string to_u32string(const FROM *str);
 }
 
 #include "lak/strconv.inl"

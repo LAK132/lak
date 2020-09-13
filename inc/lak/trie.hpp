@@ -15,8 +15,8 @@ namespace lak
   {
     trie() = default;
 
-    const std::string &key() const { return _key; }
-    const std::string &map() const { return _map; }
+    const lak::astring &key() const { return _key; }
+    const lak::astring &map() const { return _map; }
     const std::vector<trie> &nodes() const { return _nodes; }
 
     // Value of this node.
@@ -24,49 +24,49 @@ namespace lak
     const std::optional<T> &value() const;
 
     // Find the node for key.
-    trie *find(const std::string &key);
-    const trie *find(const std::string &key) const;
+    trie *find(const lak::astring &key);
+    const trie *find(const lak::astring &key) const;
 
     // Find the node for key, or create one.
-    trie &find_or_emplace(const std::string &key);
-    trie &operator[](const std::string &key);
+    trie &find_or_emplace(const lak::astring &key);
+    trie &operator[](const lak::astring &key);
 
     // Default construct a T at key if it does not already exist.
-    void try_emplace(const std::string &key);
+    void try_emplace(const lak::astring &key);
 
     // Construct a T with args at key if it does not already exist.
     template<typename... ARGS>
-    void try_emplace(const std::string &key, ARGS &&... args);
+    void try_emplace(const lak::astring &key, ARGS &&... args);
 
     // Default construct a T at key, destroying the previous T if it already
     // existed.
-    void force_emplace(const std::string &key);
+    void force_emplace(const lak::astring &key);
 
     // Construct a T with args at key, destroying the previous T if it already
     // existed.
     template<typename... ARGS>
-    void force_emplace(const std::string &key, ARGS &&... args);
+    void force_emplace(const lak::astring &key, ARGS &&... args);
 
   private:
-    std::string _key;
+    lak::astring _key;
     std::optional<T> _value;
-    std::string _map         = "";
+    lak::astring _map        = "";
     std::vector<trie> _nodes = {};
 
-    trie(std::string &&k);
+    trie(lak::astring &&k);
 
-    trie(std::string &&k, std::optional<T> &&v);
+    trie(lak::astring &&k, std::optional<T> &&v);
 
-    trie(std::string &&k, std::string &&m, std::vector<trie> &&n);
+    trie(lak::astring &&k, lak::astring &&m, std::vector<trie> &&n);
 
-    trie(std::string &&k,
+    trie(lak::astring &&k,
          std::optional<T> &&v,
-         std::string &&m,
+         lak::astring &&m,
          std::vector<trie> &&n);
 
-    trie *internal_try_emplace(const std::string &key);
+    trie *internal_try_emplace(const lak::astring &key);
 
-    trie *internal_force_emplace(const std::string &key);
+    trie *internal_force_emplace(const lak::astring &key);
 
     static trie merge(trie &&node1, trie &&node2);
 

@@ -118,12 +118,12 @@ namespace lak
 
   /* --- window state --- */
 
-  std::wstring window_title(const lak::platform_instance &i,
+  lak::wstring window_title(const lak::platform_instance &i,
                             const lak::window_handle &w);
 
   bool set_window_title(const lak::platform_instance &i,
                         const lak::window_handle &w,
-                        const std::wstring &s);
+                        const lak::wstring &s);
 
   lak::vec2l_t window_size(const lak::platform_instance &i,
                            const lak::window_handle &w);
@@ -240,12 +240,12 @@ namespace lak
       return _handle.platform_handle;
     }
 
-    inline std::wstring title() const
+    inline lak::wstring title() const
     {
       return lak::window_title(_platform_instance, _handle);
     }
 
-    inline window &set_title(const std::wstring &title)
+    inline window &set_title(const lak::wstring &title)
     {
       lak::set_window_title(_platform_instance, _handle, title);
       return *this;
