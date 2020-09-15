@@ -29,7 +29,7 @@ namespace lak
         case GL_OUT_OF_MEMORY: ERROR("OpenGL: Out of memory."); break;
         case GL_STACK_UNDERFLOW: ERROR("OpenGL: Stack underflow."); break;
         case GL_STACK_OVERFLOW: ERROR("OpenGL: Stack overflow."); break;
-        default: ERROR("Unknown error: 0x" << error << "."); break;
+        default: ERROR("Unknown error: ", error, "."); break;
       }
       return false;
     }

@@ -1,5 +1,12 @@
-#include "lak/window.hpp"
+#define SDL_MAIN_HANDLED
+#define LAK_USE_SDL
+
+#include <SDL.h>
+
+#include <GL/gl3w.h>
+
 #include "lak/memmanip.hpp"
+#include "lak/window.hpp"
 
 bool lak::create_software_window(const lak::platform_instance &instance,
                                  lak::window_handle *window,
@@ -45,7 +52,7 @@ bool lak::create_opengl_window(const lak::platform_instance &instance,
 #define SET_ATTRIB(A, B)                                                      \
   if (SDL_GL_SetAttribute(A, B))                                              \
   {                                                                           \
-    WARNING("Failed to set " #A " to " #B " (" << B << ")");                  \
+    WARNING("Failed to set " #A " to " #B " (", B, ")");                      \
     return false;                                                             \
   }
   SET_ATTRIB(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG)
