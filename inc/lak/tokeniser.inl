@@ -284,23 +284,17 @@ lak::token<CHAR> lak::tokeniser<CHAR>::until(char32_t codepoint) noexcept
 {
   _next.source = lak::span(_next.source.begin(), _data.end());
 
+  ASSERT_EQUAL(_current.source.end(), _next.source.begin());
+
   size_t count = 0;
 
-  for (const auto &[c, len] : codepoint_range(_next.source))
+  for (const auto &[c, len] : lak::codepoint_range(_next.source))
   {
     if (c == codepoint) break;
 
     count += len;
 
-    if (c == U'\n')
-    {
-      ++_next.position.end.line;
-      _next.position.end.column = 1;
-    }
-    else
-    {
-      ++_next.position.end.column;
-    }
+    _next.position.end += c;
   }
 
   _next.source = _next.source.first(count);
@@ -318,39 +312,46 @@ lak::token<CHAR> lak::tokeniser<CHAR>::until(
 
   _next.source = lak::span(_next.source.begin(), _data.end());
 
+  ASSERT_EQUAL(_current.source.end(), _next.source.begin());
+
   size_t count                = 0;
   size_t pre_match_count      = 0;
   size_t match_len            = 0;
   codepoint_position end_line = _next.position.end;
 
-  for (const auto &[c, len] : codepoint_range(_next.source))
+  if (str.size() <= _next.source.size())
   {
-    if (c == str[match_len])
+    for (const auto &[c, len] : lak::codepoint_range(_next.source))
     {
-      ++match_len;
+      if (c == str[match_len])
+      {
+        ++match_len;
+      }
+      else
+      {
+        pre_match_count    = count;
+        match_len          = 0;
+        _next.position.end = end_line;
+      }
+
+      ASSERT(match_len <= str.size());
+
+      if (match_len == str.size()) break;
+
+      count += len;
+
+      end_line += c;
     }
-    else
+  }
+  else
+  {
+    // str is longer than the remaining data, so we can never find it.
+    // Instead we just update the end position.
+    for (const auto &[c, len] : lak::codepoint_range(_next.source))
     {
-      pre_match_count    = count;
-      match_len          = 0;
-      _next.position.end = end_line;
+      _next.position.end += c;
     }
-
-    ASSERT(match_len <= str.size());
-
-    if (match_len == str.size()) break;
-
-    count += len;
-
-    if (c == U'\n')
-    {
-      ++end_line.line;
-      end_line.column = 1;
-    }
-    else
-    {
-      ++end_line.column;
-    }
+    pre_match_count = _next.source.size();
   }
 
   _next.source = _next.source.first(pre_match_count);
@@ -365,21 +366,15 @@ lak::token<CHAR> lak::tokeniser<CHAR>::skip(char32_t codepoint) noexcept
 {
   _next.source = lak::span(_next.source.begin(), _data.end());
 
+  ASSERT_EQUAL(_current.source.end(), _next.source.begin());
+
   size_t count = 0;
 
-  for (const auto &[c, len] : codepoint_range(_next.source))
+  for (const auto &[c, len] : lak::codepoint_range(_next.source))
   {
     count += len;
 
-    if (c == U'\n')
-    {
-      ++_next.position.end.line;
-      _next.position.end.column = 1;
-    }
-    else
-    {
-      ++_next.position.end.column;
-    }
+    _next.position.end += c;
 
     if (c == codepoint) break;
   }
@@ -402,28 +397,33 @@ lak::token<CHAR> lak::tokeniser<CHAR>::skip(
   size_t count     = 0;
   size_t match_len = 0;
 
-  for (const auto &[c, len] : codepoint_range(_next.source))
+  if (str.size() <= _next.source.size())
   {
-    count += len;
-
-    if (c == U'\n')
+    for (const auto &[c, len] : lak::codepoint_range(_next.source))
     {
-      ++_next.position.end.line;
-      _next.position.end.column = 1;
+      count += len;
+
+      _next.position.end += c;
+
+      if (c == str[match_len])
+        ++match_len;
+      else
+        match_len = 0;
+
+      ASSERT(match_len <= str.size());
+
+      if (match_len == str.size()) break;
     }
-    else
+  }
+  else
+  {
+    // str is longer than the remaining data, so we can never find it.
+    // Instead we just update the end position.
+    for (const auto &[c, len] : lak::codepoint_range(_next.source))
     {
-      ++_next.position.end.column;
+      _next.position.end += c;
     }
-
-    if (c == str[match_len])
-      ++match_len;
-    else
-      match_len = 0;
-
-    ASSERT(match_len <= str.size());
-
-    if (match_len == str.size()) break;
+    count = _next.source.size();
   }
 
   _next.source = _next.source.first(count);
