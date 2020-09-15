@@ -36,7 +36,7 @@ std::optional<lak::token<CHAR>> lak::token_buffer<CHAR>::match(
     if (lak::span<const char32_t>(_buffer).first(op.size()) ==
         lak::string_view(op))
     {
-      // :TRICKY: token.position.end may not be corrent here!
+      // :TRICKY: token.position.end may not be correct here!
 
       // token.source is tracking the entire length of the current token,
       // whereas buffer_source_begin is only tracking where the next
@@ -262,7 +262,8 @@ lak::token<CHAR> lak::tokeniser<CHAR>::peek() const noexcept
   _next.source = _next.source.first(count);
 
   // Flush out the buffer.
-  while (buffer.buffer().size() > 0)
+  while (buffer.buffer().size() > 0 &&
+         buffer.source().begin() < _next.source.end())
   {
     if (auto match = buffer.match(_operators, _next); match)
     {
@@ -323,6 +324,12 @@ lak::token<CHAR> lak::tokeniser<CHAR>::until(
   {
     for (const auto &[c, len] : lak::codepoint_range(_next.source))
     {
+      count += len;
+
+      end_line += c;
+
+      ASSERT(match_len < str.size());
+
       if (c == str[match_len])
       {
         ++match_len;
@@ -334,13 +341,14 @@ lak::token<CHAR> lak::tokeniser<CHAR>::until(
         _next.position.end = end_line;
       }
 
-      ASSERT(match_len <= str.size());
-
       if (match_len == str.size()) break;
+    }
 
-      count += len;
-
-      end_line += c;
+    if (match_len != str.size())
+    {
+      // We never *fully* matched str.
+      pre_match_count    = count;
+      _next.position.end = end_line;
     }
   }
   else
