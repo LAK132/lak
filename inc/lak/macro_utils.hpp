@@ -57,6 +57,10 @@
   if (PRE_STATEMENT; CONDITION)                                               \
     for (bool UNIQUIFY(FIRST_LOOP_) = true; UNIQUIFY(FIRST_LOOP_) || CONDITION; (UNIQUIFY(FIRST_LOOP_) = false), (__VA_ARGS__))
 
+#undef range_for_or
+#define range_for_or(RANGE, ...)                                           \
+  if (auto&& UNIQUIFY(LOOP_RANGE_) = RANGE; UNIQUIFY(LOOP_RANGE_).begin() != UNIQUIFY(LOOP_RANGE_).end()) for (__VA_ARGS__ : UNIQUIFY(LOOP_RANGE_))
+
 #undef while_or
 #define while_or(...)                                                         \
   if (__VA_ARGS__)                                                            \
