@@ -133,6 +133,20 @@ namespace lak
   template<typename CHAR>
   struct tokeniser
   {
+    struct iterator
+    {
+    private:
+      tokeniser &_tokeniser;
+
+    public:
+      iterator(tokeniser &t) : _tokeniser(t) {}
+      auto &&operator++() { return _tokeniser.operator++(); }
+      auto &&operator*() { return _tokeniser.operator*(); }
+      auto operator->() { return _tokeniser.operator->(); }
+      bool operator==(nullptr_t) { return _tokeniser == nullptr; }
+      bool operator!=(nullptr_t) { return _tokeniser != nullptr; }
+    };
+
   private:
     span<const CHAR> _data;
     std::vector<std::u32string> _operators;
@@ -165,7 +179,7 @@ namespace lak
       reset();
     }
 
-    inline tokeniser &begin() noexcept { return *this; }
+    inline iterator begin() noexcept { return *this; }
 
     inline nullptr_t end() const noexcept { return nullptr; }
 
@@ -183,6 +197,11 @@ namespace lak
     inline const lak::token<CHAR> &operator*() const noexcept
     {
       return _current;
+    }
+
+    inline const lak::token<CHAR> *operator->() const noexcept
+    {
+      return &_current;
     }
 
     tokeniser &operator++() noexcept;
