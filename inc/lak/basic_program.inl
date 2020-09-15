@@ -1,10 +1,10 @@
 #define SDL_MAIN_HANDLED
 #include <SDL.h>
 
-#include "opengl/state.hpp"
+#include "lak/opengl/state.hpp"
 
-#include "debug.hpp"
-#include "window.hpp"
+#include "lak/debug.hpp"
+#include "lak/window.hpp"
 
 #ifndef APP_NAME
 #  define APP_NAME "basic window"
@@ -31,8 +31,8 @@ void MessageCallback(GLenum source,
       severity == GL_DEBUG_SEVERITY_NOTIFICATION)
     return;
 
-  DEBUG("GL CALLBACK: " << (type == GL_DEBUG_TYPE_ERROR ? "** ERROR **" : ""));
-  DEBUG("| Error code: 0x" << glGetError());
+  DEBUG("GL CALLBACK: ", (type == GL_DEBUG_TYPE_ERROR ? "** ERROR **" : ""));
+  DEBUG("| Error code: ", glGetError());
   switch (type)
   {
     case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR:
@@ -48,7 +48,7 @@ void MessageCallback(GLenum source,
     case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:
       DEBUG("| Type: UNDEFINED BEHAVIOR");
       break;
-    default: DEBUG("| Type: 0x" << type); break;
+    default: DEBUG("| Type: ", type); break;
   }
   switch (severity)
   {
@@ -58,7 +58,7 @@ void MessageCallback(GLenum source,
     case GL_DEBUG_SEVERITY_NOTIFICATION:
       DEBUG("| Severity: NOTIFICATION");
       break;
-    default: DEBUG("| Severity: 0x" << severity); break;
+    default: DEBUG("| Severity: ", severity); break;
   }
   switch (source)
   {
@@ -72,9 +72,9 @@ void MessageCallback(GLenum source,
     case GL_DEBUG_SOURCE_WINDOW_SYSTEM:
       DEBUG("| Source: WINDOW SYSTEM");
       break;
-    default: DEBUG("| Source: 0x" << source); break;
+    default: DEBUG("| Source: ", source); break;
   }
-  DEBUG("| Message:\n" << message << "\n");
+  DEBUG("| Message:\n", message, "\n");
 }
 
 int main(int argc, char **argv)
