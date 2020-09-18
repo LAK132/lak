@@ -14,10 +14,10 @@ void lak::debugger_t::std_out(const lak::u8string &line_info,
   stream << indent << line_info << lak::to_u8string(str);
   if (live_output_enabled && !live_errors_only)
   {
-    std::cout << reinterpret_cast<const char *>(indent.c_str());
+    std::cout << lak::as_astring(indent);
     if (line_info_enabled)
     {
-      std::cout << reinterpret_cast<const char *>(line_info.c_str());
+      std::cout << lak::as_astring(line_info);
     }
     std::cout << str << std::flush;
   }
@@ -62,10 +62,10 @@ void lak::debugger_t::std_err(const lak::u8string &line_info,
   stream << indent << line_info << lak::to_u8string(str);
   if (live_output_enabled)
   {
-    std::cout << reinterpret_cast<const char *>(indent.c_str());
+    std::cout << lak::as_astring(indent);
     if (line_info_enabled)
     {
-      std::cout << reinterpret_cast<const char *>(line_info.c_str());
+      std::cout << lak::as_astring(line_info);
     }
     std::cout << str << std::flush;
   }
@@ -136,7 +136,7 @@ std::filesystem::path lak::debugger_t::save(const std::filesystem::path &path)
   if (!path.string().empty())
   {
     std::ofstream file(path, std::ios::out | std::ios::trunc);
-    if (file.is_open()) file << reinterpret_cast<const char *>(str().c_str());
+    if (file.is_open()) file << lak::as_astring(str());
   }
 
   std::error_code ec;

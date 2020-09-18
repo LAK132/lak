@@ -58,11 +58,15 @@
     for (bool UNIQUIFY(FIRST_LOOP_) = true; UNIQUIFY(FIRST_LOOP_) || CONDITION; (UNIQUIFY(FIRST_LOOP_) = false), (__VA_ARGS__))
 
 #undef range_for_or
-#define range_for_or(RANGE, ...)                                           \
+#define range_for_or(RANGE, ...)                                              \
   if (auto&& UNIQUIFY(LOOP_RANGE_) = RANGE; UNIQUIFY(LOOP_RANGE_).begin() != UNIQUIFY(LOOP_RANGE_).end()) for (__VA_ARGS__ : UNIQUIFY(LOOP_RANGE_))
 
 #undef while_or
 #define while_or(...)                                                         \
   if (__VA_ARGS__)                                                            \
     for (bool UNIQUIFY(FIRST_LOOP_) = true; UNIQUIFY(FIRST_LOOP_) || __VA_ARGS__; UNIQUIFY(FIRST_LOOP_) = false)
+
+#undef if_in
+#define if_in(VALUE, RANGE, INDEX)                                            \
+  auto&& UNIQUIFY(FIND_RANGE_) = RANGE; auto&& UNIQUIFY(FIND_VALUE_) = VALUE; size_t UNIQUIFY(FIND_INDEX_) = 0; for (; UNIQUIFY(FIND_INDEX_) < UNIQUIFY(FIND_RANGE_).size(); ++UNIQUIFY(FIND_INDEX_)) if (UNIQUIFY(FIND_RANGE_)[UNIQUIFY(FIND_INDEX_)] == UNIQUIFY(FIND_VALUE_)) break; if (size_t INDEX = UNIQUIFY(FIND_INDEX_); INDEX < UNIQUIFY(FIND_RANGE_).size())
 // clang-format on

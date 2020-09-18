@@ -16,6 +16,29 @@ using wchar_unicode_t = char16_t;
 using wchar_unicode_t = char8_t;
 #endif
 
+// (char_t, prefix, arguments)
+#define LAK_FOREACH_CHAR(MACRO, ...)                                          \
+  MACRO(char, a, __VA_ARGS__)                                                 \
+  MACRO(wchar_t, w, __VA_ARGS__)                                              \
+  MACRO(char8_t, u8, __VA_ARGS__)                                             \
+  MACRO(char16_t, u16, __VA_ARGS__)                                           \
+  MACRO(char32_t, u32, __VA_ARGS__)
+
+#define LAK_TEMPLATE_FOREACH_CHAR_EX(CHAR, PREFIX, TYPE)                      \
+  template struct TYPE<CHAR>;
+#define LAK_TEMPLATE_FOREACH_CHAR(TYPE)                                       \
+  LAK_FOREACH_CHAR(LAK_TEMPLATE_FOREACH_CHAR_EX, TYPE)
+
+#define LAK_EXTERN_TEMPLATE_FOREACH_CHAR_EX(CHAR, PREFIX, TYPE)               \
+  extern template struct TYPE<CHAR>;
+#define LAK_EXTERN_TEMPLATE_FOREACH_CHAR(TYPE)                                \
+  LAK_FOREACH_CHAR(LAK_EXTERN_TEMPLATE_FOREACH_CHAR_EX, TYPE)
+
+#define LAK_TYPEDEF_FOREACH_CHAR_EX(CHAR, PREFIX, TYPE)                       \
+  using TOKEN_CONCAT(PREFIX, TYPE) = TYPE<CHAR>;
+#define LAK_TYPEDEF_FOREACH_CHAR(TYPE)                                        \
+  LAK_FOREACH_CHAR(LAK_TYPEDEF_FOREACH_CHAR_EX, TYPE)
+
 namespace lak
 {
   template<typename CHAR>

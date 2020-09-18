@@ -1,7 +1,9 @@
 #ifndef LAK_SPAN_HPP
 #define LAK_SPAN_HPP
 
+#include "lak/char.hpp"
 #include "lak/stdint.hpp"
+#include "lak/type_utils.hpp"
 
 #include <array>
 #include <vector>
@@ -61,11 +63,26 @@ namespace lak
     {
     }
 
-    inline constexpr span(T (&data)[SIZE]) noexcept : _data(data) {}
+    template<
+      typename U            = T,
+      std::enable_if_t<std::is_same_v<U, T> &&
+                         !std::is_same_v<lak::remove_cvref_t<T>, char> &&
+                         !std::is_same_v<lak::remove_cvref_t<T>, wchar_t> &&
+                         !std::is_same_v<lak::remove_cvref_t<T>, char8_t> &&
+                         !std::is_same_v<lak::remove_cvref_t<T>, char16_t> &&
+                         !std::is_same_v<lak::remove_cvref_t<T>, char32_t>,
+                       int> = 0>
+    inline constexpr span(U (&data)[SIZE]) noexcept : _data(data)
+    {
+    }
+
+    explicit inline constexpr span(T *data) noexcept : _data(data) {}
 
     inline constexpr T &operator[](size_t index) const noexcept;
 
     inline constexpr T *data() const noexcept;
+
+    [[nodiscard]] inline constexpr bool empty() const noexcept;
 
     inline constexpr size_t size() const noexcept;
 
@@ -90,6 +107,8 @@ namespace lak
     inline constexpr span<T, count> last() const;
 
     inline constexpr span<T, lak::dynamic_extent> last(size_t count) const;
+
+    inline constexpr auto to_string() const;
   };
 
   template<size_t SIZE>
@@ -118,12 +137,21 @@ namespace lak
     {
     }
 
-    template<typename T>
+    template<
+      typename T,
+      std::enable_if_t<!std::is_same_v<lak::remove_cvref_t<T>, char> &&
+                         !std::is_same_v<lak::remove_cvref_t<T>, wchar_t> &&
+                         !std::is_same_v<lak::remove_cvref_t<T>, char8_t> &&
+                         !std::is_same_v<lak::remove_cvref_t<T>, char16_t> &&
+                         !std::is_same_v<lak::remove_cvref_t<T>, char32_t>,
+                       int> = 0>
     inline constexpr span(T (&data)[SIZE / sizeof(T)]) noexcept : _data(data)
     {
     }
 
     inline constexpr void *data() const noexcept;
+
+    [[nodiscard]] inline constexpr bool empty() const noexcept;
 
     inline constexpr size_t size() const noexcept;
 
@@ -174,6 +202,8 @@ namespace lak
     }
 
     inline constexpr const void *data() const noexcept;
+
+    [[nodiscard]] inline constexpr bool empty() const noexcept;
 
     inline constexpr size_t size() const noexcept;
 
@@ -258,8 +288,17 @@ namespace lak
     {
     }
 
-    template<size_t SIZE>
-    inline constexpr span(T (&data)[SIZE]) noexcept : _data(data), _size(SIZE)
+    template<
+      typename U = T,
+      size_t SIZE,
+      std::enable_if_t<std::is_same_v<U, T> &&
+                         !std::is_same_v<lak::remove_cvref_t<T>, char> &&
+                         !std::is_same_v<lak::remove_cvref_t<T>, wchar_t> &&
+                         !std::is_same_v<lak::remove_cvref_t<T>, char8_t> &&
+                         !std::is_same_v<lak::remove_cvref_t<T>, char16_t> &&
+                         !std::is_same_v<lak::remove_cvref_t<T>, char32_t>,
+                       int> = 0>
+    inline constexpr span(U (&data)[SIZE]) noexcept : _data(data), _size(SIZE)
     {
     }
 
@@ -273,6 +312,8 @@ namespace lak
     inline constexpr T &operator[](size_t index) const noexcept;
 
     inline constexpr T *data() const noexcept;
+
+    [[nodiscard]] inline constexpr bool empty() const noexcept;
 
     inline constexpr size_t size() const noexcept;
 
@@ -297,6 +338,8 @@ namespace lak
     inline constexpr span<T, count> last() const;
 
     inline constexpr span<T, lak::dynamic_extent> last(size_t count) const;
+
+    inline constexpr auto to_string() const;
   };
 
   template<>
@@ -332,7 +375,15 @@ namespace lak
     {
     }
 
-    template<typename T, size_t SIZE>
+    template<
+      typename T,
+      size_t SIZE,
+      std::enable_if_t<!std::is_same_v<lak::remove_cvref_t<T>, char> &&
+                         !std::is_same_v<lak::remove_cvref_t<T>, wchar_t> &&
+                         !std::is_same_v<lak::remove_cvref_t<T>, char8_t> &&
+                         !std::is_same_v<lak::remove_cvref_t<T>, char16_t> &&
+                         !std::is_same_v<lak::remove_cvref_t<T>, char32_t>,
+                       int> = 0>
     inline constexpr span(T (&data)[SIZE]) noexcept
     : _data(data), _size(SIZE * sizeof(T))
     {
@@ -344,6 +395,8 @@ namespace lak
     }
 
     inline constexpr void *data() const noexcept;
+
+    [[nodiscard]] inline constexpr bool empty() const noexcept;
 
     inline constexpr size_t size() const noexcept;
 
@@ -406,7 +459,15 @@ namespace lak
     {
     }
 
-    template<typename T, size_t SIZE>
+    template<
+      typename T,
+      size_t SIZE,
+      std::enable_if_t<!std::is_same_v<lak::remove_cvref_t<T>, char> &&
+                         !std::is_same_v<lak::remove_cvref_t<T>, wchar_t> &&
+                         !std::is_same_v<lak::remove_cvref_t<T>, char8_t> &&
+                         !std::is_same_v<lak::remove_cvref_t<T>, char16_t> &&
+                         !std::is_same_v<lak::remove_cvref_t<T>, char32_t>,
+                       int> = 0>
     inline constexpr span(T (&data)[SIZE]) noexcept
     : _data(data), _size(SIZE * sizeof(T))
     {
@@ -418,6 +479,8 @@ namespace lak
     }
 
     inline constexpr const void *data() const noexcept;
+
+    [[nodiscard]] inline constexpr bool empty() const noexcept;
 
     inline constexpr size_t size() const noexcept;
 
@@ -466,6 +529,9 @@ namespace lak
   // Find the subspan of source that is equal to sub.
   template<typename T>
   lak::span<T> find_subspan(lak::span<T> source, lak::span<T> sub);
+
+  template<typename T>
+  lak::span<T> common_initial_sequence(lak::span<T> a, lak::span<T> b);
 
   template<typename T>
   void rotate_left(lak::span<T> data, size_t distance = 1);

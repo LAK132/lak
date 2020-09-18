@@ -1,115 +1,118 @@
+#include "lak/debug.hpp"
+#include "lak/unicode.hpp"
+
 namespace
 {
   namespace impl
   {
-    bool is_prefix(std::string_view str, std::string_view prefix)
+    template<typename CHAR>
+    bool is_prefix(lak::span<const CHAR> str, lak::span<const CHAR> prefix)
     {
-      return prefix.size() <= str.size() &&
-             str.substr(0, prefix.size()) == prefix;
-    }
-
-    lak::astring longest_common_prefix(const lak::astring &str1,
-                                       const lak::astring &str2)
-    {
-      return lak::astring(
-        str1.begin(),
-        std::mismatch(str1.begin(), str1.end(), str2.begin(), str2.end())
-          .first);
+      return prefix.size() <= str.size() && str.first(prefix.size()) == prefix;
     }
   }
 }
 
-template<typename T>
-std::optional<T> &lak::trie<T>::value()
+template<typename CHAR, typename T>
+std::optional<T> &lak::trie<CHAR, T>::value()
 {
   return _value;
 }
 
-template<typename T>
-const std::optional<T> &lak::trie<T>::value() const
+template<typename CHAR, typename T>
+const std::optional<T> &lak::trie<CHAR, T>::value() const
 {
   return _value;
 }
 
-template<typename T>
-lak::trie<T> *lak::trie<T>::find(const lak::astring &key)
+template<typename CHAR, typename T>
+lak::trie<CHAR, T> *lak::trie<CHAR, T>::find(const lak::string<CHAR> &key)
 {
   auto [node, remaining_key] = find(this, key);
   return remaining_key == node->_key ? node : nullptr;
 }
 
-template<typename T>
-const lak::trie<T> *lak::trie<T>::find(const lak::astring &key) const
+template<typename CHAR, typename T>
+const lak::trie<CHAR, T> *lak::trie<CHAR, T>::find(
+  const lak::string<CHAR> &key) const
 {
   auto [node, remaining_key] = find(this, key);
   return remaining_key == node->_key ? node : nullptr;
 }
 
-template<typename T>
-lak::trie<T> &lak::trie<T>::find_or_emplace(const lak::astring &key)
+template<typename CHAR, typename T>
+lak::trie<CHAR, T> &lak::trie<CHAR, T>::find_or_emplace(
+  const lak::string<CHAR> &key)
 {
-  auto [node, remaining_key] = find(this, key);
+  auto [node, remaining_key] = find(this, lak::string_view(key));
 
-  if (remaining_key != node->_key)
+  if (remaining_key != lak::string_view(node->_key))
   {
-    node->try_emplace(remaining_key);
+    node->try_emplace(remaining_key.to_string());
   }
 
-  std::tie(node, remaining_key) = find(this, key);
+  std::tie(node, remaining_key) = find(this, lak::string_view(key));
 
-  assert(remaining_key == node->_key);
-  assert(node->_value);
+  ASSERT_EQUAL(remaining_key, lak::string_view(node->_key));
+  ASSERT(node->_value);
 
   return *node;
 }
 
-template<typename T>
-lak::trie<T> &lak::trie<T>::operator[](const lak::astring &key)
+template<typename CHAR, typename T>
+lak::trie<CHAR, T> &lak::trie<CHAR, T>::operator[](
+  const lak::string<CHAR> &key)
 {
   return find_or_emplace(key);
 }
 
-template<typename T>
-void lak::trie<T>::try_emplace(const lak::astring &key)
+template<typename CHAR, typename T>
+void lak::trie<CHAR, T>::try_emplace(const lak::string<CHAR> &key)
 {
-  if (auto node = internal_try_emplace(key); node) node->_value.emplace();
+  if (auto node = internal_try_emplace(lak::string_view(key)); node)
+    node->_value.emplace();
 }
 
-template<typename T>
+template<typename CHAR, typename T>
 template<typename... ARGS>
-void lak::trie<T>::try_emplace(const lak::astring &key, ARGS &&... args)
+void lak::trie<CHAR, T>::try_emplace(const lak::string<CHAR> &key,
+                                     ARGS &&... args)
 {
-  if (auto node = internal_try_emplace(key); node)
+  if (auto node = internal_try_emplace(lak::string_view(key)); node)
     node->_value.emplace(std::forward<ARGS...>(args...));
 }
 
-template<typename T>
-void lak::trie<T>::force_emplace(const lak::astring &key)
+template<typename CHAR, typename T>
+void lak::trie<CHAR, T>::force_emplace(const lak::string<CHAR> &key)
 {
   internal_force_emplace(key)->_value.emplace();
 }
 
-template<typename T>
+template<typename CHAR, typename T>
 template<typename... ARGS>
-void lak::trie<T>::force_emplace(const lak::astring &key, ARGS &&... args)
+void lak::trie<CHAR, T>::force_emplace(const lak::string<CHAR> &key,
+                                       ARGS &&... args)
 {
-  internal_force_emplace(key)->_value.emplace(std::forward<ARGS...>(args...));
+  internal_force_emplace(lak::string_view(key))
+    ->_value.emplace(std::forward<ARGS...>(args...));
 }
 
-template<typename T>
-lak::trie<T>::trie(lak::astring &&k)
+template<typename CHAR, typename T>
+lak::trie<CHAR, T>::trie(lak::string<CHAR> &&k)
 : _key(std::move(k)), _value(std::nullopt), _map(), _nodes()
 {
 }
 
-template<typename T>
-lak::trie<T>::trie(lak::astring &&k, std::optional<T> &&v)
+template<typename CHAR, typename T>
+lak::trie<CHAR, T>::trie(lak::string<CHAR> &&k, std::optional<T> &&v)
 : _key(std::move(k)), _value(std::move(v)), _map(), _nodes()
 {
 }
 
-template<typename T>
-lak::trie<T>::trie(lak::astring &&k, lak::astring &&m, std::vector<trie> &&n)
+template<typename CHAR, typename T>
+lak::trie<CHAR, T>::trie(lak::string<CHAR> &&k,
+                         std::vector<char32_t> &&m,
+                         std::vector<trie> &&n)
 : _key(std::move(k)),
   _value(std::nullopt),
   _map(std::move(m)),
@@ -117,11 +120,11 @@ lak::trie<T>::trie(lak::astring &&k, lak::astring &&m, std::vector<trie> &&n)
 {
 }
 
-template<typename T>
-lak::trie<T>::trie(lak::astring &&k,
-                   std::optional<T> &&v,
-                   lak::astring &&m,
-                   std::vector<trie> &&n)
+template<typename CHAR, typename T>
+lak::trie<CHAR, T>::trie(lak::string<CHAR> &&k,
+                         std::optional<T> &&v,
+                         std::vector<char32_t> &&m,
+                         std::vector<trie> &&n)
 : _key(std::move(k)),
   _value(std::move(v)),
   _map(std::move(m)),
@@ -129,33 +132,37 @@ lak::trie<T>::trie(lak::astring &&k,
 {
 }
 
-template<typename T>
-lak::trie<T> *lak::trie<T>::internal_try_emplace(const lak::astring &key)
+template<typename CHAR, typename T>
+lak::trie<CHAR, T> *lak::trie<CHAR, T>::internal_try_emplace(
+  lak::span<const CHAR> key)
 {
   auto [node, remaining_key] = find(this, key);
 
-  if (remaining_key == node->_key)
+  ASSERT_NOT_EQUAL(node, nullptr);
+
+  if (remaining_key == lak::string_view(node->_key))
   {
     // exact node already exists.
     return node->_value.has_value() ? nullptr : node;
   }
 
   // merge a newly constructed node with the terminal node that we found.
-  *node = merge(std::move(*node), trie(lak::astring(remaining_key)));
+  *node = merge(std::move(*node), trie(remaining_key.to_string()));
 
   node = find(node, remaining_key).first;
 
-  assert(!node->_value.has_value());
+  ASSERT(!node->_value.has_value());
 
   return node;
 }
 
-template<typename T>
-lak::trie<T> *lak::trie<T>::internal_force_emplace(const lak::astring &key)
+template<typename CHAR, typename T>
+lak::trie<CHAR, T> *lak::trie<CHAR, T>::internal_force_emplace(
+  lak::span<const CHAR> key)
 {
   auto [node, remaining_key] = find(this, key);
 
-  if (remaining_key == node->_key)
+  if (remaining_key == lak::string_view(node->_key))
   {
     // exact node already exists.
     if (node->_value.has_value()) node->_value.reset();
@@ -163,80 +170,165 @@ lak::trie<T> *lak::trie<T>::internal_force_emplace(const lak::astring &key)
   }
 
   // merge a newly constructed node with the terminal node that we found.
-  *node = merge(std::move(*node), trie(lak::astring(remaining_key)));
+  *node = merge(std::move(*node), trie(remaining_key.to_string()));
 
   node = find(node, remaining_key).first;
 
-  assert(!node->_value.has_value());
+  ASSERT(!node->_value.has_value());
 
   return node;
 }
 
-template<typename T>
-lak::trie<T> lak::trie<T>::merge(lak::trie &&node1, lak::trie &&node2)
+template<typename CHAR, typename T>
+lak::trie<CHAR, T> lak::trie<CHAR, T>::merge(lak::trie<CHAR, T> &&node1,
+                                             lak::trie<CHAR, T> &&node2)
 {
-  assert(node1._key != node2._key);
+  ASSERT_NOT_EQUAL(node1._key, node2._key);
 
-  auto common = impl::longest_common_prefix(node1._key, node2._key);
+  auto u32key1 = lak::strconv<char32_t, CHAR>(node1._key);
+  auto u32key2 = lak::strconv<char32_t, CHAR>(node2._key);
 
-  const auto common_length = common.size();
+  auto u32common = lak::common_initial_sequence(lak::string_view(u32key1),
+                                                lak::string_view(u32key2));
+
+  const auto u32_common_length = u32common.size();
+  const auto common_length     = lak::converted_string_length<CHAR>(u32common);
 
   if (common_length == node1._key.size())
   {
     // node1.key is a prefix of node2.key.
-    node1._map += node2._key.at(common_length);
-    node2._key = node2._key.substr(common_length + 1);
+    const char32_t map2_key = u32key2.at(u32_common_length);
+    node1._map.push_back(map2_key);
+    node2._key =
+      node2._key.substr(common_length + lak::codepoint_length<CHAR>(map2_key));
     node1._nodes.emplace_back(std::move(node2));
     return node1;
   }
   else if (common_length == node2._key.size())
   {
     // node2.key is a prefix of node1.key.
-    node2._map += node1._key.at(common_length);
-    node1._key = node1._key.substr(common_length + 1);
+    const char32_t map1_key = u32key1.at(u32_common_length);
+    node2._map.push_back(map1_key);
+    node1._key =
+      node1._key.substr(common_length + lak::codepoint_length<CHAR>(map1_key));
     node2._nodes.emplace_back(std::move(node1));
     return node2;
   }
   else
   {
-    // node1.key and node2.key are divergent.
-    lak::astring map = lak::astring() + node1._key.at(common_length) +
-                       node2._key.at(common_length);
-
-    node1._key = node1._key.substr(common_length + 1);
-    node2._key = node2._key.substr(common_length + 1);
+    ASSERT_GREATER(node1._key.size(), common_length);
+    ASSERT_GREATER(node2._key.size(), common_length);
+    ASSERT_GREATER(u32key1.size(), u32_common_length);
+    ASSERT_GREATER(u32key2.size(), u32_common_length);
+    std::vector<char32_t> map = {u32key1.at(u32_common_length),
+                                 u32key2.at(u32_common_length)};
+    node1._key =
+      node1._key.substr(common_length + lak::codepoint_length<CHAR>(map[0]));
+    node2._key =
+      node2._key.substr(common_length + lak::codepoint_length<CHAR>(map[1]));
 
     std::vector<trie> nodes;
     nodes.emplace_back(std::move(node1));
     nodes.emplace_back(std::move(node2));
 
-    return trie(std::move(common), std::move(map), std::move(nodes));
+    return trie(
+      lak::strconv<CHAR>(u32common), std::move(map), std::move(nodes));
   }
 }
 
-template<typename T>
-std::pair<lak::trie<T> *, std::string> lak::trie<T>::find(lak::trie *node,
-                                                          std::string_view key)
+template<typename CHAR, typename T>
+std::pair<lak::trie<CHAR, T> *, lak::span<const CHAR>>
+lak::trie<CHAR, T>::find(lak::trie<CHAR, T> *node, lak::span<const CHAR> key)
 {
   for (;;)
   {
-    if (key.empty() || !impl::is_prefix(key, node->_key) || key == node->_key)
+    if (key.empty() || !impl::is_prefix(key, lak::string_view(node->_key)) ||
+        key == lak::string_view(node->_key))
     {
-      return {node, lak::astring(key)};
+      ASSERT_NOT_EQUAL(node, nullptr);
+      return {node, key};
     }
 
     const auto common_size = node->_key.size();
-    const auto lookup      = key.at(common_size);
-    const auto pos         = node->_map.find_first_of(lookup);
+    ASSERT_GREATER(key.size(), common_size);
+    const auto lookup = lak::codepoint(key.subspan(common_size));
 
-    if (pos == std::string::npos)
+    if_in(lookup, node->_map, index)
     {
-      return {node, lak::astring(key)};
+      ASSERT_GREATER(node->_nodes.size(), index);
+      node = node->_nodes.data() + index;
+      key  = key.subspan(common_size + lak::codepoint_length<CHAR>(lookup));
     }
     else
     {
-      node = node->_nodes.data() + pos;
-      key  = key.substr(common_size + 1);
+      ASSERT_NOT_EQUAL(node, nullptr);
+      return {node, key};
     }
   }
+}
+
+template<typename CHAR, typename T>
+std::ostream &operator<<(std::ostream &strm, const lak::trie<CHAR, T> &trie)
+{
+  std::vector<lak::span<const lak::trie<CHAR, T>>> stack;
+
+  stack.emplace_back(&trie, 1);
+
+  while (stack.size() > 0)
+  {
+    if (stack.back().size() > 0)
+    {
+      auto &t = stack.back()[0];
+
+      lak::u8string key;
+      if (stack.size() > 1)
+      {
+        auto t_span        = stack.back();
+        auto t_parent_span = stack[stack.size() - 2];
+        auto &t_parent     = t_parent_span[0];
+        ASSERT_GREATER_OR_EQUAL(t_parent.map().size(), t_span.size());
+        size_t parent_index = t_parent.map().size() - t_span.size();
+        key = lak::to_u8string(lak::span(&t_parent.map()[parent_index], 1));
+      }
+      key += lak::to_u8string(t.key());
+
+      strm << lak::astring((stack.size() - 1) * 2, ' ') << "\""
+           << lak::as_astring(key) << "\" : [{";
+
+      if (t.value()) strm << *t.value();
+
+      strm << "}, {";
+
+      const bool has_nodes = t.nodes().size() > 0;
+      if (has_nodes)
+      {
+        strm << "\n";
+        stack.push_back(lak::span(t.nodes()));
+      }
+      else
+      {
+        strm << "}]";
+        stack.back() = stack.back().subspan(1);
+        if (stack.back().size() > 0)
+        {
+          strm << ",\n";
+        }
+      }
+    }
+    else
+    {
+      stack.pop_back();
+      if (stack.size() > 0)
+      {
+        strm << "\n" << lak::astring((stack.size() - 1) * 2, ' ') << "}]";
+        stack.back() = stack.back().subspan(1);
+        if (stack.back().size() > 0)
+        {
+          strm << ",\n";
+        }
+      }
+    }
+  }
+
+  return strm;
 }

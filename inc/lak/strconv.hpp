@@ -42,12 +42,6 @@ namespace lak
     inline constexpr bool operator!=(char32_t c) const noexcept;
   };
 
-  extern template struct codepoint_iterator<char>;
-  extern template struct codepoint_iterator<wchar_t>;
-  extern template struct codepoint_iterator<char8_t>;
-  extern template struct codepoint_iterator<char16_t>;
-  extern template struct codepoint_iterator<char32_t>;
-
   template<typename CHAR>
   struct codepoint_range
   {
@@ -65,7 +59,7 @@ namespace lak
     }
 
     inline constexpr codepoint_range(const lak::string<CHAR> &str) noexcept
-    : _data(str.c_str(), str.size())
+    : _data(lak::span(str.c_str(), str.size()))
     {
     }
 
@@ -73,12 +67,6 @@ namespace lak
 
     inline constexpr char32_t end() const noexcept;
   };
-
-  extern template struct codepoint_range<char>;
-  extern template struct codepoint_range<wchar_t>;
-  extern template struct codepoint_range<char8_t>;
-  extern template struct codepoint_range<char16_t>;
-  extern template struct codepoint_range<char32_t>;
 
   template<typename TO, typename FROM>
   inline lak::string<TO> strconv(const lak::string<FROM> &str);
@@ -116,6 +104,16 @@ namespace lak
   inline lak::u16string to_u16string(const FROM *str);
   template<typename FROM>
   inline lak::u32string to_u32string(const FROM *str);
+
+  // Reinterpret UTF-8 string as an ASCII string.
+  inline lak::span<const char> as_astring(const lak::u8string &str);
+  inline lak::span<const char> as_astring(lak::span<const char8_t> str);
+  inline lak::span<const char> as_astring(const char8_t *str);
+
+  // Reinterpret ASCII string as a UTF-8 string.
+  inline lak::span<const char8_t> as_u8string(const lak::astring &str);
+  inline lak::span<const char8_t> as_u8string(lak::span<const char> str);
+  inline lak::span<const char8_t> as_u8string(const char *str);
 }
 
 #include "lak/strconv.inl"

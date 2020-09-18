@@ -1,22 +1,29 @@
 #ifndef LAK_TRIE_HPP
 #define LAK_TRIE_HPP
 
+#include "lak/span.hpp"
 #include "lak/string.hpp"
 
-#include <assert.h>
 #include <optional>
 #include <tuple>
 #include <vector>
 
 namespace lak
 {
-  template<typename T>
+  template<typename CHAR, typename T>
   struct trie
   {
+  private:
+    lak::string<CHAR> _key;
+    std::optional<T> _value;
+    std::vector<char32_t> _map;
+    std::vector<trie> _nodes;
+
+  public:
     trie() = default;
 
-    const lak::astring &key() const { return _key; }
-    const lak::astring &map() const { return _map; }
+    const lak::string<CHAR> &key() const { return _key; }
+    const std::vector<char32_t> &map() const { return _map; }
     const std::vector<trie> &nodes() const { return _nodes; }
 
     // Value of this node.
@@ -24,56 +31,67 @@ namespace lak
     const std::optional<T> &value() const;
 
     // Find the node for key.
-    trie *find(const lak::astring &key);
-    const trie *find(const lak::astring &key) const;
+    trie *find(const lak::string<CHAR> &key);
+    const trie *find(const lak::string<CHAR> &key) const;
 
     // Find the node for key, or create one.
-    trie &find_or_emplace(const lak::astring &key);
-    trie &operator[](const lak::astring &key);
+    trie &find_or_emplace(const lak::string<CHAR> &key);
+    trie &operator[](const lak::string<CHAR> &key);
 
     // Default construct a T at key if it does not already exist.
-    void try_emplace(const lak::astring &key);
+    void try_emplace(const lak::string<CHAR> &key);
 
     // Construct a T with args at key if it does not already exist.
     template<typename... ARGS>
-    void try_emplace(const lak::astring &key, ARGS &&... args);
+    void try_emplace(const lak::string<CHAR> &key, ARGS &&... args);
 
     // Default construct a T at key, destroying the previous T if it already
     // existed.
-    void force_emplace(const lak::astring &key);
+    void force_emplace(const lak::string<CHAR> &key);
 
     // Construct a T with args at key, destroying the previous T if it already
     // existed.
     template<typename... ARGS>
-    void force_emplace(const lak::astring &key, ARGS &&... args);
+    void force_emplace(const lak::string<CHAR> &key, ARGS &&... args);
 
   private:
-    lak::astring _key;
-    std::optional<T> _value;
-    lak::astring _map        = "";
-    std::vector<trie> _nodes = {};
+    trie(lak::string<CHAR> &&k);
 
-    trie(lak::astring &&k);
+    trie(lak::string<CHAR> &&k, std::optional<T> &&v);
 
-    trie(lak::astring &&k, std::optional<T> &&v);
-
-    trie(lak::astring &&k, lak::astring &&m, std::vector<trie> &&n);
-
-    trie(lak::astring &&k,
-         std::optional<T> &&v,
-         lak::astring &&m,
+    trie(lak::string<CHAR> &&k,
+         std::vector<char32_t> &&m,
          std::vector<trie> &&n);
 
-    trie *internal_try_emplace(const lak::astring &key);
+    trie(lak::string<CHAR> &&k,
+         std::optional<T> &&v,
+         std::vector<char32_t> &&m,
+         std::vector<trie> &&n);
 
-    trie *internal_force_emplace(const lak::astring &key);
+    trie *internal_try_emplace(lak::span<const CHAR> key);
+
+    trie *internal_force_emplace(lak::span<const CHAR> key);
 
     static trie merge(trie &&node1, trie &&node2);
 
-    static std::pair<trie *, std::string> find(trie *node,
-                                               std::string_view key);
+    static std::pair<trie *, lak::span<const CHAR>> find(
+      trie *node, lak::span<const CHAR> key);
   };
+
+  template<typename T>
+  using atrie = trie<char, T>;
+  template<typename T>
+  using wtrie = trie<wchar_t, T>;
+  template<typename T>
+  using u8trie = trie<char8_t, T>;
+  template<typename T>
+  using u16trie = trie<char16_t, T>;
+  template<typename T>
+  using u32trie = trie<char32_t, T>;
 }
+
+template<typename CHAR, typename T>
+std::ostream &operator<<(std::ostream &strm, const lak::trie<CHAR, T> &trie);
 
 #include "trie.inl"
 

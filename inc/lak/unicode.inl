@@ -1,5 +1,19 @@
 #include "lak/strconv.hpp"
 
+template<typename TO, typename FROM>
+size_t lak::converted_string_length(lak::span<FROM> str)
+{
+  size_t result = 0;
+  while (str.size() > 0)
+  {
+    auto char_len = lak::character_length(str);
+    ASSERT_NOT_EQUAL(char_len, 0);
+    result += lak::codepoint_length<TO>(lak::codepoint(str));
+    str = str.subspan(char_len);
+  }
+  return result;
+}
+
 template<typename CHAR>
 lak::span<CHAR> lak::string_view(CHAR *str)
 {
@@ -69,6 +83,6 @@ void lak::append_codepoint(lak::string<CHAR> &str, char32_t code)
 {
   constexpr size_t buffer_size = lak::chars_per_codepoint_v<CHAR>;
   CHAR buffer[buffer_size + 1] = {};
-  lak::from_codepoint(lak::span(buffer).template first<buffer_size>(), code);
+  lak::from_codepoint(lak::codepoint_buffer<CHAR>((CHAR *)buffer), code);
   str += buffer;
 }

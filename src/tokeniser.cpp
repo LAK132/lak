@@ -48,8 +48,6 @@ std::ostream &operator<<(std::ostream &strm, const lak::token_position &pos)
               << "}";
 }
 
-template struct lak::tokeniser<char>;
-template struct lak::tokeniser<wchar_t>;
-template struct lak::tokeniser<char8_t>;
-template struct lak::tokeniser<char16_t>;
-template struct lak::tokeniser<char32_t>;
+LAK_TEMPLATE_FOREACH_CHAR(lak::token)
+LAK_TEMPLATE_FOREACH_CHAR(lak::token_buffer)
+LAK_TEMPLATE_FOREACH_CHAR(lak::tokeniser)
