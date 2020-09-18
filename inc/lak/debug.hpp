@@ -22,8 +22,7 @@
   [&] {                                                                       \
     std::stringstream _debug_stream;                                          \
     _debug_stream << x;                                                       \
-    return lak::u8string(                                                     \
-      reinterpret_cast<const char8_t *>(_debug_stream.str().c_str()));        \
+    return lak::as_u8string(_debug_stream.str()).to_string();                 \
   }()
 #undef TO_WSTRING
 #define TO_WSTRING(x)                                                         \
@@ -118,12 +117,14 @@ namespace lak
   }
 
 #undef CHECKPOINT
+#undef SCOPED_CHECKPOINT
 #undef DEBUG_LINE_FILE
 #undef DEBUG
 #undef WDEBUG_LINE_FILE
 #undef WDEBUG
 #if defined(NOLOG)
 #  define CHECKPOINT()
+#  define SCOPED_CHECKPOINT(...)
 #  define DEBUG(...)
 #  define WDEBUG(...)
 #else
@@ -135,9 +136,11 @@ namespace lak
 #    define WDEBUG_LINE_FILE L"" LAK_FAINT "(" LINE_TRACE_STR ")" LAK_SGR_RESET
 #  endif
 #  define CHECKPOINT()                                                        \
-    lak::debugger.std_out(                                                    \
-      TO_U8STRING("CHECKPOINT" << DEBUG_LINE_FILE),                           \
-      lak::u8string(reinterpret_cast<const char8_t *>("\n")));
+    lak::debugger.std_out(TO_U8STRING("CHECKPOINT" << DEBUG_LINE_FILE),       \
+                          lak::to_u8string("\n"));
+#  define SCOPED_CHECKPOINT(FUNCTION)                                         \
+    lak::scoped_indenter UNIQUIFY(SCOPED_INDENTOR_)(FUNCTION                  \
+                                                    " " DEBUG_LINE_FILE);
 #  define DEBUG(...)                                                          \
     lak::debugger.std_out(TO_U8STRING("DEBUG" << DEBUG_LINE_FILE << ": "),    \
                           lak::streamify<char8_t>(__VA_ARGS__, "\n"));
@@ -155,9 +158,7 @@ namespace lak
 #define NOISY_ABORT()                                                         \
   {                                                                           \
     DEBUG_BREAK();                                                            \
-    std::cerr << reinterpret_cast<const char *>(                              \
-                   lak::debugger.stream.str().c_str())                        \
-              << "\n";                                                        \
+    std::cerr << lak::as_astring(lak::debugger.stream.str()) << "\n";         \
     ABORT();                                                                  \
   }
 

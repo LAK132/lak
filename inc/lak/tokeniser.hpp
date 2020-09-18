@@ -3,7 +3,6 @@
 
 #include "lak/span.hpp"
 #include "lak/string.hpp"
-#include "lak/vec.hpp"
 
 #include <vector>
 
@@ -250,17 +249,12 @@ namespace lak
     operator bool() const noexcept { return _current.source.size() != 0; }
   };
 
-  extern template struct tokeniser<char>;
-  extern template struct tokeniser<wchar_t>;
-  extern template struct tokeniser<char8_t>;
-  extern template struct tokeniser<char16_t>;
-  extern template struct tokeniser<char32_t>;
-
-  using atokeniser   = tokeniser<char>;
-  using wtokeniser   = tokeniser<wchar_t>;
-  using u8tokeniser  = tokeniser<char8_t>;
-  using u16tokeniser = tokeniser<char16_t>;
-  using u32tokeniser = tokeniser<char32_t>;
+  LAK_EXTERN_TEMPLATE_FOREACH_CHAR(token)
+  LAK_EXTERN_TEMPLATE_FOREACH_CHAR(token_buffer)
+  LAK_EXTERN_TEMPLATE_FOREACH_CHAR(tokeniser)
+  LAK_TYPEDEF_FOREACH_CHAR(token)
+  LAK_TYPEDEF_FOREACH_CHAR(token_buffer)
+  LAK_TYPEDEF_FOREACH_CHAR(tokeniser)
 }
 
 std::ostream &operator<<(std::ostream &strm,

@@ -17,6 +17,11 @@ namespace lak
   size_t string_length(const char16_t *str);
   size_t string_length(const char32_t *str);
 
+  // The length of the character length (not codepoint length) of the string if
+  // it was converted to TO type characters.
+  template<typename TO, typename FROM>
+  size_t converted_string_length(lak::span<FROM> str);
+
   template<typename CHAR>
   lak::span<CHAR> string_view(CHAR *str);
   template<typename CHAR>

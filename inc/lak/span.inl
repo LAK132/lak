@@ -1,5 +1,7 @@
 #include "lak/debug.hpp"
 #include "lak/stdint.hpp"
+#include "lak/strconv.hpp"
+#include "lak/string.hpp"
 
 #include <array>
 #include <vector>
@@ -17,6 +19,12 @@ template<typename T, size_t SIZE>
 inline constexpr T *lak::span<T, SIZE>::data() const noexcept
 {
   return _data;
+}
+
+template<typename T, size_t SIZE>
+[[nodiscard]] inline constexpr bool lak::span<T, SIZE>::empty() const noexcept
+{
+  return size() == 0;
 }
 
 template<typename T, size_t SIZE>
@@ -109,12 +117,25 @@ inline constexpr lak::span<T, lak::dynamic_extent> lak::span<T, SIZE>::last(
   return {begin() + (size() - count), count};
 }
 
+template<typename T, size_t SIZE>
+inline constexpr auto lak::span<T, SIZE>::to_string() const
+{
+  return lak::string<lak::remove_const_t<T>>(begin(), end());
+}
+
 /* --- lak::span<void, SIZE> --- */
 
 template<size_t SIZE>
 inline constexpr void *lak::span<void, SIZE>::data() const noexcept
 {
   return _data;
+}
+
+template<size_t SIZE>
+[[nodiscard]] inline constexpr bool lak::span<void, SIZE>::empty()
+  const noexcept
+{
+  return size() == 0;
 }
 
 template<size_t SIZE>
@@ -135,6 +156,13 @@ template<size_t SIZE>
 inline constexpr const void *lak::span<const void, SIZE>::data() const noexcept
 {
   return _data;
+}
+
+template<size_t SIZE>
+[[nodiscard]] inline constexpr bool lak::span<const void, SIZE>::empty()
+  const noexcept
+{
+  return size() == 0;
 }
 
 template<size_t SIZE>
@@ -172,6 +200,13 @@ template<typename T>
 inline constexpr T *lak::span<T, lak::dynamic_extent>::data() const noexcept
 {
   return _data;
+}
+
+template<typename T>
+[[nodiscard]] inline constexpr bool lak::span<T, lak::dynamic_extent>::empty()
+  const noexcept
+{
+  return size() == 0;
 }
 
 template<typename T>
@@ -266,12 +301,24 @@ lak::span<T, lak::dynamic_extent>::last(size_t count) const
   return {begin() + (size() - count), count};
 }
 
+template<typename T>
+inline constexpr auto lak::span<T, lak::dynamic_extent>::to_string() const
+{
+  return lak::string<lak::remove_const_t<T>>(begin(), end());
+}
+
 /* --- lak::span<void, lak::dynamic_extent> --- */
 
 inline constexpr void *lak::span<void, lak::dynamic_extent>::data()
   const noexcept
 {
   return _data;
+}
+
+[[nodiscard]] inline constexpr bool
+lak::span<void, lak::dynamic_extent>::empty() const noexcept
+{
+  return size() == 0;
 }
 
 inline constexpr size_t lak::span<void, lak::dynamic_extent>::size()
@@ -292,6 +339,12 @@ inline constexpr const void *lak::span<const void, lak::dynamic_extent>::data()
   const noexcept
 {
   return _data;
+}
+
+[[nodiscard]] inline constexpr bool
+lak::span<const void, lak::dynamic_extent>::empty() const noexcept
+{
+  return size() == 0;
 }
 
 inline constexpr size_t lak::span<const void, lak::dynamic_extent>::size()
@@ -315,6 +368,14 @@ lak::span<T> lak::find_subspan(lak::span<T> source, lak::span<T> subspan)
     source = source.subspan(1);
   }
   return {};
+}
+
+template<typename T>
+lak::span<T> lak::common_initial_sequence(lak::span<T> a, lak::span<T> b)
+{
+  size_t count = 0;
+  while (count < a.size() && count < b.size() && a[count] == b[count]) ++count;
+  return a.first(count);
 }
 
 template<typename T>

@@ -356,29 +356,29 @@ bool lak::is_whitespace(char32_t c)
 
 std::ostream &operator<<(std::ostream &strm, const lak::span<const char> &str)
 {
-  return strm << reinterpret_cast<const char *>(lak::to_u8string(str).c_str());
+  return strm << std::string_view(str.data(), str.size());
 }
 
 std::ostream &operator<<(std::ostream &strm,
                          const lak::span<const wchar_t> &str)
 {
-  return strm << reinterpret_cast<const char *>(lak::to_u8string(str).c_str());
+  return strm << lak::as_astring(lak::to_u8string(str));
 }
 
 std::ostream &operator<<(std::ostream &strm,
                          const lak::span<const char8_t> &str)
 {
-  return strm << reinterpret_cast<const char *>(lak::to_u8string(str).c_str());
+  return strm << lak::as_astring(str);
 }
 
 std::ostream &operator<<(std::ostream &strm,
                          const lak::span<const char16_t> &str)
 {
-  return strm << reinterpret_cast<const char *>(lak::to_u8string(str).c_str());
+  return strm << lak::as_astring(lak::to_u8string(str));
 }
 
 std::ostream &operator<<(std::ostream &strm,
                          const lak::span<const char32_t> &str)
 {
-  return strm << reinterpret_cast<const char *>(lak::to_u8string(str).c_str());
+  return strm << lak::as_astring(lak::to_u8string(str));
 }

@@ -25,13 +25,15 @@ lak::string<CHAR> lak::streamify(const ARGS &... args)
 #if __cplusplus <= 201703L
     else if constexpr (std::is_same_v<lak::u8string, arg_t>)
     {
-      strm << reinterpret_cast<const char *>(arg.c_str());
+      strm << lak::as_astring(arg);
     }
 #endif
     else
     {
       if constexpr (lak::is_span_v<arg_t>)
         ::operator<<(strm, arg);
+      else if constexpr (std::is_null_pointer_v<arg_t>)
+        strm << "nullptr";
       else
         strm << arg;
     }
@@ -41,8 +43,7 @@ lak::string<CHAR> lak::streamify(const ARGS &... args)
 
 #if __cplusplus <= 201703L
   if constexpr (std::is_same_v<CHAR, char8_t>)
-    return lak::u8string(
-      reinterpret_cast<const char8_t *>(strm.str().c_str()));
+    return lak::as_u8string(strm.str()).to_string();
   else
 #endif
     return strm.str();
