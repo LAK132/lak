@@ -8,7 +8,7 @@ namespace
     template<typename CHAR>
     bool is_prefix(lak::span<const CHAR> str, lak::span<const CHAR> prefix)
     {
-      return prefix.size() <= str.size() && str.first(prefix.size()) == prefix;
+      return prefix.size() < str.size() && str.first(prefix.size()) == prefix;
     }
   }
 }
@@ -28,15 +28,28 @@ const std::optional<T> &lak::trie<CHAR, T>::value() const
 template<typename CHAR, typename T>
 lak::trie<CHAR, T> *lak::trie<CHAR, T>::find(const lak::string<CHAR> &key)
 {
-  auto [node, remaining_key] = find(this, key);
-  return remaining_key == node->_key ? node : nullptr;
+  return find(lak::string_view(key));
 }
 
 template<typename CHAR, typename T>
 const lak::trie<CHAR, T> *lak::trie<CHAR, T>::find(
   const lak::string<CHAR> &key) const
 {
+  return find(lak::string_view(key));
+}
+
+template<typename CHAR, typename T>
+lak::trie<CHAR, T> *lak::trie<CHAR, T>::find(lak::span<const CHAR> key)
+{
   auto [node, remaining_key] = find(this, key);
+  return remaining_key == node->_key ? node : nullptr;
+}
+
+template<typename CHAR, typename T>
+const lak::trie<CHAR, T> *lak::trie<CHAR, T>::find(
+  lak::span<const CHAR> key) const
+{
+  auto [node, remaining_key] = find(const_cast<trie *>(this), key);
   return remaining_key == node->_key ? node : nullptr;
 }
 
@@ -85,7 +98,7 @@ void lak::trie<CHAR, T>::try_emplace(const lak::string<CHAR> &key,
 template<typename CHAR, typename T>
 void lak::trie<CHAR, T>::force_emplace(const lak::string<CHAR> &key)
 {
-  internal_force_emplace(key)->_value.emplace();
+  internal_force_emplace(lak::string_view(key))->_value.emplace();
 }
 
 template<typename CHAR, typename T>
@@ -295,9 +308,13 @@ std::ostream &operator<<(std::ostream &strm, const lak::trie<CHAR, T> &trie)
       strm << lak::astring((stack.size() - 1) * 2, ' ') << "\""
            << lak::as_astring(key) << "\" : [{";
 
-      if (t.value()) strm << *t.value();
-
-      strm << "}, {";
+      if constexpr (lak::is_streamable<decltype(*t.value())>())
+      {
+        if (t.value())
+        {
+          strm << *t.value() << "}, {";
+        }
+      }
 
       const bool has_nodes = t.nodes().size() > 0;
       if (has_nodes)
