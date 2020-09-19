@@ -5,6 +5,30 @@
 
 namespace lak
 {
+  /* --- true/false_type --- */
+
+  struct true_type
+  {
+    static constexpr bool value = true;
+  };
+  struct false_type
+  {
+    static constexpr bool value = false;
+  };
+
+  /* --- bool_type --- */
+
+  template<bool B>
+  struct bool_type;
+  template<>
+  struct bool_type<true> : public true_type
+  {
+  };
+  template<>
+  struct bool_type<false> : public false_type
+  {
+  };
+
   /* --- type_identity --- */
 
   template<typename T>
@@ -94,11 +118,40 @@ namespace lak
   /* --- is_function --- */
 
   template<typename T>
-  struct is_function : std::is_function<lak::remove_refs_ptrs_t<T>>
+  struct is_function : public std::is_function<lak::remove_refs_ptrs_t<T>>
   {
   };
   template<typename T>
   static constexpr bool is_function_v = is_function<T>::value;
+
+  /* --- enable_if --- */
+
+  template<bool B, typename T = void>
+  struct enable_if
+  {
+  };
+  template<typename T>
+  struct enable_if<true, T>
+  {
+    using type = T;
+  };
+  template<bool B, typename T = void>
+  using enable_if_t = typename enable_if<B, T>::type;
+  template<bool B>
+  using enable_if_i = typename enable_if<B, int>::type;
+
+  /* --- is_same --- */
+
+  template<typename T, typename U>
+  struct is_same : public false_type
+  {
+  };
+  template<typename T>
+  struct is_same<T, T> : public true_type
+  {
+  };
+  template<typename T, typename U>
+  static constexpr bool is_same_v = is_same<T, U>::value;
 }
 
 #endif
