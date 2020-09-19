@@ -326,32 +326,8 @@ lak::span<char32_t> lak::from_codepoint(lak::codepoint_buffer<char32_t> c,
 
 bool lak::is_whitespace(char32_t c)
 {
-  return c == U'\u0009'    // tab
-         || c == U'\u000A' // line feed
-         || c == U'\u000B' // line tab
-         || c == U'\u000C' // form feed
-         || c == U'\u000D' // carriage return
-         || c == U'\u0020' // space
-         || c == U'\u0085' // next line
-         || c == U'\u00A0' // no-break space
-         || c == U'\u1680' // ogham space mark
-         || c == U'\u2000' // en quad
-         || c == U'\u2001' // em quad
-         || c == U'\u2002' // en space
-         || c == U'\u2003' // em space
-         || c == U'\u2004' // three-per-em space
-         || c == U'\u2005' // four-per-em space
-         || c == U'\u2006' // six-per-em space
-         || c == U'\u2007' // figure space
-         || c == U'\u2008' // punctuation space
-         || c == U'\u2009' // thin space
-         || c == U'\u200A' // hair space
-         || c == U'\u2028' // line separator
-         || c == U'\u2029' // paragraph separator
-         || c == U'\u202F' // narrow no-break space
-         || c == U'\u205F' // medium mathematical space
-         || c == U'\u3000' // ideographic space
-    ;
+  if_in(c, lak::whitespaces(), i) { return true; }
+  else { return false; }
 }
 
 std::ostream &operator<<(std::ostream &strm, const lak::span<const char> &str)
