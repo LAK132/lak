@@ -69,6 +69,8 @@ namespace lak
   template<typename CHAR>
   void append_codepoint(lak::string<CHAR> &str, char32_t code);
 
+  inline constexpr lak::span<const char32_t> whitespaces();
+
   bool is_whitespace(char32_t c);
 }
 
