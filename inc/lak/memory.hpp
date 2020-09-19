@@ -72,6 +72,7 @@ namespace lak
     std::vector<uint8_t> read_range(size_t from, size_t to) const;
     memory &write(const std::vector<uint8_t> &bytes);
     memory &write(const memory &other);
+    memory &write(const uint8_t *bytes, size_t count);
 
     // ASCII
     lak::astring read_astring(size_t max_len = SIZE_MAX);
@@ -130,6 +131,25 @@ namespace lak
     int64_t peek_s64(const int64_t def = 0) const;
     memory &write_s64(const uint64_t v);
 #endif
+
+    template<typename T>
+    T *read_type()
+    {
+      if ((position + sizeof(T)) <= _data.size())
+      {
+        auto *result = reinterpret_cast<T *>(get());
+        position += sizeof(T);
+        return result;
+      }
+      else
+        return nullptr;
+    }
+
+    template<typename T>
+    void write_type(T *data)
+    {
+      write(reinterpret_cast<const uint8_t *>(data), sizeof(T));
+    }
   };
 }
 

@@ -302,15 +302,20 @@ std::vector<uint8_t> lak::memory::read_range(size_t from, size_t to) const
 
 lak::memory &lak::memory::write(const std::vector<uint8_t> &bytes)
 {
-  insert(bytes.size());
-  std::memcpy(get(), bytes.data(), bytes.size());
-  position += bytes.size();
-  return *this;
+  return write(bytes.data(), bytes.size());
 }
 
 lak::memory &lak::memory::write(const lak::memory &other)
 {
   return write(other._data);
+}
+
+lak::memory &lak::memory::write(const uint8_t *bytes, size_t count)
+{
+  insert(count);
+  std::memcpy(get(), bytes, count);
+  position += count;
+  return *this;
 }
 
 lak::astring lak::memory::read_astring(size_t max_len)

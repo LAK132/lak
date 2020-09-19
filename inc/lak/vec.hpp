@@ -28,6 +28,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <tuple>
 
 namespace lak
 {
@@ -72,6 +73,24 @@ namespace lak
     inline const T &operator[](const size_t index) const
     {
       return (&x)[index];
+    }
+
+    template<size_t I>
+    inline T &get()
+    {
+      if constexpr (I == 0)
+        return x;
+      else if constexpr (I == 1)
+        return y;
+    }
+
+    template<size_t I>
+    inline const T &get() const
+    {
+      if constexpr (I == 0)
+        return x;
+      else if constexpr (I == 1)
+        return y;
     }
 
     template<typename L>
@@ -240,6 +259,28 @@ namespace lak
     inline const T &operator[](const size_t index) const
     {
       return (&x)[index];
+    }
+
+    template<size_t I>
+    inline T &get()
+    {
+      if constexpr (I == 0)
+        return x;
+      else if constexpr (I == 1)
+        return y;
+      else if constexpr (I == 3)
+        return z;
+    }
+
+    template<size_t I>
+    inline const T &get() const
+    {
+      if constexpr (I == 0)
+        return x;
+      else if constexpr (I == 1)
+        return y;
+      else if constexpr (I == 3)
+        return z;
     }
 
     template<typename L>
@@ -435,6 +476,32 @@ namespace lak
       return (&x)[index];
     }
 
+    template<size_t I>
+    inline T &get()
+    {
+      if constexpr (I == 0)
+        return x;
+      else if constexpr (I == 1)
+        return y;
+      else if constexpr (I == 3)
+        return z;
+      else if constexpr (I == 4)
+        return w;
+    }
+
+    template<size_t I>
+    inline const T &get() const
+    {
+      if constexpr (I == 0)
+        return x;
+      else if constexpr (I == 1)
+        return y;
+      else if constexpr (I == 3)
+        return z;
+      else if constexpr (I == 4)
+        return w;
+    }
+
     template<typename L>
     explicit operator vec2<L>() const
     {
@@ -582,6 +649,42 @@ namespace lak
   using vec4u32_t = vec4<uint32_t>;
   using vec4i64_t = vec4<int64_t>;
   using vec4u64_t = vec4<uint64_t>;
+}
+
+namespace std
+{
+  template<typename T>
+  struct tuple_size<lak::vec2<T>>
+  {
+    static constexpr size_t value = 2;
+  };
+  template<size_t I, typename T>
+  struct tuple_element<I, lak::vec2<T>>
+  {
+    using type = T;
+  };
+
+  template<typename T>
+  struct tuple_size<lak::vec3<T>>
+  {
+    static constexpr size_t value = 3;
+  };
+  template<size_t I, typename T>
+  struct tuple_element<I, lak::vec3<T>>
+  {
+    using type = T;
+  };
+
+  template<typename T>
+  struct tuple_size<lak::vec4<T>>
+  {
+    static constexpr size_t value = 4;
+  };
+  template<size_t I, typename T>
+  struct tuple_element<I, lak::vec4<T>>
+  {
+    using type = T;
+  };
 }
 
 // dot product

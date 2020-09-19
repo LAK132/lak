@@ -107,6 +107,8 @@ namespace lak
   };
   template<typename PACK>
   using unique_pack_t = typename unique_pack<PACK>::type;
+  template<typename... T>
+  using make_unique_pack_t = unique_pack_t<type_pack<T...>>;
 
   /* --- pack_from_function --- */
 
@@ -136,6 +138,29 @@ namespace lak
   };
   template<template<typename...> typename T, typename PACK>
   using create_from_pack_t = typename create_from_pack<T, PACK>::type;
+
+  /* --- does_pack_contain --- */
+
+  template<typename PACK, typename T>
+  struct does_pack_contain;
+  template<typename T>
+  struct does_pack_contain<type_pack<>, T> : public false_type
+  {
+  };
+  template<typename TYPE, typename T>
+  struct does_pack_contain<type_pack<TYPE>, T>
+  : public bool_type<is_same_v<TYPE, T>>
+  {
+  };
+  template<typename TYPE, typename... TYPES, typename T>
+  struct does_pack_contain<type_pack<TYPE, TYPES...>, T>
+  : public bool_type<is_same_v<TYPE, T> ||
+                     does_pack_contain<type_pack<TYPES...>, T>>
+  {
+  };
+  template<typename PACK, typename T>
+  static constexpr bool does_pack_contain_v =
+    does_pack_contain<PACK, T>::value;
 }
 
 #endif
