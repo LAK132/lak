@@ -13,7 +13,7 @@ lak::string<CHAR> lak::streamify(const ARGS &... args)
 #else
   std::basic_stringstream<CHAR> strm;
 #endif
-  strm << std::hex << std::noshowbase << std::uppercase;
+  strm << std::hex << std::noshowbase << std::uppercase << std::boolalpha;
 
   auto streamer = [&strm](const auto &arg) {
     using arg_t = lak::remove_cvref_t<decltype(arg)>;
