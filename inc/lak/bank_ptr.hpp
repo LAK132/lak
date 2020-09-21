@@ -35,17 +35,37 @@ namespace lak
     template<typename... ARGS>
     static [[nodiscard]] bank_ptr create(ARGS &&... args);
 
-    bank_ptr(const bank_ptr &other);
+    template<typename FUNCTOR>
+    static void for_each(FUNCTOR &&func);
 
-    bank_ptr &operator=(const bank_ptr &);
+    template<typename FUNCTOR>
+    static bank_ptr find_if(FUNCTOR &&func);
+
+    bank_ptr();
+
+    bank_ptr(std::nullptr_t);
+    bank_ptr &operator=(std::nullptr_t);
+
+    bank_ptr(const bank_ptr &other);
+    bank_ptr &operator=(const bank_ptr &other);
 
     ~bank_ptr();
 
-    T *operator->() { return &_container[_index]; }
-    const T *operator->() const { return &_container[_index]; }
+    void reset();
 
-    T &operator*() { return _container[_index]; }
-    const T &operator*() const { return _container[_index]; }
+    T *operator->();
+    const T *operator->() const;
+
+    T &operator*();
+    const T &operator*() const;
+
+    bool operator==(const bank_ptr &rhs) const;
+    bool operator!=(const bank_ptr &rhs) const;
+
+    bool operator==(std::nullptr_t) const;
+    bool operator!=(std::nullptr_t) const;
+
+    operator bool() const;
   };
 
   template<typename T>
