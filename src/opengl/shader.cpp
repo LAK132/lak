@@ -22,9 +22,11 @@ namespace lak
 
     shader shader::create(const lak::astring &code, GLenum shader_type)
     {
+      ASSERTF(lak::opengl::check_error(), "Already in bad state");
       shader shdr;
-      shdr._type         = shader_type;
-      shdr._shader       = glCreateShader(shdr._type);
+      shdr._type   = shader_type;
+      shdr._shader = glCreateShader(shdr._type);
+      ASSERT(lak::opengl::check_error());
       const GLchar *cstr = code.c_str();
       glShaderSource(shdr._shader, 1, &cstr, nullptr);
       ASSERT(lak::opengl::check_error());
