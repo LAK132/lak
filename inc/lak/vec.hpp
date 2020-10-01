@@ -28,6 +28,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <iostream>
 #include <tuple>
 
 namespace lak
@@ -1047,6 +1048,25 @@ template<typename T>
 bool operator!=(const lak::vec4<T> &lhs, const lak::vec4<T> &rhs)
 {
   return !(lhs == rhs);
+}
+
+template<typename T>
+std::ostream &operator<<(std::ostream &strm, const lak::vec2<T> &rhs)
+{
+  return strm << "(" << rhs.x << " " << rhs.y << ")";
+}
+
+template<typename T>
+std::ostream &operator<<(std::ostream &strm, const lak::vec3<T> &rhs)
+{
+  return strm << "(" << rhs.x << " " << rhs.y << " " << rhs.z << ")";
+}
+
+template<typename T>
+std::ostream &operator<<(std::ostream &strm, const lak::vec4<T> &rhs)
+{
+  return strm << "(" << rhs.x << " " << rhs.y << " " << rhs.z << " " << rhs.w
+              << ")";
 }
 
 #endif
