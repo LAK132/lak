@@ -18,7 +18,7 @@
 #include <fstream>
 #include <iostream>
 
-std::vector<uint8_t> lak::read_file(const fs::path &path)
+std::vector<uint8_t> lak::read_file(const lak::fs::path &path)
 {
   std::ifstream file(path, std::ios::binary | std::ios::ate);
   std::vector<uint8_t> result;
@@ -31,7 +31,8 @@ std::vector<uint8_t> lak::read_file(const fs::path &path)
   return result;
 }
 
-bool lak::save_file(const fs::path &path, const std::vector<uint8_t> &data)
+bool lak::save_file(const lak::fs::path &path,
+                    const std::vector<uint8_t> &data)
 {
   std::ofstream file(path, std::ios::binary | std::ios::out | std::ios::trunc);
   if (!file.is_open()) return false;
@@ -39,7 +40,7 @@ bool lak::save_file(const fs::path &path, const std::vector<uint8_t> &data)
   return true;
 }
 
-bool lak::save_file(const fs::path &path, const lak::astring &string)
+bool lak::save_file(const lak::fs::path &path, const lak::astring &string)
 {
   std::ofstream file(path, std::ios::out | std::ios::trunc);
   if (!file.is_open()) return false;
@@ -47,7 +48,7 @@ bool lak::save_file(const fs::path &path, const lak::astring &string)
   return true;
 }
 
-bool lak::save_file(const fs::path &path, const lak::wstring &string)
+bool lak::save_file(const lak::fs::path &path, const lak::wstring &string)
 {
   std::basic_ofstream<wchar_t> file(path, std::ios::out | std::ios::trunc);
   if (!file.is_open()) return false;
@@ -55,7 +56,7 @@ bool lak::save_file(const fs::path &path, const lak::wstring &string)
   return true;
 }
 
-bool lak::save_file(const fs::path &path, const lak::u8string &string)
+bool lak::save_file(const lak::fs::path &path, const lak::u8string &string)
 {
   std::basic_ofstream<char8_t> file(path, std::ios::out | std::ios::trunc);
   if (!file.is_open()) return false;
@@ -63,7 +64,7 @@ bool lak::save_file(const fs::path &path, const lak::u8string &string)
   return true;
 }
 
-bool lak::save_file(const fs::path &path, const lak::u16string &string)
+bool lak::save_file(const lak::fs::path &path, const lak::u16string &string)
 {
   std::basic_ofstream<char16_t> file(path, std::ios::out | std::ios::trunc);
   if (!file.is_open()) return false;
@@ -71,7 +72,7 @@ bool lak::save_file(const fs::path &path, const lak::u16string &string)
   return true;
 }
 
-bool lak::save_file(const fs::path &path, const lak::u32string &string)
+bool lak::save_file(const lak::fs::path &path, const lak::u32string &string)
 {
   std::basic_ofstream<char32_t> file(path, std::ios::out | std::ios::trunc);
   if (!file.is_open()) return false;
@@ -95,7 +96,7 @@ lak::fs::path lak::exe_path()
 
   path[used + 1] = 0;
 
-  return fs::path(path.data());
+  return lak::fs::path(path.data());
 
 #elif defined(LAK_OS_LINUX)
   const auto *proc_str = "/proc/self/exe";
@@ -135,7 +136,7 @@ lak::fs::path lak::exe_path()
 
   if (read + 1 < path.size()) path[read + 1] = 0;
 
-  return fs::path(path.data());
+  return lak::fs::path(path.data());
 
 #else
   FATAL("Not implemented");
@@ -143,27 +144,27 @@ lak::fs::path lak::exe_path()
 #endif
 }
 
-lak::fs::path lak::normalised(const fs::path &path)
+lak::fs::path lak::normalised(const lak::fs::path &path)
 {
   // ("a/b" | "a/b/") -> "a/b/." -> "a/b"
   return (path / ".").parent_path();
 }
 
-bool lak::has_parent(const fs::path &path)
+bool lak::has_parent(const lak::fs::path &path)
 {
   return lak::normalised(path).has_parent_path();
 }
 
-lak::fs::path lak::parent(const fs::path &path)
+lak::fs::path lak::parent(const lak::fs::path &path)
 {
   return lak::normalised(path).parent_path();
 }
 
-lak::deepest_folder_result lak::deepest_folder(const fs::path &path,
+lak::deepest_folder_result lak::deepest_folder(const lak::fs::path &path,
                                                std::error_code &ec)
 {
-  fs::path folder = lak::normalised(path);
-  fs::path file;
+  lak::fs::path folder = lak::normalised(path);
+  lak::fs::path file;
   auto entry = fs::directory_entry(path, ec);
   while (!entry.is_directory() && lak::has_parent(folder))
   {
