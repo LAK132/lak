@@ -7,12 +7,15 @@
 
 #include <array>
 
-#define glEnableDisable(TARGET, BOOL) ((BOOL) ? glEnable : glDisable)((TARGET))
-
 namespace lak
 {
   namespace opengl
   {
+    auto enable_if(GLenum target, bool enable)
+    {
+      return (enable ? glEnable : glDisable)(target);
+    }
+
     // returns true when there is no errors.
     static bool check_error()
     {
