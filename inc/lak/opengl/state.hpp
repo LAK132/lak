@@ -3,6 +3,7 @@
 
 #include <GL/gl3w.h>
 
+#include "lak/compiler.hpp"
 #include "lak/debug.hpp"
 
 #include <array>
@@ -11,7 +12,7 @@ namespace lak
 {
   namespace opengl
   {
-    auto enable_if(GLenum target, bool enable)
+    force_inline auto enable_if(GLenum target, bool enable)
     {
       return (enable ? glEnable : glDisable)(target);
     }
@@ -38,7 +39,7 @@ namespace lak
     }
 
     template<size_t S = 1>
-    auto get_boolean(GLenum target)
+    force_inline auto get_boolean(GLenum target)
     {
       if constexpr (S == 1)
       {
@@ -55,7 +56,7 @@ namespace lak
     }
 
     template<size_t S = 1>
-    auto get_int(GLenum target)
+    force_inline auto get_int(GLenum target)
     {
       if constexpr (S == 1)
       {
@@ -72,7 +73,7 @@ namespace lak
     }
 
     template<size_t S = 1>
-    auto get_uint(GLenum target)
+    force_inline auto get_uint(GLenum target)
     {
       if constexpr (S == 1)
       {
@@ -89,7 +90,7 @@ namespace lak
     }
 
     template<size_t S = 1>
-    auto get_enum(GLenum target)
+    force_inline auto get_enum(GLenum target)
     {
       if constexpr (S == 1)
       {
@@ -106,7 +107,7 @@ namespace lak
     }
 
     template<size_t S = 1>
-    auto get_int64(GLenum target)
+    force_inline auto get_int64(GLenum target)
     {
       if constexpr (S == 1)
       {
@@ -123,7 +124,7 @@ namespace lak
     }
 
     template<size_t S = 1>
-    auto get_uint64(GLenum target)
+    force_inline auto get_uint64(GLenum target)
     {
       if constexpr (S == 1)
       {
@@ -140,7 +141,7 @@ namespace lak
     }
 
     template<size_t S = 1>
-    auto get_float(GLenum target)
+    force_inline auto get_float(GLenum target)
     {
       if constexpr (S == 1)
       {
@@ -157,7 +158,7 @@ namespace lak
     }
 
     template<size_t S = 1>
-    auto get_double(GLenum target)
+    force_inline auto get_double(GLenum target)
     {
       if constexpr (S == 1)
       {
@@ -174,7 +175,7 @@ namespace lak
     }
 
     template<GLenum PNAME>
-    auto get_program_value(GLuint program)
+    force_inline auto get_program_value(GLuint program)
     {
       static_assert(
         PNAME == GL_DELETE_STATUS || PNAME == GL_LINK_STATUS ||
