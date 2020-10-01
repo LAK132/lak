@@ -210,7 +210,7 @@ namespace lak
 
       for (GLuint i = 0; i < attributes.size(); ++i)
       {
-        memset(name.data(), 0, name.size());
+        std::memset(name.data(), 0, name.size());
         glGetActiveAttrib(_program,
                           i,
                           (GLsizei)name.size(),
@@ -243,7 +243,7 @@ namespace lak
 
       for (GLuint i = 0; i < uniforms.size(); ++i)
       {
-        memset(name.data(), 0, name.size());
+        std::memset(name.data(), 0, name.size());
         glGetActiveUniform(_program,
                            i,
                            (GLsizei)name.size(),
@@ -271,7 +271,7 @@ namespace lak
         1);
       ASSERT(lak::opengl::check_error());
 
-      memset(name.data(), 0, name.size());
+      std::memset(name.data(), 0, name.size());
       glGetActiveAttrib(_program,
                         attr,
                         (GLsizei)name.size(),
@@ -297,7 +297,7 @@ namespace lak
                   1);
       ASSERT(lak::opengl::check_error());
 
-      memset(name.data(), 0, name.size());
+      std::memset(name.data(), 0, name.size());
       glGetActiveUniform(_program,
                          unif,
                          (GLsizei)name.size(),
