@@ -1,26 +1,32 @@
 #ifndef LAK_DEFER_HPP
 #define LAK_DEFER_HPP
 
+#include "lak/compiler.hpp"
+#include "lak/macro_utils.hpp"
+
+#include <functional>
+
 namespace lak
 {
   template<typename LAMBDA>
   struct defer_t
   {
   public:
+    static_assert(std::is_invocable_v<LAMBDA>);
     LAMBDA _lambda;
     defer_t(LAMBDA lambda) : _lambda(lambda) {}
     ~defer_t() { _lambda(); }
   };
   template<typename LAMBDA>
-  inline defer_t<LAMBDA> defer(LAMBDA lambda)
+  force_inline defer_t<LAMBDA> defer(LAMBDA lambda)
   {
-    return defer_t<LAMBDA>(lambda); // hello
+    return defer_t<LAMBDA>(lambda);
   }
 }
 
-#define LAK_DEFER_CONCAT_EX(s1, s2) s1##s2
-#define LAK_DEFER_CONCAT(s1, s2)    LAK_DEFER_CONCAT_EX(s1, s2)
-#define LAK_DEFER_OBJECT            LAK_DEFER_CONCAT(_DEFER_OBJECT_, __LINE__)
-#define DEFER(...)                  auto LAK_DEFER_OBJECT = lak::defer([&]() { __VA_ARGS__; })
+#define DEFER(...)                                                            \
+  auto UNIQUIFY(DEFER_OBJECT_) = lak::defer([&]() { __VA_ARGS__; })
+#define DEFER_CALL(FUNC, ...)                                                 \
+  auto UNIQUIFY(DEFER_OBJECT_) = lak::defer(std::bind(FUNC, __VA_ARGS__))
 
-#endif // LAK_DEFER_HPP
+#endif
