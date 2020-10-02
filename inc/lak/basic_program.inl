@@ -4,6 +4,7 @@
 #include "lak/opengl/state.hpp"
 
 #include "lak/debug.hpp"
+#include "lak/events.hpp"
 #include "lak/window.hpp"
 
 #ifndef APP_NAME
@@ -13,11 +14,13 @@
 // Implement these basic_window_* functions in your program.
 void basic_window_preinit(int argc, char **argv);
 void basic_window_init(lak::window &window);
-void basic_window_handle_event(SDL_Event &event, lak::window &window);
+void basic_window_handle_event(lak::window &window, lak::event &event);
 void basic_window_loop(lak::window &window, uint64_t counter_delta);
 void basic_window_quit(lak::window &window);
 uint32_t basic_window_target_framerate = 60;
-lak::window::opengl_settings basic_window_opengl_settings;
+bool basic_window_force_software       = false;
+lak::opengl_settings basic_window_opengl_settings;
+lak::software_settings basic_window_software_settings;
 
 void MessageCallback(GLenum source,
                      GLenum type,
@@ -87,35 +90,51 @@ int main(int argc, char **argv)
 
   basic_window_preinit(argc, argv);
 
-  lak::core_init();
+  auto instance = lak::platform_init();
+  DEFER(lak::platform_quit(&instance));
 
-  auto window = lak::window(APP_NAME, {720, 480}, SDL_WINDOW_RESIZABLE);
+  auto window = [&] {
+    if (!basic_window_force_software)
+    {
+      // Attempt to open an OpenGL window first.
+      auto window = lak::window(instance, basic_window_opengl_settings);
+      window.set_title(L"" APP_NAME);
+      window.set_size({720, 480});
 
-  if (!window) FATAL("Failed to create window");
-
-  /* --- Graphics initialisation --- */
-
-  // :TODO: Add a way to selected a prefered graphics mode
-  if (window.init_opengl(basic_window_opengl_settings))
-  {
-    glViewport(0, 0, window.size().x, window.size().y);
-    glClearColor(0.0f, 0.3125f, 0.3125f, 1.0f);
-    glEnable(GL_DEPTH_TEST);
+      if (window.graphics() == lak::graphics_mode::OpenGL)
+      {
+        glViewport(0, 0, window.drawable_size().x, window.drawable_size().y);
+        glClearColor(0.0f, 0.3125f, 0.3125f, 1.0f);
+        glEnable(GL_DEPTH_TEST);
 
 #ifndef NDEBUG
-    glEnable(GL_DEBUG_OUTPUT);
-    glDebugMessageCallback(MessageCallback, 0);
+        glEnable(GL_DEBUG_OUTPUT);
+        glDebugMessageCallback(&MessageCallback, 0);
 #endif
-  }
-  else if (window.init_software())
-  {
-    // If this isn't called here it crashes when it's called later.
-    SDL_GetWindowSurface(window.sdl_window());
-  }
-  else
-  {
-    FATAL("Failed to start any known graphics mode");
-  }
+        return window;
+      }
+      else
+      {
+        WARNING("Failed to create OpenGL window");
+      }
+    }
+    {
+      // Fall back to software window if OpenGL fails to open.
+      auto window = lak::window(instance, basic_window_software_settings);
+      window.set_title(L"" APP_NAME);
+      window.set_size({720, 480});
+
+      if (window.graphics() == lak::graphics_mode::Software)
+      {
+        return window;
+      }
+      else
+      {
+        WARNING("Failed to create Software window");
+      }
+    }
+    FATAL("Failed to create a window");
+  }();
 
   basic_window_init(window);
 
@@ -126,32 +145,14 @@ int main(int argc, char **argv)
   for (bool running = true; running;)
   {
     /* --- Handle SDL2 events --- */
-    for (SDL_Event event; SDL_PollEvent(&event);
-         basic_window_handle_event(event, window))
+    for (lak::event event; lak::next_thread_event(instance, &event);
+         basic_window_handle_event(window, event))
     {
       switch (event.type)
       {
-        case SDL_QUIT:
+        case lak::event_type::quit_program:
         {
           running = false;
-        }
-        break;
-
-        /* --- Window events --- */
-        case SDL_WINDOWEVENT:
-        {
-          switch (event.window.event)
-          {
-            case SDL_WINDOWEVENT_RESIZED:
-            case SDL_WINDOWEVENT_SIZE_CHANGED:
-            {
-              window.set_size(
-                {(uint32_t)event.window.data1, (uint32_t)event.window.data2});
-              if (window.graphics() == lak::graphics_mode::OpenGL)
-                glViewport(0, 0, window.size().x, window.size().y);
-            }
-            break;
-          }
         }
         break;
       }
@@ -159,7 +160,7 @@ int main(int argc, char **argv)
 
     if (window.graphics() == lak::graphics_mode::OpenGL)
     {
-      glViewport(0, 0, window.size().x, window.size().y);
+      glViewport(0, 0, window.drawable_size().x, window.drawable_size().y);
       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     }
 
@@ -178,8 +179,4 @@ int main(int argc, char **argv)
 #endif
 
   basic_window_quit(window);
-
-  window.close();
-
-  lak::core_quit();
 }
