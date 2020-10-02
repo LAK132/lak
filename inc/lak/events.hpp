@@ -219,8 +219,8 @@ namespace lak
   static_assert(std::is_default_constructible_v<lak::event>,
                 "lak::event must be default constructible");
 
-  bool next_thread_event(const lak::platform_instance &i, lak::event *e);
-  bool peek_thread_event(const lak::platform_instance &i, lak::event *e);
+  bool next_event(const lak::platform_instance &i, lak::event *e);
+  bool peek_event(const lak::platform_instance &i, lak::event *e);
 }
 
 #endif

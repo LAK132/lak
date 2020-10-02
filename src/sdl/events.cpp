@@ -218,9 +218,9 @@ SDL_Window *window_from_event(const SDL_Event &event)
   }
 }
 
-bool handle_thread_event(const lak::platform_instance &instance,
-                         lak::event *event,
-                         SDL_eventaction action)
+bool handle_event(const lak::platform_instance &instance,
+                  lak::event *event,
+                  SDL_eventaction action)
 {
   SDL_PumpEvents();
   if (SDL_Event e;
@@ -241,14 +241,12 @@ bool handle_thread_event(const lak::platform_instance &instance,
   return false;
 }
 
-bool lak::next_thread_event(const lak::platform_instance &instance,
-                            lak::event *event)
+bool lak::next_event(const lak::platform_instance &instance, lak::event *event)
 {
-  return handle_thread_event(instance, event, SDL_GETEVENT);
+  return handle_event(instance, event, SDL_GETEVENT);
 }
 
-bool lak::peek_thread_event(const lak::platform_instance &instance,
-                            lak::event *event)
+bool lak::peek_event(const lak::platform_instance &instance, lak::event *event)
 {
-  return handle_thread_event(instance, event, SDL_PEEKEVENT);
+  return handle_event(instance, event, SDL_PEEKEVENT);
 }
