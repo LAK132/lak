@@ -2,6 +2,8 @@
 
 #include <thread>
 
+template struct lak::bank<lak::window_handle>;
+
 uint64_t lak::yield_frame(const uint64_t last_counter,
                           const uint32_t target_framerate)
 {
