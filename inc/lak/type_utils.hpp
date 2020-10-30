@@ -124,6 +124,21 @@ namespace lak
   template<typename T>
   static constexpr bool is_function_v = is_function<T>::value;
 
+  /* --- conditional --- */
+
+  template<bool B, typename T, typename U>
+  struct conditional;
+  template<typename T, typename U>
+  struct conditional<true, T, U> : lak::type_identity<T>
+  {
+  };
+  template<typename T, typename U>
+  struct conditional<false, T, U> : lak::type_identity<U>
+  {
+  };
+  template<bool B, typename T, typename U>
+  using conditional_t = typename conditional<B, T, U>::type;
+
   /* --- enable_if --- */
 
   template<bool B, typename T = void>
