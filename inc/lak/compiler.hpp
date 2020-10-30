@@ -22,6 +22,7 @@
 #  define packed_struct struct __attribute__((packed))
 #  define DEBUG_BREAK() asm("int $3")
 #elif defined(LAK_COMPILER_MSVC)
+#  include <intrin.h>
 #  define force_inline  inline __forceinline
 #  define packed_struct __pragma(pack(1)) struct
 #  define DEBUG_BREAK() __debugbreak()
