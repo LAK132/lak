@@ -10,6 +10,9 @@
 
 namespace lak
 {
+  template<typename T, size_t SIZE>
+  struct array;
+
   /* --- Compile time sized spans --- */
 
   template<typename T, size_t SIZE = lak::dynamic_extent>
@@ -59,6 +62,20 @@ namespace lak
     template<size_t N>
     inline constexpr span(
       std::array<std::remove_const_t<T>, SIZE> &array) noexcept
+    : _data(array.data())
+    {
+    }
+
+    template<size_t N>
+    inline constexpr span(
+      const lak::array<std::remove_const_t<T>, SIZE> &array) noexcept
+    : _data(array.data())
+    {
+    }
+
+    template<size_t N>
+    inline constexpr span(
+      lak::array<std::remove_const_t<T>, SIZE> &array) noexcept
     : _data(array.data())
     {
     }
@@ -288,6 +305,20 @@ namespace lak
     {
     }
 
+    template<size_t N>
+    inline constexpr span(
+      const lak::array<std::remove_const_t<T>, N> &array) noexcept
+    : _data(array.data()), _size(array.size())
+    {
+    }
+
+    template<size_t N>
+    inline constexpr span(
+      lak::array<std::remove_const_t<T>, N> &array) noexcept
+    : _data(array.data()), _size(array.size())
+    {
+    }
+
     template<
       typename U = T,
       size_t SIZE,
@@ -498,6 +529,12 @@ namespace lak
 
   template<typename T, size_t N>
   span(std::array<T, N> &) -> span<T, N>;
+
+  template<typename T, size_t N>
+  span(const lak::array<T, N> &) -> span<const T, N>;
+
+  template<typename T, size_t N>
+  span(lak::array<T, N> &) -> span<T, N>;
 
   template<typename T, size_t N>
   span(T (&)[N]) -> span<T, N>;
