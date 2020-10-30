@@ -26,6 +26,8 @@
 #  endif
 #endif
 
+#include "lak/stdint.hpp"
+
 #include <cstddef>
 #include <cstdint>
 #include <iostream>
@@ -209,6 +211,8 @@ namespace lak
   using vec2c_t   = vec2<signed char>;
   using vec2i_t   = vec2<int>;
   using vec2l_t   = vec2<long>;
+  using vec2f32_t = vec2<f32_t>;
+  using vec2f64_t = vec2<f64_t>;
   using vec2s_t   = vec2<size_t>;
   using vec2i8_t  = vec2<int8_t>;
   using vec2u8_t  = vec2<uint8_t>;
@@ -413,6 +417,8 @@ namespace lak
   using vec3c_t   = vec3<signed char>;
   using vec3i_t   = vec3<int>;
   using vec3l_t   = vec3<long>;
+  using vec3f32_t = vec3<f32_t>;
+  using vec3f64_t = vec3<f64_t>;
   using vec3s_t   = vec3<size_t>;
   using vec3i8_t  = vec3<int8_t>;
   using vec3u8_t  = vec3<uint8_t>;
@@ -640,6 +646,8 @@ namespace lak
   using vec4c_t   = vec4<signed char>;
   using vec4i_t   = vec4<int>;
   using vec4l_t   = vec4<long>;
+  using vec4f32_t = vec4<f32_t>;
+  using vec4f64_t = vec4<f64_t>;
   using vec4s_t   = vec4<size_t>;
   using vec4i8_t  = vec4<int8_t>;
   using vec4u8_t  = vec4<uint8_t>;
