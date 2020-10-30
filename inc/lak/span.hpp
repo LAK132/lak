@@ -488,14 +488,13 @@ namespace lak
   };
 
   template<typename T>
-  span(const std::vector<T> &)
-    -> span<const std::remove_const<T>, lak::dynamic_extent>;
+  span(const std::vector<T> &) -> span<const T, lak::dynamic_extent>;
 
   template<typename T>
   span(std::vector<T> &) -> span<T, lak::dynamic_extent>;
 
   template<typename T, size_t N>
-  span(const std::array<T, N> &) -> span<const std::remove_const_t<T>, N>;
+  span(const std::array<T, N> &) -> span<const T, N>;
 
   template<typename T, size_t N>
   span(std::array<T, N> &) -> span<T, N>;
