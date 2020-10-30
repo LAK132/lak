@@ -16,11 +16,11 @@
 #if defined(LAK_COMPILER_CLANG)
 #  define force_inline  inline __attribute__((always_inline))
 #  define packed_struct struct __attribute__((packed))
-#  define DEBUG_BREAK()
+#  define DEBUG_BREAK() asm("int $3")
 #elif defined(LAK_COMPILER_GNUC)
 #  define force_inline  inline __attribute__((always_inline))
 #  define packed_struct struct __attribute__((packed))
-#  define DEBUG_BREAK()
+#  define DEBUG_BREAK() asm("int $3")
 #elif defined(LAK_COMPILER_MSVC)
 #  define force_inline  inline __forceinline
 #  define packed_struct __pragma(pack(1)) struct
