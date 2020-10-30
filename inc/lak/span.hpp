@@ -12,7 +12,7 @@ namespace lak
 {
   /* --- Compile time sized spans --- */
 
-  template<typename T, size_t SIZE = dynamic_extent>
+  template<typename T, size_t SIZE = lak::dynamic_extent>
   struct span
   {
   private:
@@ -213,7 +213,7 @@ namespace lak
   /* --- Runtime sized spans --- */
 
   template<typename T>
-  struct span<T, dynamic_extent>
+  struct span<T, lak::dynamic_extent>
   {
   private:
     T *_data     = nullptr;
@@ -343,7 +343,7 @@ namespace lak
   };
 
   template<>
-  struct span<void, dynamic_extent>
+  struct span<void, lak::dynamic_extent>
   {
   private:
     void *_data  = nullptr;
@@ -404,7 +404,7 @@ namespace lak
   };
 
   template<>
-  struct span<const void, dynamic_extent>
+  struct span<const void, lak::dynamic_extent>
   {
   private:
     const void *_data = nullptr;
@@ -489,10 +489,10 @@ namespace lak
 
   template<typename T>
   span(const std::vector<T> &)
-    -> span<const std::remove_const_t<T>, dynamic_extent>;
+    -> span<const std::remove_const<T>, lak::dynamic_extent>;
 
   template<typename T>
-  span(std::vector<T> &) -> span<T, dynamic_extent>;
+  span(std::vector<T> &) -> span<T, lak::dynamic_extent>;
 
   template<typename T, size_t N>
   span(const std::array<T, N> &) -> span<const std::remove_const_t<T>, N>;
@@ -504,10 +504,10 @@ namespace lak
   span(T (&)[N]) -> span<T, N>;
 
   template<typename T>
-  span(T *, size_t) -> span<T, dynamic_extent>;
+  span(T *, size_t) -> span<T, lak::dynamic_extent>;
 
   template<typename T>
-  span(T *, T *) -> span<T, dynamic_extent>;
+  span(T *, T *) -> span<T, lak::dynamic_extent>;
 
   template<typename T>
   struct is_span
