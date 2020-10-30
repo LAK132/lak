@@ -57,7 +57,7 @@ uint8_t lak::codepoint_length(char32_t code)
       return 2;
     else if (code >= 0x0800U && code <= 0xFFFFU)
       return 3;
-    else if (code >= 0x00010000U && code <= 0x00010FFFFU)
+    else if (code >= 0x00010000U && code <= 0x0010FFFFU)
       return 4;
     else
       return 0;
