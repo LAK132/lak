@@ -1,11 +1,11 @@
 #include "lak/intrin.hpp"
 
-void lak::cpuid(unsigned int index, unsigned int info[4])
+void lak::cpuid(unsigned int level, unsigned int info[4])
 {
 #if defined(LAK_COMPILER_GNUC)
-  __get_cpuid(index, info + 0, info + 1, info + 2, info + 3);
+  __cpuid_count(level, 0, info[0], info[1], info[2], info[3]);
 #elif defined(LAK_COMPILER_MSVC)
-  __cpuid(reinterpret_cast<int *>(info), index);
+  __cpuidex(reinterpret_cast<int *>(info), level, 0);
 #else
 #  error "Compiler not supported"
 #endif
