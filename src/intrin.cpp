@@ -1,5 +1,4 @@
 #include "lak/intrin.hpp"
-#include "lak/debug.hpp"
 
 void lak::cpuid(unsigned int index, unsigned int info[4])
 {
@@ -19,8 +18,6 @@ lak::instruction_set lak::instruction_set::get()
   unsigned int cpu_info[4] = {};
   lak::cpuid(0, cpu_info);
   unsigned int max_level = cpu_info[0];
-
-  DEBUG(max_level);
 
   lak::instruction_set result = {};
 
