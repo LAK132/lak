@@ -45,6 +45,8 @@ int main()
 #include "lak/string.hpp"
 #include "lak/vec.hpp"
 
+#include "lak/profile.hpp"
+
 namespace lak
 {
   enum struct graphics_mode
@@ -217,12 +219,6 @@ namespace lak
   bool set_opengl_swap_interval(const lak::opengl_context &c, int interval);
 
   bool swap_window(const lak::platform_instance &i, lak::window_handle *w);
-
-  /* --- performance --- */
-
-  uint64_t performance_frequency();
-
-  uint64_t performance_counter();
 
   // Yield this thread until the target framerate is achieved.
   uint64_t yield_frame(const uint64_t last_counter,

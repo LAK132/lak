@@ -294,13 +294,3 @@ bool lak::swap_window(const lak::platform_instance &instance,
     default: return false;
   }
 }
-
-uint64_t lak::performance_frequency()
-{
-  return SDL_GetPerformanceFrequency();
-}
-
-uint64_t lak::performance_counter()
-{
-  return SDL_GetPerformanceCounter();
-}

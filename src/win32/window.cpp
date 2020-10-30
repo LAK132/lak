@@ -208,13 +208,3 @@ bool lak::peek_window_event(const lak::platform_instance &instance,
 
   return true;
 }
-
-uint64_t lak::performance_frequency()
-{
-  return 0;
-}
-
-uint64_t lak::performance_counter()
-{
-  return 0;
-}
