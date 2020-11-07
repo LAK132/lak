@@ -2,11 +2,12 @@
 // wchar_t will hold Unicode characters. wchar_t encoding is determined based
 // on its size.
 
-#ifndef LAK_UNICODE_HPP
-#define LAK_UNICODE_HPP
-
 #include "lak/span.hpp"
-#include "lak/string.hpp"
+
+#ifndef LAK_UNICODE_HPP
+#  define LAK_UNICODE_HPP
+
+#  include "lak/string.hpp"
 
 namespace lak
 {
@@ -74,7 +75,7 @@ namespace lak
   bool is_whitespace(char32_t c);
 }
 
-#include <ostream>
+#  include <ostream>
 
 std::ostream &operator<<(std::ostream &strm, const lak::span<const char> &str);
 
@@ -90,6 +91,6 @@ std::ostream &operator<<(std::ostream &strm,
 std::ostream &operator<<(std::ostream &strm,
                          const lak::span<const char32_t> &str);
 
-#include "lak/unicode.inl"
+#  include "lak/unicode.inl"
 
 #endif

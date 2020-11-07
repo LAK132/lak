@@ -1,4 +1,5 @@
 #ifndef LAK_DEBUG_HPP
+#  define LAK_DEBUG_HPP
 #  include "lak/compiler.hpp"
 #  include "lak/macro_utils.hpp"
 #  include "lak/os.hpp"
@@ -34,7 +35,7 @@
 #undef WTO_U8STRING
 #define WTO_U8STRING(x) [&] { return lak::to_u8string(TO_WSTRING(x)); }()
 
-#ifndef LAK_DEBUG_HPP
+#ifndef LAK_DEBUG_HPP1
 namespace lak
 {
   template<typename T>
@@ -363,7 +364,8 @@ namespace lak
     }                                                                         \
   }
 
-#ifndef LAK_DEBUG_HPP
-#  define LAK_DEBUG_HPP
+#ifndef LAK_DEBUG_HPP1
+#  define LAK_DEBUG_HPP1
 #  include "lak/debug.inl"
 #endif
+#include "lak/strcast.hpp"

@@ -2,6 +2,7 @@
 #define LAK_INTRIN_HPP
 
 #include "lak/compiler.hpp"
+#include "lak/stdint.hpp"
 
 #if defined(LAK_COMPILER_GNUC)
 #  include <cpuid.h>
