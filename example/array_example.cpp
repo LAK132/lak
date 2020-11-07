@@ -31,7 +31,3 @@ int main()
 
   std::cout << "\n";
 }
-
-#include "../src/debug.cpp"
-#include "../src/strconv.cpp"
-#include "../src/unicode.cpp"

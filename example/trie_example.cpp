@@ -33,11 +33,3 @@ int main()
 
   return 0;
 }
-
-#include "../src/debug.cpp"
-#include "../src/file.cpp"
-#include "../src/memory.cpp"
-#include "../src/strconv.cpp"
-#include "../src/tinflate.cpp"
-#include "../src/tokeniser.cpp"
-#include "../src/unicode.cpp"
