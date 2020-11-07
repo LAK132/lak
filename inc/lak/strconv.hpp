@@ -2,13 +2,15 @@
 // wchar_t will hold Unicode characters. wchar_t encoding is determined based
 // on its size.
 
-#ifndef LAK_STRCONV_HPP
-#define LAK_STRCONV_HPP
-
 #include "lak/span.hpp"
-#include "lak/string.hpp"
 
-#include <tuple>
+#ifndef LAK_STRCONV_HPP
+#  define LAK_STRCONV_HPP
+
+#  include "lak/strcast.hpp"
+#  include "lak/string.hpp"
+
+#  include <tuple>
 
 namespace lak
 {
@@ -104,18 +106,8 @@ namespace lak
   inline lak::u16string to_u16string(const FROM *str);
   template<typename FROM>
   inline lak::u32string to_u32string(const FROM *str);
-
-  // Reinterpret UTF-8 string as an ASCII string.
-  inline lak::span<const char> as_astring(const lak::u8string &str);
-  inline lak::span<const char> as_astring(lak::span<const char8_t> str);
-  inline lak::span<const char> as_astring(const char8_t *str);
-
-  // Reinterpret ASCII string as a UTF-8 string.
-  inline lak::span<const char8_t> as_u8string(const lak::astring &str);
-  inline lak::span<const char8_t> as_u8string(lak::span<const char> str);
-  inline lak::span<const char8_t> as_u8string(const char *str);
 }
 
-#include "lak/strconv.inl"
+#  include "lak/strconv.inl"
 
 #endif

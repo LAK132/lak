@@ -365,137 +365,163 @@ namespace lak
       switch (info.type)
       {
         case GL_FLOAT:
-          ASSERT((1 * data.size() / sizeof(GLfloat)) >= count);
+          ASSERT(static_cast<GLsizei>(1 * data.size() / sizeof(GLfloat)) >=
+                 count);
           glUniform1fv(unif, count, (GLfloat *)data.data());
           ASSERT(lak::opengl::check_error());
           break;
         case GL_FLOAT_VEC2:
-          ASSERT((2 * data.size() / sizeof(GLfloat)) >= count);
+          ASSERT(static_cast<GLsizei>(2 * data.size() / sizeof(GLfloat)) >=
+                 count);
           glUniform2fv(unif, count, (GLfloat *)data.data());
           ASSERT(lak::opengl::check_error());
           break;
         case GL_FLOAT_VEC3:
-          ASSERT((3 * data.size() / sizeof(GLfloat)) >= count);
+          ASSERT(static_cast<GLsizei>(3 * data.size() / sizeof(GLfloat)) >=
+                 count);
           glUniform3fv(unif, count, (GLfloat *)data.data());
           ASSERT(lak::opengl::check_error());
           break;
         case GL_FLOAT_VEC4:
-          ASSERT((4 * data.size() / sizeof(GLfloat)) >= count);
+          ASSERT(static_cast<GLsizei>(4 * data.size() / sizeof(GLfloat)) >=
+                 count);
           glUniform4fv(unif, count, (GLfloat *)data.data());
           ASSERT(lak::opengl::check_error());
           break;
         case GL_FLOAT_MAT2:
-          ASSERT((2 * 2 * data.size() / sizeof(GLfloat)) >= count);
+          ASSERT(static_cast<GLsizei>(2 * 2 * data.size() / sizeof(GLfloat)) >=
+                 count);
           glUniformMatrix2fv(unif, count, transpose, (GLfloat *)data.data());
           ASSERT(lak::opengl::check_error());
           break;
         case GL_FLOAT_MAT2x3:
-          ASSERT((2 * 3 * data.size() / sizeof(GLfloat)) >= count);
+          ASSERT(static_cast<GLsizei>(2 * 3 * data.size() / sizeof(GLfloat)) >=
+                 count);
           glUniformMatrix2x3fv(unif, count, transpose, (GLfloat *)data.data());
           ASSERT(lak::opengl::check_error());
           break;
         case GL_FLOAT_MAT2x4:
-          ASSERT((2 * 4 * data.size() / sizeof(GLfloat)) >= count);
+          ASSERT(static_cast<GLsizei>(2 * 4 * data.size() / sizeof(GLfloat)) >=
+                 count);
           glUniformMatrix2x4fv(unif, count, transpose, (GLfloat *)data.data());
           ASSERT(lak::opengl::check_error());
           break;
         case GL_FLOAT_MAT3:
-          ASSERT((3 * 3 * data.size() / sizeof(GLfloat)) >= count);
+          ASSERT(static_cast<GLsizei>(3 * 3 * data.size() / sizeof(GLfloat)) >=
+                 count);
           glUniformMatrix3fv(unif, count, transpose, (GLfloat *)data.data());
           ASSERT(lak::opengl::check_error());
           break;
         case GL_FLOAT_MAT3x2:
-          ASSERT((3 * 2 * data.size() / sizeof(GLfloat)) >= count);
+          ASSERT(static_cast<GLsizei>(3 * 2 * data.size() / sizeof(GLfloat)) >=
+                 count);
           glUniformMatrix3x2fv(unif, count, transpose, (GLfloat *)data.data());
           ASSERT(lak::opengl::check_error());
           break;
         case GL_FLOAT_MAT3x4:
-          ASSERT((3 * 4 * data.size() / sizeof(GLfloat)) >= count);
+          ASSERT(static_cast<GLsizei>(3 * 4 * data.size() / sizeof(GLfloat)) >=
+                 count);
           glUniformMatrix3x4fv(unif, count, transpose, (GLfloat *)data.data());
           ASSERT(lak::opengl::check_error());
           break;
         case GL_FLOAT_MAT4:
-          ASSERT((4 * 4 * data.size() / sizeof(GLfloat)) >= count);
+          ASSERT(static_cast<GLsizei>(4 * 4 * data.size() / sizeof(GLfloat)) >=
+                 count);
           glUniformMatrix4fv(unif, count, transpose, (GLfloat *)data.data());
           ASSERT(lak::opengl::check_error());
           break;
         case GL_FLOAT_MAT4x2:
-          ASSERT((4 * 2 * data.size() / sizeof(GLfloat)) >= count);
+          ASSERT(static_cast<GLsizei>(4 * 2 * data.size() / sizeof(GLfloat)) >=
+                 count);
           glUniformMatrix4x2fv(unif, count, transpose, (GLfloat *)data.data());
           ASSERT(lak::opengl::check_error());
           break;
         case GL_FLOAT_MAT4x3:
-          ASSERT((4 * 3 * data.size() / sizeof(GLfloat)) >= count);
+          ASSERT(static_cast<GLsizei>(4 * 3 * data.size() / sizeof(GLfloat)) >=
+                 count);
           glUniformMatrix4x3fv(unif, count, transpose, (GLfloat *)data.data());
           ASSERT(lak::opengl::check_error());
           break;
         case GL_DOUBLE:
-          ASSERT((1 * data.size() / sizeof(GLdouble)) >= count);
+          ASSERT(static_cast<GLsizei>(1 * data.size() / sizeof(GLdouble)) >=
+                 count);
           glUniform1dv(unif, count, (GLdouble *)data.data());
           ASSERT(lak::opengl::check_error());
           break;
         case GL_DOUBLE_VEC2:
-          ASSERT((2 * data.size() / sizeof(GLdouble)) >= count);
+          ASSERT(static_cast<GLsizei>(2 * data.size() / sizeof(GLdouble)) >=
+                 count);
           glUniform2dv(unif, count, (GLdouble *)data.data());
           ASSERT(lak::opengl::check_error());
           break;
         case GL_DOUBLE_VEC3:
-          ASSERT((3 * data.size() / sizeof(GLdouble)) >= count);
+          ASSERT(static_cast<GLsizei>(3 * data.size() / sizeof(GLdouble)) >=
+                 count);
           glUniform3dv(unif, count, (GLdouble *)data.data());
           ASSERT(lak::opengl::check_error());
           break;
         case GL_DOUBLE_VEC4:
-          ASSERT((4 * data.size() / sizeof(GLdouble)) >= count);
+          ASSERT(static_cast<GLsizei>(4 * data.size() / sizeof(GLdouble)) >=
+                 count);
           glUniform4dv(unif, count, (GLdouble *)data.data());
           ASSERT(lak::opengl::check_error());
           break;
         case GL_DOUBLE_MAT2:
-          ASSERT((2 * 2 * data.size() / sizeof(GLdouble)) >= count);
+          ASSERT(static_cast<GLsizei>(2 * 2 * data.size() /
+                                      sizeof(GLdouble)) >= count);
           glUniformMatrix2dv(unif, count, transpose, (GLdouble *)data.data());
           ASSERT(lak::opengl::check_error());
           break;
         case GL_DOUBLE_MAT2x3:
-          ASSERT((2 * 3 * data.size() / sizeof(GLdouble)) >= count);
+          ASSERT(static_cast<GLsizei>(2 * 3 * data.size() /
+                                      sizeof(GLdouble)) >= count);
           glUniformMatrix2x3dv(
             unif, count, transpose, (GLdouble *)data.data());
           ASSERT(lak::opengl::check_error());
           break;
         case GL_DOUBLE_MAT2x4:
-          ASSERT((2 * 4 * data.size() / sizeof(GLdouble)) >= count);
+          ASSERT(static_cast<GLsizei>(2 * 4 * data.size() /
+                                      sizeof(GLdouble)) >= count);
           glUniformMatrix2x4dv(
             unif, count, transpose, (GLdouble *)data.data());
           ASSERT(lak::opengl::check_error());
           break;
         case GL_DOUBLE_MAT3:
-          ASSERT((3 * 3 * data.size() / sizeof(GLdouble)) >= count);
+          ASSERT(static_cast<GLsizei>(3 * 3 * data.size() /
+                                      sizeof(GLdouble)) >= count);
           glUniformMatrix3dv(unif, count, transpose, (GLdouble *)data.data());
           ASSERT(lak::opengl::check_error());
           break;
         case GL_DOUBLE_MAT3x2:
-          ASSERT((3 * 2 * data.size() / sizeof(GLdouble)) >= count);
+          ASSERT(static_cast<GLsizei>(3 * 2 * data.size() /
+                                      sizeof(GLdouble)) >= count);
           glUniformMatrix3x2dv(
             unif, count, transpose, (GLdouble *)data.data());
           ASSERT(lak::opengl::check_error());
           break;
         case GL_DOUBLE_MAT3x4:
-          ASSERT((3 * 4 * data.size() / sizeof(GLdouble)) >= count);
+          ASSERT(static_cast<GLsizei>(3 * 4 * data.size() /
+                                      sizeof(GLdouble)) >= count);
           glUniformMatrix3x4dv(
             unif, count, transpose, (GLdouble *)data.data());
           ASSERT(lak::opengl::check_error());
           break;
         case GL_DOUBLE_MAT4:
-          ASSERT((4 * 4 * data.size() / sizeof(GLdouble)) >= count);
+          ASSERT(static_cast<GLsizei>(4 * 4 * data.size() /
+                                      sizeof(GLdouble)) >= count);
           glUniformMatrix4dv(unif, count, transpose, (GLdouble *)data.data());
           ASSERT(lak::opengl::check_error());
           break;
         case GL_DOUBLE_MAT4x2:
-          ASSERT((4 * 2 * data.size() / sizeof(GLdouble)) >= count);
+          ASSERT(static_cast<GLsizei>(4 * 2 * data.size() /
+                                      sizeof(GLdouble)) >= count);
           glUniformMatrix4x2dv(
             unif, count, transpose, (GLdouble *)data.data());
           ASSERT(lak::opengl::check_error());
           break;
         case GL_DOUBLE_MAT4x3:
-          ASSERT((4 * 3 * data.size() / sizeof(GLdouble)) >= count);
+          ASSERT(static_cast<GLsizei>(4 * 3 * data.size() /
+                                      sizeof(GLdouble)) >= count);
           glUniformMatrix4x3dv(
             unif, count, transpose, (GLdouble *)data.data());
           ASSERT(lak::opengl::check_error());
@@ -517,42 +543,50 @@ namespace lak
         case GL_SAMPLER_BUFFER:
         case GL_SAMPLER_2D_RECT:
         case GL_SAMPLER_2D_RECT_SHADOW:
-          ASSERT((1 * data.size() / sizeof(GLint)) >= count);
+          ASSERT(static_cast<GLsizei>(1 * data.size() / sizeof(GLint)) >=
+                 count);
           glUniform1iv(unif, count, (GLint *)data.data());
           ASSERT(lak::opengl::check_error());
           break;
         case GL_INT_VEC2:
-          ASSERT((2 * data.size() / sizeof(GLint)) >= count);
+          ASSERT(static_cast<GLsizei>(2 * data.size() / sizeof(GLint)) >=
+                 count);
           glUniform2iv(unif, count, (GLint *)data.data());
           ASSERT(lak::opengl::check_error());
           break;
         case GL_INT_VEC3:
-          ASSERT((3 * data.size() / sizeof(GLint)) >= count);
+          ASSERT(static_cast<GLsizei>(3 * data.size() / sizeof(GLint)) >=
+                 count);
           glUniform3iv(unif, count, (GLint *)data.data());
           ASSERT(lak::opengl::check_error());
           break;
         case GL_INT_VEC4:
-          ASSERT((4 * data.size() / sizeof(GLint)) >= count);
+          ASSERT(static_cast<GLsizei>(4 * data.size() / sizeof(GLint)) >=
+                 count);
           glUniform4iv(unif, count, (GLint *)data.data());
           ASSERT(lak::opengl::check_error());
           break;
         case GL_UNSIGNED_INT:
-          ASSERT((1 * data.size() / sizeof(GLuint)) >= count);
+          ASSERT(static_cast<GLsizei>(1 * data.size() / sizeof(GLuint)) >=
+                 count);
           glUniform1uiv(unif, count, (GLuint *)data.data());
           ASSERT(lak::opengl::check_error());
           break;
         case GL_UNSIGNED_INT_VEC2:
-          ASSERT((2 * data.size() / sizeof(GLuint)) >= count);
+          ASSERT(static_cast<GLsizei>(2 * data.size() / sizeof(GLuint)) >=
+                 count);
           glUniform2uiv(unif, count, (GLuint *)data.data());
           ASSERT(lak::opengl::check_error());
           break;
         case GL_UNSIGNED_INT_VEC3:
-          ASSERT((3 * data.size() / sizeof(GLuint)) >= count);
+          ASSERT(static_cast<GLsizei>(3 * data.size() / sizeof(GLuint)) >=
+                 count);
           glUniform3uiv(unif, count, (GLuint *)data.data());
           ASSERT(lak::opengl::check_error());
           break;
         case GL_UNSIGNED_INT_VEC4:
-          ASSERT((4 * data.size() / sizeof(GLuint)) >= count);
+          ASSERT(static_cast<GLsizei>(4 * data.size() / sizeof(GLuint)) >=
+                 count);
           glUniform4uiv(unif, count, (GLuint *)data.data());
           ASSERT(lak::opengl::check_error());
           break;

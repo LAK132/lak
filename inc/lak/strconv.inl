@@ -156,35 +156,5 @@ inline lak::u32string lak::to_u32string(const FROM *str)
   return lak::strconv<char32_t>(lak::span(str, lak::string_length(str)));
 }
 
-inline lak::span<const char> lak::as_astring(const lak::u8string &str)
-{
-  return lak::span<const char>(lak::string_view(str));
-}
-
-inline lak::span<const char> lak::as_astring(lak::span<const char8_t> str)
-{
-  return lak::span<const char>(str);
-}
-
-inline lak::span<const char> lak::as_astring(const char8_t *str)
-{
-  return lak::span<const char>(lak::string_view(str));
-}
-
-inline lak::span<const char8_t> lak::as_u8string(const lak::astring &str)
-{
-  return lak::span<const char8_t>(lak::string_view(str));
-}
-
-inline lak::span<const char8_t> lak::as_u8string(lak::span<const char> str)
-{
-  return lak::span<const char8_t>(str);
-}
-
-inline lak::span<const char8_t> lak::as_u8string(const char *str)
-{
-  return lak::span<const char8_t>(lak::string_view(str));
-}
-
 LAK_EXTERN_TEMPLATE_FOREACH_CHAR(lak::codepoint_iterator)
 LAK_EXTERN_TEMPLATE_FOREACH_CHAR(lak::codepoint_range)
