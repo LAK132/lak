@@ -128,6 +128,14 @@ namespace lak
 
     T &back();
     const T &back() const;
+
+    template<typename... ARGS>
+    T &emplace_back(ARGS &&... args);
+
+    T &push_back(const T &t);
+    T &push_back(T &&t);
+
+    void pop_back();
   };
 }
 

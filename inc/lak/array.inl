@@ -255,3 +255,37 @@ const T &lak::array<T, lak::dynamic_extent>::back() const
   ASSERT_GREATER(_size, 0);
   return _data[_size - 1];
 }
+
+template<typename T>
+template<typename... ARGS>
+T &lak::array<T, lak::dynamic_extent>::emplace_back(ARGS &&... args)
+{
+  commit(_size + 1);
+  new (_data + _size) T(lak::forward<ARGS>(args)...);
+  ++_size;
+  return back();
+}
+
+template<typename T>
+T &lak::array<T, lak::dynamic_extent>::push_back(const T &t)
+{
+  commit(_size + 1);
+  new (_data + _size) T(t);
+  ++_size;
+  return back();
+}
+
+template<typename T>
+T &lak::array<T, lak::dynamic_extent>::push_back(T &&t)
+{
+  commit(_size + 1);
+  new (_data + _size) T(lak::move(t));
+  ++_size;
+  return back();
+}
+
+template<typename T>
+void lak::array<T, lak::dynamic_extent>::pop_back()
+{
+  _data[--_size].~T();
+}
