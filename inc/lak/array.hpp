@@ -70,6 +70,8 @@ namespace lak
     size_t _committed = 0; // bytes
     size_t _reserved  = 0; // bytes
 
+    void commit(size_t new_size);
+
   public:
     using value_type      = T;
     using size_type       = size_t;
