@@ -8,10 +8,27 @@
 #include <array>
 #include <vector>
 
+// When we move to C++20 we need to allow ASSERTF to work in constexpr
+// functions.
+#if __cplusplus <= 201703L
+#  define ASSERT_CONSTEXPR
+#else
+#  define ASSERT_CONSTEXPR constexpr
+#endif
+
 namespace lak
 {
   template<typename T, size_t SIZE>
   struct array;
+
+  template<typename T>
+  struct is_span
+  {
+    static constexpr bool value = false;
+  };
+
+  template<typename T>
+  inline constexpr bool is_span_v = is_span<T>::value;
 
   /* --- Compile time sized spans --- */
 
@@ -52,28 +69,24 @@ namespace lak
     {
     }
 
-    template<size_t N>
     inline constexpr span(
       const std::array<std::remove_const_t<T>, SIZE> &array) noexcept
     : _data(array.data())
     {
     }
 
-    template<size_t N>
     inline constexpr span(
       std::array<std::remove_const_t<T>, SIZE> &array) noexcept
     : _data(array.data())
     {
     }
 
-    template<size_t N>
     inline constexpr span(
       const lak::array<std::remove_const_t<T>, SIZE> &array) noexcept
     : _data(array.data())
     {
     }
 
-    template<size_t N>
     inline constexpr span(
       lak::array<std::remove_const_t<T>, SIZE> &array) noexcept
     : _data(array.data())
@@ -101,7 +114,7 @@ namespace lak
 
     explicit inline constexpr span(T *data) noexcept : _data(data) {}
 
-    inline constexpr T &operator[](size_t index) const noexcept;
+    inline ASSERT_CONSTEXPR T &operator[](size_t index) const noexcept;
 
     inline constexpr T *data() const noexcept;
 
@@ -116,20 +129,22 @@ namespace lak
     inline constexpr T *end() const noexcept;
 
     template<size_t offset, size_t count = lak::dynamic_extent>
-    inline constexpr span<T, count> subspan() const;
+    inline ASSERT_CONSTEXPR span<T, count> subspan() const;
 
-    inline constexpr span<T, lak::dynamic_extent> subspan(
+    inline ASSERT_CONSTEXPR span<T, lak::dynamic_extent> subspan(
       size_t offset, size_t count = lak::dynamic_extent) const;
 
     template<size_t count>
     inline constexpr span<T, count> first() const;
 
-    inline constexpr span<T, lak::dynamic_extent> first(size_t count) const;
+    inline ASSERT_CONSTEXPR span<T, lak::dynamic_extent> first(
+      size_t count) const;
 
     template<size_t count>
     inline constexpr span<T, count> last() const;
 
-    inline constexpr span<T, lak::dynamic_extent> last(size_t count) const;
+    inline ASSERT_CONSTEXPR span<T, lak::dynamic_extent> last(
+      size_t count) const;
 
     inline constexpr auto to_string() const;
   };
@@ -280,17 +295,6 @@ namespace lak
         _size = other.size();
     }
 
-    inline constexpr span(
-      const std::vector<std::remove_const_t<T>> &vector) noexcept
-    : _data(vector.data()), _size(vector.size())
-    {
-    }
-
-    inline constexpr span(std::vector<std::remove_const_t<T>> &vector) noexcept
-    : _data(vector.data()), _size(vector.size())
-    {
-    }
-
     template<size_t N>
     inline constexpr span(
       const std::array<std::remove_const_t<T>, N> &array) noexcept
@@ -311,17 +315,11 @@ namespace lak
     {
     }
 
-    template<size_t N>
-    inline constexpr span(
-      const lak::array<std::remove_const_t<T>, N> &array) noexcept
-    : _data(array.data()), _size(array.size())
-    {
-    }
-
-    template<size_t N>
-    inline constexpr span(
-      lak::array<std::remove_const_t<T>, N> &array) noexcept
-    : _data(array.data()), _size(array.size())
+    template<
+      typename CONTAINER,
+      lak::enable_if_i<!lak::is_span_v<lak::remove_cvref_t<CONTAINER>>> = 0>
+    inline constexpr span(CONTAINER &&container) noexcept
+    : _data(container.data()), _size(container.size())
     {
     }
 
@@ -344,9 +342,9 @@ namespace lak
     {
     }
 
-    explicit inline constexpr span(T *begin, T *end) noexcept;
+    explicit inline ASSERT_CONSTEXPR span(T *begin, T *end) noexcept;
 
-    inline constexpr T &operator[](size_t index) const noexcept;
+    inline ASSERT_CONSTEXPR T &operator[](size_t index) const noexcept;
 
     inline constexpr T *data() const noexcept;
 
@@ -361,20 +359,22 @@ namespace lak
     inline constexpr T *end() const noexcept;
 
     template<size_t offset, size_t count = lak::dynamic_extent>
-    inline constexpr span<T, count> subspan() const;
+    inline ASSERT_CONSTEXPR span<T, count> subspan() const;
 
-    inline constexpr span<T, lak::dynamic_extent> subspan(
+    inline ASSERT_CONSTEXPR span<T, lak::dynamic_extent> subspan(
       size_t offset, size_t count = lak::dynamic_extent) const;
 
     template<size_t count>
-    inline constexpr span<T, count> first() const;
+    inline ASSERT_CONSTEXPR span<T, count> first() const;
 
-    inline constexpr span<T, lak::dynamic_extent> first(size_t count) const;
+    inline ASSERT_CONSTEXPR span<T, lak::dynamic_extent> first(
+      size_t count) const;
 
     template<size_t count>
-    inline constexpr span<T, count> last() const;
+    inline ASSERT_CONSTEXPR span<T, count> last() const;
 
-    inline constexpr span<T, lak::dynamic_extent> last(size_t count) const;
+    inline ASSERT_CONSTEXPR span<T, lak::dynamic_extent> last(
+      size_t count) const;
 
     inline constexpr auto to_string() const;
   };
@@ -551,20 +551,11 @@ namespace lak
   template<typename T>
   span(T *, T *) -> span<T, lak::dynamic_extent>;
 
-  template<typename T>
-  struct is_span
-  {
-    static constexpr bool value = false;
-  };
-
   template<typename T, size_t S>
   struct is_span<lak::span<T, S>>
   {
     static constexpr bool value = true;
   };
-
-  template<typename T>
-  inline constexpr bool is_span_v = is_span<T>::value;
 
   /* --- helper functions --- */
 
@@ -590,6 +581,8 @@ bool operator==(lak::span<T> a, lak::span<T> b);
 
 template<typename T>
 bool operator!=(lak::span<T> a, lak::span<T> b);
+
+#undef ASSERT_CONSTEXPR
 
 #include "lak/span.inl"
 
