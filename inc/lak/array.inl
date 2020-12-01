@@ -19,6 +19,20 @@ constexpr lak::array<T, SIZE> &lak::array<T, SIZE>::operator=(
 }
 
 template<typename T, size_t SIZE>
+T &lak::array<T, SIZE>::at(size_t index)
+{
+  ASSERT_GREATER(SIZE, index);
+  return _data[index];
+}
+
+template<typename T, size_t SIZE>
+const T &lak::array<T, SIZE>::at(size_t index) const
+{
+  ASSERT_GREATER(SIZE, index);
+  return _data[index];
+}
+
+template<typename T, size_t SIZE>
 constexpr T &lak::array<T, SIZE>::operator[](size_t index)
 {
   return _data[index];
@@ -142,15 +156,27 @@ void lak::array<T, lak::dynamic_extent>::force_clear()
 }
 
 template<typename T>
-T &lak::array<T, lak::dynamic_extent>::operator[](size_t index)
+T &lak::array<T, lak::dynamic_extent>::at(size_t index)
 {
   ASSERT_GREATER(_size, index);
   return _data[index];
 }
 
 template<typename T>
-const T &lak::array<T, lak::dynamic_extent>::operator[](size_t index) const
+const T &lak::array<T, lak::dynamic_extent>::at(size_t index) const
 {
   ASSERT_GREATER(_size, index);
+  return _data[index];
+}
+
+template<typename T>
+T &lak::array<T, lak::dynamic_extent>::operator[](size_t index)
+{
+  return _data[index];
+}
+
+template<typename T>
+const T &lak::array<T, lak::dynamic_extent>::operator[](size_t index) const
+{
   return _data[index];
 }
