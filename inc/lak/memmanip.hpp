@@ -27,9 +27,13 @@ namespace lak
     std::memset(dst, val, sizeof(T));
   }
 
+  size_t page_size();
+
   lak::span<void> page_reserve(size_t size);
 
   bool page_commit(lak::span<void> pages);
+
+  bool page_decommit(lak::span<void> pages);
 
   bool page_free(lak::span<void> pages);
 }
