@@ -30,6 +30,8 @@ namespace lak
     constexpr array(array &&other);
     constexpr array &operator=(array &&other);
 
+    array(std::initializer_list<T> list);
+
     constexpr size_t size() const { return SIZE; }
     constexpr size_t capacity() const { return SIZE; }
     [[nodiscard]] constexpr bool empty() const { return SIZE == 0; }

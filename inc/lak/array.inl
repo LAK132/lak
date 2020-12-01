@@ -1,3 +1,4 @@
+#include "lak/algorithm.hpp"
 #include "lak/compiler.hpp"
 #include "lak/memmanip.hpp"
 #include "lak/span.hpp"
@@ -16,6 +17,13 @@ constexpr lak::array<T, SIZE> &lak::array<T, SIZE>::operator=(
 {
   for (size_t i = 0; i < SIZE; ++i) std::swap(_data[i], other._data[i]);
   return *this;
+}
+
+template<typename T, size_t SIZE>
+lak::array<T, SIZE>::array(std::initializer_list<T> list)
+{
+  ASSERT_EQUAL(list.size(), SIZE);
+  lak::copy(list.begin(), list.end(), static_cast<T *>(_data));
 }
 
 template<typename T, size_t SIZE>
