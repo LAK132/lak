@@ -51,6 +51,12 @@ namespace lak
 
     constexpr T &operator[](size_t index);
     constexpr const T &operator[](size_t index) const;
+
+    constexpr T &front();
+    constexpr const T &front() const;
+
+    constexpr T &back();
+    constexpr const T &back() const;
   };
 
   template<typename T>
@@ -110,6 +116,12 @@ namespace lak
 
     T &operator[](size_t index);
     const T &operator[](size_t index) const;
+
+    T &front();
+    const T &front() const;
+
+    T &back();
+    const T &back() const;
   };
 }
 

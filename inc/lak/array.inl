@@ -44,6 +44,30 @@ constexpr const T &lak::array<T, SIZE>::operator[](size_t index) const
   return _data[index];
 }
 
+template<typename T, size_t SIZE>
+constexpr T &lak::array<T, SIZE>::front()
+{
+  return _data[0];
+}
+
+template<typename T, size_t SIZE>
+constexpr const T &lak::array<T, SIZE>::front() const
+{
+  return _data[0];
+}
+
+template<typename T, size_t SIZE>
+constexpr T &lak::array<T, SIZE>::back()
+{
+  return _data[SIZE - 1];
+}
+
+template<typename T, size_t SIZE>
+constexpr const T &lak::array<T, SIZE>::back() const
+{
+  return _data[SIZE - 1];
+}
+
 /* --- dynamic size --- */
 
 template<typename T>
@@ -179,4 +203,32 @@ template<typename T>
 const T &lak::array<T, lak::dynamic_extent>::operator[](size_t index) const
 {
   return _data[index];
+}
+
+template<typename T>
+T &lak::array<T, lak::dynamic_extent>::front()
+{
+  ASSERT_GREATER(_size, 0);
+  return _data[0];
+}
+
+template<typename T>
+const T &lak::array<T, lak::dynamic_extent>::front() const
+{
+  ASSERT_GREATER(_size, 0);
+  return _data[0];
+}
+
+template<typename T>
+T &lak::array<T, lak::dynamic_extent>::back()
+{
+  ASSERT_GREATER(_size, 0);
+  return _data[_size - 1];
+}
+
+template<typename T>
+const T &lak::array<T, lak::dynamic_extent>::back() const
+{
+  ASSERT_GREATER(_size, 0);
+  return _data[_size - 1];
 }
