@@ -190,6 +190,26 @@ namespace lak
   };
   template<typename T, typename U>
   static constexpr bool is_same_v = is_same<T, U>::value;
+
+  /* --- is_const --- */
+
+  template<typename T>
+  struct is_const : public false_type
+  {
+  };
+  template<typename T>
+  struct is_const<const T> : public true_type
+  {
+  };
+  template<typename T>
+  static constexpr bool is_const_v = is_const<T>::value;
+
+  /* --- copy_const --- */
+
+  template<typename FROM, typename TO>
+  using copy_const_t = lak::conditional_t<lak::is_const_v<FROM>,
+                                          const lak::remove_const_t<TO>,
+                                          lak::remove_const_t<TO>>;
 }
 
 #endif
