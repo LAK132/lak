@@ -79,6 +79,18 @@ constexpr const T &lak::array<T, SIZE>::back() const
 /* --- dynamic size --- */
 
 template<typename T>
+void lak::array<T, lak::dynamic_extent>::commit(size_t new_size)
+{
+  size_t new_size_bytes = new_size * sizeof(T);
+  if (new_size_bytes > _committed)
+  {
+    if (new_size_bytes > _reserved) reserve(new_size);
+    _committed = new_size_bytes;
+    ASSERT(lak::page_commit(lak::span<void>(_data, _committed)));
+  }
+}
+
+template<typename T>
 lak::array<T, lak::dynamic_extent>::array(
   array<T, lak::dynamic_extent> &&other)
 : _data(other._data),
@@ -115,13 +127,7 @@ void lak::array<T, lak::dynamic_extent>::resize(size_t new_size)
 {
   if (new_size > _size)
   {
-    size_t new_size_bytes = new_size * sizeof(T);
-    if (new_size_bytes > _committed)
-    {
-      if (new_size_bytes > _reserved) reserve(new_size);
-      _committed = new_size_bytes;
-      ASSERT(lak::page_commit(lak::span<void>(_data, _committed)));
-    }
+    commit(new_size);
     for (; _size < new_size; ++_size) new (_data + _size) T();
   }
   else if (new_size < _size)
