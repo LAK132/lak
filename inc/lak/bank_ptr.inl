@@ -1,3 +1,5 @@
+#include "lak/utility.hpp"
+
 /* --- lak::bank<T> --- */
 
 template<typename T>
@@ -37,12 +39,12 @@ size_t lak::bank<T>::internal_create(ARGS &&... args)
     auto index = _deleted.back();
     _deleted.pop_back();
     _container[index].~T();
-    new (&_container[index]) T(std::forward<ARGS>(args)...);
+    new (&_container[index]) T(lak::forward<ARGS>(args)...);
     return index;
   }
   else
   {
-    _container.emplace_back(std::forward<ARGS>(args)...);
+    _container.emplace_back(lak::forward<ARGS>(args)...);
     return _container.size() - 1;
   }
 }
@@ -97,7 +99,7 @@ template<typename T>
 T *lak::bank<T>::create(T &&t)
 {
   std::lock_guard lock(_mutex);
-  auto result = internal_create(std::move(t));
+  auto result = internal_create(lak::move(t));
   return result != std::numeric_limits<size_t>::max() ? &_container[result]
                                                       : nullptr;
 }
@@ -107,7 +109,7 @@ template<typename... ARGS>
 T *lak::bank<T>::create(ARGS &&... args)
 {
   std::lock_guard lock(_mutex);
-  auto result = internal_create(std::forward<ARGS>(args)...);
+  auto result = internal_create(lak::forward<ARGS>(args)...);
   return result != std::numeric_limits<size_t>::max() ? &_container[result]
                                                       : nullptr;
 }
@@ -148,7 +150,7 @@ template<typename FUNCTOR>
 T *lak::bank<T>::find_if(FUNCTOR &&func)
 {
   std::lock_guard lock(_mutex);
-  auto result = internal_find_if(std::forward<FUNCTOR>(func));
+  auto result = internal_find_if(lak::forward<FUNCTOR>(func));
   return result != std::numeric_limits<size_t>::max() ? &_container[result]
                                                       : nullptr;
 }
@@ -166,7 +168,7 @@ template<typename T>
 lak::unique_bank_ptr<T> lak::unique_bank_ptr<T>::create(T &&t)
 {
   std::lock_guard lock(_mutex);
-  return {internal_create(std::move(t))};
+  return {internal_create(lak::move(t))};
 }
 
 template<typename T>
@@ -174,7 +176,7 @@ template<typename... ARGS>
 lak::unique_bank_ptr<T> lak::unique_bank_ptr<T>::create(ARGS &&... args)
 {
   std::lock_guard lock(_mutex);
-  return {internal_create(std::forward<ARGS>(args)...)};
+  return {internal_create(lak::forward<ARGS>(args)...)};
 }
 
 template<typename T>
@@ -375,7 +377,7 @@ template<typename T>
 lak::shared_bank_ptr<T> lak::shared_bank_ptr<T>::create(T &&t)
 {
   std::lock_guard lock(_mutex);
-  auto index = internal_create(std::move(t));
+  auto index = internal_create(lak::move(t));
   _reference_count.resize(_container.size());
   ++_reference_count[index];
   return {index};
@@ -386,7 +388,7 @@ template<typename... ARGS>
 lak::shared_bank_ptr<T> lak::shared_bank_ptr<T>::create(ARGS &&... args)
 {
   std::lock_guard lock(_mutex);
-  auto index = internal_create(std::forward<ARGS>(args)...);
+  auto index = internal_create(lak::forward<ARGS>(args)...);
   _reference_count.resize(_container.size());
   ++_reference_count[index];
   return {index};
@@ -397,7 +399,7 @@ template<typename FUNCTOR>
 lak::shared_bank_ptr<T> lak::shared_bank_ptr<T>::find_if(FUNCTOR &&func)
 {
   std::lock_guard lock(_mutex);
-  auto result = internal_find_if(std::forward<FUNCTOR>(func));
+  auto result = internal_find_if(lak::forward<FUNCTOR>(func));
   _reference_count.resize(_container.size());
   if (result != std::numeric_limits<size_t>::max()) ++_reference_count[result];
   return {result};
