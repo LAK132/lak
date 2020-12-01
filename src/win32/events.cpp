@@ -4,6 +4,7 @@
 #ifndef NOMINMAX
 #  define NOMINMAX
 #endif
+#include <Windows.h>
 #include <windowsx.h>
 #include <wingdi.h>
 
@@ -20,247 +21,323 @@ EXTERN_C IMAGE_DOS_HEADER __ImageBase;
 
 #include <thread>
 
-void win32_error_popup(LPWSTR lpszFunction);
+lak::wstring win32_error_string(LPCWSTR lpszFunction);
+void win32_error_popup(LPCWSTR lpszFunction);
 
-void translate_event(const MSG &msg, lak::event *event)
+void translate_event(const MSG &msg,
+                     lak::event *event,
+                     const lak::window_handle *window = nullptr)
 {
   using namespace lak;
 
-  lak::memcpy(&event->platform_event, &msg);
-
   switch (msg.message)
   {
-    /* --- quit_program --- */
+      /* --- quit_program --- */
 
     // Quit the application entirely.
     case WM_QUIT:
-      DEBUG("WM_QUIT");
-      event->type = event_type::quit_program;
-      break;
+    {
+      CHECKPOINT();
+      *event = lak::event(lak::event_type::quit_program, window, msg);
+    }
+    break;
 
-    /* --- window_close --- */
+      /* --- close_window --- */
 
     // User is *asking* to close this window.
     case WM_CLOSE:
-      DEBUG("WM_CLOSE");
-      event->type = event_type::window_close;
-      lak::memset(&event->window, 0);
-      break;
+    {
+      *event = lak::event(
+        lak::event_type::close_window, window, msg, lak::window_event{});
+    }
+    break;
 
-      /* --- window_destroyed --- */
+      /* --- window_closed --- */
 
     // Window *has* been destroyed.
     case WM_DESTROY:
-      DEBUG("WM_DESTROY");
-      event->type = event_type::window_destroyed;
-      lak::memset(&event->window, 0);
-      break;
-
-      /* --- window_created --- */
-
-    // Window has been created.
-    case WM_CREATE:
-      DEBUG("WM_CREATE");
-      event->type = event_type::window_created;
-      lak::memset(&event->window, 0);
-      break;
+    {
+      *event = lak::event(
+        lak::event_type::window_closed, window, msg, lak::window_event{});
+    }
+    break;
 
       /* --- window_changed --- */
 
     case WM_WINDOWPOSCHANGED:
-      DEBUG("WM_WINDOWPOSCHANGED");
-      event->type = event_type::window_changed;
-      lak::memset(&event->window, 0);
-      break;
+    {
+      // :TODO: get position/size data
+      *event = lak::event(
+        lak::event_type::window_changed, window, msg, lak::window_event{});
+    }
+    break;
 
       /* --- window_exposed --- */
 
     case WM_PAINT:
-      DEBUG("WM_PAINT");
-      event->type = event_type::window_exposed;
-      lak::memset(&event->window, 0);
-      break;
+    {
+      *event = lak::event(
+        lak::event_type::window_exposed, window, msg, lak::window_event{});
+    }
+    break;
 
       /* --- key_down --- */
 
     case WM_KEYDOWN:
-      event->type = event_type::key_down;
-      lak::memset(&event->key, 0);
-      break;
+    {
+      // :TODO:
+      *event =
+        lak::event(lak::event_type::key_down, window, msg, lak::key_event{});
+    }
+    break;
 
       /* --- key_up --- */
 
     case WM_KEYUP:
-      event->type = event_type::key_up;
-      lak::memset(&event->key, 0);
-      break;
+    {
+      // :TODO:
+      *event =
+        lak::event(lak::event_type::key_up, window, msg, lak::key_event{});
+    }
+    break;
 
-      /* --- mouse_button_down --- */
+      /* --- character --- */
+
+    case WM_UNICHAR:
+    {
+      // :TODO: is this a text input event? should SDL2 have something like
+      // this?
+      if (msg.wParam != UNICODE_NOCHAR)
+        *event = lak::event(lak::event_type::character,
+                            window,
+                            msg,
+                            lak::character_event{(char32_t)msg.wParam});
+      else
+        *event = lak::event(lak::event_type::platform_event, window, msg);
+    }
+    break;
+
+      /* --- button_down --- */
 
     case WM_LBUTTONDOWN:
-      event->type = event_type::mouse_button_down;
-      lak::memset(&event->mouse, 0);
-      event->mouse.button = mouse_button::left;
-      // event->mouse.mod = GET_KEYSTATE_WPARAM(msg.wParam);
-      event->mouse.position.x = GET_X_LPARAM(msg.lParam);
-      event->mouse.position.y = GET_Y_LPARAM(msg.lParam);
-      break;
+    {
+      *event = lak::event(lak::event_type::button_down,
+                          window,
+                          msg,
+                          lak::button_event{mouse_button::left});
+    }
+    break;
 
     case WM_MBUTTONDOWN:
-      event->type = event_type::mouse_button_down;
-      lak::memset(&event->mouse, 0);
-      event->mouse.button = mouse_button::middle;
-      // event->mouse.mod = GET_KEYSTATE_WPARAM(msg.wParam);
-      event->mouse.position.x = GET_X_LPARAM(msg.lParam);
-      event->mouse.position.y = GET_Y_LPARAM(msg.lParam);
-      break;
+    {
+      *event = lak::event(lak::event_type::button_down,
+                          window,
+                          msg,
+                          lak::button_event{mouse_button::middle});
+    }
+    break;
 
     case WM_RBUTTONDOWN:
-      event->type = event_type::mouse_button_down;
-      lak::memset(&event->mouse, 0);
-      event->mouse.button = mouse_button::right;
-      // event->mouse.mod = GET_KEYSTATE_WPARAM(msg.wParam);
-      event->mouse.position.x = GET_X_LPARAM(msg.lParam);
-      event->mouse.position.y = GET_Y_LPARAM(msg.lParam);
-      break;
+    {
+      *event = lak::event(lak::event_type::button_down,
+                          window,
+                          msg,
+                          lak::button_event{mouse_button::right});
+    }
+    break;
 
     case WM_XBUTTONDOWN:
-      event->type = event_type::mouse_button_down;
-      lak::memset(&event->mouse, 0);
-      event->mouse.button =
-        (GET_XBUTTON_WPARAM(msg.wParam) == XBUTTON1 ? mouse_button::x1
-                                                    : mouse_button::none) |
-        (GET_XBUTTON_WPARAM(msg.wParam) == XBUTTON2 ? mouse_button::x2
-                                                    : mouse_button::none);
-      // event->mouse.mod = GET_KEYSTATE_WPARAM(msg.wParam);
-      event->mouse.position.x = GET_X_LPARAM(msg.lParam);
-      event->mouse.position.y = GET_Y_LPARAM(msg.lParam);
-      break;
+    {
+      *event = lak::event(
+        lak::event_type::button_down,
+        window,
+        msg,
+        lak::button_event{
+          (GET_XBUTTON_WPARAM(msg.wParam) == XBUTTON1 ? mouse_button::x1
+                                                      : mouse_button::none) |
+          (GET_XBUTTON_WPARAM(msg.wParam) == XBUTTON2 ? mouse_button::x2
+                                                      : mouse_button::none)});
+    }
+    break;
 
-      /* --- mouse_button_up --- */
+      /* --- button_up --- */
 
     case WM_LBUTTONUP:
-      event->type = event_type::mouse_button_up;
-      lak::memset(&event->mouse, 0);
-      event->mouse.button = mouse_button::left;
-      // event->mouse.mod = GET_KEYSTATE_WPARAM(msg.wParam);
-      event->mouse.position.x = GET_X_LPARAM(msg.lParam);
-      event->mouse.position.y = GET_Y_LPARAM(msg.lParam);
-      break;
+    {
+      *event = lak::event(lak::event_type::button_up,
+                          window,
+                          msg,
+                          lak::button_event{mouse_button::left});
+    }
+    break;
 
     case WM_MBUTTONUP:
-      event->type = event_type::mouse_button_up;
-      lak::memset(&event->mouse, 0);
-      event->mouse.button = mouse_button::middle;
-      // event->mouse.mod = GET_KEYSTATE_WPARAM(msg.wParam);
-      event->mouse.position.x = GET_X_LPARAM(msg.lParam);
-      event->mouse.position.y = GET_Y_LPARAM(msg.lParam);
-      break;
+    {
+      *event = lak::event(lak::event_type::button_up,
+                          window,
+                          msg,
+                          lak::button_event{mouse_button::middle});
+    }
+    break;
 
     case WM_RBUTTONUP:
-      event->type = event_type::mouse_button_up;
-      lak::memset(&event->mouse, 0);
-      event->mouse.button = mouse_button::right;
-      // event->mouse.mod = GET_KEYSTATE_WPARAM(msg.wParam);
-      event->mouse.position.x = GET_X_LPARAM(msg.lParam);
-      event->mouse.position.y = GET_Y_LPARAM(msg.lParam);
-      break;
+    {
+      *event = lak::event(lak::event_type::button_up,
+                          window,
+                          msg,
+                          lak::button_event{mouse_button::right});
+    }
+    break;
 
     case WM_XBUTTONUP:
-      event->type = event_type::mouse_button_up;
-      lak::memset(&event->mouse, 0);
-      event->mouse.button =
-        (GET_XBUTTON_WPARAM(msg.wParam) == XBUTTON1 ? mouse_button::x1
-                                                    : mouse_button::none) |
-        (GET_XBUTTON_WPARAM(msg.wParam) == XBUTTON2 ? mouse_button::x2
-                                                    : mouse_button::none);
-      // event->mouse.mod = GET_KEYSTATE_WPARAM(msg.wParam);
-      event->mouse.position.x = GET_X_LPARAM(msg.lParam);
-      event->mouse.position.y = GET_Y_LPARAM(msg.lParam);
-      break;
+    {
+      *event = lak::event(
+        lak::event_type::button_up,
+        window,
+        msg,
+        lak::button_event{
+          (GET_XBUTTON_WPARAM(msg.wParam) == XBUTTON1 ? mouse_button::x1
+                                                      : mouse_button::none) |
+          (GET_XBUTTON_WPARAM(msg.wParam) == XBUTTON2 ? mouse_button::x2
+                                                      : mouse_button::none)});
+    }
+    break;
 
-      /* --- mouse_move --- */
+      /* --- motion --- */
 
     case WM_MOUSEMOVE:
-      event->type = event_type::mouse_motion;
-      lak::memset(&event->mouse, 0);
-      // event->mouse.mod = GET_KEYSTATE_WPARAM(msg.wParam);
-      event->mouse.position.x = GET_X_LPARAM(msg.lParam);
-      event->mouse.position.y = GET_Y_LPARAM(msg.lParam);
-      break;
+    {
+      *event = lak::event(lak::event_type::motion,
+                          window,
+                          msg,
+                          lak::motion_event{{GET_X_LPARAM(msg.lParam),
+                                             GET_Y_LPARAM(msg.lParam)}});
+    }
+    break;
 
-      /* --- mouse_wheel --- */
+      /* --- wheel --- */
 
     case WM_MOUSEWHEEL:
-      event->type = event_type::mouse_wheel;
-      lak::memset(&event->mouse, 0);
-      event->mouse.wheel.y =
-        float(GET_WHEEL_DELTA_WPARAM(msg.wParam)) / float(WHEEL_DELTA);
-      // event->mouse.mod = GET_KEYSTATE_WPARAM(msg.wParam);
-      event->mouse.position.x = GET_X_LPARAM(msg.lParam);
-      event->mouse.position.y = GET_Y_LPARAM(msg.lParam);
-      break;
+    {
+      *event = lak::event(
+        lak::event_type::wheel,
+        window,
+        msg,
+        lak::wheel_event{
+          {0.0f,
+           float(GET_WHEEL_DELTA_WPARAM(msg.wParam)) / float(WHEEL_DELTA)}});
+    }
+    break;
 
-    default: event->type = event_type::platform_event; break;
+      /* --- platform_event --- */
+
+    // Window has been created.
+    case WM_CREATE:
+    {
+      *event = lak::event(lak::event_type::platform_event, window, msg);
+    }
+    break;
+
+    default:
+    {
+      *event = lak::event(lak::event_type::platform_event, window, msg);
+    }
+    break;
   }
 }
 
-// :TODO: Call this from handle_size_move_event but also let the other
-// functions call this when they don't get any events out of the queue.
-bool handle_size_move(const lak::window &window)
+bool handle_size_move(const lak::platform_instance &instance,
+                      lak::window_handle &handle)
 {
-  if (window._moving)
+  if (handle._moving)
   {
     POINT cursor;
-    ASSERT(GetCursorPos(&cursor) != 0);
-    const RECT &rect = window._window_start;
-    MoveWindow(window.platform_handle(),
-               rect.left + cursor.x - window._cursor_start.x,
-               rect.top + cursor.y - window._cursor_start.y,
-               rect.right - rect.left,
-               rect.bottom - rect.top,
-               TRUE);
+    ASSERTF(::GetCursorPos(&cursor) != 0,
+            lak::to_astring(win32_error_string(L"GetCursorPos")));
+    const RECT &rect = handle._window_start;
+    ASSERTF(::MoveWindow(handle._platform_handle,
+                         rect.left + cursor.x - handle._cursor_start.x,
+                         rect.top + cursor.y - handle._cursor_start.y,
+                         rect.right - rect.left,
+                         rect.bottom - rect.top,
+                         TRUE) != 0,
+            lak::to_astring(win32_error_string(L"MoveWindow")));
     return true;
   }
-  else if (window._resizing)
+  if (handle._resizing)
   {
     POINT cursor;
-    ASSERT(GetCursorPos(&cursor) != 0);
-    const RECT &rect = window._window_start;
+    ASSERTF(::GetCursorPos(&cursor) != 0,
+            lak::to_astring(win32_error_string(L"GetCursorPos")));
+    const RECT &rect = handle._window_start;
     RECT diff        = {0, 0, 0, 0};
-    if (window._side & window.left)
+    if (handle._side & handle.left)
     {
-      diff.left  = cursor.x - window._cursor_start.x;
+      diff.left  = cursor.x - handle._cursor_start.x;
       diff.right = -diff.left;
     }
-    if (window._side & window.top)
+    if (handle._side & handle.top)
     {
-      diff.top    = cursor.y - window._cursor_start.y;
+      diff.top    = cursor.y - handle._cursor_start.y;
       diff.bottom = -diff.top;
     }
-    if (window._side & window.right)
+    if (handle._side & handle.right)
     {
-      diff.right = cursor.x - window._cursor_start.x;
+      diff.right = cursor.x - handle._cursor_start.x;
     }
-    if (window._side & window.bottom)
+    if (handle._side & handle.bottom)
     {
-      diff.bottom = cursor.y - window._cursor_start.y;
+      diff.bottom = cursor.y - handle._cursor_start.y;
     }
-    MoveWindow(window.platform_handle(),
-               rect.left + diff.left,
-               rect.top + diff.top,
-               std::max(0L, (rect.right - rect.left) + diff.right),
-               std::max(0L, (rect.bottom - rect.top) + diff.bottom),
-               TRUE);
+    int x = rect.left + diff.left;
+    int y = rect.top + diff.top;
+    int w = std::max(0L, (rect.right - rect.left) + diff.right);
+    int h = std::max(0L, (rect.bottom - rect.top) + diff.bottom);
+    ASSERTF(::MoveWindow(handle._platform_handle, x, y, w, h, TRUE) != 0,
+            lak::to_astring(win32_error_string(L"MoveWindow")));
+
+    if (handle.graphics_mode() == lak::graphics_mode::Software)
+    {
+      // we need to resize the pixel buffer
+      // this is also touched in software create_window constructor
+      std::get<lak::software_context>(handle._context)
+        .platform_handle.resize({(size_t)w, (size_t)h});
+    }
+
     return true;
   }
 
   return false;
 }
 
-// Returns true if the event has handled by this function.
-bool handle_size_move_event(const lak::window &window, const MSG &msg)
+bool is_size_move_event(const lak::window_handle *handle, const MSG &msg)
 {
+  if (!handle) return false;
+
+  switch (msg.message)
+  {
+    case WM_SYSCOMMAND: return true;
+
+    case WM_LBUTTONUP:
+    case WM_NCLBUTTONUP:
+    case WM_MOUSEMOVE:
+    case WM_MOUSELEAVE:
+    case WM_MOUSEHOVER:
+    case WM_NCMOUSEMOVE:
+    case WM_NCMOUSELEAVE:
+    case WM_NCMOUSEHOVER: return handle->_moving || handle->_resizing;
+
+    default: return false;
+  }
+}
+
+// Returns true if the event has handled by this function.
+bool handle_size_move_event(const lak::platform_instance &instance,
+                            lak::window_handle *handle,
+                            const MSG &msg)
+{
+  if (!handle) return false;
+
   switch (msg.message)
   {
     case WM_SYSCOMMAND:
@@ -271,130 +348,197 @@ bool handle_size_move_event(const lak::window &window, const MSG &msg)
         {
           switch (msg.wParam & 0xF)
           {
-            case 0x1: window._side = window.left; break;
-            case 0x2: window._side = window.right; break;
-            case 0x3: window._side = window.top; break;
-            case 0x4: window._side = window.top | window.left; break;
-            case 0x5: window._side = window.top | window.right; break;
-            case 0x6: window._side = window.bottom; break;
-            case 0x7: window._side = window.bottom | window.left; break;
-            case 0x8: window._side = window.bottom | window.right; break;
+            case 0x1: handle->_side = handle->left; break;
+            case 0x2: handle->_side = handle->right; break;
+            case 0x3: handle->_side = handle->top; break;
+            case 0x4: handle->_side = handle->top | handle->left; break;
+            case 0x5: handle->_side = handle->top | handle->right; break;
+            case 0x6: handle->_side = handle->bottom; break;
+            case 0x7: handle->_side = handle->bottom | handle->left; break;
+            case 0x8: handle->_side = handle->bottom | handle->right; break;
             default:
               FATAL("Invalid side");
-              window._side = 0;
+              handle->_side = 0;
               break;
           }
 
           // screen coords.
-          ASSERT(GetWindowRect(msg.hwnd, &window._window_start) != 0);
-          ASSERT(GetCursorPos(&window._cursor_start) != 0);
-          window._resizing = true;
-          return true;
+          ASSERTF(::GetWindowRect(msg.hwnd, &handle->_window_start) != 0,
+                  lak::to_astring(win32_error_string(L"GetWindowRect")));
+          handle->_cursor_start.x = GET_X_LPARAM(msg.lParam);
+          handle->_cursor_start.y = GET_Y_LPARAM(msg.lParam);
+          handle->_resizing       = true;
+          ::SetCapture(handle->_platform_handle);
         }
+        break;
 
         case SC_MOVE:
         {
           // screen coords.
-          ASSERT(GetWindowRect(msg.hwnd, &window._window_start) != 0);
-          ASSERT(GetCursorPos(&window._cursor_start) != 0);
-          window._moving = true;
-          return true;
+          ASSERTF(::GetWindowRect(msg.hwnd, &handle->_window_start) != 0,
+                  lak::to_astring(win32_error_string(L"GetWindowRect")));
+          handle->_cursor_start.x = GET_X_LPARAM(msg.lParam);
+          handle->_cursor_start.y = GET_Y_LPARAM(msg.lParam);
+          handle->_moving         = true;
+          ::SetCapture(handle->_platform_handle);
         }
+        break;
       }
       return true;
     }
 
     case WM_LBUTTONUP:
     case WM_NCLBUTTONUP:
-      if (window._moving || window._resizing)
+    {
+      if (handle->_moving || handle->_resizing)
       {
-        window._moving   = false;
-        window._resizing = false;
+        handle->_moving   = false;
+        handle->_resizing = false;
+        ASSERTF(::ReleaseCapture() != 0,
+                lak::to_astring(win32_error_string(L"ReleaseCapture")));
         return true;
       }
-      break;
+    }
+    break;
 
     case WM_MOUSEMOVE:
     case WM_MOUSELEAVE:
     case WM_MOUSEHOVER:
     case WM_NCMOUSEMOVE:
     case WM_NCMOUSELEAVE:
-    case WM_NCMOUSEHOVER: return handle_size_move(window);
+    case WM_NCMOUSEHOVER: return handle_size_move(instance, *handle);
   }
 
   return false;
 }
 
-// :TODO: If this ends up being for a windows that is about to get destroyed,
+lak::window_handle *window_from_event(const MSG &event)
+{
+  return event.hwnd ? lak::bank<lak::window_handle>::find_if(
+                        [hwnd = event.hwnd](const lak::window_handle &handle) {
+                          return handle._platform_handle == hwnd;
+                        })
+                    : nullptr;
+}
+
+// If this ends up being for a window that is about to get destroyed,
 // this message should be zeroed out.
 thread_local MSG previous_event = {};
 
-bool next_event(const lak::platform_instance &instance,
-                const lak::window *lwindow,
-                HWND window,
-                lak::event *event)
+bool peek_next_event(const lak::platform_instance &instance,
+                     MSG *msg,
+                     UINT filter_min,
+                     UINT filter_max,
+                     UINT remove,
+                     bool *buffered_message = nullptr)
+{
+  if (auto *hacked_msg = instance.platform_events.front(); hacked_msg)
+  {
+    if (buffered_message) *buffered_message = true;
+    lak::memcpy(msg, hacked_msg);
+    if (remove == PM_REMOVE)
+      instance.platform_events.pop_front();
+    else
+      ASSERT_EQUAL(remove, PM_NOREMOVE);
+    return true;
+  }
+  else
+  {
+    if (buffered_message) *buffered_message = false;
+    return ::PeekMessageW(msg, NULL, filter_min, filter_max, remove);
+  }
+}
+
+bool handle_next_event(const lak::platform_instance &instance,
+                       lak::event *event,
+                       const bool pop_messages)
 {
   // Delaying dispatch until the next time through here should let us handle
   // WM_PAINT correctly after the call to next_event.
-  if (previous_event.message)
+  if (pop_messages && previous_event.message)
   {
-    DispatchMessageW(&previous_event);
+    ::DispatchMessageW(&previous_event);
+    lak::memset(&previous_event, 0);
   }
 
   const UINT filter_min = 0;
   const UINT filter_max = 0;
 
-  MSG msg = {};
-  do
+  // We automatically handle size/move events here, don't return them to the
+  // caller.
+  MSG msg                    = {};
+  bool buffered_message      = false;
+  lak::window_handle *handle = nullptr;
+  if (pop_messages)
   {
-    if (!PeekMessageW(&msg, window, filter_min, filter_max, PM_REMOVE))
+    do
     {
-      if (lwindow) handle_size_move(*lwindow);
-
-      lak::memset(&previous_event, 0);
+      if (!peek_next_event(instance,
+                           &msg,
+                           filter_min,
+                           filter_max,
+                           PM_REMOVE,
+                           &buffered_message))
+      {
+        return false;
+      }
+      handle = window_from_event(msg);
+      // handle_size_move_event calls handle_size_move
+    } while (handle_size_move_event(instance, handle, msg));
+  }
+  else
+  {
+    if (!peek_next_event(instance,
+                         &msg,
+                         filter_min,
+                         filter_max,
+                         PM_NOREMOVE,
+                         &buffered_message))
+    {
       return false;
     }
-    // Skip all messages handled by handle_size_move_event.
-  } while (lwindow && handle_size_move_event(*lwindow, msg));
-
-  TranslateMessage(&msg);
-
-  if (msg.message == WM_DESTROY)
-    lak::memset(&previous_event, 0);
-  else
-    lak::memcpy(&previous_event, &msg);
-
-  translate_event(msg, event);
-
-  return true;
-}
-
-bool peek_event(const lak::platform_instance &instance,
-                HWND window,
-                lak::event *event)
-{
-  const UINT filter_min = 0;
-  const UINT filter_max = 0;
-
-  MSG msg = {};
-  if (!PeekMessageW(&msg, window, filter_min, filter_max, 0))
-  {
-    return false;
+    handle = window_from_event(msg);
+    while (handle_size_move_event(instance, handle, msg))
+    {
+      // remove the previously peeked message as it was used in
+      // handle_size_move_event.
+      ASSERT(peek_next_event(
+        instance, &msg, filter_min, filter_max, PM_REMOVE, &buffered_message));
+      if (!peek_next_event(instance,
+                           &msg,
+                           filter_min,
+                           filter_max,
+                           PM_NOREMOVE,
+                           &buffered_message))
+      {
+        return false;
+      }
+      handle = window_from_event(msg);
+    }
   }
 
-  translate_event(msg, event);
+  ::TranslateMessage(&msg);
+
+  if (pop_messages)
+  {
+    // Do no re-dispatch messages that were buffered from WndProc.
+    if (buffered_message)
+      lak::memset(&previous_event, 0);
+    else
+      lak::memcpy(&previous_event, &msg);
+  }
+
+  translate_event(msg, event, handle);
 
   return true;
 }
 
-bool lak::next_thread_event(const lak::platform_instance &instance,
-                            lak::event *event)
+bool lak::next_event(const lak::platform_instance &instance, lak::event *event)
 {
-  return next_event(instance, nullptr, reinterpret_cast<HWND>(-1), event);
+  return handle_next_event(instance, event, true);
 }
 
-bool lak::peek_thread_event(const lak::platform_instance &instance,
-                            lak::event *event)
+bool lak::peek_event(const lak::platform_instance &instance, lak::event *event)
 {
-  return peek_event(instance, reinterpret_cast<HWND>(-1), event);
+  return handle_next_event(instance, event, false);
 }

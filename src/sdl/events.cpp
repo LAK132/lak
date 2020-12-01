@@ -4,6 +4,47 @@
 #include "lak/memmanip.hpp"
 #include "lak/window.hpp"
 
+SDL_Window *sdl_window_from_event(const SDL_Event &event)
+{
+  switch (event.type)
+  {
+    case SDL_WINDOWEVENT: return SDL_GetWindowFromID(event.window.windowID);
+
+    case SDL_KEYDOWN:
+    case SDL_KEYUP: return SDL_GetWindowFromID(event.key.windowID);
+
+    case SDL_TEXTEDITING:
+    case SDL_TEXTINPUT: return SDL_GetWindowFromID(event.text.windowID);
+
+    case SDL_MOUSEMOTION: return SDL_GetWindowFromID(event.motion.windowID);
+
+    case SDL_MOUSEBUTTONDOWN:
+    case SDL_MOUSEBUTTONUP: return SDL_GetWindowFromID(event.button.windowID);
+
+    case SDL_MOUSEWHEEL: return SDL_GetWindowFromID(event.wheel.windowID);
+
+    case SDL_DROPFILE:
+    case SDL_DROPTEXT:
+    case SDL_DROPBEGIN:
+    case SDL_DROPCOMPLETE: return SDL_GetWindowFromID(event.drop.windowID);
+
+    case SDL_USEREVENT: return SDL_GetWindowFromID(event.user.windowID);
+
+    default: return nullptr;
+  }
+}
+
+const lak::window_handle *window_from_event(const SDL_Event &event)
+{
+  SDL_Window *handle = sdl_window_from_event(event);
+
+  return handle ? lak::bank<lak::window_handle>::find_if(
+                    [window = handle](const lak::window_handle &handle) {
+                      return handle._platform_handle == window;
+                    })
+                : nullptr;
+}
+
 void translate_event(const SDL_Event &sdl_event,
                      lak::event *event,
                      const lak::window_handle *window = nullptr)
@@ -188,53 +229,15 @@ void translate_event(const SDL_Event &sdl_event,
   }
 }
 
-SDL_Window *window_from_event(const SDL_Event &event)
-{
-  switch (event.type)
-  {
-    case SDL_WINDOWEVENT: return SDL_GetWindowFromID(event.window.windowID);
-
-    case SDL_KEYDOWN:
-    case SDL_KEYUP: return SDL_GetWindowFromID(event.key.windowID);
-
-    case SDL_TEXTEDITING:
-    case SDL_TEXTINPUT: return SDL_GetWindowFromID(event.text.windowID);
-
-    case SDL_MOUSEMOTION: return SDL_GetWindowFromID(event.motion.windowID);
-
-    case SDL_MOUSEBUTTONDOWN:
-    case SDL_MOUSEBUTTONUP: return SDL_GetWindowFromID(event.button.windowID);
-
-    case SDL_MOUSEWHEEL: return SDL_GetWindowFromID(event.wheel.windowID);
-
-    case SDL_DROPFILE:
-    case SDL_DROPTEXT:
-    case SDL_DROPBEGIN:
-    case SDL_DROPCOMPLETE: return SDL_GetWindowFromID(event.drop.windowID);
-
-    case SDL_USEREVENT: return SDL_GetWindowFromID(event.user.windowID);
-
-    default: return nullptr;
-  }
-}
-
-bool handle_event(const lak::platform_instance &instance,
-                  lak::event *event,
-                  SDL_eventaction action)
+bool handle_next_event(const lak::platform_instance &instance,
+                       lak::event *event,
+                       SDL_eventaction action)
 {
   SDL_PumpEvents();
   if (SDL_Event e;
       SDL_PeepEvents(&e, 1, action, SDL_FIRSTEVENT, SDL_LASTEVENT) > 0)
   {
-    const lak::window_handle *handle;
-    if (auto sdl_window = window_from_event(e); sdl_window)
-    {
-      handle = lak::bank<lak::window_handle>::find_if(
-        [sdl_window](const lak::window_handle &handle) {
-          return handle._platform_handle == sdl_window;
-        });
-    }
-    translate_event(e, event, handle);
+    translate_event(e, event, window_from_event(event->platform_event));
     lak::memcpy(&e, &event->platform_event);
     return true;
   }
@@ -243,10 +246,10 @@ bool handle_event(const lak::platform_instance &instance,
 
 bool lak::next_event(const lak::platform_instance &instance, lak::event *event)
 {
-  return handle_event(instance, event, SDL_GETEVENT);
+  return handle_next_event(instance, event, SDL_GETEVENT);
 }
 
 bool lak::peek_event(const lak::platform_instance &instance, lak::event *event)
 {
-  return handle_event(instance, event, SDL_PEEKEVENT);
+  return handle_next_event(instance, event, SDL_PEEKEVENT);
 }

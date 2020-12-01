@@ -21,6 +21,7 @@ namespace lak
 
     quit_program,
 
+    close_window,
     window_closed,
     window_changed,
     window_exposed,
@@ -127,26 +128,22 @@ namespace lak
                                  lak::motion_event,
                                  lak::wheel_event>;
 
-#ifdef LAK_USE_WINAPI
-    using platform_event_t = MSG;
-#endif
-
-#ifdef LAK_USE_XLIB
-    using platform_event_t = XEvent;
-#endif
-
-#ifdef LAK_USE_XCB
-    using platform_event_t = xcb_generic_event_t;
-#endif
-
-#ifdef LAK_USE_SDL
-    using platform_event_t = SDL_Event;
-#endif
-
     lak::event_type type             = lak::event_type::platform_event;
     const lak::window_handle *handle = nullptr;
-    platform_event_t platform_event;
+#if defined(LAK_USE_WINAPI)
+    MSG platform_event;
+#elif defined(LAK_USE_XLIB)
+    XEvent platform_event;
+#elif defined(LAK_USE_XCB)
+    xcb_generic_event_t platform_event;
+#elif defined(LAK_USE_SDL)
+    SDL_Event platform_event;
+#else
+#  error "No implementation specified"
+#endif
     state_t _state;
+
+    using platform_event_t = decltype(platform_event);
 
     const lak::window_event &window() const
     {

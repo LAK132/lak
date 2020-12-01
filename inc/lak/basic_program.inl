@@ -1,5 +1,7 @@
-#define SDL_MAIN_HANDLED
-#include <SDL.h>
+#ifdef LAK_USE_SDL
+#  define SDL_MAIN_HANDLED
+#  include <SDL.h>
+#endif
 
 #include "lak/opengl/state.hpp"
 
@@ -145,11 +147,12 @@ int main(int argc, char **argv)
   for (bool running = true; running;)
   {
     /* --- Handle SDL2 events --- */
-    for (lak::event event; lak::next_thread_event(instance, &event);
+    for (lak::event event; lak::next_event(instance, &event);
          basic_window_handle_event(window, event))
     {
       switch (event.type)
       {
+        case lak::event_type::close_window:
         case lak::event_type::quit_program:
         {
           running = false;

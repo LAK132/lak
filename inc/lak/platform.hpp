@@ -1,7 +1,7 @@
 #ifndef LAK_PLATFORM_HPP
 #define LAK_PLATFORM_HPP
 
-#ifdef LAK_USE_WINAPI
+#if defined(LAK_USE_WINAPI)
 #  ifndef WIN32_MEAN_AND_LEAN
 #    define WIN32_MEAN_AND_LEAN
 #  endif
@@ -9,20 +9,17 @@
 #    define NOMINMAX
 #  endif
 #  include <Windows.h>
-#endif
-
-#ifdef LAK_USE_XLIB
+#elif defined(LAK_USE_XLIB)
 #  include <X11/Xlib.h>
-#endif
-
-#ifdef LAK_USE_XCB
+#elif defined(LAK_USE_XCB)
 #  include <xcb/xcb.h>
-#endif
-
-#ifdef LAK_USE_SDL
+#elif defined(LAK_USE_SDL)
 #  include <SDL/SDL.h>
+#else
+#  error "No implementation specified"
 #endif
 
+#include "lak/buffer.hpp"
 #include "lak/compiler.hpp"
 #include "lak/os.hpp"
 #include "lak/span.hpp"
@@ -45,6 +42,7 @@ namespace lak
     WNDCLASSW window_class;
     ATOM window_class_atom;
     mutable bool opengl_initialised = false;
+    mutable lak::buffer<MSG, 0x100> platform_events;
 #elif defined(LAK_USE_XLIB)
     Display *handle;
     Atom wm_delete_window;

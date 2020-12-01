@@ -29,7 +29,7 @@ uint64_t lak::performance_frequency()
 {
 #if defined(LAK_OS_WINDOWS)
   LARGE_INTEGER result;
-  ASSERT(QueryPerformanceFrequency(&result));
+  ASSERT(::QueryPerformanceFrequency(&result));
   return result.QuadPart;
 #elif defined(LAK_OS_LINUX)
   return 1'000'000'000;
@@ -42,7 +42,7 @@ uint64_t lak::performance_counter()
 {
 #if defined(LAK_OS_WINDOWS)
   LARGE_INTEGER result;
-  ASSERT(QueryPerformanceCounter(&result));
+  ASSERT(::QueryPerformanceCounter(&result));
   return result.QuadPart;
 #elif defined(LAK_OS_LINUX)
   struct timespec time;

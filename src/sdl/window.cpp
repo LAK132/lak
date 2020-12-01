@@ -236,6 +236,17 @@ lak::vec2l_t lak::window_size(const lak::platform_instance &instance,
   return {w, h};
 }
 
+bool lak::set_window_cursor_pos(const lak::platform_instance &instance,
+                                const lak::window_handle *handle,
+                                lak::vec2l_t pos)
+{
+  ASSERT(pos.x < INT_MAX && pos.x > INT_MIN);
+  ASSERT(pos.y < INT_MAX && pos.y > INT_MIN);
+  // :TODO: clamp instead of cast
+  SDL_WarpMouseInWindow(handle->platform_handle(), (int)pos.x, (int)pos.y);
+  return true;
+}
+
 lak::vec2l_t lak::window_drawable_size(const lak::platform_instance &instance,
                                        const lak::window_handle *handle)
 {

@@ -14,6 +14,9 @@
 #undef UNIQUIFY
 #define UNIQUIFY(x) TOKEN_CONCAT(x, __LINE__)
 
+#undef EMPTY_MACRO
+#define EMPTY_MACRO(...)
+
 #undef LAK_ESC
 #undef LAK_CSI
 #undef LAK_SGR_STR

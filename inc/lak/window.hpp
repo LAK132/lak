@@ -41,8 +41,10 @@ int main()
 #include "lak/events.hpp"
 
 #include "lak/bank_ptr.hpp"
+#include "lak/image.hpp"
 #include "lak/memmanip.hpp"
 #include "lak/string.hpp"
+#include "lak/surface.hpp"
 #include "lak/vec.hpp"
 
 #include "lak/profile.hpp"
@@ -77,51 +79,73 @@ namespace lak
 
   struct software_context
   {
-#ifdef LAK_USE_SDL
-    SDL_Surface *platform_handle = NULL;
-    SDL_Window *sdl_window       = NULL;
+#if defined(LAK_USE_WINAPI)
+    mutable lak::image<lak::colour::bgrx8888, true> platform_handle;
+#elif defined(LAK_USE_XLIB)
+#  error "NYI"
+#elif defined(LAK_USE_XCB)
+#  error "NYI"
+#elif defined(LAK_USE_SDL)
+    SDL_Surface *platform_handle  = NULL;
+    SDL_Window *sdl_window        = NULL;
+#else
+#  error "No implementation specified"
 #endif
+    using platform_handle_t = decltype(platform_handle);
   };
 
   struct opengl_context
   {
-#ifdef LAK_USE_WINAPI
+#if defined(LAK_USE_WINAPI)
     HGLRC platform_handle = NULL;
-    HDC device_context    = NULL;
-#endif
-
-#ifdef LAK_USE_SDL
+#elif defined(LAK_USE_XLIB)
+#  error "NYI"
+#elif defined(LAK_USE_XCB)
+#  error "NYI"
+#elif defined(LAK_USE_SDL)
     SDL_GLContext platform_handle = NULL;
     SDL_Window *sdl_window        = NULL;
+#else
+#  error "No implementation specified"
 #endif
   };
 
   struct vulkan_context
   {
+#if defined(LAK_USE_WINAPI)
+#elif defined(LAK_USE_XLIB)
+#  error "NYI"
+#elif defined(LAK_USE_XCB)
+#  error "NYI"
+#elif defined(LAK_USE_SDL)
+    SDL_Window *sdl_window        = NULL;
+#else
+#  error "No implementation specified"
+#endif
   };
 
   struct window_handle
   {
-#ifdef LAK_USE_WINAPI
+#if defined(LAK_USE_WINAPI)
     using platform_handle_t = HWND;
+    HWND _platform_handle   = NULL;
+    HDC _device_context     = NULL;
+#elif defined(LAK_USE_XLIB)
+    using platform_handle_t  = Window *;
+    Window *_platform_handle = NULL;
+#elif defined(LAK_USE_XCB)
+    using platform_handle_t       = xcb_window_t;
+    xcb_window_t _platform_handle = NULL;
+#elif defined(LAK_USE_SDL)
+    using platform_handle_t       = SDL_Window *;
+    SDL_Window *_platform_handle  = NULL;
+#else
+#  error "No implementation specified"
 #endif
 
-#ifdef LAK_USE_XLIB
-    using platform_handle_t = Window *;
-#endif
-
-#ifdef LAK_USE_XCB
-    using platform_handle_t = xcb_window_t;
-#endif
-
-#ifdef LAK_USE_SDL
-    using platform_handle_t = SDL_Window *;
-#endif
-
-    platform_handle_t _platform_handle = NULL;
+    const lak::platform_instance *_instance = nullptr;
 
 #ifdef LAK_USE_WINAPI
-    mutable lak::buffer<MSG, 0x100> _platform_events;
     mutable bool _moving   = false;
     mutable bool _resizing = false;
     mutable POINT _cursor_start;
@@ -146,6 +170,8 @@ namespace lak
     {
       return _platform_handle;
     }
+
+    const lak::platform_instance *instance() const { return _instance; }
 
     lak::graphics_mode graphics_mode() const
     {
@@ -213,6 +239,14 @@ namespace lak
                        lak::window_handle *w,
                        lak::vec2l_t s);
 
+  bool set_window_cursor_pos(const lak::platform_instance &i,
+                             const lak::window_handle *w,
+                             lak::vec2l_t p);
+
+  // :TODO: bool set_window_drawable_size(const lak::platform_instance &i,
+  //                                      lak::window_handle *w,
+  //                                      lak::vec2l_t s);
+
   /* --- graphics control --- */
 
   // :TODO: This probably belongs in the platform header.
@@ -234,7 +268,7 @@ namespace lak
 
   public:
     inline window(window &&w)
-    : _platform_instance(w._platform_instance), _handle(std::move(w._handle))
+    : _platform_instance(w._platform_instance), _handle(lak::move(w._handle))
     {
       ASSERT(_handle);
     }
@@ -310,6 +344,12 @@ namespace lak
     inline window &set_size(lak::vec2l_t size)
     {
       ASSERT(lak::set_window_size(_platform_instance, handle(), size));
+      return *this;
+    }
+
+    inline const window &set_cursor_pos(lak::vec2l_t pos) const
+    {
+      ASSERT(lak::set_window_cursor_pos(_platform_instance, handle(), pos));
       return *this;
     }
 
