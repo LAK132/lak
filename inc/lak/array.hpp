@@ -90,6 +90,8 @@ namespace lak
     array(array &&other);
     array &operator=(array &&other);
 
+    array(std::initializer_list<T> list);
+
     ~array();
 
     size_t size() const { return _size; }

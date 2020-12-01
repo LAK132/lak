@@ -117,6 +117,15 @@ lak::array<T, lak::dynamic_extent>
 }
 
 template<typename T>
+lak::array<T, lak::dynamic_extent>::array(std::initializer_list<T> list)
+{
+  commit(list.size());
+  ASSERT_LESS_OR_EQUAL(list.size(), _committed);
+  for (; _size < list.size(); ++_size)
+    new (_data + _size) T(list.begin()[_size]);
+}
+
+template<typename T>
 lak::array<T, lak::dynamic_extent>::~array()
 {
   force_clear();
