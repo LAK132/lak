@@ -44,6 +44,14 @@ namespace lak
   {
   };
 
+  /* --- size_type --- */
+
+  template<size_t S>
+  struct size_type
+  {
+    static constexpr size_t value = S;
+  };
+
   /* --- type_identity --- */
 
   template<typename T>
