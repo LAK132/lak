@@ -18,7 +18,7 @@ void basic_window_preinit(int argc, char **argv);
 void basic_window_init(lak::window &window);
 void basic_window_handle_event(lak::window &window, lak::event &event);
 void basic_window_loop(lak::window &window, uint64_t counter_delta);
-void basic_window_quit(lak::window &window);
+int basic_window_quit(lak::window &window);
 uint32_t basic_window_target_framerate = 60;
 bool basic_window_force_software       = false;
 lak::opengl_settings basic_window_opengl_settings;
@@ -181,5 +181,5 @@ int main(int argc, char **argv)
   glDisable(GL_DEBUG_OUTPUT);
 #endif
 
-  basic_window_quit(window);
+  return basic_window_quit(window);
 }
