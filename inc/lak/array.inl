@@ -8,14 +8,14 @@
 template<typename T, size_t SIZE>
 constexpr lak::array<T, SIZE>::array(array<T, SIZE> &&other)
 {
-  for (size_t i = 0; i < SIZE; ++i) std::swap(_data[i], other._data[i]);
+  lak::swap(_data, other._data);
 }
 
 template<typename T, size_t SIZE>
 constexpr lak::array<T, SIZE> &lak::array<T, SIZE>::operator=(
   array<T, SIZE> &&other)
 {
-  for (size_t i = 0; i < SIZE; ++i) std::swap(_data[i], other._data[i]);
+  lak::swap(_data, other._data);
   return *this;
 }
 
@@ -109,10 +109,10 @@ lak::array<T, lak::dynamic_extent>
   &lak::array<T, lak::dynamic_extent>::operator=(
     array<T, lak::dynamic_extent> &&other)
 {
-  std::swap(_data, other._data);
-  std::swap(_size, other._size);
-  std::swap(_committed, other._committed);
-  std::swap(_reserved, other._reserved);
+  lak::swap(_data, other._data);
+  lak::swap(_size, other._size);
+  lak::swap(_committed, other._committed);
+  lak::swap(_reserved, other._reserved);
   return *this;
 }
 
@@ -173,7 +173,7 @@ void lak::array<T, lak::dynamic_extent>::reserve(size_t new_capacity)
 
     // move all the Ts from the old memory block to the new memory block
     for (size_t i = 0; i < _size; ++i)
-      new (static_cast<T *>(new_buffer.data()) + i) T(std::move(_data[i]));
+      new (static_cast<T *>(new_buffer.data()) + i) T(lak::move(_data[i]));
 
     // destroy the Ts in the old memory block and free memory
     for (size_t i = 0; i < _size; ++i) _data[i].~T();
