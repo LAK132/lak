@@ -36,9 +36,7 @@ size_t lak::bank<T>::internal_create(ARGS &&... args)
   {
     auto index = _deleted.back();
     _deleted.pop_back();
-    // :TODO: Fuck you MSVC
-    [[maybe_unused]] auto why_are_destructors_marked_nodiscard =
-      _container[index].~T();
+    _container[index].~T();
     new (&_container[index]) T(std::forward<ARGS>(args)...);
     return index;
   }
