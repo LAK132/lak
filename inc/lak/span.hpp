@@ -80,6 +80,12 @@ namespace lak
     {
     }
 
+    explicit inline constexpr span(
+      std::initializer_list<std::remove_const_t<T>> list) noexcept
+    : _data(list.begin())
+    {
+    }
+
     template<
       typename U            = T,
       std::enable_if_t<std::is_same_v<U, T> &&
