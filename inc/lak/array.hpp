@@ -46,6 +46,9 @@ namespace lak
     constexpr const T *cbegin() const { return &_data[0]; }
     constexpr const T *cend() const { return &_data[SIZE]; }
 
+    T &at(size_t index);
+    const T &at(size_t index) const;
+
     constexpr T &operator[](size_t index);
     constexpr const T &operator[](size_t index) const;
   };
@@ -101,6 +104,9 @@ namespace lak
 
     const T *cbegin() const { return _data; }
     const T *cend() const { return _data + _size; }
+
+    T &at(size_t index);
+    const T &at(size_t index) const;
 
     T &operator[](size_t index);
     const T &operator[](size_t index) const;
