@@ -3,6 +3,21 @@
 
 #include <optional>
 
+#define TEMPLATE_VALUE_TYPE(NAME, TEMPL_TYPE, VAL_TYPE)                       \
+  template<TEMPL_TYPE T>                                                      \
+  struct NAME;                                                                \
+  template<TEMPL_TYPE T>                                                      \
+  inline constexpr VAL_TYPE NAME##_v = NAME<T>::value;
+
+#define DEFAULTED_TEMPLATE_VALUE_TYPE(NAME, TEMPL_TYPE, VAL_TYPE, DEFAULT)    \
+  template<TEMPL_TYPE T>                                                      \
+  struct NAME                                                                 \
+  {                                                                           \
+    static constexpr VAL_TYPE value = DEFAULT;                                \
+  };                                                                          \
+  template<TEMPL_TYPE T>                                                      \
+  inline constexpr VAL_TYPE NAME##_v = NAME<T>::value;
+
 namespace lak
 {
   /* --- true/false_type --- */
