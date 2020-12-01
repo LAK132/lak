@@ -8,7 +8,7 @@ namespace lak
   namespace opengl
   {
     shader::shader(shader &&other)
-    : _shader(std::exchange(other._shader, (GLuint)0))
+    : _shader(lak::exchange(other._shader, (GLuint)0))
     {
     }
 
@@ -98,7 +98,7 @@ namespace lak
     }
 
     program::program(program &&other)
-    : _program(std::exchange(other._program, (GLuint)0))
+    : _program(lak::exchange(other._program, (GLuint)0))
     {
     }
 

@@ -10,7 +10,7 @@ namespace lak
     /* --- buffer --- */
 
     buffer::buffer(buffer &&other)
-    : _buffer(std::exchange(other._buffer, 0U)), _target(other._target)
+    : _buffer(lak::exchange(other._buffer, 0U)), _target(other._target)
     {
     }
 
@@ -89,10 +89,10 @@ namespace lak
     /* --- vertex_buffer --- */
 
     vertex_buffer::vertex_buffer(vertex_buffer &&other)
-    : _vertex_buffer(std::move(other._vertex_buffer)),
-      _index_buffer(std::move(other._index_buffer)),
-      _attributes(std::move(other._attributes)),
-      _vertex_count(std::exchange(other._vertex_count, 0U))
+    : _vertex_buffer(lak::move(other._vertex_buffer)),
+      _index_buffer(lak::move(other._index_buffer)),
+      _attributes(lak::move(other._attributes)),
+      _vertex_count(lak::exchange(other._vertex_count, 0U))
     {
     }
 
@@ -220,7 +220,7 @@ namespace lak
     /* --- vertex_array --- */
 
     vertex_array::vertex_array(vertex_array &&other)
-    : _array(std::exchange(other._array, 0U))
+    : _array(lak::exchange(other._array, 0U))
     {
     }
 
@@ -259,10 +259,10 @@ namespace lak
     /* --- static_object_part --- */
 
     static_object_part::static_object_part(static_object_part &&other)
-    : _vertex_array(std::move(other._vertex_array)),
-      _vertex_buffer(std::move(other._vertex_buffer)),
-      _shader(std::move(other._shader)),
-      _textures(std::move(other._textures))
+    : _vertex_array(lak::move(other._vertex_array)),
+      _vertex_buffer(lak::move(other._vertex_buffer)),
+      _shader(lak::move(other._shader)),
+      _textures(lak::move(other._textures))
     {
     }
 

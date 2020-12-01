@@ -1,5 +1,6 @@
 #include "lak/debug.hpp"
 #include "lak/unicode.hpp"
+#include "lak/utility.hpp"
 
 namespace
 {
@@ -92,7 +93,7 @@ void lak::trie<CHAR, T>::try_emplace(const lak::string<CHAR> &key,
                                      ARGS &&... args)
 {
   if (auto node = internal_try_emplace(lak::string_view(key)); node)
-    node->_value.emplace(std::forward<ARGS...>(args...));
+    node->_value.emplace(lak::forward<ARGS>(args)...);
 }
 
 template<typename CHAR, typename T>
@@ -107,18 +108,18 @@ void lak::trie<CHAR, T>::force_emplace(const lak::string<CHAR> &key,
                                        ARGS &&... args)
 {
   internal_force_emplace(lak::string_view(key))
-    ->_value.emplace(std::forward<ARGS...>(args...));
+    ->_value.emplace(lak::forward<ARGS>(args)...);
 }
 
 template<typename CHAR, typename T>
 lak::trie<CHAR, T>::trie(lak::string<CHAR> &&k)
-: _key(std::move(k)), _value(std::nullopt), _map(), _nodes()
+: _key(lak::move(k)), _value(std::nullopt), _map(), _nodes()
 {
 }
 
 template<typename CHAR, typename T>
 lak::trie<CHAR, T>::trie(lak::string<CHAR> &&k, std::optional<T> &&v)
-: _key(std::move(k)), _value(std::move(v)), _map(), _nodes()
+: _key(lak::move(k)), _value(lak::move(v)), _map(), _nodes()
 {
 }
 
@@ -126,10 +127,10 @@ template<typename CHAR, typename T>
 lak::trie<CHAR, T>::trie(lak::string<CHAR> &&k,
                          std::vector<char32_t> &&m,
                          std::vector<trie> &&n)
-: _key(std::move(k)),
+: _key(lak::move(k)),
   _value(std::nullopt),
-  _map(std::move(m)),
-  _nodes(std::move(n))
+  _map(lak::move(m)),
+  _nodes(lak::move(n))
 {
 }
 
@@ -138,10 +139,10 @@ lak::trie<CHAR, T>::trie(lak::string<CHAR> &&k,
                          std::optional<T> &&v,
                          std::vector<char32_t> &&m,
                          std::vector<trie> &&n)
-: _key(std::move(k)),
-  _value(std::move(v)),
-  _map(std::move(m)),
-  _nodes(std::move(n))
+: _key(lak::move(k)),
+  _value(lak::move(v)),
+  _map(lak::move(m)),
+  _nodes(lak::move(n))
 {
 }
 
@@ -160,7 +161,7 @@ lak::trie<CHAR, T> *lak::trie<CHAR, T>::internal_try_emplace(
   }
 
   // merge a newly constructed node with the terminal node that we found.
-  *node = merge(std::move(*node), trie(remaining_key.to_string()));
+  *node = merge(lak::move(*node), trie(remaining_key.to_string()));
 
   node = find(node, remaining_key).first;
 
@@ -183,7 +184,7 @@ lak::trie<CHAR, T> *lak::trie<CHAR, T>::internal_force_emplace(
   }
 
   // merge a newly constructed node with the terminal node that we found.
-  *node = merge(std::move(*node), trie(remaining_key.to_string()));
+  *node = merge(lak::move(*node), trie(remaining_key.to_string()));
 
   node = find(node, remaining_key).first;
 
@@ -214,7 +215,7 @@ lak::trie<CHAR, T> lak::trie<CHAR, T>::merge(lak::trie<CHAR, T> &&node1,
     node1._map.push_back(map2_key);
     node2._key =
       node2._key.substr(common_length + lak::codepoint_length<CHAR>(map2_key));
-    node1._nodes.emplace_back(std::move(node2));
+    node1._nodes.emplace_back(lak::move(node2));
     return node1;
   }
   else if (common_length == node2._key.size())
@@ -224,7 +225,7 @@ lak::trie<CHAR, T> lak::trie<CHAR, T>::merge(lak::trie<CHAR, T> &&node1,
     node2._map.push_back(map1_key);
     node1._key =
       node1._key.substr(common_length + lak::codepoint_length<CHAR>(map1_key));
-    node2._nodes.emplace_back(std::move(node1));
+    node2._nodes.emplace_back(lak::move(node1));
     return node2;
   }
   else
@@ -241,11 +242,11 @@ lak::trie<CHAR, T> lak::trie<CHAR, T>::merge(lak::trie<CHAR, T> &&node1,
       node2._key.substr(common_length + lak::codepoint_length<CHAR>(map[1]));
 
     std::vector<trie> nodes;
-    nodes.emplace_back(std::move(node1));
-    nodes.emplace_back(std::move(node2));
+    nodes.emplace_back(lak::move(node1));
+    nodes.emplace_back(lak::move(node2));
 
     return trie(
-      lak::strconv<CHAR>(u32common), std::move(map), std::move(nodes));
+      lak::strconv<CHAR>(u32common), lak::move(map), lak::move(nodes));
   }
 }
 
