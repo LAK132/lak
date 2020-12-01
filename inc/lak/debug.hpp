@@ -260,21 +260,30 @@ namespace lak
 #endif
 
 #undef ASSERT
+#undef ASSERT_NYI
 #undef ASSERT_EQUAL
 #undef ASSERT_NOT_EQUAL
 #undef ASSERT_GREATER
 #undef ASSERT_GREATER_OR_EQUAL
+#undef ASSERT_LESS
+#undef ASSERT_LESS_OR_EQUAL
 #undef ASSERTF
 #undef ASSERTF_EQUAL
 #undef ASSERTF_NOT_EQUAL
 #undef ASSERTF_GREATER
 #undef ASSERTF_GREATER_OR_EQUAL
+#undef ASSERTF_LESS
+#undef ASSERTF_LESS_OR_EQUAL
 #define ASSERT(x)                                                             \
   {                                                                           \
     if (!(x))                                                                 \
     {                                                                         \
       FATAL("Assertion '" STRINGIFY(x) "' failed");                           \
     }                                                                         \
+  }
+#define ASSERT_NYI()                                                          \
+  {                                                                           \
+    FATAL("Behaviour not yet implemented");                                   \
   }
 #define ASSERT_EQUAL(x, y)                                                    \
   {                                                                           \
@@ -306,6 +315,22 @@ namespace lak
     {                                                                         \
       FATAL(                                                                  \
         "Assertion '" STRINGIFY(x >= y) "' failed: '", x, "' < '", y, "'");   \
+    }                                                                         \
+  }
+#define ASSERT_LESS(x, y)                                                     \
+  {                                                                           \
+    if (!((x) < (y)))                                                         \
+    {                                                                         \
+      FATAL(                                                                  \
+        "Assertion '" STRINGIFY(x < y) "' failed: '", x, "' >= '", y, "'");   \
+    }                                                                         \
+  }
+#define ASSERT_LESS_OR_EQUAL(x, y)                                            \
+  {                                                                           \
+    if (!((x) <= (y)))                                                        \
+    {                                                                         \
+      FATAL(                                                                  \
+        "Assertion '" STRINGIFY(x <= y) "' failed: '", x, "' > '", y, "'");   \
     }                                                                         \
   }
 #define ASSERTF(x, str)                                                       \
@@ -358,6 +383,30 @@ namespace lak
       FATAL("Assertion '" STRINGIFY(x >= y) "' failed: '",                    \
             x,                                                                \
             "' < '",                                                          \
+            y,                                                                \
+            "': ",                                                            \
+            TO_U8STRING(str));                                                \
+    }                                                                         \
+  }
+#define ASSERTF_LESS(x, y, str)                                               \
+  {                                                                           \
+    if (!((x) < (y)))                                                         \
+    {                                                                         \
+      FATAL("Assertion '" STRINGIFY(x < y) "' failed: '",                     \
+            x,                                                                \
+            "' >= '",                                                         \
+            y,                                                                \
+            "': ",                                                            \
+            TO_U8STRING(str));                                                \
+    }                                                                         \
+  }
+#define ASSERTF_LESS_OR_EQUAL(x, y, str)                                      \
+  {                                                                           \
+    if (!((x) <= (y)))                                                        \
+    {                                                                         \
+      FATAL("Assertion '" STRINGIFY(x <= y) "' failed: '",                    \
+            x,                                                                \
+            "' > '",                                                          \
             y,                                                                \
             "': ",                                                            \
             TO_U8STRING(str));                                                \
