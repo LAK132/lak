@@ -99,20 +99,9 @@ namespace lak
     {
     }
 
-    template<
-      typename U            = T,
-      std::enable_if_t<std::is_same_v<U, T> &&
-                         !std::is_same_v<lak::remove_cvref_t<T>, char> &&
-                         !std::is_same_v<lak::remove_cvref_t<T>, wchar_t> &&
-                         !std::is_same_v<lak::remove_cvref_t<T>, char8_t> &&
-                         !std::is_same_v<lak::remove_cvref_t<T>, char16_t> &&
-                         !std::is_same_v<lak::remove_cvref_t<T>, char32_t>,
-                       int> = 0>
-    inline constexpr span(U (&data)[SIZE]) noexcept : _data(data)
-    {
-    }
+    inline constexpr span(T (&data)[SIZE]) noexcept : _data(data) {}
 
-    explicit inline constexpr span(T *data) noexcept : _data(data) {}
+    static inline constexpr span from_ptr(T *data) noexcept;
 
     inline ASSERT_CONSTEXPR T &operator[](size_t index) const noexcept;
 
@@ -323,17 +312,8 @@ namespace lak
     {
     }
 
-    template<
-      typename U = T,
-      size_t SIZE,
-      std::enable_if_t<std::is_same_v<U, T> &&
-                         !std::is_same_v<lak::remove_cvref_t<T>, char> &&
-                         !std::is_same_v<lak::remove_cvref_t<T>, wchar_t> &&
-                         !std::is_same_v<lak::remove_cvref_t<T>, char8_t> &&
-                         !std::is_same_v<lak::remove_cvref_t<T>, char16_t> &&
-                         !std::is_same_v<lak::remove_cvref_t<T>, char32_t>,
-                       int> = 0>
-    inline constexpr span(U (&data)[SIZE]) noexcept : _data(data), _size(SIZE)
+    template<size_t SIZE>
+    inline constexpr span(T (&data)[SIZE]) noexcept : _data(data), _size(SIZE)
     {
     }
 

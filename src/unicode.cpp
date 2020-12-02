@@ -219,7 +219,7 @@ char32_t lak::codepoint(lak::span<const char32_t> str)
 
 /* --- from_codepoint --- */
 
-lak::span<char> lak::from_codepoint(lak::codepoint_buffer<char> c,
+lak::span<char> lak::from_codepoint(lak::codepoint_buffer_t<char> c,
                                     char32_t code)
 {
   if (code <= 0x7FU)
@@ -235,14 +235,14 @@ lak::span<char> lak::from_codepoint(lak::codepoint_buffer<char> c,
   }
 }
 
-lak::span<wchar_t> lak::from_codepoint(lak::codepoint_buffer<wchar_t> c,
+lak::span<wchar_t> lak::from_codepoint(lak::codepoint_buffer_t<wchar_t> c,
                                        char32_t code)
 {
   return lak::span<wchar_t>(
-    lak::from_codepoint(lak::codepoint_buffer<wchar_unicode_t>(c), code));
+    lak::from_codepoint(lak::codepoint_buffer_t<wchar_unicode_t>(c), code));
 }
 
-lak::span<char8_t> lak::from_codepoint(lak::codepoint_buffer<char8_t> c,
+lak::span<char8_t> lak::from_codepoint(lak::codepoint_buffer_t<char8_t> c,
                                        char32_t code)
 {
   if (code <= 0x7FU)
@@ -283,7 +283,7 @@ lak::span<char8_t> lak::from_codepoint(lak::codepoint_buffer<char8_t> c,
   }
 }
 
-lak::span<char16_t> lak::from_codepoint(lak::codepoint_buffer<char16_t> c,
+lak::span<char16_t> lak::from_codepoint(lak::codepoint_buffer_t<char16_t> c,
                                         char32_t code)
 {
   if (code <= 0xD7FF || (code >= 0xE000 && code <= 0xFFFFU))
@@ -308,7 +308,7 @@ lak::span<char16_t> lak::from_codepoint(lak::codepoint_buffer<char16_t> c,
   }
 }
 
-lak::span<char32_t> lak::from_codepoint(lak::codepoint_buffer<char32_t> c,
+lak::span<char32_t> lak::from_codepoint(lak::codepoint_buffer_t<char32_t> c,
                                         char32_t code)
 {
   if (code <= 0xD7FFU || (code >= 0xE000U && code <= 0x0010FFFFU))
