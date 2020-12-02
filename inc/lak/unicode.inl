@@ -83,7 +83,7 @@ void lak::append_codepoint(lak::string<CHAR> &str, char32_t code)
 {
   constexpr size_t buffer_size = lak::chars_per_codepoint_v<CHAR>;
   CHAR buffer[buffer_size + 1] = {};
-  lak::from_codepoint(lak::codepoint_buffer<CHAR>((CHAR *)buffer), code);
+  lak::from_codepoint(lak::codepoint_buffer(lak::span(buffer)), code);
   str += buffer;
 }
 
@@ -123,5 +123,5 @@ namespace
 
 inline constexpr lak::span<const char32_t> lak::whitespaces()
 {
-  return lak::span<const char32_t, 25>(impl::spaces);
+  return lak::span(impl::spaces);
 }

@@ -15,6 +15,15 @@
 /* --- lak::span<T, SIZE> --- */
 
 template<typename T, size_t SIZE>
+inline constexpr lak::span<T, SIZE> lak::span<T, SIZE>::from_ptr(
+  T *data) noexcept
+{
+  lak::span<T, SIZE> result;
+  result._data = data;
+  return result;
+}
+
+template<typename T, size_t SIZE>
 inline ASSERT_CONSTEXPR T &lak::span<T, SIZE>::operator[](
   size_t index) const noexcept
 {
@@ -95,7 +104,7 @@ template<size_t count>
 inline constexpr lak::span<T, count> lak::span<T, SIZE>::first() const
 {
   static_assert(count <= SIZE, "subspan too large");
-  return lak::span<T, count>{begin()};
+  return lak::span<T, count>::from_ptr(begin());
 }
 
 template<typename T, size_t SIZE>
@@ -278,7 +287,7 @@ inline ASSERT_CONSTEXPR lak::span<T, count>
 lak::span<T, lak::dynamic_extent>::first() const
 {
   ASSERTF(count <= size(), count << " > " << size());
-  return lak::span<T, count>{begin()};
+  return lak::span<T, count>::from_ptr(begin());
 }
 
 template<typename T>
