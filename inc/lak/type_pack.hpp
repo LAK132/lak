@@ -2,6 +2,7 @@
 #define LAK_TYPE_PACK_HPP
 
 #include "lak/optional.hpp"
+#include "lak/tuple.hpp"
 #include "lak/type_utils.hpp"
 
 namespace lak
@@ -10,6 +11,19 @@ namespace lak
 
   template<typename... TYPES>
   struct type_pack
+  {
+  };
+
+  /* --- tuple_element --- */
+
+  template<size_t I, typename T, typename... U>
+  struct tuple_element<I, lak::type_pack<T, U...>>
+  : public lak::tuple_element<I - 1, lak::type_pack<U...>>
+  {
+  };
+  template<typename T, typename... U>
+  struct tuple_element<0, lak::type_pack<T, U...>>
+  : public lak::type_identity<T>
   {
   };
 

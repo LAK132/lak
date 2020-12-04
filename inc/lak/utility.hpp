@@ -6,6 +6,25 @@
 
 namespace lak
 {
+  /* --- declval --- */
+
+  template<typename T>
+  lak::add_rvalue_reference_t<T> declval() noexcept;
+
+  /* --- in_place_index --- */
+
+  template<size_t I>
+  struct in_place_index_t : public lak::size_type<I>
+  {
+  };
+  template<size_t I>
+  inline constexpr in_place_index_t<I> in_place_index{};
+
+  struct in_place_t
+  {
+  };
+  inline constexpr in_place_t in_place{};
+
   /* --- move --- */
 
   template<typename T>
@@ -60,6 +79,24 @@ namespace lak
     auto result = lak::move(a);
     a           = T(lak::forward<U>(n));
     return lak::move(result);
+  }
+
+  /* --- as_ptr --- */
+
+  // Converts pointers and pointer-like types to pointers.
+
+  template<typename T>
+  force_inline constexpr T *as_ptr(T *p)
+  {
+    return p;
+  }
+
+  // Converts references and reference-like types to pointers.
+
+  template<typename T>
+  force_inline constexpr T *as_ptr(lak::remove_refs_ptrs<T> &p)
+  {
+    std::addressof(p);
   }
 }
 
