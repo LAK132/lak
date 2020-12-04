@@ -22,9 +22,8 @@ namespace lak
   struct array;
 
   template<typename T>
-  struct is_span
+  struct is_span : lak::false_type
   {
-    static constexpr bool value = false;
   };
 
   template<typename T>
@@ -532,9 +531,8 @@ namespace lak
   span(T *, T *) -> span<T, lak::dynamic_extent>;
 
   template<typename T, size_t S>
-  struct is_span<lak::span<T, S>>
+  struct is_span<lak::span<T, S>> : lak::true_type
   {
-    static constexpr bool value = true;
   };
 
   /* --- helper functions --- */
