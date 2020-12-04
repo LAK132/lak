@@ -6,11 +6,15 @@
 
 namespace lak
 {
+  /* --- move --- */
+
   template<typename T>
   force_inline constexpr lak::remove_reference_t<T> &&move(T &&t) noexcept
   {
     return static_cast<lak::remove_reference_t<T> &&>(t);
   }
+
+  /* --- forward --- */
 
   template<typename T>
   force_inline constexpr T &&forward(lak::remove_reference_t<T> &t) noexcept
@@ -23,6 +27,8 @@ namespace lak
   {
     return static_cast<T &&>(t);
   }
+
+  /* --- swap --- */
 
   template<typename T>
   force_inline constexpr void swap(T &a, T &b)
@@ -37,6 +43,8 @@ namespace lak
   {
     for (size_t i = 0; i < SIZE; ++i) lak::swap(a[i], b[i]);
   }
+
+  /* --- exchange --- */
 
   template<typename T>
   force_inline constexpr T exchange(T &a, T &&n)
