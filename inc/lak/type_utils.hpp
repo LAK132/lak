@@ -20,36 +20,40 @@
 
 namespace lak
 {
-  /* --- true/false_type --- */
+  /* --- integral_constant --- */
 
-  struct true_type
+  template<typename T, T V>
+  struct integral_constant
   {
-    static constexpr bool value = true;
-  };
-  struct false_type
-  {
-    static constexpr bool value = false;
+    using type               = T;
+    static constexpr T value = V;
   };
 
   /* --- bool_type --- */
 
   template<bool B>
-  struct bool_type;
-  template<>
-  struct bool_type<true> : public true_type
-  {
-  };
-  template<>
-  struct bool_type<false> : public false_type
-  {
-  };
+  using bool_type = lak::integral_constant<bool, B>;
+
+  /* --- true/false_type --- */
+
+  using true_type  = lak::bool_type<true>;
+  using false_type = lak::bool_type<false>;
 
   /* --- size_type --- */
 
   template<size_t S>
-  struct size_type
+  using size_type = lak::integral_constant<size_t, S>;
+
+  /* --- is_integral_constant --- */
+
+  template<typename T>
+  struct is_integral_constant : public lak::false_type
   {
-    static constexpr size_t value = S;
+  };
+  template<typename T, T V>
+  struct is_integral_constant<lak::integral_constant<T, V>>
+  : public lak::true_type
+  {
   };
 
   /* --- type_identity --- */
@@ -94,24 +98,52 @@ namespace lak
   /* --- remove_reference --- */
 
   template<typename T>
-  struct remove_reference : public type_identity<T>
+  struct remove_reference : public lak::type_identity<T>
   {
   };
   template<typename T>
-  struct remove_reference<T &> : public type_identity<T>
+  struct remove_reference<T &> : public lak::type_identity<T>
   {
   };
   template<typename T>
-  struct remove_reference<T &&> : public type_identity<T>
+  struct remove_reference<T &&> : public lak::type_identity<T>
   {
   };
   template<typename T>
-  using remove_reference_t = typename remove_reference<T>::type;
+  using remove_reference_t = typename lak::remove_reference<T>::type;
+
+  /* --- remove_lvalue_reference --- */
+
+  template<typename T>
+  struct remove_lvalue_reference : public lak::type_identity<T>
+  {
+  };
+  template<typename T>
+  struct remove_lvalue_reference<T &> : public lak::type_identity<T>
+  {
+  };
+  template<typename T>
+  using remove_lvalue_reference_t =
+    typename lak::remove_lvalue_reference<T>::type;
+
+  /* --- remove_rvalue_reference --- */
+
+  template<typename T>
+  struct remove_rvalue_reference : public lak::type_identity<T>
+  {
+  };
+  template<typename T>
+  struct remove_rvalue_reference<T &&> : public lak::type_identity<T>
+  {
+  };
+  template<typename T>
+  using remove_rvalue_reference_t =
+    typename lak::remove_rvalue_reference<T>::type;
 
   /* --- remove_cvref --- */
 
   template<typename T>
-  using remove_cvref_t = remove_cv_t<remove_reference_t<T>>;
+  using remove_cvref_t = lak::remove_cv_t<lak::remove_reference_t<T>>;
 
   /* --- remove_refs_ptrs --- */
 
@@ -123,20 +155,62 @@ namespace lak
   template<typename T>
   struct remove_refs_ptrs<T *>
   {
-    using type = typename remove_refs_ptrs<T>::type;
+    using type = typename lak::remove_refs_ptrs<T>::type;
   };
   template<typename T>
   struct remove_refs_ptrs<T &>
   {
-    using type = typename remove_refs_ptrs<T>::type;
+    using type = typename lak::remove_refs_ptrs<T>::type;
   };
   template<typename T>
   struct remove_refs_ptrs<T &&>
   {
-    using type = typename remove_refs_ptrs<T>::type;
+    using type = typename lak::remove_refs_ptrs<T>::type;
   };
   template<typename T>
-  using remove_refs_ptrs_t = typename remove_refs_ptrs<T>::type;
+  using remove_refs_ptrs_t = typename lak::remove_refs_ptrs<T>::type;
+
+  /* --- add_lvalue_reference --- */
+
+  template<typename T>
+  struct add_lvalue_reference : public lak::type_identity<T &>
+  {
+  };
+  template<>
+  struct add_lvalue_reference<void> : public lak::type_identity<void>
+  {
+  };
+  template<typename T>
+  struct add_lvalue_reference<T &> : public lak::type_identity<T &>
+  {
+  };
+  template<typename T>
+  struct add_lvalue_reference<T &&> : public lak::type_identity<T &>
+  {
+  };
+  template<typename T>
+  using add_lvalue_reference_t = typename add_lvalue_reference<T>::type;
+
+  /* --- add_lvalue_reference --- */
+
+  template<typename T>
+  struct add_rvalue_reference : public lak::type_identity<T &&>
+  {
+  };
+  template<>
+  struct add_rvalue_reference<void> : public lak::type_identity<void>
+  {
+  };
+  template<typename T>
+  struct add_rvalue_reference<T &> : public lak::type_identity<T &>
+  {
+  };
+  template<typename T>
+  struct add_rvalue_reference<T &&> : public lak::type_identity<T &&>
+  {
+  };
+  template<typename T>
+  using add_rvalue_reference_t = typename add_rvalue_reference<T>::type;
 
   /* --- is_function --- */
 
@@ -181,11 +255,11 @@ namespace lak
   /* --- is_same --- */
 
   template<typename T, typename U>
-  struct is_same : public false_type
+  struct is_same : public lak::false_type
   {
   };
   template<typename T>
-  struct is_same<T, T> : public true_type
+  struct is_same<T, T> : public lak::true_type
   {
   };
   template<typename T, typename U>
@@ -194,15 +268,134 @@ namespace lak
   /* --- is_const --- */
 
   template<typename T>
-  struct is_const : public false_type
+  struct is_const : public lak::false_type
   {
   };
   template<typename T>
-  struct is_const<const T> : public true_type
+  struct is_const<const T> : public lak::true_type
   {
   };
   template<typename T>
   static constexpr bool is_const_v = is_const<T>::value;
+
+  static_assert(!lak::is_const_v<char>);
+  static_assert(lak::is_const_v<const char>);
+  static_assert(lak::is_const_v<const volatile char>);
+  static_assert(!lak::is_const_v<char &>);
+  static_assert(!lak::is_const_v<const volatile char &>);
+  static_assert(!lak::is_const_v<char &&>);
+  static_assert(!lak::is_const_v<const volatile char &&>);
+
+  /* --- is_lvalue_reference --- */
+
+  template<typename T>
+  struct is_lvalue_reference : public lak::false_type
+  {
+  };
+  template<typename T>
+  struct is_lvalue_reference<T &> : public lak::true_type
+  {
+  };
+  template<typename T>
+  static constexpr bool is_lvalue_reference_v = is_lvalue_reference<T>::value;
+
+  static_assert(!lak::is_lvalue_reference_v<char>);
+  static_assert(!lak::is_lvalue_reference_v<const volatile char>);
+  static_assert(lak::is_lvalue_reference_v<char &>);
+  static_assert(lak::is_lvalue_reference_v<const volatile char &>);
+  static_assert(!lak::is_lvalue_reference_v<char &&>);
+  static_assert(!lak::is_lvalue_reference_v<const volatile char &&>);
+
+  /* --- is_rvalue_reference --- */
+
+  template<typename T>
+  struct is_rvalue_reference : public lak::false_type
+  {
+  };
+  template<typename T>
+  struct is_rvalue_reference<T &&> : public lak::true_type
+  {
+  };
+  template<typename T>
+  static constexpr bool is_rvalue_reference_v = is_rvalue_reference<T>::value;
+
+  static_assert(!lak::is_rvalue_reference_v<char>);
+  static_assert(!lak::is_rvalue_reference_v<const volatile char>);
+  static_assert(!lak::is_rvalue_reference_v<char &>);
+  static_assert(!lak::is_rvalue_reference_v<const volatile char &>);
+  static_assert(lak::is_rvalue_reference_v<char &&>);
+  static_assert(lak::is_rvalue_reference_v<const volatile char &&>);
+
+  /* --- is_reference --- */
+
+  template<typename T>
+  struct is_reference : public lak::false_type
+  {
+  };
+  template<typename T>
+  struct is_reference<T &> : public lak::true_type
+  {
+  };
+  template<typename T>
+  struct is_reference<T &&> : public lak::true_type
+  {
+  };
+  template<typename T>
+  static constexpr bool is_reference_v = is_reference<T>::value;
+
+  static_assert(!lak::is_reference_v<char>);
+  static_assert(!lak::is_reference_v<const volatile char>);
+  static_assert(lak::is_reference_v<char &>);
+  static_assert(lak::is_reference_v<const volatile char &>);
+  static_assert(lak::is_reference_v<char &&>);
+  static_assert(lak::is_reference_v<const volatile char &&>);
+
+  /* --- is_pointer --- */
+
+  template<typename T>
+  struct is_pointer : public lak::false_type
+  {
+  };
+  template<typename T>
+  struct is_pointer<T *> : public lak::true_type
+  {
+  };
+  template<typename T>
+  static constexpr bool is_pointer_v = lak::is_pointer<T>::value;
+
+  static_assert(!lak::is_pointer_v<char>);
+  static_assert(lak::is_pointer_v<char *>);
+  static_assert(lak::is_pointer_v<const volatile char *>);
+  static_assert(!lak::is_pointer_v<char &>);
+  static_assert(!lak::is_pointer_v<const volatile char &>);
+  static_assert(!lak::is_pointer_v<char &&>);
+  static_assert(!lak::is_pointer_v<const volatile char &&>);
+
+  /* --- lvalue_to_ptr --- */
+
+  template<typename T>
+  struct lvalue_to_ptr : public lak::type_identity<T>
+  {
+  };
+  template<typename T>
+  struct lvalue_to_ptr<T &> : public lak::type_identity<T *>
+  {
+  };
+  template<typename T>
+  using lvalue_to_ptr_t = typename lvalue_to_ptr<T>::type;
+
+  static_assert(lak::is_same_v<char, lak::lvalue_to_ptr_t<char>>);
+  static_assert(lak::is_same_v<const volatile char,
+                               lak::lvalue_to_ptr_t<const volatile char>>);
+  static_assert(lak::is_same_v<char *, lak::lvalue_to_ptr_t<char *>>);
+  static_assert(lak::is_same_v<const volatile char *,
+                               lak::lvalue_to_ptr_t<const volatile char *>>);
+  static_assert(lak::is_same_v<char *, lak::lvalue_to_ptr_t<char &>>);
+  static_assert(lak::is_same_v<const volatile char *,
+                               lak::lvalue_to_ptr_t<const volatile char &>>);
+  static_assert(lak::is_same_v<char &&, lak::lvalue_to_ptr_t<char &&>>);
+  static_assert(lak::is_same_v<const volatile char &&,
+                               lak::lvalue_to_ptr_t<const volatile char &&>>);
 
   /* --- copy_const --- */
 
