@@ -1,6 +1,7 @@
 #ifndef LAK_FILE_HPP
 #define LAK_FILE_HPP
 
+#include "lak/errno_result.hpp"
 #include "lak/string.hpp"
 
 #include <filesystem>
@@ -11,7 +12,7 @@ namespace lak
 {
   namespace fs = std::filesystem;
 
-  std::vector<uint8_t> read_file(const fs::path &path);
+  lak::errno_result<std::vector<uint8_t>> read_file(const fs::path &path);
 
   bool save_file(const fs::path &path, const std::vector<uint8_t> &data);
 
