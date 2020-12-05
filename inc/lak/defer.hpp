@@ -26,6 +26,9 @@ namespace lak
 
 #define DEFER(...)                                                            \
   auto UNIQUIFY(DEFER_OBJECT_) = lak::defer([&]() { __VA_ARGS__; })
+#define DEFER_RESET(OBJ)                                                      \
+  auto UNIQUIFY(DEFER_RESET_OBJECT_) = OBJ;                                   \
+  DEFER(OBJ = lak::move(UNIQUIFY(DEFER_RESET_OBJECT_)));
 #define DEFER_CALL(FUNC, ...)                                                 \
   auto UNIQUIFY(DEFER_OBJECT_) = lak::defer(std::bind(FUNC, __VA_ARGS__))
 
