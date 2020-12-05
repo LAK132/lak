@@ -5,7 +5,6 @@
 #include "lak/type_utils.hpp"
 #include "lak/utility.hpp"
 #include "lak/variant.hpp"
-#include "lak/visit.hpp"
 
 namespace lak
 {
@@ -14,9 +13,9 @@ namespace lak
   };
   static constexpr lak::nullopt_t nullopt;
 
-  /* --- optional<T> --- */
+  /* --- optional --- */
 
-  template<typename T>
+  template<typename T = void>
   struct optional
   {
     using value_type = T;
@@ -26,8 +25,14 @@ namespace lak
 
   public:
     optional() : _value() {}
-    optional(const optional &) = default;
-    optional(optional &&)      = default;
+    optional(const optional &other)
+    : _index(other._index), _value(other._value)
+    {
+    }
+    optional(optional &&other)
+    : _index(other._index), _value(lak::move(other._value))
+    {
+    }
 
     optional(lak::nullopt_t) {}
     template<typename U>
@@ -56,7 +61,7 @@ namespace lak
       return *this;
     }
 
-    constexpr inline bool has_value() const { return _valie.index() == 1; }
+    constexpr inline bool has_value() const { return _value.index() == 1; }
 
     constexpr inline operator bool() const { return _has_value; }
 
@@ -76,6 +81,56 @@ namespace lak
 
     T *operator->() { return get(); }
     const T *operator->() const { return get(); }
+  };
+
+  /* --- optional<void> --- */
+
+  template<>
+  struct optional<void>
+  {
+    using value_type = void;
+
+  private:
+    bool _value = false;
+
+  public:
+    optional()                 = default;
+    optional(const optional &) = default;
+    optional(optional &&)      = default;
+
+    optional(lak::nullopt_t) : _value(false) {}
+    optional(lak::in_place_t) : _value(true) {}
+    template<bool B>
+    optional(lak::bool_type<B>) : _value(B)
+    {
+    }
+
+    optional &operator=(const optional &) = default;
+    optional &operator=(optional &&) = default;
+
+    optional &operator=(lak::nullopt_t)
+    {
+      _value = false;
+      return *this;
+    }
+    template<bool B>
+    optional &operator=(lak::bool_type<B>)
+    {
+      _value = B;
+      return *this;
+    }
+
+    constexpr inline bool has_value() const { return _value; }
+
+    constexpr inline operator bool() const { return _value; }
+
+    void emplace() { _value = true; }
+
+    void reset() { _value = false; }
+
+    bool get() const { return _value; }
+
+    void operator*() const {}
   };
 
   /* --- optional<T&> --- */
