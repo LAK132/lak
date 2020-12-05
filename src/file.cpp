@@ -139,15 +139,24 @@ lak::fs::path lak::exe_path()
   return lak::fs::path(path.data());
 
 #else
-  FATAL("Not implemented");
+  ASSERT_NYI();
   return {};
 #endif
 }
 
 lak::fs::path lak::normalised(const lak::fs::path &path)
 {
-  // ("a/b" | "a/b/") -> "a/b/." -> "a/b"
-  return (path / ".").parent_path();
+  // ("a/b" | "a/b/" | "a/b/.") -> "a/b/" -> "a/b/." -> "a/b"
+  auto norm = (path.lexically_normal() / ".").parent_path();
+  if (norm == ".")
+    return "";
+  else
+    return norm;
+}
+
+lak::fs::path lak::relative(const lak::fs::path &from, const lak::fs::path &to)
+{
+  return lak::normalised(from.lexically_relative(to));
 }
 
 bool lak::has_parent(const lak::fs::path &path)
@@ -160,22 +169,22 @@ lak::fs::path lak::parent(const lak::fs::path &path)
   return lak::normalised(path).parent_path();
 }
 
-lak::deepest_folder_result lak::deepest_folder(const lak::fs::path &path,
-                                               std::error_code &ec)
+lak::result<lak::deepest_folder_result, std::error_code> lak::deepest_folder(
+  const lak::fs::path &path)
 {
   lak::fs::path folder = lak::normalised(path);
-  lak::fs::path file;
-  auto entry = fs::directory_entry(path, ec);
+  std::error_code ec;
+  auto entry = lak::fs::directory_entry(folder, ec);
   while (!entry.is_directory() && lak::has_parent(folder))
   {
     folder = lak::parent(folder);
-    file   = path.lexically_relative(folder);
     // we're intentionally ignoring errors if there's still parent
     // directories, but we don't want to ignore the error of the last call
     // to fs::directory_entry.
     ec.clear();
-    entry = fs::directory_entry(folder, ec);
+    entry = lak::fs::directory_entry(folder, ec);
   }
-  if (ec) WARNING(path, ": ", ec.message());
-  return {lak::normalised(folder), lak::normalised(file)};
+  if (ec) return lak::err_t{ec};
+  return lak::ok_t{lak::deepest_folder_result{lak::normalised(folder),
+                                              lak::relative(path, folder)}};
 }

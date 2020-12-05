@@ -25,6 +25,8 @@ namespace lak
 
   fs::path normalised(const fs::path &path);
 
+  fs::path relative(const fs::path &from, const fs::path &to);
+
   bool has_parent(const fs::path &path);
 
   // The the ACTUAL parent path.
@@ -37,8 +39,8 @@ namespace lak
     fs::path folder;
     fs::path file;
   };
-  deepest_folder_result deepest_folder(const fs::path &path,
-                                       std::error_code &ec);
+  lak::result<lak::deepest_folder_result, std::error_code> deepest_folder(
+    const fs::path &path);
 }
 
 #endif
