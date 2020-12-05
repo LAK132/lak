@@ -18,17 +18,25 @@
 #include <fstream>
 #include <iostream>
 
-std::vector<uint8_t> lak::read_file(const lak::fs::path &path)
+lak::errno_result<std::vector<uint8_t>> lak::read_file(
+  const lak::fs::path &path)
 {
   std::ifstream file(path, std::ios::binary | std::ios::ate);
-  std::vector<uint8_t> result;
-  if (!file.is_open()) return result;
-  std::streampos fileSize = file.tellg();
-  if (fileSize == std::streampos(-1)) return result;
+  if (!file.is_open()) return lak::err_t{lak::errno_error::last_error()};
+
+  std::streampos file_size = file.tellg();
+  if (file_size == std::streampos(-1))
+    return lak::err_t{lak::errno_error::last_error()};
+
   file.seekg(0);
-  result.resize(fileSize);
+  if (file.fail()) return lak::err_t{lak::errno_error::last_error()};
+
+  auto result = std::vector<uint8_t>(file_size);
+
   file.read(reinterpret_cast<char *>(result.data()), result.size());
-  return result;
+  if (file.fail()) return lak::err_t{lak::errno_error::last_error()};
+
+  return lak::ok_t{lak::move(result)};
 }
 
 bool lak::save_file(const lak::fs::path &path,
