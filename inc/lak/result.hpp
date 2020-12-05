@@ -47,9 +47,6 @@ namespace lak
   template<typename T>
   ok_t(T &) -> ok_t<T &>;
 
-  template<typename T>
-  ok_t(const T &) -> ok_t<const T &>;
-
   /* --- err_t --- */
 
   template<typename T = lak::monostate>
@@ -63,9 +60,6 @@ namespace lak
 
   template<typename T>
   err_t(T &) -> err_t<T &>;
-
-  template<typename T>
-  err_t(const T &) -> err_t<const T &>;
 
   /* --- result --- */
 
@@ -399,6 +393,15 @@ namespace lak
         return lak::err_t{forward_err()};
     }
   };
+
+  template<typename OK, typename... ERR>
+  using results = lak::result<OK, lak::variant<ERR...>>;
+
+  template<typename ERR>
+  using error_code = lak::result<lak::monostate, ERR>;
+
+  template<typename... ERR>
+  using error_codes = lak::error_code<lak::variant<ERR...>>;
 
   template<typename... T>
   struct is_result<lak::result<T...>> : public lak::true_type
