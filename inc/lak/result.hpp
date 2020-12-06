@@ -72,18 +72,24 @@ namespace lak
   private:
     lak::variant<OK, ERR> _value;
 
-    force_inline ok_type &get_ok() { return *_value.get<0>(); }
-    force_inline const ok_type &get_ok() const { return *_value.get<0>(); }
+    force_inline ok_type &get_ok() { return *_value.template get<0>(); }
+    force_inline const ok_type &get_ok() const
+    {
+      return *_value.template get<0>();
+    }
     force_inline OK &&forward_ok()
     {
-      return lak::forward<OK>(*_value.get<0>());
+      return lak::forward<OK>(*_value.template get<0>());
     }
 
-    force_inline err_type &get_err() { return *_value.get<1>(); }
-    force_inline const err_type &get_err() const { return *_value.get<1>(); }
+    force_inline err_type &get_err() { return *_value.template get<1>(); }
+    force_inline const err_type &get_err() const
+    {
+      return *_value.template get<1>();
+    }
     force_inline ERR &&forward_err()
     {
-      return lak::forward<ERR>(*_value.get<1>());
+      return lak::forward<ERR>(*_value.template get<1>());
     }
 
     result(const lak::variant<OK, ERR> &value) : _value(value) {}
@@ -129,8 +135,11 @@ namespace lak
 
     /* --- ok --- */
 
-    [[nodiscard]] ok_type *ok() & { return _value.get<0>(); }
-    [[nodiscard]] const ok_type *ok() const & { return _value.get<0>(); }
+    [[nodiscard]] ok_type *ok() & { return _value.template get<0>(); }
+    [[nodiscard]] const ok_type *ok() const &
+    {
+      return _value.template get<0>();
+    }
     [[nodiscard]] lak::optional<OK> ok() &&
     {
       return is_ok() ? lak::optional<OK>(forward_ok()) : lak::nullopt;
@@ -138,8 +147,11 @@ namespace lak
 
     /* --- err --- */
 
-    [[nodiscard]] err_type *err() & { return _value.get<1>(); }
-    [[nodiscard]] const err_type *err() const & { return _value.get<1>(); }
+    [[nodiscard]] err_type *err() & { return _value.template get<1>(); }
+    [[nodiscard]] const err_type *err() const &
+    {
+      return _value.template get<1>();
+    }
     [[nodiscard]] lak::optional<ERR> err() &&
     {
       return is_err() ? lak::optional<ERR>(forward_err()) : lak::nullopt;

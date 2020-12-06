@@ -72,10 +72,10 @@ bool lak::page_decommit(lak::span<void> pages)
   return VirtualFree(pages.data(), pages.size(), MEM_DECOMMIT) != 0;
 #elif defined(LAK_OS_LINUX)
   return mprotect(pages.data(), pages.size(), PROT_NONE) == 0 &&
-         madvice(pages.data(), pages.size(), MADV_DONTNEED) == 0;
+         madvise(pages.data(), pages.size(), MADV_DONTNEED) == 0;
 #elif defined(LAK_OS_MAC)
   return mprotect(pages.data(), pages.size(), PROT_NONE) == 0 &&
-         madvice(pages.data(), pages.size(), MADV_FREE) == 0;
+         madvise(pages.data(), pages.size(), MADV_FREE) == 0;
 #else
 #  error "OS not supported"
 #endif

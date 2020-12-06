@@ -20,18 +20,20 @@ uint64_t lak::yield_frame(const uint64_t last_counter,
   return lak::performance_counter();
 }
 
-#ifdef LAK_USE_WINAPI
-#  include "lak/src/win32/window.cpp"
-#endif
+#ifndef LAK_DONT_AUTO_COMPILE_PLATFORM_SPECIFICS
+#  ifdef LAK_USE_WINAPI
+#    include "lak/src/win32/window.cpp"
+#  endif
 
-#ifdef LAK_USE_XLIB
-#  include "lak/src/xlib/window.cpp"
-#endif
+#  ifdef LAK_USE_XLIB
+#    include "lak/src/xlib/window.cpp"
+#  endif
 
-#ifdef LAK_USE_XCB
-#  include "lak/src/xcb/window.cpp"
-#endif
+#  ifdef LAK_USE_XCB
+#    include "lak/src/xcb/window.cpp"
+#  endif
 
-#ifdef LAK_USE_SDL
-#  include "lak/src/sdl/window.cpp"
+#  ifdef LAK_USE_SDL
+#    include "lak/src/sdl/window.cpp"
+#  endif
 #endif

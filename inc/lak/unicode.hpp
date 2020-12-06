@@ -51,14 +51,14 @@ namespace lak
   char32_t codepoint(const lak::string<CHAR> &str, size_t offset);
 
   template<typename CHAR>
-  using codepoint_buffer_t = lak::span<CHAR, chars_per_codepoint_v<CHAR>>;
+  using codepoint_buffer_t = lak::span<CHAR, lak::chars_per_codepoint_v<CHAR>>;
   template<typename CHAR,
            size_t SIZE,
-           lak::enable_if_i<(SIZE >= chars_per_codepoint_v<CHAR>)> = 0>
+           lak::enable_if_i<(SIZE >= lak::chars_per_codepoint_v<CHAR>)> = 0>
   force_inline constexpr lak::codepoint_buffer_t<CHAR> codepoint_buffer(
     lak::span<CHAR, SIZE> buf)
   {
-    return buf.first<chars_per_codepoint_v<CHAR>>();
+    return buf.template first<lak::chars_per_codepoint_v<CHAR>>();
   }
 
   template<typename CHAR>

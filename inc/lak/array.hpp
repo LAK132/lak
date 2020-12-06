@@ -1,13 +1,14 @@
 #ifndef LAK_ARRAY_HPP
 #define LAK_ARRAY_HPP
 
+#include "lak/compiler.hpp"
 #include "lak/stdint.hpp"
 #include "lak/type_utils.hpp"
 
 namespace lak
 {
   template<typename T, size_t SIZE = lak::dynamic_extent>
-  struct array
+  packed_struct array
   {
   private:
     T _data[SIZE] = {};

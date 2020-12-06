@@ -75,7 +75,9 @@ namespace lak
     force_inline pack_union(lak::in_place_index_t<0>, ARGS &&... args)
     : value(lak::forward<ARGS>(args)...){};
 
-    template<size_t I, typename... ARGS, lak::enable_if_i<(I < size)> = 0>
+    template<size_t I,
+             typename... ARGS,
+             lak::enable_if_i<(I > 0 && I < size)> = 0>
     force_inline pack_union(lak::in_place_index_t<I>, ARGS &&... args)
     : next(lak::in_place_index<I - 1>, lak::forward<ARGS>(args)...){};
 

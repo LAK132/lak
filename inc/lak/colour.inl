@@ -15,7 +15,7 @@ LAK_FOREACH_COLOUR(LAK_TEMPLATE_IS_COLOUR)
   };
 LAK_FOREACH_VIRTUAL_COLOUR_CHANNEL(LAK_TEMPLATE_IS_COLOUR_CHANNEL)
 
-#define LAK_TEMPLATE_CHANNEL_BIT_COUNT(SYMBOL, NAME, SIZE)                    \
+#define LAK_TEMPLATE_CHANNEL_BIT_COUNT(SYMBOL, NAME, SIZE, ...)               \
   template<>                                                                  \
   struct lak::colour::bit_count<lak::colour::channel_type::NAME##SIZE>        \
   : lak::size_type<SIZE>                                                      \
@@ -23,11 +23,11 @@ LAK_FOREACH_VIRTUAL_COLOUR_CHANNEL(LAK_TEMPLATE_IS_COLOUR_CHANNEL)
   };
 LAK_FOREACH_SIZED_CHANNEL_TYPE(LAK_TEMPLATE_CHANNEL_BIT_COUNT)
 
-#define LAK_TEMPLATE_CHANNEL_NAME(SYMBOL, NAME, SIZE)                         \
+#define LAK_TEMPLATE_CHANNEL_NAME(SYMBOL, NAME, SIZE, ...)                    \
   template<>                                                                  \
   struct lak::colour::channel_name<lak::colour::channel_type::NAME##SIZE>     \
   {                                                                           \
-    static constexpr char *value = #NAME;                                     \
+    static constexpr const char *value = #NAME;                               \
   };
 LAK_FOREACH_SIZED_CHANNEL_TYPE(LAK_TEMPLATE_CHANNEL_NAME)
 
@@ -426,7 +426,7 @@ namespace lak
     };
     static_assert(sizeof(i8) == 8 / 8);
     template<>
-    struct lak::colour::is_indexed<lak::colour::i8> : lak::true_type
+    struct is_indexed<lak::colour::i8> : lak::true_type
     {
     };
 

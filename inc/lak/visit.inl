@@ -84,6 +84,7 @@ auto lak::visit(VAR &&variant, FUNCTOR &&functor)
                             [&](auto index) {
                               using I = lak::remove_cvref_t<decltype(index)>;
                               static_assert(lak::is_integral_constant_v<I>);
-                              return functor(*variant.get<I::value>());
+                              return functor(
+                                *variant.template get<I::value>());
                             });
 }
