@@ -58,6 +58,8 @@ namespace lak
     {
     }
 
+    ~optional() { reset(); }
+
     optional &operator=(const optional &other)
     {
       if (other._has_value)
