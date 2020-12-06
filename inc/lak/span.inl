@@ -79,7 +79,7 @@ inline ASSERT_CONSTEXPR lak::span<T, count> lak::span<T, SIZE>::subspan() const
   else
   {
     static_assert(offset + count <= SIZE, "subspan too large");
-    return lak::span<T, count>{begin() + offset};
+    return lak::span<T, count>::from_ptr(begin() + offset);
   }
 }
 
@@ -120,7 +120,7 @@ template<size_t count>
 inline constexpr lak::span<T, count> lak::span<T, SIZE>::last() const
 {
   static_assert(count <= SIZE, "subspan too large");
-  return lak::span<T, count>{begin() + (size() - count)};
+  return lak::span<T, count>::from_ptr(begin() + (size() - count));
 }
 
 template<typename T, size_t SIZE>
@@ -261,7 +261,7 @@ lak::span<T, lak::dynamic_extent>::subspan() const
   }
   else
   {
-    return lak::span<T, count>{begin() + offset};
+    return lak::span<T, count>::from_ptr(begin() + offset);
   }
 }
 
@@ -304,7 +304,7 @@ inline ASSERT_CONSTEXPR lak::span<T, count>
 lak::span<T, lak::dynamic_extent>::last() const
 {
   ASSERTF(count <= size(), count << " > " << size());
-  return lak::span<T, count>{begin() + (size() - count)};
+  return lak::span<T, count>::from_ptr(begin() + (size() - count));
 }
 
 template<typename T>

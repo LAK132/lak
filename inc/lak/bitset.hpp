@@ -24,7 +24,7 @@ namespace lak
   }
 
   template<lak::endian ENDIAN, typename UINT, size_t... SIZE>
-  struct bitset
+  packed_struct bitset
   {
     static_assert((((sizeof(UINT) * 8) >= SIZE) && ...));
     static constexpr size_t member_size[sizeof...(SIZE)] = {SIZE...};
@@ -55,7 +55,7 @@ namespace lak
     constexpr
 #endif
       bitset(lak::span<const UINT> init)
-    : bitset(init.first<sizeof...(SIZE)>())
+    : bitset(init.template first<sizeof...(SIZE)>())
     {
     }
 
@@ -63,7 +63,7 @@ namespace lak
     constexpr UINT get() const
     {
       constexpr size_t bit_offset =
-        lak::sum(lak::span(member_size).first<INDEX>());
+        lak::sum(lak::span(member_size).template first<INDEX>());
       constexpr size_t partial_offset  = bit_offset % 8;
       constexpr size_t index_bit_count = member_size[INDEX];
 
@@ -137,7 +137,7 @@ namespace lak
     constexpr void set(UINT value)
     {
       constexpr size_t bit_offset =
-        lak::sum(lak::span(member_size).first<INDEX>());
+        lak::sum(lak::span(member_size).template first<INDEX>());
       constexpr size_t partial_offset  = bit_offset % 8;
       constexpr size_t index_bit_count = member_size[INDEX];
       ASSERT_GREATER_OR_EQUAL(lak::bit_count_mask(index_bit_count), value);

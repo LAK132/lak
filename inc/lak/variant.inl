@@ -1,5 +1,7 @@
 #include "lak/variant.hpp"
 
+#include "lak/visit.hpp"
+
 template<typename T, typename... U>
 template<size_t I>
 auto &lak::pack_union<T, U...>::get()
@@ -7,7 +9,7 @@ auto &lak::pack_union<T, U...>::get()
   if constexpr (I == 0)
     return value;
   else
-    return next.get<I - 1>();
+    return next.template get<I - 1>();
 }
 
 template<typename T, typename... U>
@@ -17,7 +19,7 @@ const auto &lak::pack_union<T, U...>::get() const
   if constexpr (I == 0)
     return value;
   else
-    return next.get<I - 1>();
+    return next.template get<I - 1>();
 }
 
 template<typename T, typename... U>
@@ -27,7 +29,7 @@ void lak::pack_union<T, U...>::emplace(ARGS &&... args)
   if constexpr (I == 0)
     new (&value) T(lak::forward<ARGS>(args)...);
   else
-    next.emplace<I - 1>(lak::forward<ARGS>(args)...);
+    next.template emplace<I - 1>(lak::forward<ARGS>(args)...);
 }
 
 template<typename T, typename... U>
@@ -52,7 +54,7 @@ void lak::pack_union<T, U...>::reset()
   if constexpr (I == 0)
     value.~T();
   else
-    next.reset<I - 1>();
+    next.template reset<I - 1>();
 }
 
 template<typename T, typename... U>
@@ -144,9 +146,9 @@ lak::variant<T...>::variant(const variant &other)
     lak::make_index_sequence<_size>{}, _index, [&, this](auto index) {
       using I = lak::remove_cvref_t<decltype(index)>;
       if constexpr (_is_ref<I::value>)
-        _value.emplace<I::value>(other.get<I::value>());
+        _value.template emplace<I::value>(other.template get<I::value>());
       else
-        _value.emplace<I::value>(*other.get<I::value>());
+        _value.template emplace<I::value>(*other.template get<I::value>());
     }));
 }
 
@@ -159,10 +161,10 @@ lak::variant<T...>::variant(variant &&other)
     lak::make_index_sequence<_size>{}, _index, [&, this](auto index) {
       using I = lak::remove_cvref_t<decltype(index)>;
       if constexpr (_is_ref<I::value>)
-        _value.emplace<I::value>(other.get<I::value>());
+        _value.template emplace<I::value>(other.template get<I::value>());
       else
-        _value.emplace<I::value>(
-          lak::forward<value_type<I::value>>(*other.get<I::value>()));
+        _value.template emplace<I::value>(
+          lak::forward<value_type<I::value>>(*other.template get<I::value>()));
     }));
 }
 
@@ -172,7 +174,7 @@ lak::variant<T...> &lak::variant<T...>::operator=(const variant &other)
   ASSERT(lak::visit_switch(
     lak::make_index_sequence<_size>{}, other._index, [&, this](auto index) {
       using I = lak::remove_cvref_t<decltype(index)>;
-      emplace<I::value>(*other.get<I::value>());
+      emplace<I::value>(*other.template get<I::value>());
     }));
   return *this;
 }
@@ -184,7 +186,7 @@ lak::variant<T...> &lak::variant<T...>::operator=(variant &&other)
     lak::make_index_sequence<_size>{}, other._index, [&, this](auto index) {
       using I = lak::remove_cvref_t<decltype(index)>;
       emplace<I::value>(
-        lak::forward<value_type<I::value>>(*other.get<I::value>()));
+        lak::forward<value_type<I::value>>(*other.template get<I::value>()));
     }));
   return *this;
 }
@@ -195,13 +197,13 @@ auto &lak::variant<T...>::emplace(ARGS &&... args)
 {
   ASSERT(_value.reset_dynamic(_index));
   _index = I;
-  _value.emplace<I>(lak::forward<ARGS>(args)...);
-  return _value.get<I>();
+  _value.template emplace<I>(lak::forward<ARGS>(args)...);
+  return _value.template get<I>();
 }
 
 template<typename... T>
 template<size_t I, typename... ARGS>
-static lak::variant<T...> lak::variant<T...>::make(ARGS &&... args)
+lak::variant<T...> lak::variant<T...>::make(ARGS &&... args)
 {
   static_assert(I < _size);
   return variant(lak::in_place_index<I>, lak::forward<ARGS>(args)...);
@@ -213,7 +215,7 @@ lak::variant<T...>::~variant()
   ASSERT(lak::visit_switch(
     lak::make_index_sequence<_size>{}, _index, [this](auto index) {
       using I = lak::remove_cvref_t<decltype(index)>;
-      _value.reset<I::value>();
+      _value.template reset<I::value>();
     }));
 }
 
@@ -223,9 +225,9 @@ auto *lak::variant<T...>::get()
 {
   // we store references as pointers.
   if constexpr (_is_ref<I>)
-    return I == _index ? _value.get<I>() : nullptr;
+    return I == _index ? _value.template get<I>() : nullptr;
   else
-    return I == _index ? &_value.get<I>() : nullptr;
+    return I == _index ? &_value.template get<I>() : nullptr;
 }
 
 template<typename... T>
@@ -234,9 +236,9 @@ const auto *lak::variant<T...>::get() const
 {
   // we store references as pointers.
   if constexpr (_is_ref<I>)
-    return I == _index ? _value.get<I>() : nullptr;
+    return I == _index ? _value.template get<I>() : nullptr;
   else
-    return I == _index ? &_value.get<I>() : nullptr;
+    return I == _index ? &_value.template get<I>() : nullptr;
 }
 
 // template<typename FUNCTOR>

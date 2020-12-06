@@ -4,7 +4,6 @@
 #include "lak/type_pack.hpp"
 #include "lak/type_utils.hpp"
 #include "lak/utility.hpp"
-#include "lak/variant.hpp"
 
 namespace lak
 {
@@ -21,33 +20,58 @@ namespace lak
     using value_type = T;
 
   private:
-    lak::variant<lak::monostate, value_type> _value;
+    bool _has_value = false;
+    union
+    {
+      lak::nullopt_t _null_value;
+      value_type _value;
+    };
 
   public:
-    optional() : _value() {}
+    optional() : _null_value() { _null_value.~nullopt_t(); }
     optional(const optional &other)
-    : _index(other._index), _value(other._value)
+    : _has_value(other._has_value), _null_value()
     {
+      _null_value.~nullopt_t();
+      if (_has_value)
+      {
+        new (&_value) value_type(other._value);
+      }
     }
-    optional(optional &&other)
-    : _index(other._index), _value(lak::move(other._value))
+    optional(optional &&other) : _has_value(other._has_value), _null_value()
     {
+      _null_value.~nullopt_t();
+      if (_has_value)
+      {
+        new (&_value) value_type(lak::move(other._value));
+      }
     }
 
-    optional(lak::nullopt_t) {}
+    optional(lak::nullopt_t) : _null_value() { _null_value.~nullopt_t(); }
     template<typename U>
-    optional(U &&other)
-    : _value(lak::in_place_index<1>, lak::forward<U>(other))
+    optional(U &&other) : _has_value(true), _value(lak::forward<U>(other))
     {
     }
     template<typename... ARGS>
     optional(lak::in_place_t, ARGS &&... args)
-    : _value(lak::in_place_index<1>, lak::forward<ARGS>(args)...)
+    : _has_value(true), _value(lak::forward<ARGS>(args)...)
     {
     }
 
-    optional &operator=(const optional &) = default;
-    optional &operator=(optional &&) = default;
+    optional &operator=(const optional &other)
+    {
+      if (other._has_value)
+        emplace(other._value);
+      else
+        reset();
+    }
+    optional &operator=(optional &&other)
+    {
+      if (other._has_value)
+        emplace(lak::move(other._value));
+      else
+        reset();
+    }
 
     optional &operator=(lak::nullopt_t)
     {
@@ -61,20 +85,30 @@ namespace lak
       return *this;
     }
 
-    constexpr inline bool has_value() const { return _value.index() == 1; }
+    constexpr inline bool has_value() const { return _has_value; }
 
     constexpr inline operator bool() const { return _has_value; }
 
     template<typename U>
     value_type &emplace(U &&other)
     {
-      return _value.emplace<1>(lak::forward<U>(other));
+      reset();
+      new (&_value) value_type(lak::forward<U>(other));
+      _has_value = true;
+      return _value;
     }
 
-    void reset() { _value.emplace<0>(); }
+    void reset()
+    {
+      if (_has_value)
+      {
+        _value.~value_type();
+        _has_value = false;
+      }
+    }
 
-    T *get() { return _value.get<1>(); }
-    const T *get() const { return _value.get<1>(); }
+    T *get() { return _has_value ? &_value : nullptr; }
+    const T *get() const { return _has_value ? &_value : nullptr; }
 
     T &operator*() { return *get(); }
     const T &operator*() const { return *get(); }

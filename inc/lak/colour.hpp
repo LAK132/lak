@@ -81,7 +81,7 @@ namespace lak
 
     enum struct channel_type
     {
-#define _LAK_DEF_CHANNEL_TYPE(SYMBOL, NAME, SIZE) NAME##SIZE,
+#define _LAK_DEF_CHANNEL_TYPE(SYMBOL, NAME, SIZE, ...) NAME##SIZE,
       LAK_FOREACH_SIZED_CHANNEL_TYPE(_LAK_DEF_CHANNEL_TYPE) last
 #undef _LAK_DEF_CHANNEL_TYPE
     };
@@ -183,7 +183,7 @@ namespace lak
     auto palette = lak::span(result);
 
     uint8_t index = 0;
-    for (auto &colour : palette.first<7>())
+    for (auto &colour : palette.template first<7>())
     {
       colour.R((index & 0b001) * 0x80);
       colour.G((index & 0b010) * 0x80);
@@ -195,7 +195,7 @@ namespace lak
     palette[8].V(0x80);
 
     index = 0;
-    for (auto &colour : palette.subspan<9, 7>())
+    for (auto &colour : palette.template subspan<9, 7>())
     {
       colour.R((index & 0b001) * 0xFF);
       colour.G((index & 0b010) * 0xFF);
@@ -204,7 +204,7 @@ namespace lak
     }
 
     index = 0;
-    for (auto &colour : palette.subspan<16, 216>())
+    for (auto &colour : palette.template subspan<16, 216>())
     {
       const uint8_t r = index % 5;
       const uint8_t g = (index / 5) % 5;
@@ -217,7 +217,7 @@ namespace lak
     }
 
     index = 0;
-    for (auto &colour : palette.subspan<232, 24>())
+    for (auto &colour : palette.template subspan<232, 24>())
     {
       colour.V((index * 10) + 8);
       ++index;
@@ -368,14 +368,14 @@ template<typename LHS,
          lak::enable_if_i<lak::is_colour_v<LHS> && lak::is_colour_v<RHS>> = 0>
 auto operator%(const LHS &lhs, const RHS &rhs)
 {
-  if constexpr (!lak::colour::has_alpha<RHS>)
+  if constexpr (!lak::colour::has_alpha_v<RHS>)
   {
     // RHS doesn't have alpha (LHS is overwritten regardless of if it has
     // alpha).
 
     return rhs;
   }
-  else if constexpr (!lak::colour::has_alpha<LHS>)
+  else if constexpr (!lak::colour::has_alpha_v<LHS>)
   {
     // RHS has alpha, LHS doesn't (compile time optimise for LHS alpha =
     // max_value).

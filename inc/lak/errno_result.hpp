@@ -5,6 +5,7 @@
 #include "lak/strconv.hpp"
 
 #include <cerrno>
+#include <cstring>
 #include <ostream>
 
 namespace lak
@@ -25,8 +26,8 @@ namespace lak
   using errno_result = lak::result<T, errno_error>;
 }
 
-static std::ostream &operator<<(std::ostream &strm,
-                                const lak::errno_error &err)
+[[maybe_unused]] static std::ostream &operator<<(std::ostream &strm,
+                                                 const lak::errno_error &err)
 {
   return strm << std::strerror(err.value);
 }
