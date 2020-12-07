@@ -119,13 +119,16 @@ void lak::token_buffer<CHAR>::operator++()
     auto u8source = lak::to_u8string(_buffer_token.source);
     ASSERT_EQUAL(u8buffer, u8source);
 
+    /* These test don't work when the buffers contain the same data despite
+    referring to different parts of the input string.
     auto max_buffer = std::max(pre_buffer.size(), _buffer.size());
     auto buffcmp    = lak::compare<char32_t>(pre_buffer, _buffer);
     ASSERTF_GREATER(max_buffer,
                     buffcmp,
                     "'" << lak::to_astring(lak::span(pre_buffer)) << "' '"
                         << lak::to_astring(lak::span(_buffer)) << "'");
-    ASSERT_NOT_EQUAL(pre_buffer_token.source, _buffer_token.source);
+    */
+    ASSERT(!lak::same_span(pre_buffer_token.source, _buffer_token.source));
     ASSERT_NOT_EQUAL(pre_buffer_token.position, _buffer_token.position);
   }
 }
@@ -213,7 +216,7 @@ lak::token<CHAR> lak::tokeniser<CHAR>::peek() const noexcept
 
     auto before = buffer.source();
     ++buffer;
-    ASSERT_NOT_EQUAL(before, buffer.source());
+    ASSERT(!lak::same_span(before, buffer.source()));
 
     _next.position.begin += c;
 
@@ -252,7 +255,7 @@ lak::token<CHAR> lak::tokeniser<CHAR>::peek() const noexcept
 
     auto before = buffer.source();
     ++buffer;
-    ASSERT_NOT_EQUAL(before, buffer.source());
+    ASSERT(!lak::same_span(before, buffer.source()));
 
     _next.position.end += c;
 
