@@ -429,7 +429,7 @@ void lak::rotate_right(lak::span<T> data, size_t distance)
 template<typename T>
 size_t lak::compare(lak::span<const T> a, lak::span<const T> b)
 {
-  if (a == b) return a.size();
+  if (lak::same_span(a, b)) return a.size();
   size_t result = 0;
   while (result < a.size() && result < b.size() && a[result] == b[result])
     ++result;
@@ -437,7 +437,13 @@ size_t lak::compare(lak::span<const T> a, lak::span<const T> b)
 }
 
 template<typename T>
-bool operator==(lak::span<T> a, lak::span<T> b)
+bool lak::same_span(lak::span<const T> a, lak::span<const T> b)
+{
+  return a.data() == b.data() && a.size() == b.size();
+}
+
+template<typename T>
+bool operator==(lak::span<const T> a, lak::span<const T> b)
 {
   if (a.size() != b.size()) return false;
   for (size_t i = 0; i < a.size(); ++i)
@@ -446,7 +452,7 @@ bool operator==(lak::span<T> a, lak::span<T> b)
 }
 
 template<typename T>
-bool operator!=(lak::span<T> a, lak::span<T> b)
+bool operator!=(lak::span<const T> a, lak::span<const T> b)
 {
   return !(a == b);
 }
