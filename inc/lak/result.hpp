@@ -431,14 +431,16 @@ namespace lak
   };
 
 #if !defined(NOLOG) && !defined(NDEBUG)
-#  define EXPECT(STR)     expect(LINE_TRACE_STR ": " STR)
-#  define EXPECT_ERR(STR) expect_err(LINE_TRACE_STR ": " STR)
+#  define EXPECT(...)                                                         \
+    expect(lak::streamify<char8_t>(LINE_TRACE_STR ": ", __VA_ARGS__))
+#  define EXPECT_ERR(...)                                                     \
+    expect_err(lak::streamify<char8_t>(LINE_TRACE_STR ": ", __VA_ARGS__))
 
 #  define UNWRAP()     expect(LINE_TRACE_STR ": unwrap failed")
 #  define UNWRAP_ERR() expect_err(LINE_TRACE_STR ": unwrap_err failed")
 #else
-#  define EXPECT(STR)     expect(STR)
-#  define EXPECT_ERR(STR) expect_err(STR)
+#  define EXPECT(...)     expect(lak::streamify<char8_t>(__VA_ARGS__))
+#  define EXPECT_ERR(...) expect_err(lak::streamify<char8_t>(__VA_ARGS__))
 
 #  define UNWRAP()     unwrap()
 #  define UNWRAP_ERR() unwrap_err()
