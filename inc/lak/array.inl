@@ -126,6 +126,16 @@ lak::array<T, lak::dynamic_extent>::array(std::initializer_list<T> list)
 }
 
 template<typename T>
+template<typename ITER>
+lak::array<T, lak::dynamic_extent>::array(ITER &&begin, ITER &&end)
+{
+  const size_t sz = end - begin;
+  commit(sz);
+  ASSERT_LESS_OR_EQUAL(sz, _committed);
+  for (; _size < sz; ++_size, ++begin) new (_data + _size) T(*begin);
+}
+
+template<typename T>
 lak::array<T, lak::dynamic_extent>::~array()
 {
   force_clear();
@@ -288,4 +298,18 @@ template<typename T>
 void lak::array<T, lak::dynamic_extent>::pop_back()
 {
   _data[--_size].~T();
+}
+
+template<typename T>
+T *lak::array<T, lak::dynamic_extent>::erase(T *element)
+{
+  ASSERT_GREATER_OR_EQUAL(element, _data);
+  ASSERT_LESS(element, (_data + _size));
+
+  for (auto end = (_data + _size), it = element - 1; it != end; ++it)
+    *(it - 1) = lak::move(*it);
+
+  pop_back();
+
+  return element;
 }
