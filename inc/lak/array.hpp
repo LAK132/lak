@@ -4,6 +4,7 @@
 #include "lak/compiler.hpp"
 #include "lak/stdint.hpp"
 #include "lak/type_utils.hpp"
+#include "lak/utility.hpp"
 
 namespace lak
 {
@@ -28,7 +29,7 @@ namespace lak
     constexpr array(const array &) = default;
     constexpr array &operator=(const array &) = default;
 
-    constexpr array(array &&other);
+    constexpr array(array && other);
     constexpr array &operator=(array &&other);
 
     array(std::initializer_list<T> list);
@@ -93,6 +94,9 @@ namespace lak
 
     array(std::initializer_list<T> list);
 
+    template<typename ITER>
+    array(ITER &&begin, ITER &&end);
+
     ~array();
 
     size_t size() const { return _size; }
@@ -137,6 +141,8 @@ namespace lak
     T &push_back(T &&t);
 
     void pop_back();
+
+    T *erase(T *element);
   };
 }
 
