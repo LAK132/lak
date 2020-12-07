@@ -1,10 +1,9 @@
 #ifndef LAK_TOKENISER_HPP
 #define LAK_TOKENISER_HPP
 
+#include "lak/array.hpp"
 #include "lak/span.hpp"
 #include "lak/string.hpp"
-
-#include <vector>
 
 namespace lak
 {
@@ -94,7 +93,7 @@ namespace lak
 
     inline token_buffer(lak::span<const CHAR> data,
                         size_t max_size,
-                        const token<CHAR> &start)
+                        const lak::token<CHAR> &start)
     : _source(data),
       _max_size(
         std::min(max_size, lak::span(start.source.begin(), data.end()).size()))
@@ -147,8 +146,8 @@ namespace lak
     };
 
   private:
-    span<const CHAR> _data;
-    std::vector<std::u32string> _operators;
+    lak::span<const CHAR> _data;
+    lak::array<lak::u32string> _operators;
     size_t _longest_operator;
 
     lak::token<CHAR> _current;
@@ -157,9 +156,9 @@ namespace lak
     void internal_pump() noexcept;
 
   public:
-    inline tokeniser(span<const CHAR> str,
-                     const std::vector<std::u32string> &operators) noexcept
-    : _data(str), _operators(operators), _longest_operator(0)
+    inline tokeniser(lak::span<const CHAR> str,
+                     lak::array<lak::u32string> operators) noexcept
+    : _data(str), _operators(lak::move(operators)), _longest_operator(0)
     {
       for (auto it = _operators.begin(); it != _operators.end();)
       {
