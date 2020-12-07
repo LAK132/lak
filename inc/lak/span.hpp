@@ -552,13 +552,19 @@ namespace lak
 
   template<typename T>
   size_t compare(lak::span<const T> a, lak::span<const T> b);
+
+  // Check if the spans are pointing to the same underlying data.
+  template<typename T>
+  bool same_span(lak::span<const T> a, lak::span<const T> b);
 }
 
+// Check if the data pointed to by the spans compare equal (not that the spans
+// point to the exact same data).
 template<typename T>
-bool operator==(lak::span<T> a, lak::span<T> b);
+bool operator==(lak::span<const T> a, lak::span<const T> b);
 
 template<typename T>
-bool operator!=(lak::span<T> a, lak::span<T> b);
+bool operator!=(lak::span<const T> a, lak::span<const T> b);
 
 #undef ASSERT_CONSTEXPR
 
