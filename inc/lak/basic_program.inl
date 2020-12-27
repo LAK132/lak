@@ -24,13 +24,13 @@ bool basic_window_force_software       = false;
 lak::opengl_settings basic_window_opengl_settings;
 lak::software_settings basic_window_software_settings;
 
-void MessageCallback(GLenum source,
-                     GLenum type,
-                     GLuint id,
-                     GLenum severity,
-                     GLsizei length,
-                     const GLchar *message,
-                     const void *userParam)
+void APIENTRY MessageCallback(GLenum source,
+                              GLenum type,
+                              GLuint id,
+                              GLenum severity,
+                              GLsizei length,
+                              const GLchar *message,
+                              const void *userParam)
 {
   if (type == GL_DEBUG_TYPE_OTHER &&
       severity == GL_DEBUG_SEVERITY_NOTIFICATION)
