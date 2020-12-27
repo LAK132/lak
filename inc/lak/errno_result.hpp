@@ -3,6 +3,7 @@
 
 #include "lak/result.hpp"
 #include "lak/strconv.hpp"
+#include "lak/streamify.hpp"
 
 #include <cerrno>
 #include <cstring>
@@ -16,9 +17,9 @@ namespace lak
 
     static errno_error last_error() { return {errno}; }
 
-    inline lak::u8string to_string() const
+    inline lak::astring to_string() const
     {
-      return lak::to_u8string(std::strerror(value));
+      return lak::streamify<char>(value, ": ", std::strerror(value));
     }
   };
 
@@ -29,7 +30,7 @@ namespace lak
 [[maybe_unused]] static std::ostream &operator<<(std::ostream &strm,
                                                  const lak::errno_error &err)
 {
-  return strm << std::strerror(err.value);
+  return strm << err.to_string();
 }
 
 #endif

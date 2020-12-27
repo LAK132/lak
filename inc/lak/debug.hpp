@@ -3,6 +3,7 @@
 #  include "lak/compiler.hpp"
 #  include "lak/macro_utils.hpp"
 #  include "lak/os.hpp"
+#  include "lak/streamify.hpp"
 #  include "lak/string.hpp"
 
 #  include <cstdlib>
@@ -38,23 +39,6 @@
 #ifndef LAK_DEBUG_HPP1
 namespace lak
 {
-  template<typename T>
-  constexpr auto _is_streamable(int)
-    -> decltype(std::declval<std::ostream &>() << std::declval<T>(), bool())
-  {
-    return true;
-  }
-  template<typename T>
-  constexpr auto _is_streamable(...) -> decltype(bool())
-  {
-    return false;
-  }
-  template<typename T>
-  constexpr bool is_streamable()
-  {
-    return _is_streamable<T>(0);
-  }
-
   // Use std::set_terminate(lak::terminate_handler); to enable
   void terminate_handler();
 
@@ -101,9 +85,6 @@ namespace lak
   extern size_t debug_indent;
 
   extern debugger_t debugger;
-
-  template<typename CHAR, typename... ARGS>
-  lak::string<CHAR> streamify(const ARGS &... args);
 }
 #endif
 
@@ -370,6 +351,5 @@ namespace lak
 
 #ifndef LAK_DEBUG_HPP1
 #  define LAK_DEBUG_HPP1
-#  include "lak/debug.inl"
 #endif
 #include "lak/strcast.hpp"
