@@ -221,10 +221,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
         {
           if (window->software_context().platform_handle.contig_size() > 0)
           {
-            SCOPED_TIMER([](uint64_t diff) {
-              DEBUG("paint_image time: ",
-                    diff / (double)lak::performance_frequency())
-            });
             ASSERT(paint_image(
               window->_platform_handle,
               lak::image_view(window->software_context().platform_handle)));
