@@ -10,33 +10,7 @@
 #  include <filesystem>
 #  include <iostream>
 #  include <sstream>
-#endif
 
-#undef TO_STRING
-#define TO_STRING(x)                                                          \
-  [&] {                                                                       \
-    std::stringstream _debug_stream;                                          \
-    _debug_stream << x;                                                       \
-    return _debug_stream.str();                                               \
-  }()
-#undef TO_U8STRING
-#define TO_U8STRING(x)                                                        \
-  [&] {                                                                       \
-    std::stringstream _debug_stream;                                          \
-    _debug_stream << x;                                                       \
-    return lak::as_u8string(_debug_stream.str()).to_string();                 \
-  }()
-#undef TO_WSTRING
-#define TO_WSTRING(x)                                                         \
-  [&] {                                                                       \
-    std::wstringstream _debug_stream;                                         \
-    _debug_stream << x;                                                       \
-    return _debug_stream.str();                                               \
-  }()
-#undef WTO_U8STRING
-#define WTO_U8STRING(x) [&] { return lak::to_u8string(TO_WSTRING(x)); }()
-
-#ifndef LAK_DEBUG_HPP1
 namespace lak
 {
   // Use std::set_terminate(lak::terminate_handler); to enable
@@ -87,6 +61,30 @@ namespace lak
   extern debugger_t debugger;
 }
 #endif
+
+#undef TO_STRING
+#define TO_STRING(x)                                                          \
+  [&] {                                                                       \
+    std::stringstream _debug_stream;                                          \
+    _debug_stream << x;                                                       \
+    return _debug_stream.str();                                               \
+  }()
+#undef TO_U8STRING
+#define TO_U8STRING(x)                                                        \
+  [&] {                                                                       \
+    std::stringstream _debug_stream;                                          \
+    _debug_stream << x;                                                       \
+    return lak::as_u8string(_debug_stream.str()).to_string();                 \
+  }()
+#undef TO_WSTRING
+#define TO_WSTRING(x)                                                         \
+  [&] {                                                                       \
+    std::wstringstream _debug_stream;                                         \
+    _debug_stream << x;                                                       \
+    return _debug_stream.str();                                               \
+  }()
+#undef WTO_U8STRING
+#define WTO_U8STRING(x) [&] { return lak::to_u8string(TO_WSTRING(x)); }()
 
 #undef TRY
 #undef CATCH
@@ -349,7 +347,4 @@ namespace lak
     }                                                                         \
   }
 
-#ifndef LAK_DEBUG_HPP1
-#  define LAK_DEBUG_HPP1
-#endif
 #include "lak/strcast.hpp"
