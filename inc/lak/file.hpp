@@ -5,6 +5,7 @@
 #include "lak/string.hpp"
 
 #include <filesystem>
+#include <system_error>
 #include <tuple>
 #include <vector>
 
