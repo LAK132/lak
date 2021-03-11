@@ -1,6 +1,26 @@
 #ifndef LAK_COMPILER_HPP
 #define LAK_COMPILER_HPP
 
+#if __cplusplus >= 202002L
+#  define LAK_COMPILER_CPP20
+#endif
+#if __cplusplus >= 201703L
+#  define LAK_COMPILER_CPP17
+#endif
+#if __cplusplus >= 201402L
+#  define LAK_COMPILER_CPP14
+#endif
+#if __cplusplus >= 201103L
+#  define LAK_COMPILER_CPP11
+#endif
+#if __cplusplus >= 199711L
+#  define LAK_COMPILER_CPP98
+#endif
+
+#ifndef LAK_COMPILER_CPP17
+#  error Expected at least a C++17 compiler
+#endif
+
 #ifdef __clang__
 #  define LAK_COMPILER_CLANG
 #endif
