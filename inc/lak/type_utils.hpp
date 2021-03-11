@@ -427,6 +427,30 @@ namespace lak
                                           const lak::remove_const_t<TO>,
                                           lak::remove_const_t<TO>>;
 
+  /* --- nth_type --- */
+
+  template<size_t I, typename... T>
+  struct nth_type;
+
+  template<typename T, typename... U>
+  struct nth_type<0, T, U...> : public lak::type_identity<T>
+  {
+  };
+
+  template<size_t I, typename T, typename... U>
+  struct nth_type<I, T, U...>
+  {
+    static_assert(I <= sizeof...(U));
+    using type = typename lak::nth_type<I - 1, U...>::type;
+  };
+
+  template<size_t I, typename... T>
+  using nth_type_t = typename lak::nth_type<I, T...>::type;
+
+  static_assert(lak::is_same_v<char, lak::nth_type_t<0, char, float, void>>);
+  static_assert(lak::is_same_v<float, lak::nth_type_t<1, char, float, void>>);
+  static_assert(lak::is_same_v<void, lak::nth_type_t<2, char, float, void>>);
+
   /* --- integer_sequence --- */
 
   template<typename T, T... I>
