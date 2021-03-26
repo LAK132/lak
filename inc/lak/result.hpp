@@ -381,6 +381,22 @@ namespace lak
       return lak::forward<ERR>(expect_err("unwrap_err failed"));
     }
 
+    /* --- unsafe_unwrap --- */
+
+    ok_type &unsafe_unwrap() & { return get_ok(); }
+
+    const ok_type &unsafe_unwrap() const & { return get_ok(); }
+
+    OK &&unsafe_unwrap() && { return lak::forward<OK>(get_ok()); }
+
+    /* --- unsafe_unwrap_err --- */
+
+    err_type &unsafe_unwrap_err() & { return get_err(); }
+
+    const err_type &unsafe_unwrap_err() const & { return get_err(); }
+
+    ERR &&unsafe_unwrap_err() && { return lak::forward<ERR>(get_err()); }
+
     /* --- flatten --- */
 
     template<
@@ -459,10 +475,10 @@ namespace lak
   ASSIGN[&]()                                                                 \
   {                                                                           \
     if (auto result = __VA_ARGS__; result.is_ok())                            \
-      return lak::move(result).unwrap();                                      \
+      return lak::move(result).unsafe_unwrap();                               \
     else                                                                      \
       _error_result = lak::forward<lak::result_err_type_t<decltype(result)>>( \
-        result.unwrap_err());                                                 \
+        result.unsafe_unwrap_err());                                          \
     std::longjmp(UNIQUIFY(ERROR_RESULT_JUMP_BUFFER_), 1);                     \
   }                                                                           \
   ()
