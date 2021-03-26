@@ -33,11 +33,12 @@ size_t lak::page_size()
   return page_size;
 }
 
-lak::span<void> lak::page_reserve(size_t size)
+lak::span<void> lak::page_reserve(size_t size, size_t *page_size_out)
 {
   ASSERT_GREATER(size, 0);
   void *result           = nullptr;
   const size_t page_size = lak::page_size();
+  if (page_size_out) *page_size_out = page_size;
   // round size to the nearest page size
   size = page_size * ((size % page_size > 1 ? 1 : 0) + (size / page_size));
 

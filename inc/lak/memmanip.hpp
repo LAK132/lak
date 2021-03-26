@@ -29,7 +29,7 @@ namespace lak
 
   size_t page_size();
 
-  lak::span<void> page_reserve(size_t size);
+  lak::span<void> page_reserve(size_t size, size_t *page_size_out = nullptr);
 
   bool page_commit(lak::span<void> pages);
 
