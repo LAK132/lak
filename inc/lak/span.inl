@@ -373,6 +373,32 @@ lak::span<const void, lak::dynamic_extent>::size_bytes() const noexcept
   return _size;
 }
 
+/* --- helper functions --- */
+
+template<typename T>
+constexpr bool lak::contains(lak::span<const T> s, const T &v)
+{
+  for (const auto &e : s)
+    if (e == v) return true;
+  return false;
+}
+
+template<typename T>
+lak::pair<lak::span<T>, lak::span<T>> lak::split(lak::span<T> s, T *at)
+{
+  ASSERT_GREATER_OR_EQUAL(at, s.begin());
+  ASSERT_LESS_OR_EQUAL(at, s.end());
+  return {lak::span(s.begin(), at), lak::span(at, s.end())};
+}
+
+template<typename T>
+lak::pair<lak::span<T>, lak::span<T>> lak::split(lak::span<T> s, size_t at)
+{
+  ASSERT_LESS_OR_EQUAL(at, s.size());
+  return {lak::span(s.begin(), s.begin() + at),
+          lak::span(s.begin() + at, s.end())};
+}
+
 template<typename T>
 lak::span<T> lak::find_subspan(lak::span<T> source, lak::span<T> subspan)
 {

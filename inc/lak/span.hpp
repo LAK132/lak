@@ -3,6 +3,7 @@
 
 #include "lak/char.hpp"
 #include "lak/stdint.hpp"
+#include "lak/tuple.hpp"
 #include "lak/type_utils.hpp"
 
 #include <array>
@@ -536,6 +537,14 @@ namespace lak
   };
 
   /* --- helper functions --- */
+
+  template<typename T>
+  constexpr bool contains(lak::span<const T> s, const T &v);
+
+  template<typename T>
+  lak::pair<lak::span<T>, lak::span<T>> split(lak::span<T> s, T *at);
+  template<typename T>
+  lak::pair<lak::span<T>, lak::span<T>> split(lak::span<T> s, size_t at);
 
   // Find the subspan of source that is equal to sub.
   template<typename T>
