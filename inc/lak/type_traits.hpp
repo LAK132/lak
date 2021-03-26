@@ -80,6 +80,16 @@ namespace lak
   constexpr inline bool is_detected_exact_v =
     lak::is_deteccted_exact<EXPECTED, OP, ARGS...>::value;
 
+  /* --- is_lak_type --- */
+
+  template<typename T>
+  struct is_lak_type : lak::false_type
+  {
+  };
+
+  template<typename T>
+  constexpr inline bool is_lak_type_v = is_lak_type<T>::value;
+
   /* --- is_constructible --- */
 
   template<typename, typename T, typename... ARGS>
