@@ -64,7 +64,7 @@ namespace lak
   /* --- result --- */
 
   template<typename OK, typename ERR>
-  struct result
+  struct [[nodiscard]] result
   {
     using ok_type  = lak::remove_reference_t<OK>;
     using err_type = lak::remove_reference_t<ERR>;
