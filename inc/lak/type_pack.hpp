@@ -81,6 +81,20 @@ namespace lak
   template<typename... PACKS>
   using concat_packs_t = typename lak::concat_packs<PACKS...>::type;
 
+  /* --- flatten_pack --- */
+
+  // pack<pack<T...>, pack<U...>> -> pack<T..., U...>
+
+  template<typename PACK>
+  struct flatten_pack;
+  template<typename... PACKS>
+  struct flatten_pack<lak::type_pack<PACKS...>>
+  {
+    using type = lak::concat_packs_t<PACKS...>;
+  };
+  template<typename PACK>
+  using flatten_pack_t = typename lak::flatten_pack<PACK>::type;
+
   /* --- remove_from_pack --- */
 
   template<typename T, typename PACK>
