@@ -85,3 +85,15 @@
       break;                                                                  \
   if (size_t INDEX = UNIQUIFY(FIND_INDEX_);                                   \
       INDEX < UNIQUIFY(FIND_RANGE_).size())
+
+#undef if_not_in
+#define if_not_in(VALUE, RANGE)                                               \
+  auto &&UNIQUIFY(FIND_RANGE_) = RANGE;                                       \
+  auto &&UNIQUIFY(FIND_VALUE_) = VALUE;                                       \
+  size_t UNIQUIFY(FIND_INDEX_) = 0;                                           \
+  for (; UNIQUIFY(FIND_INDEX_) < UNIQUIFY(FIND_RANGE_).size();                \
+       ++UNIQUIFY(FIND_INDEX_))                                               \
+    if (UNIQUIFY(FIND_RANGE_)[UNIQUIFY(FIND_INDEX_)] ==                       \
+        UNIQUIFY(FIND_VALUE_))                                                \
+      break;                                                                  \
+  if (UNIQUIFY(FIND_INDEX_) == UNIQUIFY(FIND_RANGE_).size())
