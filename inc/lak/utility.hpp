@@ -91,6 +91,20 @@ namespace lak
     return p;
   }
 
+#ifndef LAK_NO_STD
+  template<typename T>
+  force_inline T *as_ptr(std::reference_wrapper<T> *p)
+  {
+    return p ? &p->get() : nullptr;
+  }
+
+  template<typename T>
+  force_inline const T *as_ptr(const std::reference_wrapper<T> *p)
+  {
+    return p ? &p->get() : nullptr;
+  }
+#endif
+
   // Converts references and reference-like types to pointers.
 
   template<typename T>
@@ -98,6 +112,20 @@ namespace lak
   {
     std::addressof(p);
   }
+
+#ifndef LAK_NO_STD
+  template<typename T>
+  force_inline T *as_ptr(std::reference_wrapper<T> &p)
+  {
+    return &p->get();
+  }
+
+  template<typename T>
+  force_inline const T *as_ptr(const std::reference_wrapper<T> &p)
+  {
+    return &p->get();
+  }
+#endif
 }
 
 #endif
