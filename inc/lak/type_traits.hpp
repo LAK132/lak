@@ -100,7 +100,7 @@ namespace lak
   template<typename T, typename... ARGS>
   struct is_constructible_<void_t<decltype(T(lak::declval<ARGS>()...))>,
                            T,
-                           ARGS...> : std::true_type
+                           ARGS...> : lak::true_type
   {
   };
 
