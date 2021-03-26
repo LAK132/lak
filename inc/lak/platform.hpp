@@ -78,6 +78,10 @@ namespace lak
   bool set_clipboard(const lak::platform_instance &i, const lak::u8string &s);
   bool set_clipboard(const lak::platform_instance &i,
                      lak::span<const char8_t> s);
+  inline bool set_clipboard(const lak::platform_instance &i, const char s[])
+  {
+    return lak::set_clipboard(i, lak::as_u8string(s));
+  }
 
   bool cursor_visible(const lak::platform_instance &i);
   void show_cursor(const lak::platform_instance &i);
