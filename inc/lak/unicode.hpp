@@ -3,6 +3,7 @@
 // on its size.
 
 #include "lak/span.hpp"
+#include "lak/tuple.hpp"
 
 #ifndef LAK_UNICODE_HPP
 #  define LAK_UNICODE_HPP
@@ -78,12 +79,74 @@ namespace lak
   template<typename CHAR>
   void append_codepoint(lak::string<CHAR> &str, char32_t code);
 
-  inline constexpr lak::span<const char32_t> whitespaces();
+  inline constexpr lak::span<const char32_t> hex_alphanumerics();
+  inline constexpr bool is_hex_alphanumeric(char32_t c);
 
-  bool is_whitespace(char32_t c);
+  inline constexpr lak::span<const char32_t> control_codes();
+  inline constexpr bool is_control_code(char32_t c);
+
+  inline constexpr lak::span<const char32_t> whitespaces();
+  inline constexpr bool is_whitespace(char32_t c);
+
+  template<typename CHAR>
+  struct codepoint_iterator
+  {
+  private:
+    lak::span<const CHAR> _data;
+    lak::pair<char32_t, uint8_t> _current;
+
+  public:
+    inline constexpr codepoint_iterator(lak::span<CHAR> str) noexcept
+    : _data(str)
+    {
+      operator++();
+    }
+
+    inline constexpr codepoint_iterator(lak::span<const CHAR> str) noexcept
+    : _data(str)
+    {
+      operator++();
+    }
+
+    inline constexpr const lak::pair<char32_t, uint8_t> &operator*()
+      const noexcept;
+
+    inline constexpr codepoint_iterator &operator++() noexcept;
+
+    inline constexpr bool operator==(char32_t c) const noexcept;
+
+    inline constexpr bool operator!=(char32_t c) const noexcept;
+  };
+
+  template<typename CHAR>
+  struct codepoint_range
+  {
+  private:
+    lak::span<const CHAR> _data;
+
+  public:
+    inline constexpr codepoint_range(lak::span<CHAR> str) noexcept : _data(str)
+    {
+    }
+
+    inline constexpr codepoint_range(lak::span<const CHAR> str) noexcept
+    : _data(str)
+    {
+    }
+
+    inline constexpr codepoint_range(const lak::string<CHAR> &str) noexcept
+    : _data(lak::span(str.c_str(), str.size()))
+    {
+    }
+
+    inline constexpr codepoint_iterator<CHAR> begin() const noexcept;
+
+    inline constexpr char32_t end() const noexcept;
+  };
 }
 
-#  include <ostream>
+#  ifndef LAK_NO_STD
+#    include <ostream>
 
 std::ostream &operator<<(std::ostream &strm, const lak::span<const char> &str);
 
@@ -98,6 +161,7 @@ std::ostream &operator<<(std::ostream &strm,
 
 std::ostream &operator<<(std::ostream &strm,
                          const lak::span<const char32_t> &str);
+#  endif
 
 #  include "lak/unicode.inl"
 

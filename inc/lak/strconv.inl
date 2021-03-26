@@ -1,49 +1,5 @@
 #include "lak/unicode.hpp"
 
-template<typename CHAR>
-inline constexpr const std::pair<char32_t, uint8_t>
-  &lak::codepoint_iterator<CHAR>::operator*() const noexcept
-{
-  return _current;
-}
-
-template<typename CHAR>
-inline constexpr lak::codepoint_iterator<CHAR>
-  &lak::codepoint_iterator<CHAR>::operator++() noexcept
-{
-  _current.second = lak::character_length(_data);
-  _current.first  = _current.second ? codepoint(_data) : 0;
-  _data           = _data.subspan(_current.second);
-  return *this;
-}
-
-template<typename CHAR>
-inline constexpr bool lak::codepoint_iterator<CHAR>::operator==(
-  char32_t c) const noexcept
-{
-  return _current.first == c;
-}
-
-template<typename CHAR>
-inline constexpr bool lak::codepoint_iterator<CHAR>::operator!=(
-  char32_t c) const noexcept
-{
-  return _current.first != c;
-}
-
-template<typename CHAR>
-inline constexpr lak::codepoint_iterator<CHAR>
-lak::codepoint_range<CHAR>::begin() const noexcept
-{
-  return {_data};
-}
-
-template<typename CHAR>
-inline constexpr char32_t lak::codepoint_range<CHAR>::end() const noexcept
-{
-  return 0;
-}
-
 template<typename TO, typename FROM>
 inline lak::string<TO> lak::strconv(const lak::string<FROM> &str)
 {

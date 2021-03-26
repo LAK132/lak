@@ -14,62 +14,6 @@
 
 namespace lak
 {
-  template<typename CHAR>
-  struct codepoint_iterator
-  {
-  private:
-    lak::span<const CHAR> _data;
-    std::pair<char32_t, uint8_t> _current;
-
-  public:
-    inline constexpr codepoint_iterator(lak::span<CHAR> str) noexcept
-    : _data(str)
-    {
-      operator++();
-    }
-
-    inline constexpr codepoint_iterator(lak::span<const CHAR> str) noexcept
-    : _data(str)
-    {
-      operator++();
-    }
-
-    inline constexpr const std::pair<char32_t, uint8_t> &operator*()
-      const noexcept;
-
-    inline constexpr codepoint_iterator &operator++() noexcept;
-
-    inline constexpr bool operator==(char32_t c) const noexcept;
-
-    inline constexpr bool operator!=(char32_t c) const noexcept;
-  };
-
-  template<typename CHAR>
-  struct codepoint_range
-  {
-  private:
-    lak::span<const CHAR> _data;
-
-  public:
-    inline constexpr codepoint_range(lak::span<CHAR> str) noexcept : _data(str)
-    {
-    }
-
-    inline constexpr codepoint_range(lak::span<const CHAR> str) noexcept
-    : _data(str)
-    {
-    }
-
-    inline constexpr codepoint_range(const lak::string<CHAR> &str) noexcept
-    : _data(lak::span(str.c_str(), str.size()))
-    {
-    }
-
-    inline constexpr codepoint_iterator<CHAR> begin() const noexcept;
-
-    inline constexpr char32_t end() const noexcept;
-  };
-
   template<typename TO, typename FROM>
   inline lak::string<TO> strconv(const lak::string<FROM> &str);
   template<typename FROM>

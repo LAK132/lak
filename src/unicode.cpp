@@ -324,12 +324,6 @@ lak::span<char32_t> lak::from_codepoint(lak::codepoint_buffer_t<char32_t> c,
   }
 }
 
-bool lak::is_whitespace(char32_t c)
-{
-  if_in(c, lak::whitespaces(), i) { return true; }
-  else { return false; }
-}
-
 std::ostream &operator<<(std::ostream &strm, const lak::span<const char> &str)
 {
   return strm << std::string_view(str.data(), str.size());
