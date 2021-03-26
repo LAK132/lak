@@ -144,6 +144,18 @@ namespace lak
   template<typename... T>
   using make_unique_pack_t = lak::unique_pack_t<lak::type_pack<T...>>;
 
+  /* --- pack_apply --- */
+
+  template<template<typename> typename T, typename PACK>
+  struct pack_apply;
+  template<template<typename> typename T, typename... TYPES>
+  struct pack_apply<T, lak::type_pack<TYPES...>>
+  {
+    using type = lak::type_pack<typename T<TYPES>::type...>;
+  };
+  template<template<typename...> typename T, typename PACK>
+  using pack_apply_t = typename lak::pack_apply<T, PACK>::type;
+
   /* --- pack_from_function --- */
 
   template<typename FUNC>
