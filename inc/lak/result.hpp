@@ -93,7 +93,7 @@ namespace lak
     }
 
     result(const lak::variant<OK, ERR> &value) : _value(value) {}
-    result(lak::variant<OK, ERR> &&value) : _value(lak::move(value)) {}
+    result(lak::variant<OK, ERR> && value) : _value(lak::move(value)) {}
 
   public:
     result(const result &) = default;
@@ -106,7 +106,7 @@ namespace lak
     {
       return result(lak::variant<OK, ERR>(lak::in_place_index<0>, value));
     }
-    static inline result make_ok(OK &&value)
+    static inline result make_ok(OK && value)
     {
       return result(lak::variant<OK, ERR>(lak::in_place_index<0>,
                                           lak::forward<OK>(value)));
@@ -115,7 +115,7 @@ namespace lak
     {
       return result(lak::variant<OK, ERR>(lak::in_place_index<1>, value));
     }
-    static inline result make_err(ERR &&value)
+    static inline result make_err(ERR && value)
     {
       return result(lak::variant<OK, ERR>(lak::in_place_index<1>,
                                           lak::forward<ERR>(value)));
@@ -161,7 +161,7 @@ namespace lak
 
     template<typename FUNCTOR>
     result<lak::remove_cvref_t<std::invoke_result_t<FUNCTOR, ok_type &>>, ERR>
-    map(FUNCTOR &&functor) &
+    map(FUNCTOR && functor) &
     {
       if (is_ok())
         return lak::ok_t{functor(get_ok())};
@@ -172,7 +172,7 @@ namespace lak
     template<typename FUNCTOR>
     result<lak::remove_cvref_t<std::invoke_result_t<FUNCTOR, const ok_type &>>,
            err_type>
-    map(FUNCTOR &&functor) const &
+      map(FUNCTOR && functor) const &
     {
       if (is_ok())
         return lak::ok_t{functor(get_ok())};
@@ -182,7 +182,7 @@ namespace lak
 
     template<typename FUNCTOR>
     result<lak::remove_cvref_t<std::invoke_result_t<FUNCTOR, OK &&>>, ERR> map(
-      FUNCTOR &&functor) &&
+      FUNCTOR && functor) &&
     {
       if (is_ok())
         return lak::ok_t{functor(forward_ok())};
@@ -194,7 +194,7 @@ namespace lak
 
     template<typename FUNCTOR>
     result<OK, lak::remove_cvref_t<std::invoke_result_t<FUNCTOR, err_type &>>>
-    map_err(FUNCTOR &&functor) &
+    map_err(FUNCTOR && functor) &
     {
       if (is_ok())
         return lak::ok_t{get_ok()};
@@ -206,7 +206,7 @@ namespace lak
     result<
       ok_type,
       lak::remove_cvref_t<std::invoke_result_t<FUNCTOR, const err_type &>>>
-    map_err(FUNCTOR &&functor) const &
+      map_err(FUNCTOR && functor) const &
     {
       if (is_ok())
         return lak::ok_t{get_ok()};
@@ -216,7 +216,7 @@ namespace lak
 
     template<typename FUNCTOR>
     result<OK, lak::remove_cvref_t<std::invoke_result_t<FUNCTOR, ERR &&>>>
-    map_err(FUNCTOR &&functor) &&
+    map_err(FUNCTOR && functor) &&
     {
       if (is_ok())
         return lak::ok_t{forward_ok()};
@@ -232,7 +232,7 @@ namespace lak
         ERR,
         lak::result_err_type_t<std::invoke_result_t<FUNCTOR, ok_type &>>>> = 0>
     lak::remove_cvref_t<std::invoke_result_t<FUNCTOR, ok_type &>> and_then(
-      FUNCTOR &&functor) &
+      FUNCTOR && functor) &
     {
       if (is_ok())
         return functor(get_ok());
@@ -246,7 +246,7 @@ namespace lak
                lak::result_err_type_t<
                  std::invoke_result_t<FUNCTOR, const ok_type &>>>> = 0>
     lak::remove_cvref_t<std::invoke_result_t<FUNCTOR, const ok_type &>>
-    and_then(FUNCTOR &&functor) const &
+      and_then(FUNCTOR && functor) const &
     {
       if (is_ok())
         return functor(get_ok());
@@ -254,13 +254,13 @@ namespace lak
         return lak::err_t{get_err()};
     }
 
-    template<
-      typename FUNCTOR,
-      lak::enable_if_i<lak::is_same_v<
-        ERR,
-        lak::result_err_type_t<std::invoke_result_t<FUNCTOR, OK &&>>>> = 0>
+    template<typename FUNCTOR,
+             lak::enable_if_i<lak::is_same_v<
+               ERR,
+               lak::result_err_type_t<std::invoke_result_t<FUNCTOR, OK &&>>>> =
+               0>
     lak::remove_cvref_t<std::invoke_result_t<FUNCTOR, OK &&>> and_then(
-      FUNCTOR &&functor) &&
+      FUNCTOR && functor) &&
     {
       if (is_ok())
         return functor(forward_ok());
@@ -277,7 +277,7 @@ namespace lak
         lak::result_err_type_t<std::invoke_result_t<FUNCTOR, err_type &>>>> =
         0>
     lak::remove_cvref_t<std::invoke_result_t<FUNCTOR, err_type &>> or_else(
-      FUNCTOR &&functor) &
+      FUNCTOR && functor) &
     {
       if (is_ok())
         return lak::ok_t{get_ok()};
@@ -291,7 +291,7 @@ namespace lak
                lak::result_err_type_t<
                  std::invoke_result_t<FUNCTOR, const err_type &>>>> = 0>
     lak::remove_cvref_t<std::invoke_result_t<FUNCTOR, const err_type &>>
-    or_else(FUNCTOR &&functor) const &
+      or_else(FUNCTOR && functor) const &
     {
       if (is_ok())
         return lak::ok_t{get_ok()};
@@ -305,7 +305,7 @@ namespace lak
         ERR,
         lak::result_err_type_t<std::invoke_result_t<FUNCTOR, ERR &&>>>> = 0>
     lak::remove_cvref_t<std::invoke_result_t<FUNCTOR, ERR &&>> or_else(
-      FUNCTOR &&functor) &&
+      FUNCTOR && functor) &&
     {
       if (is_ok())
         return lak::ok_t{forward_ok()};
@@ -316,21 +316,21 @@ namespace lak
     /* --- expect --- */
 
     template<typename STR>
-    ok_type &expect(STR &&error_str) &
+    ok_type &expect(STR && error_str) &
     {
       if (is_err()) ABORTF(error_str, ": ", get_err());
       return get_ok();
     }
 
     template<typename STR>
-    const ok_type &expect(STR &&error_str) const &
+    const ok_type &expect(STR && error_str) const &
     {
       if (is_err()) ABORTF(error_str, ": ", get_err());
       return get_ok();
     }
 
     template<typename STR>
-    OK &&expect(STR &&error_str) &&
+    OK &&expect(STR && error_str) &&
     {
       if (is_err()) ABORTF(error_str, ": ", get_err());
       return forward_ok();
@@ -339,21 +339,21 @@ namespace lak
     /* --- expect_err --- */
 
     template<typename STR>
-    err_type &expect_err(STR &&error_str) &
+    err_type &expect_err(STR && error_str) &
     {
       if (is_ok()) ABORTF(error_str /*, ": ", get_ok()*/);
       return get_err();
     }
 
     template<typename STR>
-    const err_type &expect_err(STR &&error_str) const &
+    const err_type &expect_err(STR && error_str) const &
     {
       if (is_ok()) ABORTF(error_str /*, ": ", get_ok()*/);
       return get_err();
     }
 
     template<typename STR>
-    ERR &&expect_err(STR &&error_str) &&
+    ERR &&expect_err(STR && error_str) &&
     {
       if (is_ok()) ABORTF(error_str /*, ": ", get_ok()*/);
       return forward_err();
@@ -399,9 +399,9 @@ namespace lak
 
     /* --- flatten --- */
 
-    template<
-      typename U                                                       = OK,
-      lak::enable_if_i<lak::is_same_v<ERR, lak::result_err_type_t<U>>> = 0>
+    template<typename U = OK,
+             lak::enable_if_i<lak::is_same_v<ERR, lak::result_err_type_t<U>>> =
+               0>
     ok_type flatten() const &
     {
       if (is_ok())
@@ -410,9 +410,9 @@ namespace lak
         return lak::err_t{get_err()};
     }
 
-    template<
-      typename U                                                       = OK,
-      lak::enable_if_t<lak::is_same_v<ERR, lak::result_err_type_t<U>>> = 0>
+    template<typename U = OK,
+             lak::enable_if_t<lak::is_same_v<ERR, lak::result_err_type_t<U>>> =
+               0>
     ok_type flatten() &&
     {
       if (is_ok())
@@ -420,6 +420,56 @@ namespace lak
       else
         return lak::err_t{forward_err()};
     }
+
+    /* --- if_ok --- */
+
+    template<typename FUNCTOR>
+    result &if_ok(FUNCTOR && functor) &
+    {
+      if (is_ok()) functor(get_ok());
+      return *this;
+    }
+
+    template<typename FUNCTOR>
+    const result &if_ok(FUNCTOR && functor) const &
+    {
+      if (is_ok()) functor(get_ok());
+      return *this;
+    }
+
+    template<typename FUNCTOR>
+    result &&if_ok(FUNCTOR && functor) &&
+    {
+      if (is_ok()) functor(lak::move(*this).get_ok());
+      return lak::move(*this);
+    }
+
+    /* --- if_err --- */
+
+    template<typename FUNCTOR>
+    result &if_err(FUNCTOR && functor) &
+    {
+      if (is_err()) functor(get_err());
+      return *this;
+    }
+
+    template<typename FUNCTOR>
+    const result &if_err(FUNCTOR && functor) const &
+    {
+      if (is_err()) functor(get_err());
+      return *this;
+    }
+
+    template<typename FUNCTOR>
+    result &&if_err(FUNCTOR && functor) &&
+    {
+      if (is_err()) functor(lak::move(*this).get_err());
+      return lak::move(*this);
+    }
+
+    /* --- discard --- */
+
+    void discard() const {}
   };
 
   template<typename OK, typename... ERR>
@@ -454,38 +504,38 @@ namespace lak
 
 #  define UNWRAP()     expect(LINE_TRACE_STR ": unwrap failed")
 #  define UNWRAP_ERR() expect_err(LINE_TRACE_STR ": unwrap_err failed")
+
+#  define IF_OK(...)  if_ok([&](const auto &val) { DEBUG(__VA_ARGS__, val); })
+#  define IF_ERR(...) if_err([&](const auto &err) { ERROR(__VA_ARGS__, err); })
 #else
 #  define EXPECT(...)     expect(lak::streamify<char8_t>(__VA_ARGS__))
 #  define EXPECT_ERR(...) expect_err(lak::streamify<char8_t>(__VA_ARGS__))
 
 #  define UNWRAP()     unwrap()
 #  define UNWRAP_ERR() unwrap_err()
+
+#  define IF_OK(...)
+#  define IF_ERR(...)
 #endif
 
-#define HANDLE_RESULT_ERR(...)                                                \
-  using _error_result_t = __VA_ARGS__;                                        \
-  lak::optional<_error_result_t> _error_result;
+#define RES_TRY(...)                                                          \
+  auto UNIQUIFY(RESULT_) = __VA_ARGS__;                                       \
+  if (UNIQUIFY(RESULT_).is_err())                                             \
+    return lak::err_t{lak::move(UNIQUIFY(RESULT_)).unsafe_unwrap_err()};      \
+  lak::move(UNIQUIFY(RESULT_)).unsafe_unwrap()
 
-  // This should hopefully respect object lifetimes.
-
-#define RES_TRY(ASSIGN, ...)                                                  \
-  std::jmp_buf UNIQUIFY(ERROR_RESULT_JUMP_BUFFER_);                           \
-  if (setjmp(UNIQUIFY(ERROR_RESULT_JUMP_BUFFER_)))                            \
-    return lak::err_t{lak::forward<_error_result_t>(*_error_result)};         \
-  ASSIGN[&]()                                                                 \
-  {                                                                           \
-    if (auto result = __VA_ARGS__; result.is_ok())                            \
-      return lak::move(result).unsafe_unwrap();                               \
-    else                                                                      \
-      _error_result = lak::forward<lak::result_err_type_t<decltype(result)>>( \
-        result.unsafe_unwrap_err());                                          \
-    std::longjmp(UNIQUIFY(ERROR_RESULT_JUMP_BUFFER_), 1);                     \
-  }                                                                           \
-  ()
+#define RES_TRY_ASSIGN(ASSIGN, ...)                                           \
+  auto UNIQUIFY(RESULT_) = __VA_ARGS__;                                       \
+  if (UNIQUIFY(RESULT_).is_err())                                             \
+    return lak::err_t{lak::move(UNIQUIFY(RESULT_)).unsafe_unwrap_err()};      \
+  ASSIGN lak::move(UNIQUIFY(RESULT_)).unsafe_unwrap()
 
 #define RES_TRY_ERR(...)                                                      \
-  if (auto result = __VA_ARGS__; result.is_err())                             \
-    return lak::err_t{lak::move(result).unwrap_err()};
+  do                                                                          \
+  {                                                                           \
+    if (auto result = __VA_ARGS__; result.is_err())                           \
+      return lak::err_t{lak::move(result).unwrap_err()};                      \
+  } while (false)
 }
 
 #endif
