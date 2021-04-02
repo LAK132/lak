@@ -1,6 +1,8 @@
 #ifndef LAK_TUPLE_HPP
 #define LAK_TUPLE_HPP
 
+#include "lak/type_traits.hpp"
+
 #ifndef LAK_NO_STD
 #  include <tuple>
 #endif
@@ -10,19 +12,19 @@ namespace lak
 #ifdef LAK_NO_STD
 #  define LAK_TUPLE_ELEMENT lak::tuple_element
 #  define LAK_TUPLE_SIZE    lak::tuple_size
-    template<size_t I, typename T>
-    struct tuple_element;
-    template<typename T>
-    struct tuple_size;
+  template<size_t I, typename T>
+  struct tuple_element;
+  template<typename T>
+  struct tuple_size;
 #else
 #  define LAK_TUPLE_ELEMENT std::tuple_element
 #  define LAK_TUPLE_SIZE    std::tuple_size
-    template<size_t I, typename T>
-    struct tuple_element : std::tuple_element<I, T>
+  template<size_t I, typename T>
+  struct tuple_element : std::tuple_element<I, T>
   {
   };
-    template<typename T>
-    struct tuple_size : std::tuple_size<T>
+  template<typename T>
+  struct tuple_size : std::tuple_size<T>
   {
   };
 #endif
@@ -107,26 +109,8 @@ namespace lak
   pair(const T &, const U &) -> pair<T, U>;
 
   template<typename T, typename U>
-  struct lak::is_lak_type<lak::pair<T, U>> : lak::true_type
+  struct is_lak_type<lak::pair<T, U>> : lak::true_type
   {
-  };
-
-  template<typename T, typename U>
-  struct LAK_TUPLE_SIZE<lak::pair<T, U>>
-  {
-    static constexpr size_t value = 2;
-  };
-
-  template<typename T, typename U>
-  struct LAK_TUPLE_ELEMENT<0, lak::pair<T, U>>
-  {
-    using type = T;
-  };
-
-  template<typename T, typename U>
-  struct LAK_TUPLE_ELEMENT<1, lak::pair<T, U>>
-  {
-    using type = T;
   };
 
   /* --- tuple --- */
@@ -185,7 +169,7 @@ namespace lak
       if constexpr (I == 0)
         return value;
       else
-        return next.get<I - 1>();
+        return next.template get<I - 1>();
     }
     template<size_t I>
     auto &get() const
@@ -194,7 +178,7 @@ namespace lak
       if constexpr (I == 0)
         return value;
       else
-        return next.get<I - 1>();
+        return next.template get<I - 1>();
     }
   };
 
@@ -207,26 +191,8 @@ namespace lak
   tuple(const T &...) -> tuple<T...>;
 
   template<typename... T>
-  struct lak::is_lak_type<lak::tuple<T...>> : lak::true_type
+  struct is_lak_type<lak::tuple<T...>> : lak::true_type
   {
-  };
-
-  template<typename... T>
-  struct LAK_TUPLE_SIZE<lak::tuple<T...>>
-  {
-    static constexpr size_t value = sizeof(T...);
-  };
-
-  template<typename T, typename... U>
-  struct LAK_TUPLE_ELEMENT<0, lak::tuple<T, U...>>
-  {
-    using type = T;
-  };
-
-  template<size_t I, typename T, typename... U>
-  struct LAK_TUPLE_ELEMENT<I, lak::tuple<T, U...>>
-  {
-    using type = typename LAK_TUPLE_ELEMENT<I - 1, lak::tuple<U...>>::type;
   };
 
   /* --- free functions --- */
@@ -237,5 +203,45 @@ namespace lak
     return {args...};
   }
 }
+
+/* --- pair --- */
+
+template<typename T, typename U>
+struct LAK_TUPLE_SIZE<lak::pair<T, U>>
+{
+  static constexpr size_t value = 2;
+};
+
+template<typename T, typename U>
+struct LAK_TUPLE_ELEMENT<0, lak::pair<T, U>>
+{
+  using type = T;
+};
+
+template<typename T, typename U>
+struct LAK_TUPLE_ELEMENT<1, lak::pair<T, U>>
+{
+  using type = U;
+};
+
+/* --- tuple --- */
+
+template<typename... T>
+struct LAK_TUPLE_SIZE<lak::tuple<T...>>
+{
+  static constexpr size_t value = sizeof...(T);
+};
+
+template<typename T, typename... U>
+struct LAK_TUPLE_ELEMENT<0, lak::tuple<T, U...>>
+{
+  using type = T;
+};
+
+template<size_t I, typename T, typename... U>
+struct LAK_TUPLE_ELEMENT<I, lak::tuple<T, U...>>
+{
+  using type = typename LAK_TUPLE_ELEMENT<I - 1, lak::tuple<U...>>::type;
+};
 
 #endif

@@ -97,7 +97,6 @@ HEADERS = \
 	inc/lak/trie.hpp \
 	inc/lak/trie.inl \
 	inc/lak/type_pack.hpp \
-	inc/lak/type_utils.hpp \
 	inc/lak/unicode.hpp \
 	inc/lak/unicode.inl \
 	inc/lak/vec_intrin.hpp \

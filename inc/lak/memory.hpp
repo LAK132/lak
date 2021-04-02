@@ -9,7 +9,9 @@
 #include "lak/string.hpp"
 #include "lak/type_traits.hpp"
 
-#include <vector>
+#ifndef LAK_NO_STD
+#  include <vector>
+#endif
 
 // wtf windows???
 #ifdef min
@@ -478,9 +480,11 @@ namespace lak
     }
   };
 
+#ifndef LAK_NO_STD
   using vector_memory = simple_memory<std::vector>;
-  using array_memory  = simple_memory<lak::array>;
-  using span_memory   = simple_memory<lak::span>;
+#endif
+  using array_memory = simple_memory<lak::dynamic_array>;
+  using span_memory  = simple_memory<lak::dynamic_span>;
 
   using memory = vector_memory;
 }

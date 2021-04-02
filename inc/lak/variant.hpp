@@ -1,7 +1,6 @@
 #ifndef LAK_VARIANT_HPP
 #define LAK_VARIANT_HPP
 
-#include "lak/type_pack.hpp"
 #include "lak/type_traits.hpp"
 #include "lak/utility.hpp"
 
@@ -161,7 +160,7 @@ namespace lak
     using indices = lak::index_sequence_for<T...>;
 
     template<size_t I>
-    using value_type = lak::tuple_element_t<I, lak::type_pack<T...>>;
+    using value_type = lak::nth_type_t<I, T...>;
 
   private:
     using union_type = pack_union<lak::lvalue_to_ptr_t<T>...>;

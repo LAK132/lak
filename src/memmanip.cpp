@@ -1,5 +1,6 @@
 #include "lak/memmanip.hpp"
 #include "lak/compiler.hpp"
+#include "lak/os.hpp"
 #include "lak/span.hpp"
 
 #if defined(LAK_OS_WINDOWS)

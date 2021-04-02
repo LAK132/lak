@@ -42,7 +42,7 @@ namespace lak
   };
 
   template<typename T>
-  ok_t(T &&) -> ok_t<T &&>;
+  ok_t(T &&) -> ok_t<T>;
 
   template<typename T>
   ok_t(T &) -> ok_t<T &>;
@@ -56,7 +56,7 @@ namespace lak
   };
 
   template<typename T>
-  err_t(T &&) -> err_t<T &&>;
+  err_t(T &&) -> err_t<T>;
 
   template<typename T>
   err_t(T &) -> err_t<T &>;
