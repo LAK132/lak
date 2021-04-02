@@ -34,18 +34,21 @@
 #endif
 
 #if defined(LAK_COMPILER_CLANG)
-#  define force_inline  inline __attribute__((always_inline))
-#  define packed_struct struct __attribute__((packed))
-#  define DEBUG_BREAK() asm("int $3")
+#  define force_inline      inline __attribute__((always_inline))
+#  define packed_struct     struct __attribute__((packed))
+#  define DEBUG_BREAK()     asm("int $3")
+#  define LAK_OPT_ARGS(...) , __VA_ARGS__
 #elif defined(LAK_COMPILER_GNUC)
-#  define force_inline  inline __attribute__((always_inline))
-#  define packed_struct struct __attribute__((packed))
-#  define DEBUG_BREAK() asm("int $3")
+#  define force_inline      inline __attribute__((always_inline))
+#  define packed_struct     struct __attribute__((packed))
+#  define DEBUG_BREAK()     asm("int $3")
+#  define LAK_OPT_ARGS(...) , ##__VA_ARGS__
 #elif defined(LAK_COMPILER_MSVC)
 #  include <intrin.h>
-#  define force_inline  inline __forceinline
-#  define packed_struct __pragma(pack(1)) struct
-#  define DEBUG_BREAK() __debugbreak()
+#  define force_inline      inline __forceinline
+#  define packed_struct     __pragma(pack(1)) struct
+#  define DEBUG_BREAK()     __debugbreak()
+#  define LAK_OPT_ARGS(...) , __VA_ARGS__
 #else
 #  error "Compiler not supported"
 #endif
