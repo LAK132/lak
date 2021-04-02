@@ -36,6 +36,7 @@
 #undef LAK_FAINT
 #undef LAK_ITALIC
 #undef LAK_YELLOW
+#undef LAK_BRIGHT_BLACK
 #undef LAK_BRIGHT_RED
 #undef LAK_SGR_FORE
 #undef LAK_SGR_FORE_8
@@ -53,6 +54,7 @@
 #define LAK_FAINT         LAK_SGR(2)
 #define LAK_ITALIC        LAK_SGR(3)
 #define LAK_YELLOW        LAK_SGR(33)
+#define LAK_BRIGHT_BLACK  LAK_SGR(90)
 #define LAK_BRIGHT_RED    LAK_SGR(91)
 #define LAK_SGR_FORE(x)   LAK_SGR_STR("3" STRINGIFY(x))
 #define LAK_SGR_FORE_8(x) LAK_SGR_STR("38;5;" STRINGIFY(x))
