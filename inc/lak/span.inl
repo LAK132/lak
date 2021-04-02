@@ -137,6 +137,18 @@ inline constexpr auto lak::span<T, SIZE>::to_string() const
   return lak::string<lak::remove_const_t<T>>(begin(), end());
 }
 
+template<typename T, size_t SIZE>
+inline constexpr auto lak::span<T, SIZE>::stringify() const
+{
+  lak::u8string result = lak::as_u8string("{").to_string();
+  for (const auto &element : *this)
+  {
+    result += lak::streamify<char8_t>(result, ", ");
+  }
+  if (result.size() > 2) result.resize(result.size() - 2);
+  return result + lak::as_u8string("}").to_string();
+}
+
 /* --- lak::span<void, SIZE> --- */
 
 template<size_t SIZE>
@@ -319,6 +331,18 @@ template<typename T>
 inline constexpr auto lak::span<T, lak::dynamic_extent>::to_string() const
 {
   return lak::string<lak::remove_const_t<T>>(begin(), end());
+}
+
+template<typename T>
+inline constexpr auto lak::span<T, lak::dynamic_extent>::stringify() const
+{
+  lak::u8string result = lak::as_u8string("{").to_string();
+  for (const auto &element : *this)
+  {
+    result += lak::streamify<char8_t>(element, ", ");
+  }
+  if (result.size() > 2) result.resize(result.size() - 2);
+  return result + lak::as_u8string("}").to_string();
 }
 
 /* --- lak::span<void, lak::dynamic_extent> --- */

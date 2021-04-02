@@ -1,7 +1,6 @@
 #ifndef LAK_TYPE_PACK_HPP
 #define LAK_TYPE_PACK_HPP
 
-#include "lak/optional.hpp"
 #include "lak/tuple.hpp"
 #include "lak/type_traits.hpp"
 

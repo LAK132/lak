@@ -1,5 +1,7 @@
 #include "lak/debug.hpp"
 
+#include "lak/os.hpp"
+
 #include <fstream>
 
 void lak::terminate_handler()
@@ -14,10 +16,10 @@ void lak::debugger_t::std_out(const lak::u8string &line_info,
   stream << indent << line_info << lak::to_u8string(str);
   if (live_output_enabled && !live_errors_only)
   {
-    std::cout << lak::as_astring(indent);
+    ::operator<<(std::cout, lak::as_astring(indent));
     if (line_info_enabled)
     {
-      std::cout << lak::as_astring(line_info);
+      ::operator<<(std::cout, lak::as_astring(line_info));
     }
     std::cout << str << std::flush;
   }
@@ -62,10 +64,10 @@ void lak::debugger_t::std_err(const lak::u8string &line_info,
   stream << indent << line_info << lak::to_u8string(str);
   if (live_output_enabled)
   {
-    std::cout << lak::as_astring(indent);
+    ::operator<<(std::cout, lak::as_astring(indent));
     if (line_info_enabled)
     {
-      std::cout << lak::as_astring(line_info);
+      ::operator<<(std::cout, lak::as_astring(line_info));
     }
     std::cout << str << std::flush;
   }
@@ -136,7 +138,7 @@ std::filesystem::path lak::debugger_t::save(const std::filesystem::path &path)
   if (!path.string().empty())
   {
     std::ofstream file(path, std::ios::out | std::ios::trunc);
-    if (file.is_open()) file << lak::as_astring(str());
+    if (file.is_open()) ::operator<<(file, lak::as_astring(str()));
   }
 
   std::error_code ec;
@@ -148,7 +150,8 @@ std::filesystem::path lak::debugger_t::save(const std::filesystem::path &path)
 
 lak::scoped_indenter::scoped_indenter(const lak::astring &name)
 {
-  lak::debugger.std_out(lak::to_u8string(""), name + " {\n");
+  lak::debugger.std_out(lak::to_u8string(""), name + "\n");
+  lak::debugger.std_out(lak::to_u8string(""), "{\n");
   ++lak::debug_indent;
 }
 
@@ -184,6 +187,6 @@ lak::u8string lak::scoped_indenter::u8str()
   return s;
 }
 
-size_t lak::debug_indent;
+size_t lak::debug_indent = 0;
 
 lak::debugger_t lak::debugger;

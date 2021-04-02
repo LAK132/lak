@@ -1,4 +1,6 @@
+#include "lak/strcast.hpp"
 #include "lak/strconv.hpp"
+#include "lak/streamify.hpp"
 
 template<typename TO, typename FROM>
 size_t lak::converted_string_length(lak::span<FROM> str)

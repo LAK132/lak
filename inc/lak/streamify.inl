@@ -15,7 +15,7 @@ lak::string<CHAR> lak::streamify(const ARGS &... args)
 #endif
   strm << std::hex << std::noshowbase << std::uppercase << std::boolalpha;
 
-  auto streamer = [&strm](const auto &arg) {
+  [[maybe_unused]] auto streamer = [&strm](const auto &arg) {
     using arg_t = lak::remove_cvref_t<decltype(arg)>;
 
     if constexpr (std::is_integral_v<arg_t> && !std::is_same_v<arg_t, char>)
@@ -31,11 +31,11 @@ lak::string<CHAR> lak::streamify(const ARGS &... args)
 #if __cplusplus <= 201703L
       else if constexpr (std::is_same_v<arg_t, lak::u8string> &&
                          std::is_same_v<CHAR, char8_t>)
-        strm << lak::as_astring(arg);
+        ::operator<<(strm, lak::as_astring(arg));
       else if constexpr (lak::is_string_v<arg_t> &&
                          !std::is_same_v<arg_t, lak::u8string> &&
                          std::is_same_v<CHAR, char8_t>)
-        strm << lak::as_astring(lak::to_u8string(arg));
+        ::operator<<(strm, lak::as_astring(lak::to_u8string(arg)));
 #endif
       else if constexpr (lak::is_string_v<arg_t> &&
                          !std::is_same_v<arg_t, lak::string<CHAR>>)

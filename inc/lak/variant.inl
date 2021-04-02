@@ -2,6 +2,8 @@
 
 #include "lak/visit.hpp"
 
+#include "lak/debug.hpp"
+
 template<typename T, typename... U>
 template<size_t I>
 auto &lak::pack_union<T, U...>::get()
@@ -74,7 +76,7 @@ bool lak::pack_union<T, U...>::reset_dynamic(size_t i)
 template<typename T>
 lak::pack_union<T>::pack_union(lak::uninitialised_union_flag_t) : _()
 {
-  _.~uninitialised_union_flag_t();
+  _.~monostate();
 }
 
 template<typename T>

@@ -7,7 +7,6 @@
 #ifndef LAK_STRCONV_HPP
 #  define LAK_STRCONV_HPP
 
-#  include "lak/strcast.hpp"
 #  include "lak/string.hpp"
 
 #  include <tuple>

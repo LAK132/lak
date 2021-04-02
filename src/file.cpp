@@ -1,8 +1,11 @@
 #include "lak/os.hpp"
 
 #if defined(LAK_OS_WINDOWS)
-#  ifndef WIN32_LEAN_AND_MEAN
-#    define WIN32_LEAN_AND_MEAN
+#  ifndef WIN32_MEAN_AND_LEAN
+#    define WIN32_MEAN_AND_LEAN
+#  endif
+#  ifndef NOMINMAX
+#    define NOMINMAX
 #  endif
 #  include <Windows.h>
 #endif

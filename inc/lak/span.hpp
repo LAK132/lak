@@ -136,6 +136,7 @@ namespace lak
       size_t count) const;
 
     inline constexpr auto to_string() const;
+    inline constexpr auto stringify() const;
   };
 
   template<size_t SIZE>
@@ -357,6 +358,7 @@ namespace lak
       size_t count) const;
 
     inline constexpr auto to_string() const;
+    inline constexpr auto stringify() const;
   };
 
   template<>
@@ -535,6 +537,9 @@ namespace lak
   struct is_span<lak::span<T, S>> : lak::true_type
   {
   };
+
+  template<typename T>
+  using dynamic_span = lak::span<T, lak::dynamic_extent>;
 
   /* --- helper functions --- */
 
