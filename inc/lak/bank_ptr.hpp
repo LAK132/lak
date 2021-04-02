@@ -17,25 +17,25 @@ namespace lak
 
     static void internal_flush();
 
-    static [[nodiscard]] size_t internal_find_index(T *ptr);
+    [[nodiscard]] static size_t internal_find_index(T *ptr);
 
     template<typename... ARGS>
-    static [[nodiscard]] size_t internal_create(ARGS &&... args);
+    [[nodiscard]] static size_t internal_create(ARGS &&... args);
 
     static void internal_destroy(size_t index);
 
     template<typename FUNCTOR>
-    static [[nodiscard]] size_t internal_find_if(FUNCTOR &&func);
+    [[nodiscard]] static size_t internal_find_if(FUNCTOR &&func);
 
   public:
     static void flush();
 
-    static [[nodiscard]] T *create(const T &t);
+    [[nodiscard]] static T *create(const T &t);
 
-    static [[nodiscard]] T *create(T &&t);
+    [[nodiscard]] static T *create(T &&t);
 
     template<typename... ARGS>
-    static [[nodiscard]] T *create(ARGS &&... args);
+    [[nodiscard]] static T *create(ARGS &&... args);
 
     static void destroy(T *t);
 
@@ -57,21 +57,21 @@ namespace lak
     {
       _value = _index == std::numeric_limits<size_t>::max()
                  ? nullptr
-                 : &_container[index];
+                 : &bank<T>::_container[index];
     }
 
   public:
     using bank<T>::flush;
     using bank<T>::for_each;
 
-    static [[nodiscard]] unique_bank_ptr create(const T &t);
+    [[nodiscard]] static unique_bank_ptr create(const T &t);
 
-    static [[nodiscard]] unique_bank_ptr create(T &&t);
+    [[nodiscard]] static unique_bank_ptr create(T &&t);
 
     template<typename... ARGS>
-    static [[nodiscard]] unique_bank_ptr create(ARGS &&... args);
+    [[nodiscard]] static unique_bank_ptr create(ARGS &&... args);
 
-    static [[nodiscard]] unique_bank_ptr from_raw_bank_ptr(T *ptr);
+    [[nodiscard]] static unique_bank_ptr from_raw_bank_ptr(T *ptr);
 
     unique_bank_ptr();
 
@@ -129,15 +129,15 @@ namespace lak
 
     static void flush();
 
-    static [[nodiscard]] shared_bank_ptr create(const T &t);
+    [[nodiscard]] static shared_bank_ptr create(const T &t);
 
-    static [[nodiscard]] shared_bank_ptr create(T &&t);
+    [[nodiscard]] static shared_bank_ptr create(T &&t);
 
     template<typename... ARGS>
-    static [[nodiscard]] shared_bank_ptr create(ARGS &&... args);
+    [[nodiscard]] static shared_bank_ptr create(ARGS &&... args);
 
     template<typename FUNCTOR>
-    static [[nodiscard]] shared_bank_ptr find_if(FUNCTOR &&func);
+    [[nodiscard]] static shared_bank_ptr find_if(FUNCTOR &&func);
 
     shared_bank_ptr() : unique_bank_ptr<T>() {}
 

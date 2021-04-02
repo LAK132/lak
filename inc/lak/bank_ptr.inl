@@ -160,32 +160,32 @@ T *lak::bank<T>::find_if(FUNCTOR &&func)
 template<typename T>
 lak::unique_bank_ptr<T> lak::unique_bank_ptr<T>::create(const T &t)
 {
-  std::lock_guard lock(_mutex);
-  return {internal_create(t)};
+  std::lock_guard lock(bank<T>::_mutex);
+  return {bank<T>::internal_create(t)};
 }
 
 template<typename T>
 lak::unique_bank_ptr<T> lak::unique_bank_ptr<T>::create(T &&t)
 {
-  std::lock_guard lock(_mutex);
-  return {internal_create(lak::move(t))};
+  std::lock_guard lock(bank<T>::_mutex);
+  return {bank<T>::internal_create(lak::move(t))};
 }
 
 template<typename T>
 template<typename... ARGS>
 lak::unique_bank_ptr<T> lak::unique_bank_ptr<T>::create(ARGS &&... args)
 {
-  std::lock_guard lock(_mutex);
-  return {internal_create(lak::forward<ARGS>(args)...)};
+  std::lock_guard lock(bank<T>::_mutex);
+  return {bank<T>::internal_create(lak::forward<ARGS>(args)...)};
 }
 
 template<typename T>
 lak::unique_bank_ptr<T> lak::unique_bank_ptr<T>::from_raw_bank_ptr(T *ptr)
 {
-  std::lock_guard lock(_mutex);
-  ASSERT_GREATER_OR_EQUAL(ptr, &_container.front());
-  ASSERT_GREATER_OR_EQUAL(&_container.back(), ptr);
-  return {internal_find_index(ptr)};
+  std::lock_guard lock(bank<T>::_mutex);
+  ASSERT_GREATER_OR_EQUAL(ptr, &bank<T>::_container.front());
+  ASSERT_GREATER_OR_EQUAL(&bank<T>::_container.back(), ptr);
+  return {bank<T>::internal_find_index(ptr)};
 }
 
 template<typename T>
@@ -227,14 +227,14 @@ template<typename T>
 void lak::unique_bank_ptr<T>::reset()
 {
   if (!*this) return;
-  std::lock_guard lock(_mutex);
-  if (_index == _container.size() - 1)
+  std::lock_guard lock(bank<T>::_mutex);
+  if (_index == bank<T>::_container.size() - 1)
   {
-    _container.pop_back();
+    bank<T>::_container.pop_back();
   }
   else
   {
-    internal_destroy(_index);
+    bank<T>::internal_destroy(_index);
   }
   _index = std::numeric_limits<size_t>::max();
   _value = nullptr;
@@ -358,17 +358,17 @@ lak::unique_bank_ptr<T>::operator bool() const
 template<typename T>
 void lak::shared_bank_ptr<T>::flush()
 {
-  std::lock_guard lock(_mutex);
-  internal_flush();
-  _reference_count.resize(_container.size());
+  std::lock_guard lock(bank<T>::_mutex);
+  bank<T>::internal_flush();
+  _reference_count.resize(bank<T>::_container.size());
 }
 
 template<typename T>
 lak::shared_bank_ptr<T> lak::shared_bank_ptr<T>::create(const T &t)
 {
-  std::lock_guard lock(_mutex);
+  std::lock_guard lock(bank<T>::_mutex);
   auto index = internal_create(t);
-  _reference_count.resize(_container.size());
+  _reference_count.resize(bank<T>::_container.size());
   ++_reference_count[index];
   return {index};
 }
@@ -376,9 +376,9 @@ lak::shared_bank_ptr<T> lak::shared_bank_ptr<T>::create(const T &t)
 template<typename T>
 lak::shared_bank_ptr<T> lak::shared_bank_ptr<T>::create(T &&t)
 {
-  std::lock_guard lock(_mutex);
+  std::lock_guard lock(bank<T>::_mutex);
   auto index = internal_create(lak::move(t));
-  _reference_count.resize(_container.size());
+  _reference_count.resize(bank<T>::_container.size());
   ++_reference_count[index];
   return {index};
 }
@@ -387,9 +387,9 @@ template<typename T>
 template<typename... ARGS>
 lak::shared_bank_ptr<T> lak::shared_bank_ptr<T>::create(ARGS &&... args)
 {
-  std::lock_guard lock(_mutex);
+  std::lock_guard lock(bank<T>::_mutex);
   auto index = internal_create(lak::forward<ARGS>(args)...);
-  _reference_count.resize(_container.size());
+  _reference_count.resize(bank<T>::_container.size());
   ++_reference_count[index];
   return {index};
 }
@@ -398,9 +398,9 @@ template<typename T>
 template<typename FUNCTOR>
 lak::shared_bank_ptr<T> lak::shared_bank_ptr<T>::find_if(FUNCTOR &&func)
 {
-  std::lock_guard lock(_mutex);
+  std::lock_guard lock(bank<T>::_mutex);
   auto result = internal_find_if(lak::forward<FUNCTOR>(func));
-  _reference_count.resize(_container.size());
+  _reference_count.resize(bank<T>::_container.size());
   if (result != std::numeric_limits<size_t>::max()) ++_reference_count[result];
   return {result};
 }
@@ -414,41 +414,41 @@ lak::shared_bank_ptr<T> &lak::shared_bank_ptr<T>::operator=(std::nullptr_t)
 template<typename T>
 lak::shared_bank_ptr<T>::shared_bank_ptr(const shared_bank_ptr &other)
 {
-  std::lock_guard lock(_mutex);
-  _index = other._index;
-  _value = other._value;
-  ++_reference_count[_index];
+  std::lock_guard lock(bank<T>::_mutex);
+  unique_bank_ptr<T>::_index = other._index;
+  unique_bank_ptr<T>::_value = other._value;
+  ++_reference_count[unique_bank_ptr<T>::_index];
 };
 
 template<typename T>
 lak::shared_bank_ptr<T> &lak::shared_bank_ptr<T>::operator=(
   const shared_bank_ptr &other)
 {
-  std::lock_guard lock(_mutex);
-  _index = other._index;
-  _value = other._value;
-  ++_reference_count[_index];
+  std::lock_guard lock(bank<T>::_mutex);
+  unique_bank_ptr<T>::_index = other._index;
+  unique_bank_ptr<T>::_value = other._value;
+  ++_reference_count[unique_bank_ptr<T>::_index];
   return *this;
 };
 
 template<typename T>
 lak::shared_bank_ptr<T>::shared_bank_ptr(unique_bank_ptr<T> &&other)
-: unique_bank_ptr()
+: unique_bank_ptr<T>()
 {
-  std::lock_guard lock(_mutex);
-  std::swap(_index, other._index);
-  std::swap(_value, other._value);
-  ++_reference_count[_index];
+  std::lock_guard lock(bank<T>::_mutex);
+  std::swap(unique_bank_ptr<T>::_index, other._index);
+  std::swap(unique_bank_ptr<T>::_value, other._value);
+  ++_reference_count[unique_bank_ptr<T>::_index];
 };
 
 template<typename T>
 lak::shared_bank_ptr<T> &lak::shared_bank_ptr<T>::operator=(
   unique_bank_ptr<T> &&other)
 {
-  std::lock_guard lock(_mutex);
-  std::swap(_index, other._index);
-  std::swap(_value, other._value);
-  ++_reference_count[_index];
+  std::lock_guard lock(bank<T>::_mutex);
+  std::swap(unique_bank_ptr<T>::_index, other._index);
+  std::swap(unique_bank_ptr<T>::_value, other._value);
+  ++_reference_count[unique_bank_ptr<T>::_index];
   return *this;
 };
 
@@ -462,70 +462,76 @@ template<typename T>
 void lak::shared_bank_ptr<T>::reset()
 {
   if (!*this) return;
-  std::lock_guard lock(_mutex);
-  if (--_reference_count[_index] == 0)
+  std::lock_guard lock(bank<T>::_mutex);
+  if (--_reference_count[unique_bank_ptr<T>::_index] == 0)
   {
-    if (_index == _container.size() - 1)
+    if (unique_bank_ptr<T>::_index == bank<T>::_container.size() - 1)
     {
-      _container.pop_back();
+      bank<T>::_container.pop_back();
       _reference_count.pop_back();
     }
     else
     {
-      internal_destroy(_index);
-      _reference_count.resize(_container.size());
+      bank<T>::internal_destroy(unique_bank_ptr<T>::_index);
+      _reference_count.resize(bank<T>::_container.size());
     }
   }
-  _index = std::numeric_limits<size_t>::max();
-  _value = nullptr;
+  unique_bank_ptr<T>::_index = std::numeric_limits<size_t>::max();
+  unique_bank_ptr<T>::_value = nullptr;
 }
 
 template<typename T>
 bool lak::shared_bank_ptr<T>::operator<(
   const lak::shared_bank_ptr<T> &rhs) const
 {
-  ASSERT((_index == rhs._index) == (_value == rhs._value));
-  return _index < rhs._index;
+  ASSERT((unique_bank_ptr<T>::_index == rhs._index) ==
+         (unique_bank_ptr<T>::_value == rhs._value));
+  return unique_bank_ptr<T>::_index < rhs._index;
 }
 
 template<typename T>
 bool lak::shared_bank_ptr<T>::operator<=(
   const lak::shared_bank_ptr<T> &rhs) const
 {
-  ASSERT((_index == rhs._index) == (_value == rhs._value));
-  return _index <= rhs._index;
+  ASSERT((unique_bank_ptr<T>::_index == rhs._index) ==
+         (unique_bank_ptr<T>::_value == rhs._value));
+  return unique_bank_ptr<T>::_index <= rhs._index;
 }
 
 template<typename T>
 bool lak::shared_bank_ptr<T>::operator>(
   const lak::shared_bank_ptr<T> &rhs) const
 {
-  ASSERT((_index == rhs._index) == (_value == rhs._value));
-  return _index > rhs._index;
+  ASSERT((unique_bank_ptr<T>::_index == rhs._index) ==
+         (unique_bank_ptr<T>::_value == rhs._value));
+  return unique_bank_ptr<T>::_index > rhs._index;
 }
 
 template<typename T>
 bool lak::shared_bank_ptr<T>::operator>=(
   const lak::shared_bank_ptr<T> &rhs) const
 {
-  ASSERT((_index == rhs._index) == (_value == rhs._value));
-  return _index >= rhs._index;
+  ASSERT((unique_bank_ptr<T>::_index == rhs._index) ==
+         (unique_bank_ptr<T>::_value == rhs._value));
+  return unique_bank_ptr<T>::_index >= rhs._index;
 }
 
 template<typename T>
 bool lak::shared_bank_ptr<T>::operator==(
   const lak::shared_bank_ptr<T> &rhs) const
 {
-  ASSERT((_index == rhs._index) == (_value == rhs._value));
-  return _index == rhs._index;
+  ASSERT((unique_bank_ptr<T>::_index == rhs._index) ==
+         (unique_bank_ptr<T>::_value == rhs._value));
+  return unique_bank_ptr<T>::_index == rhs._index;
 }
 
 template<typename T>
 bool lak::shared_bank_ptr<T>::operator!=(
   const lak::shared_bank_ptr<T> &rhs) const
 {
-  ASSERT((_index == rhs._index) == (_value == rhs._value));
-  return _index != rhs._index;
+  ASSERT((unique_bank_ptr<T>::_index == rhs._index) ==
+         (unique_bank_ptr<T>::_value == rhs._value));
+  return unique_bank_ptr<T>::_index != rhs._index;
 }
 
 template<typename T>
