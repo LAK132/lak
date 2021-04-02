@@ -7,7 +7,18 @@
 
 #include "lak/debug.hpp"
 #include "lak/events.hpp"
+#include "lak/os.hpp"
 #include "lak/window.hpp"
+
+#ifdef LAK_OS_WINDOWS
+#  ifndef WIN32_MEAN_AND_LEAN
+#    define WIN32_MEAN_AND_LEAN
+#  endif
+#  ifndef NOMINMAX
+#    define NOMINMAX
+#  endif
+#  include <Windows.h>
+#endif
 
 #ifndef APP_NAME
 #  define APP_NAME "basic window"
@@ -87,6 +98,34 @@ int main(int argc, char **argv)
   /* --- Debugger initialisation --- */
 
   std::set_terminate(lak::terminate_handler);
+
+#ifdef LAK_OS_WINDOWS
+  /* --- Enable SGR codes in the Windows terminal --- */
+
+  do
+  {
+    HANDLE hOut = ::GetStdHandle(STD_OUTPUT_HANDLE);
+    if (hOut == INVALID_HANDLE_VALUE)
+    {
+      WARNING(::GetLastError());
+      break;
+    }
+
+    DWORD dwMode = 0;
+    if (!::GetConsoleMode(hOut, &dwMode))
+    {
+      WARNING(::GetLastError());
+      break;
+    }
+
+    dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+    if (!::SetConsoleMode(hOut, dwMode))
+    {
+      WARNING(::GetLastError());
+      break;
+    }
+  } while (false);
+#endif
 
   /* --- Window initialisation --- */
 

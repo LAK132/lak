@@ -122,8 +122,11 @@ namespace lak
 #  define SCOPED_CHECKPOINT(...)
 #  define DEBUG(...)
 #else
-#  if defined(LAK_OS_WINDOWS)
+#  if defined(LAK_NO_DEBUG_COLOURS)
 #    define DEBUG_LINE_FILE "(" LINE_TRACE_STR ")"
+#  elif defined(LAK_OS_WINDOWS)
+#    define DEBUG_LINE_FILE                                                   \
+      LAK_BRIGHT_BLACK "(" LINE_TRACE_STR ")" LAK_SGR_RESET
 #  else
 #    define DEBUG_LINE_FILE LAK_FAINT "(" LINE_TRACE_STR ")" LAK_SGR_RESET
 #  endif
@@ -165,7 +168,7 @@ namespace lak
 #  define WARNING(...)
 #  define ERROR(...)
 #  define FATAL(...) ABORT()
-#elif defined(LAK_OS_WINDOWS)
+#elif defined(LAK_NO_DEBUG_COLOURS)
 #  define WARNING(...)                                                        \
     lak::debugger.std_err(TO_U8STRING("WARNING" << DEBUG_LINE_FILE << ": "),  \
                           lak::streamify<char8_t>(__VA_ARGS__, "\n"));
