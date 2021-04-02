@@ -11,10 +11,8 @@
 #ifndef LAK_TINFLATE_HPP
 #define LAK_TINFLATE_HPP
 
-#include <cstddef>
-#include <cstdint>
-#include <deque>
-#include <vector>
+#include "lak/span.hpp"
+#include "lak/stdint.hpp"
 
 namespace tinf
 {
@@ -35,149 +33,163 @@ namespace tinf
     READ_LENGTHS_17,
     READ_LENGTHS_18,
     READ_SYMBOL,
+    PUSH_SYMBOL,
     READ_LENGTH,
     READ_DISTANCE,
-    READ_DISTANCE_EXTRA
+    READ_DISTANCE_EXTRA,
+    WRITE_REPEAT
   };
+
+// Fuck you Windows
+#undef NO_DATA
 
   enum class error_t : uint8_t
   {
-    OK = 0x0,
+    OK,
 
-    NO_DATA = 0x1,
+    NO_DATA,
 
-    INVALID_PARAMETER = 0x2,
-    CUSTOM_DICTIONARY = 0x3,
+    INVALID_PARAMETER,
+    CUSTOM_DICTIONARY,
 
-    INVALID_STATE            = 0x4,
-    INVALID_BLOCK_CODE       = 0x5,
-    OUT_OF_DATA              = 0x6,
-    CORRUPT_STREAM           = 0x7,
-    HUFFMAN_TABLE_GEN_FAILED = 0x8,
-    INVALID_SYMBOL           = 0x9,
-    INVALID_DISTANCE         = 0xA,
+    INVALID_STATE,
+    INVALID_BLOCK_CODE,
+    OUT_OF_DATA,
+    OUTPUT_FULL, // output buffer needs more memory. output buffer must contain
+                 // at least the last 32KiB of read data.
+    CORRUPT_STREAM,
+    HUFFMAN_TABLE_GEN_FAILED,
+    INVALID_SYMBOL,
+    INVALID_DISTANCE,
 
-    NO_SYMBOLS       = 0xB,
-    TOO_MANY_SYMBOLS = 0xC,
-    INCOMPLETE_TREE  = 0xD
+    NO_SYMBOLS,
+    TOO_MANY_SYMBOLS,
+    INCOMPLETE_TREE
   };
 
   struct decompression_state_t
   {
-    std::vector<uint8_t>::const_iterator begin;
-    std::vector<uint8_t>::const_iterator end;
+    lak::span<const uint8_t> data;
 
-    state_t state     = state_t::INITIAL;
-    uint32_t crc      = 0;
-    uint32_t bitAccum = 0;
-    uint32_t numBits  = 0;
-    bool final        = false;
-    bool anaconda     = false;
+    state_t state      = state_t::INITIAL;
+    uint32_t crc       = 0;
+    uint32_t bit_accum = 0;
+    uint32_t num_bits  = 0;
+    bool final         = false;
+    bool anaconda      = false;
 
-    uint8_t firstByte;
-    uint8_t blockType;
+    uint8_t first_byte;
+    uint8_t block_type;
     uint32_t counter;
     uint32_t symbol;
-    uint32_t lastValue;
-    uint32_t repeatLength;
-    uint32_t repeatCount;
+    uint32_t last_value;
+    uint32_t repeat_length;
+    uint32_t repeat_count;
     uint32_t distance;
 
     uint32_t len;
     uint32_t ilen;
     uint32_t nread;
 
-    int16_t literalTable[0x23E]; // (288 * 2) - 2
-    int16_t distanceTable[0x3E]; // (32 * 2) - 2
-    uint32_t literalCount;
-    uint32_t distanceCount;
-    uint32_t codelenCount;
-    int16_t codelenTable[0x24]; // (19 * 2) - 2
-    uint8_t literalLen[0x120];  // 288
-    uint8_t distanceLen[0x20];  // 32
-    uint8_t codelenLen[0x13];   // 19
+    int16_t literal_table[0x23E]; // (288 * 2) - 2
+    int16_t distance_table[0x3E]; // (32 * 2) - 2
+    uint32_t literal_count;
+    uint32_t distance_count;
+    uint32_t codelen_count;
+    int16_t codelen_table[0x24]; // (19 * 2) - 2
+    uint8_t literal_len[0x120];  // 288
+    uint8_t distance_len[0x20];  // 32
+    uint8_t codelen_len[0x13];   // 19
 
     template<typename T>
     bool peek_bits(const size_t n, T &var)
     {
-      while (numBits < n)
+      while (num_bits < n)
       {
-        if (begin >= end) return true;
-        bitAccum |= ((uint32_t)*begin) << numBits;
-        numBits += 8;
-        ++begin;
+        if (data.empty()) return true;
+        bit_accum |= data[0] << num_bits;
+        num_bits += 8;
+        data = data.subspan(1);
       }
-      var = bitAccum & ((1UL << n) - 1);
+      var = bit_accum & ((1UL << n) - 1);
       return false;
     }
 
-    template<typename T>
-    bool get_bits(const size_t n, T &var)
+    force_inline bool get_byte()
     {
-      while (numBits < n)
-      {
-        if (begin >= end) return true;
-        bitAccum |= ((uint32_t)*begin) << numBits;
-        numBits += 8;
-        ++begin;
-      }
-      var = bitAccum & ((1UL << n) - 1);
-      bitAccum >>= n;
-      numBits -= n;
+      ASSERT_LESS_OR_EQUAL(num_bits + 8, sizeof(bit_accum) * 8);
+      if (data.empty()) return true;
+      bit_accum |= data[0] << num_bits;
+      num_bits += 8;
+      data = data.subspan(1);
+      return false;
+    }
+
+    force_inline void flush_bits(const size_t n)
+    {
+      bit_accum >>= n;
+      num_bits -= n;
+    }
+
+    template<typename T>
+    bool get_bits(const size_t n, T *out)
+    {
+      while (num_bits < n)
+        if (get_byte()) return true;
+
+      *out = bit_accum & ((1UL << n) - 1);
+
+      flush_bits(n);
+
       return false;
     }
 
     template<typename T>
-    bool get_huff(T &var, short *table)
+    bool get_huff(int16_t *table, T *out)
     {
       uint32_t bitsUsed = 0;
       uint32_t index    = 0;
+
       for (;;)
       {
-        if (numBits <= bitsUsed)
-        {
-          if (begin >= end) return true;
-          bitAccum |= ((uint32_t)*begin) << numBits;
-          numBits += 8;
-          ++begin;
-        }
-        index += (bitAccum >> bitsUsed) & 1;
+        if (num_bits <= bitsUsed)
+          if (get_byte()) return true;
+
+        index += (bit_accum >> bitsUsed) & 1;
         ++bitsUsed;
         if (table[index] >= 0) break;
         index = ~(table[index]);
       }
-      bitAccum >>= bitsUsed;
-      numBits -= bitsUsed;
-      var = table[index];
+
+      *out = table[index];
+
+      flush_bits(bitsUsed);
+
       return false;
     }
   };
 
   const char *error_name(error_t error);
 
-  error_t tinflate(const std::vector<uint8_t> &compressed,
-                   std::deque<uint8_t> &output,
+  // the output buffer should always contain the last 32KiB data read.
+  //
+  // if *head is null it will be set to output.begin().
+
+  error_t tinflate(lak::span<const uint8_t> compressed,
+                   lak::span<uint8_t> output,
+                   uint8_t **head,
                    uint32_t *crc = nullptr);
 
-  error_t tinflate(typename std::vector<uint8_t>::const_iterator begin,
-                   typename std::vector<uint8_t>::const_iterator end,
-                   std::deque<uint8_t> &output,
-                   uint32_t *crc = nullptr);
-
-  error_t tinflate(const std::vector<uint8_t> &compressed,
-                   std::deque<uint8_t> &output,
-                   decompression_state_t &state,
-                   uint32_t *crc = nullptr);
-
-  error_t tinflate(typename std::vector<uint8_t>::const_iterator begin,
-                   typename std::vector<uint8_t>::const_iterator end,
-                   std::deque<uint8_t> &output,
+  error_t tinflate(lak::span<const uint8_t> compressed,
+                   lak::span<uint8_t> output,
+                   uint8_t **head,
                    decompression_state_t &state,
                    uint32_t *crc = nullptr);
 
   error_t tinflate_header(decompression_state_t &state);
 
-  error_t tinflate_block(std::deque<uint8_t> &output,
+  error_t tinflate_block(lak::span<uint8_t> output,
+                         uint8_t **head,
                          decompression_state_t &state);
 
   error_t gen_huffman_table(uint32_t symbols,

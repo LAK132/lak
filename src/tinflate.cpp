@@ -77,6 +77,7 @@ namespace tinf
       case error_t::INVALID_STATE: return "Invalid state";
       case error_t::INVALID_BLOCK_CODE: return "Invalid block code";
       case error_t::OUT_OF_DATA: return "Out of data";
+      case error_t::OUTPUT_FULL: return "Output buffer full";
       case error_t::CORRUPT_STREAM: return "Corrupt stream";
       case error_t::HUFFMAN_TABLE_GEN_FAILED:
         return "Huffman table gen failed";
@@ -89,46 +90,28 @@ namespace tinf
     }
   }
 
-  error_t tinflate(const std::vector<uint8_t> &compressed,
-                   std::deque<uint8_t> &output,
+  error_t tinflate(lak::span<const uint8_t> compressed,
+                   lak::span<uint8_t> output,
+                   uint8_t **head,
                    uint32_t *crc)
   {
     decompression_state_t state;
-    return tinflate(
-      compressed.cbegin(), compressed.cend(), output, state, crc);
+    return tinflate(compressed, output, head, state, crc);
   }
 
-  error_t tinflate(typename std::vector<uint8_t>::const_iterator begin,
-                   typename std::vector<uint8_t>::const_iterator end,
-                   std::deque<uint8_t> &output,
-                   uint32_t *crc)
-  {
-    decompression_state_t state;
-    return tinflate(begin, end, output, state, crc);
-  }
-
-  error_t tinflate(const std::vector<uint8_t> &compressed,
-                   std::deque<uint8_t> &output,
+  error_t tinflate(lak::span<const uint8_t> compressed,
+                   lak::span<uint8_t> output,
+                   uint8_t **head,
                    decompression_state_t &state,
                    uint32_t *crc)
   {
-    return tinflate(compressed.begin(), compressed.end(), output, state, crc);
-  }
-
-  error_t tinflate(typename std::vector<uint8_t>::const_iterator begin,
-                   typename std::vector<uint8_t>::const_iterator end,
-                   std::deque<uint8_t> &output,
-                   decompression_state_t &state,
-                   uint32_t *crc)
-  {
-    state.begin = begin;
-    state.end   = end;
+    state.data = compressed;
 
     if (error_t er = tinflate_header(state); er != error_t::OK) return er;
 
     do
     {
-      error_t res = tinflate_block(output, state);
+      error_t res = tinflate_block(output, head, state);
       if (res != error_t::OK) return res;
     } while (!state.final);
 
@@ -139,45 +122,46 @@ namespace tinf
 
   error_t tinflate_header(decompression_state_t &state)
   {
-    const ptrdiff_t size = state.end - state.begin;
-    if (size <= 0) return error_t::OUT_OF_DATA;
+    if (state.data.empty()) return error_t::OUT_OF_DATA;
 
     if (state.state == state_t::INITIAL ||
         state.state == state_t::PARTIAL_ZLIB_HEADER)
     {
       uint16_t zlibHeader;
-      if (size == 0)
+      if (state.data.size() == 0)
       {
         return error_t::OUT_OF_DATA;
       }
 
-      if (state.state == state_t::INITIAL && size == 1)
+      if (state.state == state_t::INITIAL && state.data.size() == 1)
       {
-        state.firstByte = *state.begin;
-        state.state     = state_t::PARTIAL_ZLIB_HEADER;
+        state.first_byte = state.data[0];
+        state.state      = state_t::PARTIAL_ZLIB_HEADER;
         return error_t::OUT_OF_DATA;
       }
 
       if (state.state == state_t::PARTIAL_ZLIB_HEADER)
       {
-        zlibHeader = (state.firstByte << 8) | *state.begin;
+        zlibHeader = (state.first_byte << 8) | state.data[0];
       }
       else
       {
-        zlibHeader = ((*state.begin) << 8) | *(state.begin + 1);
+        zlibHeader = (state.data[0] << 8) | state.data[1];
       }
 
       if ((zlibHeader & 0x8F00) == 0x0800 && (zlibHeader % 31) == 0)
       {
         if (zlibHeader & 0x0020) return error_t::CUSTOM_DICTIONARY;
 
-        state.begin += (state.state == state_t::PARTIAL_ZLIB_HEADER ? 1 : 2);
-        if (state.begin >= state.end) return error_t::OUT_OF_DATA;
+        const unsigned int increment =
+          (state.state == state_t::PARTIAL_ZLIB_HEADER ? 1 : 2);
+        if (increment > state.data.size()) return error_t::OUT_OF_DATA;
+        state.data = state.data.subspan(increment);
       }
       else if (state.state == state_t::PARTIAL_ZLIB_HEADER)
       {
-        state.bitAccum = state.firstByte;
-        state.numBits  = 8;
+        state.bit_accum = state.first_byte;
+        state.num_bits  = 8;
       }
       state.state = state_t::HEADER;
     }
@@ -185,432 +169,407 @@ namespace tinf
     return error_t::OK;
   }
 
-  error_t tinflate_block(std::deque<uint8_t> &output,
+  error_t tinflate_block(lak::span<uint8_t> output,
+                         uint8_t **head,
                          decompression_state_t &state)
   {
     uint32_t icrc = ~state.crc;
+    if (*head < output.begin()) *head = output.begin();
+    if (*head >= output.end()) return error_t::OUTPUT_FULL;
 
-    auto push = [&output, &icrc](const uint8_t val) {
-      output.push_back(val);
-      icrc = crc32_table[(icrc & 0xFF) ^ val] ^ ((icrc >> 8) & 0xFFFFFFUL);
+    auto push = [&](const uint8_t val) -> bool {
+      if (*head >= output.end()) return false;
+      *((*head)++) = val;
+      icrc = crc32_table[(icrc & 0xFF) ^ val] ^ ((icrc >> 8) & 0xFF'FFFFUL);
+      return true;
     };
 
-    auto out_of_data = [&state, &icrc]() {
-      state.crc = ~icrc & 0xFFFFFFFFUL;
+    auto out_of_data = [&state, &icrc]() -> error_t {
+      state.crc = ~icrc & 0xFFFF'FFFFUL;
       return error_t::OUT_OF_DATA;
     };
 
-    static const uint8_t codelenOrder[19] = {
+    static const uint8_t codelen_order[19] = {
       16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15};
-    static const uint8_t codelenOrderAnaconda[19] = {
+    static const uint8_t codelen_order_anaconda[19] = {
       18, 17, 16, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
+
+#define SET_STATE(STATE)                                                      \
+  state.state = state_t::STATE;                                               \
+  [[fallthrough]];                                                            \
+  case state_t::STATE:
 
     switch (state.state)
     {
       case state_t::HEADER:
         if (state.anaconda)
         {
-          if (state.get_bits(4, state.blockType)) return out_of_data();
-          state.final = state.blockType >> 3;
-          state.blockType &= 0x7;
-          if (state.blockType == 7)
-            state.blockType = 0;
-          else if (state.blockType == 5)
-            state.blockType = 1;
-          else if (state.blockType == 6)
-            state.blockType = 2;
+          if (state.get_bits(4, &state.block_type)) return out_of_data();
+          state.final = state.block_type >> 3;
+          state.block_type &= 0x7;
+          if (state.block_type == 7)
+            state.block_type = 0;
+          else if (state.block_type == 5)
+            state.block_type = 1;
+          else if (state.block_type == 6)
+            state.block_type = 2;
           else
-            state.blockType = 3;
+            state.block_type = 3;
         }
         else
         {
-          if (state.get_bits(3, state.blockType)) return out_of_data();
-          state.final = state.blockType & 0x1;
-          state.blockType >>= 1;
+          if (state.get_bits(3, &state.block_type)) return out_of_data();
+          state.final = state.block_type & 0x1;
+          state.block_type >>= 1;
         }
 
-        if (state.blockType == 3)
+        if (state.block_type == 3)
         {
-          state.crc = ~icrc & 0xFFFFFFFFUL;
+          state.crc = ~icrc & 0xFFFF'FFFFUL;
           return error_t::INVALID_BLOCK_CODE;
         }
 
-        if (state.blockType == 0)
+        if (state.block_type == 0)
         {
-          state.numBits = 0;
+          state.num_bits = 0;
 
-          state.state = state_t::UNCOMPRESSED_LEN;
+          SET_STATE(UNCOMPRESSED_LEN)
 
-          [[fallthrough]];
-          case state_t::UNCOMPRESSED_LEN:
+          if (state.get_bits(16, &state.len)) return out_of_data();
 
-            if (state.get_bits(16, state.len)) return out_of_data();
+          SET_STATE(UNCOMPRESSED_ILEN)
 
-            state.state = state_t::UNCOMPRESSED_ILEN;
+          if (!state.anaconda)
+          {
+            if (state.get_bits(16, &state.ilen)) return out_of_data();
 
-            [[fallthrough]];
-          case state_t::UNCOMPRESSED_ILEN:
-
-            if (!state.anaconda)
+            if (state.ilen != (~state.len & 0xFFFF))
             {
-              if (state.get_bits(16, state.ilen)) return out_of_data();
-
-              if (state.ilen != (~state.len & 0xFFFF))
-              {
-                state.crc = ~icrc & 0xFFFFFFFFUL;
-                return error_t::CORRUPT_STREAM;
-              }
+              state.crc = ~icrc & 0xFFFF'FFFFUL;
+              return error_t::CORRUPT_STREAM;
             }
-            state.nread = 0;
+          }
+          state.nread = 0;
 
-            state.state = state_t::UNCOMPRESSED_DATA;
+          SET_STATE(UNCOMPRESSED_DATA)
 
-            [[fallthrough]];
-          case state_t::UNCOMPRESSED_DATA:
+          while (state.nread < state.len)
+          {
+            if (state.data.empty()) return out_of_data();
 
-            while (state.nread < state.len)
-            {
-              if (state.begin >= state.end) return out_of_data();
-              push(*state.begin++);
-              ++state.nread;
-            }
-            state.crc   = ~icrc & 0xFFFFFFFFUL;
-            state.state = state_t::HEADER;
-            return error_t::OK;
+            if (!push(state.data[0])) return error_t::OUTPUT_FULL;
+
+            state.data = state.data.subspan(1);
+            ++state.nread;
+          }
+          state.crc   = ~icrc & 0xFFFF'FFFFUL;
+          state.state = state_t::HEADER;
+          return error_t::OK;
         }
 
-        if (state.blockType == 2)
+        if (state.block_type == 2)
         {
-          state.state = state_t::LITERAL_COUNT;
+          SET_STATE(LITERAL_COUNT)
 
-          [[fallthrough]];
-          case state_t::LITERAL_COUNT:
+          if (state.get_bits(5, &state.literal_count)) return out_of_data();
+          state.literal_count += 257;
 
-            if (state.get_bits(5, state.literalCount)) return out_of_data();
-            state.literalCount += 257;
+          SET_STATE(DISTANCE_COUNT)
 
-            state.state = state_t::DISTANCE_COUNT;
+          if (state.get_bits(5, &state.distance_count)) return out_of_data();
+          state.distance_count += 1;
 
-            [[fallthrough]];
-          case state_t::DISTANCE_COUNT:
+          SET_STATE(CODELEN_COUNT)
 
-            if (state.get_bits(5, state.distanceCount)) return out_of_data();
-            state.distanceCount += 1;
+          if (state.get_bits(4, &state.codelen_count)) return out_of_data();
+          state.codelen_count += 4;
+          state.counter = 0;
 
-            state.state = state_t::CODELEN_COUNT;
+          SET_STATE(READ_CODE_LENGTHS)
 
-            [[fallthrough]];
-          case state_t::CODELEN_COUNT:
+          if (state.anaconda)
+          {
+            for (; state.counter < state.codelen_count; ++state.counter)
+              if (state.get_bits(
+                    3,
+                    &state.codelen_len[codelen_order_anaconda[state.counter]]))
+                return out_of_data();
 
-            if (state.get_bits(4, state.codelenCount)) return out_of_data();
-            state.codelenCount += 4;
-            state.counter = 0;
+            for (; state.counter < 19; ++state.counter)
+              state.codelen_len[codelen_order_anaconda[state.counter]] = 0;
+          }
+          else
+          {
+            for (; state.counter < state.codelen_count; ++state.counter)
+              if (state.get_bits(
+                    3, &state.codelen_len[codelen_order[state.counter]]))
+                return out_of_data();
 
-            state.state = state_t::READ_CODE_LENGTHS;
+            for (; state.counter < 19; ++state.counter)
+              state.codelen_len[codelen_order[state.counter]] = 0;
+          }
 
-            [[fallthrough]];
-          case state_t::READ_CODE_LENGTHS:
+          if (gen_huffman_table(
+                19, state.codelen_len, false, state.codelen_table) !=
+              error_t::OK)
+          {
+            state.crc = ~icrc & 0xFFFF'FFFFUL;
+            return error_t::HUFFMAN_TABLE_GEN_FAILED;
+          }
 
-            if (state.anaconda)
+          state.repeat_count = 0;
+          state.last_value   = 0;
+          state.counter      = 0;
+
+          SET_STATE(READ_LENGTHS)
+
+          while (state.counter < state.literal_count + state.distance_count)
+          {
+            if (state.repeat_count == 0)
             {
-              for (; state.counter < state.codelenCount; ++state.counter)
-                if (state.get_bits(
-                      3,
-                      state.codelenLen[codelenOrderAnaconda[state.counter]]))
-                  return out_of_data();
+              if (state.get_huff(state.codelen_table, &state.symbol))
+                return out_of_data();
 
-              for (; state.counter < 19; ++state.counter)
-                state.codelenLen[codelenOrderAnaconda[state.counter]] = 0;
-            }
-            else
-            {
-              for (; state.counter < state.codelenCount; ++state.counter)
-                if (state.get_bits(
-                      3, state.codelenLen[codelenOrder[state.counter]]))
-                  return out_of_data();
-
-              for (; state.counter < 19; ++state.counter)
-                state.codelenLen[codelenOrder[state.counter]] = 0;
-            }
-
-            if (gen_huffman_table(
-                  19, state.codelenLen, false, state.codelenTable) !=
-                error_t::OK)
-            {
-              state.crc = ~icrc & 0xFFFFFFFFUL;
-              return error_t::HUFFMAN_TABLE_GEN_FAILED;
-            }
-
-            state.repeatCount = 0;
-            state.lastValue   = 0;
-            state.counter     = 0;
-
-            state.state = state_t::READ_LENGTHS;
-
-            [[fallthrough]];
-          case state_t::READ_LENGTHS:
-
-            while (state.counter < state.literalCount + state.distanceCount)
-            {
-              if (state.repeatCount == 0)
+              if (state.symbol < 16)
               {
-                if (state.get_huff(state.symbol, state.codelenTable))
-                  return out_of_data();
-
-                if (state.symbol < 16)
-                {
-                  state.lastValue   = state.symbol;
-                  state.repeatCount = 1;
-                }
-                else if (state.symbol == 16)
-                {
-                  state.state = state_t::READ_LENGTHS_16;
-
-                  [[fallthrough]];
-                  case state_t::READ_LENGTHS_16:
-
-                    if (state.get_bits(2, state.repeatCount))
-                      return out_of_data();
-                    state.repeatCount += 3;
-                }
-                else if (state.symbol == 17)
-                {
-                  state.lastValue = 0;
-
-                  state.state = state_t::READ_LENGTHS_17;
-
-                  [[fallthrough]];
-                  case state_t::READ_LENGTHS_17:
-
-                    if (state.get_bits(3, state.repeatCount))
-                      return out_of_data();
-                    state.repeatCount += 3;
-                }
-                else if (state.symbol)
-                {
-                  state.lastValue = 0;
-
-                  state.state = state_t::READ_LENGTHS_18;
-
-                  [[fallthrough]];
-                  case state_t::READ_LENGTHS_18:
-
-                    if (state.get_bits(7, state.repeatCount))
-                      return out_of_data();
-                    state.repeatCount += 11;
-                }
+                state.last_value   = state.symbol;
+                state.repeat_count = 1;
               }
+              else if (state.symbol == 16)
+              {
+                SET_STATE(READ_LENGTHS_16)
 
-              if (state.counter < state.literalCount)
-                state.literalLen[state.counter] = (uint8_t)state.lastValue;
-              else
-                state.distanceLen[state.counter - state.literalCount] =
-                  (uint8_t)state.lastValue;
+                if (state.get_bits(2, &state.repeat_count))
+                  return out_of_data();
+                state.repeat_count += 3;
+              }
+              else if (state.symbol == 17)
+              {
+                state.last_value = 0;
 
-              ++state.counter;
-              --state.repeatCount;
-              state.state = state_t::READ_LENGTHS;
+                SET_STATE(READ_LENGTHS_17)
+
+                if (state.get_bits(3, &state.repeat_count))
+                  return out_of_data();
+                state.repeat_count += 3;
+              }
+              else if (state.symbol)
+              {
+                state.last_value = 0;
+
+                SET_STATE(READ_LENGTHS_18)
+
+                if (state.get_bits(7, &state.repeat_count))
+                  return out_of_data();
+                state.repeat_count += 11;
+              }
             }
 
-            if (gen_huffman_table(state.literalCount,
-                                  state.literalLen,
-                                  false,
-                                  state.literalTable) != error_t::OK ||
-                gen_huffman_table(state.distanceCount,
-                                  state.distanceLen,
-                                  true,
-                                  state.distanceTable) != error_t::OK)
-            {
-              state.crc = ~icrc & 0xFFFFFFFFUL;
-              return error_t::HUFFMAN_TABLE_GEN_FAILED;
-            }
+            if (state.counter < state.literal_count)
+              state.literal_len[state.counter] = (uint8_t)state.last_value;
+            else
+              state.distance_len[state.counter - state.literal_count] =
+                (uint8_t)state.last_value;
+
+            ++state.counter;
+            --state.repeat_count;
+            state.state = state_t::READ_LENGTHS;
+          }
+
+          if (gen_huffman_table(state.literal_count,
+                                state.literal_len,
+                                false,
+                                state.literal_table) != error_t::OK ||
+              gen_huffman_table(state.distance_count,
+                                state.distance_len,
+                                true,
+                                state.distance_table) != error_t::OK)
+          {
+            state.crc = ~icrc & 0xFFFF'FFFFUL;
+            return error_t::HUFFMAN_TABLE_GEN_FAILED;
+          }
         }
         else
         {
-          int32_t nextFree = 2;
+          int32_t next_free = 2;
           int32_t i;
 
           for (i = 0; i < 0x7E; ++i)
           {
-            state.literalTable[i] = ~nextFree;
-            nextFree += 2;
+            state.literal_table[i] = ~next_free;
+            next_free += 2;
           }
 
           for (; i < 0x96; ++i)
-            state.literalTable[i] = (uint16_t)i + (256 - 0x7E);
+            state.literal_table[i] = (uint16_t)i + (256 - 0x7E);
 
           for (; i < 0xFE; ++i)
           {
-            state.literalTable[i] = ~nextFree;
-            nextFree += 2;
+            state.literal_table[i] = ~next_free;
+            next_free += 2;
           }
 
           for (; i < 0x18E; ++i)
-            state.literalTable[i] = (uint16_t)i + (0 - 0xFE);
+            state.literal_table[i] = (uint16_t)i + (0 - 0xFE);
 
           for (; i < 0x196; ++i)
-            state.literalTable[i] = (uint16_t)i + (280 - 0x18E);
+            state.literal_table[i] = (uint16_t)i + (280 - 0x18E);
 
           for (; i < 0x1CE; ++i)
           {
-            state.literalTable[i] = ~nextFree;
-            nextFree += 2;
+            state.literal_table[i] = ~next_free;
+            next_free += 2;
           }
 
           for (; i < 0x23E; ++i)
-            state.literalTable[i] = (uint16_t)i + (144 - 0x1CE);
+            state.literal_table[i] = (uint16_t)i + (144 - 0x1CE);
 
-          for (i = 0; i < 0x1E; ++i) state.distanceTable[i] = ~(i * 2 + 2);
+          for (i = 0; i < 0x1E; ++i) state.distance_table[i] = ~(i * 2 + 2);
 
-          for (i = 0x1E; i < 0x3E; ++i) state.distanceTable[i] = i - 0x1E;
+          for (i = 0x1E; i < 0x3E; ++i) state.distance_table[i] = i - 0x1E;
         }
 
         for (;;)
         {
-          state.state = state_t::READ_SYMBOL;
+          SET_STATE(READ_SYMBOL)
 
-          [[fallthrough]];
-          case state_t::READ_SYMBOL:
+          if (state.get_huff(state.literal_table, &state.symbol))
+            return out_of_data();
 
-            if (state.get_huff(state.symbol, state.literalTable))
+          if (state.symbol < 256)
+          {
+            SET_STATE(PUSH_SYMBOL)
+
+            if (!push((uint8_t)state.symbol)) return error_t::OUTPUT_FULL;
+
+            continue;
+          }
+
+          if (state.symbol == 256) break;
+
+          if (state.symbol <= 264)
+          {
+            state.repeat_length = (state.symbol - 257) + 3;
+          }
+          else if (state.symbol <= 284)
+          {
+            SET_STATE(READ_LENGTH)
+
+            const uint32_t lengthBits = (state.symbol - 261) / 4;
+            if (state.get_bits(lengthBits, &state.repeat_length))
               return out_of_data();
+            state.repeat_length +=
+              3 + ((4 + ((state.symbol - 265) & 3)) << lengthBits);
+          }
+          else if (state.symbol == 285)
+          {
+            state.repeat_length = 258;
+          }
+          else
+          {
+            state.crc = ~icrc & 0xFFFF'FFFFUL;
+            return error_t::INVALID_SYMBOL;
+          }
 
-            if (state.symbol < 256)
-            {
-              push((const uint8_t)state.symbol);
-              continue;
-            }
+          SET_STATE(READ_DISTANCE)
 
-            if (state.symbol == 256) break;
+          if (state.get_huff(state.distance_table, &state.symbol))
+            return out_of_data();
 
-            if (state.symbol <= 264)
-            {
-              state.repeatLength = (state.symbol - 257) + 3;
-            }
-            else if (state.symbol <= 284)
-            {
-              state.state = state_t::READ_LENGTH;
+          if (state.symbol <= 3)
+          {
+            state.distance = state.symbol + 1;
+          }
+          else if (state.symbol <= 29)
+          {
+            SET_STATE(READ_DISTANCE_EXTRA)
 
-              [[fallthrough]];
-              case state_t::READ_LENGTH:
-
-                const uint32_t lengthBits = (state.symbol - 261) / 4;
-                if (state.get_bits(lengthBits, state.repeatLength))
-                  return out_of_data();
-                state.repeatLength +=
-                  3 + ((4 + ((state.symbol - 265) & 3)) << lengthBits);
-            }
-            else if (state.symbol == 285)
-            {
-              state.repeatLength = 258;
-            }
-            else
-            {
-              state.crc = ~icrc & 0xFFFFFFFFUL;
-              return error_t::INVALID_SYMBOL;
-            }
-
-            state.state = state_t::READ_DISTANCE;
-
-            [[fallthrough]];
-          case state_t::READ_DISTANCE:
-
-            if (state.get_huff(state.symbol, state.distanceTable))
+            const uint32_t distance_bits = (state.symbol - 2) / 2;
+            if (state.get_bits(distance_bits, &state.distance))
               return out_of_data();
+            state.distance += 1 + ((2 + (state.symbol & 1)) << distance_bits);
+          }
+          else
+          {
+            state.crc = ~icrc & 0xFFFF'FFFFUL;
+            return error_t::INVALID_SYMBOL;
+          }
 
-            if (state.symbol <= 3)
-            {
-              state.distance = state.symbol + 1;
-            }
-            else if (state.symbol <= 29)
-            {
-              state.state = state_t::READ_DISTANCE_EXTRA;
+          if (state.distance > *head - output.begin())
+          {
+            state.crc = ~icrc & 0xFFFF'FFFFUL;
+            return error_t::INVALID_DISTANCE;
+            // There wasn't enough data in the back buffer.
+          }
 
-              [[fallthrough]];
-              case state_t::READ_DISTANCE_EXTRA:
+          SET_STATE(WRITE_REPEAT)
 
-                const uint32_t distanceBits = (state.symbol - 2) / 2;
-                if (state.get_bits(distanceBits, state.distance))
-                  return out_of_data();
-                state.distance +=
-                  1 + ((2 + (state.symbol & 1)) << distanceBits);
-            }
-            else
-            {
-              state.crc = ~icrc & 0xFFFFFFFFUL;
-              return error_t::INVALID_SYMBOL;
-            }
-
-            if (state.distance > output.size())
-            {
-              state.crc = ~icrc & 0xFFFFFFFFUL;
-              return error_t::INVALID_DISTANCE;
-            }
-
-            while (state.repeatLength-- > 0)
-              push(output[output.size() - state.distance]);
-            state.repeatLength = 0;
+          for (; state.repeat_length > 0; --state.repeat_length)
+            if (!push(*((*head) - state.distance)))
+              return error_t::OUTPUT_FULL;
+          state.repeat_length = 0;
         }
         break;
 
-      case state_t::INITIAL:
-      case state_t::PARTIAL_ZLIB_HEADER:
+      case state_t::INITIAL: [[fallthrough]];
+      case state_t::PARTIAL_ZLIB_HEADER: [[fallthrough]];
       default: return error_t::INVALID_STATE;
     }
+#undef SET_STATE
 
-    state.crc   = ~icrc & 0xFFFFFFFFUL;
+    state.crc   = ~icrc & 0xFFFF'FFFFUL;
     state.state = state_t::HEADER;
     return error_t::OK;
   }
 
   error_t gen_huffman_table(uint32_t symbols,
                             const uint8_t *lengths,
-                            bool allowNoSymbols,
+                            bool allow_no_symbols,
                             int16_t *table)
   {
-    uint16_t lengthCount[16] = {0};
-    uint16_t totalCount      = 0;
-    uint16_t firstCode[16];
+    uint16_t length_count[16] = {0};
+    uint16_t total_count      = 0;
+    uint16_t first_code[16];
 
     for (uint32_t i = 0; i < symbols; ++i)
-      if (lengths[i] > 0) ++lengthCount[lengths[i]];
+      if (lengths[i] > 0) ++length_count[lengths[i]];
 
-    for (uint32_t i = 1; i < 16; ++i) totalCount += lengthCount[i];
+    for (uint32_t i = 1; i < 16; ++i) total_count += length_count[i];
 
-    if (totalCount == 0)
+    if (total_count == 0)
     {
-      return allowNoSymbols ? error_t::OK : error_t::NO_SYMBOLS;
+      return allow_no_symbols ? error_t::OK : error_t::NO_SYMBOLS;
     }
-    else if (totalCount == 1)
+    else if (total_count == 1)
     {
       for (uint32_t i = 0; i < symbols; ++i)
         if (lengths[i] != 0) table[0] = table[1] = (uint16_t)i;
       return error_t::OK;
     }
 
-    firstCode[0] = 0;
+    first_code[0] = 0;
     for (uint32_t i = 1; i < 16; ++i)
     {
-      firstCode[i] = (firstCode[i - 1] + lengthCount[i - 1]) << 1;
-      if (firstCode[i] + lengthCount[i] > (uint16_t)1 << i)
+      first_code[i] = (first_code[i - 1] + length_count[i - 1]) << 1;
+      if (first_code[i] + length_count[i] > (uint16_t)1 << i)
         return error_t::TOO_MANY_SYMBOLS;
     }
-    if (firstCode[15] + lengthCount[15] != (uint16_t)1 << 15)
+    if (first_code[15] + length_count[15] != (uint16_t)1 << 15)
       return error_t::INCOMPLETE_TREE;
 
     for (uint32_t index = 0, i = 1; i < 16; ++i)
     {
-      uint32_t codeLimit = 1U << i;
-      uint32_t nextCode  = firstCode[i] + lengthCount[i];
-      uint32_t nextIndex = index + (codeLimit - firstCode[i]);
+      uint32_t code_limit = 1U << i;
+      uint32_t next_code  = first_code[i] + length_count[i];
+      uint32_t next_index = index + (code_limit - first_code[i]);
 
       for (uint32_t j = 0; j < symbols; ++j)
         if (lengths[j] == i) table[index++] = (uint16_t)j;
 
-      for (uint32_t j = nextCode; j < codeLimit; ++j)
+      for (uint32_t j = next_code; j < code_limit; ++j)
       {
-        table[index++] = ~nextIndex;
-        nextIndex += 2;
+        table[index++] = ~next_index;
+        next_index += 2;
       }
     }
 
