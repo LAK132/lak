@@ -6,10 +6,14 @@
 
 namespace lak
 {
+  /* --- monostate --- */
+
   struct monostate
   {
   };
   static_assert(lak::is_default_constructible_v<lak::monostate>);
+
+  /* --- is_variant --- */
 
   template<typename T>
   struct is_variant : public lak::false_type
@@ -17,6 +21,8 @@ namespace lak
   };
   template<typename T>
   static constexpr bool is_variant_v = lak::is_variant<T>::value;
+
+  /* --- _var_t --- */
 
   template<size_t I, typename T>
   struct _var_t
@@ -36,18 +42,23 @@ namespace lak
     return {v};
   }
 
-  template<typename... T>
-  struct pack_union;
+  /* --- uninitialised_union_flag_t --- */
 
   struct uninitialised_union_flag_t
   {
   };
   static constexpr uninitialised_union_flag_t uninitialised_union_flag;
 
+  /* --- pack_union --- */
+
+  template<typename... T>
+  struct pack_union;
+
   template<typename T, typename... U>
   struct pack_union<T, U...>
   {
     static_assert(lak::is_same_v<lak::remove_reference_t<T>, T>);
+    static_assert(!lak::is_void_v<T>);
 
     using next_type = pack_union<U...>;
 
@@ -116,7 +127,7 @@ namespace lak
     union
     {
       T value;
-      lak::uninitialised_union_flag_t _;
+      lak::monostate _;
     };
 
     template<typename V                                           = T,
@@ -151,6 +162,8 @@ namespace lak
   };
 
   static_assert(lak::is_same_v<lak::pack_union<char>::value_type<0>, char>);
+
+  /* --- variant --- */
 
   template<typename... T>
   struct variant

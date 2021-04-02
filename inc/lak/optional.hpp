@@ -1,12 +1,20 @@
-#ifndef LAK_OPTIONAL_HPP
-#define LAK_OPTIONAL_HPP
+#include "lak/visit.hpp"
 
-#include "lak/type_pack.hpp"
-#include "lak/type_traits.hpp"
-#include "lak/utility.hpp"
+#ifndef LAK_OPTIONAL_HPP
+#  define LAK_OPTIONAL_HPP
+
+#  include "lak/type_traits.hpp"
+#  include "lak/uninitialised.hpp"
+#  include "lak/utility.hpp"
+
+#  ifndef LAK_NO_STD
+#    include <optional>
+#  endif
 
 namespace lak
 {
+  /* --- nullopt --- */
+
   struct nullopt_t
   {
   };
@@ -21,33 +29,26 @@ namespace lak
 
   private:
     bool _has_value = false;
-    union
-    {
-      lak::nullopt_t _null_value;
-      value_type _value;
-    };
+    lak::uninitialised<value_type> _value;
 
   public:
-    optional() : _null_value() { _null_value.~nullopt_t(); }
-    optional(const optional &other)
-    : _has_value(other._has_value), _null_value()
+    optional() = default;
+    optional(const optional &other) : _has_value(other._has_value)
     {
-      _null_value.~nullopt_t();
       if (_has_value)
       {
-        new (&_value) value_type(other._value);
+        _value.create(other._value.value());
       }
     }
-    optional(optional &&other) : _has_value(other._has_value), _null_value()
+    optional(optional &&other) : _has_value(other._has_value)
     {
-      _null_value.~nullopt_t();
       if (_has_value)
       {
-        new (&_value) value_type(lak::move(other._value));
+        _value.create(lak::move(other._value.value()));
       }
     }
 
-    optional(lak::nullopt_t) : _null_value() { _null_value.~nullopt_t(); }
+    optional(lak::nullopt_t) {}
     template<typename U>
     optional(U &&other) : _has_value(true), _value(lak::forward<U>(other))
     {
@@ -95,7 +96,7 @@ namespace lak
     value_type &emplace(U &&other)
     {
       reset();
-      new (&_value) value_type(lak::forward<U>(other));
+      _value.create(lak::forward<U>(other));
       _has_value = true;
       return _value;
     }
@@ -104,13 +105,13 @@ namespace lak
     {
       if (_has_value)
       {
-        _value.~value_type();
+        _value.destroy();
         _has_value = false;
       }
     }
 
-    T *get() { return _has_value ? &_value : nullptr; }
-    const T *get() const { return _has_value ? &_value : nullptr; }
+    T *get() { return _has_value ? &_value.value() : nullptr; }
+    const T *get() const { return _has_value ? &_value.value() : nullptr; }
 
     T &operator*() { return *get(); }
     const T &operator*() const { return *get(); }
@@ -230,12 +231,6 @@ namespace lak
   /* --- as_ptr --- */
 
   template<typename T>
-  force_inline lak::remove_reference_t<T> *as_ptr(std::optional<T &> p)
-  {
-    return lak::as_ptr(p.operator->());
-  }
-
-  template<typename T>
   force_inline lak::remove_reference_t<T> *as_ptr(lak::optional<T> &p)
   {
     return lak::as_ptr(p.operator->());
@@ -247,6 +242,14 @@ namespace lak
   {
     return lak::as_ptr(p.operator->());
   }
+
+#  ifndef LAK_NO_STD
+  template<typename T>
+  force_inline lak::remove_reference_t<T> *as_ptr(std::optional<T &> p)
+  {
+    return lak::as_ptr(p.operator->());
+  }
+#  endif
 }
 
 #endif
