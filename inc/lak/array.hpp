@@ -1,7 +1,6 @@
 #ifndef LAK_ARRAY_HPP
 #define LAK_ARRAY_HPP
 
-#include "lak/compiler.hpp"
 #include "lak/stdint.hpp"
 #include "lak/type_traits.hpp"
 #include "lak/utility.hpp"
@@ -9,7 +8,7 @@
 namespace lak
 {
   template<typename T, size_t SIZE = lak::dynamic_extent>
-  packed_struct array
+  struct array
   {
   private:
     T _data[SIZE] = {};
@@ -29,7 +28,7 @@ namespace lak
     constexpr array(const array &) = default;
     constexpr array &operator=(const array &) = default;
 
-    constexpr array(array && other);
+    constexpr array(array &&other);
     constexpr array &operator=(array &&other);
 
     array(std::initializer_list<T> list);
@@ -144,6 +143,9 @@ namespace lak
 
     T *erase(T *element);
   };
+
+  template<typename T>
+  using dynamic_array = lak::array<T, lak::dynamic_extent>;
 }
 
 #include "lak/array.inl"

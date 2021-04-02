@@ -1,9 +1,9 @@
 #ifndef LAK_BITSET_HPP
 #define LAK_BITSET_HPP
 
-#include "lak/array.hpp"
 #include "lak/compiler.hpp"
 #include "lak/endian.hpp"
+#include "lak/packed_array.hpp"
 #include "lak/span.hpp"
 #include "lak/stdint.hpp"
 
@@ -32,7 +32,7 @@ namespace lak
     static constexpr size_t byte_count =
       ((bit_count % 8 > 0) ? 1 : 0) + (bit_count / 8);
     // uint8_t _value[byte_count] = {};
-    lak::array<uint8_t, byte_count> _value = {};
+    lak::packed_array<uint8_t, byte_count> _value = {};
 
     bitset() {}
 
