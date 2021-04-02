@@ -91,6 +91,40 @@ namespace tinf
   }
 
   error_t tinflate(lak::span<const uint8_t> compressed,
+                   lak::array<uint8_t> *output,
+                   uint32_t *crc)
+  {
+    decompression_state_t state;
+    return tinflate(compressed, output, state, crc);
+  }
+
+  error_t tinflate(lak::span<const uint8_t> compressed,
+                   lak::array<uint8_t> *output,
+                   decompression_state_t &state,
+                   uint32_t *crc)
+  {
+    auto &buffer = *output;
+    if (buffer.empty()) buffer.resize(0x100);
+
+    auto *head = buffer.data();
+
+    error_t err = error_t::OK;
+    while (err == error_t::OK && !state.final)
+    {
+      err = tinflate(compressed, lak::span(buffer), &head, state, crc);
+      while (err == tinf::error_t::OUTPUT_FULL)
+      {
+        size_t offset = head - buffer.data();
+        buffer.resize(buffer.size() * 2);
+        head = buffer.data() + offset;
+        err  = tinflate(compressed, lak::span(buffer), &head, state, crc);
+      }
+    }
+
+    return err;
+  }
+
+  error_t tinflate(lak::span<const uint8_t> compressed,
                    lak::span<uint8_t> output,
                    uint8_t **head,
                    uint32_t *crc)

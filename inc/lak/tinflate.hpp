@@ -11,6 +11,7 @@
 #ifndef LAK_TINFLATE_HPP
 #define LAK_TINFLATE_HPP
 
+#include "lak/array.hpp"
 #include "lak/span.hpp"
 #include "lak/stdint.hpp"
 
@@ -174,6 +175,15 @@ namespace tinf
   // the output buffer should always contain the last 32KiB data read.
   //
   // if *head is null it will be set to output.begin().
+
+  error_t tinflate(lak::span<const uint8_t> compressed,
+                   lak::array<uint8_t> *output,
+                   uint32_t *crc = nullptr);
+
+  error_t tinflate(lak::span<const uint8_t> compressed,
+                   lak::array<uint8_t> *output,
+                   decompression_state_t &state,
+                   uint32_t *crc = nullptr);
 
   error_t tinflate(lak::span<const uint8_t> compressed,
                    lak::span<uint8_t> output,
