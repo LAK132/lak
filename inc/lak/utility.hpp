@@ -2,15 +2,10 @@
 #define LAK_UTILITY_HPP
 
 #include "lak/compiler.hpp"
-#include "lak/type_utils.hpp"
+#include "lak/type_traits.hpp"
 
 namespace lak
 {
-  /* --- declval --- */
-
-  template<typename T>
-  lak::add_rvalue_reference_t<T> declval() noexcept;
-
   /* --- in_place_index --- */
 
   template<size_t I>

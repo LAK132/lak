@@ -3,7 +3,7 @@
 
 #include "lak/compiler.hpp"
 #include "lak/stdint.hpp"
-#include "lak/type_utils.hpp"
+#include "lak/type_traits.hpp"
 
 namespace lak
 {

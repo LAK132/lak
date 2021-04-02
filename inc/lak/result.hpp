@@ -3,7 +3,7 @@
 
 #include "lak/macro_utils.hpp"
 #include "lak/optional.hpp"
-#include "lak/type_utils.hpp"
+#include "lak/type_traits.hpp"
 #include "lak/variant.hpp"
 
 #include <csetjmp>

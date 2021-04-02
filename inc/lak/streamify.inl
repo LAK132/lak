@@ -1,6 +1,6 @@
 #include "lak/span.hpp"
 #include "lak/strconv.hpp"
-#include "lak/type_utils.hpp"
+#include "lak/type_traits.hpp"
 #include "lak/unicode.hpp"
 
 template<typename CHAR, typename... ARGS>

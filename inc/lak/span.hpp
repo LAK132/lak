@@ -4,7 +4,7 @@
 #include "lak/char.hpp"
 #include "lak/stdint.hpp"
 #include "lak/tuple.hpp"
-#include "lak/type_utils.hpp"
+#include "lak/type_traits.hpp"
 
 #include <array>
 #include <vector>

@@ -17,6 +17,16 @@
 #undef EMPTY_MACRO
 #define EMPTY_MACRO(...)
 
+#undef EXPAND
+#define EXPAND(x) x
+
+#undef LAK_ALL_CVTS
+#define LAK_ALL_CVTS(MACRO, ...)                                              \
+  EXPAND(MACRO(, __VA_ARGS__))                                                \
+  EXPAND(MACRO(const, __VA_ARGS__))                                           \
+  EXPAND(MACRO(volatile, __VA_ARGS__))                                        \
+  EXPAND(MACRO(const volatile, __VA_ARGS__))
+
 #undef LAK_ESC
 #undef LAK_CSI
 #undef LAK_SGR_STR
