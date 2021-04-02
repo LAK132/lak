@@ -2,6 +2,7 @@
 #define LAK_STRING_HPP
 
 #include "lak/char.hpp"
+#include "lak/type_traits.hpp"
 
 #include <string>
 
@@ -27,6 +28,11 @@ namespace lak
   };
   template<typename T>
   inline constexpr bool is_string_v = lak::is_string<T>::value;
+
+  template<typename T>
+  struct is_lak_type<lak::is_string<T>> : lak::true_type
+  {
+  };
 }
 
 #endif

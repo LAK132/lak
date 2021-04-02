@@ -4,6 +4,10 @@
 #include "lak/compiler.hpp"
 #include "lak/type_traits.hpp"
 
+#ifndef LAK_NO_STD
+#  include <utility>
+#endif
+
 namespace lak
 {
   /* --- in_place_index --- */

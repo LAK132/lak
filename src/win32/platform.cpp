@@ -4,6 +4,7 @@
 #include "lak/image.hpp"
 #include "lak/memmanip.hpp"
 #include "lak/platform.hpp"
+#include "lak/platform_result.hpp"
 #include "lak/strconv.hpp"
 #include "lak/window.hpp"
 
@@ -470,44 +471,46 @@ bool lak::get_clipboard(const lak::platform_instance &i, lak::u8string *s)
 bool lak::set_clipboard(const lak::platform_instance &i,
                         const lak::u8string &s)
 {
-  return lak::set_clipboard(i, lak::span(s.c_str(), s.size()));
+  return lak::set_clipboard(i, lak::string_view(s));
 }
 
 bool lak::set_clipboard(const lak::platform_instance &i,
                         lak::span<const char8_t> s)
 {
-  std::wstring str = lak::to_wstring(s);
+  [&]() -> lak::winapi::result<lak::monostate> {
+    std::wstring str = lak::to_wstring(s);
 
-  if (!OpenClipboard(NULL))
-  {
-    WARNING("Failed to open clipboard");
-    return false;
-  }
+    WINAPI_EXPECT(::OpenClipboard(NULL));
 
-  ASSERT(EmptyClipboard());
+    DEFER(::CloseClipboard());
 
-  size_t size            = (str.size() + 1) * sizeof(wchar_t);
-  HGLOBAL clipboard_data = GlobalAlloc(NULL, size);
-  if (!clipboard_data)
-  {
-    WARNING("Failed to allocate clipboard data");
-    return false;
-  }
+    WINAPI_EXPECT(::EmptyClipboard());
 
-  wchar_t *data = (wchar_t *)GlobalLock(clipboard_data);
-  if (!data)
-  {
-    WARNING("Failed to lock clipboard data");
-    return false;
-  }
+    size_t size = (str.size() + 1) * sizeof(wchar_t);
 
-  std::memcpy(data, str.c_str(), size);
+    RES_TRY_ASSIGN(HGLOBAL clipboard_data =,
+                   lak::winapi::invoke_nullerr(::GlobalAlloc, NULL, size));
 
-  ASSERT(GlobalUnlock(clipboard_data));
-  ASSERT(SetClipboardData(CF_UNICODETEXT, clipboard_data));
+    {
+      RES_TRY_ASSIGN(
+        wchar_t *data = (wchar_t *),
+        lak::winapi::invoke_nullerr(::GlobalLock, clipboard_data));
 
-  ASSERT(CloseClipboard());
+      DEFER(lak::winapi::invoke_bool<true>(::GlobalUnlock, clipboard_data)
+              .EXPECT("GlobalUnlock failed"));
 
+      std::memcpy(data, str.c_str(), size);
+    }
+
+    return lak::winapi::invoke_bool<true>(
+             ::SetClipboardData, CF_UNICODETEXT, clipboard_data)
+      .map_err([&](auto err) {
+        lak::winapi::invoke_bool<true>(::GlobalFree, clipboard_data)
+          .EXPECT("GlobalFree failed");
+        return err;
+      });
+  }()
+             .EXPECT("set_clipboard failed");
   return true;
 }
 

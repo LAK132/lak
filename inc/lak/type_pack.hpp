@@ -207,6 +207,24 @@ namespace lak
   template<typename PACK, typename T>
   static constexpr bool does_pack_contain_v =
     lak::does_pack_contain<PACK, T>::value;
+
+  /* --- sizeof_pack_args --- */
+
+  template<typename PACK>
+  struct sizeof_pack_args;
+  template<typename T, typename... U>
+  struct sizeof_pack_args<lak::type_pack<T, U...>>
+  {
+    static constexpr size_t value =
+      sizeof(T) + sizeof_pack_args<lak::type_pack<U...>>::value;
+  };
+  template<>
+  struct sizeof_pack_args<lak::type_pack<>>
+  {
+    static constexpr size_t value = 0;
+  };
+  template<typename PACK>
+  inline constexpr size_t sizeof_pack_args_v = sizeof_pack_args<PACK>::value;
 }
 
 #endif
