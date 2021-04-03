@@ -255,6 +255,9 @@ namespace lak
     {
       auto result = peek_str_ne<T>(max_len);
       _cursor += result.size() * sizeof(T);
+      if (result.size() < max_len && remaining() > sizeof(T) &&
+          peek_ne<T>() == T(0))
+        _cursor += sizeof(T); // skip null terminator.
       return result;
     }
     template<typename T>
@@ -262,6 +265,9 @@ namespace lak
     {
       auto result = peek_str_le<T>(max_len);
       _cursor += result.size() * sizeof(T);
+      if (result.size() < max_len && remaining() > sizeof(T) &&
+          peek_le<T>() == T(0))
+        _cursor += sizeof(T); // skip null terminator.
       return result;
     }
     template<typename T>
@@ -269,6 +275,9 @@ namespace lak
     {
       auto result = peek_str_be<T>(max_len);
       _cursor += result.size() * sizeof(T);
+      if (result.size() < max_len && remaining() > sizeof(T) &&
+          peek_be<T>() == T(0))
+        _cursor += sizeof(T); // skip null terminator.
       return result;
     }
     template<typename T>
