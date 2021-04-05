@@ -80,6 +80,26 @@ namespace lak
     return lak::move(result);
   }
 
+  /* --- construct_at --- */
+
+  template<typename T, typename... ARGS>
+  constexpr T *construct_at(T *p, ARGS &&... args)
+  {
+    return ::new (const_cast<void *>(static_cast<const volatile void *>(p)))
+      T(lak::forward<ARGS>(args)...);
+  }
+
+  /* --- destroy_at --- */
+
+  template<typename T>
+  constexpr void destroy_at(T *p)
+  {
+    if constexpr (lak::is_array_v<T>)
+      for (auto &elem : *p) lak::destroy_at(lak::addressof(elem));
+    else
+      p->~T();
+  }
+
   /* --- as_ptr --- */
 
   // Converts pointers and pointer-like types to pointers.
