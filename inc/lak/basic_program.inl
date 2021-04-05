@@ -219,7 +219,10 @@ int main(int argc, char **argv)
   }
 
 #ifndef NDEBUG
-  glDisable(GL_DEBUG_OUTPUT);
+  if (window.graphics() == lak::graphics_mode::OpenGL)
+  {
+    glDisable(GL_DEBUG_OUTPUT);
+  }
 #endif
 
   return basic_window_quit(window);
