@@ -301,15 +301,23 @@ void lak::array<T, lak::dynamic_extent>::pop_back()
 }
 
 template<typename T>
-T *lak::array<T, lak::dynamic_extent>::erase(T *element)
+T *lak::array<T, lak::dynamic_extent>::erase(const T *first, const T *last)
 {
-  ASSERT_GREATER_OR_EQUAL(element, _data);
-  ASSERT_LESS(element, (_data + _size));
+  ASSERT_GREATER_OR_EQUAL(first, cbegin());
+  ASSERT_LESS_OR_EQUAL(first, cend());
+  ASSERT_GREATER_OR_EQUAL(last, cbegin());
+  ASSERT_LESS_OR_EQUAL(last, cend());
 
-  for (auto end = (_data + _size), it = element - 1; it != end; ++it)
-    *(it - 1) = lak::move(*it);
+  const size_t index  = first - cbegin();
+  const size_t length = last - first;
 
-  pop_back();
+  ASSERT_LESS_OR_EQUAL(index + length, size());
 
-  return element;
+  if (length == 0) return begin() + index;
+
+  lak::shift_left(lak::split(lak::span(*this), first).second, length);
+
+  for (size_t i = length; i-- > 0;) pop_back();
+
+  return begin() + index;
 }

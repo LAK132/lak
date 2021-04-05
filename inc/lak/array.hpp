@@ -141,7 +141,9 @@ namespace lak
 
     void pop_back();
 
-    T *erase(T *element);
+    T *erase(const T *first, const T *last);
+
+    T *erase(const T *element) { return erase(element, element + 1); }
   };
 
   template<typename T>
