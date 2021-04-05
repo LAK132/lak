@@ -69,9 +69,9 @@
 #  define CHECKPOINT()                                                        \
     lak::debugger.std_out(TO_U8STRING("CHECKPOINT" << DEBUG_LINE_FILE),       \
                           lak::to_u8string("\n"));
-#  define SCOPED_CHECKPOINT(FUNCTION)                                         \
-    lak::scoped_indenter UNIQUIFY(SCOPED_INDENTOR_)(FUNCTION                  \
-                                                    " " DEBUG_LINE_FILE);
+#  define SCOPED_CHECKPOINT(...)                                              \
+    lak::scoped_indenter UNIQUIFY(SCOPED_INDENTOR_)(                          \
+      lak::streamify<char>(__VA_ARGS__, " " DEBUG_LINE_FILE));
 #  define DEBUG(...)                                                          \
     lak::debugger.std_out(TO_U8STRING("DEBUG" << DEBUG_LINE_FILE << ": "),    \
                           lak::streamify<char8_t>(__VA_ARGS__, "\n"));
