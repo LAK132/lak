@@ -805,10 +805,15 @@ namespace lak
   static_assert(!lak::is_const_v<char>);
   static_assert(lak::is_const_v<const char>);
   static_assert(lak::is_const_v<const volatile char>);
+  static_assert(!lak::is_const_v<char *>);
+  static_assert(!lak::is_const_v<const volatile char *>);
+  static_assert(lak::is_const_v<const volatile char *const>);
   static_assert(!lak::is_const_v<char &>);
   static_assert(!lak::is_const_v<const volatile char &>);
   static_assert(!lak::is_const_v<char &&>);
   static_assert(!lak::is_const_v<const volatile char &&>);
+  static_assert(!lak::is_const_v<char[]>);
+  static_assert(lak::is_const_v<const volatile char[]>);
 
   /* --- is_void --- */
 
@@ -823,10 +828,14 @@ namespace lak
   static_assert(!lak::is_void_v<char>);
   static_assert(!lak::is_void_v<const char>);
   static_assert(!lak::is_void_v<const volatile char>);
+  static_assert(!lak::is_void_v<char *>);
+  static_assert(!lak::is_void_v<const volatile char *>);
   static_assert(!lak::is_void_v<char &>);
   static_assert(!lak::is_void_v<const volatile char &>);
   static_assert(!lak::is_void_v<char &&>);
   static_assert(!lak::is_void_v<const volatile char &&>);
+  static_assert(!lak::is_void_v<char[]>);
+  static_assert(!lak::is_void_v<const volatile char[]>);
   static_assert(lak::is_void_v<void>);
   static_assert(lak::is_void_v<const void>);
   static_assert(lak::is_void_v<const volatile void>);
@@ -849,10 +858,14 @@ namespace lak
 
   static_assert(!lak::is_lvalue_reference_v<char>);
   static_assert(!lak::is_lvalue_reference_v<const volatile char>);
+  static_assert(!lak::is_lvalue_reference_v<char *>);
+  static_assert(!lak::is_lvalue_reference_v<const volatile char *>);
   static_assert(lak::is_lvalue_reference_v<char &>);
   static_assert(lak::is_lvalue_reference_v<const volatile char &>);
   static_assert(!lak::is_lvalue_reference_v<char &&>);
   static_assert(!lak::is_lvalue_reference_v<const volatile char &&>);
+  static_assert(!lak::is_lvalue_reference_v<char[]>);
+  static_assert(!lak::is_lvalue_reference_v<const volatile char[]>);
 
   /* --- is_rvalue_reference --- */
 
@@ -872,10 +885,14 @@ namespace lak
 
   static_assert(!lak::is_rvalue_reference_v<char>);
   static_assert(!lak::is_rvalue_reference_v<const volatile char>);
+  static_assert(!lak::is_rvalue_reference_v<char *>);
+  static_assert(!lak::is_rvalue_reference_v<const volatile char *>);
   static_assert(!lak::is_rvalue_reference_v<char &>);
   static_assert(!lak::is_rvalue_reference_v<const volatile char &>);
   static_assert(lak::is_rvalue_reference_v<char &&>);
   static_assert(lak::is_rvalue_reference_v<const volatile char &&>);
+  static_assert(!lak::is_rvalue_reference_v<char[]>);
+  static_assert(!lak::is_rvalue_reference_v<const volatile char[]>);
 
   /* --- is_reference --- */
 
@@ -890,10 +907,14 @@ namespace lak
 
   static_assert(!lak::is_reference_v<char>);
   static_assert(!lak::is_reference_v<const volatile char>);
+  static_assert(!lak::is_reference_v<char *>);
+  static_assert(!lak::is_reference_v<const volatile char *>);
   static_assert(lak::is_reference_v<char &>);
   static_assert(lak::is_reference_v<const volatile char &>);
   static_assert(lak::is_reference_v<char &&>);
   static_assert(lak::is_reference_v<const volatile char &&>);
+  static_assert(!lak::is_reference_v<char[]>);
+  static_assert(!lak::is_reference_v<const volatile char[]>);
 
   /* --- is_pointer --- */
 
@@ -911,12 +932,46 @@ namespace lak
   inline constexpr bool is_pointer_v = lak::is_pointer<T>::value;
 
   static_assert(!lak::is_pointer_v<char>);
+  static_assert(!lak::is_pointer_v<const volatile char>);
   static_assert(lak::is_pointer_v<char *>);
   static_assert(lak::is_pointer_v<const volatile char *>);
   static_assert(!lak::is_pointer_v<char &>);
   static_assert(!lak::is_pointer_v<const volatile char &>);
   static_assert(!lak::is_pointer_v<char &&>);
   static_assert(!lak::is_pointer_v<const volatile char &&>);
+  static_assert(!lak::is_pointer_v<char[]>);
+  static_assert(!lak::is_pointer_v<const volatile char[]>);
+
+  /* --- is_array --- */
+
+  template<typename T>
+  struct is_array : lak::false_type
+  {
+  };
+
+  template<typename T>
+  struct is_array<T[]> : lak::true_type
+  {
+  };
+
+  template<typename T, size_t N>
+  struct is_array<T[N]> : lak::true_type
+  {
+  };
+
+  template<typename T>
+  inline constexpr bool is_array_v = lak::is_array<T>::value;
+
+  static_assert(!lak::is_array_v<char>);
+  static_assert(!lak::is_array_v<const volatile char>);
+  static_assert(!lak::is_array_v<char *>);
+  static_assert(!lak::is_array_v<const volatile char *>);
+  static_assert(!lak::is_array_v<char &>);
+  static_assert(!lak::is_array_v<const volatile char &>);
+  static_assert(!lak::is_array_v<char &&>);
+  static_assert(!lak::is_array_v<const volatile char &&>);
+  static_assert(lak::is_array_v<char[]>);
+  static_assert(lak::is_array_v<const volatile char[]>);
 
   /* --- is_function --- */
 
