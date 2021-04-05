@@ -408,11 +408,12 @@ constexpr bool lak::contains(lak::span<const T> s, const T &v)
 }
 
 template<typename T>
-lak::pair<lak::span<T>, lak::span<T>> lak::split(lak::span<T> s, T *at)
+lak::pair<lak::span<T>, lak::span<T>> lak::split(lak::span<T> s, const T *at)
 {
   ASSERT_GREATER_OR_EQUAL(at, s.begin());
   ASSERT_LESS_OR_EQUAL(at, s.end());
-  return {lak::span(s.begin(), at), lak::span(at, s.end())};
+  const size_t index = at - s.begin();
+  return lak::split(s, index);
 }
 
 template<typename T>
@@ -443,37 +444,86 @@ lak::span<T> lak::common_initial_sequence(lak::span<T> a, lak::span<T> b)
 }
 
 template<typename T>
-void lak::rotate_left(lak::span<T> data, size_t distance)
+lak::span<T> lak::rotate_left(lak::span<T> data, size_t distance)
 {
-  if (data.size() == 0) return;
+  if (data.size() == 0 || (distance % data.size()) == 0) return;
 
-  const size_t offset = distance % data.size();
-
-  if (offset == 0) return;
-
-  const size_t count = data.size() - offset;
-
-  for (size_t i = 0; i < count; ++i)
+  for (size_t i = 0; i < data.size(); ++i)
   {
-    std::swap(data[i], data[i + offset]);
+    lak::swap(data[i], data[(i + distance) % data.size()]);
   }
+
+  return data;
 }
 
 template<typename T>
-void lak::rotate_right(lak::span<T> data, size_t distance)
+lak::span<T> lak::rotate_right(lak::span<T> data, size_t distance)
 {
-  if (data.size() == 0) return;
+  if (data.size() == 0 || (distance % data.size()) == 0) return;
 
-  const size_t offset = distance % data.size();
-
-  if (offset == 0) return;
-
-  const size_t count = data.size() - offset;
-
-  for (size_t i = count; i-- > 0;)
+  for (size_t i = data.size(); i-- > 0;)
   {
-    std::swap(data[i], data[i + offset]);
+    lak::swap(data[i], data[(i + distance) % data.size()]);
   }
+
+  return data;
+}
+
+template<typename T>
+lak::shift_result<T> lak::shift_left(lak::span<T> data, size_t distance)
+{
+  lak::shift_result<T> result;
+
+  if (distance > data.size())
+  {
+    result.moved_to   = data.first(0);
+    result.unmodified = data;
+    result.moved_from = data.last(0);
+    return result;
+  }
+
+  for (size_t i = distance; i < data.size(); ++i)
+  {
+    data[i - distance] = lak::move(data[i]);
+  }
+
+  const size_t moved_count = data.size() - distance;
+
+  lak::tie(result.moved_from, data) = lak::split(data, moved_count);
+
+  lak::tie(result.unmodified, result.moved_from) = lak::split(
+    data, (moved_count > data.size()) ? 0 : (data.size() - moved_count));
+
+  return result;
+}
+
+template<typename T>
+lak::shift_result<T> lak::shift_right(lak::span<T> data, size_t distance)
+{
+  lak::shift_result<T> result;
+
+  if (distance > data.size())
+  {
+    result.moved_to   = data.last(0);
+    result.unmodified = data;
+    result.moved_from = data.first(0);
+    return result;
+  }
+
+  for (size_t i = data.size(); i < distance; --i)
+  {
+    data[i] = lak::move(data[i - distace]);
+  }
+
+  const size_t moved_count = data.size() - distance;
+
+  lak::tie(data, result.moved_from) =
+    lak::split(data, data.size() - moved_count);
+
+  lak::tie(result.moved_from, result.unmodified) =
+    lak::split(data, (moved_count > data.size()) ? 0 : moved_count);
+
+  return result;
 }
 
 template<typename T>

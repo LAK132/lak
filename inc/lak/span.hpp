@@ -547,7 +547,7 @@ namespace lak
   constexpr bool contains(lak::span<const T> s, const T &v);
 
   template<typename T>
-  lak::pair<lak::span<T>, lak::span<T>> split(lak::span<T> s, T *at);
+  lak::pair<lak::span<T>, lak::span<T>> split(lak::span<T> s, const T *at);
   template<typename T>
   lak::pair<lak::span<T>, lak::span<T>> split(lak::span<T> s, size_t at);
 
@@ -559,10 +559,24 @@ namespace lak
   lak::span<T> common_initial_sequence(lak::span<T> a, lak::span<T> b);
 
   template<typename T>
-  void rotate_left(lak::span<T> data, size_t distance = 1);
+  lak::span<T> rotate_left(lak::span<T> data, size_t distance = 1);
 
   template<typename T>
-  void rotate_right(lak::span<T> data, size_t distance = 1);
+  lak::span<T> rotate_right(lak::span<T> data, size_t distance = 1);
+
+  template<typename T>
+  struct shift_result
+  {
+    lak::span<T> moved_to;
+    lak::span<T> unmodified;
+    lak::span<T> moved_from;
+  };
+
+  template<typename T>
+  lak::shift_result<T> shift_left(lak::span<T> data, size_t distance = 1);
+
+  template<typename T>
+  lak::shift_result<T> shift_right(lak::span<T> data, size_t distance = 1);
 
   template<typename T>
   size_t compare(lak::span<const T> a, lak::span<const T> b);
