@@ -1,9 +1,13 @@
 #ifndef LAK_BANK_PTR_HPP
 #define LAK_BANK_PTR_HPP
 
-#include <deque>
+#include "lak/array.hpp"
+#include "lak/railcar.hpp"
+
+#ifdef LAK_NO_STD
+#  error STL required
+#endif
 #include <mutex>
-#include <vector>
 
 namespace lak
 {
@@ -12,8 +16,8 @@ namespace lak
   {
   protected:
     static std::mutex _mutex;
-    static std::deque<T> _container;
-    static std::vector<size_t> _deleted;
+    static lak::railcar<T> _container;
+    static lak::array<size_t> _deleted;
 
     static void internal_flush();
 
@@ -116,7 +120,7 @@ namespace lak
   struct shared_bank_ptr : protected unique_bank_ptr<T>
   {
   protected:
-    static std::deque<size_t> _reference_count;
+    static lak::railcar<size_t> _reference_count;
 
     shared_bank_ptr(size_t index) : unique_bank_ptr<T>(index) {}
 
@@ -168,11 +172,11 @@ namespace lak
   template<typename T>
   std::mutex lak::bank<T>::_mutex;
   template<typename T>
-  std::deque<T> lak::bank<T>::_container;
+  lak::railcar<T> lak::bank<T>::_container;
   template<typename T>
-  std::vector<size_t> lak::bank<T>::_deleted;
+  lak::array<size_t> lak::bank<T>::_deleted;
   template<typename T>
-  std::deque<size_t> lak::shared_bank_ptr<T>::_reference_count;
+  lak::railcar<size_t> lak::shared_bank_ptr<T>::_reference_count;
 }
 
 #include "bank_ptr.inl"
