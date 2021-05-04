@@ -51,7 +51,7 @@ namespace lak
     }
 
 // See span.hpp
-#if __cplusplus > 201703L
+#ifdef LAK_COMPILER_CPP20
     constexpr
 #endif
       bitset(lak::span<const UINT> init)

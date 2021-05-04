@@ -1,6 +1,7 @@
 #include "lak/debug.hpp"
 
 #include "lak/os.hpp"
+#include "lak/strconv.hpp"
 
 #include <fstream>
 
@@ -13,7 +14,9 @@ void lak::debugger_t::std_out(const lak::u8string &line_info,
                               const lak::astring &str)
 {
   const auto indent = scoped_indenter::u8str();
-  stream << indent << line_info << lak::to_u8string(str);
+  stream << lak::strconv<LAK_DEBUG_STREAM_CHAR>(indent)
+         << lak::strconv<LAK_DEBUG_STREAM_CHAR>(line_info)
+         << lak::strconv<LAK_DEBUG_STREAM_CHAR>(str);
   if (live_output_enabled && !live_errors_only)
   {
     ::operator<<(std::cout, lak::as_astring(indent));
@@ -29,7 +32,9 @@ void lak::debugger_t::std_out(const lak::u8string &line_info,
                               const lak::wstring &str)
 {
   const auto indent = scoped_indenter::u8str();
-  stream << indent << line_info << lak::to_u8string(str);
+  stream << lak::strconv<LAK_DEBUG_STREAM_CHAR>(indent)
+         << lak::strconv<LAK_DEBUG_STREAM_CHAR>(line_info)
+         << lak::strconv<LAK_DEBUG_STREAM_CHAR>(str);
   if (live_output_enabled && !live_errors_only)
   {
     std::wcout << lak::to_wstring(indent);
@@ -45,7 +50,9 @@ void lak::debugger_t::std_out(const lak::u8string &line_info,
                               const lak::u8string &str)
 {
   const auto indent = scoped_indenter::u8str();
-  stream << indent << line_info << str;
+  stream << lak::strconv<LAK_DEBUG_STREAM_CHAR>(indent)
+         << lak::strconv<LAK_DEBUG_STREAM_CHAR>(line_info)
+         << lak::strconv<LAK_DEBUG_STREAM_CHAR>(str);
   if (live_output_enabled && !live_errors_only)
   {
     std::wcout << lak::to_wstring(indent);
@@ -61,7 +68,9 @@ void lak::debugger_t::std_err(const lak::u8string &line_info,
                               const lak::astring &str)
 {
   const auto indent = scoped_indenter::u8str();
-  stream << indent << line_info << lak::to_u8string(str);
+  stream << lak::strconv<LAK_DEBUG_STREAM_CHAR>(indent)
+         << lak::strconv<LAK_DEBUG_STREAM_CHAR>(line_info)
+         << lak::strconv<LAK_DEBUG_STREAM_CHAR>(str);
   if (live_output_enabled)
   {
     ::operator<<(std::cout, lak::as_astring(indent));
@@ -77,7 +86,9 @@ void lak::debugger_t::std_err(const lak::u8string &line_info,
                               const lak::wstring &str)
 {
   const auto indent = scoped_indenter::u8str();
-  stream << indent << line_info << lak::to_u8string(str);
+  stream << lak::strconv<LAK_DEBUG_STREAM_CHAR>(indent)
+         << lak::strconv<LAK_DEBUG_STREAM_CHAR>(line_info)
+         << lak::strconv<LAK_DEBUG_STREAM_CHAR>(str);
   if (live_output_enabled)
   {
     std::wcout << lak::to_wstring(indent);
@@ -93,7 +104,9 @@ void lak::debugger_t::std_err(const lak::u8string &line_info,
                               const lak::u8string &str)
 {
   const auto indent = scoped_indenter::u8str();
-  stream << indent << line_info << str;
+  stream << lak::strconv<LAK_DEBUG_STREAM_CHAR>(indent)
+         << lak::strconv<LAK_DEBUG_STREAM_CHAR>(line_info)
+         << lak::strconv<LAK_DEBUG_STREAM_CHAR>(str);
   if (live_output_enabled)
   {
     std::wcout << lak::to_wstring(indent);
@@ -110,7 +123,7 @@ void lak::debugger_t::clear()
   stream.clear();
 }
 
-lak::u8string lak::debugger_t::str()
+lak::string<LAK_DEBUG_STREAM_CHAR> lak::debugger_t::str()
 {
   return stream.str();
 }
@@ -119,15 +132,18 @@ void lak::debugger_t::abort()
 {
   DEBUG_BREAK();
   std::cerr << "Something went wrong!\n";
+#ifndef LAK_NO_FILESYSTEM
   if (!crash_path.empty())
     std::cerr
       << "Saving crash log to '" << lak::debugger.save()
       << "'.\nPlease forward the crash log onto the developer so they can "
          "attempt to fix the issues that caused this crash.\n";
+#endif
   PAUSE();
   std::abort();
 }
 
+#ifndef LAK_NO_FILESYSTEM
 std::filesystem::path lak::debugger_t::save()
 {
   return save(crash_path);
@@ -147,6 +163,7 @@ std::filesystem::path lak::debugger_t::save(const std::filesystem::path &path)
   else
     return absolute;
 }
+#endif
 
 lak::scoped_indenter::scoped_indenter(const lak::astring &name)
 {
@@ -179,8 +196,8 @@ lak::wstring lak::scoped_indenter::wstr()
 
 lak::u8string lak::scoped_indenter::u8str()
 {
-  static const lak::u8string bar = lak::to_u8string("| ");
-  static const lak::u8string dot = lak::to_u8string(": ");
+  static const auto bar = "| "_u8;
+  static const auto dot = ": "_u8;
   lak::u8string s;
   for (size_t i = lak::debug_indent; i-- > 0;)
     s += ((lak::debug_indent - i) & 1) ? bar : dot;

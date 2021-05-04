@@ -1,8 +1,12 @@
+#ifdef LAK_NO_FILESYSTEM
+#  error This file should not be compiled with filesystems disabled
+#endif
+
 #include "lak/os.hpp"
 
 #if defined(LAK_OS_WINDOWS)
-#  ifndef WIN32_MEAN_AND_LEAN
-#    define WIN32_MEAN_AND_LEAN
+#  ifndef WIN32_LEAN_AND_MEAN
+#    define WIN32_LEAN_AND_MEAN
 #  endif
 #  ifndef NOMINMAX
 #    define NOMINMAX
@@ -42,8 +46,7 @@ lak::errno_result<std::vector<uint8_t>> lak::read_file(
   return lak::ok_t{lak::move(result)};
 }
 
-bool lak::save_file(const lak::fs::path &path,
-                    const std::vector<uint8_t> &data)
+bool lak::save_file(const lak::fs::path &path, lak::span<const uint8_t> data)
 {
   std::ofstream file(path, std::ios::binary | std::ios::out | std::ios::trunc);
   if (!file.is_open()) return false;
@@ -51,44 +54,40 @@ bool lak::save_file(const lak::fs::path &path,
   return true;
 }
 
+bool lak::save_file(const lak::fs::path &path,
+                    const std::vector<uint8_t> &data)
+{
+  return lak::save_file(path, lak::span(data));
+}
+
 bool lak::save_file(const lak::fs::path &path, const lak::astring &string)
 {
-  std::ofstream file(path, std::ios::out | std::ios::trunc);
-  if (!file.is_open()) return false;
-  file << string;
-  return true;
+  return lak::save_file(path,
+                        lak::span<const uint8_t>(lak::string_view(string)));
 }
 
 bool lak::save_file(const lak::fs::path &path, const lak::wstring &string)
 {
-  std::basic_ofstream<wchar_t> file(path, std::ios::out | std::ios::trunc);
-  if (!file.is_open()) return false;
-  file << string;
-  return true;
+  return lak::save_file(path,
+                        lak::span<const uint8_t>(lak::string_view(string)));
 }
 
 bool lak::save_file(const lak::fs::path &path, const lak::u8string &string)
 {
-  std::basic_ofstream<char8_t> file(path, std::ios::out | std::ios::trunc);
-  if (!file.is_open()) return false;
-  file << string;
-  return true;
+  return lak::save_file(path,
+                        lak::span<const uint8_t>(lak::string_view(string)));
 }
 
 bool lak::save_file(const lak::fs::path &path, const lak::u16string &string)
 {
-  std::basic_ofstream<char16_t> file(path, std::ios::out | std::ios::trunc);
-  if (!file.is_open()) return false;
-  file << string;
-  return true;
+  return lak::save_file(path,
+                        lak::span<const uint8_t>(lak::string_view(string)));
 }
 
 bool lak::save_file(const lak::fs::path &path, const lak::u32string &string)
 {
-  std::basic_ofstream<char32_t> file(path, std::ios::out | std::ios::trunc);
-  if (!file.is_open()) return false;
-  file << string;
-  return true;
+  return lak::save_file(path,
+                        lak::span<const uint8_t>(lak::string_view(string)));
 }
 
 lak::fs::path lak::exe_path()

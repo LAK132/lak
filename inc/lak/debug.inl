@@ -4,7 +4,9 @@
 #include "lak/string.hpp"
 
 #include <cstdlib>
-#include <filesystem>
+#ifndef LAK_NO_FILESYSTEM
+#  include <filesystem>
+#endif
 #include <iostream>
 #include <sstream>
 
@@ -15,7 +17,10 @@ namespace lak
 
   struct debugger_t
   {
-    std::basic_stringstream<char8_t> stream;
+#ifndef LAK_DEBUG_STREAM_CHAR
+#  define LAK_DEBUG_STREAM_CHAR char8_t
+#endif
+    std::basic_stringstream<LAK_DEBUG_STREAM_CHAR> stream;
 
     void std_out(const lak::u8string &line_info, const lak::astring &str);
     void std_out(const lak::u8string &line_info, const lak::wstring &str);
@@ -31,11 +36,13 @@ namespace lak
 
     [[noreturn]] void abort();
 
+#ifndef LAK_NO_FILESYSTEM
     std::filesystem::path save();
 
     std::filesystem::path save(const std::filesystem::path &path);
 
     std::filesystem::path crash_path;
+#endif
 
     bool live_output_enabled = true;
     bool live_errors_only    = false;

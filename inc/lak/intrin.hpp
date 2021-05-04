@@ -4,7 +4,8 @@
 #include "lak/compiler.hpp"
 #include "lak/stdint.hpp"
 
-#if defined(LAK_COMPILER_GNUC)
+#if defined(LAK_COMPILER_EMSCRIPTEN)
+#elif defined(LAK_COMPILER_GNUC)
 #  include <cpuid.h>
 #  include <immintrin.h>
 #elif defined(LAK_COMPILER_MSVC)
@@ -36,7 +37,8 @@ namespace lak
     static instruction_set get();
   };
 
-#if defined(LAK_COMPILER_MSVC)
+#if defined(LAK_COMPILER_EMSCRIPTEN)
+#elif defined(LAK_COMPILER_MSVC)
   using m128_t  = __m128;
   using m256_t  = __m256;
   using m256d_t = __m256d;

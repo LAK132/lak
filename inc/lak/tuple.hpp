@@ -2,6 +2,7 @@
 #define LAK_TUPLE_HPP
 
 #include "lak/type_traits.hpp"
+#include "lak/utility.hpp"
 
 #ifndef LAK_NO_STD
 #  include <tuple>

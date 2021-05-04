@@ -4,7 +4,7 @@
 #include "lak/stdint.hpp"
 
 // char8_t typedef for C++ < 20
-#if __cplusplus <= 201703L
+#ifndef LAK_COMPILER_CPP20
 using char8_t = uint_least8_t;
 #endif
 

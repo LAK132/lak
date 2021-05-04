@@ -21,6 +21,10 @@
 #  error Expected at least a C++17 compiler
 #endif
 
+#ifdef __EMSCRIPTEN__
+#  define LAK_COMPILER_EMSCRIPTEN
+#endif
+
 #ifdef __clang__
 #  define LAK_COMPILER_CLANG
 #endif
@@ -33,7 +37,12 @@
 #  define LAK_COMPILER_MSVC
 #endif
 
-#if defined(LAK_COMPILER_CLANG)
+#if defined(LAK_COMPILER_EMSCRIPTEN)
+#  define force_inline  inline __attribute__((always_inline))
+#  define packed_struct struct __attribute__((packed))
+#  define DEBUG_BREAK()
+#  define LAK_OPT_ARGS(...) , __VA_ARGS__
+#elif defined(LAK_COMPILER_CLANG)
 #  define force_inline      inline __attribute__((always_inline))
 #  define packed_struct     struct __attribute__((packed))
 #  define DEBUG_BREAK()     asm("int $3")

@@ -80,6 +80,14 @@ namespace lak
     return lak::move(result);
   }
 
+  /* --- addressof --- */
+
+  template<typename T>
+  auto addressof(T &&t)
+  {
+    return std::addressof(lak::forward<T>(t));
+  }
+
   /* --- construct_at --- */
 
   template<typename T, typename... ARGS>

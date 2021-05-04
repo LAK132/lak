@@ -1,4 +1,4 @@
-#include "lak/span.hpp"
+#include "lak/strcast.hpp"
 #include "lak/strconv.hpp"
 #include "lak/type_traits.hpp"
 #include "lak/unicode.hpp"
@@ -6,12 +6,15 @@
 template<typename CHAR, typename... ARGS>
 lak::string<CHAR> lak::streamify(const ARGS &... args)
 {
-#if __cplusplus <= 201703L
+#ifndef LAK_COMPILER_CPP20
   std::basic_stringstream<
     std::conditional_t<std::is_same_v<CHAR, char8_t>, char, CHAR>>
-    strm;
+    _strm;
+  auto &strm = static_cast<std::basic_ostream<
+    std::conditional_t<std::is_same_v<CHAR, char8_t>, char, CHAR>> &>(_strm);
 #else
-  std::basic_stringstream<CHAR> strm;
+  std::basic_stringstream<CHAR> _strm;
+  auto &strm = static_cast<std::basic_ostream<CHAR> &>(_strm);
 #endif
   strm << std::hex << std::noshowbase << std::uppercase << std::boolalpha;
 
@@ -28,14 +31,14 @@ lak::string<CHAR> lak::streamify(const ARGS &... args)
         ::operator<<(strm, arg);
       else if constexpr (std::is_null_pointer_v<arg_t>)
         strm << "nullptr";
-#if __cplusplus <= 201703L
+#ifndef LAK_COMPILER_CPP20
       else if constexpr (std::is_same_v<arg_t, lak::u8string> &&
                          std::is_same_v<CHAR, char8_t>)
-        ::operator<<(strm, lak::as_astring(arg));
+        strm << lak::as_astring(arg);
       else if constexpr (lak::is_string_v<arg_t> &&
                          !std::is_same_v<arg_t, lak::u8string> &&
                          std::is_same_v<CHAR, char8_t>)
-        ::operator<<(strm, lak::as_astring(lak::to_u8string(arg)));
+        strm << lak::as_astring(lak::to_u8string(arg));
 #endif
       else if constexpr (lak::is_string_v<arg_t> &&
                          !std::is_same_v<arg_t, lak::string<CHAR>>)
@@ -47,10 +50,10 @@ lak::string<CHAR> lak::streamify(const ARGS &... args)
 
   (streamer(args), ...);
 
-#if __cplusplus <= 201703L
+#ifndef LAK_COMPILER_CPP20
   if constexpr (std::is_same_v<CHAR, char8_t>)
-    return lak::as_u8string(strm.str()).to_string();
+    return lak::as_u8string(_strm.str()).to_string();
   else
 #endif
-    return strm.str();
+    return _strm.str();
 }

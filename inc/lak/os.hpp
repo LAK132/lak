@@ -25,7 +25,7 @@
 #  define LAK_OS_GNU_LINUX
 #endif
 
-#if defined(__linux__)
+#if defined(__linux__) || defined(__EMSCRIPTEN__)
 // *Anything* running the Linux kernel.
 #  define LAK_OS_LINUX
 #  if !defined(LAK_USE_XLIB) && !defined(LAK_USE_XCB) &&                      \

@@ -127,7 +127,7 @@ uint8_t lak::character_length(lak::span<const char32_t> str)
 
 char32_t lak::codepoint(lak::span<const char> str)
 {
-  if (str.size() >= 1 && str[0] < 0x80)
+  if (str.size() >= 1 && static_cast<const unsigned char>(str[0]) < 0x80)
   {
     return str[0];
   }

@@ -35,4 +35,9 @@ namespace lak
   };
 }
 
+static inline const char8_t *operator"" _u8(const char *str, size_t)
+{
+  return reinterpret_cast<const char8_t *>(str);
+}
+
 #endif

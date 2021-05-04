@@ -6,7 +6,7 @@
 #define LAK_STRCAST_HPP
 
 #include "lak/compiler.hpp"
-#include "lak/span.hpp"
+#include "lak/span_forward.hpp"
 #include "lak/string.hpp"
 
 namespace lak
@@ -21,6 +21,8 @@ namespace lak
   force_inline lak::span<const char8_t> as_u8string(lak::span<const char> str);
   force_inline lak::span<const char8_t> as_u8string(const char *str);
 }
+
+#include "lak/span.hpp"
 
 #include "lak/strcast.inl"
 

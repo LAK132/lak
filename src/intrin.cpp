@@ -2,7 +2,8 @@
 
 void lak::cpuid(unsigned int level, unsigned int info[4])
 {
-#if defined(LAK_COMPILER_GNUC)
+#if defined(LAK_COMPILER_EMSCRIPTEN)
+#elif defined(LAK_COMPILER_GNUC)
   __cpuid_count(level, 0, info[0], info[1], info[2], info[3]);
 #elif defined(LAK_COMPILER_MSVC)
   __cpuidex(reinterpret_cast<int *>(info), level, 0);
