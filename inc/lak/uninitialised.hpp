@@ -10,8 +10,6 @@ namespace lak
   template<typename T>
   struct uninitialised
   {
-    static_assert(lak::is_default_constructible_v<uninitialised>);
-
     using value_type = T;
     union
     {
@@ -33,6 +31,7 @@ namespace lak
     value_type &create(ARGS &&... args)
     {
       new (&_value) value_type(lak::forward<ARGS>(args)...);
+      return _value;
     }
 
     void destroy() { _value.~value_type(); }
@@ -42,6 +41,7 @@ namespace lak
     const value_type &value() const { return _value; }
   };
 
+  static_assert(lak::is_default_constructible_v<lak::uninitialised<int>>);
 }
 
 #endif

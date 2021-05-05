@@ -370,7 +370,7 @@ namespace lak
       _cursor += count;
       return result;
     }
-    container_t read(size_t from, size_t to) const
+    inline container_t read(size_t from, size_t to) const
     {
       ASSERT_LESS_OR_EQUAL(from, to);
       ASSERT_LESS_OR_EQUAL(to, size());

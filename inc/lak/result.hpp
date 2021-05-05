@@ -367,7 +367,7 @@ namespace lak
 
     OK &&unwrap() && { return lak::forward<OK>(expect("unwrap failed")); }
 
-    /* --- unwrap_Err --- */
+    /* --- unwrap_err --- */
 
     err_type &unwrap_err() & { return expect_err("unwrap_err failed"); }
 

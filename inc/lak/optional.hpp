@@ -98,7 +98,7 @@ namespace lak
       reset();
       _value.create(lak::forward<U>(other));
       _has_value = true;
-      return _value;
+      return _value.value();
     }
 
     void reset()
