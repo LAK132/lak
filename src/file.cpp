@@ -51,7 +51,9 @@ bool lak::save_file(const lak::fs::path &path, lak::span<const uint8_t> data)
   std::ofstream file(path, std::ios::binary | std::ios::out | std::ios::trunc);
   if (!file.is_open()) return false;
   file.write(reinterpret_cast<const char *>(data.data()), data.size());
-  return true;
+  if (!file.good()) return false;
+  file.close();
+  return !file.fail();
 }
 
 bool lak::save_file(const lak::fs::path &path,
