@@ -32,7 +32,7 @@ namespace lak
 
     void clear();
 
-    lak::u8string str();
+    lak::string<LAK_DEBUG_STREAM_CHAR> str();
 
     [[noreturn]] void abort();
 
