@@ -365,7 +365,7 @@ bool operator!=(lak::span<const T> a, lak::span<const T> b)
 /* --- lak::span<T, SIZE> --- */
 
 template<typename T, size_t SIZE>
-inline constexpr auto lak::span<T, SIZE>::to_string() const
+inline auto lak::span<T, SIZE>::to_string() const
 {
   return lak::string<lak::remove_const_t<T>>(begin(), end());
 }
@@ -373,7 +373,7 @@ inline constexpr auto lak::span<T, SIZE>::to_string() const
 /* --- lak::span<T, lak::dynamic_extent> --- */
 
 template<typename T>
-inline constexpr auto lak::span<T, lak::dynamic_extent>::to_string() const
+inline auto lak::span<T, lak::dynamic_extent>::to_string() const
 {
   return lak::string<lak::remove_const_t<T>>(begin(), end());
 }
@@ -387,7 +387,7 @@ inline constexpr auto lak::span<T, lak::dynamic_extent>::to_string() const
 /* --- lak::span<T, SIZE> --- */
 
 template<typename T, size_t SIZE>
-inline constexpr auto lak::span<T, SIZE>::stringify() const
+inline auto lak::span<T, SIZE>::stringify() const
 {
   lak::u8string result = lak::as_u8string("{").to_string();
   for (const auto &element : *this)
@@ -401,7 +401,7 @@ inline constexpr auto lak::span<T, SIZE>::stringify() const
 /* --- lak::span<T, lak::dynamic_extent> --- */
 
 template<typename T>
-inline constexpr auto lak::span<T, lak::dynamic_extent>::stringify() const
+inline auto lak::span<T, lak::dynamic_extent>::stringify() const
 {
   lak::u8string result = lak::as_u8string("{").to_string();
   for (const auto &element : *this)

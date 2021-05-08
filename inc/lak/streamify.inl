@@ -3,6 +3,9 @@
 #include "lak/type_traits.hpp"
 #include "lak/unicode.hpp"
 
+// clang hack
+#include "lak/errno_result.hpp"
+
 template<typename CHAR, typename... ARGS>
 lak::string<CHAR> lak::streamify(const ARGS &... args)
 {

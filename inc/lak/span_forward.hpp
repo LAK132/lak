@@ -135,8 +135,8 @@ namespace lak
     inline ASSERT_CONSTEXPR span<T, lak::dynamic_extent> last(
       size_t count) const;
 
-    inline constexpr auto to_string() const;
-    inline constexpr auto stringify() const;
+    inline auto to_string() const;
+    inline auto stringify() const;
   };
 
   template<size_t SIZE>
@@ -357,8 +357,8 @@ namespace lak
     inline ASSERT_CONSTEXPR span<T, lak::dynamic_extent> last(
       size_t count) const;
 
-    inline constexpr auto to_string() const;
-    inline constexpr auto stringify() const;
+    inline auto to_string() const;
+    inline auto stringify() const;
   };
 
   template<>
