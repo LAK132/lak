@@ -5,6 +5,7 @@
 #include "lak/type_traits.hpp"
 
 #ifndef LAK_NO_STD
+#  include <memory>
 #  include <utility>
 #endif
 
@@ -137,7 +138,7 @@ namespace lak
   template<typename T>
   force_inline constexpr T *as_ptr(lak::remove_refs_ptrs<T> &p)
   {
-    std::addressof(p);
+    lak::addressof(p);
   }
 
 #ifndef LAK_NO_STD
