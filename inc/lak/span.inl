@@ -217,11 +217,40 @@ lak::span<const void, lak::dynamic_extent>::size_bytes() const noexcept
 /* --- helper functions --- */
 
 template<typename T>
+constexpr T *lak::find_first(lak::span<T> s, const T &v)
+{
+  for (auto it = s.begin(); it != s.end(); ++it)
+    if (*it == v) return it;
+  return s.end();
+}
+
+template<typename T>
 constexpr bool lak::contains(lak::span<const T> s, const T &v)
 {
-  for (const auto &e : s)
-    if (e == v) return true;
-  return false;
+  return lak::find_first<const T>(s, v) != s.end();
+}
+
+template<typename T>
+lak::pair<lak::span<T>, lak::span<T>> lak::split_before(lak::span<T> s,
+                                                        const T &v)
+{
+  return lak::split(s, lak::find_first<T>(s, v));
+}
+
+template<typename T>
+lak::pair<lak::span<T>, lak::span<T>> lak::split_after(lak::span<T> s,
+                                                       const T &v)
+{
+  if (auto at = lak::find_first(s, v); at != s.end())
+    return lak::split(s, at + 1);
+  else
+    return {s.first(0), s};
+}
+
+template<typename T>
+void lak::fill(lak::span<T> span, const T &value)
+{
+  for (auto &v : span) v = value;
 }
 
 template<typename T>

@@ -543,15 +543,34 @@ namespace lak
 
   /* --- helper functions --- */
 
+  // return s.end() if v is not found
+  template<typename T>
+  constexpr T *find_first(lak::span<T> s, const T &v);
+
   template<typename T>
   constexpr bool contains(lak::span<const T> s, const T &v);
 
   template<typename T>
   lak::pair<lak::span<T>, lak::span<T>> split(lak::span<T> s, T *at);
+
   template<typename T, lak::enable_if_i<!lak::is_const_v<T>> = 0>
   lak::pair<lak::span<T>, lak::span<T>> split(lak::span<T> s, const T *at);
+
   template<typename T>
   lak::pair<lak::span<T>, lak::span<T>> split(lak::span<T> s, size_t at);
+
+  // {s, s.last(0)} if s does not contain a v
+  template<typename T>
+  lak::pair<lak::span<T>, lak::span<T>> split_before(lak::span<T> s,
+                                                     const T &v);
+
+  // {s.first(0), s} if s does not contain a v
+  template<typename T>
+  lak::pair<lak::span<T>, lak::span<T>> split_after(lak::span<T> s,
+                                                    const T &v);
+
+  template<typename T>
+  void fill(lak::span<T> span, const T &value);
 
   // Find the subspan of source that is equal to sub.
   template<typename T>

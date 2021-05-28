@@ -7,6 +7,10 @@
 #include "lak/span.hpp"
 #include "lak/stdint.hpp"
 
+#ifndef LAK_NO_STD
+#  include <initializer_list>
+#endif
+
 namespace lak
 {
   constexpr size_t sum(lak::span<const size_t> sizes)
@@ -58,6 +62,21 @@ namespace lak
     : bitset(init.template first<sizeof...(SIZE)>())
     {
     }
+
+    constexpr bitset(lak::array<const UINT, sizeof...(SIZE)> init)
+    : bitset(lak::span<const UINT, sizeof...(SIZE)>(init))
+    {
+    }
+
+#ifndef LAK_NO_STD
+#  ifdef LAK_COMPILER_CPP20
+    constexpr
+#  endif
+      bitset(std::initializer_list<UINT> init)
+    : bitset(lak::span<const UINT>(init.begin(), init.end()))
+    {
+    }
+#endif
 
     template<size_t INDEX>
     constexpr UINT get() const

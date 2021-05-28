@@ -1,35 +1,36 @@
 #include "lak/trie.hpp"
 
-#include <iostream>
+#include "lak/test.hpp"
 
-int main()
+BEGIN_TEST(trie)
 {
   lak::atrie<lak::astring> trie;
 
   trie.try_emplace("", "first");
   trie.try_emplace("i", "second");
-  std::cout << trie << "\n\n";
+  DEBUG(trie);
 
   trie.try_emplace("j", "second2");
-  std::cout << trie << "\n\n";
+  DEBUG(trie);
 
   trie.try_emplace("int", "third");
-  std::cout << trie << "\n\n";
+  DEBUG(trie);
 
   trie.try_emplace("intint", "fourth");
-  std::cout << trie << "\n\n";
+  DEBUG(trie);
 
   trie.try_emplace("l", "fifth");
-  std::cout << trie << "\n\n";
+  DEBUG(trie);
 
   trie["long long"].value() = "seventh";
-  std::cout << trie << "\n\n";
+  DEBUG(trie);
 
   trie.try_emplace("long", "sixth");
-  std::cout << trie << "\n\n";
+  DEBUG(trie);
 
   trie.force_emplace("long", "eighth");
-  std::cout << trie << "\n\n";
+  DEBUG(trie);
 
   return 0;
 }
+END_TEST()

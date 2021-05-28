@@ -33,6 +33,8 @@ namespace lak
     // Find the node for key.
     trie *find(const lak::string<CHAR> &key);
     const trie *find(const lak::string<CHAR> &key) const;
+    trie *find(lak::span<const CHAR> key);
+    const trie *find(lak::span<const CHAR> key) const;
 
     // Find the node for key, or create one.
     trie &find_or_emplace(const lak::string<CHAR> &key);
