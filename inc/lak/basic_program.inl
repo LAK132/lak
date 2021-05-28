@@ -25,7 +25,7 @@
 #endif
 
 // Implement these basic_window_* functions in your program.
-void basic_window_preinit(int argc, char **argv);
+lak::optional<int> basic_window_preinit(int argc, char **argv);
 void basic_window_init(lak::window &window);
 void basic_window_handle_event(lak::window &window, lak::event &event);
 void basic_window_loop(lak::window &window, uint64_t counter_delta);
@@ -129,7 +129,7 @@ int main(int argc, char **argv)
 
   /* --- Window initialisation --- */
 
-  basic_window_preinit(argc, argv);
+  if (auto v = basic_window_preinit(argc, argv); v) return *v;
 
   auto instance = lak::platform_init();
   DEFER(lak::platform_quit(&instance));
