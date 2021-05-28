@@ -41,7 +41,7 @@ lak::span<void> lak::page_reserve(size_t size, size_t *page_size_out)
   const size_t page_size = lak::page_size();
   if (page_size_out) *page_size_out = page_size;
   // round size to the nearest page size
-  size = page_size * ((size % page_size > 1 ? 1 : 0) + (size / page_size));
+  size = page_size * ((size % page_size > 0 ? 1 : 0) + (size / page_size));
 
 #if defined(LAK_OS_WINDOWS)
   result = VirtualAlloc(nullptr, size, MEM_RESERVE, PAGE_READWRITE);
