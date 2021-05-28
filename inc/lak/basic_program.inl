@@ -32,6 +32,7 @@ void basic_window_loop(lak::window &window, uint64_t counter_delta);
 int basic_window_quit(lak::window &window);
 uint32_t basic_window_target_framerate = 60;
 bool basic_window_force_software       = false;
+lak::vec2l_t basic_window_start_size   = {1200, 700};
 lak::opengl_settings basic_window_opengl_settings;
 lak::software_settings basic_window_software_settings;
 
@@ -140,7 +141,7 @@ int main(int argc, char **argv)
       // Attempt to open an OpenGL window first.
       auto window = lak::window(instance, basic_window_opengl_settings);
       window.set_title(L"" APP_NAME);
-      window.set_size({720, 480});
+      window.set_size(basic_window_start_size);
 
       if (window.graphics() == lak::graphics_mode::OpenGL)
       {
@@ -163,7 +164,7 @@ int main(int argc, char **argv)
       // Fall back to software window if OpenGL fails to open.
       auto window = lak::window(instance, basic_window_software_settings);
       window.set_title(L"" APP_NAME);
-      window.set_size({720, 480});
+      window.set_size(basic_window_start_size);
 
       if (window.graphics() == lak::graphics_mode::Software)
       {
