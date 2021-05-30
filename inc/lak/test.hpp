@@ -13,7 +13,8 @@ namespace lak
   [[nodiscard]] bool register_test(const lak::astring &test_name,
                                    int (*test_function)());
 
-#define BEGIN_TEST(NAME) static bool UNIQUIFY(TEST_##NAME) = lak::register_test(#NAME, []() -> int
+#define BEGIN_TEST(NAME)                                                      \
+  const static bool UNIQUIFY(TEST_##NAME) = lak::register_test(#NAME, []()->int
 #define END_TEST() );
 }
 
