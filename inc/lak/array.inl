@@ -91,6 +91,12 @@ void lak::array<T, lak::dynamic_extent>::commit(size_t new_size)
 }
 
 template<typename T>
+lak::array<T, lak::dynamic_extent>::array(size_t initial_size) : array()
+{
+  resize(initial_size);
+}
+
+template<typename T>
 lak::array<T, lak::dynamic_extent>::array(
   array<T, lak::dynamic_extent> &&other)
 : _data(other._data),

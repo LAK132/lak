@@ -91,6 +91,8 @@ namespace lak
     array(array &&other);
     array &operator=(array &&other);
 
+    array(size_t initial_size);
+
     array(std::initializer_list<T> list);
 
     template<typename ITER>
