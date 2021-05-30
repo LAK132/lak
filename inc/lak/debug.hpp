@@ -158,66 +158,81 @@
   {                                                                           \
     FATAL("Behaviour not yet implemented");                                   \
   }
-#define ASSERT_EQUAL(x, y)                                                    \
+#define ASSERT_EQUAL(X, Y)                                                    \
   {                                                                           \
+    const auto &x = (X);                                                      \
+    const auto &y = (Y);                                                      \
     if (!((x) == (y)))                                                        \
     {                                                                         \
       FATAL(                                                                  \
-        "Assertion '" STRINGIFY(x == y) "' failed: '", x, "' != '", y, "'");  \
+        "Assertion '" STRINGIFY(X == Y) "' failed: '", x, "' != '", y, "'");  \
     }                                                                         \
   }
-#define ASSERT_NOT_EQUAL(x, y)                                                \
+#define ASSERT_NOT_EQUAL(X, Y)                                                \
   {                                                                           \
+    const auto &x = (X);                                                      \
+    const auto &y = (Y);                                                      \
     if (!((x) != (y)))                                                        \
     {                                                                         \
       FATAL(                                                                  \
-        "Assertion '" STRINGIFY(x != y) "' failed: '", x, "' == '", y, "'");  \
+        "Assertion '" STRINGIFY(X != Y) "' failed: '", x, "' == '", y, "'");  \
     }                                                                         \
   }
-#define ASSERT_GREATER(x, y)                                                  \
+#define ASSERT_GREATER(X, Y)                                                  \
   {                                                                           \
+    const auto &x = (X);                                                      \
+    const auto &y = (Y);                                                      \
     if (!((x) > (y)))                                                         \
     {                                                                         \
       FATAL(                                                                  \
-        "Assertion '" STRINGIFY(x > y) "' failed: '", x, "' <= '", y, "'");   \
+        "Assertion '" STRINGIFY(X > Y) "' failed: '", x, "' <= '", y, "'");   \
     }                                                                         \
   }
-#define ASSERT_GREATER_OR_EQUAL(x, y)                                         \
+#define ASSERT_GREATER_OR_EQUAL(X, Y)                                         \
   {                                                                           \
+    const auto &x = (X);                                                      \
+    const auto &y = (Y);                                                      \
     if (!((x) >= (y)))                                                        \
     {                                                                         \
       FATAL(                                                                  \
-        "Assertion '" STRINGIFY(x >= y) "' failed: '", x, "' < '", y, "'");   \
+        "Assertion '" STRINGIFY(X >= Y) "' failed: '", x, "' < '", y, "'");   \
     }                                                                         \
   }
-#define ASSERT_LESS(x, y)                                                     \
+#define ASSERT_LESS(X, Y)                                                     \
   {                                                                           \
+    const auto &x = (X);                                                      \
+    const auto &y = (Y);                                                      \
     if (!((x) < (y)))                                                         \
     {                                                                         \
       FATAL(                                                                  \
-        "Assertion '" STRINGIFY(x < y) "' failed: '", x, "' >= '", y, "'");   \
+        "Assertion '" STRINGIFY(X < Y) "' failed: '", x, "' >= '", y, "'");   \
     }                                                                         \
   }
-#define ASSERT_LESS_OR_EQUAL(x, y)                                            \
+#define ASSERT_LESS_OR_EQUAL(X, Y)                                            \
   {                                                                           \
+    const auto &x = (X);                                                      \
+    const auto &y = (Y);                                                      \
     if (!((x) <= (y)))                                                        \
     {                                                                         \
       FATAL(                                                                  \
-        "Assertion '" STRINGIFY(x <= y) "' failed: '", x, "' > '", y, "'");   \
+        "Assertion '" STRINGIFY(X <= Y) "' failed: '", x, "' > '", y, "'");   \
     }                                                                         \
   }
-#define ASSERTF(x, str)                                                       \
+#define ASSERTF(X, str)                                                       \
   {                                                                           \
+    const auto &x = (X);                                                      \
     if (!(x))                                                                 \
     {                                                                         \
-      FATAL("Assertion '" STRINGIFY(x) "' failed: ", TO_U8STRING(str));       \
+      FATAL("Assertion '" STRINGIFY(X) "' failed: ", TO_U8STRING(str));       \
     }                                                                         \
   }
-#define ASSERTF_EQUAL(x, y, str)                                              \
+#define ASSERTF_EQUAL(X, Y, str)                                              \
   {                                                                           \
+    const auto &x = (X);                                                      \
+    const auto &y = (Y);                                                      \
     if (!((x) == (y)))                                                        \
     {                                                                         \
-      FATAL("Assertion '" STRINGIFY(x == y) "' failed: '",                    \
+      FATAL("Assertion '" STRINGIFY(X == Y) "' failed: '",                    \
             x,                                                                \
             "' != '",                                                         \
             y,                                                                \
@@ -225,11 +240,13 @@
             TO_U8STRING(str));                                                \
     }                                                                         \
   }
-#define ASSERTF_NOT_EQUAL(x, y, str)                                          \
+#define ASSERTF_NOT_EQUAL(X, Y, str)                                          \
   {                                                                           \
+    const auto &x = (X);                                                      \
+    const auto &y = (Y);                                                      \
     if (!((x) != (y)))                                                        \
     {                                                                         \
-      FATAL("Assertion '" STRINGIFY(x != y) "' failed: '",                    \
+      FATAL("Assertion '" STRINGIFY(X != Y) "' failed: '",                    \
             x,                                                                \
             "' == '",                                                         \
             y,                                                                \
@@ -237,11 +254,13 @@
             TO_U8STRING(str));                                                \
     }                                                                         \
   }
-#define ASSERTF_GREATER(x, y, str)                                            \
+#define ASSERTF_GREATER(X, Y, str)                                            \
   {                                                                           \
+    const auto &x = (X);                                                      \
+    const auto &y = (Y);                                                      \
     if (!((x) > (y)))                                                         \
     {                                                                         \
-      FATAL("Assertion '" STRINGIFY(x > y) "' failed: '",                     \
+      FATAL("Assertion '" STRINGIFY(X > Y) "' failed: '",                     \
             x,                                                                \
             "' <= '",                                                         \
             y,                                                                \
@@ -249,11 +268,13 @@
             TO_U8STRING(str));                                                \
     }                                                                         \
   }
-#define ASSERTF_GREATER_OR_EQUAL(x, y, str)                                   \
+#define ASSERTF_GREATER_OR_EQUAL(X, Y, str)                                   \
   {                                                                           \
+    const auto &x = (X);                                                      \
+    const auto &y = (Y);                                                      \
     if (!((x) >= (y)))                                                        \
     {                                                                         \
-      FATAL("Assertion '" STRINGIFY(x >= y) "' failed: '",                    \
+      FATAL("Assertion '" STRINGIFY(X >= Y) "' failed: '",                    \
             x,                                                                \
             "' < '",                                                          \
             y,                                                                \
@@ -261,11 +282,13 @@
             TO_U8STRING(str));                                                \
     }                                                                         \
   }
-#define ASSERTF_LESS(x, y, str)                                               \
+#define ASSERTF_LESS(X, Y, str)                                               \
   {                                                                           \
+    const auto &x = (X);                                                      \
+    const auto &y = (Y);                                                      \
     if (!((x) < (y)))                                                         \
     {                                                                         \
-      FATAL("Assertion '" STRINGIFY(x < y) "' failed: '",                     \
+      FATAL("Assertion '" STRINGIFY(X < Y) "' failed: '",                     \
             x,                                                                \
             "' >= '",                                                         \
             y,                                                                \
@@ -273,11 +296,13 @@
             TO_U8STRING(str));                                                \
     }                                                                         \
   }
-#define ASSERTF_LESS_OR_EQUAL(x, y, str)                                      \
+#define ASSERTF_LESS_OR_EQUAL(X, Y, str)                                      \
   {                                                                           \
+    const auto &x = (X);                                                      \
+    const auto &y = (Y);                                                      \
     if (!((x) <= (y)))                                                        \
     {                                                                         \
-      FATAL("Assertion '" STRINGIFY(x <= y) "' failed: '",                    \
+      FATAL("Assertion '" STRINGIFY(X <= Y) "' failed: '",                    \
             x,                                                                \
             "' > '",                                                          \
             y,                                                                \
