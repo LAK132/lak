@@ -491,12 +491,12 @@ namespace lak
   };
 
 #ifndef LAK_NO_STD
-  using vector_memory = simple_memory<std::vector>;
+  using vector_memory = lak::simple_memory<std::vector>;
 #endif
-  using array_memory = simple_memory<lak::dynamic_array>;
-  using span_memory  = simple_memory<lak::dynamic_span>;
+  using array_memory = lak::simple_memory<lak::dynamic_array>;
+  using span_memory  = lak::simple_memory<lak::dynamic_span>;
 
-  using memory = vector_memory;
+  using memory = lak::vector_memory;
 }
 
 #endif // LAK_MEMORY_HPP
