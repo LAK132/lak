@@ -22,10 +22,10 @@ namespace lak
   };
 
   lak::result<lak::memory, lak::lz4_decode_error> decode_lz4_block(
-    lak::memory &strm, size_t output_size);
+    lak::span_memory &strm, size_t output_size);
 
   inline lak::result<lak::memory, lak::lz4_decode_error> decode_lz4_block(
-    lak::memory &&strm, size_t output_size)
+    lak::span_memory &&strm, size_t output_size)
   {
     return decode_lz4_block(strm, output_size);
   }

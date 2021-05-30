@@ -1,7 +1,7 @@
 #include "lak/compression/lz4.hpp"
 
 lak::result<lak::memory, lak::lz4_decode_error> lak::decode_lz4_block(
-  lak::memory &strm, size_t output_size)
+  lak::span_memory &strm, size_t output_size)
 {
   lak::memory output = lak::memory(std::vector<uint8_t>(output_size));
 
