@@ -328,3 +328,18 @@ T *lak::array<T, lak::dynamic_extent>::erase(const T *first, const T *last)
 
   return begin() + index;
 }
+
+template<typename T, size_t S>
+bool operator==(const lak::array<T, S> &a, const lak::array<T, S> &b)
+{
+  if (a.size() != b.size()) return false;
+  for (size_t i = 0; i < a.size(); ++i)
+    if (a[i] != b[i]) return false;
+  return true;
+}
+
+template<typename T, size_t S>
+bool operator!=(const lak::array<T, S> &a, const lak::array<T, S> &b)
+{
+  return !(a == b);
+}

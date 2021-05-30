@@ -152,6 +152,12 @@ namespace lak
   using dynamic_array = lak::array<T, lak::dynamic_extent>;
 }
 
+template<typename T, size_t S>
+bool operator==(const lak::array<T, S> &a, const lak::array<T, S> &b);
+
+template<typename T, size_t S>
+bool operator!=(const lak::array<T, S> &a, const lak::array<T, S> &b);
+
 #include "lak/array.inl"
 
 #endif
