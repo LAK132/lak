@@ -576,8 +576,8 @@ namespace lak
 #  define UNWRAP()     unwrap()
 #  define UNWRAP_ERR() unwrap_err()
 
-#  define IF_OK(...)
-#  define IF_ERR(...)
+#  define IF_OK(...)  if_ok([](...) {})
+#  define IF_ERR(...) if_err([](...) {})
 #endif
 
 #define RES_TRY(...)                                                          \
