@@ -60,7 +60,6 @@ namespace lak
 inline lak::deflate_iterator &lak::deflate_iterator::fail(error_t reason)
 {
   ASSERT(reason != error_t::ok);
-  if (reason != error_t::out_of_data) DEBUG_BREAK();
   _crc   = ~_icrc & 0xFFFF'FFFFUL;
   _value = value_type::make_err(reason);
   return *this;
