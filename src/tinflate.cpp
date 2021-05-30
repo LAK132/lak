@@ -103,23 +103,38 @@ namespace tinf
                    decompression_state_t &state,
                    uint32_t *crc)
   {
-    auto &buffer = *output;
-    if (buffer.empty()) buffer.resize(0x100);
+    auto &buffer  = *output;
+    uint8_t *head = buffer.data() + buffer.size();
 
-    auto *head = buffer.data();
+    auto double_size = [&]() {
+      size_t offset = head - buffer.data();
+      buffer.resize(buffer.size() * 2);
+      head = buffer.data() + offset;
+    };
+
+    if (buffer.empty())
+    {
+      buffer.resize(0x100);
+      head = buffer.data();
+    }
+    else
+    {
+      double_size();
+    }
 
     error_t err = error_t::OK;
-    while (err == error_t::OK && !state.final)
+    while (err == error_t::OK &&
+           (state.state != tinf::state_t::HEADER || !state.final))
     {
       err = tinflate(compressed, lak::span(buffer), &head, state, crc);
       while (err == tinf::error_t::OUTPUT_FULL)
       {
-        size_t offset = head - buffer.data();
-        buffer.resize(buffer.size() * 2);
-        head = buffer.data() + offset;
-        err  = tinflate(compressed, lak::span(buffer), &head, state, crc);
+        double_size();
+        err = tinflate(compressed, lak::span(buffer), &head, state, crc);
       }
     }
+
+    buffer.resize(head - buffer.data());
 
     return err;
   }
@@ -147,7 +162,7 @@ namespace tinf
     {
       error_t res = tinflate_block(output, head, state);
       if (res != error_t::OK) return res;
-    } while (!state.final);
+    } while (state.state != tinf::state_t::HEADER || !state.final);
 
     if (crc) *crc = state.crc;
 
@@ -239,8 +254,10 @@ namespace tinf
         if (state.anaconda)
         {
           if (state.get_bits(4, &state.block_type)) return out_of_data();
+
           state.final = state.block_type >> 3;
           state.block_type &= 0x7;
+
           if (state.block_type == 7)
             state.block_type = 0;
           else if (state.block_type == 5)
