@@ -501,6 +501,9 @@ namespace lak
       return lak::move(result).unsafe_unwrap_err();
   }
 
+  template<typename OK>
+  using maybe = lak::result<OK, lak::monostate>;
+
   template<typename OK, typename... ERR>
   using results = lak::result<OK, lak::variant<ERR...>>;
 
