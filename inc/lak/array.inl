@@ -202,6 +202,7 @@ void lak::array<T, lak::dynamic_extent>::reserve(size_t new_capacity)
 
   _data     = static_cast<T *>(new_buffer.data());
   _reserved = new_buffer.size();
+  ASSERT(_data);
   ASSERT_GREATER_OR_EQUAL(_reserved, _committed);
 }
 
