@@ -79,24 +79,24 @@ namespace tinf
     bool final         = false;
     bool anaconda      = false;
 
-    uint8_t first_byte;
-    uint8_t block_type;
-    uint32_t counter;
-    uint32_t symbol;
-    uint32_t last_value;
-    uint32_t repeat_length;
-    uint32_t repeat_count;
-    uint32_t distance;
+    uint8_t first_byte     = 0;
+    uint8_t block_type     = 0;
+    uint32_t counter       = 0;
+    uint32_t symbol        = 0;
+    uint32_t last_value    = 0;
+    uint32_t repeat_length = 0;
+    uint32_t repeat_count  = 0;
+    uint32_t distance      = 0;
 
-    uint32_t len;
-    uint32_t ilen;
-    uint32_t nread;
+    uint32_t len   = 0;
+    uint32_t ilen  = 0;
+    uint32_t nread = 0;
 
     int16_t literal_table[0x23E]; // (288 * 2) - 2
     int16_t distance_table[0x3E]; // (32 * 2) - 2
-    uint32_t literal_count;
-    uint32_t distance_count;
-    uint32_t codelen_count;
+    uint32_t literal_count  = 0;
+    uint32_t distance_count = 0;
+    uint32_t codelen_count  = 0;
     int16_t codelen_table[0x24]; // (19 * 2) - 2
     uint8_t literal_len[0x120];  // 288
     uint8_t distance_len[0x20];  // 32
