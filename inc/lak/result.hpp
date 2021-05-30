@@ -472,6 +472,35 @@ namespace lak
     void discard() const {}
   };
 
+  /* --- ok_or_err --- */
+
+  template<typename T>
+  T &ok_or_err(lak::result<T, T> &result)
+  {
+    if (result.is_ok())
+      return result.unsafe_unwrap();
+    else
+      return result.unsafe_unwrap_err();
+  }
+
+  template<typename T>
+  const T &ok_or_err(const lak::result<T, T> &result)
+  {
+    if (result.is_ok())
+      return result.unsafe_unwrap();
+    else
+      return result.unsafe_unwrap_err();
+  }
+
+  template<typename T>
+  T &&ok_or_err(lak::result<T, T> &&result)
+  {
+    if (result.is_ok())
+      return lak::move(result).unsafe_unwrap();
+    else
+      return lak::move(result).unsafe_unwrap_err();
+  }
+
   template<typename OK, typename... ERR>
   using results = lak::result<OK, lak::variant<ERR...>>;
 
