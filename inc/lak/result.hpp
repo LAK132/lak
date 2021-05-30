@@ -316,21 +316,21 @@ namespace lak
     /* --- expect --- */
 
     template<typename STR>
-    ok_type &expect(STR && error_str) &
+    ok_type &expect(const STR &error_str) &
     {
       if (is_err()) ABORTF(error_str, ": ", get_err());
       return get_ok();
     }
 
     template<typename STR>
-    const ok_type &expect(STR && error_str) const &
+    const ok_type &expect(const STR &error_str) const &
     {
       if (is_err()) ABORTF(error_str, ": ", get_err());
       return get_ok();
     }
 
     template<typename STR>
-    OK &&expect(STR && error_str) &&
+    OK &&expect(const STR &error_str) &&
     {
       if (is_err()) ABORTF(error_str, ": ", get_err());
       return forward_ok();
@@ -339,21 +339,21 @@ namespace lak
     /* --- expect_err --- */
 
     template<typename STR>
-    err_type &expect_err(STR && error_str) &
+    err_type &expect_err(const STR &error_str) &
     {
       if (is_ok()) ABORTF(error_str /*, ": ", get_ok()*/);
       return get_err();
     }
 
     template<typename STR>
-    const err_type &expect_err(STR && error_str) const &
+    const err_type &expect_err(const STR &error_str) const &
     {
       if (is_ok()) ABORTF(error_str /*, ": ", get_ok()*/);
       return get_err();
     }
 
     template<typename STR>
-    ERR &&expect_err(STR && error_str) &&
+    ERR &&expect_err(const STR &error_str) &&
     {
       if (is_ok()) ABORTF(error_str /*, ": ", get_ok()*/);
       return forward_err();
