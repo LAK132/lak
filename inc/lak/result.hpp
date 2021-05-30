@@ -558,7 +558,7 @@ namespace lak
   {
   };
 
-#if !defined(NOLOG) && !defined(NDEBUG)
+#ifndef NDEBUG
 #  define EXPECT(...)                                                         \
     expect(lak::streamify<char8_t>(LINE_TRACE_STR ": ", __VA_ARGS__))
 #  define EXPECT_ERR(...)                                                     \
@@ -566,19 +566,16 @@ namespace lak
 
 #  define UNWRAP()     expect(LINE_TRACE_STR ": unwrap failed")
 #  define UNWRAP_ERR() expect_err(LINE_TRACE_STR ": unwrap_err failed")
-
-#  define IF_OK(...)  if_ok([&](const auto &val) { DEBUG(__VA_ARGS__, val); })
-#  define IF_ERR(...) if_err([&](const auto &err) { ERROR(__VA_ARGS__, err); })
 #else
 #  define EXPECT(...)     expect(lak::streamify<char8_t>(__VA_ARGS__))
 #  define EXPECT_ERR(...) expect_err(lak::streamify<char8_t>(__VA_ARGS__))
 
 #  define UNWRAP()     unwrap()
 #  define UNWRAP_ERR() unwrap_err()
-
-#  define IF_OK(...)  if_ok([](...) {})
-#  define IF_ERR(...) if_err([](...) {})
 #endif
+
+#define IF_OK(...)  if_ok([&](const auto &val) { DEBUG(__VA_ARGS__, val); })
+#define IF_ERR(...) if_err([&](const auto &err) { ERROR(__VA_ARGS__, err); })
 
 #define RES_TRY(...)                                                          \
   auto UNIQUIFY(RESULT_) = __VA_ARGS__;                                       \
