@@ -418,7 +418,6 @@ inline lak::deflate_iterator &lak::deflate_iterator::step()
                   .is_err())
               return fail(error_t::out_of_data);
             _distance += 1 + ((2 + (_symbol & 1)) << distance_bits);
-            if (_distance > _output_buffer.size()) DEBUG_BREAK();
           }
           else
           {
