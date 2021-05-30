@@ -318,21 +318,51 @@ namespace lak
     template<typename STR>
     ok_type &expect(const STR &error_str) &
     {
-      if (is_err()) ABORTF(error_str, ": ", get_err());
+      if (is_err())
+      {
+        if constexpr (lak::is_same_v<ERR, lak::monostate>)
+        {
+          ABORTF(error_str);
+        }
+        else
+        {
+          ABORTF(error_str, ": ", get_err());
+        }
+      }
       return get_ok();
     }
 
     template<typename STR>
     const ok_type &expect(const STR &error_str) const &
     {
-      if (is_err()) ABORTF(error_str, ": ", get_err());
+      if (is_err())
+      {
+        if constexpr (lak::is_same_v<ERR, lak::monostate>)
+        {
+          ABORTF(error_str);
+        }
+        else
+        {
+          ABORTF(error_str, ": ", get_err());
+        }
+      }
       return get_ok();
     }
 
     template<typename STR>
     OK &&expect(const STR &error_str) &&
     {
-      if (is_err()) ABORTF(error_str, ": ", get_err());
+      if (is_err())
+      {
+        if constexpr (lak::is_same_v<ERR, lak::monostate>)
+        {
+          ABORTF(error_str);
+        }
+        else
+        {
+          ABORTF(error_str, ": ", get_err());
+        }
+      }
       return forward_ok();
     }
 
