@@ -54,7 +54,7 @@ namespace lak
     container_t _data;
     size_t _cursor = 0;
 
-    void _write(size_t s)
+    void prepare_write(size_t s)
     {
       if constexpr (lak::is_resizable_v<container_t>)
       {
@@ -305,7 +305,7 @@ namespace lak
     template<typename T>
     simple_memory &write_ne(T t)
     {
-      _write(sizeof(T));
+      prepare_write(sizeof(T));
       *reinterpret_cast<T *>(cursor()) = t;
       _cursor += sizeof(T);
       return *this;
@@ -313,7 +313,7 @@ namespace lak
     template<typename T>
     simple_memory &write_le(T t)
     {
-      _write(sizeof(T));
+      prepare_write(sizeof(T));
       for (size_t i = 0; i < sizeof(T); ++i)
       {
         *cursor() = (t >> i) & 0xFFU;
@@ -325,7 +325,7 @@ namespace lak
     template<typename T>
     simple_memory &write_be(T t)
     {
-      _write(sizeof(T));
+      prepare_write(sizeof(T));
       for (size_t i = sizeof(T); i-- > 0;)
       {
         *cursor() = (t >> i) & 0xFFU;
@@ -336,7 +336,7 @@ namespace lak
     }
     inline simple_memory &write(lak::span<const uint8_t> bytes)
     {
-      _write(bytes.size());
+      prepare_write(bytes.size());
       lak::copy(bytes.begin(), bytes.end(), cursor());
       _cursor += bytes.size();
       return *this;
