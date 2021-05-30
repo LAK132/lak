@@ -97,6 +97,12 @@ namespace lak
       return *this;
     }
 
+    container_t &&release()
+    {
+      _cursor = 0;
+      return lak::move(_data);
+    }
+
     void clear()
     {
       _data   = container_t{};
