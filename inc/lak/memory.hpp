@@ -338,6 +338,7 @@ namespace lak
     {
       _write(bytes.size());
       lak::copy(bytes.begin(), bytes.end(), cursor());
+      _cursor += bytes.size();
       return *this;
     }
     template<typename T>
