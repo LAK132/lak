@@ -72,6 +72,10 @@ namespace lak
               case CHAR('U'): it = str.insert(it, CHAR('Y')) + 1; break;
             }
           break;
+
+        case CHAR('!'):
+          *it = CHAR(',');
+          it  = str.insert(str.insert(it + 1, CHAR(',')) + 1, CHAR(','));
       }
     }
     return str;
