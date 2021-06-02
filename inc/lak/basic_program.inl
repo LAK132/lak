@@ -33,6 +33,7 @@ int basic_window_quit(lak::window &window);
 uint32_t basic_window_target_framerate = 60;
 bool basic_window_force_software       = false;
 lak::vec2l_t basic_window_start_size   = {1200, 700};
+lak::vec4f_t basic_window_clear_colour = {0.0f, 0.3125f, 0.312f, 1.0f};
 lak::opengl_settings basic_window_opengl_settings;
 lak::software_settings basic_window_software_settings;
 
@@ -146,7 +147,10 @@ int main(int argc, char **argv)
       if (window.graphics() == lak::graphics_mode::OpenGL)
       {
         glViewport(0, 0, window.drawable_size().x, window.drawable_size().y);
-        glClearColor(0.0f, 0.3125f, 0.3125f, 1.0f);
+        glClearColor(basic_window_clear_colour.r,
+                     basic_window_clear_colour.g,
+                     basic_window_clear_colour.b,
+                     basic_window_clear_colour.a);
         glEnable(GL_DEPTH_TEST);
 
 #ifndef NDEBUG
