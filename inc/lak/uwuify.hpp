@@ -23,14 +23,14 @@ namespace lak
           it = str.insert(str.insert(it + 1, CHAR('w')) + 1, CHAR('o'));
           break;
         case CHAR('O'):
-          it = str.insert(str.insert(it + 1, CHAR('W')) + 1, CHAR('O'));
+          it = str.insert(str.insert(it + 1, CHAR('w')) + 1, CHAR('O'));
           break;
 
         case CHAR('u'):
           it = str.insert(str.insert(it + 1, CHAR('w')) + 1, CHAR('u'));
           break;
         case CHAR('U'):
-          it = str.insert(str.insert(it + 1, CHAR('W')) + 1, CHAR('U'));
+          it = str.insert(str.insert(it + 1, CHAR('w')) + 1, CHAR('U'));
           break;
 
         case CHAR('t'):
