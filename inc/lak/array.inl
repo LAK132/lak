@@ -88,6 +88,8 @@ void lak::array<T, lak::dynamic_extent>::commit(size_t new_size)
     _committed = new_size_bytes;
     ASSERT(lak::page_commit(lak::span<void>(_data, _committed)));
   }
+  if (new_size != 0) ASSERT(_data != nullptr);
+  ASSERT_GREATER_OR_EQUAL(_committed, new_size);
 }
 
 template<typename T>
@@ -164,7 +166,8 @@ void lak::array<T, lak::dynamic_extent>::resize(size_t new_size)
 template<typename T>
 void lak::array<T, lak::dynamic_extent>::clear()
 {
-  while (_size-- > 0) _data[_size].~T();
+  for (auto &e : *this) e.~T();
+  _size = 0;
 }
 
 template<typename T>
@@ -172,7 +175,11 @@ void lak::array<T, lak::dynamic_extent>::reserve(size_t new_capacity)
 {
   size_t new_capacity_bytes = new_capacity * sizeof(T);
 
-  if (new_capacity_bytes <= _reserved) return;
+  if (new_capacity_bytes <= _reserved)
+  {
+    if (new_capacity_bytes != 0) ASSERT(_data != nullptr);
+    return;
+  }
 
   if (new_capacity_bytes < _reserved * 2)
   {
@@ -248,28 +255,28 @@ const T &lak::array<T, lak::dynamic_extent>::operator[](size_t index) const
 template<typename T>
 T &lak::array<T, lak::dynamic_extent>::front()
 {
-  ASSERT_GREATER(_size, 0);
+  ASSERT_GREATER(_size, 0U);
   return _data[0];
 }
 
 template<typename T>
 const T &lak::array<T, lak::dynamic_extent>::front() const
 {
-  ASSERT_GREATER(_size, 0);
+  ASSERT_GREATER(_size, 0U);
   return _data[0];
 }
 
 template<typename T>
 T &lak::array<T, lak::dynamic_extent>::back()
 {
-  ASSERT_GREATER(_size, 0);
+  ASSERT_GREATER(_size, 0U);
   return _data[_size - 1];
 }
 
 template<typename T>
 const T &lak::array<T, lak::dynamic_extent>::back() const
 {
-  ASSERT_GREATER(_size, 0);
+  ASSERT_GREATER(_size, 0U);
   return _data[_size - 1];
 }
 
@@ -304,6 +311,7 @@ T &lak::array<T, lak::dynamic_extent>::push_back(T &&t)
 template<typename T>
 void lak::array<T, lak::dynamic_extent>::pop_back()
 {
+  ASSERT_GREATER(_size, 0U);
   _data[--_size].~T();
 }
 
