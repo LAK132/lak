@@ -590,6 +590,102 @@ namespace lak
   static_assert(lak::is_same_v<lak::remove_refs_ptrs_t<const volatile int &&>,
                                const volatile int>);
 
+  /* --- add_wconst --- */
+
+  // west-const
+
+  template<typename T>
+  struct add_wconst : lak::type_identity<const T>
+  {
+  };
+
+  template<typename T>
+  struct add_wconst<T *> : lak::type_identity<const T *>
+  {
+  };
+
+  template<typename T>
+  struct add_wconst<T &> : lak::type_identity<const T &>
+  {
+  };
+
+  template<typename T>
+  struct add_wconst<T &&> : lak::type_identity<const T &&>
+  {
+  };
+
+  template<typename T>
+  using add_wconst_t = typename lak::add_wconst<T>::type;
+
+  static_assert(lak::is_same_v<lak::add_wconst_t<int>, const int>);
+  static_assert(lak::is_same_v<lak::add_wconst_t<const int>, const int>);
+  static_assert(
+    lak::is_same_v<lak::add_wconst_t<volatile int>, const volatile int>);
+  static_assert(
+    lak::is_same_v<lak::add_wconst_t<const volatile int>, const volatile int>);
+
+  static_assert(lak::is_same_v<lak::add_wconst_t<int *>, const int *>);
+  static_assert(lak::is_same_v<lak::add_wconst_t<const int *>, const int *>);
+  static_assert(
+    lak::is_same_v<lak::add_wconst_t<volatile int *>, const volatile int *>);
+  static_assert(lak::is_same_v<lak::add_wconst_t<const volatile int *>,
+                               const volatile int *>);
+
+  static_assert(lak::is_same_v<lak::add_wconst_t<int &>, const int &>);
+  static_assert(lak::is_same_v<lak::add_wconst_t<const int &>, const int &>);
+  static_assert(
+    lak::is_same_v<lak::add_wconst_t<volatile int &>, const volatile int &>);
+  static_assert(lak::is_same_v<lak::add_wconst_t<const volatile int &>,
+                               const volatile int &>);
+
+  static_assert(lak::is_same_v<lak::add_wconst_t<int &&>, const int &&>);
+  static_assert(lak::is_same_v<lak::add_wconst_t<const int &&>, const int &&>);
+  static_assert(
+    lak::is_same_v<lak::add_wconst_t<volatile int &&>, const volatile int &&>);
+  static_assert(lak::is_same_v<lak::add_wconst_t<const volatile int &&>,
+                               const volatile int &&>);
+
+  /* --- add_econst --- */
+
+  // east-const
+
+  template<typename T>
+  struct add_econst : lak::type_identity<T const>
+  {
+  };
+
+  template<typename T>
+  using add_econst_t = typename lak::add_econst<T>::type;
+
+  static_assert(lak::is_same_v<lak::add_econst_t<int>, const int>);
+  static_assert(lak::is_same_v<lak::add_econst_t<const int>, const int>);
+  static_assert(
+    lak::is_same_v<lak::add_econst_t<volatile int>, const volatile int>);
+  static_assert(
+    lak::is_same_v<lak::add_econst_t<const volatile int>, const volatile int>);
+
+  static_assert(lak::is_same_v<lak::add_econst_t<int *>, int *const>);
+  static_assert(
+    lak::is_same_v<lak::add_econst_t<const int *>, const int *const>);
+  static_assert(
+    lak::is_same_v<lak::add_econst_t<volatile int *>, volatile int *const>);
+  static_assert(lak::is_same_v<lak::add_econst_t<const volatile int *>,
+                               const volatile int *const>);
+
+  static_assert(lak::is_same_v<lak::add_econst_t<int &>, int &>);
+  static_assert(lak::is_same_v<lak::add_econst_t<const int &>, const int &>);
+  static_assert(
+    lak::is_same_v<lak::add_econst_t<volatile int &>, volatile int &>);
+  static_assert(lak::is_same_v<lak::add_econst_t<const volatile int &>,
+                               const volatile int &>);
+
+  static_assert(lak::is_same_v<lak::add_econst_t<int &&>, int &&>);
+  static_assert(lak::is_same_v<lak::add_econst_t<const int &&>, const int &&>);
+  static_assert(
+    lak::is_same_v<lak::add_econst_t<volatile int &&>, volatile int &&>);
+  static_assert(lak::is_same_v<lak::add_econst_t<const volatile int &&>,
+                               const volatile int &&>);
+
   /* --- add_lvalue_reference --- */
 
   template<typename T>
