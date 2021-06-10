@@ -383,7 +383,7 @@ bool lak::set_window_cursor_pos(const lak::platform_instance &instance,
   ASSERT(pos.x < INT_MAX && pos.x > INT_MIN);
   ASSERT(pos.y < INT_MAX && pos.y > INT_MIN);
   POINT relative = {(int)pos.x, (int)pos.y};
-  return ::ClientToScreen(handle->platform_handle(), &relative) &&
+  return ::ClientToScreen(handle->_platform_handle, &relative) &&
          ::SetCursorPos(relative.x, relative.y);
 }
 

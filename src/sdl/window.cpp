@@ -215,7 +215,7 @@ lak::wstring lak::window_title(const lak::platform_instance &instance,
                                const lak::window_handle *handle)
 {
   return lak::to_wstring(
-    lak::as_u8string(SDL_GetWindowTitle(handle->platform_handle())));
+    lak::as_u8string(SDL_GetWindowTitle(handle->_platform_handle)));
 }
 
 bool lak::set_window_title(const lak::platform_instance &instance,
@@ -223,7 +223,7 @@ bool lak::set_window_title(const lak::platform_instance &instance,
                            const lak::wstring &str)
 {
   SDL_SetWindowTitle(
-    handle->platform_handle(),
+    handle->_platform_handle,
     reinterpret_cast<const char *>(lak::to_u8string(str).c_str()));
   return true;
 }
@@ -243,7 +243,7 @@ bool lak::set_window_cursor_pos(const lak::platform_instance &instance,
   ASSERT(pos.x < INT_MAX && pos.x > INT_MIN);
   ASSERT(pos.y < INT_MAX && pos.y > INT_MIN);
   // :TODO: clamp instead of cast
-  SDL_WarpMouseInWindow(handle->platform_handle(), (int)pos.x, (int)pos.y);
+  SDL_WarpMouseInWindow(handle->_platform_handle, (int)pos.x, (int)pos.y);
   return true;
 }
 
@@ -279,7 +279,7 @@ bool lak::set_window_size(const lak::platform_instance &instance,
   ASSERT_GREATER(std::numeric_limits<int>::max(), size.x);
   ASSERT_GREATER(std::numeric_limits<int>::max(), size.y);
 
-  SDL_SetWindowSize(handle->platform_handle(),
+  SDL_SetWindowSize(handle->_platform_handle,
                     static_cast<int>(size.x),
                     static_cast<int>(size.y));
   return true;

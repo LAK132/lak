@@ -127,21 +127,19 @@ namespace lak
   struct window_handle
   {
 #if defined(LAK_USE_WINAPI)
-    using platform_handle_t = HWND;
-    HWND _platform_handle   = NULL;
-    HDC _device_context     = NULL;
+    HWND _platform_handle = NULL;
+    HDC _device_context   = NULL;
 #elif defined(LAK_USE_XLIB)
-    using platform_handle_t  = Window *;
     Window *_platform_handle = NULL;
 #elif defined(LAK_USE_XCB)
-    using platform_handle_t       = xcb_window_t;
     xcb_window_t _platform_handle = NULL;
 #elif defined(LAK_USE_SDL)
-    using platform_handle_t       = SDL_Window *;
     SDL_Window *_platform_handle  = NULL;
 #else
 #  error "No implementation specified"
 #endif
+
+    using platform_handle_t = decltype(_platform_handle);
 
     const lak::platform_instance *_instance = nullptr;
 
@@ -166,7 +164,7 @@ namespace lak
                  lak::vulkan_context>
       _context;
 
-    const platform_handle_t platform_handle() const
+    lak::add_wconst_t<platform_handle_t> platform_handle() const
     {
       return _platform_handle;
     }
@@ -362,7 +360,8 @@ namespace lak
 
 #include <ostream>
 
-static std::ostream &operator<<(std::ostream &strm, lak::graphics_mode mode)
+[[maybe_unused]] static std::ostream &operator<<(std::ostream &strm,
+                                                 lak::graphics_mode mode)
 {
   switch (mode)
   {
