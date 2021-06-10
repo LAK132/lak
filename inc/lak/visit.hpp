@@ -44,6 +44,26 @@ namespace lak
   */
   template<typename VAR, typename FUNCTOR>
   auto visit(VAR &&variant, FUNCTOR &&functor);
+
+  /*
+
+  Example:
+
+  lak::variant<char, int> my_variant;
+
+  lak::visit(my_variant, overloaded {
+    [](char value) { },
+    [](int value) { },
+  });
+
+  */
+  template<class... Ts>
+  struct overloaded : Ts...
+  {
+    using Ts::operator()...;
+  };
+  template<class... Ts>
+  overloaded(Ts...) -> overloaded<Ts...>;
 }
 
 #include "lak/visit.inl"
