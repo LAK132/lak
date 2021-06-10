@@ -420,20 +420,30 @@ lak::shared_bank_ptr<T> &lak::shared_bank_ptr<T>::operator=(std::nullptr_t)
 template<typename T>
 lak::shared_bank_ptr<T>::shared_bank_ptr(const shared_bank_ptr &other)
 {
-  std::lock_guard lock(bank<T>::_mutex);
-  unique_bank_ptr<T>::_index = other._index;
-  unique_bank_ptr<T>::_value = other._value;
-  ++_reference_count[unique_bank_ptr<T>::_index];
+  if (other)
+  {
+    std::lock_guard lock(bank<T>::_mutex);
+    unique_bank_ptr<T>::_index = other._index;
+    unique_bank_ptr<T>::_value = other._value;
+    ++_reference_count[unique_bank_ptr<T>::_index];
+  }
+  else
+    reset();
 };
 
 template<typename T>
 lak::shared_bank_ptr<T> &lak::shared_bank_ptr<T>::operator=(
   const shared_bank_ptr &other)
 {
-  std::lock_guard lock(bank<T>::_mutex);
-  unique_bank_ptr<T>::_index = other._index;
-  unique_bank_ptr<T>::_value = other._value;
-  ++_reference_count[unique_bank_ptr<T>::_index];
+  if (other)
+  {
+    std::lock_guard lock(bank<T>::_mutex);
+    unique_bank_ptr<T>::_index = other._index;
+    unique_bank_ptr<T>::_value = other._value;
+    ++_reference_count[unique_bank_ptr<T>::_index];
+  }
+  else
+    reset();
   return *this;
 };
 
@@ -441,20 +451,30 @@ template<typename T>
 lak::shared_bank_ptr<T>::shared_bank_ptr(unique_bank_ptr<T> &&other)
 : unique_bank_ptr<T>()
 {
-  std::lock_guard lock(bank<T>::_mutex);
-  std::swap(unique_bank_ptr<T>::_index, other._index);
-  std::swap(unique_bank_ptr<T>::_value, other._value);
-  ++_reference_count[unique_bank_ptr<T>::_index];
+  if (other)
+  {
+    std::lock_guard lock(bank<T>::_mutex);
+    std::swap(unique_bank_ptr<T>::_index, other._index);
+    std::swap(unique_bank_ptr<T>::_value, other._value);
+    ++_reference_count[unique_bank_ptr<T>::_index];
+  }
+  else
+    reset();
 };
 
 template<typename T>
 lak::shared_bank_ptr<T> &lak::shared_bank_ptr<T>::operator=(
   unique_bank_ptr<T> &&other)
 {
-  std::lock_guard lock(bank<T>::_mutex);
-  std::swap(unique_bank_ptr<T>::_index, other._index);
-  std::swap(unique_bank_ptr<T>::_value, other._value);
-  ++_reference_count[unique_bank_ptr<T>::_index];
+  if (other)
+  {
+    std::lock_guard lock(bank<T>::_mutex);
+    std::swap(unique_bank_ptr<T>::_index, other._index);
+    std::swap(unique_bank_ptr<T>::_value, other._value);
+    ++_reference_count[unique_bank_ptr<T>::_index];
+  }
+  else
+    reset();
   return *this;
 };
 
