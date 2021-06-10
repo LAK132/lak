@@ -24,9 +24,13 @@ lak::string<CHAR> lak::streamify(const ARGS &... args)
   [[maybe_unused]] auto streamer = [&strm](const auto &arg) {
     using arg_t = lak::remove_cvref_t<decltype(arg)>;
 
-    if constexpr ((std::is_integral_v<arg_t> &&
-                   !std::is_same_v<arg_t, char>) ||
-                  std::is_enum_v<arg_t>)
+    if constexpr (lak::is_same_v<arg_t, bool>)
+    {
+      strm << (arg ? "true" : "false");
+    }
+    else if constexpr ((std::is_integral_v<arg_t> &&
+                        !std::is_same_v<arg_t, char>) ||
+                       std::is_enum_v<arg_t>)
     {
       // :TODO: work out if it's possible to check if there is a stream
       // operator overloaded for arg_t enums.
