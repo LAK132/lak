@@ -8,12 +8,14 @@
 using char8_t = uint_least8_t;
 #endif
 
-#if WCHAR_MAX > 0xFFFFU
+#if WCHAR_MAX == 0x7FFFFFFF || WCHAR_MAX == 0xFFFFFFFF
 using wchar_unicode_t = char32_t;
-#elif WCHAR_MAX > 0xFFU
+#elif WCHAR_MAX == 0x7FFF || WCHAR_MAX == 0xFFFF
 using wchar_unicode_t = char16_t;
-#else
+#elif WCHAR_MAX == 0x7F || WCHAR_MAX == 0xFF
 using wchar_unicode_t = char8_t;
+#else
+#  error "Unsupported WCHAR_MAX"
 #endif
 
 // (char_t, prefix, arguments)

@@ -213,8 +213,7 @@ inline constexpr lak::span<const char32_t> lak::control_codes()
 
 inline constexpr bool lak::is_control_code(char32_t c)
 {
-  return (c >= U'\u0000' && c <= U'\u001F') ||
-         (c >= U'\u007F' && c <= U'\u009F');
+  return (c <= U'\u001F') || (c >= U'\u007F' && c <= U'\u009F');
 }
 
 inline constexpr lak::span<const char32_t> lak::whitespaces()
