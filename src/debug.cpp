@@ -130,8 +130,8 @@ lak::string<LAK_DEBUG_STREAM_CHAR> lak::debugger_t::str()
 
 void lak::debugger_t::abort()
 {
+  std::cerr << "Something went wrong!\n" << std::flush;
   DEBUG_BREAK();
-  std::cerr << "Something went wrong!\n";
 #ifndef LAK_NO_FILESYSTEM
   if (!crash_path.empty())
     std::cerr
