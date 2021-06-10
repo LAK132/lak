@@ -103,7 +103,7 @@ T &lak::lifetime_view<T>::push_back(T &&t)
 template<typename T>
 void lak::lifetime_view<T>::pop_back()
 {
-  ASSERT_GREATER(_constructed, 0);
+  ASSERT_GREATER(_constructed, 0U);
   --_constructed;
   lak::destroy_at(end());
 }
