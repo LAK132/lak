@@ -231,7 +231,7 @@ namespace lak
       static constexpr uint8_t size      = 0;
       static constexpr uint8_t max_value = 0x00U;
 
-      LAK_COLOUR_DEFAULTS(channel0, true)
+      LAK_COLOUR_DEFAULTS(channel0, ((void)rhs, true))
 
       force_inline channel0(uint8_t V) : _v(V & max_value) {}
       template<typename CHANNEL,
