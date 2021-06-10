@@ -72,8 +72,8 @@ namespace lak
     constexpr size_t capacity() const { return 1; }
     [[nodiscard]] constexpr bool empty() const { return false; }
 
-    constexpr T &operator[](size_t index) { return _value; }
-    constexpr const T &operator[](size_t index) const { return _value; }
+    constexpr T &operator[](size_t) { return _value; }
+    constexpr const T &operator[](size_t) const { return _value; }
   };
 }
 
