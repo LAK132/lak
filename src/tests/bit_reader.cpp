@@ -1,13 +1,13 @@
-#include "lak/bitreader.hpp"
+#include "lak/bit_reader.hpp"
 #include "lak/span.hpp"
 
 #include "lak/test.hpp"
 
-BEGIN_TEST(bitreader)
+BEGIN_TEST(bit_reader)
 {
   auto data = lak::span<const uint8_t>(lak::string_view("ABCD "));
 
-  lak::bitreader reader;
+  lak::bit_reader reader;
 
   ASSERT(reader.empty());
 

@@ -4,7 +4,7 @@
 #define LAK_COMPRESSION_DEFLATE_HPP
 
 #include "lak/array.hpp"
-#include "lak/bitreader.hpp"
+#include "lak/bit_reader.hpp"
 #include "lak/buffer_span.hpp"
 #include "lak/result.hpp"
 #include "lak/span.hpp"
@@ -65,7 +65,7 @@ namespace lak
     using value_type = lak::result<uint8_t, error_t>;
     value_type _value;
 
-    lak::bitreader _compressed;
+    lak::bit_reader _compressed;
     lak::buffer_span<uint8_t, 0x8000> _output_buffer;
 
     state_t _state = state_t::out_of_data;

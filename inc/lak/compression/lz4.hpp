@@ -2,7 +2,6 @@
 #define LAK_COMPRESSION_LZ4_HPP
 
 #include "lak/array.hpp"
-#include "lak/bitreader.hpp"
 #include "lak/buffer_span.hpp"
 #include "lak/result.hpp"
 #include "lak/span.hpp"

@@ -1,13 +1,13 @@
-#ifndef LAK_BITREADER_HPP
-#define LAK_BITREADER_HPP
+#ifndef LAK_BIT_READER_HPP
+#define LAK_BIT_READER_HPP
 
-#include "lak/memory.hpp"
+#include "lak/binary_reader.hpp"
 #include "lak/result.hpp"
 #include "lak/span.hpp"
 
 namespace lak
 {
-  struct bitreader
+  struct bit_reader
   {
   private:
     lak::span<const uint8_t> _data;
@@ -19,13 +19,13 @@ namespace lak
     inline void flush_bits(const uint8_t bits);
 
   public:
-    bitreader() = default;
+    bit_reader() = default;
 
-    bitreader(const bitreader &) = default;
+    bit_reader(const bit_reader &) = default;
 
-    bitreader &operator=(const bitreader &) = default;
+    bit_reader &operator=(const bit_reader &) = default;
 
-    inline bitreader(lak::span<const uint8_t> data) : _data(data) {}
+    inline bit_reader(lak::span<const uint8_t> data) : _data(data) {}
 
     inline lak::span<const uint8_t> get() const { return _data; }
 
@@ -67,6 +67,6 @@ namespace lak
   };
 }
 
-#include "lak/bitreader.inl"
+#include "lak/bit_reader.inl"
 
 #endif
