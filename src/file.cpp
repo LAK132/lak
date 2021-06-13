@@ -25,7 +25,7 @@
 #include <fstream>
 #include <iostream>
 
-lak::errno_result<std::vector<uint8_t>> lak::read_file(
+lak::errno_result<lak::array<uint8_t>> lak::read_file(
   const lak::fs::path &path)
 {
   std::ifstream file(path, std::ios::binary | std::ios::ate);
@@ -38,7 +38,7 @@ lak::errno_result<std::vector<uint8_t>> lak::read_file(
   file.seekg(0);
   if (file.fail()) return lak::err_t{lak::errno_error::last_error()};
 
-  auto result = std::vector<uint8_t>(file_size);
+  auto result = lak::array<uint8_t>(file_size);
 
   file.read(reinterpret_cast<char *>(result.data()), result.size());
   if (file.fail()) return lak::err_t{lak::errno_error::last_error()};
@@ -54,12 +54,6 @@ bool lak::save_file(const lak::fs::path &path, lak::span<const uint8_t> data)
   if (!file.good()) return false;
   file.close();
   return !file.fail();
-}
-
-bool lak::save_file(const lak::fs::path &path,
-                    const std::vector<uint8_t> &data)
-{
-  return lak::save_file(path, lak::span(data));
 }
 
 bool lak::save_file(const lak::fs::path &path, const lak::astring &string)

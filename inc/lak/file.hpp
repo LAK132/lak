@@ -3,23 +3,20 @@
 
 #ifndef LAK_NO_FILESYSTEM
 
+#  include "lak/array.hpp"
 #  include "lak/errno_result.hpp"
 #  include "lak/string.hpp"
 
 #  include <filesystem>
 #  include <system_error>
-#  include <tuple>
-#  include <vector>
 
 namespace lak
 {
   namespace fs = std::filesystem;
 
-  lak::errno_result<std::vector<uint8_t>> read_file(const fs::path &path);
+  lak::errno_result<lak::array<uint8_t>> read_file(const fs::path &path);
 
   bool save_file(const fs::path &path, lak::span<const uint8_t> data);
-
-  bool save_file(const fs::path &path, const std::vector<uint8_t> &data);
 
   bool save_file(const fs::path &path, const lak::astring &string);
   bool save_file(const fs::path &path, const lak::wstring &string);
