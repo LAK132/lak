@@ -169,15 +169,13 @@ inline lak::deflate_iterator &lak::deflate_iterator::step()
 
         while (_nread < _len)
         {
-          return lak::ok_or_err(
-            _compressed.read_byte()
-              .map([this](uintmax_t v) -> lak::deflate_iterator & {
-                ++_nread;
-                return success(v);
-              })
-              .map_err([this](...) -> lak::deflate_iterator & {
-                return fail(error_t::out_of_data);
-              }));
+          _compressed.read_byte()
+            .if_ok([this](uintmax_t v) {
+              ++_nread;
+              success(v);
+            })
+            .if_err([this](...) { fail(error_t::out_of_data); });
+          return *this;
         }
 
         return block_complete();
