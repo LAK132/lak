@@ -35,13 +35,17 @@
     getchar();                                                                \
   }
 
+#undef DEBUG_LINE_FILE
+#undef DEBUG_DEBUG_LINE_FILE
+#undef DEBUG_CHECKPOINT_LINE_FILE
 #undef CHECKPOINT
 #undef SCOPED_CHECKPOINT
-#undef DEBUG_LINE_FILE
+#undef FUNCTION_CHECKPOINT
 #undef DEBUG
 #if defined(NOLOG)
 #  define CHECKPOINT()
 #  define SCOPED_CHECKPOINT(...)
+#  define FUNCTION_CHECKPOINT(...)
 #  define DEBUG(...)
 #else
 #  if defined(LAK_NO_DEBUG_COLOURS)
@@ -52,14 +56,17 @@
 #  else
 #    define DEBUG_LINE_FILE LAK_FAINT "(" LINE_TRACE_STR ")" LAK_SGR_RESET
 #  endif
+#  define DEBUG_DEBUG_LINE_FILE      "DEBUG " DEBUG_LINE_FILE ": "
+#  define DEBUG_CHECKPOINT_LINE_FILE "CHECKPOINT " DEBUG_LINE_FILE
 #  define CHECKPOINT()                                                        \
-    lak::debugger.std_out(TO_U8STRING("CHECKPOINT" << DEBUG_LINE_FILE),       \
+    lak::debugger.std_out(TO_U8STRING(DEBUG_CHECKPOINT_LINE_FILE),            \
                           lak::to_u8string("\n"));
 #  define SCOPED_CHECKPOINT(...)                                              \
     lak::scoped_indenter UNIQUIFY(SCOPED_INDENTOR_)(                          \
       lak::streamify<char>(__VA_ARGS__, " " DEBUG_LINE_FILE));
+#  define FUNCTION_CHECKPOINT(...) SCOPED_CHECKPOINT("" __VA_ARGS__, __func__)
 #  define DEBUG(...)                                                          \
-    lak::debugger.std_out(TO_U8STRING("DEBUG" << DEBUG_LINE_FILE << ": "),    \
+    lak::debugger.std_out(TO_U8STRING(DEBUG_DEBUG_LINE_FILE),                 \
                           lak::streamify<char8_t>(__VA_ARGS__, "\n"));
 #endif
 
@@ -83,6 +90,9 @@
     ABORT();                                                                  \
   }
 
+#undef DEBUG_WARNING_LINE_FILE
+#undef DEBUG_ERROR_LINE_FILE
+#undef DEBUG_FATAL_LINE_FILE
 #undef WARNING
 #undef ERROR
 #undef FATAL
@@ -90,32 +100,26 @@
 #  define WARNING(...)
 #  define ERROR(...)
 #  define FATAL(...) ABORT()
-#elif defined(LAK_NO_DEBUG_COLOURS)
-#  define WARNING(...)                                                        \
-    lak::debugger.std_err(TO_U8STRING("WARNING" << DEBUG_LINE_FILE << ": "),  \
-                          lak::streamify<char8_t>(__VA_ARGS__, "\n"));
-#  define ERROR(...)                                                          \
-    lak::debugger.std_err(TO_U8STRING("ERROR" << DEBUG_LINE_FILE << ": "),    \
-                          lak::streamify<char8_t>(__VA_ARGS__, "\n"));
-#  define FATAL(...)                                                          \
-    ABORTF(TO_U8STRING("FATAL" << DEBUG_LINE_FILE << ": "), __VA_ARGS__)
 #else
+#  if defined(LAK_NO_DEBUG_COLOURS)
+#    define DEBUG_WARNING_LINE_FILE "WARNING " DEBUG_LINE_FILE ": "
+#    define DEBUG_ERROR_LINE_FILE   "ERROR " DEBUG_LINE_FILE ": "
+#    define DEBUG_FATAL_LINE_FILE   "FATAL " DEBUG_LINE_FILE ": "
+#  else
+#    define DEBUG_WARNING_LINE_FILE                                           \
+      LAK_YELLOW LAK_BOLD "WARNING " LAK_SGR_RESET DEBUG_LINE_FILE ": "
+#    define DEBUG_ERROR_LINE_FILE                                             \
+      LAK_BRIGHT_RED LAK_BOLD "ERROR " LAK_SGR_RESET DEBUG_LINE_FILE ": "
+#    define DEBUG_FATAL_LINE_FILE                                             \
+      LAK_BRIGHT_RED LAK_BOLD "FATAL " LAK_SGR_RESET DEBUG_LINE_FILE ": "
+#  endif
 #  define WARNING(...)                                                        \
-    lak::debugger.std_err(                                                    \
-      TO_U8STRING(LAK_YELLOW LAK_BOLD "WARNING" LAK_SGR_RESET LAK_YELLOW      \
-                  << DEBUG_LINE_FILE << ": "),                                \
-      lak::streamify<char8_t>(__VA_ARGS__, "\n"));
+    lak::debugger.std_err(TO_U8STRING(DEBUG_WARNING_LINE_FILE),               \
+                          lak::streamify<char8_t>(__VA_ARGS__, "\n"));
 #  define ERROR(...)                                                          \
-    lak::debugger.std_err(                                                    \
-      TO_U8STRING(                                                            \
-        LAK_BRIGHT_RED LAK_BOLD "ERROR" LAK_SGR_RESET LAK_BRIGHT_RED          \
-        << DEBUG_LINE_FILE << ": "),                                          \
-      lak::streamify<char8_t>(__VA_ARGS__, "\n"));
-#  define FATAL(...)                                                          \
-    ABORTF(TO_U8STRING(                                                       \
-             LAK_BRIGHT_RED LAK_BOLD "FATAL" LAK_SGR_RESET LAK_BRIGHT_RED     \
-             << DEBUG_LINE_FILE << ": "),                                     \
-           __VA_ARGS__)
+    lak::debugger.std_err(TO_U8STRING(DEBUG_ERROR_LINE_FILE),                 \
+                          lak::streamify<char8_t>(__VA_ARGS__, "\n"));
+#  define FATAL(...) ABORTF(TO_U8STRING(DEBUG_FATAL_LINE_FILE), __VA_ARGS__)
 #endif
 
 #undef ASSERT

@@ -560,12 +560,12 @@ namespace lak
 
 #ifndef NDEBUG
 #  define EXPECT(...)                                                         \
-    expect(lak::streamify<char8_t>(LINE_TRACE_STR ": ", __VA_ARGS__))
+    expect(lak::streamify<char8_t>(DEBUG_FATAL_LINE_FILE, __VA_ARGS__))
 #  define EXPECT_ERR(...)                                                     \
-    expect_err(lak::streamify<char8_t>(LINE_TRACE_STR ": ", __VA_ARGS__))
+    expect_err(lak::streamify<char8_t>(DEBUG_FATAL_LINE_FILE, __VA_ARGS__))
 
-#  define UNWRAP()     expect(LINE_TRACE_STR ": unwrap failed")
-#  define UNWRAP_ERR() expect_err(LINE_TRACE_STR ": unwrap_err failed")
+#  define UNWRAP()     EXPECT("unwrap failed")
+#  define UNWRAP_ERR() EXPECT_ERR("unwrap_err failed")
 #else
 #  define EXPECT(...)     expect(lak::streamify<char8_t>(__VA_ARGS__))
 #  define EXPECT_ERR(...) expect_err(lak::streamify<char8_t>(__VA_ARGS__))
