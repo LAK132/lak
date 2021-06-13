@@ -22,20 +22,6 @@
 #undef WTO_U8STRING
 #define WTO_U8STRING(x) [&] { return lak::to_u8string(TO_WSTRING(x)); }()
 
-#undef TRY
-#undef CATCH
-#if defined(NDEBUG)
-#  define TRY      try
-#  define CATCH(X) catch (X)
-#else
-#  define TRY
-#  define CATCH(X)                                                            \
-    try                                                                       \
-    {                                                                         \
-    }                                                                         \
-    catch (X)
-#endif
-
 #undef PAUSE
 #undef PAUSEF
 #define PAUSE()                                                               \
