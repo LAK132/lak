@@ -10,14 +10,14 @@
 
 namespace lak
 {
-  template<typename T, bool PAGE_ALLOCATED = false>
+  template<typename T>
   struct image;
   template<typename T>
   struct image_view;
   template<typename T>
   struct image_subview;
 
-  template<typename T, bool PAGE_ALLOCATED>
+  template<typename T>
   struct image
   {
     using size_type  = vec2s_t;
@@ -32,8 +32,8 @@ namespace lak
     image(image &&img) : _size(img._size), _value(lak::move(img._value)) {}
     image &operator=(image &&img)
     {
-      _size  = img._size;
-      _value = lak::move(img._value);
+      lak::swap(_size, img._size);
+      lak::swap(_value, img._value);
     }
 
     value_type &at(const size_type index)
@@ -85,12 +85,23 @@ namespace lak
       for (auto &v : _value) v = value;
     }
 
+    template<lak::endian E = lak::endian::little>
+    static lak::result<image> from_bytes(lak::span<const uint8_t> bytes,
+                                         size_type size)
+    {
+      return lak::array_from_bytes<value_type, E>(bytes, size.x * size.y)
+        .map([&size](lak::array<value_type> &&data) -> image {
+          image result;
+          result._value = lak::move(data);
+          result._size  = size;
+          ASSERT_EQUAL(result._value.size(), result._size.x * result._size.y);
+          return result;
+        });
+    }
+
   private:
     size_type _size;
-    lak::conditional_t<PAGE_ALLOCATED,
-                       lak::array<value_type>,
-                       std::vector<value_type>>
-      _value;
+    lak::array<value_type> _value;
   };
 
   template<typename T>
@@ -122,10 +133,8 @@ namespace lak
       return *this;
     }
 
-    template<typename U,
-             bool PAGED,
-             lak::enable_if_i<lak::is_same_v<T, const U>> = 0>
-    image_view(const image<U, PAGED> &img)
+    template<typename U, lak::enable_if_i<lak::is_same_v<T, const U>> = 0>
+    image_view(const image<U> &img)
     : _value(lak::span(img.data(), img.contig_size())), _size(img.size())
     {
       ASSERT_GREATER_OR_EQUAL(_value.size_bytes(),
@@ -133,10 +142,8 @@ namespace lak
                                 _size.y);
     }
 
-    template<typename U,
-             bool PAGED,
-             lak::enable_if_i<lak::is_same_v<T, U>> = 0>
-    image_view(image<U, PAGED> &img)
+    template<typename U, lak::enable_if_i<lak::is_same_v<T, U>> = 0>
+    image_view(image<U> &img)
     : _value(lak::span(img.data(), img.contig_size())), _size(img.size())
     {
       ASSERT_GREATER_OR_EQUAL(_value.size_bytes(),
@@ -204,11 +211,11 @@ namespace lak
     uintptr_t _padding                           = 0;
   };
 
-  template<typename T, bool PAGED>
-  image_view(const image<T, PAGED> &) -> image_view<const T>;
+  template<typename T>
+  image_view(const image<T> &) -> image_view<const T>;
 
-  template<typename T, bool PAGED>
-  image_view(image<T, PAGED> &) -> image_view<T>;
+  template<typename T>
+  image_view(image<T> &) -> image_view<T>;
 
   template<typename T>
   image_view(lak::span<T>, lak::vec2s_t) -> image_view<T>;
@@ -245,18 +252,14 @@ namespace lak
       return *this;
     }
 
-    template<typename U,
-             bool PAGED,
-             lak::enable_if_i<lak::is_same_v<T, const U>> = 0>
-    image_subview(const image<U, PAGED> &img)
+    template<typename U, lak::enable_if_i<lak::is_same_v<T, const U>> = 0>
+    image_subview(const image<U> &img)
     : _value(img), _start({0, 0}), _size(img.size())
     {
     }
 
-    template<typename U,
-             bool PAGED,
-             lak::enable_if_i<lak::is_same_v<T, U>> = 0>
-    image_subview(image<U, PAGED> &img)
+    template<typename U, lak::enable_if_i<lak::is_same_v<T, U>> = 0>
+    image_subview(image<U> &img)
     : _value(img), _start({0, 0}), _size(img.size())
     {
     }
@@ -345,11 +348,11 @@ namespace lak
     size_type _size           = {0, 0};
   };
 
-  template<typename T, bool PAGED>
-  image_subview(const image<T, PAGED> &) -> image_subview<const T>;
+  template<typename T>
+  image_subview(const image<T> &) -> image_subview<const T>;
 
-  template<typename T, bool PAGED>
-  image_subview(image<T, PAGED> &) -> image_subview<T>;
+  template<typename T>
+  image_subview(image<T> &) -> image_subview<T>;
 
   template<typename T>
   image_subview(const image_view<T> &) -> image_subview<T>;
@@ -414,8 +417,7 @@ namespace lak
   }
 
 #define LAK_TEMPLATE_IMAGE_TYPEDEF(COLOUR, ...)                               \
-  template<bool PAGE_ALLOCATED = true>                                        \
-  using COLOUR##image         = image<lak::colour::COLOUR, PAGE_ALLOCATED>;   \
+  using COLOUR##image         = image<lak::colour::COLOUR>;                   \
   using COLOUR##image_view    = image_view<lak::colour::COLOUR>;              \
   using COLOUR##image_subview = image_subview<lak::colour::COLOUR>;
   LAK_FOREACH_COLOUR(LAK_TEMPLATE_IMAGE_TYPEDEF)
@@ -426,19 +428,17 @@ namespace lak
   [[maybe_unused]] static image3_t ImageFromRGB24(uint8_t *pixels,
                                                   vec2s_t size)
   {
-    image3_t result;
-    result.resize(size);
-    std::memcpy(&result[0].x, pixels, size.x * size.y * 3);
-    return result;
+    return image3_t::from_bytes(
+             lak::span<const uint8_t>(pixels, size.x * size.y * 3), size)
+      .unwrap();
   }
 
   [[maybe_unused]] static image4_t ImageFromRGBA32(uint8_t *pixels,
                                                    vec2s_t size)
   {
-    image4_t result;
-    result.resize(size);
-    std::memcpy(&result[0].x, pixels, size.x * size.y * 4);
-    return result;
+    return image4_t::from_bytes(
+             lak::span<const uint8_t>(pixels, size.x * size.y * 4), size)
+      .unwrap();
   }
 }
 
