@@ -21,6 +21,8 @@ namespace lak
     match_too_long,
   };
 
+  const char *lz4_error_name(lak::lz4_decode_error err);
+
   lak::result<lak::array<uint8_t>, lak::lz4_decode_error> decode_lz4_block(
     lak::binary_reader &strm, size_t output_size);
 
