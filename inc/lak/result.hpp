@@ -226,6 +226,8 @@ namespace lak
 
     /* --- and_then --- */
 
+    // and_then(func) ~= map(func).flatten()
+
     template<
       typename FUNCTOR,
       lak::enable_if_i<lak::is_same_v<
