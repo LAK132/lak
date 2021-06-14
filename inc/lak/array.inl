@@ -119,15 +119,11 @@ lak::array<T, lak::dynamic_extent>
 template<typename T>
 lak::array<T, lak::dynamic_extent>::array(
   array<T, lak::dynamic_extent> &&other)
-: _data(other._data),
-  _size(other._size),
-  _committed(other._committed),
-  _reserved(other._reserved)
+: _data(lak::exchange(other._data, nullptr)),
+  _size(lak::exchange(other._size, 0)),
+  _committed(lak::exchange(other._committed, 0)),
+  _reserved(lak::exchange(other._reserved, 0))
 {
-  other._data      = nullptr;
-  other._size      = 0;
-  other._committed = 0;
-  other._reserved  = 0;
 }
 
 template<typename T>
