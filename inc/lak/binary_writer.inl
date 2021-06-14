@@ -194,11 +194,8 @@ struct lak::to_bytes_traits<f32_t, E>
 
   static void to_bytes(lak::span<uint8_t, size> bytes, f32_t value)
   {
-    uint32_t other_value;
-    lak::memcpy(reinterpret_cast<char *>(&other_value),
-                reinterpret_cast<const char *>(&value),
-                size);
-    lak::to_bytes_traits<uint32_t, E>::to_bytes(bytes, other_value);
+    lak::to_bytes_traits<uint32_t, E>::to_bytes(
+      bytes, lak::bit_cast<uint32_t>(value));
   }
 };
 
@@ -212,11 +209,8 @@ struct lak::to_bytes_traits<f64_t, E>
 
   static void to_bytes(lak::span<uint8_t, size> bytes, f64_t value)
   {
-    uint64_t other_value;
-    lak::memcpy(reinterpret_cast<char *>(&other_value),
-                reinterpret_cast<const char *>(&value),
-                size);
-    lak::to_bytes_traits<uint64_t, E>::to_bytes(bytes, other_value);
+    lak::to_bytes_traits<uint64_t, E>::to_bytes(
+      bytes, lak::bit_cast<uint64_t>(value));
   }
 };
 

@@ -42,6 +42,14 @@ namespace lak
     lak::fill(lak::as_bytes(dst), char(0));
   }
 
+  template<typename TO, typename FROM>
+  TO bit_cast(const FROM &from)
+  {
+    TO result;
+    lak::memcpy(lak::as_bytes(&result), lak::as_bytes(&from));
+    return result;
+  }
+
   size_t page_size();
 
   size_t round_to_page_multiple(size_t size, size_t *page_size_out = nullptr);

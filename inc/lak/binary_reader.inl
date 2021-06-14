@@ -179,13 +179,8 @@ struct lak::from_bytes_traits<f32_t, E>
 
   static value_type from_bytes(lak::span<const uint8_t, size> bytes)
   {
-    uint32_t value = lak::from_bytes_traits<uint32_t, E>::from_bytes(bytes);
-    f32_t result;
-    lak::memcpy(reinterpret_cast<char *>(&result),
-                reinterpret_cast<const char *>(&value),
-                size);
-
-    return result;
+    return lak::bit_cast<f32_t>(
+      lak::from_bytes_traits<uint32_t, E>::from_bytes(bytes));
   }
 };
 
@@ -199,13 +194,8 @@ struct lak::from_bytes_traits<f64_t, E>
 
   static value_type from_bytes(lak::span<const uint8_t, size> bytes)
   {
-    uint64_t value = lak::from_bytes_traits<uint64_t, E>::from_bytes(bytes);
-    f64_t result;
-    lak::memcpy(reinterpret_cast<char *>(&result),
-                reinterpret_cast<const char *>(&value),
-                size);
-
-    return result;
+    return lak::bit_cast<f64_t>(
+      lak::from_bytes_traits<uint64_t, E>::from_bytes(bytes));
   }
 };
 
