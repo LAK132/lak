@@ -609,11 +609,11 @@ namespace lak
 
 // Check if the data pointed to by the spans compare equal (not that the spans
 // point to the exact same data).
-template<typename T>
-bool operator==(lak::span<const T> a, lak::span<const T> b);
+template<typename T, size_t S1, typename U, size_t S2>
+bool operator==(lak::span<T, S1> a, lak::span<U, S2> b);
 
-template<typename T>
-bool operator!=(lak::span<const T> a, lak::span<const T> b);
+template<typename T, size_t S1, typename U, size_t S2>
+bool operator!=(lak::span<T, S1> a, lak::span<U, S2> b);
 
 #undef ASSERT_CONSTEXPR
 

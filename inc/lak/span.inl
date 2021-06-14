@@ -371,8 +371,8 @@ bool lak::same_span(lak::span<const T> a, lak::span<const T> b)
   return a.data() == b.data() && a.size() == b.size();
 }
 
-template<typename T>
-bool operator==(lak::span<const T> a, lak::span<const T> b)
+template<typename T, size_t S1, typename U, size_t S2>
+bool operator==(lak::span<T, S1> a, lak::span<U, S2> b)
 {
   if (a.size() != b.size()) return false;
   for (size_t i = 0; i < a.size(); ++i)
@@ -380,8 +380,8 @@ bool operator==(lak::span<const T> a, lak::span<const T> b)
   return true;
 }
 
-template<typename T>
-bool operator!=(lak::span<const T> a, lak::span<const T> b)
+template<typename T, size_t S1, typename U, size_t S2>
+bool operator!=(lak::span<T, S1> a, lak::span<U, S2> b)
 {
   return !(a == b);
 }
