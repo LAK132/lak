@@ -84,9 +84,9 @@ namespace lak
     using iterator        = T *;
     using const_iterator  = const T *;
 
-    array()              = default;
-    array(const array &) = default;
-    array &operator=(const array &) = default;
+    array() = default;
+    array(const array &);
+    array &operator=(const array &);
 
     array(array &&other);
     array &operator=(array &&other);

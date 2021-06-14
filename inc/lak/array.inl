@@ -100,6 +100,24 @@ lak::array<T, lak::dynamic_extent>::array(size_t initial_size) : array()
 
 template<typename T>
 lak::array<T, lak::dynamic_extent>::array(
+  const array<T, lak::dynamic_extent> &other)
+{
+  operator=(other);
+}
+
+template<typename T>
+lak::array<T, lak::dynamic_extent>
+  &lak::array<T, lak::dynamic_extent>::operator=(
+    const array<T, lak::dynamic_extent> &other)
+{
+  clear();
+  reserve(other.size());
+  for (const auto &e : other) push_back(e);
+  return *this;
+}
+
+template<typename T>
+lak::array<T, lak::dynamic_extent>::array(
   array<T, lak::dynamic_extent> &&other)
 : _data(other._data),
   _size(other._size),

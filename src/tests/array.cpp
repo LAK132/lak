@@ -26,6 +26,28 @@ BEGIN_TEST(array)
     DEBUG(i);
   }
 
+  {
+    lak::array<int> array3;
+    array3.resize(0x30);
+    array3[10] = 40;
+
+    ASSERT_EQUAL(array3.size(), 0x30);
+    ASSERT_EQUAL(array3[10], 40);
+
+    array2 = array3; // test copying.
+
+    ASSERT_NOT_EQUAL(array2.data(), array3.data());
+
+    ASSERT_EQUAL(array3.size(), 0x30);
+    ASSERT_EQUAL(array3[10], 40);
+
+    ASSERT_EQUAL(array2.size(), 0x30);
+    ASSERT_EQUAL(array2[10], 40);
+  }
+
+  ASSERT_EQUAL(array2.size(), 0x30);
+  ASSERT_EQUAL(array2[10], 40);
+
   return 0;
 }
 END_TEST()
