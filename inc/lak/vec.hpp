@@ -26,6 +26,7 @@
 #  endif
 #endif
 
+#include "lak/binary_reader.hpp"
 #include "lak/stdint.hpp"
 
 #include <cstddef>
@@ -1076,5 +1077,53 @@ std::ostream &operator<<(std::ostream &strm, const lak::vec4<T> &rhs)
   return strm << "(" << rhs.x << " " << rhs.y << " " << rhs.z << " " << rhs.w
               << ")";
 }
+
+template<typename T, lak::endian E>
+struct lak::from_bytes_traits<lak::vec2<T>, E>
+{
+  using value_type             = lak::vec2<T>;
+  static constexpr size_t size = lak::from_bytes_size_v<T, E> * 2;
+
+  static value_type from_bytes(lak::span<const uint8_t, size> bytes)
+  {
+    constexpr size_t element_size = lak::from_bytes_size_v<T, E>;
+    return value_type(
+      lak::from_bytes<T, E>(bytes.first<element_size>()),
+      lak::from_bytes<T, E>(bytes.subspan<element_size, element_size>()));
+  }
+};
+
+template<typename T, lak::endian E>
+struct lak::from_bytes_traits<lak::vec3<T>, E>
+{
+  using value_type             = lak::vec3<T>;
+  static constexpr size_t size = lak::from_bytes_size_v<T, E> * 3;
+
+  static value_type from_bytes(lak::span<const uint8_t, size> bytes)
+  {
+    constexpr size_t element_size = lak::from_bytes_size_v<T, E>;
+    return value_type(
+      lak::from_bytes<T, E>(bytes.first<element_size>()),
+      lak::from_bytes<T, E>(bytes.subspan<element_size, element_size>()),
+      lak::from_bytes<T, E>(bytes.subspan<element_size * 2, element_size>()));
+  }
+};
+
+template<typename T, lak::endian E>
+struct lak::from_bytes_traits<lak::vec4<T>, E>
+{
+  using value_type             = lak::vec4<T>;
+  static constexpr size_t size = lak::from_bytes_size_v<T, E> * 4;
+
+  static value_type from_bytes(lak::span<const uint8_t, size> bytes)
+  {
+    constexpr size_t element_size = lak::from_bytes_size_v<T, E>;
+    return value_type(
+      lak::from_bytes<T, E>(bytes.first<element_size>()),
+      lak::from_bytes<T, E>(bytes.subspan<element_size, element_size>()),
+      lak::from_bytes<T, E>(bytes.subspan<element_size * 2, element_size>()),
+      lak::from_bytes<T, E>(bytes.subspan<element_size * 3, element_size>()));
+  }
+};
 
 #endif
