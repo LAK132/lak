@@ -52,3 +52,8 @@ uint64_t lak::performance_counter()
 #  error "OS not supported"
 #endif
 }
+
+double lak::ticks_to_seconds(uint64_t ticks)
+{
+  return double(ticks) / double(lak::performance_frequency());
+}
