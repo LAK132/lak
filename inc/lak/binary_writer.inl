@@ -23,6 +23,23 @@ lak::result<lak::span<uint8_t>> lak::to_bytes(lak::span<uint8_t> bytes,
   return lak::ok_t{bytes.subspan(min_size)};
 }
 
+template<typename T, lak::endian E>
+lak::result<lak::span<uint8_t>> lak::array_to_bytes(lak::span<uint8_t> bytes,
+                                                    lak::span<const T> values)
+{
+  const size_t req_size = lak::to_bytes_size_v<T, E> * values.size();
+
+  if (req_size > bytes.size()) return lak::err_t{};
+
+  for (const T &value : values)
+  {
+    lak::to_bytes<T, E>(bytes.first<lak::to_bytes_size_v<T, E>>(), value);
+    bytes = bytes.subspan(lak::to_bytes_size_v<T, E>);
+  }
+
+  return lak::ok_t{bytes};
+}
+
 /* --- uint8_t --- */
 
 template<lak::endian E>

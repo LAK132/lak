@@ -14,6 +14,8 @@ namespace lak
   struct to_bytes_traits
   {
     using value_type = lak::nonesuch;
+
+    static constexpr size_t size = 0;
   };
 
   template<typename T, lak::endian E>
@@ -32,6 +34,11 @@ namespace lak
   template<typename T, lak::endian E = lak::endian::little>
   lak::result<lak::span<uint8_t>> to_bytes(lak::span<uint8_t> bytes,
                                            const T &value);
+
+  // returns bytes.subspan(to_bytes_traits::size * values.size()) on success
+  template<typename T, lak::endian E = lak::endian::little>
+  lak::result<lak::span<uint8_t>> array_to_bytes(lak::span<uint8_t> bytes,
+                                                 lak::span<const T> values);
 
   struct binary_span_writer
   {
@@ -80,25 +87,13 @@ namespace lak
     template<typename T, lak::endian E = lak::endian::little>
     lak::result<> write(lak::span<T> values)
     {
-      using value_type = lak::remove_const_t<T>;
-
       if (empty()) return lak::err_t{};
-
-      const size_t min_size =
-        lak::to_bytes_size_v<value_type, E> * values.size();
-
-      auto bytes = remaining();
-
-      if (min_size > bytes.size()) return lak::err_t{};
-
-      for (const value_type &value : values)
-      {
-        lak::to_bytes<value_type, E>(
-          bytes.first<lak::to_bytes_size_v<value_type, E>>(), value);
-        bytes = bytes.subspan(lak::to_bytes_size_v<value_type, E>);
-      }
-
-      return lak::ok_t{};
+      using value_type = lak::remove_const_t<T>;
+      return lak::array_to_bytes<value_type, E>(remaining(), values)
+        .if_ok([&, this](...) {
+          this->cursor += lak::to_bytes_size_v<value_type, E> * values.size();
+        })
+        .map([](...) -> lak::monostate { return {}; });
     }
 
     template<typename CHAR, lak::endian E = lak::endian::little>
@@ -106,12 +101,12 @@ namespace lak
     {
       if (empty()) return lak::err_t{};
 
-      const size_t min_size =
+      const size_t req_size =
         lak::to_bytes_size_v<CHAR, E> * (string.size() + 1);
 
       auto bytes = remaining();
 
-      if (min_size > bytes.size()) return lak::err_t{};
+      if (req_size > bytes.size()) return lak::err_t{};
 
       for (const CHAR &c : string)
       {
@@ -122,6 +117,8 @@ namespace lak
       lak::to_bytes<CHAR, E>(bytes.first<lak::to_bytes_size_v<CHAR, E>>(),
                              CHAR(0));
       bytes = bytes.subspan(lak::to_bytes_size_v<CHAR, E>);
+
+      cursor += req_size;
 
       return lak::ok_t{};
     }
