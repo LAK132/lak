@@ -18,6 +18,31 @@
 #  include <unistd.h>
 #endif
 
+void lak::memcpy(char *dst, const char *src, size_t count)
+{
+  for (size_t i = 0; i < count; ++i) dst[i] = src[i];
+}
+
+void lak::memmove(char *dst, const char *src, size_t count)
+{
+  if (dst < src)
+    for (size_t i = 0; i < count; ++i) dst[i] = src[i];
+  else if (dst > src)
+    while (count-- > 0) dst[count] = src[count];
+}
+
+void lak::memcpy(lak::span<char> dst, lak::span<const char> src)
+{
+  lak::memcpy(
+    dst.data(), src.data(), dst.size() < src.size() ? dst.size() : src.size());
+}
+
+void lak::memmove(lak::span<char> dst, lak::span<const char> src)
+{
+  lak::memmove(
+    dst.data(), src.data(), dst.size() < src.size() ? dst.size() : src.size());
+}
+
 size_t lak::page_size()
 {
 #if defined(LAK_OS_WINDOWS)

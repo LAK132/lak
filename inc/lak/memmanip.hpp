@@ -16,6 +16,14 @@ namespace lak
       reinterpret_cast<lak::copy_const_t<T, char> *>(v));
   }
 
+  void memcpy(char *dst, const char *src, size_t count);
+
+  void memmove(char *dst, const char *src, size_t count);
+
+  void memcpy(lak::span<char> dst, lak::span<const char> src);
+
+  void memmove(lak::span<char> dst, lak::span<const char> src);
+
   template<typename T, typename U>
   force_inline void memcpy(T *dst, const U *src)
   {
