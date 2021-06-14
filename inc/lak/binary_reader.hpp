@@ -13,6 +13,8 @@ namespace lak
   struct from_bytes_traits
   {
     using value_type = lak::nonesuch;
+
+    static constexpr size_t size = 0;
   };
 
   template<typename T, lak::endian E>
@@ -25,10 +27,18 @@ namespace lak
     lak::from_bytes_traits<T, E>::size;
 
   template<typename T, lak::endian E = lak::endian::little>
+  using from_bytes_value_type_t =
+    typename lak::from_bytes_traits<T, E>::value_type;
+
+  template<typename T, lak::endian E = lak::endian::little>
   T from_bytes(lak::span<const uint8_t, lak::from_bytes_size_v<T, E>> bytes);
 
   template<typename T, lak::endian E = lak::endian::little>
   lak::result<T> from_bytes(lak::span<const uint8_t> bytes);
+
+  template<typename T, lak::endian E = lak::endian::little>
+  lak::result<lak::array<T>> array_from_bytes(lak::span<const uint8_t> bytes,
+                                              size_t count);
 
   struct binary_reader
   {
@@ -82,20 +92,7 @@ namespace lak
     template<typename T, lak::endian E = lak::endian::little>
     lak::result<lak::array<T>> peek(size_t count)
     {
-      const size_t req_size = lak::from_bytes_size_v<T, E> * count;
-
-      auto bytes = remaining();
-
-      if (req_size > bytes.size()) return lak::err_t{};
-
-      lak::array<T> result;
-      result.reserve(count);
-
-      for (; count-- > 0; bytes = bytes.subspan(lak::from_bytes_size_v<T, E>))
-        result.push_back(
-          lak::from_bytes<T, E>(bytes.first<lak::from_bytes_size_v<T, E>>()));
-
-      return lak::ok_t{lak::move(result)};
+      return lak::array_from_bytes<T, E>(remaining(), count);
     }
 
     template<typename T, lak::endian E = lak::endian::little>
