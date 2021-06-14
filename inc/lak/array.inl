@@ -81,7 +81,7 @@ constexpr const T &lak::array<T, SIZE>::back() const
 template<typename T>
 void lak::array<T, lak::dynamic_extent>::commit(size_t new_size)
 {
-  size_t new_size_bytes = new_size * sizeof(T);
+  size_t new_size_bytes = lak::round_to_page_multiple(new_size * sizeof(T));
   if (new_size_bytes > _committed)
   {
     if (new_size_bytes > _reserved) reserve(new_size);
@@ -197,9 +197,10 @@ void lak::array<T, lak::dynamic_extent>::reserve(size_t new_capacity)
 
   if (new_capacity_bytes < _reserved * 2)
   {
-    new_capacity       = (_reserved * 2) / sizeof(T);
-    new_capacity_bytes = new_capacity * sizeof(T);
+    new_capacity_bytes = _reserved * 2;
   }
+
+  new_capacity_bytes = lak::round_to_page_multiple(new_capacity_bytes);
 
   lak::span<void> new_buffer = lak::page_reserve(new_capacity_bytes);
 

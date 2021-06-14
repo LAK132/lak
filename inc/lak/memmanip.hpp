@@ -29,6 +29,8 @@ namespace lak
 
   size_t page_size();
 
+  size_t round_to_page_multiple(size_t size, size_t *page_size_out = nullptr);
+
   lak::span<void> page_reserve(size_t size, size_t *page_size_out = nullptr);
 
   bool page_commit(lak::span<void> pages);

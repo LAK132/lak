@@ -34,14 +34,19 @@ size_t lak::page_size()
   return page_size;
 }
 
+size_t lak::round_to_page_multiple(size_t size, size_t *page_size_out)
+{
+  const size_t page_size = lak::page_size();
+  if (page_size_out) *page_size_out = page_size;
+  return page_size * ((size % page_size > 0 ? 1 : 0) + (size / page_size));
+}
+
 lak::span<void> lak::page_reserve(size_t size, size_t *page_size_out)
 {
   ASSERT_GREATER(size, 0);
-  void *result           = nullptr;
-  const size_t page_size = lak::page_size();
-  if (page_size_out) *page_size_out = page_size;
-  // round size to the nearest page size
-  size = page_size * ((size % page_size > 0 ? 1 : 0) + (size / page_size));
+  void *result = nullptr;
+
+  size = lak::round_to_page_multiple(size, page_size_out);
 
 #if defined(LAK_OS_WINDOWS)
   result = VirtualAlloc(nullptr, size, MEM_RESERVE, PAGE_READWRITE);
