@@ -63,7 +63,7 @@ namespace lak
 
   /* --- result --- */
 
-  template<typename OK, typename ERR>
+  template<typename OK = lak::monostate, typename ERR = lak::monostate>
   struct [[nodiscard]] result
   {
     using ok_type  = lak::remove_reference_t<OK>;
@@ -530,9 +530,6 @@ namespace lak
     else
       return lak::move(result).unsafe_unwrap_err();
   }
-
-  template<typename OK>
-  using maybe = lak::result<OK, lak::monostate>;
 
   template<typename OK, typename... ERR>
   using results = lak::result<OK, lak::variant<ERR...>>;
