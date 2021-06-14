@@ -43,7 +43,7 @@ lak::result<lak::array<uint8_t>, lak::lz4_decode_error> lak::decode_lz4_block(
       }
     }
 
-    // there are length literals
+    // there are <length> literals
 
     if (strm.remaining().size() < length)
       return lak::err_t{lak::lz4_decode_error::out_of_data};
