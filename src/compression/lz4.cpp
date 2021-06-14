@@ -52,8 +52,6 @@ lak::result<lak::array<uint8_t>, lak::lz4_decode_error> lak::decode_lz4_block(
 
     if (strm.empty()) break; // reached the end of the last block
 
-    if (strm.remaining().size() < 2)
-      return lak::err_t{lak::lz4_decode_error::out_of_data};
     RES_TRY_ASSIGN(const auto offset =, strm.read_u16().map_err(out_of_data));
     if (offset == 0) return lak::err_t{lak::lz4_decode_error::zero_offset};
 
