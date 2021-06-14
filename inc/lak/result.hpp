@@ -350,7 +350,7 @@ namespace lak
     }
 
     template<typename STR>
-    OK &&expect(const STR &error_str) &&
+    OK expect(const STR &error_str) &&
     {
       if (is_err())
       {
@@ -383,7 +383,7 @@ namespace lak
     }
 
     template<typename STR>
-    ERR &&expect_err(const STR &error_str) &&
+    ERR expect_err(const STR &error_str) &&
     {
       if (is_ok()) ABORTF(error_str /*, ": ", get_ok()*/);
       return forward_err();
@@ -395,7 +395,7 @@ namespace lak
 
     const ok_type &unwrap() const & { return expect("unwrap failed"); }
 
-    OK &&unwrap() && { return lak::forward<OK>(expect("unwrap failed")); }
+    OK unwrap() && { return lak::forward<OK>(expect("unwrap failed")); }
 
     /* --- unwrap_err --- */
 
@@ -406,7 +406,7 @@ namespace lak
       return expect_err("unwrap_err failed");
     }
 
-    ERR &&unwrap_err() &&
+    ERR unwrap_err() &&
     {
       return lak::forward<ERR>(expect_err("unwrap_err failed"));
     }
@@ -417,7 +417,7 @@ namespace lak
 
     const ok_type &unsafe_unwrap() const & { return get_ok(); }
 
-    OK &&unsafe_unwrap() && { return lak::forward<OK>(get_ok()); }
+    OK unsafe_unwrap() && { return lak::forward<OK>(get_ok()); }
 
     /* --- unsafe_unwrap_err --- */
 
@@ -425,7 +425,7 @@ namespace lak
 
     const err_type &unsafe_unwrap_err() const & { return get_err(); }
 
-    ERR &&unsafe_unwrap_err() && { return lak::forward<ERR>(get_err()); }
+    ERR unsafe_unwrap_err() && { return lak::forward<ERR>(get_err()); }
 
     /* --- flatten --- */
 
@@ -470,7 +470,7 @@ namespace lak
     template<typename FUNCTOR>
     result &&if_ok(FUNCTOR && functor) &&
     {
-      if (is_ok()) functor(lak::move(*this).get_ok());
+      if (is_ok()) functor(forward_ok());
       return lak::move(*this);
     }
 
@@ -493,7 +493,7 @@ namespace lak
     template<typename FUNCTOR>
     result &&if_err(FUNCTOR && functor) &&
     {
-      if (is_err()) functor(lak::move(*this).get_err());
+      if (is_err()) functor(forward_err());
       return lak::move(*this);
     }
 
@@ -523,7 +523,7 @@ namespace lak
   }
 
   template<typename T>
-  T &&ok_or_err(lak::result<T, T> &&result)
+  T ok_or_err(lak::result<T, T> &&result)
   {
     if (result.is_ok())
       return lak::move(result).unsafe_unwrap();
