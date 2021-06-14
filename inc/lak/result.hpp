@@ -574,7 +574,7 @@ namespace lak
 #define IF_OK(...)  if_ok([&](const auto &val) { DEBUG(__VA_ARGS__, val); })
 #define IF_ERR(...) if_err([&](const auto &err) { ERROR(__VA_ARGS__, err); })
 
-#define RES_TRY(...)                                                          \
+#define RES_TRY_FLUENT(...)                                                   \
   auto UNIQUIFY(RESULT_) = __VA_ARGS__;                                       \
   if (UNIQUIFY(RESULT_).is_err())                                             \
     return lak::err_t{lak::move(UNIQUIFY(RESULT_)).unsafe_unwrap_err()};      \
@@ -586,7 +586,7 @@ namespace lak
     return lak::err_t{lak::move(UNIQUIFY(RESULT_)).unsafe_unwrap_err()};      \
   ASSIGN lak::move(UNIQUIFY(RESULT_)).unsafe_unwrap()
 
-#define RES_TRY_ERR(...)                                                      \
+#define RES_TRY(...)                                                          \
   do                                                                          \
   {                                                                           \
     if (auto result = __VA_ARGS__; result.is_err())                           \
