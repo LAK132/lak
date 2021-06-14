@@ -14,6 +14,8 @@ namespace lak
 {
   namespace fs = std::filesystem;
 
+  lak::errno_result<bool> path_exists(const fs::path &path);
+
   lak::errno_result<lak::array<uint8_t>> read_file(const fs::path &path);
 
   bool save_file(const fs::path &path, lak::span<const uint8_t> data);

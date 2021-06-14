@@ -25,6 +25,15 @@
 #include <fstream>
 #include <iostream>
 
+lak::errno_result<bool> lak::path_exists(const lak::fs::path &path)
+{
+  std::error_code ec;
+  if (bool result = fs::exists(path, ec); ec)
+    return lak::err_t{lak::errno_error{ec.value()}};
+  else
+    return lak::ok_t{result};
+}
+
 lak::errno_result<lak::array<uint8_t>> lak::read_file(
   const lak::fs::path &path)
 {
