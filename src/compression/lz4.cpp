@@ -82,7 +82,7 @@ lak::result<lak::array<uint8_t>, lak::lz4_decode_error> lak::decode_lz4_block(
       writer.write_u8(v).UNWRAP();
   }
 
-  if (!output.empty()) WARNING("Expected More Output Data");
+  if (!writer.empty()) WARNING("Expected More Output Data");
 
   return lak::ok_t{lak::move(output)};
 }
