@@ -7,6 +7,15 @@
 
 namespace lak
 {
+  // see lak::binary_reader and lak::binary_writer for type safe manipulation
+  // of types as bytes
+  template<typename T>
+  lak::span<lak::copy_const_t<T, char>, sizeof(T)> as_bytes(T *v)
+  {
+    return lak::span<lak::copy_const_t<T, char>, sizeof(T)>::from_ptr(
+      reinterpret_cast<lak::copy_const_t<T, char> *>(v));
+  }
+
   template<typename T, typename U>
   force_inline void memcpy(T *dst, const U *src)
   {
