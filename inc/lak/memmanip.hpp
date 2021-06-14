@@ -37,9 +37,9 @@ namespace lak
   }
 
   template<typename T>
-  force_inline void memset(T *dst, int val)
+  force_inline void bzero(T *dst)
   {
-    std::memset(dst, val, sizeof(T));
+    lak::fill(lak::as_bytes(dst), char(0));
   }
 
   size_t page_size();
