@@ -17,6 +17,20 @@ namespace lak
 #define SCOPED_TIMER(FUNC)                                                    \
   const uint64_t UNIQUIFY(DEBUG_TIMER_) = lak::performance_counter();         \
   DEFER(FUNC((lak::performance_counter() - UNIQUIFY(DEBUG_TIMER_))));
+
+  struct timer
+  {
+    uint64_t _begin;
+    uint64_t _end;
+
+    inline void start() { _begin = lak::performance_counter(); }
+
+    inline void stop() { _end = lak::performance_counter(); }
+
+    uint64_t ticks() const { return _end - _begin; }
+
+    double seconds() const { return lak::ticks_to_seconds(ticks()); }
+  };
 }
 
 #endif
