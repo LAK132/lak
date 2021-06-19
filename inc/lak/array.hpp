@@ -3,6 +3,7 @@
 
 #include "lak/stdint.hpp"
 #include "lak/type_traits.hpp"
+#include "lak/unique_pages.hpp"
 #include "lak/utility.hpp"
 
 namespace lak
@@ -66,10 +67,11 @@ namespace lak
   struct array<T, lak::dynamic_extent>
   {
   private:
-    T *_data          = nullptr;
-    size_t _size      = 0; // Ts
-    size_t _committed = 0; // bytes
-    size_t _reserved  = 0; // bytes
+    lak::unique_pages _data = {};
+    size_t _size            = 0; // Ts
+    size_t _committed       = 0; // bytes
+
+    void reserve_bytes(size_t new_capacity_bytes);
 
     void commit(size_t new_size);
 
@@ -101,33 +103,35 @@ namespace lak
     ~array();
 
     size_t size() const { return _size; }
-    void resize(size_t new_size);
-    void clear();
-
     size_t capacity() const { return _committed / sizeof(T); }
-    size_t reserved() const { return _reserved / sizeof(T); }
+    size_t reserved() const { return _data.size_bytes() / sizeof(T); }
+
+    void resize(size_t new_size);
+    void resize(size_t new_size, const T &default_value);
     void reserve(size_t new_capacity);
+
+    void clear();
     void force_clear();
 
     [[nodiscard]] bool empty() const { return _size == 0; }
 
-    T *data() { return _data; }
-    const T *data() const { return _data; }
+    T *data() { return static_cast<T *>(_data.data()); }
+    const T *data() const { return static_cast<const T *>(_data.data()); }
 
-    T *begin() { return _data; }
-    T *end() { return _data + _size; }
+    T *begin() { return data(); }
+    T *end() { return data() + _size; }
 
-    const T *begin() const { return _data; }
-    const T *end() const { return _data + _size; }
+    const T *begin() const { return data(); }
+    const T *end() const { return data() + _size; }
 
-    const T *cbegin() const { return _data; }
-    const T *cend() const { return _data + _size; }
+    const T *cbegin() const { return data(); }
+    const T *cend() const { return data() + _size; }
 
     T &at(size_t index);
     const T &at(size_t index) const;
 
-    T &operator[](size_t index);
-    const T &operator[](size_t index) const;
+    T &operator[](size_t index) { return data()[index]; }
+    const T &operator[](size_t index) const { return data()[index]; }
 
     T &front();
     const T &front() const;

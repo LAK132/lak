@@ -170,47 +170,32 @@ void lak::railcar<T>::internal_init_bin_size()
 template<typename T>
 void lak::railcar<T>::internal_alloc_end()
 {
-  if (_data.empty() || _data.back().size() == _data.back().max_size())
+  if (_data.empty() || _data.back().size() == _bin_size)
   {
     internal_init_bin_size();
-    _data.emplace_back(lak::unique_pages<T>::make(_bin_size));
+    lak::array<T> new_bin;
+    new_bin.reserve(_bin_size);
+    _data.emplace_back(lak::move(new_bin));
   }
+  ASSERT_NOT_EQUAL(_data.back().size(), _bin_size);
 }
 
 template<typename T>
-lak::railcar<T>::railcar(const railcar &other)
+lak::railcar<T>::railcar(const railcar &other) : _data(other._data)
 {
-  _data.reserve(other._data.size());
-
-  for (const auto &other_page : other._data)
-  {
-    for (const auto &elem : other_page)
-    {
-      push_back(elem);
-    }
-  }
 }
 
 template<typename T>
 lak::railcar<T> &lak::railcar<T>::operator=(const railcar &other)
 {
-  _data.reserve(other._data.size());
-
-  for (const auto &other_page : other._data)
-  {
-    for (const auto &elem : other_page)
-    {
-      push_back(elem);
-    }
-  }
-  return *this;
+  _data = other._data;
 }
 
 template<typename T>
 lak::railcar<T>::railcar(railcar &&other)
+: _data(lak::exchange(other._data, lak::array<lak::array<T>>{})),
+  _bin_size(other._bin_size)
 {
-  _data     = lak::exchange(other._data, lak::array<lak::unique_pages<T>>{});
-  _bin_size = lak::exchange(other._bin_size, 0);
 }
 
 template<typename T>
@@ -223,8 +208,8 @@ lak::railcar<T> &lak::railcar<T>::operator=(railcar &&other)
 
 template<typename T>
 lak::railcar<T>::railcar(std::initializer_list<T> list)
+: railcar(list.begin(), list.end())
 {
-  for (auto it = list.begin(); it != list.end(); ++it) push_back(*it);
 }
 
 template<typename T>
@@ -232,12 +217,6 @@ template<typename ITER>
 lak::railcar<T>::railcar(ITER &&begin, ITER &&end)
 {
   for (; begin != end; ++begin) push_back(*begin);
-}
-
-template<typename T>
-lak::railcar<T>::~railcar()
-{
-  clear();
 }
 
 template<typename T>
@@ -360,8 +339,6 @@ T &lak::railcar<T>::emplace_back(ARGS &&... args)
 {
   internal_alloc_end();
 
-  ASSERT_NOT_EQUAL(_data.back().size(), _data.back().max_size());
-
   return _data.back().emplace_back(lak::forward<ARGS>(args)...);
 }
 
@@ -370,8 +347,6 @@ T &lak::railcar<T>::push_back(const T &t)
 {
   internal_alloc_end();
 
-  ASSERT_NOT_EQUAL(_data.back().size(), _data.back().max_size());
-
   return _data.back().push_back(t);
 }
 
@@ -379,8 +354,6 @@ template<typename T>
 T &lak::railcar<T>::push_back(T &&t)
 {
   internal_alloc_end();
-
-  ASSERT_NOT_EQUAL(_data.back().size(), _data.back().max_size());
 
   return _data.back().push_back(lak::move(t));
 }

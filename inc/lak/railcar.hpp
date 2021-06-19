@@ -70,8 +70,8 @@ namespace lak
   struct railcar
   {
   private:
-    lak::array<lak::unique_pages<T>> _data = {};
-    size_t _bin_size                       = 0;
+    lak::array<lak::array<T>> _data = {};
+    size_t _bin_size                = 0;
 
     void internal_init_bin_size();
     void internal_alloc_end();
@@ -99,8 +99,6 @@ namespace lak
 
     template<typename ITER>
     railcar(ITER &&begin, ITER &&end);
-
-    ~railcar();
 
     size_t size() const;
     void resize(size_t new_size);
