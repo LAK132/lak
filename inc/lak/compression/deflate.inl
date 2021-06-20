@@ -174,7 +174,8 @@ inline lak::deflate_iterator &lak::deflate_iterator::step()
               ++_nread;
               success(v);
             })
-            .if_err([this](...) { fail(error_t::out_of_data); });
+            .if_err([this](...) { fail(error_t::out_of_data); })
+            .discard();
           return *this;
         }
 

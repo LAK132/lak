@@ -26,6 +26,46 @@ namespace lak
   {
     static constexpr bool value = true;
   };
+  template<>
+  struct is_string<const char8_t *>
+  {
+    static constexpr bool value = true;
+  };
+  template<>
+  struct is_string<char8_t *>
+  {
+    static constexpr bool value = true;
+  };
+  template<>
+  struct is_string<const char16_t *>
+  {
+    static constexpr bool value = true;
+  };
+  template<>
+  struct is_string<char16_t *>
+  {
+    static constexpr bool value = true;
+  };
+  template<>
+  struct is_string<const char32_t *>
+  {
+    static constexpr bool value = true;
+  };
+  template<>
+  struct is_string<char32_t *>
+  {
+    static constexpr bool value = true;
+  };
+  template<>
+  struct is_string<const wchar_t *>
+  {
+    static constexpr bool value = true;
+  };
+  template<>
+  struct is_string<wchar_t *>
+  {
+    static constexpr bool value = true;
+  };
   template<typename T>
   inline constexpr bool is_string_v = lak::is_string<T>::value;
 

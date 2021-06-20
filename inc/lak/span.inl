@@ -66,6 +66,45 @@ inline constexpr lak::span<T, count> lak::span<T, SIZE>::last() const
   return lak::span<T, count>::from_ptr(begin() + (size() - count));
 }
 
+// add const
+template<typename T, size_t SIZE>
+constexpr lak::span<T, SIZE>::operator span<const T, SIZE>() const noexcept
+{
+  return lak::span<const T, SIZE>::from_ptr(_data);
+}
+
+// reinterpret cast to U
+template<typename T, size_t SIZE>
+  template<lak::concepts::ptr_reinterpret_castable_from<T> U>
+  requires !lak::concepts::same_as<U, T> &&
+  !lak::concepts::same_as<U, void> //
+  constexpr lak::span<T, SIZE>::operator span<U,
+                                              (SIZE * sizeof(T)) / sizeof(U)>()
+    const noexcept
+{
+  return lak::span<U, (SIZE * sizeof(T)) / sizeof(U)>::from_ptr(
+    reinterpret_cast<U *>(_data));
+}
+
+// reinterpret cast to void
+template<typename T, size_t SIZE>
+template<lak::concepts::void_type V>
+requires lak::concepts::ptr_reinterpret_castable<T, V> //
+  constexpr lak::span<T, SIZE>::operator span<V, SIZE * sizeof(T)>()
+    const noexcept
+{
+  return lak::span<V, SIZE * sizeof(T)>::from_ptr(reintpret_cast<V *>(_data));
+}
+
+// static cast to dynamic size
+template<typename T, size_t SIZE>
+template<lak::concepts::ptr_static_castable_from<T> U>
+constexpr lak::span<T, SIZE>::operator span<U, lak::dynamic_extent>()
+  const noexcept
+{
+  return lak::span<U, lak::dynamic_extent>(static_cast<U *>(data()), size());
+}
+
 /* --- lak::span<void, SIZE> --- */
 
 template<size_t SIZE>
@@ -91,6 +130,36 @@ template<size_t SIZE>
 inline constexpr size_t lak::span<void, SIZE>::size_bytes() const noexcept
 {
   return SIZE;
+}
+
+// add const
+template<size_t SIZE>
+constexpr lak::span<void, SIZE>::operator span<const void, SIZE>()
+  const noexcept
+{
+  lak::span<const void, SIZE> result;
+  result._data = _data;
+  return result;
+}
+
+// reinterpret cast to T
+template<size_t SIZE>
+template<lak::concepts::ptr_reinterpret_castable_from<void> T>
+requires !lak::is_void_v<T> //
+  constexpr lak::span<void, SIZE>::operator span<T, (SIZE / sizeof(T))>()
+    const noexcept
+{
+  return lak::span<T, (SIZE / sizeof(T))>::from_ptr(
+    reinterpret_cast<T *>(_data));
+}
+
+// static cast to dynamic size
+template<size_t SIZE>
+template<lak::concepts::void_type V>
+constexpr lak::span<void, SIZE>::operator span<V, lak::dynamic_extent>()
+  const noexcept
+{
+  return lak::span<V, lak::dynamic_extent>(static_cast<V *>(data()), size());
 }
 
 /* --- lak::span<const void, SIZE> --- */
@@ -119,6 +188,26 @@ inline constexpr size_t lak::span<const void, SIZE>::size_bytes()
   const noexcept
 {
   return SIZE;
+}
+
+// reinterpret cast to T
+template<size_t SIZE>
+template<lak::concepts::ptr_reinterpret_castable_from<const void> T>
+requires !lak::is_void_v<T> //
+  constexpr lak::span<const void, SIZE>::operator span<T, SIZE / sizeof(T)>()
+    const noexcept
+{
+  return lak::span<T, SIZE / sizeof(T)>::from_ptr(
+    reinterpret_cast<T *>(_data));
+}
+
+// static cast to dynamic size
+template<size_t SIZE>
+constexpr lak::span<const void, SIZE>::operator span<const void,
+                                                     lak::dynamic_extent>()
+  const noexcept
+{
+  return lak::span<const void, lak::dynamic_extent>(data(), size());
 }
 
 /* --- lak::span<T, lak::dynamic_extent> --- */
@@ -162,6 +251,37 @@ inline constexpr T *lak::span<T, lak::dynamic_extent>::end() const noexcept
   return _data + _size;
 }
 
+// add const
+template<typename T>
+constexpr lak::span<T, lak::dynamic_extent>::
+operator span<const T, lak::dynamic_extent>() const noexcept
+{
+  return lak::span<const T, lak::dynamic_extent>(_data, _size);
+}
+
+// reinterpret cast to U
+template<typename T>
+  template<lak::concepts::ptr_reinterpret_castable_from<T> U>
+  requires !lak::concepts::same_as<U, T> &&
+  !lak::concepts::same_as<U, void> //
+  constexpr lak::span<T, lak::dynamic_extent>::
+  operator span<U, lak::dynamic_extent>() const noexcept
+{
+  return lak::span<U, lak::dynamic_extent>(reinterpret_cast<U *>(_data),
+                                           (_size * sizeof(T)) / sizeof(U));
+}
+
+// reinterpret cast to void
+template<typename T>
+template<lak::concepts::void_type V>
+requires lak::concepts::ptr_reinterpret_castable<T, V> //
+  constexpr lak::span<T, lak::dynamic_extent>::
+  operator span<V, lak::dynamic_extent>() const noexcept
+{
+  return lak::span<V, lak::dynamic_extent>(reintpret_cast<V *>(_data),
+                                           _size * sizeof(T));
+}
+
 /* --- lak::span<void, lak::dynamic_extent> --- */
 
 inline constexpr void *lak::span<void, lak::dynamic_extent>::data()
@@ -188,6 +308,24 @@ inline constexpr size_t lak::span<void, lak::dynamic_extent>::size_bytes()
   return _size;
 }
 
+// add const
+constexpr lak::span<void, lak::dynamic_extent>::
+operator span<const void, lak::dynamic_extent>() const noexcept
+{
+  return lak::span<const void, lak::dynamic_extent>(
+    static_cast<const void *>(_data), _size);
+}
+
+// reinterpret cast to U
+template<lak::concepts::ptr_reinterpret_castable_from<void> U>
+requires !lak::is_void_v<U> //
+  constexpr lak::span<void, lak::dynamic_extent>::
+  operator span<U, lak::dynamic_extent>() const noexcept
+{
+  return lak::span<U, lak::dynamic_extent>(reinterpret_cast<U *>(_data),
+                                           _size / sizeof(U));
+}
+
 /* --- lak::span<const void, lak::dynamic_extent> --- */
 
 inline constexpr const void *lak::span<const void, lak::dynamic_extent>::data()
@@ -212,6 +350,16 @@ inline constexpr size_t
 lak::span<const void, lak::dynamic_extent>::size_bytes() const noexcept
 {
   return _size;
+}
+
+// reinterpret cast to U
+template<lak::concepts::ptr_reinterpret_castable_from<const void> U>
+requires !lak::is_void_v<U> //
+  constexpr lak::span<const void, lak::dynamic_extent>::
+  operator span<U, lak::dynamic_extent>() const noexcept
+{
+  return lak::span<U, lak::dynamic_extent>(reinterpret_cast<U *>(_data),
+                                           _size / sizeof(U));
 }
 
 /* --- helper functions --- */

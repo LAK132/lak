@@ -1342,15 +1342,15 @@ namespace lak
   inline constexpr bool is_default_constructible_v =
     lak::is_default_constructible<T>::value;
 
-  /* --- is_castable --- */
+  /* --- is_static_castable --- */
 
   template<typename, typename T, typename U>
-  struct is_castable_ : lak::false_type
+  struct is_static_castable_ : lak::false_type
   {
   };
 
   template<typename T, typename U>
-  struct is_castable_<
+  struct is_static_castable_<
     lak::void_t<decltype(static_cast<U>(lak::declval<T>()), 0)>,
     T,
     U> : lak::true_type
@@ -1358,10 +1358,40 @@ namespace lak
   };
 
   template<typename T, typename U>
-  using is_castable = lak::is_castable_<void_t<>, T, U>;
+  using is_static_castable = lak::is_static_castable_<lak::void_t<>, T, U>;
 
   template<typename T, typename U>
-  inline constexpr bool is_castable_v = lak::is_castable<T, U>::value;
+  inline constexpr bool is_static_castable_v =
+    lak::is_static_castable<T, U>::value;
+
+  static_assert(lak::is_static_castable_v<int *, const int *>);
+
+  /* --- is_reinterpret_castable --- */
+
+  template<typename, typename T, typename U>
+  struct is_reinterpret_castable_ : lak::false_type
+  {
+  };
+
+  template<typename T, typename U>
+  struct is_reinterpret_castable_<
+    lak::void_t<decltype(reinterpret_cast<U>(lak::declval<T>()), 0)>,
+    T,
+    U> : lak::true_type
+  {
+  };
+
+  template<typename T, typename U>
+  using is_reinterpret_castable =
+    lak::is_reinterpret_castable_<lak::void_t<>, T, U>;
+
+  template<typename T, typename U>
+  inline constexpr bool is_reinterpret_castable_v =
+    lak::is_reinterpret_castable<T, U>::value;
+
+  static_assert(lak::is_reinterpret_castable_v<int *, const int *>);
+  static_assert(lak::is_reinterpret_castable_v<int *, const char *>);
+  static_assert(!lak::is_reinterpret_castable_v<const int *, int *>);
 
   /* --- is_resizable --- */
 
@@ -1426,7 +1456,7 @@ namespace lak
 
   /* --- is_invocable --- */
 
-  template<typename V, typename F, typename... ARGS>
+  template<typename, typename F, typename... ARGS>
   struct _is_invocable : lak::false_type
   {
   };
@@ -1440,7 +1470,7 @@ namespace lak
   };
 
   template<typename F, typename... ARGS>
-  struct is_invocable : lak::_is_invocable<void, F, ARGS...>
+  struct is_invocable : lak::_is_invocable<lak::void_t<>, F, ARGS...>
   {
   };
 
@@ -1455,6 +1485,27 @@ namespace lak
   static_assert(!lak::is_invocable_v<decltype([](int &&) {}), const int &>);
   static_assert(lak::is_invocable_v<void(int), int>);
   static_assert(lak::is_invocable_v<void()>);
+
+  /* --- has_type_size_signature --- */
+  template<typename T>
+  struct has_type_size_signature : lak::false_type
+  {
+  };
+
+  template<template<typename, size_t> typename T, typename U, size_t S>
+  struct has_type_size_signature<T<U, S>> : lak::true_type
+  {
+    static constexpr size_t value = S;
+  };
+
+  template<typename T>
+  static constexpr bool has_type_size_signature_v =
+    lak::has_type_size_signature<T>::value;
+
+  template<typename T>
+  requires lak::has_type_size_signature_v<T> //
+    static constexpr size_t type_size_signature_size_v =
+      lak::has_type_size_signature<T>::value;
 }
 
 #endif

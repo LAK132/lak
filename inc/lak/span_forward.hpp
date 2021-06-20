@@ -2,6 +2,7 @@
 #define LAK_SPAN_FORWARD_HPP
 
 #include "lak/char.hpp"
+#include "lak/concepts.hpp"
 #include "lak/stdint.hpp"
 #include "lak/tuple.hpp"
 #include "lak/type_traits.hpp"
@@ -46,50 +47,13 @@ namespace lak
     constexpr span(const span &) = default;
     constexpr span &operator=(const span &) = default;
 
-    template<typename U, std::enable_if_t<std::is_same_v<const U, T>, int> = 0>
-    inline constexpr span(const span<U, SIZE> &other) noexcept
-    : _data(other.data())
+    template<lak::concepts::fixed_contiguous_range_of<T, SIZE> RANGE>
+    inline constexpr span(RANGE &range) noexcept : _data(range.data())
     {
     }
 
-    template<
-      typename U,
-      std::enable_if_t<!std::is_void_v<std::remove_const_t<U>>, int> = 0>
-    explicit inline constexpr span(
-      const span<U, (SIZE * sizeof(T)) / sizeof(U)> &other) noexcept
-    : _data(reinterpret_cast<T *>(other.data()))
-    {
-    }
-
-    template<typename U,
-             std::enable_if_t<std::is_void_v<std::remove_const_t<U>>, int> = 0>
-    explicit inline constexpr span(
-      const span<U, SIZE * sizeof(T)> &other) noexcept
-    : _data(reinterpret_cast<T *>(other.data()))
-    {
-    }
-
-    inline constexpr span(
-      const std::array<std::remove_const_t<T>, SIZE> &array) noexcept
-    : _data(array.data())
-    {
-    }
-
-    inline constexpr span(
-      std::array<std::remove_const_t<T>, SIZE> &array) noexcept
-    : _data(array.data())
-    {
-    }
-
-    inline constexpr span(
-      const lak::array<std::remove_const_t<T>, SIZE> &array) noexcept
-    : _data(array.data())
-    {
-    }
-
-    inline constexpr span(
-      lak::array<std::remove_const_t<T>, SIZE> &array) noexcept
-    : _data(array.data())
+    template<lak::concepts::fixed_contiguous_range_of<T, SIZE> RANGE>
+    inline constexpr span(const RANGE &range) noexcept : _data(range.data())
     {
     }
 
@@ -137,6 +101,25 @@ namespace lak
 
     inline auto to_string() const;
     inline auto stringify() const;
+
+    // add const
+    constexpr operator span<const T, SIZE>() const noexcept;
+
+    // reinterpret cast to U
+    template<lak::concepts::ptr_reinterpret_castable_from<T> U>
+      requires !lak::concepts::same_as<U, T> &&
+      !lak::concepts::same_as<U, void> //
+      constexpr explicit operator span<U, (SIZE * sizeof(T)) / sizeof(U)>()
+        const noexcept;
+
+    // reinterpret cast to void
+    template<lak::concepts::void_type V>
+    requires lak::concepts::ptr_reinterpret_castable<T, V> //
+      constexpr explicit operator span<V, SIZE * sizeof(T)>() const noexcept;
+
+    // static cast to dynamic size
+    template<lak::concepts::ptr_static_castable_from<T> U>
+    constexpr operator span<U, lak::dynamic_extent>() const noexcept;
   };
 
   template<size_t SIZE>
@@ -152,18 +135,6 @@ namespace lak
     constexpr span()             = default;
     constexpr span(const span &) = default;
     constexpr span &operator=(const span &) = default;
-
-    template<typename T, std::enable_if_t<!std::is_void_v<T>, int> = 0>
-    inline constexpr span(const span<T, SIZE / sizeof(T)> &other) noexcept
-    : _data(other.data())
-    {
-    }
-
-    template<typename T>
-    inline constexpr span(std::array<T, SIZE / sizeof(T)> &array) noexcept
-    : _data(array.data())
-    {
-    }
 
     template<
       typename T,
@@ -184,6 +155,18 @@ namespace lak
     inline constexpr size_t size() const noexcept;
 
     inline constexpr size_t size_bytes() const noexcept;
+
+    // add const
+    constexpr operator span<const void, SIZE>() const noexcept;
+
+    // reinterpret cast to T
+    template<lak::concepts::ptr_reinterpret_castable_from<void> T>
+    requires !lak::is_void_v<T> //
+      constexpr explicit operator span<T, (SIZE / sizeof(T))>() const noexcept;
+
+    // static cast to dynamic size
+    template<lak::concepts::void_type V>
+    constexpr operator span<V, lak::dynamic_extent>() const noexcept;
   };
 
   template<size_t SIZE>
@@ -200,30 +183,6 @@ namespace lak
     constexpr span(const span &) = default;
     constexpr span &operator=(const span &) = default;
 
-    inline constexpr span(const span<void, SIZE> &other) noexcept
-    : _data(other.data())
-    {
-    }
-
-    template<typename T, std::enable_if_t<!std::is_void_v<T>, int> = 0>
-    inline constexpr span(const span<T, SIZE / sizeof(T)> &other) noexcept
-    : _data(other.data())
-    {
-    }
-
-    template<typename T>
-    inline constexpr span(std::array<T, SIZE / sizeof(T)> &array) noexcept
-    : _data(array.data())
-    {
-    }
-
-    template<typename T>
-    inline constexpr span(
-      const std::array<T, SIZE / sizeof(T)> &array) noexcept
-    : _data(array.data())
-    {
-    }
-
     template<typename T>
     inline constexpr span(T (&data)[SIZE / sizeof(T)]) noexcept : _data(data)
     {
@@ -236,6 +195,14 @@ namespace lak
     inline constexpr size_t size() const noexcept;
 
     inline constexpr size_t size_bytes() const noexcept;
+
+    // reinterpret cast to T
+    template<lak::concepts::ptr_reinterpret_castable_from<const void> T>
+    requires !lak::is_void_v<T> //
+      constexpr explicit operator span<T, SIZE / sizeof(T)>() const noexcept;
+
+    // static cast to dynamic size
+    constexpr operator span<const void, lak::dynamic_extent>() const noexcept;
   };
 
   /* --- Runtime sized spans --- */
@@ -255,61 +222,21 @@ namespace lak
     constexpr span(const span &) = default;
     constexpr span &operator=(const span &) = default;
 
-    template<size_t S>
-    inline constexpr span(const span<T, S> &other) noexcept
-    : _data(other.data()), _size(other.size())
+    template<lak::concepts::contiguous_range_of<T> RANGE>
+    inline constexpr span(RANGE &range) noexcept
+    : _data(range.data()), _size(range.size())
     {
     }
 
-    template<typename U,
-             size_t S,
-             std::enable_if_t<std::is_same_v<const U, T>, int> = 0>
-    inline constexpr span(const span<U, S> &other) noexcept
-    : _data(reinterpret_cast<T *>(other.data()))
-    {
-      if constexpr (std::is_void_v<std::remove_const_t<U>>)
-        _size = other.size() / sizeof(T);
-      else
-        _size = other.size();
-    }
-
-    template<typename U,
-             size_t S,
-             std::enable_if_t<!std::is_same_v<const U, T>, int> = 0>
-    explicit inline constexpr span(const span<U, S> &other) noexcept
-    : _data(reinterpret_cast<T *>(other.data()))
-    {
-      if constexpr (std::is_void_v<std::remove_const_t<U>>)
-        _size = other.size() / sizeof(T);
-      else
-        _size = other.size();
-    }
-
-    template<size_t N>
-    inline constexpr span(
-      const std::array<std::remove_const_t<T>, N> &array) noexcept
-    : _data(array.data()), _size(N)
-    {
-    }
-
-    template<size_t N>
-    inline constexpr span(
-      std::array<std::remove_const_t<T>, N> &array) noexcept
-    : _data(array.data()), _size(N)
+    template<lak::concepts::contiguous_range_of<T> RANGE>
+    inline constexpr span(const RANGE &range) noexcept
+    : _data(range.data()), _size(range.size())
     {
     }
 
     inline constexpr span(
       std::initializer_list<std::remove_const_t<T>> list) noexcept
     : _data(list.begin()), _size(list.size())
-    {
-    }
-
-    template<
-      typename CONTAINER,
-      lak::enable_if_i<!lak::is_span_v<lak::remove_cvref_t<CONTAINER>>> = 0>
-    inline constexpr span(CONTAINER &&container) noexcept
-    : _data(container.data()), _size(container.size())
     {
     }
 
@@ -359,6 +286,22 @@ namespace lak
 
     inline auto to_string() const;
     inline auto stringify() const;
+
+    // add const
+    constexpr operator span<const T, lak::dynamic_extent>() const noexcept;
+
+    // reinterpret cast to U
+    template<lak::concepts::ptr_reinterpret_castable_from<T> U>
+      requires !lak::concepts::same_as<U, T> &&
+      !lak::concepts::same_as<U, void> //
+      constexpr explicit operator span<U, lak::dynamic_extent>()
+        const noexcept;
+
+    // reinterpret cast to void
+    template<lak::concepts::void_type V>
+    requires lak::concepts::ptr_reinterpret_castable<T, V> //
+      constexpr explicit operator span<V, lak::dynamic_extent>()
+        const noexcept;
   };
 
   template<>
@@ -376,38 +319,6 @@ namespace lak
     constexpr span(const span &) = default;
     constexpr span &operator=(const span &) = default;
 
-    template<typename T, std::enable_if_t<!std::is_void_v<T>, int> = 0>
-    inline constexpr span(const span<T> &other) noexcept
-    : _data(other.data()), _size(sizeof(T) * other.size())
-    {
-    }
-
-    template<typename T>
-    inline constexpr span(std::vector<T> &vector) noexcept
-    : _data(vector.data()), _size(sizeof(T) * vector.size())
-    {
-    }
-
-    template<typename T, size_t N>
-    inline constexpr span(std::array<T, N> &array) noexcept
-    : _data(array.data()), _size(sizeof(T) * N)
-    {
-    }
-
-    template<
-      typename T,
-      size_t SIZE,
-      std::enable_if_t<!std::is_same_v<lak::remove_cvref_t<T>, char> &&
-                         !std::is_same_v<lak::remove_cvref_t<T>, wchar_t> &&
-                         !std::is_same_v<lak::remove_cvref_t<T>, char8_t> &&
-                         !std::is_same_v<lak::remove_cvref_t<T>, char16_t> &&
-                         !std::is_same_v<lak::remove_cvref_t<T>, char32_t>,
-                       int> = 0>
-    inline constexpr span(T (&data)[SIZE]) noexcept
-    : _data(data), _size(SIZE * sizeof(T))
-    {
-    }
-
     inline constexpr span(void *data, size_t size) noexcept
     : _data(data), _size(size)
     {
@@ -420,6 +331,15 @@ namespace lak
     inline constexpr size_t size() const noexcept;
 
     inline constexpr size_t size_bytes() const noexcept;
+
+    // add const
+    constexpr operator span<const void, lak::dynamic_extent>() const noexcept;
+
+    // reinterpret cast to U
+    template<lak::concepts::ptr_reinterpret_castable_from<void> U>
+    requires !lak::is_void_v<U> //
+      constexpr explicit operator span<U, lak::dynamic_extent>()
+        const noexcept;
   };
 
   template<>
@@ -437,61 +357,6 @@ namespace lak
     constexpr span(const span &) = default;
     constexpr span &operator=(const span &) = default;
 
-    inline constexpr span(const span<void> &other) noexcept
-    : _data(other.data()), _size(other.size())
-    {
-    }
-
-    template<typename T, std::enable_if_t<!std::is_void_v<T>, int> = 0>
-    inline constexpr span(const span<T> &other) noexcept
-    : _data(other.data()), _size(sizeof(T) * other.size())
-    {
-    }
-
-    template<typename T>
-    inline constexpr span(std::vector<T> &vector) noexcept
-    : _data(vector.data()), _size(sizeof(T) * vector.size())
-    {
-    }
-
-    template<typename T>
-    inline constexpr span(const std::vector<T> &vector) noexcept
-    : _data(vector.data()), _size(sizeof(T) * vector.size())
-    {
-    }
-
-    template<typename T, size_t N>
-    inline constexpr span(std::array<T, N> &array) noexcept
-    : _data(array.data()), _size(sizeof(T) * N)
-    {
-    }
-
-    template<typename T, size_t N>
-    inline constexpr span(const std::array<T, N> &array) noexcept
-    : _data(array.data()), _size(sizeof(T) * N)
-    {
-    }
-
-    template<typename T>
-    inline constexpr span(std::initializer_list<T> list) noexcept
-    : _data(list.begin()), _size(sizeof(T) * list.size())
-    {
-    }
-
-    template<
-      typename T,
-      size_t SIZE,
-      std::enable_if_t<!std::is_same_v<lak::remove_cvref_t<T>, char> &&
-                         !std::is_same_v<lak::remove_cvref_t<T>, wchar_t> &&
-                         !std::is_same_v<lak::remove_cvref_t<T>, char8_t> &&
-                         !std::is_same_v<lak::remove_cvref_t<T>, char16_t> &&
-                         !std::is_same_v<lak::remove_cvref_t<T>, char32_t>,
-                       int> = 0>
-    inline constexpr span(T (&data)[SIZE]) noexcept
-    : _data(data), _size(SIZE * sizeof(T))
-    {
-    }
-
     inline constexpr span(const void *data, size_t size) noexcept
     : _data(data), _size(size)
     {
@@ -504,19 +369,21 @@ namespace lak
     inline constexpr size_t size() const noexcept;
 
     inline constexpr size_t size_bytes() const noexcept;
+
+    // reinterpret cast to U
+    template<lak::concepts::ptr_reinterpret_castable_from<const void> U>
+    requires !lak::is_void_v<U> //
+      constexpr explicit operator span<U, lak::dynamic_extent>()
+        const noexcept;
   };
 
-  template<typename T>
-  span(const std::vector<T> &) -> span<const T, lak::dynamic_extent>;
+  template<lak::concepts::contiguous_range RANGE>
+  span(RANGE &r)
+    -> span<lak::remove_pointer_t<decltype(r.data())>, lak::dynamic_extent>;
 
-  template<typename T>
-  span(std::vector<T> &) -> span<T, lak::dynamic_extent>;
-
-  template<typename T, size_t N>
-  span(const std::array<T, N> &) -> span<const T, N>;
-
-  template<typename T, size_t N>
-  span(std::array<T, N> &) -> span<T, N>;
+  template<lak::concepts::contiguous_range RANGE>
+  span(const RANGE &r)
+    -> span<lak::remove_pointer_t<decltype(r.data())>, lak::dynamic_extent>;
 
   template<typename T, size_t N>
   span(const lak::array<T, N> &) -> span<const T, N>;

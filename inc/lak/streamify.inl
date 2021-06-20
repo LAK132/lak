@@ -9,7 +9,7 @@
 template<typename CHAR, typename... ARGS>
 lak::string<CHAR> lak::streamify(const ARGS &... args)
 {
-#ifndef LAK_COMPILER_CPP20
+#if 1 // ndef LAK_COMPILER_CPP20
   std::basic_stringstream<
     std::conditional_t<std::is_same_v<CHAR, char8_t>, char, CHAR>>
     _strm;
@@ -42,7 +42,11 @@ lak::string<CHAR> lak::streamify(const ARGS &... args)
         ::operator<<(strm, arg);
       else if constexpr (std::is_null_pointer_v<arg_t>)
         strm << "nullptr";
-#ifndef LAK_COMPILER_CPP20
+#if 1 // ndef LAK_COMPILER_CPP20
+      else if constexpr (lak::is_same_v<const char8_t *,
+                                        lak::add_wconst_t<arg_t>> &&
+                         std::is_same_v<CHAR, char>)
+        strm << lak::as_astring(lak::string_view(arg));
       else if constexpr (std::is_same_v<arg_t, lak::u8string> &&
                          std::is_same_v<CHAR, char8_t>)
         strm << lak::as_astring(arg);
@@ -61,7 +65,7 @@ lak::string<CHAR> lak::streamify(const ARGS &... args)
 
   (streamer(args), ...);
 
-#ifndef LAK_COMPILER_CPP20
+#if 1 // ndef LAK_COMPILER_CPP20
   if constexpr (std::is_same_v<CHAR, char8_t>)
     return lak::as_u8string(_strm.str()).to_string();
   else
