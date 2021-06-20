@@ -1,6 +1,7 @@
 #ifndef LAK_RESULT_HPP
 #define LAK_RESULT_HPP
 
+#include "lak/concepts.hpp"
 #include "lak/macro_utils.hpp"
 #include "lak/optional.hpp"
 #include "lak/type_traits.hpp"
@@ -66,6 +67,18 @@ namespace lak
   {
     using ok_type  = lak::remove_reference_t<OK>;
     using err_type = lak::remove_reference_t<ERR>;
+
+    template<typename T>
+    using rebind_ok = lak::result<T, ERR>;
+    template<typename T>
+    using rebind_err = lak::result<OK, T>;
+
+    template<typename F, typename... T>
+    requires lak::concepts::invocable<F, T...> //
+      using invoke_rebind_ok = rebind_ok<lak::invoke_result_t<F, T...>>;
+    template<typename F, typename... T>
+    requires lak::concepts::invocable<F, T...> //
+      using invoke_rebind_err = rebind_err<lak::invoke_result_t<F, T...>>;
 
   private:
     lak::variant<OK, ERR> _value;
@@ -157,69 +170,60 @@ namespace lak
 
     /* --- map --- */
 
-    template<typename FUNCTOR>
-    result<lak::remove_cvref_t<std::invoke_result_t<FUNCTOR, ok_type &>>, ERR>
-    map(FUNCTOR && functor) &
+    template<lak::concepts::invocable<ok_type &> F>
+    auto map(F && f) &->invoke_rebind_ok<F, ok_type &>
     {
       if (is_ok())
-        return lak::ok_t{functor(get_ok())};
+        return lak::ok_t{f(get_ok())};
       else
         return lak::err_t{get_err()};
     }
 
-    template<typename FUNCTOR>
-    result<lak::remove_cvref_t<std::invoke_result_t<FUNCTOR, const ok_type &>>,
-           err_type>
-      map(FUNCTOR && functor) const &
+    template<lak::concepts::invocable<const ok_type &> F>
+    auto map(F && f) const &->invoke_rebind_ok<F, const ok_type &>
     {
       if (is_ok())
-        return lak::ok_t{functor(get_ok())};
+        return lak::ok_t{f(get_ok())};
       else
         return lak::err_t{get_err()};
     }
 
-    template<typename FUNCTOR>
-    result<lak::remove_cvref_t<std::invoke_result_t<FUNCTOR, OK &&>>, ERR> map(
-      FUNCTOR && functor) &&
+    template<lak::concepts::invocable<OK &&> F>
+    auto map(F && f) &&->invoke_rebind_ok<F, OK &&>
     {
       if (is_ok())
-        return lak::ok_t{functor(forward_ok())};
+        return lak::ok_t{f(forward_ok())};
       else
         return lak::err_t{forward_err()};
     }
 
     /* --- map_err --- */
 
-    template<typename FUNCTOR>
-    result<OK, lak::remove_cvref_t<std::invoke_result_t<FUNCTOR, err_type &>>>
-    map_err(FUNCTOR && functor) &
+    template<lak::concepts::invocable<err_type &> F>
+    auto map_err(F && f) &->invoke_rebind_err<F, err_type &>
     {
       if (is_ok())
         return lak::ok_t{get_ok()};
       else
-        return lak::err_t{functor(get_err())};
+        return lak::err_t{f(get_err())};
     }
 
-    template<typename FUNCTOR>
-    result<
-      ok_type,
-      lak::remove_cvref_t<std::invoke_result_t<FUNCTOR, const err_type &>>>
-      map_err(FUNCTOR && functor) const &
+    template<lak::concepts::invocable<const err_type &> F>
+    auto map_err(F && f) const &->invoke_rebind_err<F, const err_type &>
     {
       if (is_ok())
         return lak::ok_t{get_ok()};
       else
-        return lak::err_t{functor(get_err())};
+        return lak::err_t{f(get_err())};
     }
 
-    template<typename FUNCTOR>
-    result<OK, lak::remove_cvref_t<std::invoke_result_t<FUNCTOR, ERR &&>>>
-    map_err(FUNCTOR && functor) &&
+    template<lak::concepts::invocable<ERR &&> F>
+    auto map_err(F && f) &&->invoke_rebind_err<F, ERR &&>
     {
       if (is_ok())
         return lak::ok_t{forward_ok()};
       else
-        return lak::err_t{functor(forward_err())};
+        return lak::err_t{f(forward_err())};
     }
 
     /* --- and_then --- */
@@ -227,43 +231,30 @@ namespace lak
     // and_then(func) ~= map(func).flatten()
 
     template<
-      typename FUNCTOR,
-      lak::enable_if_i<lak::is_same_v<
-        ERR,
-        lak::result_err_type_t<std::invoke_result_t<FUNCTOR, ok_type &>>>> = 0>
-    lak::remove_cvref_t<std::invoke_result_t<FUNCTOR, ok_type &>> and_then(
-      FUNCTOR && functor) &
+      lak::concepts::invocable_result_of_template<lak::result, ok_type &> F>
+    auto and_then(F && f) &->lak::invoke_result_t<F, ok_type &>
     {
       if (is_ok())
-        return functor(get_ok());
+        return f(get_ok());
       else
         return lak::err_t{get_err()};
     }
 
-    template<typename FUNCTOR,
-             lak::enable_if_i<lak::is_same_v<
-               ERR,
-               lak::result_err_type_t<
-                 std::invoke_result_t<FUNCTOR, const ok_type &>>>> = 0>
-    lak::remove_cvref_t<std::invoke_result_t<FUNCTOR, const ok_type &>>
-      and_then(FUNCTOR && functor) const &
+    template<lak::concepts::invocable_result_of_template<lak::result,
+                                                         const ok_type &> F>
+    auto and_then(F && f) const &->lak::invoke_result_t<F, const ok_type &>
     {
       if (is_ok())
-        return functor(get_ok());
+        return f(get_ok());
       else
         return lak::err_t{get_err()};
     }
 
-    template<typename FUNCTOR,
-             lak::enable_if_i<lak::is_same_v<
-               ERR,
-               lak::result_err_type_t<std::invoke_result_t<FUNCTOR, OK &&>>>> =
-               0>
-    lak::remove_cvref_t<std::invoke_result_t<FUNCTOR, OK &&>> and_then(
-      FUNCTOR && functor) &&
+    template<lak::concepts::invocable_result_of_template<lak::result, OK &&> F>
+    auto and_then(F && f) &&->lak::invoke_result_t<F, OK &&>
     {
       if (is_ok())
-        return functor(forward_ok());
+        return f(forward_ok());
       else
         return lak::err_t{forward_err()};
     }
@@ -271,13 +262,8 @@ namespace lak
     /* --- or_else --- */
 
     template<
-      typename FUNCTOR,
-      lak::enable_if_i<lak::is_same_v<
-        ERR,
-        lak::result_err_type_t<std::invoke_result_t<FUNCTOR, err_type &>>>> =
-        0>
-    lak::remove_cvref_t<std::invoke_result_t<FUNCTOR, err_type &>> or_else(
-      FUNCTOR && functor) &
+      lak::concepts::invocable_result_of_template<lak::result, err_type &> F>
+    auto or_else(F && f) &->lak::invoke_result_t<F, err_type &>
     {
       if (is_ok())
         return lak::ok_t{get_ok()};
@@ -285,13 +271,9 @@ namespace lak
         return functor(get_err());
     }
 
-    template<typename FUNCTOR,
-             lak::enable_if_i<lak::is_same_v<
-               ERR,
-               lak::result_err_type_t<
-                 std::invoke_result_t<FUNCTOR, const err_type &>>>> = 0>
-    lak::remove_cvref_t<std::invoke_result_t<FUNCTOR, const err_type &>>
-      or_else(FUNCTOR && functor) const &
+    template<lak::concepts::invocable_result_of_template<lak::result,
+                                                         const err_type &> F>
+    auto or_else(F && f) const &->lak::invoke_result_t<F, const err_type &>
     {
       if (is_ok())
         return lak::ok_t{get_ok()};
@@ -300,12 +282,8 @@ namespace lak
     }
 
     template<
-      typename FUNCTOR,
-      lak::enable_if_i<lak::is_same_v<
-        ERR,
-        lak::result_err_type_t<std::invoke_result_t<FUNCTOR, ERR &&>>>> = 0>
-    lak::remove_cvref_t<std::invoke_result_t<FUNCTOR, ERR &&>> or_else(
-      FUNCTOR && functor) &&
+      lak::concepts::invocable_result_of_template<lak::result, ERR &&> F>
+    auto or_else(F && f) &&->lak::invoke_result_t<F, ERR &&>
     {
       if (is_ok())
         return lak::ok_t{forward_ok()};
