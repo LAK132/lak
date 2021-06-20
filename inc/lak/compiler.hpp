@@ -17,8 +17,8 @@
 #  define LAK_COMPILER_CPP98
 #endif
 
-#ifndef LAK_COMPILER_CPP17
-#  error Expected at least a C++17 compiler
+#ifndef LAK_COMPILER_CPP20
+#  error Expected at least a C++20 compiler
 #endif
 
 #ifdef __EMSCRIPTEN__
