@@ -1381,6 +1381,80 @@ namespace lak
 
   template<typename T>
   inline constexpr bool is_resizable_v = lak::is_resizable<T>::value;
+
+  /* --- is_same_template --- */
+
+  template<template<typename...> typename T, template<typename...> typename U>
+  struct is_same_template : lak::false_type
+  {
+  };
+
+  template<template<typename...> typename T>
+  struct is_same_template<T, T> : lak::true_type
+  {
+  };
+
+  template<template<typename...> typename T, template<typename...> typename U>
+  static constexpr bool is_same_template_v =
+    lak::is_same_template<T, U>::value;
+
+  /* --- is_of_template --- */
+
+  template<typename T, template<typename...> typename U>
+  struct is_of_template : lak::false_type
+  {
+  };
+
+  template<template<typename...> typename T, typename... U>
+  struct is_of_template<T<U...>, T> : lak::true_type
+  {
+  };
+
+  template<typename T, template<typename...> typename U>
+  static constexpr bool is_of_template_v = lak::is_of_template<T, U>::value;
+
+  /* --- invoke_result --- */
+
+  template<typename F, typename... ARGS>
+  struct invoke_result
+  : lak::type_identity<decltype(lak::declval<F>()(lak::declval<ARGS>()...))>
+  {
+  };
+
+  template<typename F, typename... ARGS>
+  using invoke_result_t = lak::invoke_result<F, ARGS...>::type;
+
+  /* --- is_invocable --- */
+
+  template<typename V, typename F, typename... ARGS>
+  struct _is_invocable : lak::false_type
+  {
+  };
+
+  template<typename F, typename... ARGS>
+  struct _is_invocable<
+    lak::void_t<decltype(lak::declval<F>()(lak::declval<ARGS>()...))>,
+    F,
+    ARGS...> : lak::true_type
+  {
+  };
+
+  template<typename F, typename... ARGS>
+  struct is_invocable : lak::_is_invocable<void, F, ARGS...>
+  {
+  };
+
+  template<typename F, typename... ARGS>
+  static constexpr bool is_invocable_v = lak::is_invocable<F, ARGS...>::value;
+
+  static_assert(!lak::is_invocable_v<int>);
+  static_assert(!lak::is_invocable_v<int, int>);
+  static_assert(!lak::is_invocable_v<void(), int>);
+  static_assert(!lak::is_invocable_v<void(int &), const int &>);
+  static_assert(!lak::is_invocable_v<void(int &&), const int &>);
+  static_assert(!lak::is_invocable_v<decltype([](int &&) {}), const int &>);
+  static_assert(lak::is_invocable_v<void(int), int>);
+  static_assert(lak::is_invocable_v<void()>);
 }
 
 #endif
