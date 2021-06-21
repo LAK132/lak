@@ -321,7 +321,7 @@ namespace lak
       if (is_ok())
         return lak::ok_t{get_ok()};
       else
-        return functor(get_err());
+        return f(get_err());
     }
 
     template<lak::concepts::invocable_result_of_template<lak::result,
@@ -331,7 +331,7 @@ namespace lak
       if (is_ok())
         return lak::ok_t{get_ok()};
       else
-        return functor(get_err());
+        return f(get_err());
     }
 
     template<
@@ -341,7 +341,7 @@ namespace lak
       if (is_ok())
         return lak::ok_t{forward_ok()};
       else
-        return functor(forward_err());
+        return f(forward_err());
     }
 
     /* --- expect --- */
