@@ -606,6 +606,8 @@ namespace lak
   if_ok([&](const auto &val) { DEBUG(__VA_ARGS__, ": ", val); })
 #define IF_ERR(...)                                                           \
   if_err([&](const auto &err) { ERROR(__VA_ARGS__, ": ", err); })
+#define IF_ERR_WARN(...)                                                      \
+  if_err([&](const auto &err) { WARNING(__VA_ARGS__, ": ", err); })
 
 #define RES_TRY_FLUENT(...)                                                   \
   auto UNIQUIFY(RESULT_) = __VA_ARGS__;                                       \
