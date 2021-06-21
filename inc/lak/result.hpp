@@ -226,6 +226,59 @@ namespace lak
         return lak::err_t{f(forward_err())};
     }
 
+    /* --- map_expect_value --- */
+
+    // err -> err<ERR>
+    // ok == expected -> ok<>
+    // ok != expected -> err<ERR>
+
+    template<lak::concepts::invocable_result_of<ERR, ok_type &> F>
+    auto map_expect_value(
+      const ok_type &expected,
+      F &&on_unexpected) &->lak::result<lak::monostate, ERR>
+    {
+      if (is_ok())
+      {
+        if (get_ok() == expected)
+          return lak::ok_t{};
+        else
+          return lak::err_t{on_unexpected(get_ok())};
+      }
+      else
+        return lak::err_t{get_err()};
+    }
+
+    template<lak::concepts::invocable_result_of<ERR, const ok_type &> F>
+    auto map_expect_value(const ok_type &expected, F &&on_unexpected)
+      const &->lak::result<lak::monostate, ERR>
+    {
+      if (is_ok())
+      {
+        if (get_ok() == expected)
+          return lak::ok_t{};
+        else
+          return lak::err_t{on_unexpected(get_ok())};
+      }
+      else
+        return lak::err_t{get_err()};
+    }
+
+    template<lak::concepts::invocable_result_of<ERR, OK &&> F>
+    auto map_expect_value(
+      const ok_type &expected,
+      F &&on_unexpected) &&->lak::result<lak::monostate, ERR>
+    {
+      if (is_ok())
+      {
+        if (get_ok() == expected)
+          return lak::ok_t{};
+        else
+          return lak::err_t{on_unexpected(forward_ok())};
+      }
+      else
+        return lak::err_t{get_err()};
+    }
+
     /* --- and_then --- */
 
     // and_then(func) ~= map(func).flatten()
