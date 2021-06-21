@@ -156,6 +156,19 @@ namespace lak
     template<typename F, typename... ARGS>
     concept invocable = lak::is_invocable_v<F, ARGS...>;
 
+    /* --- invocable_result_of --- */
+
+    template<typename F, typename R, typename... ARGS>
+    concept invocable_result_of = lak::concepts::invocable<F, ARGS...>
+      &&lak::concepts::same_as<lak::invoke_result_t<F, ARGS...>, R>;
+
+    /* --- invocable_result_static_castable_to --- */
+
+    template<typename F, typename R, typename... ARGS>
+    concept invocable_result_static_castable_to =
+      lak::concepts::invocable<F, ARGS...>
+        &&lak::concepts::static_castable<lak::invoke_result_t<F, ARGS...>, R>;
+
     /* --- invocable_result_of_template --- */
 
     template<typename F, template<typename...> typename R, typename... ARGS>
