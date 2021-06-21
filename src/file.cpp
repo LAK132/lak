@@ -22,8 +22,35 @@
 #include "lak/debug.hpp"
 #include "lak/file.hpp"
 
+#include "lak/strconv.hpp"
+
 #include <fstream>
 #include <iostream>
+
+inline lak::astring lak::to_astring(const fs::path &path)
+{
+  return lak::to_astring(path.native());
+}
+
+inline lak::wstring lak::to_wstring(const fs::path &path)
+{
+  return lak::to_wstring(path.native());
+}
+
+inline lak::u8string lak::to_u8string(const fs::path &path)
+{
+  return lak::to_u8string(path.native());
+}
+
+inline lak::u16string lak::to_u16string(const fs::path &path)
+{
+  return lak::to_u16string(path.native());
+}
+
+inline lak::u32string lak::to_u32string(const fs::path &path)
+{
+  return lak::to_u32string(path.native());
+}
 
 lak::error_code_result<bool> lak::path_exists(const lak::fs::path &path)
 {
