@@ -102,6 +102,21 @@ namespace lak
         [&](...) { this->cursor += lak::from_bytes_size_v<T, E> * count; });
     }
 
+    // always read count bytes even if the c string isn't the full count bytes
+    template<typename CHAR, lak::endian E = lak::endian::little>
+    lak::result<lak::string<CHAR>> read_exact_c_str(size_t count)
+    {
+      return read<CHAR>(count).map([](lak::array<CHAR> &&array) {
+        size_t len = 0;
+        for (const auto &c : array)
+        {
+          if (c == CHAR(0)) break;
+          ++len;
+        }
+        return lak::string<CHAR>(array.data(), array.data() + len);
+      });
+    }
+
     template<typename CHAR, lak::endian E = lak::endian::little>
     lak::result<lak::string<CHAR>> read_c_str(size_t max_size = SIZE_MAX)
     {
