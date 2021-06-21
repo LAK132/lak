@@ -5,6 +5,7 @@
 
 #  include "lak/array.hpp"
 #  include "lak/errno_result.hpp"
+#  include "lak/error_code_result.hpp"
 #  include "lak/string.hpp"
 
 #  include <filesystem>
@@ -14,7 +15,24 @@ namespace lak
 {
   namespace fs = std::filesystem;
 
-  lak::errno_result<bool> path_exists(const fs::path &path);
+  // true if path exists
+  // false if path does not exist
+  // error if an OS error occurs
+  lak::error_code_result<bool> path_exists(const fs::path &path);
+
+  // ok if copy was successful
+  // error if an OS error occurs
+  lak::error_code_result<> copy_file(const fs::path &from, const fs::path &to);
+
+  // true if directory was created
+  // false if directory already exists
+  // error if an OS error occurred
+  lak::error_code_result<bool> create_directory(const fs::path &path);
+
+  // ok if copy was successful
+  // error if an OS error occurs
+  lak::error_code_result<> create_hard_link(const fs::path &file,
+                                            const fs::path &link);
 
   lak::errno_result<lak::array<uint8_t>> read_file(const fs::path &path);
 

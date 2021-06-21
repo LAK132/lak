@@ -25,13 +25,46 @@
 #include <fstream>
 #include <iostream>
 
-lak::errno_result<bool> lak::path_exists(const lak::fs::path &path)
+lak::error_code_result<bool> lak::path_exists(const lak::fs::path &path)
 {
   std::error_code ec;
   if (bool result = fs::exists(path, ec); ec)
-    return lak::err_t{lak::errno_error{ec.value()}};
+    return lak::err_t{lak::error_code_error{ec}};
   else
     return lak::ok_t{result};
+}
+
+lak::error_code_result<> lak::copy_file(const fs::path &from,
+                                        const fs::path &to)
+{
+  std::error_code ec;
+  // this overload of copy_file only returns false if an error occurs
+  if (bool result = fs::copy_file(from, to, ec); ec)
+  {
+    ASSERT(!result);
+    return lak::err_t{lak::error_code_error{ec}};
+  }
+  else
+    return lak::ok_t{};
+}
+
+lak::error_code_result<bool> lak::create_directory(const fs::path &path)
+{
+  std::error_code ec;
+  if (bool result = fs::create_directory(path, ec); ec)
+    return lak::err_t{lak::error_code_error{ec}};
+  else
+    return lak::ok_t{result};
+}
+
+lak::error_code_result<> lak::create_hard_link(const fs::path &file,
+                                               const fs::path &link)
+{
+  std::error_code ec;
+  if (fs::create_hard_link(file, link, ec); ec)
+    return lak::err_t{lak::error_code_error{ec}};
+  else
+    return lak::ok_t{};
 }
 
 lak::errno_result<lak::array<uint8_t>> lak::read_file(
