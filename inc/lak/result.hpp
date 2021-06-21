@@ -602,8 +602,10 @@ namespace lak
 #  define UNWRAP_ERR() unwrap_err()
 #endif
 
-#define IF_OK(...)  if_ok([&](const auto &val) { DEBUG(__VA_ARGS__, val); })
-#define IF_ERR(...) if_err([&](const auto &err) { ERROR(__VA_ARGS__, err); })
+#define IF_OK(...)                                                            \
+  if_ok([&](const auto &val) { DEBUG(__VA_ARGS__, ": ", val); })
+#define IF_ERR(...)                                                           \
+  if_err([&](const auto &err) { ERROR(__VA_ARGS__, ": ", err); })
 
 #define RES_TRY_FLUENT(...)                                                   \
   auto UNIQUIFY(RESULT_) = __VA_ARGS__;                                       \
