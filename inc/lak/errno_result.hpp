@@ -23,7 +23,7 @@ namespace lak
     }
   };
 
-  template<typename T>
+  template<typename T = lak::monostate>
   using errno_result = lak::result<T, errno_error>;
 }
 
