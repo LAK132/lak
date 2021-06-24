@@ -12,9 +12,10 @@ namespace lak
   private:
     lak::span<const uint8_t> _data;
 
-    uintmax_t _bit_accum = 0;
-    uint8_t _num_bits    = 0;
-    uint8_t _unused_bits = 8;
+    uintmax_t _bit_accum  = 0;
+    uint8_t _num_bits     = 0; // number of bits accumulated.
+    uint8_t _unused_bits  = 8; // bits of _data[0] that are unaccumulated.
+    uintmax_t _bytes_read = 0; // number of bytes flushed from _data.
 
     inline void flush_bits(const uint8_t bits);
 
@@ -24,6 +25,12 @@ namespace lak
     bit_reader(const bit_reader &) = default;
 
     bit_reader &operator=(const bit_reader &) = default;
+
+    // (bytes, bits)
+    inline lak::pair<uintmax_t, uint8_t> bytes_read() const
+    {
+      return lak::pair<uintmax_t, uint8_t>(_bytes_read, 8 - _unused_bits);
+    }
 
     inline bit_reader(lak::span<const uint8_t> data) : _data(data) {}
 

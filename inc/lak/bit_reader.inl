@@ -25,6 +25,7 @@ lak::bit_reader::peek_bits(const uint8_t bits)
       _num_bits += _unused_bits;
       _unused_bits = 8;
       _data        = _data.subspan(1);
+      ++_bytes_read;
     }
     else
     {

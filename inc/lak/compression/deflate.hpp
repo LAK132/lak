@@ -120,6 +120,9 @@ namespace lak
 
     bool is_final_block() const;
 
+    // (bytes, bits)
+    auto bytes_read() const { return _compressed.bytes_read(); }
+
     lak::span<const uint8_t> compressed() const;
     void replace_compressed(lak::span<const uint8_t> compressed);
 
