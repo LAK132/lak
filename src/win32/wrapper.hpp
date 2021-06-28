@@ -1,6 +1,7 @@
 #ifndef LAK_WIN32_WRAPPER_HPP
 #define LAK_WIN32_WRAPPER_HPP
 
+#undef ERROR
 #ifndef WIN32_MEAN_AND_LEAN
 #  define WIN32_MEAN_AND_LEAN
 #endif

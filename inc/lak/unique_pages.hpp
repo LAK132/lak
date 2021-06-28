@@ -1,6 +1,8 @@
 #ifndef LAK_UNIQUE_PAGES_HPP
 #define LAK_UNIQUE_PAGES_HPP
 
+#include "lak/span.hpp"
+
 namespace lak
 {
   struct unique_pages : private lak::span<void>

@@ -1,6 +1,7 @@
 #ifndef LAK_CHAR_HPP
 #define LAK_CHAR_HPP
 
+#include "lak/compiler.hpp"
 #include "lak/stdint.hpp"
 
 // char8_t typedef for C++ < 20
