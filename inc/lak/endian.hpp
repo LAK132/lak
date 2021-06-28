@@ -28,9 +28,9 @@ namespace lak
   {
     little = 0,
     big    = 1,
-#ifdef LAK_LITTLE_ENDIAN
+#if defined(LAK_LITTLE_ENDIAN)
     native = little
-#else
+#elif defined(LAK_BIG_ENDIAN)
     native = big
 #endif
   };
