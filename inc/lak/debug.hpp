@@ -4,21 +4,24 @@
 
 #undef TO_STRING
 #define TO_STRING(x)                                                          \
-  [&] {                                                                       \
+  [&]                                                                         \
+  {                                                                           \
     std::stringstream _debug_stream;                                          \
     _debug_stream << x;                                                       \
     return _debug_stream.str();                                               \
   }()
 #undef TO_U8STRING
 #define TO_U8STRING(x)                                                        \
-  [&] {                                                                       \
+  [&]                                                                         \
+  {                                                                           \
     std::stringstream _debug_stream;                                          \
     _debug_stream << x;                                                       \
     return lak::as_u8string(_debug_stream.str()).to_string();                 \
   }()
 #undef TO_WSTRING
 #define TO_WSTRING(x)                                                         \
-  [&] {                                                                       \
+  [&]                                                                         \
+  {                                                                           \
     std::wstringstream _debug_stream;                                         \
     _debug_stream << x;                                                       \
     return _debug_stream.str();                                               \

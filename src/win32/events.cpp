@@ -409,9 +409,8 @@ bool handle_size_move_event(const lak::platform_instance &instance,
 lak::window_handle *window_from_event(const MSG &event)
 {
   return event.hwnd ? lak::bank<lak::window_handle>::find_if(
-                        [hwnd = event.hwnd](const lak::window_handle &handle) {
-                          return handle._platform_handle == hwnd;
-                        })
+                        [hwnd = event.hwnd](const lak::window_handle &handle)
+                        { return handle._platform_handle == hwnd; })
                     : nullptr;
 }
 

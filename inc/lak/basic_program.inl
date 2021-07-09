@@ -128,7 +128,8 @@ int main(int argc, char **argv)
   auto instance = lak::platform_init();
   DEFER(lak::platform_quit(&instance));
 
-  auto window = [&] {
+  auto window = [&]
+  {
     if (!basic_window_force_software)
     {
       // Attempt to open an OpenGL window first.

@@ -477,7 +477,8 @@ bool lak::set_clipboard(const lak::platform_instance &i,
 bool lak::set_clipboard(const lak::platform_instance &i,
                         lak::span<const char8_t> s)
 {
-  [&]() -> lak::winapi::result<lak::monostate> {
+  [&]() -> lak::winapi::result<lak::monostate>
+  {
     std::wstring str = lak::to_wstring(s);
 
     WINAPI_EXPECT(::OpenClipboard(NULL));
@@ -504,11 +505,13 @@ bool lak::set_clipboard(const lak::platform_instance &i,
 
     return lak::winapi::invoke_bool<true>(
              ::SetClipboardData, CF_UNICODETEXT, clipboard_data)
-      .map_err([&](auto err) {
-        lak::winapi::invoke_bool<true>(::GlobalFree, clipboard_data)
-          .EXPECT("GlobalFree failed");
-        return err;
-      });
+      .map_err(
+        [&](auto err)
+        {
+          lak::winapi::invoke_bool<true>(::GlobalFree, clipboard_data)
+            .EXPECT("GlobalFree failed");
+          return err;
+        });
   }()
              .EXPECT("set_clipboard failed");
   return true;

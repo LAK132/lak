@@ -4,7 +4,7 @@
 #include "lak/unicode.hpp"
 
 template<typename CHAR, typename... ARGS>
-lak::string<CHAR> lak::streamify(const ARGS &... args)
+lak::string<CHAR> lak::streamify(const ARGS &...args)
 {
 #if 1 // ndef LAK_COMPILER_CPP20
   std::basic_stringstream<
@@ -18,7 +18,8 @@ lak::string<CHAR> lak::streamify(const ARGS &... args)
 #endif
   strm << std::hex << std::noshowbase << std::uppercase << std::boolalpha;
 
-  [[maybe_unused]] auto streamer = [&strm](const auto &arg) {
+  [[maybe_unused]] auto streamer = [&strm](const auto &arg)
+  {
     using arg_t = lak::remove_cvref_t<decltype(arg)>;
 
     if constexpr (lak::is_same_v<arg_t, bool>)

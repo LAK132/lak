@@ -31,14 +31,16 @@ bool lak::deflate_iterator::get_huff(lak::span<int16_t> table, T *out)
   for (bool looping = true; looping;)
   {
     if (_compressed.peek_bits(bits_used + 1)
-          .if_ok([&](uintmax_t v) {
-            index += (v >> bits_used) & 1;
-            ++bits_used;
-            if (table[index] >= 0)
-              looping = false;
-            else
-              index = ~(table[index]);
-          })
+          .if_ok(
+            [&](uintmax_t v)
+            {
+              index += (v >> bits_used) & 1;
+              ++bits_used;
+              if (table[index] >= 0)
+                looping = false;
+              else
+                index = ~(table[index]);
+            })
           .is_err())
       return true;
   }

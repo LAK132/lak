@@ -90,13 +90,16 @@ namespace lak
                                          size_type size)
     {
       return lak::array_from_bytes<value_type, E>(bytes, size.x * size.y)
-        .map([&size](lak::array<value_type> &&data) -> image {
-          image result;
-          result._value = lak::move(data);
-          result._size  = size;
-          ASSERT_EQUAL(result._value.size(), result._size.x * result._size.y);
-          return result;
-        });
+        .map(
+          [&size](lak::array<value_type> &&data) -> image
+          {
+            image result;
+            result._value = lak::move(data);
+            result._size  = size;
+            ASSERT_EQUAL(result._value.size(),
+                         result._size.x * result._size.y);
+            return result;
+          });
     }
 
   private:
