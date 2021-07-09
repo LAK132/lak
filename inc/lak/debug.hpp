@@ -154,152 +154,169 @@
   }
 #define ASSERT_EQUAL(X, Y)                                                    \
   {                                                                           \
-    const auto &x = (X);                                                      \
-    const auto &y = (Y);                                                      \
-    if (!((x) == (y)))                                                        \
+    const auto &UNIQUIFY(x) = (X);                                            \
+    const auto &UNIQUIFY(y) = (Y);                                            \
+    if (!(UNIQUIFY(x) == UNIQUIFY(y)))                                        \
     {                                                                         \
-      FATAL(                                                                  \
-        "Assertion '" STRINGIFY(X == Y) "' failed: '", x, "' != '", y, "'");  \
+      FATAL("Assertion '" STRINGIFY(X == Y) "' failed: '",                    \
+            UNIQUIFY(x),                                                      \
+            "' != '",                                                         \
+            UNIQUIFY(y),                                                      \
+            "'");                                                             \
     }                                                                         \
   }
 #define ASSERT_NOT_EQUAL(X, Y)                                                \
   {                                                                           \
-    const auto &x = (X);                                                      \
-    const auto &y = (Y);                                                      \
-    if (!((x) != (y)))                                                        \
+    const auto &UNIQUIFY(x) = (X);                                            \
+    const auto &UNIQUIFY(y) = (Y);                                            \
+    if (!(UNIQUIFY(x) != UNIQUIFY(y)))                                        \
     {                                                                         \
-      FATAL(                                                                  \
-        "Assertion '" STRINGIFY(X != Y) "' failed: '", x, "' == '", y, "'");  \
+      FATAL("Assertion '" STRINGIFY(X != Y) "' failed: '",                    \
+            UNIQUIFY(x),                                                      \
+            "' == '",                                                         \
+            UNIQUIFY(y),                                                      \
+            "'");                                                             \
     }                                                                         \
   }
 #define ASSERT_GREATER(X, Y)                                                  \
   {                                                                           \
-    const auto &x = (X);                                                      \
-    const auto &y = (Y);                                                      \
-    if (!((x) > (y)))                                                         \
+    const auto &UNIQUIFY(x) = (X);                                            \
+    const auto &UNIQUIFY(y) = (Y);                                            \
+    if (!(UNIQUIFY(x) > UNIQUIFY(y)))                                         \
     {                                                                         \
-      FATAL(                                                                  \
-        "Assertion '" STRINGIFY(X > Y) "' failed: '", x, "' <= '", y, "'");   \
+      FATAL("Assertion '" STRINGIFY(X > Y) "' failed: '",                     \
+            UNIQUIFY(x),                                                      \
+            "' <= '",                                                         \
+            UNIQUIFY(y),                                                      \
+            "'");                                                             \
     }                                                                         \
   }
 #define ASSERT_GREATER_OR_EQUAL(X, Y)                                         \
   {                                                                           \
-    const auto &x = (X);                                                      \
-    const auto &y = (Y);                                                      \
-    if (!((x) >= (y)))                                                        \
+    const auto &UNIQUIFY(x) = (X);                                            \
+    const auto &UNIQUIFY(y) = (Y);                                            \
+    if (!(UNIQUIFY(x) >= UNIQUIFY(y)))                                        \
     {                                                                         \
-      FATAL(                                                                  \
-        "Assertion '" STRINGIFY(X >= Y) "' failed: '", x, "' < '", y, "'");   \
+      FATAL("Assertion '" STRINGIFY(X >= Y) "' failed: '",                    \
+            UNIQUIFY(x),                                                      \
+            "' < '",                                                          \
+            UNIQUIFY(y),                                                      \
+            "'");                                                             \
     }                                                                         \
   }
 #define ASSERT_LESS(X, Y)                                                     \
   {                                                                           \
-    const auto &x = (X);                                                      \
-    const auto &y = (Y);                                                      \
-    if (!((x) < (y)))                                                         \
+    const auto &UNIQUIFY(x) = (X);                                            \
+    const auto &UNIQUIFY(y) = (Y);                                            \
+    if (!(UNIQUIFY(x) < UNIQUIFY(y)))                                         \
     {                                                                         \
-      FATAL(                                                                  \
-        "Assertion '" STRINGIFY(X < Y) "' failed: '", x, "' >= '", y, "'");   \
+      FATAL("Assertion '" STRINGIFY(X < Y) "' failed: '",                     \
+            UNIQUIFY(x),                                                      \
+            "' >= '",                                                         \
+            UNIQUIFY(y),                                                      \
+            "'");                                                             \
     }                                                                         \
   }
 #define ASSERT_LESS_OR_EQUAL(X, Y)                                            \
   {                                                                           \
-    const auto &x = (X);                                                      \
-    const auto &y = (Y);                                                      \
-    if (!((x) <= (y)))                                                        \
+    const auto &UNIQUIFY(x) = (X);                                            \
+    const auto &UNIQUIFY(y) = (Y);                                            \
+    if (!(UNIQUIFY(x) <= UNIQUIFY(y)))                                        \
     {                                                                         \
-      FATAL(                                                                  \
-        "Assertion '" STRINGIFY(X <= Y) "' failed: '", x, "' > '", y, "'");   \
+      FATAL("Assertion '" STRINGIFY(X <= Y) "' failed: '",                    \
+            UNIQUIFY(x),                                                      \
+            "' > '",                                                          \
+            UNIQUIFY(y),                                                      \
+            "'");                                                             \
     }                                                                         \
   }
 #define ASSERTF(X, str)                                                       \
   {                                                                           \
-    const auto &x = (X);                                                      \
-    if (!(x))                                                                 \
+    if (!(X))                                                                 \
     {                                                                         \
       FATAL("Assertion '" STRINGIFY(X) "' failed: ", TO_U8STRING(str));       \
     }                                                                         \
   }
 #define ASSERTF_EQUAL(X, Y, str)                                              \
   {                                                                           \
-    const auto &x = (X);                                                      \
-    const auto &y = (Y);                                                      \
-    if (!((x) == (y)))                                                        \
+    const auto &UNIQUIFY(x) = (X);                                            \
+    const auto &UNIQUIFY(y) = (Y);                                            \
+    if (!(UNIQUIFY(x) == UNIQUIFY(y)))                                        \
     {                                                                         \
       FATAL("Assertion '" STRINGIFY(X == Y) "' failed: '",                    \
-            x,                                                                \
+            UNIQUIFY(x),                                                      \
             "' != '",                                                         \
-            y,                                                                \
+            UNIQUIFY(y),                                                      \
             "': ",                                                            \
             TO_U8STRING(str));                                                \
     }                                                                         \
   }
 #define ASSERTF_NOT_EQUAL(X, Y, str)                                          \
   {                                                                           \
-    const auto &x = (X);                                                      \
-    const auto &y = (Y);                                                      \
-    if (!((x) != (y)))                                                        \
+    const auto &UNIQUIFY(x) = (X);                                            \
+    const auto &UNIQUIFY(y) = (Y);                                            \
+    if (!(UNIQUIFY(x) != UNIQUIFY(y)))                                        \
     {                                                                         \
       FATAL("Assertion '" STRINGIFY(X != Y) "' failed: '",                    \
-            x,                                                                \
+            UNIQUIFY(x),                                                      \
             "' == '",                                                         \
-            y,                                                                \
+            UNIQUIFY(y),                                                      \
             "': ",                                                            \
             TO_U8STRING(str));                                                \
     }                                                                         \
   }
 #define ASSERTF_GREATER(X, Y, str)                                            \
   {                                                                           \
-    const auto &x = (X);                                                      \
-    const auto &y = (Y);                                                      \
-    if (!((x) > (y)))                                                         \
+    const auto &UNIQUIFY(x) = (X);                                            \
+    const auto &UNIQUIFY(y) = (Y);                                            \
+    if (!(UNIQUIFY(x) > UNIQUIFY(y)))                                         \
     {                                                                         \
       FATAL("Assertion '" STRINGIFY(X > Y) "' failed: '",                     \
-            x,                                                                \
+            UNIQUIFY(x),                                                      \
             "' <= '",                                                         \
-            y,                                                                \
+            UNIQUIFY(y),                                                      \
             "': ",                                                            \
             TO_U8STRING(str));                                                \
     }                                                                         \
   }
 #define ASSERTF_GREATER_OR_EQUAL(X, Y, str)                                   \
   {                                                                           \
-    const auto &x = (X);                                                      \
-    const auto &y = (Y);                                                      \
-    if (!((x) >= (y)))                                                        \
+    const auto &UNIQUIFY(x) = (X);                                            \
+    const auto &UNIQUIFY(y) = (Y);                                            \
+    if (!(UNIQUIFY(x) >= UNIQUIFY(y)))                                        \
     {                                                                         \
       FATAL("Assertion '" STRINGIFY(X >= Y) "' failed: '",                    \
-            x,                                                                \
+            UNIQUIFY(x),                                                      \
             "' < '",                                                          \
-            y,                                                                \
+            UNIQUIFY(y),                                                      \
             "': ",                                                            \
             TO_U8STRING(str));                                                \
     }                                                                         \
   }
 #define ASSERTF_LESS(X, Y, str)                                               \
   {                                                                           \
-    const auto &x = (X);                                                      \
-    const auto &y = (Y);                                                      \
-    if (!((x) < (y)))                                                         \
+    const auto &UNIQUIFY(x) = (X);                                            \
+    const auto &UNIQUIFY(y) = (Y);                                            \
+    if (!(UNIQUIFY(x) < UNIQUIFY(y)))                                         \
     {                                                                         \
       FATAL("Assertion '" STRINGIFY(X < Y) "' failed: '",                     \
-            x,                                                                \
+            UNIQUIFY(x),                                                      \
             "' >= '",                                                         \
-            y,                                                                \
+            UNIQUIFY(y),                                                      \
             "': ",                                                            \
             TO_U8STRING(str));                                                \
     }                                                                         \
   }
 #define ASSERTF_LESS_OR_EQUAL(X, Y, str)                                      \
   {                                                                           \
-    const auto &x = (X);                                                      \
-    const auto &y = (Y);                                                      \
-    if (!((x) <= (y)))                                                        \
+    const auto &UNIQUIFY(x) = (X);                                            \
+    const auto &UNIQUIFY(y) = (Y);                                            \
+    if (!(UNIQUIFY(x) <= UNIQUIFY(y)))                                        \
     {                                                                         \
       FATAL("Assertion '" STRINGIFY(X <= Y) "' failed: '",                    \
-            x,                                                                \
+            UNIQUIFY(x),                                                      \
             "' > '",                                                          \
-            y,                                                                \
+            UNIQUIFY(y),                                                      \
             "': ",                                                            \
             TO_U8STRING(str));                                                \
     }                                                                         \
