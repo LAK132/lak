@@ -452,7 +452,7 @@ bool handle_next_event(const lak::platform_instance &instance,
   if (pop_messages && previous_event.message)
   {
     ::DispatchMessageW(&previous_event);
-    lak::memset(&previous_event, 0);
+    lak::bzero(&previous_event);
   }
 
   const UINT filter_min = 0;
@@ -517,7 +517,7 @@ bool handle_next_event(const lak::platform_instance &instance,
   {
     // Do no re-dispatch messages that were buffered from WndProc.
     if (buffered_message)
-      lak::memset(&previous_event, 0);
+      lak::bzero(&previous_event);
     else
       lak::memcpy(&previous_event, &msg);
   }

@@ -401,7 +401,7 @@ bool init_opengl(lak::platform_instance *handle)
 
 bool lak::platform_init(lak::platform_instance *handle)
 {
-  lak::memset(handle, 0);
+  lak::bzero(handle);
   handle->handle = HINST_THISCOMPONENT;
 
   handle->window_class             = WNDCLASSW{};
@@ -417,7 +417,7 @@ bool lak::platform_init(lak::platform_instance *handle)
   handle->window_class_atom = RegisterClassW(&handle->window_class);
   if (!handle->window_class_atom)
   {
-    lak::memset(handle, 0);
+    lak::bzero(handle);
     win32_error_popup(L"RegiserClassW");
     // :TODO: get a proper error message from windows?
     return false;
@@ -433,7 +433,7 @@ bool lak::platform_quit(lak::platform_instance *handle)
     win32_error_popup(L"UnregisterClassW");
     return false;
   }
-  lak::memset(handle, 0);
+  lak::bzero(handle);
   return true;
 }
 
