@@ -25,8 +25,8 @@ const char *lak::deflate_iterator::error_name(error_t error)
 template<typename T>
 bool lak::deflate_iterator::get_huff(lak::span<int16_t> table, T *out)
 {
-  uint32_t bits_used = 0;
-  uint32_t index     = 0;
+  uint8_t bits_used = 0;
+  uint32_t index    = 0;
 
   for (bool looping = true; looping;)
   {
@@ -100,7 +100,7 @@ lak::deflate_iterator::error_t lak::deflate_iterator::gen_huffman_table(
 
     for (uint32_t j = next_code; j < code_limit; ++j)
     {
-      table[index++] = ~next_index;
+      table[index++] = uint16_t(~next_index);
       next_index += 2;
     }
   }
@@ -127,7 +127,7 @@ lak::deflate_iterator::deflate_iterator(
       return;
     }
 
-    uint16_t zlib_header = read.unsafe_unwrap();
+    uint16_t zlib_header = uint16_t(read.unsafe_unwrap());
     zlib_header          = (zlib_header >> 8) | ((zlib_header & 0xFF) << 8);
 
     if ((zlib_header & 0x8F00) == 0x0800 && (zlib_header % 31) == 0)

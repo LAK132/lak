@@ -33,10 +33,10 @@ BEGIN_TEST(bit_reader)
 
   ASSERT(reader.empty());
 
-  for (size_t i = 0; i < 4; ++i)
+  for (uint8_t i = 0; i < 4; ++i)
   {
     reader.reset_data(data.subspan(i, 1));
-    for (size_t j = 0; j <= (i + 1) * 8; ++j)
+    for (uint8_t j = 0; j <= (i + 1) * 8; ++j)
     {
       reader.peek_bits(j).UNWRAP();
     }

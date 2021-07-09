@@ -155,12 +155,12 @@ lak::fs::path lak::exe_path()
   std::vector<wchar_t> path;
   path.resize(MAX_PATH);
 
-  DWORD used = ::GetModuleFileNameW(NULL, path.data(), path.size());
+  DWORD used = ::GetModuleFileNameW(NULL, path.data(), DWORD(path.size()));
 
   while (used >= path.size() - 1)
   {
     path.resize(path.size() * 2);
-    used = ::GetModuleFileNameW(NULL, path.data(), path.size());
+    used = ::GetModuleFileNameW(NULL, path.data(), DWORD(path.size()));
   }
 
   path[used + 1] = 0;

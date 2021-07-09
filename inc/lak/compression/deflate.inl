@@ -114,7 +114,7 @@ inline lak::deflate_iterator &lak::deflate_iterator::step()
       if (_anaconda)
       {
         if (_compressed.read_bits(4)
-              .if_ok([&](uintmax_t v) { _block_type = v; })
+              .if_ok([&](uintmax_t v) { _block_type = uint8_t(v); })
               .is_err())
           return fail(error_t::out_of_data);
 
@@ -133,7 +133,7 @@ inline lak::deflate_iterator &lak::deflate_iterator::step()
       else
       {
         if (_compressed.read_bits(3)
-              .if_ok([&](uintmax_t v) { _block_type = v; })
+              .if_ok([&](uintmax_t v) { _block_type = uint8_t(v); })
               .is_err())
           return fail(error_t::out_of_data);
         _final = _block_type & 1;
@@ -147,7 +147,7 @@ inline lak::deflate_iterator &lak::deflate_iterator::step()
         SET_STATE(uncompressed_len)
 
         if (_compressed.read_bits(16)
-              .if_ok([&](uintmax_t v) { _len = v; })
+              .if_ok([&](uintmax_t v) { _len = uint32_t(v); })
               .is_err())
           return fail(error_t::out_of_data);
 
@@ -156,7 +156,7 @@ inline lak::deflate_iterator &lak::deflate_iterator::step()
         if (!_anaconda)
         {
           if (_compressed.read_bits(16)
-                .if_ok([&](uintmax_t v) { _ilen = v; })
+                .if_ok([&](uintmax_t v) { _ilen = uint32_t(v); })
                 .is_err())
             return fail(error_t::out_of_data);
 
@@ -172,7 +172,7 @@ inline lak::deflate_iterator &lak::deflate_iterator::step()
           _compressed.read_byte()
             .if_ok([this](uintmax_t v) {
               ++_nread;
-              success(v);
+              success(uint8_t(v));
             })
             .if_err([this](...) { fail(error_t::out_of_data); })
             .discard();
@@ -192,7 +192,7 @@ inline lak::deflate_iterator &lak::deflate_iterator::step()
           SET_STATE(literal_count)
 
           if (_compressed.read_bits(5)
-                .if_ok([&](uintmax_t v) { _literal_count = v; })
+                .if_ok([&](uintmax_t v) { _literal_count = uint32_t(v); })
                 .is_err())
             return fail(error_t::out_of_data);
           _literal_count += 257;
@@ -200,7 +200,7 @@ inline lak::deflate_iterator &lak::deflate_iterator::step()
           SET_STATE(distance_count)
 
           if (_compressed.read_bits(5)
-                .if_ok([&](uintmax_t v) { _distance_count = v; })
+                .if_ok([&](uintmax_t v) { _distance_count = uint32_t(v); })
                 .is_err())
             return fail(error_t::out_of_data);
           _distance_count += 1;
@@ -208,7 +208,7 @@ inline lak::deflate_iterator &lak::deflate_iterator::step()
           SET_STATE(codelen_count)
 
           if (_compressed.read_bits(4)
-                .if_ok([&](uintmax_t v) { _codelen_count = v; })
+                .if_ok([&](uintmax_t v) { _codelen_count = uint32_t(v); })
                 .is_err())
             return fail(error_t::out_of_data);
           _codelen_count += 4;
@@ -221,7 +221,8 @@ inline lak::deflate_iterator &lak::deflate_iterator::step()
             for (; _counter < _codelen_count; ++_counter)
               if (_compressed.read_bits(3)
                     .if_ok([&](uintmax_t v) {
-                      _codelen_len[codelen_order_anaconda[_counter]] = v;
+                      _codelen_len[codelen_order_anaconda[_counter]] =
+                        uint8_t(v);
                     })
                     .is_err())
                 return fail(error_t::out_of_data);
@@ -234,7 +235,7 @@ inline lak::deflate_iterator &lak::deflate_iterator::step()
             for (; _counter < _codelen_count; ++_counter)
               if (_compressed.read_bits(3)
                     .if_ok([&](uintmax_t v) {
-                      _codelen_len[codelen_order[_counter]] = v;
+                      _codelen_len[codelen_order[_counter]] = uint8_t(v);
                     })
                     .is_err())
                 return fail(error_t::out_of_data);
@@ -270,7 +271,7 @@ inline lak::deflate_iterator &lak::deflate_iterator::step()
                 SET_STATE(read_lengths_16)
 
                 if (_compressed.read_bits(2)
-                      .if_ok([&](uintmax_t v) { _repeat_count = v; })
+                      .if_ok([&](uintmax_t v) { _repeat_count = uint32_t(v); })
                       .is_err())
                   return fail(error_t::out_of_data);
                 _repeat_count += 3;
@@ -282,7 +283,7 @@ inline lak::deflate_iterator &lak::deflate_iterator::step()
                 SET_STATE(read_lengths_17)
 
                 if (_compressed.read_bits(3)
-                      .if_ok([&](uintmax_t v) { _repeat_count = v; })
+                      .if_ok([&](uintmax_t v) { _repeat_count = uint32_t(v); })
                       .is_err())
                   return fail(error_t::out_of_data);
                 _repeat_count += 3;
@@ -294,7 +295,7 @@ inline lak::deflate_iterator &lak::deflate_iterator::step()
                 SET_STATE(read_lengths_18)
 
                 if (_compressed.read_bits(7)
-                      .if_ok([&](uintmax_t v) { _repeat_count = v; })
+                      .if_ok([&](uintmax_t v) { _repeat_count = uint32_t(v); })
                       .is_err())
                   return fail(error_t::out_of_data);
                 _repeat_count += 11;
@@ -329,7 +330,7 @@ inline lak::deflate_iterator &lak::deflate_iterator::step()
 
           for (; i < 0x7E; ++i)
           {
-            _literal_table[i] = ~next_free;
+            _literal_table[i] = uint16_t(~next_free);
             next_free += 2;
           }
 
@@ -338,7 +339,7 @@ inline lak::deflate_iterator &lak::deflate_iterator::step()
 
           for (; i < 0xFE; ++i)
           {
-            _literal_table[i] = ~next_free;
+            _literal_table[i] = uint16_t(~next_free);
             next_free += 2;
           }
 
@@ -349,16 +350,18 @@ inline lak::deflate_iterator &lak::deflate_iterator::step()
 
           for (; i < 0x1CE; ++i)
           {
-            _literal_table[i] = ~next_free;
+            _literal_table[i] = uint16_t(~next_free);
             next_free += 2;
           }
 
           for (; i < 0x23E; ++i)
             _literal_table[i] = uint16_t(i + (0x90 - 0x1CE));
 
-          for (i = 0; i < 0x1E; ++i) _distance_table[i] = ~(i * 2 + 2);
+          for (i = 0; i < 0x1E; ++i)
+            _distance_table[i] = uint16_t(~(i * 2 + 2));
 
-          for (i = 0x1E; i < 0x3E; ++i) _distance_table[i] = i - 0x1E;
+          for (i = 0x1E; i < 0x3E; ++i)
+            _distance_table[i] = uint16_t(i - 0x1E);
         }
         else
           return fail(error_t::invalid_block_code);
@@ -370,7 +373,7 @@ inline lak::deflate_iterator &lak::deflate_iterator::step()
           if (get_huff(_literal_table, &_symbol))
             return fail(error_t::out_of_data);
 
-          if (_symbol < 256) return success(_symbol);
+          if (_symbol < 256) return success(uint8_t(_symbol));
 
           if (_symbol == 256) break;
 
@@ -382,9 +385,9 @@ inline lak::deflate_iterator &lak::deflate_iterator::step()
           {
             SET_STATE(read_length)
 
-            const uint32_t length_bits = (_symbol - 261) / 4;
+            const uint8_t length_bits = uint8_t((_symbol - 261) / 4);
             if (_compressed.read_bits(length_bits)
-                  .if_ok([&](uintmax_t v) { _repeat_length = v; })
+                  .if_ok([&](uintmax_t v) { _repeat_length = uint32_t(v); })
                   .is_err())
               return fail(error_t::out_of_data);
             _repeat_length += 3 + ((4 + ((_symbol - 265) & 3)) << length_bits);
@@ -411,9 +414,9 @@ inline lak::deflate_iterator &lak::deflate_iterator::step()
           {
             SET_STATE(read_distance_extra)
 
-            const uint32_t distance_bits = (_symbol - 2) / 2;
+            const uint8_t distance_bits = uint8_t((_symbol - 2) / 2);
             if (_compressed.read_bits(distance_bits)
-                  .if_ok([&](uintmax_t v) { _distance = v; })
+                  .if_ok([&](uintmax_t v) { _distance = uint32_t(v); })
                   .is_err())
               return fail(error_t::out_of_data);
             _distance += 1 + ((2 + (_symbol & 1)) << distance_bits);

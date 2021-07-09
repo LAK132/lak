@@ -126,14 +126,14 @@ namespace tinf
       return false;
     }
 
-    force_inline void flush_bits(const size_t n)
+    force_inline void flush_bits(const uint32_t n)
     {
       bit_accum >>= n;
       num_bits -= n;
     }
 
     template<typename T>
-    bool get_bits(const size_t n, T *out)
+    bool get_bits(const uint32_t n, T *out)
     {
       while (num_bits < n)
         if (get_byte()) return true;

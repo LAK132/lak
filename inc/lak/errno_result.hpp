@@ -6,8 +6,8 @@
 #include "lak/streamify.hpp"
 
 #include <cerrno>
-#include <cstring>
 #include <ostream>
+#include <system_error>
 
 namespace lak
 {
@@ -19,7 +19,10 @@ namespace lak
 
     inline lak::astring to_string() const
     {
-      return lak::streamify<char>(value, ": ", std::strerror(value));
+      return lak::streamify<char>(
+        value,
+        ": ",
+        std::error_code(value, std::generic_category()).message());
     }
   };
 

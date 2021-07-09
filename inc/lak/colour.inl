@@ -511,7 +511,7 @@ namespace lak
 
       LAK_COLOUR_DEFAULTS(av88, a == rhs.a && v == rhs.v)
 
-      av88(uint16_t AV) : a(AV >> 8), v(AV) {}
+      av88(uint16_t AV) : a(uint8_t(AV >> 8)), v(uint8_t(AV)) {}
 
       av88(uint8_t A, uint8_t V) : a(A), v(V) {}
 
@@ -554,7 +554,7 @@ namespace lak
 
       LAK_COLOUR_DEFAULTS(va88, a == rhs.a && v == rhs.v)
 
-      va88(uint16_t VA) : v(VA >> 8), a(VA) {}
+      va88(uint16_t VA) : v(uint8_t(VA >> 8)), a(uint8_t(VA)) {}
 
       va88(uint8_t V, uint8_t A) : v(V), a(A) {}
 

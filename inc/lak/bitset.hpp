@@ -23,7 +23,7 @@ namespace lak
   constexpr uintmax_t bit_count_mask(size_t bit_count)
   {
     uintmax_t result = 0;
-    while (bit_count-- > 0) result |= 1U << bit_count;
+    while (bit_count-- > 0) result |= 1ULL << bit_count;
     return result;
   }
 
@@ -182,7 +182,7 @@ namespace lak
         static_assert(from <= to);
         for (size_t i = from, off = 0; i < to; ++i, off += 8)
         {
-          _value[i] = value >> (off + first_bit_count);
+          _value[i] = uint8_t(value >> (off + first_bit_count));
         }
 
         // MSB
@@ -192,8 +192,8 @@ namespace lak
         {
           constexpr uintmax_t last_max = lak::bit_count_mask(last_bit_count);
           _value[(bit_offset + index_bit_count) / 8] =
-            (value >> (((to - from) * 8) + first_bit_count)) |
-            (_value[(bit_offset + index_bit_count) / 8] & ~last_max);
+            uint8_t((value >> (((to - from) * 8) + first_bit_count)) |
+                    (_value[(bit_offset + index_bit_count) / 8] & ~last_max));
         }
       }
       else if constexpr (ENDIAN == lak::endian::big)

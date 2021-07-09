@@ -29,7 +29,8 @@ namespace lak
     // (bytes, bits)
     inline lak::pair<uintmax_t, uint8_t> bytes_read() const
     {
-      return lak::pair<uintmax_t, uint8_t>(_bytes_read, 8 - _unused_bits);
+      return lak::pair<uintmax_t, uint8_t>(_bytes_read,
+                                           uint8_t(8 - _unused_bits));
     }
 
     inline bit_reader(lak::span<const uint8_t> data) : _data(data) {}

@@ -191,13 +191,17 @@ namespace lak
     {
       if (_index_buffer)
       {
-        glDrawElementsInstanced(
-          _draw_mode, _vertex_count, GL_UNSIGNED_INT, NULL, instances);
+        glDrawElementsInstanced(_draw_mode,
+                                GLsizei(_vertex_count),
+                                GL_UNSIGNED_INT,
+                                NULL,
+                                instances);
         ASSERT(lak::opengl::check_error());
       }
       else
       {
-        glDrawArraysInstanced(_draw_mode, 0, _vertex_count, instances);
+        glDrawArraysInstanced(
+          _draw_mode, 0, GLsizei(_vertex_count), instances);
         ASSERT(lak::opengl::check_error());
       }
     }
@@ -311,7 +315,7 @@ namespace lak
       size_t texture_index = 0;
       for (const auto &texture : _textures)
       {
-        glActiveTexture(GL_TEXTURE0 + (texture_index++));
+        glActiveTexture(GLenum(GL_TEXTURE0 + (texture_index++)));
         ASSERT(lak::opengl::check_error());
         texture->bind();
       }
@@ -330,7 +334,7 @@ namespace lak
       size_t texture_index = 0;
       for (const auto &texture : _textures)
       {
-        glActiveTexture(GL_TEXTURE0 + (texture_index++));
+        glActiveTexture(GLenum(GL_TEXTURE0 + (texture_index++)));
         ASSERT(lak::opengl::check_error());
         texture->bind();
       }
