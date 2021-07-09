@@ -1,3 +1,7 @@
+#ifndef LAK_DEBUG_HPP
+#  define LAK_DEBUG_HPP
+#endif
+
 #undef TO_STRING
 #define TO_STRING(x)                                                          \
   [&] {                                                                       \

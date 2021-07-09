@@ -2,14 +2,7 @@
 #include "lak/os.hpp"
 
 #if defined(LAK_OS_WINDOWS)
-#  ifndef WIN32_MEAN_AND_LEAN
-#    define WIN32_MEAN_AND_LEAN
-#  endif
-#  ifndef NOMINMAX
-#    define NOMINMAX
-#  endif
-#  undef ERROR
-#  include <Windows.h>
+#  include "lak/windows.hpp"
 #elif defined(LAK_OS_LINUX)
 #  include <unistd.h>
 #  if _POSIX_TIMERS <= 0

@@ -2,13 +2,7 @@
 #define LAK_SURFACE_HPP
 
 #if defined(LAK_USE_WINAPI)
-#  ifndef WIN32_MEAN_AND_LEAN
-#    define WIN32_MEAN_AND_LEAN
-#  endif
-#  ifndef NOMINMAX
-#    define NOMINMAX
-#  endif
-#  include <Windows.h>
+#  include "lak/windows.hpp"
 void win32_error_popup(LPWSTR lpszFunction);
 #elif defined(LAK_USE_XLIB)
 #  include <X11/Xlib.h>

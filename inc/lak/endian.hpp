@@ -10,7 +10,8 @@
 #    error "Endianness not supported"
 #  endif
 #elif defined(_MSC_VER)
-#  include "winnt.h"
+#  include "lak/windows.hpp"
+#  include <winnt.h>
 #  if REG_DWORD == REG_DWORD_BIG_ENDIAN
 #    define LAK_BIG_ENDIAN
 #  elif REG_DWORD == REG_DWORD_LITTLE_ENDIAN

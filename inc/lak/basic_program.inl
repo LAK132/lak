@@ -5,20 +5,12 @@
 
 #include "lak/opengl/state.hpp"
 
+#include "lak/windows.hpp"
+
 #include "lak/debug.hpp"
 #include "lak/events.hpp"
 #include "lak/os.hpp"
 #include "lak/window.hpp"
-
-#ifdef LAK_OS_WINDOWS
-#  ifndef WIN32_MEAN_AND_LEAN
-#    define WIN32_MEAN_AND_LEAN
-#  endif
-#  ifndef NOMINMAX
-#    define NOMINMAX
-#  endif
-#  include <Windows.h>
-#endif
 
 #ifndef APP_NAME
 #  define APP_NAME "basic window"

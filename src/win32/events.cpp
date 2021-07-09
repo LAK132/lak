@@ -1,10 +1,4 @@
-#ifndef WIN32_MEAN_AND_LEAN
-#  define WIN32_MEAN_AND_LEAN
-#endif
-#ifndef NOMINMAX
-#  define NOMINMAX
-#endif
-#include <Windows.h>
+#include "lak/windows.hpp"
 #include <windowsx.h>
 #include <wingdi.h>
 

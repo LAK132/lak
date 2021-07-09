@@ -1,15 +1,7 @@
 #ifndef LAK_WIN32_WRAPPER_HPP
 #define LAK_WIN32_WRAPPER_HPP
 
-#undef ERROR
-#ifndef WIN32_MEAN_AND_LEAN
-#  define WIN32_MEAN_AND_LEAN
-#endif
-#ifndef NOMINMAX
-#  define NOMINMAX
-#endif
-#include <Windows.h>
-#undef ERROR
+#include "lak/windows.hpp"
 
 #include "lak/defer.hpp"
 #include "lak/os.hpp"
