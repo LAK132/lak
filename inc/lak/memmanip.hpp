@@ -40,7 +40,7 @@ namespace lak
   template<typename T>
   force_inline void bzero(T *dst)
   {
-    lak::fill(lak::as_bytes(dst), char(0));
+    lak::fill<char>(lak::as_bytes(dst), char(0));
   }
 
   template<typename TO, typename FROM>
