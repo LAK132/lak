@@ -1,4 +1,4 @@
-#include "lak/src/win32/platform.hpp"
+#include "src/win32/platform.hpp"
 
 #include <GL/GL.h>
 #include <GL/gl3w.h>

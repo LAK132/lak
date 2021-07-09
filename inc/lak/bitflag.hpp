@@ -1,6 +1,8 @@
 #ifndef LAK_BITFLAG_HPP
 #define LAK_BITFLAG_HPP
 
+#include "lak/stdint.hpp"
+
 namespace lak
 {
   template<typename ENUM, ENUM TO_FIND, ENUM FLAG, ENUM... FLAGS>

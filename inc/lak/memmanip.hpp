@@ -1,8 +1,8 @@
 #ifndef LAK_MEMMANIP_HPP
 #define LAK_MEMMANIP_HPP
 
+#include "lak/result.hpp"
 #include "lak/span.hpp"
-#include "result.hpp"
 
 #include <cstring>
 

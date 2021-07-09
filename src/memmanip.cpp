@@ -37,16 +37,16 @@ size_t lak::round_to_page_multiple(size_t size, size_t *page_size_out)
 
 #ifndef LAK_DONT_AUTO_COMPILE_PLATFORM_SPECIFICS
 #  if defined(LAK_OS_WINDOWS)
-#    include "lak/src/win32/memmanip.cpp"
+#    include "src/win32/memmanip.cpp"
 #  endif
 
 #  if defined(LAK_OS_LINUX)
-#    include "lak/src/linux/memmanip.cpp"
-#    include "lak/src/posix/memmanip.cpp"
+#    include "src/linux/memmanip.cpp"
+#    include "src/posix/memmanip.cpp"
 #  endif
 
 #  if defined(LAK_OS_APPLE)
-#    include "lak/src/macos/memmanip.cpp"
-#    include "lak/src/posix/memmanip.cpp"
+#    include "src/macos/memmanip.cpp"
+#    include "src/posix/memmanip.cpp"
 #  endif
 #endif

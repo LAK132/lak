@@ -7,6 +7,8 @@
 #include "lak/span.hpp"
 #include "lak/stdint.hpp"
 
+#include "lak/debug.hpp"
+
 namespace lak
 {
   template<typename T, lak::endian E>

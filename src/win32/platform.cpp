@@ -1,10 +1,9 @@
-#include "lak/src/win32/platform.hpp"
+#include "src/win32/platform.hpp"
 
 #include "lak/debug.hpp"
 #include "lak/image.hpp"
 #include "lak/memmanip.hpp"
 #include "lak/platform.hpp"
-#include "lak/platform_result.hpp"
 #include "lak/strconv.hpp"
 #include "lak/window.hpp"
 

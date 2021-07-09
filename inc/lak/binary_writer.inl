@@ -1,6 +1,8 @@
 #include "lak/binary_writer.hpp"
 #include "lak/memmanip.hpp"
 
+#include "lak/debug.hpp"
+
 template<typename T, lak::endian E>
 void lak::to_bytes(lak::span<uint8_t, lak::to_bytes_size_v<T, E>> bytes,
                    const T &value)
