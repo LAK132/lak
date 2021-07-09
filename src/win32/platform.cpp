@@ -408,10 +408,8 @@ bool lak::platform_init(lak::platform_instance *handle)
   handle->window_class.style       = CS_OWNDC;
   handle->window_class.lpfnWndProc = &WndProc;
   handle->window_class.hInstance   = handle->handle;
-  handle->window_class.hIcon =
-    LoadIconW(handle->handle, MAKEINTRESOURCEW(IDI_APPLICATION));
-  handle->window_class.hCursor =
-    LoadCursorW(NULL, MAKEINTRESOURCEW(IDC_ARROW));
+  handle->window_class.hIcon   = LoadIconW(handle->handle, IDI_APPLICATION);
+  handle->window_class.hCursor = LoadCursorW(NULL, IDC_ARROW);
   handle->window_class.lpszClassName = L"lak's window class";
 
   handle->window_class_atom = RegisterClassW(&handle->window_class);
