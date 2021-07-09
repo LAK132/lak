@@ -24,7 +24,7 @@ namespace lak
   };
 
   template<typename T = lak::monostate>
-  using errno_result = lak::result<T, errno_error>;
+  using errno_result = lak::result<T, lak::errno_error>;
 }
 
 [[maybe_unused]] static std::ostream &operator<<(std::ostream &strm,
