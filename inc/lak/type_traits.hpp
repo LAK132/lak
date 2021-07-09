@@ -1452,7 +1452,7 @@ namespace lak
   };
 
   template<typename F, typename... ARGS>
-  using invoke_result_t = lak::invoke_result<F, ARGS...>::type;
+  using invoke_result_t = typename lak::invoke_result<F, ARGS...>::type;
 
   /* --- is_invocable --- */
 
