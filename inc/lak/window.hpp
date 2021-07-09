@@ -80,7 +80,7 @@ namespace lak
   struct software_context
   {
 #if defined(LAK_USE_WINAPI)
-    mutable lak::image<lak::colour::bgrx8888, true> platform_handle;
+    mutable lak::image<lak::colour::bgrx8888> platform_handle;
 #elif defined(LAK_USE_XLIB)
 #  error "NYI"
 #elif defined(LAK_USE_XCB)
