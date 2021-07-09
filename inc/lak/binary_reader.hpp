@@ -127,7 +127,7 @@ namespace lak
       while (max_size-- > 0ULL)
       {
         const auto r = read<CHAR, E>();
-        if (r.if_err([](...) { ERROR("read failed") }).is_err()) break;
+        if (r.if_err([](...) { ERROR("read failed"); }).is_err()) break;
         const CHAR c = r.unsafe_unwrap();
         if (c == 0) return lak::ok_t{lak::move(result)};
         result += c;
