@@ -586,6 +586,21 @@ namespace lak
   {
   };
 
+  namespace concepts
+  {
+    /* --- result_with_ok --- */
+
+    template<typename T, typename OK>
+    concept result_with_ok =
+      lak::is_result_v<T> && lak::is_same_v<lak::result_ok_type_t<T>, OK>;
+
+    /* --- result_with_err --- */
+
+    template<typename T, typename ERR>
+    concept result_with_err =
+      lak::is_result_v<T> && lak::is_same_v<lak::result_err_type_t<T>, ERR>;
+  }
+
 #ifndef NDEBUG
 #  define EXPECT(...)                                                         \
     expect(lak::streamify<char8_t>(DEBUG_FATAL_LINE_FILE, __VA_ARGS__))
