@@ -26,6 +26,27 @@ namespace lak
   {
   };
 
+  /* --- index_of_element --- */
+
+  template<size_t I, typename T, typename... U>
+  struct _index_of_element;
+  template<size_t I, typename T, typename... U>
+  struct _index_of_element<I, T, T, U...> : public lak::size_type<I>
+  {
+  };
+  template<size_t I, typename T, typename U, typename... V>
+  struct _index_of_element<I, T, U, V...>
+  : public lak::_index_of_element<I + 1, T, V...>
+  {
+  };
+  template<typename T, typename... U>
+  struct index_of_element : public lak::_index_of_element<0, T, U...>
+  {
+  };
+  template<typename T, typename... U>
+  static constexpr size_t index_of_element_v =
+    lak::index_of_element<T, U...>::value;
+
   /* --- prepend_to_pack --- */
 
   template<typename T, typename PACK>
