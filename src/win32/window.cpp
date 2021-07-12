@@ -28,7 +28,7 @@ void win32_error_popup(LPWSTR lpszFunction);
 //     static_assert(sizeof(COLOUR) == 2 || sizeof(COLOUR) == 4);
 //     context.bitmap_info =
 //       static_cast<BITMAPINFO *>(malloc(sizeof(BITMAPINFO)));
-//     lak::memset(context.bitmap_info, 0);
+//     lak::bzero(context.bitmap_info);
 //     context.bitmap_info->bmiHeader.biClrUsed = 0;
 //   }
 // }
@@ -109,7 +109,7 @@ lak::window_handle *lak::create_window(const lak::platform_instance &instance,
   //   static_assert(sizeof(colour_t) == 2 || sizeof(colour_t) == 4);
   //   context.bitmap_info =
   //     static_cast<BITMAPINFO *>(malloc(sizeof(BITMAPINFO)));
-  //   lak::memset(context.bitmap_info, 0);
+  //   lak::bzero(context.bitmap_info);
 
   //   auto &header     = context.bitmap_info->bmiHeader;
   //   header.biClrUsed = 0;

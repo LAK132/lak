@@ -98,7 +98,7 @@ namespace lak
           _bitmapinfo = (BITMAPINFO *)malloc(sizeof(BITMAPINFOHEADER) +
                                              (256 * sizeof(RGBQUAD)));
 
-          lak::memset(&_bitmapinfo->bmiHeader, 0);
+          lak::bzero(&_bitmapinfo->bmiHeader);
 
           _bitmapinfo->bmiHeader.biBitCount    = 8;
           _bitmapinfo->bmiHeader.biCompression = BI_RGB;
@@ -131,7 +131,7 @@ namespace lak
       {
         _bitmapinfo = (BITMAPINFO *)malloc(sizeof(BITMAPINFO));
 
-        lak::memset(&_bitmapinfo->bmiHeader, 0);
+        lak::bzero(&_bitmapinfo->bmiHeader);
 
         _bitmapinfo->bmiHeader.biBitCount    = sizeof(COLOUR);
         _bitmapinfo->bmiHeader.biCompression = BI_RGB;
