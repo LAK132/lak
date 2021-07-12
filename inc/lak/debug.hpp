@@ -131,6 +131,7 @@
 
 #undef ASSERT
 #undef ASSERT_NYI
+#undef ASSERT_UNREACHABLE
 #undef ASSERT_EQUAL
 #undef ASSERT_NOT_EQUAL
 #undef ASSERT_GREATER
@@ -154,6 +155,10 @@
 #define ASSERT_NYI()                                                          \
   {                                                                           \
     FATAL("Behaviour not yet implemented");                                   \
+  }
+#define ASSERT_UNREACHABLE()                                                  \
+  {                                                                           \
+    FATAL("Unreachable code reached");                                        \
   }
 #define ASSERT_EQUAL(X, Y)                                                    \
   {                                                                           \
