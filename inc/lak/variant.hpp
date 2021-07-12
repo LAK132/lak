@@ -1,6 +1,7 @@
 #ifndef LAK_VARIANT_HPP
 #define LAK_VARIANT_HPP
 
+#include "lak/type_pack.hpp"
 #include "lak/type_traits.hpp"
 #include "lak/utility.hpp"
 
