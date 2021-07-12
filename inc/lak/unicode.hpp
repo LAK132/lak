@@ -88,6 +88,9 @@ namespace lak
   inline constexpr lak::span<const char32_t> whitespaces();
   inline constexpr bool is_whitespace(char32_t c);
 
+  inline constexpr lak::span<const char8_t> ascii_whitespaces();
+  inline constexpr bool is_ascii_whitespace(char8_t c);
+
   template<typename CHAR>
   struct codepoint_iterator
   {

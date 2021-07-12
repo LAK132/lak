@@ -167,6 +167,15 @@ namespace
       U'\u009F'  // application program command
     };
 
+    constexpr char8_t ascii_spaces[] = {
+      u8'\x09', // tab
+      u8'\x0A', // line feed
+      u8'\x0B', // line tab
+      u8'\x0C', // form feed
+      u8'\x0D', // carriage return
+      u8'\x20', // space
+    };
+
     constexpr char32_t spaces[25] = {
       U'\u0009', // tab
       U'\u000A', // line feed
@@ -226,6 +235,16 @@ inline constexpr lak::span<const char32_t> lak::whitespaces()
 inline constexpr bool lak::is_whitespace(char32_t c)
 {
   return lak::contains(lak::whitespaces(), c);
+}
+
+inline constexpr lak::span<const char8_t> lak::ascii_whitespaces()
+{
+  return lak::span(impl::ascii_spaces);
+}
+
+inline constexpr bool lak::is_ascii_whitespace(char8_t c)
+{
+  return lak::contains(lak::ascii_whitespaces(), c);
 }
 
 template<typename CHAR>
