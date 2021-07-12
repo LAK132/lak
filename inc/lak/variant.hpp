@@ -175,6 +175,9 @@ namespace lak
     template<size_t I>
     using value_type = lak::nth_type_t<I, T...>;
 
+    template<typename U>
+    static constexpr size_t index_of = lak::index_of_element_v<U, T...>;
+
   private:
     using union_type = pack_union<lak::lvalue_to_ptr_t<T>...>;
 
