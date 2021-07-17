@@ -7,13 +7,6 @@
 
 namespace lak
 {
-  /* --- monostate --- */
-
-  struct monostate
-  {
-  };
-  static_assert(lak::is_default_constructible_v<lak::monostate>);
-
   /* --- is_variant --- */
 
   template<typename T>

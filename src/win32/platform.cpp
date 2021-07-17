@@ -5,6 +5,7 @@
 #include "lak/memmanip.hpp"
 #include "lak/platform.hpp"
 #include "lak/strconv.hpp"
+#include "lak/string_view.hpp"
 #include "lak/window.hpp"
 
 lak::wstring win32_error_string(LPCWSTR lpszFunction);

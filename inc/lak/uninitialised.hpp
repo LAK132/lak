@@ -1,7 +1,7 @@
 #ifndef LAK_UNINITIALISED_HPP
 #define LAK_UNINITIALISED_HPP
 
-#include "lak/variant.hpp"
+#include "lak/utility.hpp"
 
 namespace lak
 {

@@ -17,6 +17,7 @@
 #include "lak/file.hpp"
 
 #include "lak/strconv.hpp"
+#include "lak/string_view.hpp"
 
 #include <fstream>
 #include <iostream>

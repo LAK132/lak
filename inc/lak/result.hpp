@@ -65,8 +65,23 @@ namespace lak
   template<typename OK = lak::monostate, typename ERR = lak::monostate>
   struct [[nodiscard]] result
   {
-    using ok_type  = lak::remove_reference_t<OK>;
-    using err_type = lak::remove_reference_t<ERR>;
+    using ok_type            = OK;
+    using ok_reference       = lak::add_lvalue_reference_t<ok_type>;
+    using ok_const_reference = lak::add_lvalue_reference_t<const ok_type>;
+    using ok_pointer         = lak::remove_reference_t<OK> *;
+    using ok_const_pointer =
+      lak::conditional_t<lak::is_reference_v<OK>,
+                         ok_pointer,
+                         const lak::remove_reference_t<OK> *>;
+
+    using err_type            = ERR;
+    using err_reference       = lak::add_lvalue_reference_t<err_type>;
+    using err_const_reference = lak::add_lvalue_reference_t<const err_type>;
+    using err_pointer         = lak::remove_reference_t<ERR> *;
+    using err_const_pointer =
+      lak::conditional_t<lak::is_reference_v<ERR>,
+                         err_pointer,
+                         const lak::remove_reference_t<ERR> *>;
 
     template<typename T>
     using rebind_ok = lak::result<T, ERR>;
@@ -83,8 +98,8 @@ namespace lak
   private:
     lak::variant<OK, ERR> _value;
 
-    force_inline ok_type &get_ok() { return *_value.template get<0>(); }
-    force_inline const ok_type &get_ok() const
+    force_inline ok_reference get_ok() { return *_value.template get<0>(); }
+    force_inline ok_const_reference get_ok() const
     {
       return *_value.template get<0>();
     }
@@ -93,8 +108,8 @@ namespace lak
       return lak::forward<OK>(*_value.template get<0>());
     }
 
-    force_inline err_type &get_err() { return *_value.template get<1>(); }
-    force_inline const err_type &get_err() const
+    force_inline err_reference get_err() { return *_value.template get<1>(); }
+    force_inline err_const_reference get_err() const
     {
       return *_value.template get<1>();
     }
@@ -113,20 +128,20 @@ namespace lak
     result &operator=(const result &) = default;
     result &operator=(result &&) = default;
 
-    static inline result make_ok(const ok_type &value)
+    static inline result make_ok(const lak::remove_reference_t<OK> &value)
     {
       return result(lak::variant<OK, ERR>(lak::in_place_index<0>, value));
     }
-    static inline result make_ok(OK && value)
+    static inline result make_ok(OK &&value)
     {
       return result(lak::variant<OK, ERR>(lak::in_place_index<0>,
                                           lak::forward<OK>(value)));
     }
-    static inline result make_err(const err_type &value)
+    static inline result make_err(const lak::remove_reference_t<ERR> &value)
     {
       return result(lak::variant<OK, ERR>(lak::in_place_index<1>, value));
     }
-    static inline result make_err(ERR && value)
+    static inline result make_err(ERR &&value)
     {
       return result(lak::variant<OK, ERR>(lak::in_place_index<1>,
                                           lak::forward<ERR>(value)));
@@ -146,8 +161,8 @@ namespace lak
 
     /* --- ok --- */
 
-    [[nodiscard]] ok_type *ok() & { return _value.template get<0>(); }
-    [[nodiscard]] const ok_type *ok() const &
+    [[nodiscard]] ok_pointer ok() & { return _value.template get<0>(); }
+    [[nodiscard]] ok_const_pointer ok() const &
     {
       return _value.template get<0>();
     }
@@ -158,8 +173,8 @@ namespace lak
 
     /* --- err --- */
 
-    [[nodiscard]] err_type *err() & { return _value.template get<1>(); }
-    [[nodiscard]] const err_type *err() const &
+    [[nodiscard]] err_pointer err() & { return _value.template get<1>(); }
+    [[nodiscard]] err_const_pointer err() const &
     {
       return _value.template get<1>();
     }
@@ -170,8 +185,8 @@ namespace lak
 
     /* --- map --- */
 
-    template<lak::concepts::invocable<ok_type &> F>
-    auto map(F && f) &->invoke_rebind_ok<F, ok_type &>
+    template<lak::concepts::invocable<ok_reference> F>
+    auto map(F &&f) & -> invoke_rebind_ok<F, ok_reference>
     {
       if (is_ok())
         return lak::ok_t{f(get_ok())};
@@ -179,8 +194,8 @@ namespace lak
         return lak::err_t{get_err()};
     }
 
-    template<lak::concepts::invocable<const ok_type &> F>
-    auto map(F && f) const &->invoke_rebind_ok<F, const ok_type &>
+    template<lak::concepts::invocable<ok_const_reference> F>
+    auto map(F &&f) const & -> invoke_rebind_ok<F, ok_const_reference>
     {
       if (is_ok())
         return lak::ok_t{f(get_ok())};
@@ -189,7 +204,7 @@ namespace lak
     }
 
     template<lak::concepts::invocable<OK &&> F>
-    auto map(F && f) &&->invoke_rebind_ok<F, OK &&>
+    auto map(F &&f) && -> invoke_rebind_ok<F, OK &&>
     {
       if (is_ok())
         return lak::ok_t{f(forward_ok())};
@@ -199,8 +214,8 @@ namespace lak
 
     /* --- map_err --- */
 
-    template<lak::concepts::invocable<err_type &> F>
-    auto map_err(F && f) &->invoke_rebind_err<F, err_type &>
+    template<lak::concepts::invocable<err_reference> F>
+    auto map_err(F &&f) & -> invoke_rebind_err<F, err_reference>
     {
       if (is_ok())
         return lak::ok_t{get_ok()};
@@ -208,8 +223,8 @@ namespace lak
         return lak::err_t{f(get_err())};
     }
 
-    template<lak::concepts::invocable<const err_type &> F>
-    auto map_err(F && f) const &->invoke_rebind_err<F, const err_type &>
+    template<lak::concepts::invocable<err_const_reference> F>
+    auto map_err(F &&f) const & -> invoke_rebind_err<F, err_const_reference>
     {
       if (is_ok())
         return lak::ok_t{get_ok()};
@@ -218,7 +233,7 @@ namespace lak
     }
 
     template<lak::concepts::invocable<ERR &&> F>
-    auto map_err(F && f) &&->invoke_rebind_err<F, ERR &&>
+    auto map_err(F &&f) && -> invoke_rebind_err<F, ERR &&>
     {
       if (is_ok())
         return lak::ok_t{forward_ok()};
@@ -232,10 +247,9 @@ namespace lak
     // ok == expected -> ok<>
     // ok != expected -> err<ERR>
 
-    template<lak::concepts::invocable_result_of<ERR, ok_type &> F>
-    auto map_expect_value(
-      const ok_type &expected,
-      F &&on_unexpected) &->lak::result<lak::monostate, ERR>
+    template<lak::concepts::invocable_result_of<ERR, ok_reference> F>
+    auto map_expect_value(ok_const_reference expected, F &&on_unexpected)
+      & -> lak::result<lak::monostate, ERR>
     {
       if (is_ok())
       {
@@ -248,9 +262,9 @@ namespace lak
         return lak::err_t{get_err()};
     }
 
-    template<lak::concepts::invocable_result_of<ERR, const ok_type &> F>
-    auto map_expect_value(const ok_type &expected, F &&on_unexpected)
-      const &->lak::result<lak::monostate, ERR>
+    template<lak::concepts::invocable_result_of<ERR, ok_const_reference> F>
+    auto map_expect_value(ok_const_reference expected, F &&on_unexpected)
+      const & -> lak::result<lak::monostate, ERR>
     {
       if (is_ok())
       {
@@ -264,9 +278,8 @@ namespace lak
     }
 
     template<lak::concepts::invocable_result_of<ERR, OK &&> F>
-    auto map_expect_value(
-      const ok_type &expected,
-      F &&on_unexpected) &&->lak::result<lak::monostate, ERR>
+    auto map_expect_value(ok_const_reference expected, F &&on_unexpected)
+      && -> lak::result<lak::monostate, ERR>
     {
       if (is_ok())
       {
@@ -284,8 +297,8 @@ namespace lak
     // and_then(func) ~= map(func).flatten()
 
     template<
-      lak::concepts::invocable_result_of_template<lak::result, ok_type &> F>
-    auto and_then(F && f) &->lak::invoke_result_t<F, ok_type &>
+      lak::concepts::invocable_result_of_template<lak::result, ok_reference> F>
+    auto and_then(F &&f) & -> lak::invoke_result_t<F, ok_reference>
     {
       if (is_ok())
         return f(get_ok());
@@ -294,8 +307,8 @@ namespace lak
     }
 
     template<lak::concepts::invocable_result_of_template<lak::result,
-                                                         const ok_type &> F>
-    auto and_then(F && f) const &->lak::invoke_result_t<F, const ok_type &>
+                                                         ok_const_reference> F>
+    auto and_then(F &&f) const & -> lak::invoke_result_t<F, ok_const_reference>
     {
       if (is_ok())
         return f(get_ok());
@@ -304,7 +317,7 @@ namespace lak
     }
 
     template<lak::concepts::invocable_result_of_template<lak::result, OK &&> F>
-    auto and_then(F && f) &&->lak::invoke_result_t<F, OK &&>
+    auto and_then(F &&f) && -> lak::invoke_result_t<F, OK &&>
     {
       if (is_ok())
         return f(forward_ok());
@@ -314,9 +327,9 @@ namespace lak
 
     /* --- or_else --- */
 
-    template<
-      lak::concepts::invocable_result_of_template<lak::result, err_type &> F>
-    auto or_else(F && f) &->lak::invoke_result_t<F, err_type &>
+    template<lak::concepts::invocable_result_of_template<lak::result,
+                                                         err_reference> F>
+    auto or_else(F &&f) & -> lak::invoke_result_t<F, err_reference>
     {
       if (is_ok())
         return lak::ok_t{get_ok()};
@@ -324,9 +337,10 @@ namespace lak
         return f(get_err());
     }
 
-    template<lak::concepts::invocable_result_of_template<lak::result,
-                                                         const err_type &> F>
-    auto or_else(F && f) const &->lak::invoke_result_t<F, const err_type &>
+    template<
+      lak::concepts::invocable_result_of_template<lak::result,
+                                                  err_const_reference> F>
+    auto or_else(F &&f) const & -> lak::invoke_result_t<F, err_const_reference>
     {
       if (is_ok())
         return lak::ok_t{get_ok()};
@@ -336,7 +350,7 @@ namespace lak
 
     template<
       lak::concepts::invocable_result_of_template<lak::result, ERR &&> F>
-    auto or_else(F && f) &&->lak::invoke_result_t<F, ERR &&>
+    auto or_else(F &&f) && -> lak::invoke_result_t<F, ERR &&>
     {
       if (is_ok())
         return lak::ok_t{forward_ok()};
@@ -347,7 +361,7 @@ namespace lak
     /* --- expect --- */
 
     template<typename STR>
-    ok_type &expect(const STR &error_str) &
+    ok_reference expect(const STR &error_str) &
     {
       if (is_err())
       {
@@ -364,7 +378,7 @@ namespace lak
     }
 
     template<typename STR>
-    const ok_type &expect(const STR &error_str) const &
+    ok_const_reference expect(const STR &error_str) const &
     {
       if (is_err())
       {
@@ -400,14 +414,14 @@ namespace lak
     /* --- expect_err --- */
 
     template<typename STR>
-    err_type &expect_err(const STR &error_str) &
+    err_reference expect_err(const STR &error_str) &
     {
       if (is_ok()) ABORTF(error_str /*, ": ", get_ok()*/);
       return get_err();
     }
 
     template<typename STR>
-    const err_type &expect_err(const STR &error_str) const &
+    err_const_reference expect_err(const STR &error_str) const &
     {
       if (is_ok()) ABORTF(error_str /*, ": ", get_ok()*/);
       return get_err();
@@ -422,17 +436,17 @@ namespace lak
 
     /* --- unwrap --- */
 
-    ok_type &unwrap() & { return expect("unwrap failed"); }
+    ok_reference unwrap() & { return expect("unwrap failed"); }
 
-    const ok_type &unwrap() const & { return expect("unwrap failed"); }
+    ok_const_reference unwrap() const & { return expect("unwrap failed"); }
 
     OK unwrap() && { return lak::forward<OK>(expect("unwrap failed")); }
 
     /* --- unwrap_err --- */
 
-    err_type &unwrap_err() & { return expect_err("unwrap_err failed"); }
+    err_reference unwrap_err() & { return expect_err("unwrap_err failed"); }
 
-    const err_type &unwrap_err() const &
+    err_const_reference unwrap_err() const &
     {
       return expect_err("unwrap_err failed");
     }
@@ -444,17 +458,17 @@ namespace lak
 
     /* --- unsafe_unwrap --- */
 
-    ok_type &unsafe_unwrap() & { return get_ok(); }
+    ok_reference unsafe_unwrap() & { return get_ok(); }
 
-    const ok_type &unsafe_unwrap() const & { return get_ok(); }
+    ok_const_reference unsafe_unwrap() const & { return get_ok(); }
 
     OK unsafe_unwrap() && { return lak::forward<OK>(get_ok()); }
 
     /* --- unsafe_unwrap_err --- */
 
-    err_type &unsafe_unwrap_err() & { return get_err(); }
+    err_reference unsafe_unwrap_err() & { return get_err(); }
 
-    const err_type &unsafe_unwrap_err() const & { return get_err(); }
+    err_const_reference unsafe_unwrap_err() const & { return get_err(); }
 
     ERR unsafe_unwrap_err() && { return lak::forward<ERR>(get_err()); }
 

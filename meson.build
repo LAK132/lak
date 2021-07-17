@@ -79,6 +79,7 @@ sources = [
   'src/memmanip.cpp',
   'src/profile.cpp',
   'src/strconv.cpp',
+  'src/string_view.cpp',
   'src/test.cpp',
   'src/tinflate.cpp',
   'src/tokeniser.cpp',

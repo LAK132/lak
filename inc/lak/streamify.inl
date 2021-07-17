@@ -1,7 +1,7 @@
 #include "lak/strcast.hpp"
 #include "lak/strconv.hpp"
+#include "lak/string_view.hpp"
 #include "lak/type_traits.hpp"
-#include "lak/unicode.hpp"
 
 template<typename CHAR, typename... ARGS>
 lak::string<CHAR> lak::streamify(const ARGS &...args)

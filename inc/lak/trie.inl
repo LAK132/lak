@@ -1,5 +1,5 @@
 #include "lak/debug.hpp"
-#include "lak/unicode.hpp"
+#include "lak/string_view.hpp"
 #include "lak/utility.hpp"
 
 namespace

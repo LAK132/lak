@@ -1,15 +1,13 @@
-#include "lak/visit.hpp"
-
 #ifndef LAK_OPTIONAL_HPP
-#  define LAK_OPTIONAL_HPP
+#define LAK_OPTIONAL_HPP
 
-#  include "lak/type_traits.hpp"
-#  include "lak/uninitialised.hpp"
-#  include "lak/utility.hpp"
+#include "lak/type_traits.hpp"
+#include "lak/uninitialised.hpp"
+#include "lak/utility.hpp"
 
-#  ifndef LAK_NO_STD
-#    include <optional>
-#  endif
+#ifndef LAK_NO_STD
+#  include <optional>
+#endif
 
 namespace lak
 {
@@ -88,9 +86,9 @@ namespace lak
       return *this;
     }
 
-    constexpr inline bool has_value() const { return _has_value; }
+    inline bool has_value() const { return _has_value; }
 
-    constexpr inline operator bool() const { return _has_value; }
+    inline operator bool() const { return _has_value; }
 
     template<typename U>
     value_type &emplace(U &&other)
@@ -157,9 +155,9 @@ namespace lak
       return *this;
     }
 
-    constexpr inline bool has_value() const { return _value; }
+    inline bool has_value() const { return _value; }
 
-    constexpr inline operator bool() const { return _value; }
+    inline operator bool() const { return _value; }
 
     void emplace() { _value = true; }
 
@@ -206,9 +204,9 @@ namespace lak
       return *this;
     }
 
-    constexpr inline bool has_value() const { return _value; }
+    inline bool has_value() const { return _value; }
 
-    constexpr inline operator bool() const { return _value; }
+    inline operator bool() const { return _value; }
 
     value_type &emplace(T &other)
     {
@@ -243,13 +241,13 @@ namespace lak
     return lak::as_ptr(p.operator->());
   }
 
-#  ifndef LAK_NO_STD
+#ifndef LAK_NO_STD
   template<typename T>
   force_inline lak::remove_reference_t<T> *as_ptr(std::optional<T &> p)
   {
     return lak::as_ptr(p.operator->());
   }
-#  endif
+#endif
 }
 
 #endif

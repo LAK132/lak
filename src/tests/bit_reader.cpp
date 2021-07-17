@@ -1,5 +1,6 @@
 #include "lak/bit_reader.hpp"
 #include "lak/span.hpp"
+#include "lak/string_view.hpp"
 
 #include "lak/test.hpp"
 

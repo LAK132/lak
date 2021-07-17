@@ -11,6 +11,13 @@
 
 namespace lak
 {
+  /* --- monostate --- */
+
+  struct monostate
+  {
+  };
+  static_assert(lak::is_default_constructible_v<lak::monostate>);
+
   /* --- in_place_index --- */
 
   template<size_t I>

@@ -12,22 +12,10 @@
 
 namespace lak
 {
-  // Length of the null terminated string not including the null terminator.
-  size_t string_length(const char *str);
-  size_t string_length(const wchar_t *str);
-  size_t string_length(const char8_t *str);
-  size_t string_length(const char16_t *str);
-  size_t string_length(const char32_t *str);
-
   // The length of the character length (not codepoint length) of the string if
   // it was converted to TO type characters.
   template<typename TO, typename FROM>
   size_t converted_string_length(lak::span<FROM> str);
-
-  template<typename CHAR>
-  lak::span<CHAR> string_view(CHAR *str);
-  template<typename CHAR>
-  lak::span<const CHAR> string_view(const lak::string<CHAR> &str);
 
   // Returns the length of the multi-byte first/offset character (always 1 for
   // non-multi-byte string types). Returns 0 if character has a bad encoding
@@ -78,18 +66,6 @@ namespace lak
 
   template<typename CHAR>
   void append_codepoint(lak::string<CHAR> &str, char32_t code);
-
-  inline constexpr lak::span<const char32_t> hex_alphanumerics();
-  inline constexpr bool is_hex_alphanumeric(char32_t c);
-
-  inline constexpr lak::span<const char32_t> control_codes();
-  inline constexpr bool is_control_code(char32_t c);
-
-  inline constexpr lak::span<const char32_t> whitespaces();
-  inline constexpr bool is_whitespace(char32_t c);
-
-  inline constexpr lak::span<const char8_t> ascii_whitespaces();
-  inline constexpr bool is_ascii_whitespace(char8_t c);
 
   template<typename CHAR>
   struct codepoint_iterator

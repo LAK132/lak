@@ -1,4 +1,4 @@
-#include "lak/unicode.hpp"
+#include "lak/string_view.hpp"
 
 inline lak::span<const char> lak::as_astring(const lak::astring &str)
 {
