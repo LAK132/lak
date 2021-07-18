@@ -128,20 +128,12 @@ namespace lak
     result &operator=(const result &) = default;
     result &operator=(result &&) = default;
 
-    static inline result make_ok(const lak::remove_reference_t<OK> &value)
-    {
-      return result(lak::variant<OK, ERR>(lak::in_place_index<0>, value));
-    }
-    static inline result make_ok(OK &&value)
+    static inline result make_ok(OK value)
     {
       return result(lak::variant<OK, ERR>(lak::in_place_index<0>,
                                           lak::forward<OK>(value)));
     }
-    static inline result make_err(const lak::remove_reference_t<ERR> &value)
-    {
-      return result(lak::variant<OK, ERR>(lak::in_place_index<1>, value));
-    }
-    static inline result make_err(ERR &&value)
+    static inline result make_err(ERR value)
     {
       return result(lak::variant<OK, ERR>(lak::in_place_index<1>,
                                           lak::forward<ERR>(value)));
