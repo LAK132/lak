@@ -78,6 +78,7 @@ sources = [
   'src/file.cpp',
   'src/intrin.cpp',
   'src/json.cpp',
+  'src/math.cpp',
   'src/memmanip.cpp',
   'src/profile.cpp',
   'src/strconv.cpp',
