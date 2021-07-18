@@ -222,6 +222,12 @@ namespace lak
 
     size_t index() const { return _index; }
 
+    template<typename T>
+    bool holds() const
+    {
+      return _index == index_of<T>;
+    }
+
     constexpr size_t size() const { return _size; }
 
     template<size_t I>
