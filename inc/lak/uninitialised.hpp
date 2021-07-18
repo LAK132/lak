@@ -27,6 +27,8 @@ namespace lak
     {
     }
 
+    ~uninitialised() {}
+
     template<typename... ARGS>
     value_type &create(ARGS &&... args)
     {
