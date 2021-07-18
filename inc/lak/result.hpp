@@ -568,6 +568,45 @@ namespace lak
       return lak::move(result).unsafe_unwrap_err();
   }
 
+  /* --- result_from_pointer --- */
+
+  template<typename T>
+  lak::result<T &> result_from_pointer(T *ptr)
+  {
+    if (ptr)
+      return lak::ok_t<T &>{*ptr};
+    else
+      return lak::err_t{};
+  }
+
+  static_assert(
+    lak::is_same_v<decltype(result_from_pointer(lak::declval<int *>())),
+                   lak::result<int &>>);
+  static_assert(
+    lak::is_same_v<decltype(result_from_pointer(lak::declval<const int *>())),
+                   lak::result<const int &>>);
+
+  /* --- copy_result_from_pointer --- */
+
+  template<typename T>
+  lak::result<lak::remove_const_t<T>> copy_result_from_pointer(T *ptr)
+  {
+    if (ptr)
+      return lak::ok_t<lak::remove_const_t<T>>{*ptr};
+    else
+      return lak::err_t{};
+  }
+
+  static_assert(
+    lak::is_same_v<decltype(copy_result_from_pointer(lak::declval<int *>())),
+                   lak::result<int>>);
+  static_assert(lak::is_same_v<decltype(copy_result_from_pointer(
+                                 lak::declval<const int *>())),
+                               lak::result<int>>);
+  static_assert(lak::is_same_v<decltype(copy_result_from_pointer(
+                                 lak::declval<const int **>())),
+                               lak::result<const int *>>);
+
   template<typename OK, typename... ERR>
   using results = lak::result<OK, lak::variant<ERR...>>;
 
