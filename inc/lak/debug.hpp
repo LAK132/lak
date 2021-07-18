@@ -133,7 +133,9 @@
 #undef ASSERT_NYI
 #undef ASSERT_UNREACHABLE
 #undef ASSERT_EQUAL
+#undef ASSERT_ARRAY_EQUAL
 #undef ASSERT_NOT_EQUAL
+#undef ASSERT_ARRAY_NOT_EQUAL
 #undef ASSERT_GREATER
 #undef ASSERT_GREATER_OR_EQUAL
 #undef ASSERT_LESS
@@ -173,6 +175,37 @@
             "'");                                                             \
     }                                                                         \
   }
+#define ASSERT_ARRAY_EQUAL(X, Y)                                              \
+  {                                                                           \
+    const auto &UNIQUIFY(x)  = (X);                                           \
+    const auto &UNIQUIFY(y)  = (Y);                                           \
+    const size_t UNIQUIFY(c) = UNIQUIFY(x).size();                            \
+    if (UNIQUIFY(c) != UNIQUIFY(y).size())                                    \
+    {                                                                         \
+      FATAL("Assertion '" STRINGIFY(X.size() == Y.size()) "' failed: '",      \
+            UNIQUIFY(c),                                                      \
+            "' != '",                                                         \
+            UNIQUIFY(y).size(),                                               \
+            "'");                                                             \
+    }                                                                         \
+    for (size_t UNIQUIFY(i) = 0; UNIQUIFY(i) < UNIQUIFY(c); ++UNIQUIFY(i))    \
+    {                                                                         \
+      const auto &UNIQUIFY(x_i) = UNIQUIFY(x)[UNIQUIFY(i)];                   \
+      const auto &UNIQUIFY(y_i) = UNIQUIFY(y)[UNIQUIFY(i)];                   \
+      if (!(UNIQUIFY(x_i) == UNIQUIFY(y_i)))                                  \
+      {                                                                       \
+        FATAL("Assertion '" STRINGIFY(X) "[",                                 \
+              UNIQUIFY(i),                                                    \
+              "] == " STRINGIFY(Y) "[",                                       \
+              UNIQUIFY(i),                                                    \
+              "]' failed: '",                                                 \
+              UNIQUIFY(x_i),                                                  \
+              "' != '",                                                       \
+              UNIQUIFY(y_i),                                                  \
+              "'");                                                           \
+      }                                                                       \
+    }                                                                         \
+  }
 #define ASSERT_NOT_EQUAL(X, Y)                                                \
   {                                                                           \
     const auto &UNIQUIFY(x) = (X);                                            \
@@ -184,6 +217,32 @@
             "' == '",                                                         \
             UNIQUIFY(y),                                                      \
             "'");                                                             \
+    }                                                                         \
+  }
+#define ASSERT_ARRAY_NOT_EQUAL(X, Y)                                          \
+  {                                                                           \
+    const auto &UNIQUIFY(x)  = (X);                                           \
+    const auto &UNIQUIFY(y)  = (Y);                                           \
+    const size_t UNIQUIFY(c) = UNIQUIFY(x).size();                            \
+    if (UNIQUIFY(c) == UNIQUIFY(y).size())                                    \
+    {                                                                         \
+      for (size_t UNIQUIFY(i) = 0; UNIQUIFY(i) < UNIQUIFY(c); ++UNIQUIFY(i))  \
+      {                                                                       \
+        const auto &UNIQUIFY(x_i) = UNIQUIFY(x)[UNIQUIFY(i)];                 \
+        const auto &UNIQUIFY(y_i) = UNIQUIFY(y)[UNIQUIFY(i)];                 \
+        if (!(UNIQUIFY(x_i) != UNIQUIFY(y_i)))                                \
+        {                                                                     \
+          FATAL("Assertion '" STRINGIFY(X) "[",                               \
+                UNIQUIFY(i),                                                  \
+                "] != " STRINGIFY(Y) "[",                                     \
+                UNIQUIFY(i),                                                  \
+                "]' failed: '",                                               \
+                UNIQUIFY(x_i),                                                \
+                "' == '",                                                     \
+                UNIQUIFY(y_i),                                                \
+                "'");                                                         \
+        }                                                                     \
+      }                                                                       \
     }                                                                         \
   }
 #define ASSERT_GREATER(X, Y)                                                  \
