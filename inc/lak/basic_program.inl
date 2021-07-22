@@ -40,7 +40,7 @@ void APIENTRY MessageCallback(GLenum source,
                               const void *userParam)
 {
   LAK_UNUSED(id);
-  LAK_UNUSED(userParam)
+  LAK_UNUSED(userParam);
 
   if (type == GL_DEBUG_TYPE_OTHER &&
       severity == GL_DEBUG_SEVERITY_NOTIFICATION)
