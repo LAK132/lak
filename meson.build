@@ -19,6 +19,8 @@ if cxx.get_id() == 'msvc'
     '-DUNICODE',
     '-DWIN32_LEAN_AND_MEAN',
     '-DNOMINMAX',
+    '-wd4315',
+    '-wd4366',
   ]
   cplusplus = cxx.get_define(
     '__cplusplus',
