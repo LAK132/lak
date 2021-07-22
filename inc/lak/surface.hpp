@@ -9,7 +9,7 @@ void win32_error_popup(LPWSTR lpszFunction);
 #elif defined(LAK_USE_XCB)
 #  include <xcb/xcb.h>
 #elif defined(LAK_USE_SDL)
-#  include <SDL/SDL.h>
+#  include <SDL.h>
 #else
 #  error "No implementation specified"
 #endif

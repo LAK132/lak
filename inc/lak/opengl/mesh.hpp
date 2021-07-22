@@ -159,10 +159,10 @@ namespace lak
     struct static_object_part
     {
     private:
-      vertex_array _vertex_array;
       shared_vertex_buffer _vertex_buffer;
       shared_program _shader;
       std::vector<std::shared_ptr<texture>> _textures;
+      vertex_array _vertex_array;
 
     public:
       static_object_part() = default;

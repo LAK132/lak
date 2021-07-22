@@ -1,5 +1,7 @@
 #ifdef LAK_USE_SDL
-#  define SDL_MAIN_HANDLED
+#  ifndef SDL_MAIN_HANDLED
+#    error SDL_MAIN_HANDLED must be defined globally
+#  endif
 #  include <SDL.h>
 #endif
 
@@ -37,6 +39,9 @@ void APIENTRY MessageCallback(GLenum source,
                               const GLchar *message,
                               const void *userParam)
 {
+  LAK_UNUSED(id);
+  LAK_UNUSED(userParam)
+
   if (type == GL_DEBUG_TYPE_OTHER &&
       severity == GL_DEBUG_SEVERITY_NOTIFICATION)
     return;
@@ -84,7 +89,7 @@ void APIENTRY MessageCallback(GLenum source,
       break;
     default: DEBUG("| Source: ", source); break;
   }
-  DEBUG("| Message:\n", message, "\n");
+  DEBUG("| Message:\n", lak::span(message, length), "\n");
 }
 
 int main(int argc, char **argv)

@@ -17,11 +17,11 @@ namespace lak
 
   template<typename TO>
   inline lak::string<TO> strconv(const fs::path &path);
-  inline lak::astring to_astring(const fs::path &path);
-  inline lak::wstring to_wstring(const fs::path &path);
-  inline lak::u8string to_u8string(const fs::path &path);
-  inline lak::u16string to_u16string(const fs::path &path);
-  inline lak::u32string to_u32string(const fs::path &path);
+  lak::astring to_astring(const fs::path &path);
+  lak::wstring to_wstring(const fs::path &path);
+  lak::u8string to_u8string(const fs::path &path);
+  lak::u16string to_u16string(const fs::path &path);
+  lak::u32string to_u32string(const fs::path &path);
 
   // true if path exists
   // false if path does not exist

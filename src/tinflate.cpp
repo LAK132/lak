@@ -447,37 +447,39 @@ namespace tinf
 
           for (i = 0; i < 0x7E; ++i)
           {
-            state.literal_table[i] = ~next_free;
+            state.literal_table[i] = int16_t(~next_free);
             next_free += 2;
           }
 
           for (; i < 0x96; ++i)
-            state.literal_table[i] = (uint16_t)i + (256 - 0x7E);
+            state.literal_table[i] = (int16_t)i + (256 - 0x7E);
 
           for (; i < 0xFE; ++i)
           {
-            state.literal_table[i] = ~next_free;
+            state.literal_table[i] = int16_t(~next_free);
             next_free += 2;
           }
 
           for (; i < 0x18E; ++i)
-            state.literal_table[i] = (uint16_t)i + (0 - 0xFE);
+            state.literal_table[i] = (int16_t)i + (0 - 0xFE);
 
           for (; i < 0x196; ++i)
-            state.literal_table[i] = (uint16_t)i + (280 - 0x18E);
+            state.literal_table[i] = (int16_t)i + (280 - 0x18E);
 
           for (; i < 0x1CE; ++i)
           {
-            state.literal_table[i] = ~next_free;
+            state.literal_table[i] = int16_t(~next_free);
             next_free += 2;
           }
 
           for (; i < 0x23E; ++i)
-            state.literal_table[i] = (uint16_t)i + (144 - 0x1CE);
+            state.literal_table[i] = (int16_t)i + (144 - 0x1CE);
 
-          for (i = 0; i < 0x1E; ++i) state.distance_table[i] = ~(i * 2 + 2);
+          for (i = 0; i < 0x1E; ++i)
+            state.distance_table[i] = int16_t(~(i * 2 + 2));
 
-          for (i = 0x1E; i < 0x3E; ++i) state.distance_table[i] = i - 0x1E;
+          for (i = 0x1E; i < 0x3E; ++i)
+            state.distance_table[i] = int16_t(i - 0x1E);
         }
 
         for (;;)
@@ -619,7 +621,7 @@ namespace tinf
 
       for (uint32_t j = next_code; j < code_limit; ++j)
       {
-        table[index++] = ~next_index;
+        table[index++] = int16_t(~next_index);
         next_index += 2;
       }
     }

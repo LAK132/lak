@@ -360,7 +360,7 @@ namespace lak
 
 #include <ostream>
 
-[[maybe_unused]] static std::ostream &operator<<(std::ostream &strm,
+[[maybe_unused]] inline std::ostream &operator<<(std::ostream &strm,
                                                  lak::graphics_mode mode)
 {
   switch (mode)

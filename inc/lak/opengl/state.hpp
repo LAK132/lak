@@ -18,7 +18,7 @@ namespace lak
     }
 
     // returns true when there is no errors.
-    static bool check_error()
+    inline bool check_error()
     {
       auto error = glGetError();
       switch (error)

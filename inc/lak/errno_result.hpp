@@ -30,7 +30,7 @@ namespace lak
   using errno_result = lak::result<T, lak::errno_error>;
 }
 
-[[maybe_unused]] static std::ostream &operator<<(std::ostream &strm,
+[[maybe_unused]] inline std::ostream &operator<<(std::ostream &strm,
                                                  const lak::errno_error &err)
 {
   return strm << err.to_string();

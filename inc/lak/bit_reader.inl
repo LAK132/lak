@@ -44,7 +44,7 @@ lak::bit_reader::peek_bits(const uint8_t bits)
 inline lak::result<uintmax_t, lak::bit_reader::error_t>
 lak::bit_reader::read_bits(const uint8_t bits)
 {
-  return peek_bits(bits).if_ok([&](...) { flush_bits(bits); });
+  return peek_bits(bits).if_ok([&](auto &&) { flush_bits(bits); });
 }
 
 inline lak::result<uint8_t, lak::bit_reader::error_t>

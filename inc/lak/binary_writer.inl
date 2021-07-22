@@ -66,7 +66,8 @@ struct lak::to_bytes_traits<int8_t, E>
 
   static void to_bytes(lak::span<uint8_t, size> bytes, int8_t value)
   {
-    lak::to_bytes_traits<uint8_t, E>::to_bytes(bytes, uint8_t(value));
+    lak::to_bytes_traits<uint8_t, E>::to_bytes(bytes,
+                                               static_cast<uint8_t>(value));
   }
 };
 
@@ -84,13 +85,13 @@ struct lak::to_bytes_traits<uint16_t, E>
 
     if constexpr (E == lak::endian::little)
     {
-      bytes[0] = value;
-      bytes[1] = value >> 8;
+      bytes[0] = static_cast<uint8_t>(value);
+      bytes[1] = static_cast<uint8_t>(value >> 8);
     }
     else
     {
-      bytes[1] = value;
-      bytes[0] = value >> 8;
+      bytes[1] = static_cast<uint8_t>(value);
+      bytes[0] = static_cast<uint8_t>(value >> 8);
     }
   }
 };
@@ -105,7 +106,8 @@ struct lak::to_bytes_traits<int16_t, E>
 
   static void to_bytes(lak::span<uint8_t, size> bytes, int16_t value)
   {
-    lak::to_bytes_traits<uint16_t, E>::to_bytes(bytes, uint16_t(value));
+    lak::to_bytes_traits<uint16_t, E>::to_bytes(bytes,
+                                                static_cast<uint16_t>(value));
   }
 };
 
@@ -123,17 +125,17 @@ struct lak::to_bytes_traits<uint32_t, E>
 
     if constexpr (E == lak::endian::little)
     {
-      bytes[0] = value;
-      bytes[1] = value >> 8;
-      bytes[2] = value >> 16;
-      bytes[3] = value >> 24;
+      bytes[0] = static_cast<uint8_t>(value);
+      bytes[1] = static_cast<uint8_t>(value >> 8);
+      bytes[2] = static_cast<uint8_t>(value >> 16);
+      bytes[3] = static_cast<uint8_t>(value >> 24);
     }
     else
     {
-      bytes[3] = value;
-      bytes[2] = value >> 8;
-      bytes[1] = value >> 16;
-      bytes[0] = value >> 24;
+      bytes[3] = static_cast<uint8_t>(value);
+      bytes[2] = static_cast<uint8_t>(value >> 8);
+      bytes[1] = static_cast<uint8_t>(value >> 16);
+      bytes[0] = static_cast<uint8_t>(value >> 24);
     }
   }
 };
@@ -148,7 +150,8 @@ struct lak::to_bytes_traits<int32_t, E>
 
   static void to_bytes(lak::span<uint8_t, size> bytes, int32_t value)
   {
-    lak::to_bytes_traits<uint32_t, E>::to_bytes(bytes, uint32_t(value));
+    lak::to_bytes_traits<uint32_t, E>::to_bytes(bytes,
+                                                static_cast<uint32_t>(value));
   }
 };
 
@@ -166,25 +169,25 @@ struct lak::to_bytes_traits<uint64_t, E>
 
     if constexpr (E == lak::endian::little)
     {
-      bytes[0] = value;
-      bytes[1] = value >> 8;
-      bytes[2] = value >> 16;
-      bytes[3] = value >> 24;
-      bytes[4] = value >> 32;
-      bytes[5] = value >> 40;
-      bytes[6] = value >> 48;
-      bytes[7] = value >> 56;
+      bytes[0] = static_cast<uint8_t>(value);
+      bytes[1] = static_cast<uint8_t>(value >> 8);
+      bytes[2] = static_cast<uint8_t>(value >> 16);
+      bytes[3] = static_cast<uint8_t>(value >> 24);
+      bytes[4] = static_cast<uint8_t>(value >> 32);
+      bytes[5] = static_cast<uint8_t>(value >> 40);
+      bytes[6] = static_cast<uint8_t>(value >> 48);
+      bytes[7] = static_cast<uint8_t>(value >> 56);
     }
     else
     {
-      bytes[7] = value;
-      bytes[6] = value >> 8;
-      bytes[5] = value >> 16;
-      bytes[4] = value >> 24;
-      bytes[3] = value >> 32;
-      bytes[2] = value >> 40;
-      bytes[1] = value >> 48;
-      bytes[0] = value >> 56;
+      bytes[7] = static_cast<uint8_t>(value);
+      bytes[6] = static_cast<uint8_t>(value >> 8);
+      bytes[5] = static_cast<uint8_t>(value >> 16);
+      bytes[4] = static_cast<uint8_t>(value >> 24);
+      bytes[3] = static_cast<uint8_t>(value >> 32);
+      bytes[2] = static_cast<uint8_t>(value >> 40);
+      bytes[1] = static_cast<uint8_t>(value >> 48);
+      bytes[0] = static_cast<uint8_t>(value >> 56);
     }
   }
 };
@@ -199,7 +202,8 @@ struct lak::to_bytes_traits<int64_t, E>
 
   static void to_bytes(lak::span<uint8_t, size> bytes, int64_t value)
   {
-    lak::to_bytes_traits<uint64_t, E>::to_bytes(bytes, uint64_t(value));
+    lak::to_bytes_traits<uint64_t, E>::to_bytes(bytes,
+                                                static_cast<uint64_t>(value));
   }
 };
 
@@ -243,7 +247,8 @@ struct lak::to_bytes_traits<char, E>
 
   static void to_bytes(lak::span<uint8_t, size> bytes, char value)
   {
-    lak::to_bytes_traits<uint8_t, E>::to_bytes(bytes, uint8_t(value));
+    lak::to_bytes_traits<uint8_t, E>::to_bytes(bytes,
+                                               static_cast<uint8_t>(value));
   }
 };
 
@@ -258,7 +263,8 @@ struct lak::to_bytes_traits<char8_t, E>
 
   static void to_bytes(lak::span<uint8_t, size> bytes, char8_t value)
   {
-    lak::to_bytes_traits<uint8_t, E>::to_bytes(bytes, uint8_t(value));
+    lak::to_bytes_traits<uint8_t, E>::to_bytes(bytes,
+                                               static_cast<uint8_t>(value));
   }
 };
 #endif
@@ -273,7 +279,8 @@ struct lak::to_bytes_traits<char16_t, E>
 
   static void to_bytes(lak::span<uint8_t, size> bytes, char16_t value)
   {
-    lak::to_bytes_traits<uint16_t, E>::to_bytes(bytes, uint16_t(value));
+    lak::to_bytes_traits<uint16_t, E>::to_bytes(bytes,
+                                                static_cast<uint16_t>(value));
   }
 };
 
@@ -287,7 +294,8 @@ struct lak::to_bytes_traits<char32_t, E>
 
   static void to_bytes(lak::span<uint8_t, size> bytes, char32_t value)
   {
-    lak::to_bytes_traits<uint32_t, E>::to_bytes(bytes, uint32_t(value));
+    lak::to_bytes_traits<uint32_t, E>::to_bytes(bytes,
+                                                static_cast<uint32_t>(value));
   }
 };
 
@@ -301,7 +309,7 @@ struct lak::to_bytes_traits<wchar_t, E>
 
   static void to_bytes(lak::span<uint8_t, size> bytes, wchar_t value)
   {
-    lak::to_bytes_traits<wchar_unicode_t, E>::to_bytes(bytes,
-                                                       wchar_unicode_t(value));
+    lak::to_bytes_traits<wchar_unicode_t, E>::to_bytes(
+      bytes, static_cast<wchar_unicode_t>(value));
   }
 };

@@ -428,7 +428,7 @@ namespace lak
   using image3_t = image<color3_t>;
   using image4_t = image<color4_t>;
 
-  [[maybe_unused]] static image3_t ImageFromRGB24(uint8_t *pixels,
+  [[maybe_unused]] inline image3_t ImageFromRGB24(uint8_t *pixels,
                                                   vec2s_t size)
   {
     return image3_t::from_bytes(
@@ -436,7 +436,7 @@ namespace lak
       .unwrap();
   }
 
-  [[maybe_unused]] static image4_t ImageFromRGBA32(uint8_t *pixels,
+  [[maybe_unused]] inline image4_t ImageFromRGBA32(uint8_t *pixels,
                                                    vec2s_t size)
   {
     return image4_t::from_bytes(

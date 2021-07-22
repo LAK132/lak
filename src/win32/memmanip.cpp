@@ -27,27 +27,27 @@ lak::page_result_t<lak::span<void>> lak::page_reserve(size_t size,
 
   return lak::winapi::virtual_alloc(nullptr, size, MEM_RESERVE, PAGE_READWRITE)
     .map(ptr_to_span)
-    .map_err([](...) -> lak::page_error { return {}; });
+    .map_err([](auto &&) -> lak::page_error { return {}; });
 }
 
 lak::page_result_t<> lak::page_commit(lak::span<void> pages)
 {
   return lak::winapi::virtual_alloc(
            pages.data(), pages.size(), MEM_COMMIT, PAGE_READWRITE)
-    .map([](...) -> lak::monostate { return {}; })
-    .map_err([](...) -> lak::page_error { return {}; });
+    .map([](auto &&) -> lak::monostate { return {}; })
+    .map_err([](auto &&) -> lak::page_error { return {}; });
 }
 
 lak::page_result_t<> lak::page_decommit(lak::span<void> pages)
 {
   return lak::winapi::virtual_free(pages.data(), pages.size(), MEM_DECOMMIT)
-    .map_err([](...) -> lak::page_error { return {}; });
+    .map_err([](auto &&) -> lak::page_error { return {}; });
 }
 
 lak::page_result_t<> lak::page_free(lak::span<void> pages)
 {
   return lak::winapi::virtual_free(pages.data(), 0, MEM_RELEASE)
-    .map_err([](...) -> lak::page_error { return {}; });
+    .map_err([](auto &&) -> lak::page_error { return {}; });
 }
 
 #if 0

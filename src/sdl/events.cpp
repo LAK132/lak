@@ -229,7 +229,7 @@ void translate_event(const SDL_Event &sdl_event,
   }
 }
 
-bool handle_next_event(const lak::platform_instance &instance,
+bool handle_next_event(const lak::platform_instance &,
                        lak::event *event,
                        SDL_eventaction action)
 {
@@ -237,7 +237,7 @@ bool handle_next_event(const lak::platform_instance &instance,
   if (SDL_Event e;
       SDL_PeepEvents(&e, 1, action, SDL_FIRSTEVENT, SDL_LASTEVENT) > 0)
   {
-    translate_event(e, event, window_from_event(event->platform_event));
+    translate_event(e, event, window_from_event(e));
     lak::memcpy(&e, &event->platform_event);
     return true;
   }

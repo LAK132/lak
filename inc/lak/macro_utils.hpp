@@ -20,6 +20,9 @@
 #undef EXPAND
 #define EXPAND(x) x
 
+#undef LAK_UNUSED
+#define LAK_UNUSED(x) ((void)x)
+
 #undef LAK_ALL_CVTS
 #define LAK_ALL_CVTS(MACRO, ...)                                              \
   EXPAND(MACRO(, __VA_ARGS__))                                                \

@@ -49,23 +49,23 @@ namespace lak
 
     struct shader_attribute
     {
+      lak::astring name;
       GLuint position;
       GLint size;
       // GL_FLOAT, GL_FLOAT_VEC2, GL_FLOAT_VEC3, GL_FLOAT_VEC4,
       // GL_FLOAT_MAT2, GL_FLOAT_MAT3 or GL_FLOAT_MAT4.
       GLenum type;
-      lak::astring name;
     };
 
     struct shader_uniform
     {
+      lak::astring name;
       GLuint position;
       GLint size;
       // There are a lot more types that this can be compared to
       // shader_attribute, see
       // https://www.khronos.org/registry/OpenGL-Refpages/gl4/html/glGetActiveUniform.xhtml
       GLenum type;
-      lak::astring name;
     };
 
     struct program;

@@ -21,7 +21,8 @@ lak::result<lak::array<uint8_t>, lak::lz4_decode_error> lak::decode_lz4_block(
   lak::array<uint8_t> output(output_size);
   lak::binary_span_writer writer(output);
 
-  auto out_of_data = [](...) { return lak::lz4_decode_error::out_of_data; };
+  auto out_of_data = [](auto &&)
+  { return lak::lz4_decode_error::out_of_data; };
 
   for (;;)
   {
@@ -73,7 +74,7 @@ lak::result<lak::array<uint8_t>, lak::lz4_decode_error> lak::decode_lz4_block(
     match_length += 4;
 
     // this may be an aliasing copy!
-    if (writer.cursor < offset)
+    if (writer.position() < offset)
       return lak::err_t{lak::lz4_decode_error::offset_too_large};
     if (writer.remaining().size() + offset < match_length)
       return lak::err_t{lak::lz4_decode_error::out_of_data};

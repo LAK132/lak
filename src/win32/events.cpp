@@ -1,6 +1,4 @@
 #include "lak/windows.hpp"
-#include <windowsx.h>
-#include <wingdi.h>
 
 #include "lak/debug.hpp"
 #include "lak/events.hpp"

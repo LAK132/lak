@@ -1,4 +1,6 @@
-#define SDL_MAIN_HANDLED
+#ifndef SDL_MAIN_HANDLED
+#  error SDL_MAIN_HANDLED must be defined globally
+#endif
 #ifndef LAK_USE_SDL
 #  define LAK_USE_SDL
 #endif
@@ -14,7 +16,7 @@
 #include "lak/window.hpp"
 
 lak::window_handle *lak::create_window(const lak::platform_instance &instance,
-                                       const lak::software_settings &settings)
+                                       const lak::software_settings &)
 {
   auto handle = lak::unique_bank_ptr<lak::window_handle>::create();
   ASSERT(handle);
@@ -95,8 +97,8 @@ lak::window_handle *lak::create_window(const lak::platform_instance &instance,
   SET_ATTRIB(SDL_GL_CONTEXT_MINOR_VERSION, settings.minor);
 #undef SET_ATTRIB
 
-  if (!(context.platform_handle =
-          SDL_GL_CreateContext(handle->_platform_handle)))
+  if (context.platform_handle = SDL_GL_CreateContext(handle->_platform_handle);
+      !context.platform_handle)
   {
     ERROR("Failed to create an OpenGL context");
     ERROR(SDL_GetError());
@@ -137,7 +139,7 @@ lak::window_handle *lak::create_window(const lak::platform_instance &instance,
 }
 
 lak::window_handle *lak::create_window(const lak::platform_instance &instance,
-                                       const lak::vulkan_settings &settings)
+                                       const lak::vulkan_settings &)
 {
   auto handle = lak::unique_bank_ptr<lak::window_handle>::create();
   ASSERT(handle);
@@ -164,7 +166,7 @@ lak::window_handle *lak::create_window(const lak::platform_instance &instance,
   return handle.release();
 }
 
-bool lak::destroy_window(const lak::platform_instance &instance,
+bool lak::destroy_window(const lak::platform_instance &,
                          lak::window_handle *handle)
 {
   ASSERT(handle);
@@ -202,23 +204,21 @@ bool lak::destroy_window(const lak::platform_instance &instance,
 /* --- OpenGL --- */
 
 // :TODO: Actually put this in a header somewhere.
-bool lak::set_opengl_swap_interval(const lak::opengl_context &context,
-                                   int interval)
+bool lak::set_opengl_swap_interval(const lak::opengl_context &, int interval)
 {
   return SDL_GL_SetSwapInterval(interval) == 0;
-  return false;
 }
 
 /* --- Window helper functions --- */
 
-lak::wstring lak::window_title(const lak::platform_instance &instance,
+lak::wstring lak::window_title(const lak::platform_instance &,
                                const lak::window_handle *handle)
 {
   return lak::to_wstring(
     lak::as_u8string(SDL_GetWindowTitle(handle->_platform_handle)));
 }
 
-bool lak::set_window_title(const lak::platform_instance &instance,
+bool lak::set_window_title(const lak::platform_instance &,
                            lak::window_handle *handle,
                            const lak::wstring &str)
 {
@@ -228,7 +228,7 @@ bool lak::set_window_title(const lak::platform_instance &instance,
   return true;
 }
 
-lak::vec2l_t lak::window_size(const lak::platform_instance &instance,
+lak::vec2l_t lak::window_size(const lak::platform_instance &,
                               const lak::window_handle *handle)
 {
   int w, h;
@@ -236,7 +236,7 @@ lak::vec2l_t lak::window_size(const lak::platform_instance &instance,
   return {w, h};
 }
 
-bool lak::set_window_cursor_pos(const lak::platform_instance &instance,
+bool lak::set_window_cursor_pos(const lak::platform_instance &,
                                 const lak::window_handle *handle,
                                 lak::vec2l_t pos)
 {
@@ -247,10 +247,10 @@ bool lak::set_window_cursor_pos(const lak::platform_instance &instance,
   return true;
 }
 
-lak::vec2l_t lak::window_drawable_size(const lak::platform_instance &instance,
+lak::vec2l_t lak::window_drawable_size(const lak::platform_instance &,
                                        const lak::window_handle *handle)
 {
-  int w, h;
+  int w = 0, h = 0;
   switch (handle->graphics_mode())
   {
     case lak::graphics_mode::Software:
@@ -272,7 +272,7 @@ lak::vec2l_t lak::window_drawable_size(const lak::platform_instance &instance,
   return {w, h};
 }
 
-bool lak::set_window_size(const lak::platform_instance &instance,
+bool lak::set_window_size(const lak::platform_instance &,
                           lak::window_handle *handle,
                           lak::vec2l_t size)
 {
@@ -285,7 +285,7 @@ bool lak::set_window_size(const lak::platform_instance &instance,
   return true;
 }
 
-bool lak::swap_window(const lak::platform_instance &instance,
+bool lak::swap_window(const lak::platform_instance &,
                       lak::window_handle *handle)
 {
   switch (handle->graphics_mode())

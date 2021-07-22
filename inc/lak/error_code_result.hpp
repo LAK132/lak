@@ -22,7 +22,7 @@ namespace lak
   using error_code_result = lak::result<T, error_code_error>;
 }
 
-[[maybe_unused]] static std::ostream &operator<<(
+[[maybe_unused]] inline std::ostream &operator<<(
   std::ostream &strm, const lak::error_code_error &err)
 {
   return strm << err.to_string();

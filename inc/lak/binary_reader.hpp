@@ -44,37 +44,37 @@ namespace lak
 
   struct binary_reader
   {
-    lak::span<const uint8_t> data = {};
-    size_t cursor                 = 0;
+    lak::span<const uint8_t> _data = {};
+    size_t _cursor                 = 0;
 
     binary_reader() = default;
-    binary_reader(lak::span<const uint8_t> bytes) : data(bytes), cursor(0) {}
+    binary_reader(lak::span<const uint8_t> bytes) : _data(bytes), _cursor(0) {}
     binary_reader(const binary_reader &) = default;
     binary_reader &operator=(const binary_reader &) = default;
 
     inline lak::span<const uint8_t> remaining() const
     {
-      return data.subspan(cursor);
+      return _data.subspan(_cursor);
     }
-    inline bool empty() const { return cursor >= data.size(); }
-    inline size_t position() const { return cursor; }
-    inline size_t size() const { return data.size(); }
+    inline bool empty() const { return _cursor >= _data.size(); }
+    inline size_t position() const { return _cursor; }
+    inline size_t size() const { return _data.size(); }
     inline lak::result<> seek(size_t pos)
     {
-      if (pos > data.size()) return lak::err_t{};
-      cursor = pos;
+      if (pos > _data.size()) return lak::err_t{};
+      _cursor = pos;
       return lak::ok_t{};
     }
     inline lak::result<> skip(size_t count)
     {
-      if (cursor + count > data.size()) return lak::err_t{};
-      cursor += count;
+      if (_cursor + count > _data.size()) return lak::err_t{};
+      _cursor += count;
       return lak::ok_t{};
     }
     inline lak::result<> unread(size_t count)
     {
-      if (count > cursor) return lak::err_t{};
-      cursor -= count;
+      if (count > _cursor) return lak::err_t{};
+      _cursor -= count;
       return lak::ok_t{};
     }
 
@@ -88,7 +88,7 @@ namespace lak
     lak::result<T> read()
     {
       return peek<T, E>().if_ok(
-        [&](...) { this->cursor += lak::from_bytes_size_v<T, E>; });
+        [&](auto &&) { this->_cursor += lak::from_bytes_size_v<T, E>; });
     }
 
     template<typename T, lak::endian E = lak::endian::little>
@@ -101,7 +101,8 @@ namespace lak
     lak::result<lak::array<T>> read(size_t count)
     {
       return peek<T, E>(count).if_ok(
-        [&](...) { this->cursor += lak::from_bytes_size_v<T, E> * count; });
+        [&](auto &&)
+        { this->_cursor += lak::from_bytes_size_v<T, E> * count; });
     }
 
     // always read count bytes even if the c string isn't the full count bytes
@@ -125,16 +126,16 @@ namespace lak
     lak::result<lak::string<CHAR>> read_c_str(size_t max_size = SIZE_MAX)
     {
       lak::string<CHAR> result;
-      const size_t old_cursor = cursor;
+      const size_t old_cursor = _cursor;
       while (max_size-- > 0ULL)
       {
         const auto r = read<CHAR, E>();
-        if (r.if_err([](...) { ERROR("read failed"); }).is_err()) break;
+        if (r.if_err([](auto &&) { ERROR("read failed"); }).is_err()) break;
         const CHAR c = r.unsafe_unwrap();
         if (c == 0) return lak::ok_t{lak::move(result)};
         result += c;
       }
-      cursor = old_cursor;
+      _cursor = old_cursor;
       if (max_size == SIZE_MAX) ERROR("max size reached");
       return lak::err_t{};
     }

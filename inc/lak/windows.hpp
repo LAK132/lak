@@ -16,6 +16,8 @@
 #undef ERROR
 
 #include <windows.h>
+#include <windowsx.h>
+#include <wingdi.h>
 
 #ifdef LAK_DEBUG_HPP
 // restore ERROR
