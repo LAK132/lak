@@ -39,9 +39,8 @@ const lak::window_handle *window_from_event(const SDL_Event &event)
   SDL_Window *handle = sdl_window_from_event(event);
 
   return handle ? lak::bank<lak::window_handle>::find_if(
-                    [window = handle](const lak::window_handle &handle) {
-                      return handle._platform_handle == window;
-                    })
+                    [window = handle](const lak::window_handle &handle)
+                    { return handle._platform_handle == window; })
                 : nullptr;
 }
 

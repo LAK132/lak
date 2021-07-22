@@ -106,7 +106,8 @@ namespace tinf
     auto &buffer  = *output;
     uint8_t *head = buffer.data() + buffer.size();
 
-    auto double_size = [&]() {
+    auto double_size = [&]()
+    {
       size_t offset = head - buffer.data();
       buffer.resize(buffer.size() * 2);
       head = buffer.data() + offset;
@@ -226,14 +227,16 @@ namespace tinf
     if (*head < output.begin()) *head = output.begin();
     if (*head >= output.end()) return error_t::OUTPUT_FULL;
 
-    auto push = [&](const uint8_t val) -> bool {
+    auto push = [&](const uint8_t val) -> bool
+    {
       if (*head >= output.end()) return false;
       *((*head)++) = val;
       icrc = crc32_table[(icrc & 0xFF) ^ val] ^ ((icrc >> 8) & 0xFF'FFFFUL);
       return true;
     };
 
-    auto out_of_data = [&state, &icrc]() -> error_t {
+    auto out_of_data = [&state, &icrc]() -> error_t
+    {
       state.crc = ~icrc & 0xFFFF'FFFFUL;
       return error_t::OUT_OF_DATA;
     };

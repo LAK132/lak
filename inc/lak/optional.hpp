@@ -52,7 +52,7 @@ namespace lak
     {
     }
     template<typename... ARGS>
-    optional(lak::in_place_t, ARGS &&... args)
+    optional(lak::in_place_t, ARGS &&...args)
     : _has_value(true), _value(lak::forward<ARGS>(args)...)
     {
     }

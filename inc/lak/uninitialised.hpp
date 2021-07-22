@@ -23,14 +23,14 @@ namespace lak
     }
 
     template<typename... ARGS>
-    uninitialised(ARGS &&... args) : _value(lak::forward<ARGS>(args)...)
+    uninitialised(ARGS &&...args) : _value(lak::forward<ARGS>(args)...)
     {
     }
 
     ~uninitialised() {}
 
     template<typename... ARGS>
-    value_type &create(ARGS &&... args)
+    value_type &create(ARGS &&...args)
     {
       new (&_value) value_type(lak::forward<ARGS>(args)...);
       return _value;

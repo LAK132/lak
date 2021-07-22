@@ -75,13 +75,13 @@ namespace lak
     pack_union() : value(){};
 
     template<typename... ARGS>
-    force_inline pack_union(lak::in_place_index_t<0>, ARGS &&... args)
+    force_inline pack_union(lak::in_place_index_t<0>, ARGS &&...args)
     : value(lak::forward<ARGS>(args)...){};
 
     template<size_t I,
              typename... ARGS,
              lak::enable_if_i<(I > 0 && I < size)> = 0>
-    force_inline pack_union(lak::in_place_index_t<I>, ARGS &&... args)
+    force_inline pack_union(lak::in_place_index_t<I>, ARGS &&...args)
     : next(lak::in_place_index<I - 1>, lak::forward<ARGS>(args)...){};
 
     force_inline pack_union(lak::uninitialised_union_flag_t)
@@ -97,10 +97,10 @@ namespace lak
     force_inline const auto &get() const;
 
     template<size_t I, typename... ARGS>
-    force_inline void emplace(ARGS &&... args);
+    force_inline void emplace(ARGS &&...args);
 
     template<typename... ARGS>
-    force_inline bool emplace_dynamic(size_t i, ARGS &&... args);
+    force_inline bool emplace_dynamic(size_t i, ARGS &&...args);
 
     template<size_t I>
     force_inline void reset();
@@ -129,7 +129,7 @@ namespace lak
     pack_union() : value(){};
 
     template<typename... ARGS>
-    pack_union(lak::in_place_index_t<0>, ARGS &&... args)
+    pack_union(lak::in_place_index_t<0>, ARGS &&...args)
     : value(lak::forward<ARGS>(args)...){};
 
     pack_union(lak::uninitialised_union_flag_t);
@@ -144,10 +144,10 @@ namespace lak
     const auto &get() const;
 
     template<size_t I, typename... ARGS>
-    force_inline void emplace(ARGS &&... args);
+    force_inline void emplace(ARGS &&...args);
 
     template<typename... ARGS>
-    force_inline bool emplace_dynamic(size_t i, ARGS &&... args);
+    force_inline bool emplace_dynamic(size_t i, ARGS &&...args);
 
     template<size_t I>
     force_inline void reset();
@@ -191,7 +191,7 @@ namespace lak
     template<size_t I,
              typename... ARGS,
              lak::enable_if_i<(I < _size) && !_is_ref<I>> = 0>
-    variant(lak::in_place_index_t<I>, ARGS &&... args)
+    variant(lak::in_place_index_t<I>, ARGS &&...args)
     : _index(I), _value(lak::in_place_index<I>, lak::forward<ARGS>(args)...){};
 
     template<size_t I,
@@ -213,10 +213,10 @@ namespace lak
     variant &operator=(variant &&other);
 
     template<size_t I, typename... ARGS>
-    auto &emplace(ARGS &&... args);
+    auto &emplace(ARGS &&...args);
 
     template<size_t I, typename... ARGS>
-    static variant make(ARGS &&... args);
+    static variant make(ARGS &&...args);
 
     ~variant();
 

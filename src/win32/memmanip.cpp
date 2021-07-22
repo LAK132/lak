@@ -7,7 +7,8 @@
 
 size_t lak::page_size()
 {
-  const static DWORD page_size = []() {
+  const static DWORD page_size = []()
+  {
     SYSTEM_INFO system_info;
     ::GetSystemInfo(&system_info);
     return system_info.dwPageSize;

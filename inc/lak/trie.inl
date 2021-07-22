@@ -90,7 +90,7 @@ void lak::trie<CHAR, T>::try_emplace(const lak::string<CHAR> &key)
 template<typename CHAR, typename T>
 template<typename... ARGS>
 void lak::trie<CHAR, T>::try_emplace(const lak::string<CHAR> &key,
-                                     ARGS &&... args)
+                                     ARGS &&...args)
 {
   if (auto node = internal_try_emplace(lak::string_view(key)); node)
     node->_value.emplace(lak::forward<ARGS>(args)...);
@@ -105,7 +105,7 @@ void lak::trie<CHAR, T>::force_emplace(const lak::string<CHAR> &key)
 template<typename CHAR, typename T>
 template<typename... ARGS>
 void lak::trie<CHAR, T>::force_emplace(const lak::string<CHAR> &key,
-                                       ARGS &&... args)
+                                       ARGS &&...args)
 {
   internal_force_emplace(lak::string_view(key))
     ->_value.emplace(lak::forward<ARGS>(args)...);

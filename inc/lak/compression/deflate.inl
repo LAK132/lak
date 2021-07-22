@@ -170,10 +170,12 @@ inline lak::deflate_iterator &lak::deflate_iterator::step()
         while (_nread < _len)
         {
           _compressed.read_byte()
-            .if_ok([this](uintmax_t v) {
-              ++_nread;
-              success(uint8_t(v));
-            })
+            .if_ok(
+              [this](uintmax_t v)
+              {
+                ++_nread;
+                success(uint8_t(v));
+              })
             .if_err([this](auto &&) { fail(error_t::out_of_data); })
             .discard();
           return *this;
@@ -220,10 +222,11 @@ inline lak::deflate_iterator &lak::deflate_iterator::step()
           {
             for (; _counter < _codelen_count; ++_counter)
               if (_compressed.read_bits(3)
-                    .if_ok([&](uintmax_t v) {
-                      _codelen_len[codelen_order_anaconda[_counter]] =
-                        uint8_t(v);
-                    })
+                    .if_ok(
+                      [&](uintmax_t v) {
+                        _codelen_len[codelen_order_anaconda[_counter]] =
+                          uint8_t(v);
+                      })
                     .is_err())
                 return fail(error_t::out_of_data);
 
@@ -234,9 +237,9 @@ inline lak::deflate_iterator &lak::deflate_iterator::step()
           {
             for (; _counter < _codelen_count; ++_counter)
               if (_compressed.read_bits(3)
-                    .if_ok([&](uintmax_t v) {
-                      _codelen_len[codelen_order[_counter]] = uint8_t(v);
-                    })
+                    .if_ok(
+                      [&](uintmax_t v)
+                      { _codelen_len[codelen_order[_counter]] = uint8_t(v); })
                     .is_err())
                 return fail(error_t::out_of_data);
 

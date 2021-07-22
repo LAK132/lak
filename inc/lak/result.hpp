@@ -90,10 +90,10 @@ namespace lak
 
     template<typename F, typename... T>
     requires lak::concepts::invocable<F, T...> //
-      using invoke_rebind_ok = rebind_ok<lak::invoke_result_t<F, T...>>;
+    using invoke_rebind_ok = rebind_ok<lak::invoke_result_t<F, T...>>;
     template<typename F, typename... T>
     requires lak::concepts::invocable<F, T...> //
-      using invoke_rebind_err = rebind_err<lak::invoke_result_t<F, T...>>;
+    using invoke_rebind_err = rebind_err<lak::invoke_result_t<F, T...>>;
 
   private:
     lak::variant<OK, ERR> _value;
@@ -119,7 +119,7 @@ namespace lak
     }
 
     result(const lak::variant<OK, ERR> &value) : _value(value) {}
-    result(lak::variant<OK, ERR> && value) : _value(lak::move(value)) {}
+    result(lak::variant<OK, ERR> &&value) : _value(lak::move(value)) {}
 
   public:
     result(const result &) = default;
@@ -466,9 +466,9 @@ namespace lak
 
     /* --- flatten --- */
 
-    template<typename U = OK,
-             lak::enable_if_i<lak::is_same_v<ERR, lak::result_err_type_t<U>>> =
-               0>
+    template<
+      typename U                                                       = OK,
+      lak::enable_if_i<lak::is_same_v<ERR, lak::result_err_type_t<U>>> = 0>
     ok_type flatten() const &
     {
       if (is_ok())
@@ -477,9 +477,9 @@ namespace lak
         return lak::err_t{get_err()};
     }
 
-    template<typename U = OK,
-             lak::enable_if_t<lak::is_same_v<ERR, lak::result_err_type_t<U>>> =
-               0>
+    template<
+      typename U                                                       = OK,
+      lak::enable_if_t<lak::is_same_v<ERR, lak::result_err_type_t<U>>> = 0>
     ok_type flatten() &&
     {
       if (is_ok())
@@ -491,21 +491,21 @@ namespace lak
     /* --- if_ok --- */
 
     template<typename FUNCTOR>
-    result &if_ok(FUNCTOR && functor) &
+    result &if_ok(FUNCTOR &&functor) &
     {
       if (is_ok()) functor(get_ok());
       return *this;
     }
 
     template<typename FUNCTOR>
-    const result &if_ok(FUNCTOR && functor) const &
+    const result &if_ok(FUNCTOR &&functor) const &
     {
       if (is_ok()) functor(get_ok());
       return *this;
     }
 
     template<typename FUNCTOR>
-    result &&if_ok(FUNCTOR && functor) &&
+    result &&if_ok(FUNCTOR &&functor) &&
     {
       if (is_ok()) functor(forward_ok());
       return lak::move(*this);
@@ -514,21 +514,21 @@ namespace lak
     /* --- if_err --- */
 
     template<typename FUNCTOR>
-    result &if_err(FUNCTOR && functor) &
+    result &if_err(FUNCTOR &&functor) &
     {
       if (is_err()) functor(get_err());
       return *this;
     }
 
     template<typename FUNCTOR>
-    const result &if_err(FUNCTOR && functor) const &
+    const result &if_err(FUNCTOR &&functor) const &
     {
       if (is_err()) functor(get_err());
       return *this;
     }
 
     template<typename FUNCTOR>
-    result &&if_err(FUNCTOR && functor) &&
+    result &&if_err(FUNCTOR &&functor) &&
     {
       if (is_err()) functor(forward_err());
       return lak::move(*this);

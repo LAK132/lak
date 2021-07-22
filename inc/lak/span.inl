@@ -75,8 +75,8 @@ constexpr lak::span<T, SIZE>::operator span<const T, SIZE>() const noexcept
 
 // reinterpret cast to U
 template<typename T, size_t SIZE>
-  template<lak::concepts::ptr_reinterpret_castable_from<T> U>
-  requires !lak::concepts::same_as<U, T> &&
+template<lak::concepts::ptr_reinterpret_castable_from<T> U>
+requires !lak::concepts::same_as<U, T> &&
   !lak::is_void_v<U> //
   constexpr lak::span<T, SIZE>::operator span<U,
                                               (SIZE * sizeof(T)) / sizeof(U)>()
@@ -90,8 +90,8 @@ template<typename T, size_t SIZE>
 template<typename T, size_t SIZE>
 template<lak::concepts::void_type V>
 requires lak::is_reinterpret_castable_v<T *, V *> //
-  constexpr lak::span<T, SIZE>::operator span<V, SIZE * sizeof(T)>()
-    const noexcept
+constexpr lak::span<T, SIZE>::operator span<V, SIZE * sizeof(T)>()
+  const noexcept
 {
   return lak::span<V, SIZE * sizeof(T)>::from_ptr(reintpret_cast<V *>(_data));
 }
@@ -261,8 +261,8 @@ operator span<const T, lak::dynamic_extent>() const noexcept
 
 // reinterpret cast to U
 template<typename T>
-  template<lak::concepts::ptr_reinterpret_castable_from<T> U>
-  requires !lak::concepts::same_as<U, T> &&
+template<lak::concepts::ptr_reinterpret_castable_from<T> U>
+requires !lak::concepts::same_as<U, T> &&
   !lak::is_void_v<U> //
   constexpr lak::span<T, lak::dynamic_extent>::
   operator span<U, lak::dynamic_extent>() const noexcept
@@ -275,8 +275,8 @@ template<typename T>
 template<typename T>
 template<lak::concepts::void_type V>
 requires lak::is_reinterpret_castable_v<T *, V *> //
-  constexpr lak::span<T, lak::dynamic_extent>::
-  operator span<V, lak::dynamic_extent>() const noexcept
+constexpr lak::span<T, lak::dynamic_extent>::
+operator span<V, lak::dynamic_extent>() const noexcept
 {
   return lak::span<V, lak::dynamic_extent>(reinterpret_cast<V *>(_data),
                                            _size * sizeof(T));

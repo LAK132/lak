@@ -9,7 +9,8 @@ std::unordered_map<lak::astring, int (*)()> &registered_tests()
 
 int lak::run_tests(const lak::astring &tests)
 {
-  auto run_test = [](const lak::astring &test, int (*func)()) -> int {
+  auto run_test = [](const lak::astring &test, int (*func)()) -> int
+  {
     lak::scoped_indenter indent("testing " + test);
     const int result = func();
     if (result == 0)

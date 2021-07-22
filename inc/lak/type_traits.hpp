@@ -1504,8 +1504,8 @@ namespace lak
 
   template<typename T>
   requires lak::has_type_size_signature_v<T> //
-    static constexpr size_t type_size_signature_size_v =
-      lak::has_type_size_signature<T>::value;
+  static constexpr size_t type_size_signature_size_v =
+    lak::has_type_size_signature<T>::value;
 }
 
 #endif

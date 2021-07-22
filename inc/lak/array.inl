@@ -290,7 +290,7 @@ const T &lak::array<T, lak::dynamic_extent>::back() const
 
 template<typename T>
 template<typename... ARGS>
-T &lak::array<T, lak::dynamic_extent>::emplace_back(ARGS &&... args)
+T &lak::array<T, lak::dynamic_extent>::emplace_back(ARGS &&...args)
 {
   commit(_size + 1);
   new (data() + _size) T(lak::forward<ARGS>(args)...);
