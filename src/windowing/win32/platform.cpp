@@ -1,4 +1,4 @@
-#include "src/win32/platform.hpp"
+#include "platform.hpp"
 
 #include "lak/debug.hpp"
 #include "lak/image.hpp"

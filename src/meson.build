@@ -2,7 +2,7 @@ gl3w = static_library(
   'gl3w',
   'opengl/gl3w.c',
   override_options: 'warning_level=2',
-  include_directories: include_directories('..', '../inc', '../../SDL'),
+  include_directories: include_directories('..', '../inc'),
 )
 
 lak = static_library(
@@ -30,27 +30,11 @@ lak = static_library(
     'tokeniser.cpp',
     'unicode.cpp',
     'unique_pages.cpp',
-    # windowing
-    # 'events.cpp',
-    # 'platform.cpp',
-    # 'window.cpp',
   ],
   override_options: 'cpp_std=' + version,
-  include_directories: include_directories('..', '../inc', '../../SDL'),
+  include_directories: include_directories('..', '../inc'),
   dependencies: dependency('threads'),
   link_with: gl3w,
-)
-
-lakwindowing = static_library(
-  'lakwindowing',
-  [
-    'events.cpp',
-    'platform.cpp',
-    'window.cpp',
-  ],
-  override_options: 'cpp_std=' + version,
-  include_directories: include_directories('..', '../inc', '../../SDL'),
-  link_with: lak,
 )
 
 laktest = static_library(
@@ -67,6 +51,6 @@ laktest = static_library(
     'tests/type_pack.cpp',
   ],
   override_options: 'cpp_std=' + version,
-  include_directories: include_directories('..', '../inc', '../../SDL'),
+  include_directories: include_directories('..', '../inc'),
   link_with: lak,
 )

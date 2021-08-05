@@ -22,18 +22,18 @@ uint64_t lak::yield_frame(const uint64_t last_counter,
 
 #ifndef LAK_DONT_AUTO_COMPILE_PLATFORM_SPECIFICS
 #  ifdef LAK_USE_WINAPI
-#    include "src/win32/window.cpp"
+#    include "win32/window.cpp"
 #  endif
 
 #  ifdef LAK_USE_XLIB
-#    include "src/xlib/window.cpp"
+#    include "xlib/window.cpp"
 #  endif
 
 #  ifdef LAK_USE_XCB
-#    include "src/xcb/window.cpp"
+#    include "xcb/window.cpp"
 #  endif
 
 #  ifdef LAK_USE_SDL
-#    include "src/sdl/window.cpp"
+#    include "sdl/window.cpp"
 #  endif
 #endif
