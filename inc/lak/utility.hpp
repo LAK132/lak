@@ -73,19 +73,19 @@ namespace lak
   /* --- exchange --- */
 
   template<typename T>
-  force_inline constexpr T exchange(T &a, T &&n)
+  inline constexpr T exchange(T &a, T &&n)
   {
-    auto result = lak::move(a);
-    a           = lak::move(n);
-    return lak::move(result);
+    T result = lak::move(a);
+    a        = lak::move(n);
+    return result;
   }
 
   template<typename T, typename U>
-  force_inline constexpr T exchange(T &a, U &&n)
+  inline constexpr T exchange(T &a, U &&n)
   {
-    auto result = lak::move(a);
-    a           = T(lak::forward<U>(n));
-    return lak::move(result);
+    T result = lak::move(a);
+    a        = T(lak::forward<U>(n));
+    return result;
   }
 
   /* --- addressof --- */
