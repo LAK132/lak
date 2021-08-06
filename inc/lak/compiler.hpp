@@ -38,18 +38,18 @@
 #endif
 
 #if defined(LAK_COMPILER_EMSCRIPTEN)
-#  define force_inline  inline __attribute__((always_inline))
-#  define packed_struct struct __attribute__((packed))
+#  define force_inline  inline [[gnu::always_inline]]
+#  define packed_struct struct [[gnu::packed]]
 #  define DEBUG_BREAK()
 #  define LAK_OPT_ARGS(...) , __VA_ARGS__
 #elif defined(LAK_COMPILER_CLANG)
-#  define force_inline      inline __attribute__((always_inline))
-#  define packed_struct     struct __attribute__((packed))
+#  define force_inline      inline [[gnu::always_inline]]
+#  define packed_struct     struct [[gnu::packed]]
 #  define DEBUG_BREAK()     asm("int $3")
 #  define LAK_OPT_ARGS(...) , __VA_ARGS__
 #elif defined(LAK_COMPILER_GNUC)
-#  define force_inline      inline __attribute__((always_inline))
-#  define packed_struct     struct __attribute__((packed))
+#  define force_inline      inline [[gnu::always_inline]]
+#  define packed_struct     struct [[gnu::packed]]
 #  define DEBUG_BREAK()     asm("int $3")
 #  define LAK_OPT_ARGS(...) , ##__VA_ARGS__
 #elif defined(LAK_COMPILER_MSVC)
