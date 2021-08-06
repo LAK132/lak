@@ -42,22 +42,26 @@
 #  define packed_struct struct [[gnu::packed]]
 #  define DEBUG_BREAK()
 #  define LAK_OPT_ARGS(...) , __VA_ARGS__
+#  define DLL_EXPORT        [[gnu::dllexport]]
 #elif defined(LAK_COMPILER_CLANG)
 #  define force_inline      inline [[gnu::always_inline]]
 #  define packed_struct     struct [[gnu::packed]]
 #  define DEBUG_BREAK()     asm("int $3")
 #  define LAK_OPT_ARGS(...) , __VA_ARGS__
+#  define DLL_EXPORT        [[gnu::dllexport]]
 #elif defined(LAK_COMPILER_GNUC)
 #  define force_inline      inline [[gnu::always_inline]]
 #  define packed_struct     struct [[gnu::packed]]
 #  define DEBUG_BREAK()     asm("int $3")
 #  define LAK_OPT_ARGS(...) , ##__VA_ARGS__
+#  define DLL_EXPORT        [[gnu::dllexport]]
 #elif defined(LAK_COMPILER_MSVC)
 #  include <intrin.h>
 #  define force_inline      inline __forceinline
 #  define packed_struct     __pragma(pack(1)) struct
 #  define DEBUG_BREAK()     __debugbreak()
 #  define LAK_OPT_ARGS(...) , __VA_ARGS__
+#  define DLL_EXPORT        __declspec(dllexport)
 #else
 #  error "Compiler not supported"
 #endif
