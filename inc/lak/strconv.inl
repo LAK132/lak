@@ -43,7 +43,7 @@ inline lak::u32string lak::to_u32string(const lak::string<FROM> &str)
 }
 
 template<typename TO, typename FROM>
-inline lak::string<TO> lak::strconv(lak::span<FROM> str)
+inline lak::string<TO> lak::strconv(lak::string_view<FROM> str)
 {
   lak::string<TO> result;
 
@@ -54,31 +54,31 @@ inline lak::string<TO> lak::strconv(lak::span<FROM> str)
 }
 
 template<typename FROM>
-inline lak::astring lak::to_astring(lak::span<FROM> str)
+inline lak::astring lak::to_astring(lak::string_view<FROM> str)
 {
   return lak::strconv<char>(str);
 }
 
 template<typename FROM>
-inline lak::wstring lak::to_wstring(lak::span<FROM> str)
+inline lak::wstring lak::to_wstring(lak::string_view<FROM> str)
 {
   return lak::strconv<wchar_t>(str);
 }
 
 template<typename FROM>
-inline lak::u8string lak::to_u8string(lak::span<FROM> str)
+inline lak::u8string lak::to_u8string(lak::string_view<FROM> str)
 {
   return lak::strconv<char8_t>(str);
 }
 
 template<typename FROM>
-inline lak::u16string lak::to_u16string(lak::span<FROM> str)
+inline lak::u16string lak::to_u16string(lak::string_view<FROM> str)
 {
   return lak::strconv<char16_t>(str);
 }
 
 template<typename FROM>
-inline lak::u32string lak::to_u32string(lak::span<FROM> str)
+inline lak::u32string lak::to_u32string(lak::string_view<FROM> str)
 {
   return lak::strconv<char32_t>(str);
 }
@@ -86,31 +86,33 @@ inline lak::u32string lak::to_u32string(lak::span<FROM> str)
 template<typename FROM>
 inline lak::astring lak::to_astring(const FROM *str)
 {
-  return lak::strconv<char>(lak::span(str, lak::string_length(str)));
+  return lak::strconv<char>(lak::string_view(str, lak::string_length(str)));
 }
 
 template<typename FROM>
 inline lak::wstring lak::to_wstring(const FROM *str)
 {
-  return lak::strconv<wchar_t>(lak::span(str, lak::string_length(str)));
+  return lak::strconv<wchar_t>(lak::string_view(str, lak::string_length(str)));
 }
 
 template<typename FROM>
 inline lak::u8string lak::to_u8string(const FROM *str)
 {
-  return lak::strconv<char8_t>(lak::span(str, lak::string_length(str)));
+  return lak::strconv<char8_t>(lak::string_view(str, lak::string_length(str)));
 }
 
 template<typename FROM>
 inline lak::u16string lak::to_u16string(const FROM *str)
 {
-  return lak::strconv<char16_t>(lak::span(str, lak::string_length(str)));
+  return lak::strconv<char16_t>(
+    lak::string_view(str, lak::string_length(str)));
 }
 
 template<typename FROM>
 inline lak::u32string lak::to_u32string(const FROM *str)
 {
-  return lak::strconv<char32_t>(lak::span(str, lak::string_length(str)));
+  return lak::strconv<char32_t>(
+    lak::string_view(str, lak::string_length(str)));
 }
 
 LAK_EXTERN_TEMPLATE_FOREACH_CHAR(lak::codepoint_iterator)

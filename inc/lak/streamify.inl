@@ -3,19 +3,13 @@
 #include "lak/string_view.hpp"
 #include "lak/type_traits.hpp"
 
-template<typename CHAR, typename... ARGS>
-lak::string<CHAR> lak::streamify(const ARGS &...args)
+#include <ios>
+
+template<typename... ARGS>
+lak::u8string lak::streamify(const ARGS &...args)
 {
-#if 1 // ndef LAK_COMPILER_CPP20
-  std::basic_stringstream<
-    std::conditional_t<std::is_same_v<CHAR, char8_t>, char, CHAR>>
-    _strm;
-  auto &strm = static_cast<std::basic_ostream<
-    std::conditional_t<std::is_same_v<CHAR, char8_t>, char, CHAR>> &>(_strm);
-#else
-  std::basic_stringstream<CHAR> _strm;
-  auto &strm = static_cast<std::basic_ostream<CHAR> &>(_strm);
-#endif
+  std::stringstream _strm;
+  auto &strm = static_cast<std::ostream &>(_strm);
   strm << std::hex << std::noshowbase << std::uppercase << std::boolalpha;
 
   [[maybe_unused]] auto streamer = [&strm](const auto &arg)
@@ -40,22 +34,36 @@ lak::string<CHAR> lak::streamify(const ARGS &...args)
         ::operator<<(strm, arg);
       else if constexpr (std::is_null_pointer_v<arg_t>)
         strm << "nullptr";
-#if 1 // ndef LAK_COMPILER_CPP20
-      else if constexpr (lak::is_same_v<const char8_t *,
-                                        lak::add_wconst_t<arg_t>> &&
-                         std::is_same_v<CHAR, char>)
-        strm << lak::as_astring(lak::string_view(arg));
-      else if constexpr (std::is_same_v<arg_t, lak::u8string> &&
-                         std::is_same_v<CHAR, char8_t>)
-        strm << lak::as_astring(arg);
-      else if constexpr (lak::is_string_v<arg_t> &&
-                         !std::is_same_v<arg_t, lak::u8string> &&
-                         std::is_same_v<CHAR, char8_t>)
-        strm << lak::as_astring(lak::to_u8string(arg));
-#endif
-      else if constexpr (lak::is_string_v<arg_t> &&
-                         !std::is_same_v<arg_t, lak::string<CHAR>>)
-        strm << lak::strconv<CHAR>(arg);
+      else if constexpr (lak::is_string_v<arg_t>)
+      {
+        using char_type = lak::remove_cvref_t<decltype(arg[0])>;
+        if constexpr (lak::is_same_v<char, char_type>)
+        {
+          // no encoding conversion required
+          if constexpr (lak::is_pointer_v<arg_t>)
+            strm << lak::string_view<char>::from_c_str(arg);
+          else
+            strm << lak::string_view(arg);
+        }
+        else if constexpr (lak::is_same_v<char8_t, char_type>)
+        {
+          // no encoding conversion required
+          if constexpr (lak::is_pointer_v<arg_t>)
+            strm << lak::string_view<char8_t>::from_c_str(arg);
+          else
+            strm << lak::string_view(arg);
+        }
+        else
+        {
+          // encoding conversion required
+          if constexpr (lak::is_pointer_v<arg_t>)
+            strm << lak::strconv<char8_t>(
+              lak::string_view<lak::remove_const_t<
+                lak::remove_pointer_t<arg_t>>>::from_c_str(arg));
+          else
+            strm << lak::strconv<char8_t>(lak::string_view(arg));
+        }
+      }
       else
         strm << arg;
     }
@@ -63,10 +71,5 @@ lak::string<CHAR> lak::streamify(const ARGS &...args)
 
   (streamer(args), ...);
 
-#if 1 // ndef LAK_COMPILER_CPP20
-  if constexpr (std::is_same_v<CHAR, char8_t>)
-    return lak::as_u8string(_strm.str()).to_string();
-  else
-#endif
-    return _strm.str();
+  return lak::as_u8string(_strm.str()).to_string();
 }

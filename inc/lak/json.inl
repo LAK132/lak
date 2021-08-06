@@ -3,12 +3,12 @@
 /* --- JSON::subspan --- */
 
 template<typename T>
-lak::result<lak::span<T>> lak::JSON::subspan::operator()(
-  lak::span<T> values) const
+lak::result<lak::string_view<T>> lak::JSON::subspan::operator()(
+  lak::string_view<T> values) const
 {
   if (offset > (offset + count)) return lak::err_t{};
   if (values.size() < offset + count) return lak::err_t{};
-  return lak::ok_t{values.subspan(offset, count)};
+  return lak::ok_t{values.substr(offset, count)};
 }
 
 template<typename T>
@@ -55,7 +55,7 @@ inline double lak::JSON::number_proxy::as_floating_point()
 
 /* --- JSON::object_proxy --- */
 
-auto lak::JSON::object_proxy::operator[](lak::span<const char8_t> key) const
+auto lak::JSON::object_proxy::operator[](lak::string_view<char8_t> key) const
 {
   for (object o = _object;;)
   {

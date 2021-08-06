@@ -122,32 +122,32 @@ bool lak::save_file(const lak::fs::path &path, lak::span<const uint8_t> data)
 
 bool lak::save_file(const lak::fs::path &path, const lak::astring &string)
 {
-  return lak::save_file(path,
-                        lak::span<const uint8_t>(lak::string_view(string)));
+  return lak::save_file(
+    path, lak::span<const uint8_t>(lak::span(lak::string_view(string))));
 }
 
 bool lak::save_file(const lak::fs::path &path, const lak::wstring &string)
 {
-  return lak::save_file(path,
-                        lak::span<const uint8_t>(lak::string_view(string)));
+  return lak::save_file(
+    path, lak::span<const uint8_t>(lak::span(lak::string_view(string))));
 }
 
 bool lak::save_file(const lak::fs::path &path, const lak::u8string &string)
 {
-  return lak::save_file(path,
-                        lak::span<const uint8_t>(lak::string_view(string)));
+  return lak::save_file(
+    path, lak::span<const uint8_t>(lak::span(lak::string_view(string))));
 }
 
 bool lak::save_file(const lak::fs::path &path, const lak::u16string &string)
 {
-  return lak::save_file(path,
-                        lak::span<const uint8_t>(lak::string_view(string)));
+  return lak::save_file(
+    path, lak::span<const uint8_t>(lak::span(lak::string_view(string))));
 }
 
 bool lak::save_file(const lak::fs::path &path, const lak::u32string &string)
 {
-  return lak::save_file(path,
-                        lak::span<const uint8_t>(lak::string_view(string)));
+  return lak::save_file(
+    path, lak::span<const uint8_t>(lak::span(lak::string_view(string))));
 }
 
 lak::fs::path lak::exe_path()

@@ -8,14 +8,14 @@ using lak::JSON;
 
 BEGIN_TEST(json_empty)
 {
-  JSON::parse(u8R"()"_u8view).EXPECT_ERR();
+  JSON::parse(u8R"()"_view).EXPECT_ERR();
   return 0;
 }
 END_TEST()
 
 BEGIN_TEST(json_empty_object)
 {
-  JSON result = JSON::parse(u8R"({})"_u8view).UNWRAP();
+  JSON result = JSON::parse(u8R"({})"_view).UNWRAP();
 
   ASSERT(result.value().UNWRAP().get_object().UNWRAP().empty());
 
@@ -25,22 +25,21 @@ END_TEST()
 
 BEGIN_TEST(json_object)
 {
-  JSON result =
-    JSON::parse(u8R"({"a":"hello", "b": -5.0E-1})"_u8view).UNWRAP();
+  JSON result = JSON::parse(u8R"({"a":"hello", "b": -5.0E-1})"_view).UNWRAP();
 
   size_t loop_count = 0;
 
   result.value().UNWRAP().get_object().UNWRAP().for_each(
-    [&](lak::span<const char8_t> k, JSON::value_proxy v)
+    [&](lak::string_view<char8_t> k, JSON::value_proxy v)
     {
       if (loop_count == 0)
       {
-        ASSERT_EQUAL(k, u8"a"_u8view);
-        ASSERT_EQUAL(v.get_string().UNWRAP(), u8"hello"_u8view);
+        ASSERT_EQUAL(k, u8"a"_view);
+        ASSERT_EQUAL(v.get_string().UNWRAP(), u8"hello"_view);
       }
       if (loop_count == 1)
       {
-        ASSERT_EQUAL(k, u8"b"_u8view);
+        ASSERT_EQUAL(k, u8"b"_view);
         ASSERT_EQUAL(v.get_number().UNWRAP().floating_point().UNWRAP(), -0.5);
       }
       ++loop_count;
@@ -54,7 +53,7 @@ END_TEST()
 
 BEGIN_TEST(json_empty_array)
 {
-  JSON result = JSON::parse(u8R"([])"_u8view).UNWRAP();
+  JSON result = JSON::parse(u8R"([])"_view).UNWRAP();
 
   ASSERT(result.value().UNWRAP().get_array().UNWRAP().empty());
 
@@ -64,7 +63,7 @@ END_TEST()
 
 BEGIN_TEST(json_array)
 {
-  JSON result = JSON::parse(u8R"([0, 1, 2, 3])"_u8view).UNWRAP();
+  JSON result = JSON::parse(u8R"([0, 1, 2, 3])"_view).UNWRAP();
 
   size_t loop_count = 0;
 
@@ -84,9 +83,9 @@ END_TEST()
 
 BEGIN_TEST(json_empty_string)
 {
-  JSON result = JSON::parse(u8R"("")"_u8view).UNWRAP();
+  JSON result = JSON::parse(u8R"("")"_view).UNWRAP();
 
-  ASSERT_EQUAL(result.value().UNWRAP().get_string().UNWRAP(), u8""_u8view);
+  ASSERT_EQUAL(result.value().UNWRAP().get_string().UNWRAP(), u8""_view);
 
   return 0;
 }
@@ -94,10 +93,10 @@ END_TEST()
 
 BEGIN_TEST(json_string)
 {
-  JSON result = JSON::parse(u8R"("hello, world!")"_u8view).UNWRAP();
+  JSON result = JSON::parse(u8R"("hello, world!")"_view).UNWRAP();
 
   ASSERT_EQUAL(result.value().UNWRAP().get_string().UNWRAP(),
-               u8"hello, world!"_u8view);
+               u8"hello, world!"_view);
 
   return 0;
 }
@@ -106,7 +105,7 @@ END_TEST()
 BEGIN_TEST(json_escape_string)
 {
   JSON result =
-    JSON::parse(u8R"("\" \\ \/ \b\f\n\r\t\u0000\u0020\uD83D\uDC08")"_u8view)
+    JSON::parse(u8R"("\" \\ \/ \b\f\n\r\t\u0000\u0020\uD83D\uDC08")"_view)
       .UNWRAP();
 
   char8_t expected[] = {
@@ -138,7 +137,7 @@ END_TEST()
 
 BEGIN_TEST(json_unsigned_number)
 {
-  JSON result = JSON::parse(u8R"(100)"_u8view).UNWRAP();
+  JSON result = JSON::parse(u8R"(100)"_view).UNWRAP();
 
   ASSERT_EQUAL(
     result.value().UNWRAP().get_number().UNWRAP().unsigned_integer().UNWRAP(),
@@ -150,7 +149,7 @@ END_TEST()
 
 BEGIN_TEST(json_signed_number)
 {
-  JSON result = JSON::parse(u8R"(-100)"_u8view).UNWRAP();
+  JSON result = JSON::parse(u8R"(-100)"_view).UNWRAP();
 
   ASSERT_EQUAL(
     result.value().UNWRAP().get_number().UNWRAP().signed_integer().UNWRAP(),
@@ -162,7 +161,7 @@ END_TEST()
 
 BEGIN_TEST(json_float_number)
 {
-  JSON result = JSON::parse(u8R"(-1.005e2)"_u8view).UNWRAP();
+  JSON result = JSON::parse(u8R"(-1.005e2)"_view).UNWRAP();
 
   ASSERT(lak::close_to(
     result.value().UNWRAP().get_number().UNWRAP().floating_point().UNWRAP(),
@@ -188,46 +187,46 @@ BEGIN_TEST(json_complex)
       "float": 100.0
     }
   ]
-})"_u8view)
+})"_view)
                   .UNWRAP();
 
   size_t loop_count = 0;
 
   result.value().UNWRAP().get_object().UNWRAP().for_each(
-    [&](lak::span<const char8_t> k, JSON::value_proxy v)
+    [&](lak::string_view<char8_t> k, JSON::value_proxy v)
     {
       if (loop_count == 0)
       {
-        ASSERT_EQUAL(k, u8"a"_u8view);
-        ASSERT_EQUAL(v.get_string().UNWRAP(), u8"hello \n\t"_u8view);
+        ASSERT_EQUAL(k, u8"a"_view);
+        ASSERT_EQUAL(v.get_string().UNWRAP(), u8"hello \n\t"_view);
       }
       if (loop_count == 1)
       {
-        ASSERT_EQUAL(k, u8"b"_u8view);
+        ASSERT_EQUAL(k, u8"b"_view);
         ASSERT_EQUAL(v.get_number().UNWRAP().floating_point().UNWRAP(), -0.5);
       }
       if (loop_count == 3)
       {
-        ASSERT_EQUAL(k, u8"c"_u8view);
+        ASSERT_EQUAL(k, u8"c"_view);
         auto arr = v.get_array().UNWRAP();
         ASSERT(arr[0].UNWRAP().get_object().UNWRAP().empty());
         ASSERT(arr[1].UNWRAP().get_array().UNWRAP().empty());
         auto obj = arr[2].UNWRAP().get_object().UNWRAP();
-        ASSERT_EQUAL(obj[u8"uint"_u8view]
+        ASSERT_EQUAL(obj[u8"uint"_view]
                        .UNWRAP()
                        .get_number()
                        .UNWRAP()
                        .unsigned_integer()
                        .UNWRAP(),
                      100);
-        ASSERT_EQUAL(obj[u8"int"_u8view]
+        ASSERT_EQUAL(obj[u8"int"_view]
                        .UNWRAP()
                        .get_number()
                        .UNWRAP()
                        .signed_integer()
                        .UNWRAP(),
                      -100);
-        ASSERT_EQUAL(obj[u8"float"_u8view]
+        ASSERT_EQUAL(obj[u8"float"_view]
                        .UNWRAP()
                        .get_number()
                        .UNWRAP()

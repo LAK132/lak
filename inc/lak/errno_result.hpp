@@ -19,10 +19,10 @@ namespace lak
 
     inline lak::astring to_string() const
     {
-      return lak::streamify<char>(
+      return lak::to_astring(lak::streamify(
         value,
         ": ",
-        std::error_code(value, std::generic_category()).message());
+        std::error_code(value, std::generic_category()).message()));
     }
   };
 

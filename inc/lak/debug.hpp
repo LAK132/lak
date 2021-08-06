@@ -70,11 +70,11 @@
                           lak::to_u8string("\n"));
 #  define SCOPED_CHECKPOINT(...)                                              \
     lak::scoped_indenter UNIQUIFY(SCOPED_INDENTOR_)(                          \
-      lak::streamify<char>(__VA_ARGS__, " " DEBUG_LINE_FILE));
+      lak::streamify(__VA_ARGS__, " " DEBUG_LINE_FILE));
 #  define FUNCTION_CHECKPOINT(...) SCOPED_CHECKPOINT("" __VA_ARGS__, __func__)
 #  define DEBUG(...)                                                          \
     lak::debugger.std_out(TO_U8STRING(DEBUG_DEBUG_LINE_FILE),                 \
-                          lak::streamify<char8_t>(__VA_ARGS__, "\n"));
+                          lak::streamify(__VA_ARGS__, "\n"));
 #endif
 
 #undef ABORT
@@ -87,7 +87,7 @@
 #define ABORTF(...)                                                           \
   {                                                                           \
     lak::debugger.std_err(reinterpret_cast<const char8_t *>(""),              \
-                          lak::streamify<char8_t>(__VA_ARGS__, "\n"));        \
+                          lak::streamify(__VA_ARGS__, "\n"));                 \
     ABORT();                                                                  \
   }
 #define NOISY_ABORT()                                                         \
@@ -122,10 +122,10 @@
 #  endif
 #  define WARNING(...)                                                        \
     lak::debugger.std_err(TO_U8STRING(DEBUG_WARNING_LINE_FILE),               \
-                          lak::streamify<char8_t>(__VA_ARGS__, "\n"));
+                          lak::streamify(__VA_ARGS__, "\n"));
 #  define ERROR(...)                                                          \
     lak::debugger.std_err(TO_U8STRING(DEBUG_ERROR_LINE_FILE),                 \
-                          lak::streamify<char8_t>(__VA_ARGS__, "\n"));
+                          lak::streamify(__VA_ARGS__, "\n"));
 #  define FATAL(...) ABORTF(TO_U8STRING(DEBUG_FATAL_LINE_FILE), __VA_ARGS__)
 #endif
 

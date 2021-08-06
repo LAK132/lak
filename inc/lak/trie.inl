@@ -7,7 +7,7 @@ namespace
   namespace impl
   {
     template<typename CHAR>
-    bool is_prefix(lak::span<const CHAR> str, lak::span<const CHAR> prefix)
+    bool is_prefix(lak::string_view<CHAR> str, lak::string_view<CHAR> prefix)
     {
       return prefix.size() < str.size() && str.first(prefix.size()) == prefix;
     }
@@ -27,20 +27,7 @@ const std::optional<T> &lak::trie<CHAR, T>::value() const
 }
 
 template<typename CHAR, typename T>
-lak::trie<CHAR, T> *lak::trie<CHAR, T>::find(const lak::string<CHAR> &key)
-{
-  return find(lak::string_view(key));
-}
-
-template<typename CHAR, typename T>
-const lak::trie<CHAR, T> *lak::trie<CHAR, T>::find(
-  const lak::string<CHAR> &key) const
-{
-  return find(lak::string_view(key));
-}
-
-template<typename CHAR, typename T>
-lak::trie<CHAR, T> *lak::trie<CHAR, T>::find(lak::span<const CHAR> key)
+lak::trie<CHAR, T> *lak::trie<CHAR, T>::find(lak::string_view<CHAR> key)
 {
   auto [node, remaining_key] = find(this, key);
   return remaining_key == node->_key ? node : nullptr;
@@ -48,7 +35,7 @@ lak::trie<CHAR, T> *lak::trie<CHAR, T>::find(lak::span<const CHAR> key)
 
 template<typename CHAR, typename T>
 const lak::trie<CHAR, T> *lak::trie<CHAR, T>::find(
-  lak::span<const CHAR> key) const
+  lak::string_view<CHAR> key) const
 {
   auto [node, remaining_key] = find(const_cast<trie *>(this), key);
   return remaining_key == node->_key ? node : nullptr;
@@ -148,7 +135,7 @@ lak::trie<CHAR, T>::trie(lak::string<CHAR> &&k,
 
 template<typename CHAR, typename T>
 lak::trie<CHAR, T> *lak::trie<CHAR, T>::internal_try_emplace(
-  lak::span<const CHAR> key)
+  lak::string_view<CHAR> key)
 {
   auto [node, remaining_key] = find(this, key);
 
@@ -172,7 +159,7 @@ lak::trie<CHAR, T> *lak::trie<CHAR, T>::internal_try_emplace(
 
 template<typename CHAR, typename T>
 lak::trie<CHAR, T> *lak::trie<CHAR, T>::internal_force_emplace(
-  lak::span<const CHAR> key)
+  lak::string_view<CHAR> key)
 {
   auto [node, remaining_key] = find(this, key);
 
@@ -202,8 +189,9 @@ lak::trie<CHAR, T> lak::trie<CHAR, T>::merge(lak::trie<CHAR, T> &&node1,
   auto u32key1 = lak::strconv<char32_t, CHAR>(node1._key);
   auto u32key2 = lak::strconv<char32_t, CHAR>(node2._key);
 
-  auto u32common = lak::common_initial_sequence(lak::string_view(u32key1),
-                                                lak::string_view(u32key2));
+  auto u32common =
+    lak::string_view(lak::common_initial_sequence<const char32_t>(
+      lak::string_view(u32key1), lak::string_view(u32key2)));
 
   const auto u32_common_length = u32common.size();
   const auto common_length     = lak::converted_string_length<CHAR>(u32common);
@@ -251,8 +239,8 @@ lak::trie<CHAR, T> lak::trie<CHAR, T>::merge(lak::trie<CHAR, T> &&node1,
 }
 
 template<typename CHAR, typename T>
-std::pair<lak::trie<CHAR, T> *, lak::span<const CHAR>>
-lak::trie<CHAR, T>::find(lak::trie<CHAR, T> *node, lak::span<const CHAR> key)
+std::pair<lak::trie<CHAR, T> *, lak::string_view<CHAR>>
+lak::trie<CHAR, T>::find(lak::trie<CHAR, T> *node, lak::string_view<CHAR> key)
 {
   for (;;)
   {
@@ -265,13 +253,13 @@ lak::trie<CHAR, T>::find(lak::trie<CHAR, T> *node, lak::span<const CHAR> key)
 
     const auto common_size = node->_key.size();
     ASSERT_GREATER(key.size(), common_size);
-    const auto lookup = lak::codepoint(key.subspan(common_size));
+    const auto lookup = lak::codepoint(key.substr(common_size));
 
     if_in(lookup, node->_map, index)
     {
       ASSERT_GREATER(node->_nodes.size(), index);
       node = node->_nodes.data() + index;
-      key  = key.subspan(common_size + lak::codepoint_length<CHAR>(lookup));
+      key  = key.substr(common_size + lak::codepoint_length<CHAR>(lookup));
     }
     else
     {
@@ -302,7 +290,8 @@ std::ostream &operator<<(std::ostream &strm, const lak::trie<CHAR, T> &trie)
         auto &t_parent     = t_parent_span[0];
         ASSERT_GREATER_OR_EQUAL(t_parent.map().size(), t_span.size());
         size_t parent_index = t_parent.map().size() - t_span.size();
-        key = lak::to_u8string(lak::span(&t_parent.map()[parent_index], 1));
+        key =
+          lak::to_u8string(lak::string_view(&t_parent.map()[parent_index], 1));
       }
       key += lak::to_u8string(t.key());
 

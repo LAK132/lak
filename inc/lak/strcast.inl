@@ -1,41 +1,23 @@
 #include "lak/string_view.hpp"
 
-inline lak::span<const char> lak::as_astring(const lak::astring &str)
+inline lak::astring_view lak::as_astring(lak::astring_view str)
 {
-  return lak::span<const char>(lak::string_view(str));
+  return str;
 }
 
-inline lak::span<const char> lak::as_astring(const lak::u8string &str)
+inline lak::astring_view lak::as_astring(lak::u8string_view str)
 {
-  return lak::span<const char>(lak::string_view(str));
+  return lak::astring_view(reinterpret_cast<const char *>(str.data()),
+                           str.size());
 }
 
-inline lak::span<const char> lak::as_astring(lak::span<const char8_t> str)
+inline lak::u8string_view lak::as_u8string(lak::astring_view str)
 {
-  return lak::span<const char>(str);
+  return lak::u8string_view(reinterpret_cast<const char8_t *>(str.data()),
+                            str.size());
 }
 
-inline lak::span<const char> lak::as_astring(const char8_t *str)
+inline lak::u8string_view lak::as_u8string(lak::u8string_view str)
 {
-  return lak::span<const char>(lak::string_view(str));
-}
-
-inline lak::span<const char8_t> lak::as_u8string(const lak::astring &str)
-{
-  return lak::span<const char8_t>(lak::string_view(str));
-}
-
-inline lak::span<const char8_t> lak::as_u8string(const lak::u8string &str)
-{
-  return lak::span<const char8_t>(lak::string_view(str));
-}
-
-inline lak::span<const char8_t> lak::as_u8string(lak::span<const char> str)
-{
-  return lak::span<const char8_t>(str);
-}
-
-inline lak::span<const char8_t> lak::as_u8string(const char *str)
-{
-  return lak::span<const char8_t>(lak::string_view(str));
+  return str;
 }

@@ -6,7 +6,7 @@
 #include "lak/debug.hpp"
 
 template<typename TO, typename FROM>
-size_t lak::converted_string_length(lak::span<FROM> str)
+size_t lak::converted_string_length(lak::string_view<FROM> str)
 {
   size_t result = 0;
   while (str.size() > 0)
@@ -14,7 +14,7 @@ size_t lak::converted_string_length(lak::span<FROM> str)
     auto char_len = lak::character_length(str);
     ASSERT_NOT_EQUAL(char_len, 0);
     result += lak::codepoint_length<TO>(lak::codepoint(str));
-    str = str.subspan(char_len);
+    str = str.substr(char_len);
   }
   return result;
 }
@@ -22,13 +22,13 @@ size_t lak::converted_string_length(lak::span<FROM> str)
 template<typename CHAR>
 uint8_t lak::character_length(const lak::string<CHAR> &str, size_t offset)
 {
-  return lak::character_length(lak::string_view(str).subspan(offset));
+  return lak::character_length(lak::string_view(str).substr(offset));
 }
 
 template<typename CHAR>
 char32_t lak::codepoint(const lak::string<CHAR> &str, size_t offset)
 {
-  return lak::codepoint(lak::string_view(str).subspan(offset));
+  return lak::codepoint(lak::string_view(str).substr(offset));
 }
 
 template<typename CHAR>
@@ -93,7 +93,7 @@ inline constexpr lak::codepoint_iterator<CHAR>
 {
   _current.second = lak::character_length(_data);
   _current.first  = _current.second ? codepoint(_data) : 0;
-  _data           = _data.subspan(_current.second);
+  _data           = _data.substr(_current.second);
   return *this;
 }
 

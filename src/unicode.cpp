@@ -4,7 +4,7 @@
 
 /* --- character_length --- */
 
-uint8_t lak::character_length(lak::span<const char> str)
+uint8_t lak::character_length(lak::string_view<char> str)
 {
   if (str.size() >= 1 && str[0] <= 0x7F)
   {
@@ -19,12 +19,13 @@ uint8_t lak::character_length(lak::span<const char> str)
   }
 }
 
-uint8_t lak::character_length(lak::span<const wchar_t> str)
+uint8_t lak::character_length(lak::string_view<wchar_t> str)
 {
-  return lak::character_length(lak::span<const wchar_unicode_t>(str));
+  return lak::character_length(lak::string_view(
+    reinterpret_cast<const wchar_unicode_t *>(str.data()), str.size()));
 }
 
-uint8_t lak::character_length(lak::span<const char8_t> str)
+uint8_t lak::character_length(lak::string_view<char8_t> str)
 {
   if (str.size() >= 1 && (str[0] & 0b1000'0000U) == 0b0000'0000U)
   {
@@ -57,7 +58,7 @@ uint8_t lak::character_length(lak::span<const char8_t> str)
   }
 }
 
-uint8_t lak::character_length(lak::span<const char16_t> str)
+uint8_t lak::character_length(lak::string_view<char16_t> str)
 {
   if (str.size() >= 1 &&
       (str[0] & 0b1111'1000'0000'0000U) != 0b1101'1000'0000'0000U)
@@ -79,7 +80,7 @@ uint8_t lak::character_length(lak::span<const char16_t> str)
   }
 }
 
-uint8_t lak::character_length(lak::span<const char32_t> str)
+uint8_t lak::character_length(lak::string_view<char32_t> str)
 {
   if (str.size() >= 1 && str[0] < 0x110000 &&
       (str[0] & 0b1111'1000'0000'0000U) != 0b1101'1000'0000'0000U)
@@ -97,7 +98,7 @@ uint8_t lak::character_length(lak::span<const char32_t> str)
 
 /* --- codepoint --- */
 
-char32_t lak::codepoint(lak::span<const char> str)
+char32_t lak::codepoint(lak::string_view<char> str)
 {
   if (str.size() >= 1 && static_cast<const unsigned char>(str[0]) < 0x80)
   {
@@ -112,12 +113,13 @@ char32_t lak::codepoint(lak::span<const char> str)
   }
 }
 
-char32_t lak::codepoint(lak::span<const wchar_t> str)
+char32_t lak::codepoint(lak::string_view<wchar_t> str)
 {
-  return lak::codepoint(lak::span<const wchar_unicode_t>(str));
+  return lak::codepoint(lak::string_view(
+    reinterpret_cast<const wchar_unicode_t *>(str.data()), str.size()));
 }
 
-char32_t lak::codepoint(lak::span<const char8_t> str)
+char32_t lak::codepoint(lak::string_view<char8_t> str)
 {
   if (str.size() >= 1 &&
       (str[0] < 0x80 || (str[0] & 0b1100'0000U) == 0b0100'0000U))
@@ -157,7 +159,7 @@ char32_t lak::codepoint(lak::span<const char8_t> str)
   }
 }
 
-char32_t lak::codepoint(lak::span<const char16_t> str)
+char32_t lak::codepoint(lak::string_view<char16_t> str)
 {
   if (str.size() >= 1 &&
       (str[0] & 0b1111'1000'0000'0000U) != 0b1101'1000'0000'0000U)
@@ -181,7 +183,7 @@ char32_t lak::codepoint(lak::span<const char16_t> str)
   }
 }
 
-char32_t lak::codepoint(lak::span<const char32_t> str)
+char32_t lak::codepoint(lak::string_view<char32_t> str)
 {
   if (str.size() >= 1 && str[0] < 0x110000 &&
       (str[0] & 0b1111'1000'0000'0000U) != 0b1101'1000'0000'0000U)
@@ -310,31 +312,31 @@ lak::span<char32_t> lak::from_codepoint(lak::codepoint_buffer_t<char32_t> c,
   }
 }
 
-std::ostream &operator<<(std::ostream &strm, const lak::span<const char> &str)
+std::ostream &operator<<(std::ostream &strm, const lak::string_view<char> &str)
 {
   return strm << std::string_view(str.data(), str.size());
 }
 
 std::ostream &operator<<(std::ostream &strm,
-                         const lak::span<const wchar_t> &str)
+                         const lak::string_view<wchar_t> &str)
 {
   return strm << lak::as_astring(lak::to_u8string(str));
 }
 
 std::ostream &operator<<(std::ostream &strm,
-                         const lak::span<const char8_t> &str)
+                         const lak::string_view<char8_t> &str)
 {
   return strm << lak::as_astring(str);
 }
 
 std::ostream &operator<<(std::ostream &strm,
-                         const lak::span<const char16_t> &str)
+                         const lak::string_view<char16_t> &str)
 {
   return strm << lak::as_astring(lak::to_u8string(str));
 }
 
 std::ostream &operator<<(std::ostream &strm,
-                         const lak::span<const char32_t> &str)
+                         const lak::string_view<char32_t> &str)
 {
   return strm << lak::as_astring(lak::to_u8string(str));
 }

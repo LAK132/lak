@@ -22,8 +22,8 @@ namespace lak
     return _is_streamable<T>(0);
   }
 
-  template<typename CHAR, typename... ARGS>
-  lak::string<CHAR> streamify(const ARGS &... args);
+  template<typename... ARGS>
+  lak::u8string streamify(const ARGS &...args);
 }
 
 #include "lak/streamify.inl"

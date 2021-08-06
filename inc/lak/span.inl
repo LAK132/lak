@@ -569,7 +569,7 @@ inline auto lak::span<T, SIZE>::stringify() const
   lak::u8string result = lak::as_u8string("{").to_string();
   for (const auto &element : *this)
   {
-    result += lak::streamify<char8_t>(result, ", ");
+    result += lak::streamify(result, ", ");
   }
   if (result.size() > 2) result.resize(result.size() - 2);
   return result + lak::as_u8string("}").to_string();
@@ -583,7 +583,7 @@ inline auto lak::span<T, lak::dynamic_extent>::stringify() const
   lak::u8string result = lak::as_u8string("{").to_string();
   for (const auto &element : *this)
   {
-    result += lak::streamify<char8_t>(element, ", ");
+    result += lak::streamify(element, ", ");
   }
   if (result.size() > 2) result.resize(result.size() - 2);
   return result + lak::as_u8string("}").to_string();

@@ -4,6 +4,7 @@
 #include "lak/array.hpp"
 #include "lak/span.hpp"
 #include "lak/string.hpp"
+#include "lak/string_view.hpp"
 
 namespace lak
 {
@@ -16,7 +17,7 @@ namespace lak
     void operator+=(char32_t c);
 
     template<typename CHAR>
-    lak::span<CHAR> find(lak::span<CHAR> str) const
+    lak::string_view<CHAR> find(lak::string_view<CHAR> str) const
     {
       ASSERT_GREATER(line, 0);
       ASSERT_GREATER(column, 0);
@@ -25,7 +26,7 @@ namespace lak
       {
         for (const auto &[c, len] : lak::codepoint_range(str))
         {
-          str = str.subspan(len);
+          str = str.substr(len);
           if (c == U'\n') break;
         }
       }
@@ -35,7 +36,7 @@ namespace lak
       {
         if (++col == column) break;
         ASSERT(c != U'\n');
-        str = str.subspan(len);
+        str = str.substr(len);
       }
 
       return str;
@@ -57,7 +58,7 @@ namespace lak
   template<typename CHAR>
   struct token
   {
-    lak::span<const CHAR> source;
+    lak::string_view<CHAR> source;
     lak::token_position position;
 
     bool operator==(const token &other) const;
@@ -85,13 +86,13 @@ namespace lak
   template<typename CHAR>
   struct token_buffer
   {
-    lak::span<const CHAR> _source;
+    lak::string_view<CHAR> _source;
     size_t _max_size;
 
     lak::token<CHAR> _buffer_token;
     std::vector<char32_t> _buffer;
 
-    inline token_buffer(lak::span<const CHAR> data,
+    inline token_buffer(lak::string_view<CHAR> data,
                         size_t max_size,
                         const lak::token<CHAR> &start)
     : _source(data),
@@ -107,9 +108,12 @@ namespace lak
       while (_buffer.size() < _max_size) ++*this;
     }
 
-    inline lak::span<const char32_t> buffer() const { return _buffer; }
+    inline lak::u32string_view buffer() const
+    {
+      return lak::string_view(lak::span(_buffer));
+    }
 
-    inline lak::span<const CHAR> source() const
+    inline lak::string_view<CHAR> source() const
     {
       return _buffer_token.source;
     }
@@ -146,7 +150,7 @@ namespace lak
     };
 
   private:
-    lak::span<const CHAR> _data;
+    lak::string_view<CHAR> _data;
     lak::array<lak::u32string> _operators;
     size_t _longest_operator;
 
@@ -156,7 +160,7 @@ namespace lak
     void internal_pump() noexcept;
 
   public:
-    inline tokeniser(lak::span<const CHAR> str,
+    inline tokeniser(lak::string_view<CHAR> str,
                      lak::array<lak::u32string> operators) noexcept
     : _data(str), _operators(lak::move(operators)), _longest_operator(0)
     {
@@ -219,7 +223,7 @@ namespace lak
     // until it reaches the end of the line (or end of the file).
 
     // Scan until str is found (exclusive).
-    lak::token<CHAR> until(span<const char32_t> str) noexcept;
+    lak::token<CHAR> until(u32string_view str) noexcept;
     // Useful for tokenising something like multiline comments:
     //  /*
     //  this is a multiline comment
@@ -231,7 +235,7 @@ namespace lak
     lak::token<CHAR> skip(char32_t codepoint) noexcept;
 
     // Scan until str is found (inclusive).
-    lak::token<CHAR> skip(span<const char32_t> str) noexcept;
+    lak::token<CHAR> skip(u32string_view str) noexcept;
 
     void reset() noexcept;
 
@@ -274,8 +278,8 @@ template<size_t I, typename CHAR>
 struct std::tuple_element<I, lak::token<CHAR>>
 {
   static_assert(I < 2);
-  using type = lak::remove_cvref_t<decltype(
-    std::declval<lak::token<CHAR> &>().template get<I>())>;
+  using type = lak::remove_cvref_t<
+    decltype(std::declval<lak::token<CHAR> &>().template get<I>())>;
 };
 
 #include "tokeniser.inl"

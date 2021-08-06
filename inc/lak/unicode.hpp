@@ -15,27 +15,27 @@ namespace lak
   // The length of the character length (not codepoint length) of the string if
   // it was converted to TO type characters.
   template<typename TO, typename FROM>
-  size_t converted_string_length(lak::span<FROM> str);
+  size_t converted_string_length(lak::string_view<FROM> str);
 
   // Returns the length of the multi-byte first/offset character (always 1 for
   // non-multi-byte string types). Returns 0 if character has a bad encoding
   // or the string is empty.
-  uint8_t character_length(lak::span<const char> str);
-  uint8_t character_length(lak::span<const wchar_t> str);
-  uint8_t character_length(lak::span<const char8_t> str);
-  uint8_t character_length(lak::span<const char16_t> str);
-  uint8_t character_length(lak::span<const char32_t> str);
+  uint8_t character_length(lak::string_view<char> str);
+  uint8_t character_length(lak::string_view<wchar_t> str);
+  uint8_t character_length(lak::string_view<char8_t> str);
+  uint8_t character_length(lak::string_view<char16_t> str);
+  uint8_t character_length(lak::string_view<char32_t> str);
   template<typename CHAR>
   uint8_t character_length(const lak::string<CHAR> &str, size_t offset);
 
   // Returns the Unicode character code representing the first/offset
   // character. Returns NUL on error (use character_length to get more
   // information).
-  char32_t codepoint(lak::span<const char> str);
-  char32_t codepoint(lak::span<const wchar_t> str);
-  char32_t codepoint(lak::span<const char8_t> str);
-  char32_t codepoint(lak::span<const char16_t> str);
-  char32_t codepoint(lak::span<const char32_t> str);
+  char32_t codepoint(lak::string_view<char> str);
+  char32_t codepoint(lak::string_view<wchar_t> str);
+  char32_t codepoint(lak::string_view<char8_t> str);
+  char32_t codepoint(lak::string_view<char16_t> str);
+  char32_t codepoint(lak::string_view<char32_t> str);
   template<typename CHAR>
   char32_t codepoint(const lak::string<CHAR> &str, size_t offset);
 
@@ -71,17 +71,11 @@ namespace lak
   struct codepoint_iterator
   {
   private:
-    lak::span<const CHAR> _data;
+    lak::string_view<CHAR> _data;
     lak::pair<char32_t, uint8_t> _current;
 
   public:
-    inline constexpr codepoint_iterator(lak::span<CHAR> str) noexcept
-    : _data(str)
-    {
-      operator++();
-    }
-
-    inline constexpr codepoint_iterator(lak::span<const CHAR> str) noexcept
+    inline constexpr codepoint_iterator(lak::string_view<CHAR> str) noexcept
     : _data(str)
     {
       operator++();
@@ -101,20 +95,16 @@ namespace lak
   struct codepoint_range
   {
   private:
-    lak::span<const CHAR> _data;
+    lak::string_view<CHAR> _data;
 
   public:
-    inline constexpr codepoint_range(lak::span<CHAR> str) noexcept : _data(str)
-    {
-    }
-
-    inline constexpr codepoint_range(lak::span<const CHAR> str) noexcept
+    inline constexpr codepoint_range(lak::string_view<CHAR> str) noexcept
     : _data(str)
     {
     }
 
     inline constexpr codepoint_range(const lak::string<CHAR> &str) noexcept
-    : _data(lak::span(str.c_str(), str.size()))
+    : _data(lak::string_view(str.c_str(), str.size()))
     {
     }
 
@@ -127,19 +117,20 @@ namespace lak
 #  ifndef LAK_NO_STD
 #    include <ostream>
 
-std::ostream &operator<<(std::ostream &strm, const lak::span<const char> &str);
+std::ostream &operator<<(std::ostream &strm,
+                         const lak::string_view<char> &str);
 
 std::ostream &operator<<(std::ostream &strm,
-                         const lak::span<const wchar_t> &str);
+                         const lak::string_view<wchar_t> &str);
 
 std::ostream &operator<<(std::ostream &strm,
-                         const lak::span<const char8_t> &str);
+                         const lak::string_view<char8_t> &str);
 
 std::ostream &operator<<(std::ostream &strm,
-                         const lak::span<const char16_t> &str);
+                         const lak::string_view<char16_t> &str);
 
 std::ostream &operator<<(std::ostream &strm,
-                         const lak::span<const char32_t> &str);
+                         const lak::string_view<char32_t> &str);
 #  endif
 
 #  include "lak/unicode.inl"

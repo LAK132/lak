@@ -3,6 +3,7 @@
 
 #include "lak/span.hpp"
 #include "lak/string.hpp"
+#include "lak/string_view.hpp"
 
 #include <optional>
 #include <tuple>
@@ -31,10 +32,8 @@ namespace lak
     const std::optional<T> &value() const;
 
     // Find the node for key.
-    trie *find(const lak::string<CHAR> &key);
-    const trie *find(const lak::string<CHAR> &key) const;
-    trie *find(lak::span<const CHAR> key);
-    const trie *find(lak::span<const CHAR> key) const;
+    trie *find(lak::string_view<CHAR> key);
+    const trie *find(lak::string_view<CHAR> key) const;
 
     // Find the node for key, or create one.
     trie &find_or_emplace(const lak::string<CHAR> &key);
@@ -45,7 +44,7 @@ namespace lak
 
     // Construct a T with args at key if it does not already exist.
     template<typename... ARGS>
-    void try_emplace(const lak::string<CHAR> &key, ARGS &&... args);
+    void try_emplace(const lak::string<CHAR> &key, ARGS &&...args);
 
     // Default construct a T at key, destroying the previous T if it already
     // existed.
@@ -54,7 +53,7 @@ namespace lak
     // Construct a T with args at key, destroying the previous T if it already
     // existed.
     template<typename... ARGS>
-    void force_emplace(const lak::string<CHAR> &key, ARGS &&... args);
+    void force_emplace(const lak::string<CHAR> &key, ARGS &&...args);
 
   private:
     trie(lak::string<CHAR> &&k);
@@ -70,14 +69,14 @@ namespace lak
          std::vector<char32_t> &&m,
          std::vector<trie> &&n);
 
-    trie *internal_try_emplace(lak::span<const CHAR> key);
+    trie *internal_try_emplace(lak::string_view<CHAR> key);
 
-    trie *internal_force_emplace(lak::span<const CHAR> key);
+    trie *internal_force_emplace(lak::string_view<CHAR> key);
 
     static trie merge(trie &&node1, trie &&node2);
 
-    static std::pair<trie *, lak::span<const CHAR>> find(
-      trie *node, lak::span<const CHAR> key);
+    static std::pair<trie *, lak::string_view<CHAR>> find(
+      trie *node, lak::string_view<CHAR> key);
   };
 
   template<typename T>

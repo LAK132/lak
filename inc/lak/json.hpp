@@ -18,7 +18,8 @@ namespace lak
       size_t count;
 
       template<typename T>
-      lak::result<lak::span<T>> operator()(lak::span<T> values) const;
+      lak::result<lak::string_view<T>> operator()(
+        lak::string_view<T> values) const;
     };
 
     struct index
@@ -109,7 +110,7 @@ namespace lak
     public:
       inline bool empty() const { return _object.key.value == 0; }
 
-      inline auto operator[](lak::span<const char8_t> key) const;
+      inline auto operator[](lak::u8string_view key) const;
       // -> lak::result<value_proxy>
 
       template<typename F>
@@ -166,20 +167,20 @@ namespace lak
       }
 
     public:
-      using value = lak::variant<lak::span<const char8_t>, // string
-                                 nullptr_t,                // null
-                                 bool,                     // boolean
-                                 uintmax_t,                // number
-                                 intmax_t,                 // number
-                                 double,                   // number
-                                 object_proxy,             // object
-                                 array_proxy               // array
+      using value = lak::variant<lak::u8string_view, // string
+                                 nullptr_t,          // null
+                                 bool,               // boolean
+                                 uintmax_t,          // number
+                                 intmax_t,           // number
+                                 double,             // number
+                                 object_proxy,       // object
+                                 array_proxy         // array
                                  >;
 
       lak::result<object_proxy> get_object() const;
       lak::result<array_proxy> get_array() const;
       lak::result<number_proxy> get_number() const;
-      lak::result<lak::span<const char8_t>> get_string() const;
+      lak::result<lak::u8string_view> get_string() const;
       lak::result<bool> get_bool() const;
       lak::result<nullptr_t> get_null() const;
       lak::result<value> get_value() const;
@@ -196,7 +197,7 @@ namespace lak
     friend struct value_proxy;
 
     size_t _position = 0;
-    lak::span<const char8_t> _input;
+    lak::u8string_view _input;
 
     lak::array<char8_t> _string_data;
     lak::array<value_type> _data;
@@ -206,9 +207,9 @@ namespace lak
 
     bool skip_ascii_whitespace();
 
-    inline lak::span<const char8_t> remaining() const
+    inline lak::u8string_view remaining() const
     {
-      return _input.subspan(_position);
+      return _input.substr(_position);
     }
 
     inline char8_t peek() const { return _input[_position]; }
@@ -224,7 +225,7 @@ namespace lak
     lak::result<> parse_array();
     lak::result<> parse_value();
 
-    lak::result<> parse_value(lak::span<const char8_t> str);
+    lak::result<> parse_value(lak::u8string_view str);
 
   public:
     JSON()             = default;
@@ -233,7 +234,7 @@ namespace lak
     JSON &operator=(const JSON &) = default;
     JSON &operator=(JSON &&) = default;
 
-    static lak::result<JSON> parse(lak::span<const char8_t> str);
+    static lak::result<JSON> parse(lak::u8string_view str);
 
     lak::result<value_proxy> value() const;
   };

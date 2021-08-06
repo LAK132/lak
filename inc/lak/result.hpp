@@ -660,15 +660,15 @@ namespace lak
 
 #ifndef NOLOG
 #  define EXPECT(...)                                                         \
-    expect(lak::streamify<char8_t>(DEBUG_FATAL_LINE_FILE, __VA_ARGS__))
+    expect(lak::streamify(DEBUG_FATAL_LINE_FILE, __VA_ARGS__))
 #  define EXPECT_ERR(...)                                                     \
-    expect_err(lak::streamify<char8_t>(DEBUG_FATAL_LINE_FILE, __VA_ARGS__))
+    expect_err(lak::streamify(DEBUG_FATAL_LINE_FILE, __VA_ARGS__))
 
 #  define UNWRAP()     EXPECT("unwrap failed")
 #  define UNWRAP_ERR() EXPECT_ERR("unwrap_err failed")
 #else
-#  define EXPECT(...)     expect(lak::streamify<char8_t>(__VA_ARGS__))
-#  define EXPECT_ERR(...) expect_err(lak::streamify<char8_t>(__VA_ARGS__))
+#  define EXPECT(...)     expect(lak::streamify(__VA_ARGS__))
+#  define EXPECT_ERR(...) expect_err(lak::streamify(__VA_ARGS__))
 
 #  define UNWRAP()     unwrap()
 #  define UNWRAP_ERR() unwrap_err()

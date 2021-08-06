@@ -35,7 +35,7 @@ std::optional<lak::token<CHAR>> lak::token_buffer<CHAR>::match(
 
     if (_buffer.size() < op.size()) continue;
 
-    if (lak::span<const char32_t>(_buffer).first(op.size()) ==
+    if (lak::string_view(lak::span(_buffer)).first(op.size()) ==
         lak::string_view(op))
     {
       // :TRICKY: token.position.end may not be correct here!
@@ -55,7 +55,7 @@ std::optional<lak::token<CHAR>> lak::token_buffer<CHAR>::match(
         // Return the token up to the operator.
 
         return lak::token<CHAR>{
-          lak::span(token.source.begin(), _buffer_token.source.begin()),
+          lak::string_view(token.source.begin(), _buffer_token.source.begin()),
           lak::token_position{token.position.begin,
                               _buffer_token.position.begin}};
       }
@@ -78,7 +78,7 @@ std::optional<lak::token<CHAR>> lak::token_buffer<CHAR>::match(
           ASSERT_EQUAL(_buffer_token.position.begin, token.position.begin);
 
         return lak::token<CHAR>{
-          lak::span(_buffer_token.source.begin(), converted_length),
+          lak::string_view(_buffer_token.source.begin(), converted_length),
           lak::token_position{_buffer_token.position.begin, end_position}};
       }
     }
@@ -99,7 +99,7 @@ void lak::token_buffer<CHAR>::operator++()
   auto pre_buffer       = _buffer; // this is a full buffer copy.
   auto pre_buffer_token = _buffer_token;
 
-  auto remaining = lak::span(_buffer_token.source.end(), _source.end());
+  auto remaining = lak::string_view(_buffer_token.source.end(), _source.end());
 
   auto next_len            = lak::character_length(remaining);
   const char32_t next_code = lak::codepoint(remaining);
@@ -111,13 +111,13 @@ void lak::token_buffer<CHAR>::operator++()
   ASSERT_GREATER(next_len, 0);
 
   _buffer.push_back(next_code);
-  _buffer_token.source = lak::span(_buffer_token.source.begin(),
-                                   _buffer_token.source.end() + next_len);
+  _buffer_token.source = lak::string_view(
+    _buffer_token.source.begin(), _buffer_token.source.end() + next_len);
   _buffer_token.position.end += next_code;
 
   if (pre_buffer.size() > 0)
   {
-    auto u8buffer = lak::to_u8string(lak::span(_buffer));
+    auto u8buffer = lak::to_u8string(lak::string_view(lak::span(_buffer)));
     auto u8source = lak::to_u8string(_buffer_token.source);
     ASSERT_EQUAL(u8buffer, u8source);
 
@@ -130,7 +130,8 @@ void lak::token_buffer<CHAR>::operator++()
                     "'" << lak::to_astring(lak::span(pre_buffer)) << "' '"
                         << lak::to_astring(lak::span(_buffer)) << "'");
     */
-    ASSERT(!lak::same_span(pre_buffer_token.source, _buffer_token.source));
+    ASSERT(
+      !lak::same_span<CHAR>(pre_buffer_token.source, _buffer_token.source));
     ASSERT_NOT_EQUAL(pre_buffer_token.position, _buffer_token.position);
   }
 }
@@ -152,7 +153,7 @@ void lak::token_buffer<CHAR>::operator--()
   _buffer.erase(_buffer.begin());
 
   _buffer_token.source =
-    _buffer_token.source.subspan(lak::codepoint_length<CHAR>(front));
+    _buffer_token.source.substr(lak::codepoint_length<CHAR>(front));
 
   _buffer_token.position.begin += front;
 
@@ -164,7 +165,7 @@ template<typename CHAR>
 void lak::tokeniser<CHAR>::internal_pump() noexcept
 {
   _current             = _next;
-  _next.source         = lak::span(_next.source.end(), size_t(0));
+  _next.source         = lak::string_view(_next.source.end(), size_t(0));
   _next.position.begin = _next.position.end;
 
   ASSERT_EQUAL(_next.source.begin(), _current.source.end());
@@ -186,7 +187,7 @@ lak::token<CHAR> lak::tokeniser<CHAR>::peek() const noexcept
     return _next;
 
   // _next is currently empty, move its end to the end of _data.
-  _next.source = lak::span(_next.source.begin(), _data.end());
+  _next.source = lak::string_view(_next.source.begin(), _data.end());
 
   ASSERT_EQUAL(_current.source.end(), _next.source.begin());
 
@@ -197,10 +198,10 @@ lak::token<CHAR> lak::tokeniser<CHAR>::peek() const noexcept
   {
     if (!lak::is_whitespace(c)) break;
 
-    ASSERT_EQUAL(
-      _next.source.size(),
-      lak::span(buffer._buffer_token.source.begin(), buffer._source.end())
-        .size());
+    ASSERT_EQUAL(_next.source.size(),
+                 lak::string_view(buffer._buffer_token.source.begin(),
+                                  buffer._source.end())
+                   .size());
 
     if (auto match = buffer.match(_operators, _next); match)
     {
@@ -218,11 +219,11 @@ lak::token<CHAR> lak::tokeniser<CHAR>::peek() const noexcept
 
     auto before = buffer.source();
     ++buffer;
-    ASSERT(!lak::same_span(before, buffer.source()));
+    ASSERT(!lak::same_span<CHAR>(before, buffer.source()));
 
     _next.position.begin += c;
 
-    _next.source = _next.source.subspan(len);
+    _next.source = _next.source.substr(len);
   }
 
   auto whitespace_begin = _next;
@@ -257,7 +258,7 @@ lak::token<CHAR> lak::tokeniser<CHAR>::peek() const noexcept
 
     auto before = buffer.source();
     ++buffer;
-    ASSERT(!lak::same_span(before, buffer.source()));
+    ASSERT(!lak::same_span<CHAR>(before, buffer.source()));
 
     _next.position.end += c;
 
@@ -288,7 +289,7 @@ lak::token<CHAR> lak::tokeniser<CHAR>::peek() const noexcept
 template<typename CHAR>
 lak::token<CHAR> lak::tokeniser<CHAR>::until(char32_t codepoint) noexcept
 {
-  _next.source = lak::span(_next.source.begin(), _data.end());
+  _next.source = lak::string_view(_next.source.begin(), _data.end());
 
   ASSERT_EQUAL(_current.source.end(), _next.source.begin());
 
@@ -311,12 +312,11 @@ lak::token<CHAR> lak::tokeniser<CHAR>::until(char32_t codepoint) noexcept
 }
 
 template<typename CHAR>
-lak::token<CHAR> lak::tokeniser<CHAR>::until(
-  lak::span<const char32_t> str) noexcept
+lak::token<CHAR> lak::tokeniser<CHAR>::until(lak::u32string_view str) noexcept
 {
   ASSERT(str.size() > 0);
 
-  _next.source = lak::span(_next.source.begin(), _data.end());
+  _next.source = lak::string_view(_next.source.begin(), _data.end());
 
   ASSERT_EQUAL(_current.source.end(), _next.source.begin());
 
@@ -377,7 +377,7 @@ lak::token<CHAR> lak::tokeniser<CHAR>::until(
 template<typename CHAR>
 lak::token<CHAR> lak::tokeniser<CHAR>::skip(char32_t codepoint) noexcept
 {
-  _next.source = lak::span(_next.source.begin(), _data.end());
+  _next.source = lak::string_view(_next.source.begin(), _data.end());
 
   ASSERT_EQUAL(_current.source.end(), _next.source.begin());
 
@@ -400,12 +400,11 @@ lak::token<CHAR> lak::tokeniser<CHAR>::skip(char32_t codepoint) noexcept
 }
 
 template<typename CHAR>
-lak::token<CHAR> lak::tokeniser<CHAR>::skip(
-  lak::span<const char32_t> str) noexcept
+lak::token<CHAR> lak::tokeniser<CHAR>::skip(lak::u32string_view str) noexcept
 {
   ASSERT(str.size() > 0);
 
-  _next.source = lak::span(_next.source.begin(), _data.end());
+  _next.source = lak::string_view(_next.source.begin(), _data.end());
 
   size_t count     = 0;
   size_t match_len = 0;

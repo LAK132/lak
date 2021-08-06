@@ -6,25 +6,18 @@
 #define LAK_STRCAST_HPP
 
 #include "lak/compiler.hpp"
-#include "lak/span_forward.hpp"
-#include "lak/string.hpp"
+#include "lak/string_view_forward.hpp"
 
 namespace lak
 {
   // Reinterpret UTF-8 string as an ASCII string.
-  force_inline lak::span<const char> as_astring(const lak::astring &str);
-  force_inline lak::span<const char> as_astring(const lak::u8string &str);
-  force_inline lak::span<const char> as_astring(lak::span<const char8_t> str);
-  force_inline lak::span<const char> as_astring(const char8_t *str);
+  force_inline lak::astring_view as_astring(lak::astring_view str);
+  force_inline lak::astring_view as_astring(lak::u8string_view str);
 
   // Reinterpret ASCII string as a UTF-8 string.
-  force_inline lak::span<const char8_t> as_u8string(const lak::astring &str);
-  force_inline lak::span<const char8_t> as_u8string(const lak::u8string &str);
-  force_inline lak::span<const char8_t> as_u8string(lak::span<const char> str);
-  force_inline lak::span<const char8_t> as_u8string(const char *str);
+  force_inline lak::u8string_view as_u8string(lak::astring_view str);
+  force_inline lak::u8string_view as_u8string(lak::u8string_view str);
 }
-
-#include "lak/span.hpp"
 
 #include "lak/strcast.inl"
 

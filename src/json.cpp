@@ -49,8 +49,7 @@ lak::result<lak::JSON::number_proxy> lak::JSON::value_proxy::get_number() const
     .map([&](number n) -> number_proxy { return number_proxy(_parser, n); });
 }
 
-lak::result<lak::span<const char8_t>> lak::JSON::value_proxy::get_string()
-  const
+lak::result<lak::u8string_view> lak::JSON::value_proxy::get_string() const
 {
   return _index(lak::span(_parser._data))
     .and_then(
@@ -59,8 +58,8 @@ lak::result<lak::span<const char8_t>> lak::JSON::value_proxy::get_string()
           v.get<value_type::index_of<subspan>>());
       })
     .and_then(
-      [&](const subspan &s) -> lak::result<lak::span<const char8_t>> {
-        return s(lak::span<const char8_t>(_parser._string_data));
+      [&](const subspan &s) -> lak::result<lak::u8string_view> {
+        return s(lak::u8string_view(lak::span(_parser._string_data)));
       });
 }
 
@@ -96,8 +95,9 @@ lak::result<lak::JSON::value_proxy::value> lak::JSON::value_proxy::get_value()
           lak::overloaded{
             [&](const lak::JSON::subspan &str) -> value
             {
-              return value::make<value::index_of<lak::span<const char8_t>>>(
-                str(lak::span(_parser._string_data)).unwrap());
+              return value::make<value::index_of<lak::u8string_view>>(
+                str(lak::string_view(lak::span(_parser._string_data)))
+                  .unwrap());
             },
             [](const nullptr_t &) -> value
             { return value::make<value::index_of<nullptr_t>>(nullptr); },
@@ -184,7 +184,8 @@ lak::result<> lak::JSON::parse_string()
             }
           }
 
-          char32_t codepoint = lak::codepoint(lak::span(hex_char));
+          char32_t codepoint =
+            lak::codepoint(lak::string_view(lak::span(hex_char)));
 
           if (codepoint == 0 && hex_char[0] != 0) return lak::err_t{};
 
@@ -222,7 +223,7 @@ lak::result<> lak::JSON::parse_string()
 lak::result<> lak::JSON::parse_null()
 {
   // "null"
-  if (lak::compare(remaining(), u8"null"_u8view) == 4)
+  if (lak::compare(remaining(), u8"null"_view) == 4)
   {
     _position += 4;
     _data.push_back(
@@ -236,7 +237,7 @@ lak::result<> lak::JSON::parse_null()
 lak::result<> lak::JSON::parse_bool()
 {
   // "true"
-  if (lak::compare(remaining(), u8"true"_u8view) == 4)
+  if (lak::compare(remaining(), u8"true"_view) == 4)
   {
     _position += 4;
     _data.push_back(value_type::make<value_type::index_of<bool>>(true));
@@ -244,7 +245,7 @@ lak::result<> lak::JSON::parse_bool()
   }
 
   // "false"
-  if (lak::compare(remaining(), u8"false"_u8view) == 5)
+  if (lak::compare(remaining(), u8"false"_view) == 5)
   {
     _position += 5;
     _data.push_back(value_type::make<value_type::index_of<bool>>(false));
@@ -667,7 +668,7 @@ lak::result<> lak::JSON::parse_value()
   return lak::ok_t{};
 }
 
-lak::result<> lak::JSON::parse_value(lak::span<const char8_t> str)
+lak::result<> lak::JSON::parse_value(lak::u8string_view str)
 {
   _position = 0;
   _input    = str;
@@ -678,7 +679,7 @@ lak::result<> lak::JSON::parse_value(lak::span<const char8_t> str)
   return parse_value();
 }
 
-lak::result<lak::JSON> lak::JSON::parse(lak::span<const char8_t> str)
+lak::result<lak::JSON> lak::JSON::parse(lak::u8string_view str)
 {
   JSON parser;
   if (parser.parse_value(str).is_ok())

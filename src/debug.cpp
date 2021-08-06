@@ -198,8 +198,8 @@ lak::wstring lak::scoped_indenter::wstr()
 
 lak::u8string lak::scoped_indenter::u8str()
 {
-  static const auto bar = "| "_u8;
-  static const auto dot = ": "_u8;
+  static const auto bar = u8"| ";
+  static const auto dot = u8": ";
   lak::u8string s;
   for (size_t i = lak::debug_indent; i-- > 0;)
     s += ((lak::debug_indent - i) & 1) ? bar : dot;
