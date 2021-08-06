@@ -334,7 +334,7 @@ lak::wstring lak::window_title(const lak::platform_instance &instance,
   std::vector<wchar_t> str;
   str.resize(::GetWindowTextLengthW(handle->_platform_handle) + 1);
   ::GetWindowTextW(handle->_platform_handle, str.data(), str.size());
-  return lak::wstring(str.data());
+  return lak::wstring(str.begin(), str.end());
 }
 
 bool lak::set_window_title(const lak::platform_instance &instance,

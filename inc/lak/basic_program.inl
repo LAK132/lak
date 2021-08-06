@@ -89,7 +89,7 @@ void APIENTRY MessageCallback(GLenum source,
       break;
     default: DEBUG("| Source: ", source); break;
   }
-  DEBUG("| Message:\n", lak::span(message, length), "\n");
+  DEBUG("| Message:\n", lak::string_view(message, length), "\n");
 }
 
 int main(int argc, char **argv)

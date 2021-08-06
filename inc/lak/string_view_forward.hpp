@@ -95,4 +95,14 @@ inline lak::u8string_view operator"" _view(const char8_t *str, size_t size);
 inline lak::u16string_view operator"" _view(const char16_t *str, size_t size);
 inline lak::u32string_view operator"" _view(const char32_t *str, size_t size);
 
+inline lak::span<const char> operator"" _span(const char *str, size_t size);
+inline lak::span<const wchar_t> operator"" _span(const wchar_t *str,
+                                                 size_t size);
+inline lak::span<const char8_t> operator"" _span(const char8_t *str,
+                                                 size_t size);
+inline lak::span<const char16_t> operator"" _span(const char16_t *str,
+                                                  size_t size);
+inline lak::span<const char32_t> operator"" _span(const char32_t *str,
+                                                  size_t size);
+
 #endif

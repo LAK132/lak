@@ -214,8 +214,8 @@ bool lak::set_opengl_swap_interval(const lak::opengl_context &, int interval)
 lak::wstring lak::window_title(const lak::platform_instance &,
                                const lak::window_handle *handle)
 {
-  return lak::to_wstring(
-    lak::as_u8string(SDL_GetWindowTitle(handle->_platform_handle)));
+  return lak::to_wstring(lak::as_u8string(lak::astring_view::from_c_str(
+    SDL_GetWindowTitle(handle->_platform_handle))));
 }
 
 bool lak::set_window_title(const lak::platform_instance &,

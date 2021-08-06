@@ -1,22 +1,22 @@
 #include "lak/test.hpp"
 #include "lak/span.hpp"
 
-std::unordered_map<lak::astring, int (*)()> &_registered_tests()
+std::unordered_map<lak::u8string, int (*)()> &_registered_tests()
 {
-  static std::unordered_map<lak::astring, int (*)()> _tests;
+  static std::unordered_map<lak::u8string, int (*)()> _tests;
   return _tests;
 }
 
-const std::unordered_map<lak::astring, int (*)()> &lak::registered_tests()
+const std::unordered_map<lak::u8string, int (*)()> &lak::registered_tests()
 {
   return _registered_tests();
 }
 
-int lak::run_tests(const lak::astring &tests)
+int lak::run_tests(const lak::u8string &tests)
 {
-  auto run_test = [](const lak::astring &test, int (*func)()) -> int
+  auto run_test = [](const lak::u8string &test, int (*func)()) -> int
   {
-    lak::scoped_indenter indent("testing " + test);
+    lak::scoped_indenter indent(u8"testing " + test);
     const int result = func();
     if (result == 0)
       lak::debugger.std_out(u8"", LAK_GREEN "PASSED" LAK_SGR_RESET "\n");
@@ -31,7 +31,8 @@ int lak::run_tests(const lak::astring &tests)
 
   while_or(!test.empty())
   {
-    auto [do_test, remaining_tests] = lak::split_before<const char>(test, ';');
+    auto [do_test, remaining_tests] =
+      lak::split_before<const char8_t>(test, u8';');
 
     test = lak::string_view(remaining_tests)
              .substr(remaining_tests.empty() ? 0 : 1);
@@ -59,7 +60,7 @@ int lak::run_tests(const lak::astring &tests)
   return EXIT_SUCCESS;
 }
 
-bool lak::register_test(const lak::astring &test_name, int (*test_function)())
+bool lak::register_test(const lak::u8string &test_name, int (*test_function)())
 {
   bool registered =
     _registered_tests().try_emplace(test_name, test_function).second;

@@ -167,24 +167,24 @@ std::filesystem::path lak::debugger_t::save(const std::filesystem::path &path)
 }
 #endif
 
-lak::scoped_indenter::scoped_indenter(const lak::astring &name)
+lak::scoped_indenter::scoped_indenter(const lak::u8string &name)
 {
-  lak::debugger.std_out(lak::to_u8string(""), name + "\n");
-  lak::debugger.std_out(lak::to_u8string(""), "{\n");
+  lak::debugger.std_out(u8"", name + u8"\n");
+  lak::debugger.std_out(u8"", u8"{\n");
   ++lak::debug_indent;
 }
 
 lak::scoped_indenter::~scoped_indenter()
 {
   --lak::debug_indent;
-  lak::debugger.std_out(lak::to_u8string(""), "}\n");
+  lak::debugger.std_out(u8"", u8"}\n");
 }
 
 lak::astring lak::scoped_indenter::str()
 {
   lak::astring s;
   for (size_t i = lak::debug_indent; i-- > 0;)
-    s += ((lak::debug_indent - i) & 1) ? "| " : ": ";
+    s += ((lak::debug_indent - i) & 1U) ? "| " : ": ";
   return s;
 }
 
@@ -192,7 +192,7 @@ lak::wstring lak::scoped_indenter::wstr()
 {
   lak::wstring s;
   for (size_t i = lak::debug_indent; i-- > 0;)
-    s += ((lak::debug_indent - i) & 1) ? L"| " : L": ";
+    s += ((lak::debug_indent - i) & 1U) ? L"| " : L": ";
   return s;
 }
 
@@ -202,7 +202,7 @@ lak::u8string lak::scoped_indenter::u8str()
   static const auto dot = u8": ";
   lak::u8string s;
   for (size_t i = lak::debug_indent; i-- > 0;)
-    s += ((lak::debug_indent - i) & 1) ? bar : dot;
+    s += ((lak::debug_indent - i) & 1U) ? bar : dot;
   return s;
 }
 

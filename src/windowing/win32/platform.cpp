@@ -469,14 +469,7 @@ bool lak::get_clipboard(const lak::platform_instance &i, lak::u8string *s)
   return true;
 }
 
-bool lak::set_clipboard(const lak::platform_instance &i,
-                        const lak::u8string &s)
-{
-  return lak::set_clipboard(i, lak::string_view(s));
-}
-
-bool lak::set_clipboard(const lak::platform_instance &i,
-                        lak::span<const char8_t> s)
+bool lak::set_clipboard(const lak::platform_instance &i, lak::u8string_view s)
 {
   [&]() -> lak::winapi::result<lak::monostate>
   {

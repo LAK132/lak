@@ -51,7 +51,7 @@ namespace lak
 
   struct scoped_indenter
   {
-    scoped_indenter(const lak::astring &name);
+    scoped_indenter(const lak::u8string &name);
 
     ~scoped_indenter();
 
