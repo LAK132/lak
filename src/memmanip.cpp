@@ -3,6 +3,19 @@
 #include "lak/os.hpp"
 #include "lak/span.hpp"
 
+byte_t *lak::align_ptr(byte_t *ptr, size_t align)
+{
+  return reinterpret_cast<byte_t *>(
+    lak::align_ptr(reinterpret_cast<uintptr_t>(ptr), align));
+}
+
+uintptr_t lak::align_ptr(uintptr_t ptr, size_t align)
+{
+  if (align <= 1) return ptr;
+  uintptr_t offset = ptr % align;
+  return ptr + (offset == 0 ? 0 : align - offset);
+}
+
 void lak::memcpy(char *dst, const char *src, size_t count)
 {
   for (size_t i = 0; i < count; ++i) dst[i] = src[i];

@@ -8,6 +8,9 @@
 
 namespace lak
 {
+  byte_t *align_ptr(byte_t *ptr, size_t align);
+  uintptr_t align_ptr(uintptr_t ptr, size_t align);
+
   // see lak::binary_reader and lak::binary_writer for type safe manipulation
   // of types as bytes
   template<typename T>
