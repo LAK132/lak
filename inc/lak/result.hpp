@@ -9,6 +9,8 @@
 
 namespace lak
 {
+  /* --- traits --- */
+
   template<typename... T>
   struct is_result : public lak::false_type
   {
@@ -31,6 +33,13 @@ namespace lak
   };
   template<typename RESULT>
   using result_err_type_t = typename result_err_type<RESULT>::type;
+
+  /* --- infallible --- */
+
+  struct infallible
+  {
+    infallible() = delete;
+  };
 
   /* --- ok_t --- */
 
@@ -615,6 +624,9 @@ namespace lak
 
   template<typename... ERR>
   using error_codes = lak::error_code<lak::variant<ERR...>>;
+
+  template<typename OK>
+  using infallible_result = lak::result<OK, lak::infallible>;
 
   template<typename... T>
   struct is_result<lak::result<T...>> : public lak::true_type
