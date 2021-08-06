@@ -22,20 +22,3 @@ lak = static_library(
   include_directories: include_directories('..', '../inc'),
   dependencies: dependency('threads'),
 )
-
-laktest = static_library(
-  'laktest',
-  [
-    'tests/array.cpp',
-    'tests/bit_reader.cpp',
-    'tests/bitflag.cpp',
-    'tests/bitset.cpp',
-    'tests/json.cpp',
-    'tests/test.cpp',
-    'tests/trie.cpp',
-    'tests/type_pack.cpp',
-  ],
-  override_options: 'cpp_std=' + version,
-  include_directories: include_directories('..', '../inc'),
-  link_with: lak,
-)
