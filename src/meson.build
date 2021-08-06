@@ -45,7 +45,6 @@ laktest = static_library(
     'tests/bitflag.cpp',
     'tests/bitset.cpp',
     'tests/json.cpp',
-    'tests/ranges.cpp',
     'tests/test.cpp',
     'tests/trie.cpp',
     'tests/type_pack.cpp',
