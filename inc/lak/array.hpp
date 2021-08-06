@@ -38,8 +38,8 @@ namespace lak
     constexpr size_t capacity() const { return SIZE; }
     [[nodiscard]] constexpr bool empty() const { return SIZE == 0; }
 
-    T *data() { return _data; }
-    const T *data() const { return _data; }
+    constexpr T *data() { return begin(); }
+    constexpr const T *data() const { return begin(); }
 
     constexpr T *begin() { return &_data[0]; }
     constexpr T *end() { return &_data[SIZE]; }
@@ -140,7 +140,7 @@ namespace lak
     const T &back() const;
 
     template<typename... ARGS>
-    T &emplace_back(ARGS &&... args);
+    T &emplace_back(ARGS &&...args);
 
     T &push_back(const T &t);
     T &push_back(T &&t);
