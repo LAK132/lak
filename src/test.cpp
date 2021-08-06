@@ -1,10 +1,15 @@
 #include "lak/test.hpp"
 #include "lak/span.hpp"
 
-std::unordered_map<lak::astring, int (*)()> &registered_tests()
+std::unordered_map<lak::astring, int (*)()> &_registered_tests()
 {
-  static std::unordered_map<lak::astring, int (*)()> tests;
-  return tests;
+  static std::unordered_map<lak::astring, int (*)()> _tests;
+  return _tests;
+}
+
+const std::unordered_map<lak::astring, int (*)()> &lak::registered_tests()
+{
+  return _registered_tests();
 }
 
 int lak::run_tests(const lak::astring &tests)
@@ -53,6 +58,8 @@ int lak::run_tests(const lak::astring &tests)
 
 bool lak::register_test(const lak::astring &test_name, int (*test_function)())
 {
-  ASSERT(registered_tests().try_emplace(test_name, test_function).second);
-  return true;
+  bool registered =
+    _registered_tests().try_emplace(test_name, test_function).second;
+  ASSERT(registered);
+  return registered;
 }

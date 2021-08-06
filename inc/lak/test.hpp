@@ -13,6 +13,8 @@ namespace lak
   [[nodiscard]] bool register_test(const lak::astring &test_name,
                                    int (*test_function)());
 
+  const std::unordered_map<lak::astring, int (*)()> &registered_tests();
+
 #define BEGIN_TEST(NAME)                                                      \
   const static bool UNIQUIFY(TEST_##NAME) = lak::register_test(#NAME, []()->int
 #define END_TEST() );
