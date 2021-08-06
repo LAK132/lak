@@ -646,7 +646,7 @@ namespace lak
       lak::is_result_v<T> && lak::is_same_v<lak::result_err_type_t<T>, ERR>;
   }
 
-#ifndef NDEBUG
+#ifndef NOLOG
 #  define EXPECT(...)                                                         \
     expect(lak::streamify<char8_t>(DEBUG_FATAL_LINE_FILE, __VA_ARGS__))
 #  define EXPECT_ERR(...)                                                     \
