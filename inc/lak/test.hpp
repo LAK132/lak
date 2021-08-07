@@ -8,9 +8,9 @@
 
 namespace lak
 {
-  int run_tests(const lak::u8string &tests = u8"");
+  int run_tests(lak::u8string_view tests = {});
 
-  [[nodiscard]] bool register_test(const lak::u8string &test_name,
+  [[nodiscard]] bool register_test(lak::u8string_view test_name,
                                    int (*test_function)());
 
   const std::unordered_map<lak::u8string, int (*)()> &registered_tests();

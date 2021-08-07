@@ -12,7 +12,7 @@ const std::unordered_map<lak::u8string, int (*)()> &lak::registered_tests()
   return _registered_tests();
 }
 
-int lak::run_tests(const lak::u8string &tests)
+int lak::run_tests(lak::u8string_view tests)
 {
   auto run_test = [](const lak::u8string &test, int (*func)()) -> int
   {
@@ -60,7 +60,7 @@ int lak::run_tests(const lak::u8string &tests)
   return EXIT_SUCCESS;
 }
 
-bool lak::register_test(const lak::u8string &test_name, int (*test_function)())
+bool lak::register_test(lak::u8string_view test_name, int (*test_function)())
 {
   bool registered =
     _registered_tests().try_emplace(test_name, test_function).second;

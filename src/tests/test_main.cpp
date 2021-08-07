@@ -23,7 +23,8 @@ int LAK_TEST_MAIN(int argc, char **argv)
   else if (argv[1] == "-tests"_str)
   {
     if (argc < 3) FATAL("Missing tests");
-    return lak::run_tests(argv[2]);
+    return lak::run_tests(
+      lak::as_u8string(lak::astring_view::from_c_str(argv[2])));
   }
   else
   {
