@@ -9,62 +9,12 @@
 namespace lak
 {
   template<typename CHAR>
-  using string    = std::basic_string<CHAR>;
-  using astring   = lak::string<char>;
-  using wstring   = lak::string<wchar_t>;
-  using u8string  = lak::string<char8_t>;
-  using u16string = lak::string<char16_t>;
-  using u32string = lak::string<char32_t>;
+  using string = std::basic_string<CHAR>;
 
   template<typename T>
   struct is_string
   {
     static constexpr bool value = false;
-  };
-  template<typename CHAR>
-  struct is_string<lak::string<CHAR>>
-  {
-    static constexpr bool value = true;
-  };
-  template<>
-  struct is_string<const char8_t *>
-  {
-    static constexpr bool value = true;
-  };
-  template<>
-  struct is_string<char8_t *>
-  {
-    static constexpr bool value = true;
-  };
-  template<>
-  struct is_string<const char16_t *>
-  {
-    static constexpr bool value = true;
-  };
-  template<>
-  struct is_string<char16_t *>
-  {
-    static constexpr bool value = true;
-  };
-  template<>
-  struct is_string<const char32_t *>
-  {
-    static constexpr bool value = true;
-  };
-  template<>
-  struct is_string<char32_t *>
-  {
-    static constexpr bool value = true;
-  };
-  template<>
-  struct is_string<const wchar_t *>
-  {
-    static constexpr bool value = true;
-  };
-  template<>
-  struct is_string<wchar_t *>
-  {
-    static constexpr bool value = true;
   };
   template<typename T>
   inline constexpr bool is_string_v = lak::is_string<T>::value;
@@ -73,6 +23,37 @@ namespace lak
   struct is_lak_type<lak::is_string<T>> : lak::true_type
   {
   };
+
+  template<typename CHAR>
+  struct is_string<lak::string<CHAR>>
+  {
+    static constexpr bool value = true;
+  };
+
+#define LAK_DEFINE_STRING_TYPES(CHAR, PREFIX, ...)                            \
+  using PREFIX##string = lak::string<CHAR>;                                   \
+  template<size_t N>                                                          \
+  struct is_string<CHAR[N]>                                                   \
+  {                                                                           \
+    static constexpr bool value = true;                                       \
+  };                                                                          \
+  template<size_t N>                                                          \
+  struct is_string<const CHAR[N]>                                             \
+  {                                                                           \
+    static constexpr bool value = true;                                       \
+  };                                                                          \
+  template<>                                                                  \
+  struct is_string<CHAR *>                                                    \
+  {                                                                           \
+    static constexpr bool value = true;                                       \
+  };                                                                          \
+  template<>                                                                  \
+  struct is_string<const CHAR *>                                              \
+  {                                                                           \
+    static constexpr bool value = true;                                       \
+  };
+  LAK_FOREACH_CHAR(LAK_DEFINE_STRING_TYPES)
+#undef LAK_DEFINE_STRING_TYPES
 }
 
 inline lak::astring operator"" _str(const char *str, size_t size)

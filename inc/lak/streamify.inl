@@ -34,7 +34,7 @@ lak::u8string lak::streamify(const ARGS &...args)
         ::operator<<(strm, arg);
       else if constexpr (std::is_null_pointer_v<arg_t>)
         strm << "nullptr";
-      else if constexpr (lak::is_string_v<arg_t>)
+      else if constexpr (lak::is_string_v<lak::remove_cvref_t<arg_t>>)
       {
         using char_type = lak::remove_cvref_t<decltype(arg[0])>;
         if constexpr (lak::is_same_v<char, char_type>)

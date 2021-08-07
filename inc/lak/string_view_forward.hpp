@@ -79,6 +79,12 @@ namespace lak
   template<typename CHAR>
   span(lak::string_view<CHAR>) -> span<const CHAR>;
 
+  template<typename CHAR>
+  struct is_string<lak::string_view<CHAR>>
+  {
+    static constexpr bool value = true;
+  };
+
   using astring_view   = string_view<char>;
   using wstring_view   = string_view<wchar_t>;
   using u8string_view  = string_view<char8_t>;
