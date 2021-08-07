@@ -6,11 +6,11 @@
 
 namespace lak
 {
-  template<typename... ARGS>
-  lak::u8string stweamify(const ARGS &...args)
-  {
-    return lak::uwuify(lak::streamify(args...));
-  }
+	template<typename... ARGS>
+	lak::u8string stweamify(const ARGS &...args)
+	{
+		return lak::uwuify(lak::streamify(args...));
+	}
 }
 
 #endif

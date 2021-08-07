@@ -2,16 +2,16 @@
 #define LAK_SURFACE_HPP
 
 #if defined(LAK_USE_WINAPI)
-#  include "lak/windows.hpp"
+#	include "lak/windows.hpp"
 void win32_error_popup(LPWSTR lpszFunction);
 #elif defined(LAK_USE_XLIB)
-#  include <X11/Xlib.h>
+#	include <X11/Xlib.h>
 #elif defined(LAK_USE_XCB)
-#  include <xcb/xcb.h>
+#	include <xcb/xcb.h>
 #elif defined(LAK_USE_SDL)
-#  include <SDL.h>
+#	include <SDL.h>
 #else
-#  error "No implementation specified"
+#	error "No implementation specified"
 #endif
 
 #include "lak/array.hpp"
@@ -30,16 +30,16 @@ namespace lak
 
     lak::image_view<COLOUR> _pixels;
 
-#  if defined(LAK_USE_WINAPI)
+#	if defined(LAK_USE_WINAPI)
     lak::image<COLOUR, true> _platform_handle;
-#  elif defined(LAK_USE_XLIB)
-#    error "NYI"
-#  elif defined(LAK_USE_XCB)
-#    error "NYI"
-#  elif defined(LAK_USE_SDL)
-#  else
-#    error "No implementation specified"
-#  endif
+#	elif defined(LAK_USE_XLIB)
+#		error "NYI"
+#	elif defined(LAK_USE_XCB)
+#		error "NYI"
+#	elif defined(LAK_USE_SDL)
+#	else
+#		error "No implementation specified"
+#	endif
 
     operator bool() const { return _platform_handle != NULL; }
 
@@ -58,7 +58,7 @@ namespace lak
     {
       clear();
 
-#  if defined(LAK_USE_WINAPI)
+#	if defined(LAK_USE_WINAPI)
       // WinAPI bitmap scanlines are padded to end on a LONG data-type boundary
 
       /*
@@ -166,31 +166,31 @@ namespace lak
       _pixels = lak::image_view<COLOUR>(
         lak::span<COLOUR>(pixels, size.x * size.y), size);
 
-#  elif defined(LAK_USE_XLIB)
-#    error "NYI"
-#  elif defined(LAK_USE_XCB)
-#    error "NYI"
-#  elif defined(LAK_USE_SDL)
-#    error "NYI"
-#  else
-#    error "No implementation specified"
-#  endif
+#	elif defined(LAK_USE_XLIB)
+#		error "NYI"
+#	elif defined(LAK_USE_XCB)
+#		error "NYI"
+#	elif defined(LAK_USE_SDL)
+#		error "NYI"
+#	else
+#		error "No implementation specified"
+#	endif
     }
 
     void clear()
     {
-#  if defined(LAK_USE_WINAPI)
+#	if defined(LAK_USE_WINAPI)
       if (_platform_handle) ASSERT(DeleteObject(_platform_handle));
       if (_bitmapinfo) free(_bitmapinfo);
-#  elif defined(LAK_USE_XLIB)
-#    error "NYI"
-#  elif defined(LAK_USE_XCB)
-#    error "NYI"
-#  elif defined(LAK_USE_SDL)
-#    error "NYI"
-#  else
-#    error "No implementation specified"
-#  endif
+#	elif defined(LAK_USE_XLIB)
+#		error "NYI"
+#	elif defined(LAK_USE_XCB)
+#		error "NYI"
+#	elif defined(LAK_USE_SDL)
+#		error "NYI"
+#	else
+#		error "No implementation specified"
+#	endif
     }
 
     ~surface() { clear(); }

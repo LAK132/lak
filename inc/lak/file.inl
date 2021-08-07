@@ -5,5 +5,5 @@
 template<typename TO>
 inline lak::string<TO> lak::strconv(const fs::path &path)
 {
-  return lak::strconv<TO>(path.native());
+	return lak::strconv<TO>(path.native());
 }

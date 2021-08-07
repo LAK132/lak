@@ -3,7 +3,7 @@
 #include "lak/test.hpp"
 
 #define CHECK_SAME(...)                                                       \
-  static_assert(std::is_same_v<__VA_ARGS__>, "Types not the same")
+	static_assert(std::is_same_v<__VA_ARGS__>, "Types not the same")
 
 // empty type_pack
 CHECK_SAME(lak::type_pack<>, lak::type_pack<>);
@@ -54,6 +54,6 @@ CHECK_SAME(
 
 BEGIN_TEST(type_pack)
 {
-  return 0;
+	return 0;
 }
 END_TEST()

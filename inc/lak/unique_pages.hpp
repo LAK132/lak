@@ -5,41 +5,41 @@
 
 namespace lak
 {
-  struct unique_pages : private lak::span<void>
-  {
-  private:
-    inline unique_pages(lak::span<void> pages) : lak::span<void>(pages) {}
+	struct unique_pages : private lak::span<void>
+	{
+	private:
+		inline unique_pages(lak::span<void> pages) : lak::span<void>(pages) {}
 
-    void clear();
+		void clear();
 
-  public:
-    static unique_pages make(size_t min_size, size_t *actual_size = nullptr);
+	public:
+		static unique_pages make(size_t min_size, size_t *actual_size = nullptr);
 
-    inline ~unique_pages() { clear(); }
+		inline ~unique_pages() { clear(); }
 
-    unique_pages() = default;
+		unique_pages() = default;
 
-    inline unique_pages(unique_pages &&other)
-    {
-      lak::swap<lak::span<void>>(*this, other);
-    }
+		inline unique_pages(unique_pages &&other)
+		{
+			lak::swap<lak::span<void>>(*this, other);
+		}
 
-    inline unique_pages &operator=(unique_pages &&other)
-    {
-      lak::swap<lak::span<void>>(*this, other);
-      return *this;
-    }
+		inline unique_pages &operator=(unique_pages &&other)
+		{
+			lak::swap<lak::span<void>>(*this, other);
+			return *this;
+		}
 
-    inline lak::span<void> span() const
-    {
-      return static_cast<lak::span<void>>(*this);
-    }
+		inline lak::span<void> span() const
+		{
+			return static_cast<lak::span<void>>(*this);
+		}
 
-    using lak::span<void>::data;
-    using lak::span<void>::empty;
-    using lak::span<void>::size;
-    using lak::span<void>::size_bytes;
-  };
+		using lak::span<void>::data;
+		using lak::span<void>::empty;
+		using lak::span<void>::size;
+		using lak::span<void>::size_bytes;
+	};
 
 #if 0
   struct shared_pages : private lak::span<void>

@@ -9,28 +9,28 @@
 
 namespace lak
 {
-  enum class lz4_decode_error : uint8_t
-  {
-    too_many_literals,
+	enum class lz4_decode_error : uint8_t
+	{
+		too_many_literals,
 
-    out_of_data,
+		out_of_data,
 
-    zero_offset,
-    offset_too_large,
+		zero_offset,
+		offset_too_large,
 
-    match_too_long,
-  };
+		match_too_long,
+	};
 
-  const char *lz4_error_name(lak::lz4_decode_error err);
+	const char *lz4_error_name(lak::lz4_decode_error err);
 
-  lak::result<lak::array<uint8_t>, lak::lz4_decode_error> decode_lz4_block(
-    lak::binary_reader &strm, size_t output_size);
+	lak::result<lak::array<uint8_t>, lak::lz4_decode_error> decode_lz4_block(
+	  lak::binary_reader &strm, size_t output_size);
 
-  inline lak::result<lak::array<uint8_t>, lak::lz4_decode_error>
-  decode_lz4_block(lak::binary_reader &&strm, size_t output_size)
-  {
-    return decode_lz4_block(strm, output_size);
-  }
+	inline lak::result<lak::array<uint8_t>, lak::lz4_decode_error>
+	decode_lz4_block(lak::binary_reader &&strm, size_t output_size)
+	{
+		return decode_lz4_block(strm, output_size);
+	}
 }
 
 #endif

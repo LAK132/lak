@@ -2,6 +2,6 @@
 
 BEGIN_TEST(testing_framework)
 {
-  return 0;
+	return 0;
 }
 END_TEST()

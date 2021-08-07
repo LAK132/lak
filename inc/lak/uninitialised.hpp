@@ -5,45 +5,45 @@
 
 namespace lak
 {
-  /* --- uninitialised --- */
+	/* --- uninitialised --- */
 
-  template<typename T>
-  struct uninitialised
-  {
-    using value_type = T;
-    union
-    {
-      lak::monostate _uninitialised_value;
-      value_type _value;
-    };
+	template<typename T>
+	struct uninitialised
+	{
+		using value_type = T;
+		union
+		{
+			lak::monostate _uninitialised_value;
+			value_type _value;
+		};
 
-    uninitialised() : _uninitialised_value()
-    {
-      _uninitialised_value.~monostate();
-    }
+		uninitialised() : _uninitialised_value()
+		{
+			_uninitialised_value.~monostate();
+		}
 
-    template<typename... ARGS>
-    uninitialised(ARGS &&...args) : _value(lak::forward<ARGS>(args)...)
-    {
-    }
+		template<typename... ARGS>
+		uninitialised(ARGS &&...args) : _value(lak::forward<ARGS>(args)...)
+		{
+		}
 
-    ~uninitialised() {}
+		~uninitialised() {}
 
-    template<typename... ARGS>
-    value_type &create(ARGS &&...args)
-    {
-      new (&_value) value_type(lak::forward<ARGS>(args)...);
-      return _value;
-    }
+		template<typename... ARGS>
+		value_type &create(ARGS &&...args)
+		{
+			new (&_value) value_type(lak::forward<ARGS>(args)...);
+			return _value;
+		}
 
-    void destroy() { _value.~value_type(); }
+		void destroy() { _value.~value_type(); }
 
-    value_type &value() { return _value; }
+		value_type &value() { return _value; }
 
-    const value_type &value() const { return _value; }
-  };
+		const value_type &value() const { return _value; }
+	};
 
-  static_assert(lak::is_default_constructible_v<lak::uninitialised<int>>);
+	static_assert(lak::is_default_constructible_v<lak::uninitialised<int>>);
 }
 
 #endif

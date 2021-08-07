@@ -2,15 +2,15 @@
 #define LAK_WINDOWS_HPP
 
 #ifndef WIN32_LEAN_AND_MEAN
-#  define WIN32_LEAN_AND_MEAN
+#	define WIN32_LEAN_AND_MEAN
 #endif
 
 #ifndef NOMINMAX
-#  define NOMINMAX
+#	define NOMINMAX
 #endif
 
 #ifndef UNICODE
-#  define UNICODE
+#	define UNICODE
 #endif
 
 #undef ERROR
@@ -21,7 +21,7 @@
 
 #ifdef LAK_DEBUG_HPP
 // restore ERROR
-#  include "lak/debug.hpp"
+#	include "lak/debug.hpp"
 #endif
 
 #endif

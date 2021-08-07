@@ -6,31 +6,31 @@
 
 namespace lak
 {
-  // ticks per second
-  uint64_t performance_frequency();
+	// ticks per second
+	uint64_t performance_frequency();
 
-  // ticks
-  uint64_t performance_counter();
+	// ticks
+	uint64_t performance_counter();
 
-  double ticks_to_seconds(uint64_t ticks);
+	double ticks_to_seconds(uint64_t ticks);
 
 #define SCOPED_TIMER(FUNC)                                                    \
-  const uint64_t UNIQUIFY(DEBUG_TIMER_) = lak::performance_counter();         \
-  DEFER(FUNC((lak::performance_counter() - UNIQUIFY(DEBUG_TIMER_))));
+	const uint64_t UNIQUIFY(DEBUG_TIMER_) = lak::performance_counter();         \
+	DEFER(FUNC((lak::performance_counter() - UNIQUIFY(DEBUG_TIMER_))));
 
-  struct timer
-  {
-    uint64_t _begin;
-    uint64_t _end;
+	struct timer
+	{
+		uint64_t _begin;
+		uint64_t _end;
 
-    inline void start() { _begin = lak::performance_counter(); }
+		inline void start() { _begin = lak::performance_counter(); }
 
-    inline void stop() { _end = lak::performance_counter(); }
+		inline void stop() { _end = lak::performance_counter(); }
 
-    uint64_t ticks() const { return _end - _begin; }
+		uint64_t ticks() const { return _end - _begin; }
 
-    double seconds() const { return lak::ticks_to_seconds(ticks()); }
-  };
+		double seconds() const { return lak::ticks_to_seconds(ticks()); }
+	};
 }
 
 #endif
