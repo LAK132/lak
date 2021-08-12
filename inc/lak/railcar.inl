@@ -164,7 +164,7 @@ void lak::railcar<T>::internal_init_bin_size()
 {
 	if (_bin_size == 0)
 		_bin_size = std::max<size_t>(lak::page_size() / sizeof(T), size_t(1));
-	ASSERT_GREATER(_bin_size, 1);
+	ASSERT_GREATER(_bin_size, 1U);
 }
 
 template<typename T>

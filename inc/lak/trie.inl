@@ -270,11 +270,13 @@ lak::trie<CHAR, T>::find(lak::trie<CHAR, T> *node, lak::string_view<CHAR> key)
 }
 
 template<typename CHAR, typename T>
-std::ostream &operator<<(std::ostream &strm, const lak::trie<CHAR, T> &trie)
+lak::u8string lak::trie<CHAR, T>::to_string() const
 {
+	lak::u8string result;
+
 	std::vector<lak::span<const lak::trie<CHAR, T>>> stack;
 
-	stack.emplace_back(&trie, 1);
+	stack.emplace_back(this, 1);
 
 	while (stack.size() > 0)
 	{
@@ -295,30 +297,30 @@ std::ostream &operator<<(std::ostream &strm, const lak::trie<CHAR, T> &trie)
 			}
 			key += lak::to_u8string(t.key());
 
-			strm << lak::astring((stack.size() - 1) * 2, ' ') << "\""
-			     << lak::as_astring(key) << "\" : [{";
+			result += lak::u8string((stack.size() - 1) * 2, ' ') + u8"\"" + key +
+			          u8"\" : [{";
 
 			if constexpr (lak::is_streamable<decltype(*t.value())>())
 			{
 				if (t.value())
 				{
-					strm << *t.value() << "}, {";
+					result += lak::streamify(*t.value()) + u8"}, {";
 				}
 			}
 
 			const bool has_nodes = t.nodes().size() > 0;
 			if (has_nodes)
 			{
-				strm << "\n";
+				result += u8"\n";
 				stack.push_back(lak::span(t.nodes()));
 			}
 			else
 			{
-				strm << "}]";
+				result += u8"}]";
 				stack.back() = stack.back().subspan(1);
 				if (stack.back().size() > 0)
 				{
-					strm << ",\n";
+					result += u8",\n";
 				}
 			}
 		}
@@ -327,15 +329,15 @@ std::ostream &operator<<(std::ostream &strm, const lak::trie<CHAR, T> &trie)
 			stack.pop_back();
 			if (stack.size() > 0)
 			{
-				strm << "\n" << lak::astring((stack.size() - 1) * 2, ' ') << "}]";
+				result += u8"\n" + lak::u8string((stack.size() - 1) * 2, ' ') + u8"}]";
 				stack.back() = stack.back().subspan(1);
 				if (stack.back().size() > 0)
 				{
-					strm << ",\n";
+					result += u8",\n";
 				}
 			}
 		}
 	}
 
-	return strm;
+	return result;
 }

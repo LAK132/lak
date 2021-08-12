@@ -14,7 +14,7 @@ size_t lak::page_size()
 lak::page_result_t<lak::span<void>> lak::page_reserve(size_t size,
                                                       size_t *page_size_out)
 {
-	ASSERT_GREATER(size, 0);
+	ASSERT_GREATER(size, 0U);
 
 	size = lak::round_to_page_multiple(size, page_size_out);
 
@@ -27,16 +27,21 @@ lak::page_result_t<lak::span<void>> lak::page_reserve(size_t size,
 		    return lak::posix::mmap(
 		      nullptr, size, PROT_NONE, MAP_PRIVATE | MAP_FILE, fd, 0);
 	    })
+	  .map_err([](auto &&) -> lak::page_error { return {}; })
 	  .map(ptr_to_span);
 }
 
 lak::page_result_t<> lak::page_commit(lak::span<void> pages)
 {
 	return lak::posix::mprotect(
-	  pages.begin(), pages.size(), PROT_READ | PROT_WRITE);
+	         pages.data(), pages.size(), PROT_READ | PROT_WRITE)
+	  .map_err([](auto &&) -> lak::page_error { return {}; })
+	  .map([](auto &&) -> lak::monostate { return {}; });
 }
 
 lak::page_result_t<> lak::page_free(lak::span<void> pages)
 {
-	return lak::posix::munmap(pages.data(), pages.size());
+	return lak::posix::munmap(pages.data(), pages.size())
+	  .map_err([](auto &&) -> lak::page_error { return {}; })
+	  .map([](auto &&) -> lak::monostate { return {}; });
 }

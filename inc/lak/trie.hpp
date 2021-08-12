@@ -6,6 +6,7 @@
 #include "lak/string_view.hpp"
 
 #include <optional>
+#include <ostream>
 #include <tuple>
 #include <vector>
 
@@ -77,6 +78,14 @@ namespace lak
 
 		static std::pair<trie *, lak::string_view<CHAR>> find(
 		  trie *node, lak::string_view<CHAR> key);
+
+		lak::u8string to_string() const;
+
+		inline friend std::ostream &operator<<(std::ostream &strm,
+		                                       const lak::trie<CHAR, T> &trie)
+		{
+			return strm << lak::as_astring(trie.to_string());
+		}
 	};
 
 	template<typename T>
@@ -91,9 +100,6 @@ namespace lak
 	using u32trie = trie<char32_t, T>;
 }
 
-template<typename CHAR, typename T>
-std::ostream &operator<<(std::ostream &strm, const lak::trie<CHAR, T> &trie);
-
 #include "trie.inl"
 
-#endif // LAK_TRIE_HPP
+#endif

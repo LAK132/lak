@@ -263,10 +263,10 @@ namespace lak
 		/* --- static_object_part --- */
 
 		static_object_part::static_object_part(static_object_part &&other)
-		: _vertex_array(lak::move(other._vertex_array)),
-		  _vertex_buffer(lak::move(other._vertex_buffer)),
+		: _vertex_buffer(lak::move(other._vertex_buffer)),
 		  _shader(lak::move(other._shader)),
-		  _textures(lak::move(other._textures))
+		  _textures(lak::move(other._textures)),
+		  _vertex_array(lak::move(other._vertex_array))
 		{
 		}
 

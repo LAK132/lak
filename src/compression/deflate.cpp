@@ -113,9 +113,9 @@ lak::deflate_iterator::deflate_iterator(
   lak::span<uint8_t, 0x8000> output_buffer,
   bool parse_header,
   bool anaconda)
-: _compressed(compressed),
+: _value(value_type::make_err(error_t::invalid_state)),
+  _compressed(compressed),
   _output_buffer(output_buffer),
-  _value(value_type::make_err(error_t::invalid_state)),
   _anaconda(anaconda)
 {
 	if (parse_header)

@@ -3,6 +3,8 @@
 #include "lak/string_utils.hpp"
 #include "lak/string_view.hpp"
 
+#include <cmath>
+
 /* --- JSON::value_proxy --- */
 
 lak::result<lak::JSON::object_proxy> lak::JSON::value_proxy::get_object() const
@@ -477,9 +479,10 @@ auto bool_result = [](bool value) -> lak::result<>
 };
 
 template<size_t I, typename V>
-auto get_variant(V &variant) -> lak::result<decltype(*variant.get<I>())>
+auto get_variant(V &variant)
+  -> lak::result<decltype(*variant.template get<I>())>
 {
-	if (auto *v = variant.get<I>(); v) return lak::ok_t{*v};
+	if (auto *v = variant.template get<I>(); v) return lak::ok_t{*v};
 	return lak::err_t{};
 }
 

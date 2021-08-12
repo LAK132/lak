@@ -1,8 +1,40 @@
 #include "lak/char_utils.hpp"
 #include "lak/defer.hpp"
 #include "lak/string_view.hpp"
+#include "lak/tokeniser.hpp"
 
 #include <tuple>
+
+/* --- codepoint_position --- */
+
+template<typename CHAR>
+lak::string_view<CHAR> lak::codepoint_position::find(
+  lak::string_view<CHAR> str) const
+{
+	ASSERT_GREATER(line, 0U);
+	ASSERT_GREATER(column, 0U);
+
+	for (size_t l = line; --l > 0;)
+	{
+		for (const auto &[c, len] : lak::codepoint_range(str))
+		{
+			str = str.substr(len);
+			if (c == U'\n') break;
+		}
+	}
+
+	size_t col = 0;
+	for (const auto &[c, len] : lak::codepoint_range(str))
+	{
+		if (++col == column) break;
+		ASSERT(c != U'\n');
+		str = str.substr(len);
+	}
+
+	return str;
+}
+
+/* --- token --- */
 
 template<typename CHAR>
 bool lak::token<CHAR>::operator==(const token &other) const
@@ -17,10 +49,60 @@ bool lak::token<CHAR>::operator!=(const token &other) const
 }
 
 template<typename CHAR>
-std::ostream &operator<<(std::ostream &strm, const lak::token<CHAR> &token)
+template<size_t I>
+auto &lak::token<CHAR>::get()
 {
-	return strm << std::dec << "{source: " << token.source
-	            << ", position: " << token.position << "}";
+	if constexpr (I == 0)
+		return source;
+	else if constexpr (I == 1)
+		return position;
+}
+
+template<typename CHAR>
+template<size_t I>
+const auto &lak::token<CHAR>::get() const
+{
+	if constexpr (I == 0)
+		return source;
+	else if constexpr (I == 1)
+		return position;
+}
+
+/* --- token_buffer --- */
+
+template<typename CHAR>
+lak::token_buffer<CHAR>::token_buffer(lak::string_view<CHAR> data,
+                                      size_t max_size,
+                                      const lak::token<CHAR> &start)
+: _source(data),
+  _max_size(
+    std::min(max_size, lak::span(start.source.begin(), data.end()).size()))
+{
+	ASSERT_GREATER(_max_size, 0U);
+	_buffer.reserve(_max_size);
+	_buffer_token.source   = start.source.first(0);
+	_buffer_token.position = {start.position.begin, start.position.begin};
+
+	// Prefill up to _max_size characters into the buffer.
+	while (_buffer.size() < _max_size) ++*this;
+}
+
+template<typename CHAR>
+lak::u32string_view lak::token_buffer<CHAR>::buffer() const
+{
+	return lak::string_view(lak::span(_buffer));
+}
+
+template<typename CHAR>
+lak::string_view<CHAR> lak::token_buffer<CHAR>::source() const
+{
+	return _buffer_token.source;
+}
+
+template<typename CHAR>
+const lak::token_position &lak::token_buffer<CHAR>::position() const
+{
+	return _buffer_token.position;
 }
 
 template<typename CHAR>
@@ -159,6 +241,30 @@ void lak::token_buffer<CHAR>::operator--()
 
 	// ASSERT_EQUAL(_buffer_token.source.begin(),
 	//              _buffer_token.position.begin.find(_source).begin());
+}
+
+/* --- tokeniser --- */
+
+template<typename CHAR>
+lak::tokeniser<CHAR>::tokeniser(lak::string_view<CHAR> str,
+                                lak::array<lak::u32string> operators) noexcept
+: _data(str), _operators(lak::move(operators)), _longest_operator(0)
+{
+	for (auto it = _operators.begin(); it != _operators.end();)
+	{
+		if (it->empty())
+		{
+			WARNING("Empty operator (", it - _operators.begin(), ")");
+			it = _operators.erase(it);
+		}
+		else
+			++it;
+	}
+
+	for (const auto &op : _operators)
+		if (op.size() > _longest_operator) _longest_operator = op.size();
+
+	reset();
 }
 
 template<typename CHAR>

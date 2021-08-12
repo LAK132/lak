@@ -6,6 +6,8 @@
 #include "lak/string.hpp"
 #include "lak/string_view.hpp"
 
+#include <ostream>
+
 namespace lak
 {
 	struct codepoint_position
@@ -17,33 +19,17 @@ namespace lak
 		void operator+=(char32_t c);
 
 		template<typename CHAR>
-		lak::string_view<CHAR> find(lak::string_view<CHAR> str) const
-		{
-			ASSERT_GREATER(line, 0);
-			ASSERT_GREATER(column, 0);
-
-			for (size_t l = line; --l > 0;)
-			{
-				for (const auto &[c, len] : lak::codepoint_range(str))
-				{
-					str = str.substr(len);
-					if (c == U'\n') break;
-				}
-			}
-
-			size_t col = 0;
-			for (const auto &[c, len] : lak::codepoint_range(str))
-			{
-				if (++col == column) break;
-				ASSERT(c != U'\n');
-				str = str.substr(len);
-			}
-
-			return str;
-		}
+		lak::string_view<CHAR> find(lak::string_view<CHAR> str) const;
 
 		bool operator==(const codepoint_position &other) const;
 		bool operator!=(const codepoint_position &other) const;
+
+		inline friend std::ostream &operator<<(std::ostream &strm,
+		                                       const lak::codepoint_position &pos)
+		{
+			return strm << std::dec << "{line: " << pos.line
+			            << ", column: " << pos.column << "}";
+		}
 	};
 
 	struct token_position
@@ -53,6 +39,13 @@ namespace lak
 
 		bool operator==(const token_position &other) const;
 		bool operator!=(const token_position &other) const;
+
+		inline friend std::ostream &operator<<(std::ostream &strm,
+		                                       const lak::token_position &pos)
+		{
+			return strm << std::dec << "{begin: " << pos.begin
+			            << ", end: " << pos.end << "}";
+		}
 	};
 
 	template<typename CHAR>
@@ -65,21 +58,16 @@ namespace lak
 		bool operator!=(const token &other) const;
 
 		template<size_t I>
-		inline auto &get()
-		{
-			if constexpr (I == 0)
-				return source;
-			else if constexpr (I == 1)
-				return position;
-		}
+		inline auto &get();
 
 		template<size_t I>
-		inline const auto &get() const
+		inline const auto &get() const;
+
+		inline friend std::ostream &operator<<(std::ostream &strm,
+		                                       const lak::token<CHAR> &token)
 		{
-			if constexpr (I == 0)
-				return source;
-			else if constexpr (I == 1)
-				return position;
+			return strm << std::dec << "{source: " << token.source
+			            << ", position: " << token.position << "}";
 		}
 	};
 
@@ -94,34 +82,13 @@ namespace lak
 
 		inline token_buffer(lak::string_view<CHAR> data,
 		                    size_t max_size,
-		                    const lak::token<CHAR> &start)
-		: _source(data),
-		  _max_size(
-		    std::min(max_size, lak::span(start.source.begin(), data.end()).size()))
-		{
-			ASSERT_GREATER(_max_size, 0);
-			_buffer.reserve(_max_size);
-			_buffer_token.source   = start.source.first(0);
-			_buffer_token.position = {start.position.begin, start.position.begin};
+		                    const lak::token<CHAR> &start);
 
-			// Prefill up to _max_size characters into the buffer.
-			while (_buffer.size() < _max_size) ++*this;
-		}
+		inline lak::u32string_view buffer() const;
 
-		inline lak::u32string_view buffer() const
-		{
-			return lak::string_view(lak::span(_buffer));
-		}
+		inline lak::string_view<CHAR> source() const;
 
-		inline lak::string_view<CHAR> source() const
-		{
-			return _buffer_token.source;
-		}
-
-		inline const lak::token_position &position() const
-		{
-			return _buffer_token.position;
-		}
+		inline const lak::token_position &position() const;
 
 		std::optional<lak::token<CHAR>> match(
 		  lak::span<const lak::u32string> operators,
@@ -161,25 +128,7 @@ namespace lak
 
 	public:
 		inline tokeniser(lak::string_view<CHAR> str,
-		                 lak::array<lak::u32string> operators) noexcept
-		: _data(str), _operators(lak::move(operators)), _longest_operator(0)
-		{
-			for (auto it = _operators.begin(); it != _operators.end();)
-			{
-				if (it->empty())
-				{
-					WARNING("Empty operator (", it - _operators.begin(), ")");
-					it = _operators.erase(it);
-				}
-				else
-					++it;
-			}
-
-			for (const auto &op : _operators)
-				if (op.size() > _longest_operator) _longest_operator = op.size();
-
-			reset();
-		}
+		                 lak::array<lak::u32string> operators) noexcept;
 
 		inline iterator begin() noexcept { return *this; }
 
@@ -259,14 +208,6 @@ namespace lak
 	LAK_TYPEDEF_FOREACH_CHAR(token_buffer)
 	LAK_TYPEDEF_FOREACH_CHAR(tokeniser)
 }
-
-std::ostream &operator<<(std::ostream &strm,
-                         const lak::codepoint_position &pos);
-
-std::ostream &operator<<(std::ostream &strm, const lak::token_position &pos);
-
-template<typename CHAR>
-std::ostream &operator<<(std::ostream &strm, const lak::token<CHAR> &token);
 
 template<typename CHAR>
 struct std::tuple_size<lak::token<CHAR>>

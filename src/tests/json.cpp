@@ -45,7 +45,7 @@ BEGIN_TEST(json_object)
 		  ++loop_count;
 	  });
 
-	ASSERT_EQUAL(loop_count, 2);
+	ASSERT_EQUAL(loop_count, 2U);
 
 	return 0;
 }
@@ -75,7 +75,7 @@ BEGIN_TEST(json_array)
 		  ++loop_count;
 	  });
 
-	ASSERT_EQUAL(loop_count, 4);
+	ASSERT_EQUAL(loop_count, 4U);
 
 	return 0;
 }
@@ -141,7 +141,7 @@ BEGIN_TEST(json_unsigned_number)
 
 	ASSERT_EQUAL(
 	  result.value().UNWRAP().get_number().UNWRAP().unsigned_integer().UNWRAP(),
-	  100);
+	  100U);
 
 	return 0;
 }
@@ -218,7 +218,7 @@ BEGIN_TEST(json_complex)
 			                 .UNWRAP()
 			                 .unsigned_integer()
 			                 .UNWRAP(),
-			               100);
+			               100U);
 			  ASSERT_EQUAL(obj[u8"int"_view]
 			                 .UNWRAP()
 			                 .get_number()
@@ -237,7 +237,7 @@ BEGIN_TEST(json_complex)
 		  ++loop_count;
 	  });
 
-	ASSERT_EQUAL(loop_count, 3);
+	ASSERT_EQUAL(loop_count, 3U);
 
 	return 0;
 }

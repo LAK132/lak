@@ -160,7 +160,8 @@ namespace lak
 			data.resize(new_size);
 			ASSERT_EQUAL(data.size(), new_size);
 			lak::to_bytes<T, E>(
-			  lak::span(data).last<lak::to_bytes_traits<T, E>::size>(), value);
+			  lak::span(data).template last<lak::to_bytes_traits<T, E>::size>(),
+			  value);
 		}
 
 		template<typename T, lak::endian E = lak::endian::little>
@@ -178,7 +179,8 @@ namespace lak
 			for (const value_type &value : values)
 			{
 				lak::to_bytes<value_type, E>(
-				  bytes.first<lak::to_bytes_traits<value_type, E>::size>(), value);
+				  bytes.template first<lak::to_bytes_traits<value_type, E>::size>(),
+				  value);
 				bytes = bytes.subspan(lak::to_bytes_traits<value_type, E>::size);
 			}
 		}
@@ -196,11 +198,11 @@ namespace lak
 			for (const CHAR &value : values)
 			{
 				lak::to_bytes<CHAR, E>(
-				  bytes.first<lak::to_bytes_traits<CHAR, E>::size>(), value);
+				  bytes.template first<lak::to_bytes_traits<CHAR, E>::size>(), value);
 				bytes = bytes.subspan(lak::to_bytes_traits<CHAR, E>::size);
 			}
 			lak::to_bytes<CHAR, E>(
-			  bytes.first<lak::to_bytes_traits<CHAR, E>::size>(), CHAR(0));
+			  bytes.template first<lak::to_bytes_traits<CHAR, E>::size>(), CHAR(0));
 		}
 
 #define BINARY_ARRAY_WRITER_MEMBERS(TYPE, NAME, ...)                          \

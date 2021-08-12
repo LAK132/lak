@@ -2,6 +2,7 @@
 #define LAK_TYPE_TRAITS
 
 #include "lak/macro_utils.hpp"
+#include "lak/stdint.hpp"
 
 #define TEMPLATE_VALUE_TYPE(NAME, TEMPL_TYPE, VAL_TYPE)                       \
 	template<TEMPL_TYPE T>                                                      \

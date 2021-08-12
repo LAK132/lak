@@ -25,13 +25,6 @@ bool lak::codepoint_position::operator!=(
 	return !operator==(other);
 }
 
-std::ostream &operator<<(std::ostream &strm,
-                         const lak::codepoint_position &pos)
-{
-	return strm << std::dec << "{line: " << pos.line
-	            << ", column: " << pos.column << "}";
-}
-
 bool lak::token_position::operator==(const lak::token_position &other) const
 {
 	return begin == other.begin && end == other.end;
@@ -40,12 +33,6 @@ bool lak::token_position::operator==(const lak::token_position &other) const
 bool lak::token_position::operator!=(const lak::token_position &other) const
 {
 	return !operator==(other);
-}
-
-std::ostream &operator<<(std::ostream &strm, const lak::token_position &pos)
-{
-	return strm << std::dec << "{begin: " << pos.begin << ", end: " << pos.end
-	            << "}";
 }
 
 LAK_TEMPLATE_FOREACH_CHAR(lak::token)

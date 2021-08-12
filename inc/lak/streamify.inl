@@ -3,7 +3,11 @@
 #include "lak/string_view.hpp"
 #include "lak/type_traits.hpp"
 
+#include "lak/unicode.hpp"
+
 #include <ios>
+#include <ostream>
+#include <sstream>
 
 template<typename... ARGS>
 lak::u8string lak::streamify(const ARGS &...args)
@@ -30,9 +34,7 @@ lak::u8string lak::streamify(const ARGS &...args)
 		}
 		else
 		{
-			if constexpr (lak::is_span_v<arg_t>)
-				::operator<<(strm, arg);
-			else if constexpr (std::is_null_pointer_v<arg_t>)
+			if constexpr (std::is_null_pointer_v<arg_t>)
 				strm << "nullptr";
 			else if constexpr (lak::is_string_v<lak::remove_cvref_t<arg_t>>)
 			{

@@ -6,7 +6,7 @@
 
 uint8_t lak::character_length(lak::string_view<char> str)
 {
-	if (str.size() >= 1 && str[0] <= 0x7F)
+	if (str.size() >= 1 && static_cast<unsigned char>(str[0]) <= 0x7FU)
 	{
 		return 1;
 	}
@@ -100,7 +100,7 @@ uint8_t lak::character_length(lak::string_view<char32_t> str)
 
 char32_t lak::codepoint(lak::string_view<char> str)
 {
-	if (str.size() >= 1 && static_cast<const unsigned char>(str[0]) < 0x80)
+	if (str.size() >= 1 && static_cast<unsigned char>(str[0]) < 0x80)
 	{
 		return str[0];
 	}

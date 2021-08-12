@@ -19,9 +19,9 @@ int lak::run_tests(lak::u8string_view tests)
 		lak::scoped_indenter indent(u8"testing " + test);
 		const int result = func();
 		if (result == 0)
-			lak::debugger.std_out(u8"", LAK_GREEN "PASSED" LAK_SGR_RESET "\n");
+			lak::debugger.std_out(u8"", u8"" LAK_GREEN "PASSED" LAK_SGR_RESET "\n");
 		else
-			lak::debugger.std_err(u8"", LAK_RED "FAILED" LAK_SGR_RESET "\n");
+			lak::debugger.std_err(u8"", u8"" LAK_RED "FAILED" LAK_SGR_RESET "\n");
 		return result;
 	};
 
@@ -55,7 +55,8 @@ int lak::run_tests(lak::u8string_view tests)
 			if (int result = run_test(do_test, func); result != 0) return result;
 	}
 
-	std::cout << LAK_GREEN "All tests passed" LAK_SGR_RESET "\n";
+	lak::debugger.std_out(u8"",
+	                      u8"" LAK_GREEN "All tests passed" LAK_SGR_RESET "\n");
 
 	return EXIT_SUCCESS;
 }

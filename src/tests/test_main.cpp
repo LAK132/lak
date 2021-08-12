@@ -13,14 +13,14 @@ int LAK_TEST_MAIN(int argc, char **argv)
 		std::cout << "options:\n"
 		             "-help: print this text\n"
 		             "-testall: run all registered tests\n"
-		             "-tests \"test1;test2\": run the specified tests\n";
+		             "-test[s] \"test1;test2\": run the specified tests\n";
 		return argc < 2 ? EXIT_FAILURE : EXIT_SUCCESS;
 	}
 	else if (argv[1] == "-testall"_str)
 	{
 		return lak::run_tests();
 	}
-	else if (argv[1] == "-tests"_str)
+	else if (argv[1] == "-tests"_str || argv[1] == "-test"_str)
 	{
 		if (argc < 3) FATAL("Missing tests");
 		return lak::run_tests(

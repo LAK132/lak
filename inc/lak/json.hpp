@@ -74,7 +74,7 @@ namespace lak
 			}
 
 		public:
-			inline number number() { return _number; }
+			inline number as_number() { return _number; }
 
 			inline bool is_unsigned_integer() { return _number.holds<uintmax_t>(); }
 			inline bool is_signed_integer() { return _number.holds<intmax_t>(); }

@@ -26,22 +26,21 @@ if cxx.get_id() == 'msvc'
     '-wd4366',
   ]
 
-  cplusplus = cxx.get_define(
-    '__cplusplus',
-    args: project_args + ['-std:' + version],
-  )
+  macro_test_args = project_args + ['-std:' + version]
+
 else
-  version = 'c++20'
+  version = 'c++2a'
 
   project_args = [
     '-Wfatal-errors',
+    '-mavx',
   ]
 
-  cplusplus = cxx.get_define(
-    '__cplusplus',
-    args: project_args + ['-std=' + version],
-  )
+  macro_test_args = project_args + ['-std=' + version]
+
 endif
+
+cplusplus = cxx.get_define('__cplusplus', args: macro_test_args)
 
 if cxx.compute_int(cplusplus) < 202002
   error('C++ version insufficient, expected 202002L got ' + cplusplus)

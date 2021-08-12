@@ -3,7 +3,7 @@
 #include "lak/os.hpp"
 #include "lak/span.hpp"
 
-#include "wrapper.hpp"
+#include "../posix/wrapper.hpp"
 
 lak::page_result_t<> lak::page_decommit(lak::span<void> pages)
 {
@@ -13,5 +13,6 @@ lak::page_result_t<> lak::page_decommit(lak::span<void> pages)
 	    [&](auto &&) {
 		    return lak::posix::madvise(pages.data(), pages.size(), MADV_DONTNEED);
 	    })
-	  .map_err([](auto &&) -> lak::page_error { return {}; });
+	  .map_err([](auto &&) -> lak::page_error { return {}; })
+	  .map([](auto &&) -> lak::monostate { return {}; });
 }

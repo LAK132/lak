@@ -72,20 +72,28 @@ namespace lak
 
 		template<typename V                                           = T,
 		         lak::enable_if_i<lak::is_default_constructible_v<V>> = 0>
-		pack_union() : value(){};
+		pack_union() : value()
+		{
+		}
 
 		template<typename... ARGS>
 		force_inline pack_union(lak::in_place_index_t<0>, ARGS &&...args)
-		: value(lak::forward<ARGS>(args)...){};
+		: value(lak::forward<ARGS>(args)...)
+		{
+		}
 
 		template<size_t I,
 		         typename... ARGS,
 		         lak::enable_if_i<(I > 0 && I < size)> = 0>
 		force_inline pack_union(lak::in_place_index_t<I>, ARGS &&...args)
-		: next(lak::in_place_index<I - 1>, lak::forward<ARGS>(args)...){};
+		: next(lak::in_place_index<I - 1>, lak::forward<ARGS>(args)...)
+		{
+		}
 
 		force_inline pack_union(lak::uninitialised_union_flag_t)
-		: next(lak::uninitialised_union_flag){};
+		: next(lak::uninitialised_union_flag)
+		{
+		}
 
 		// union members must be manually destroyed by the user
 		~pack_union() {}
@@ -126,11 +134,15 @@ namespace lak
 
 		template<typename V                                           = T,
 		         lak::enable_if_i<lak::is_default_constructible_v<V>> = 0>
-		pack_union() : value(){};
+		pack_union() : value()
+		{
+		}
 
 		template<typename... ARGS>
 		pack_union(lak::in_place_index_t<0>, ARGS &&...args)
-		: value(lak::forward<ARGS>(args)...){};
+		: value(lak::forward<ARGS>(args)...)
+		{
+		}
 
 		pack_union(lak::uninitialised_union_flag_t);
 
@@ -186,23 +198,31 @@ namespace lak
 	public:
 		template<typename V = value_type<0>,
 		         lak::enable_if_i<lak::is_default_constructible_v<V>> = 0>
-		variant() : _index(0), _value(){};
+		variant() : _index(0), _value()
+		{
+		}
 
 		template<size_t I,
 		         typename... ARGS,
 		         lak::enable_if_i<(I < _size) && !_is_ref<I>> = 0>
 		variant(lak::in_place_index_t<I>, ARGS &&...args)
-		: _index(I), _value(lak::in_place_index<I>, lak::forward<ARGS>(args)...){};
+		: _index(I), _value(lak::in_place_index<I>, lak::forward<ARGS>(args)...)
+		{
+		}
 
 		template<size_t I,
 		         typename... ARGS,
 		         lak::enable_if_i<(I < _size) && _is_ref<I>> = 0>
 		variant(lak::in_place_index_t<I>, value_type<I> ref)
-		: _index(I), _value(lak::in_place_index<I>, &ref){};
+		: _index(I), _value(lak::in_place_index<I>, &ref)
+		{
+		}
 
 		template<size_t I, typename U>
 		variant(lak::_var_t<I, U> var)
-		: variant(lak::in_place_index<I>, lak::forward<U>(var.value)){};
+		: variant(lak::in_place_index<I>, lak::forward<U>(var.value))
+		{
+		}
 
 		variant(const variant &other);
 
@@ -222,10 +242,10 @@ namespace lak
 
 		size_t index() const { return _index; }
 
-		template<typename T>
+		template<typename U>
 		bool holds() const
 		{
-			return _index == index_of<T>;
+			return _index == index_of<U>;
 		}
 
 		constexpr size_t size() const { return _size; }

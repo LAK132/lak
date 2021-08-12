@@ -1,5 +1,6 @@
 #include "lak/math.hpp"
 
+#include <cfloat>
 #include <cmath>
 #include <limits>
 
