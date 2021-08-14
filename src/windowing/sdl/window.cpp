@@ -5,7 +5,7 @@
 #	define LAK_USE_SDL
 #endif
 
-#include <SDL.h>
+#include <SDL2/SDL.h>
 
 #include <GL/gl3w.h>
 

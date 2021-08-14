@@ -2,7 +2,7 @@
 #	ifndef SDL_MAIN_HANDLED
 #		error SDL_MAIN_HANDLED must be defined globally
 #	endif
-#	include <SDL.h>
+#	include <SDL2/SDL.h>
 #endif
 
 #include "lak/opengl/state.hpp"
