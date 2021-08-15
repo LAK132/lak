@@ -202,18 +202,16 @@ namespace lak
 		{
 		}
 
-		template<size_t I,
-		         typename... ARGS,
-		         lak::enable_if_i<(I < _size) && !_is_ref<I>> = 0>
-		variant(lak::in_place_index_t<I>, ARGS &&...args)
+		template<size_t I, typename... ARGS>
+		requires((I < _size) && !_is_ref<I>) //
+		  variant(lak::in_place_index_t<I>, ARGS &&...args)
 		: _index(I), _value(lak::in_place_index<I>, lak::forward<ARGS>(args)...)
 		{
 		}
 
-		template<size_t I,
-		         typename... ARGS,
-		         lak::enable_if_i<(I < _size) && _is_ref<I>> = 0>
-		variant(lak::in_place_index_t<I>, value_type<I> ref)
+		template<size_t I, typename... ARGS>
+		requires((I < _size) && _is_ref<I>) //
+		  variant(lak::in_place_index_t<I>, value_type<I> ref)
 		: _index(I), _value(lak::in_place_index<I>, &ref)
 		{
 		}
@@ -221,6 +219,18 @@ namespace lak
 		template<size_t I, typename U>
 		variant(lak::_var_t<I, U> var)
 		: variant(lak::in_place_index<I>, lak::forward<U>(var.value))
+		{
+		}
+
+		template<lak::concepts::one_of<T...> U>
+		variant(const U &val)
+		: variant(lak::in_place_index<variant::index_of<U>>, val)
+		{
+		}
+
+		template<lak::concepts::one_of<T...> U>
+		variant(U &&val)
+		: variant(lak::in_place_index<variant::index_of<U>>, lak::forward<U>(val))
 		{
 		}
 
