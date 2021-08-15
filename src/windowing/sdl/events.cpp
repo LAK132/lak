@@ -228,6 +228,27 @@ void translate_event(const SDL_Event &sdl_event,
 		}
 		break;
 
+		case SDL_DROPFILE:
+		{
+			*event = lak::event(
+			  lak::event_type::dropfile,
+			  window,
+			  lak::move(platform_event),
+			  lak::dropfile_event{
+			    .position = lak::vec2l_t{} /* :TODO: get the cursor position */,
+			    .path =
+			      lak::u8string(reinterpret_cast<char8_t *>(sdl_event.drop.file))});
+			SDL_free(sdl_event.drop.file);
+		}
+		break;
+
+		case SDL_DROPTEXT:
+		{
+			SDL_free(sdl_event.drop.file);
+		}
+			[[fallthrough]];
+		case SDL_DROPBEGIN: [[fallthrough]];
+		case SDL_DROPCOMPLETE: [[fallthrough]];
 		default:
 		{
 			*event = lak::event(

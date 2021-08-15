@@ -48,7 +48,7 @@ namespace lak
 		SDL_Window *sdl_window = NULL;
 		lak::graphics_context gc;
 
-		lak::graphics_mode graphics_mode() const
+		inline lak::graphics_mode graphics_mode() const
 		{
 			switch (gc.index())
 			{
@@ -60,19 +60,19 @@ namespace lak
 			}
 		}
 
-		const lak::software_context &software_context() const
+		inline const lak::software_context &software_context() const
 		{
 			ASSERT_EQUAL(graphics_mode(), lak::graphics_mode::Software);
 			return std::get<lak::software_context>(gc);
 		}
 
-		const lak::opengl_context &opengl_context() const
+		inline const lak::opengl_context &opengl_context() const
 		{
 			ASSERT_EQUAL(graphics_mode(), lak::graphics_mode::OpenGL);
 			return std::get<lak::opengl_context>(gc);
 		}
 
-		const lak::vulkan_context &vulkan_context() const
+		inline const lak::vulkan_context &vulkan_context() const
 		{
 			ASSERT_EQUAL(graphics_mode(), lak::graphics_mode::Vulkan);
 			return std::get<lak::vulkan_context>(gc);

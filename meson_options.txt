@@ -7,8 +7,14 @@ option(
 
 option(
   'lak_backend',
-  type: 'string',
+  type: 'combo',
+  choices: [
+    'win32',
+    'xlib',
+    'xcb',
+    'sdl',
+    'qt',
+  ],
   value: 'sdl',
   yield: true,
-  description: 'win32|xlib|xcb|sdl|qt',
 )

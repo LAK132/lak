@@ -51,7 +51,7 @@ namespace lak
 	struct dropfile_event
 	{
 		lak::vec2l_t position;
-		std::wstring path;
+		std::u8string path;
 	};
 
 	enum struct mod_key : uint32_t
