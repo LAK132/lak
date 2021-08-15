@@ -17,6 +17,11 @@ namespace lak
 		template<typename T, typename U>
 		concept same_as = lak::is_same_v<T, U>;
 
+		/* --- one_of --- */
+
+		template<typename T, typename... U>
+		concept one_of = ((lak::is_same_v<T, U>) || ...);
+
 		/* --- void_type --- */
 
 		template<typename T>
