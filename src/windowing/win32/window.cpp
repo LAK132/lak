@@ -1,14 +1,18 @@
-#include "platform.hpp"
+// begin weird include ordering
+#include "lak/opengl/gl3w.hpp"
 
 #include <GL/GL.h>
-#include <GL/gl3w.h>
+
+#include "lak/windows.hpp"
+// end weird include ordering
 
 #include "lak/debug.hpp"
 #include "lak/defer.hpp"
 #include "lak/image.hpp"
-#include "lak/window.hpp"
 
-void win32_error_popup(LPWSTR lpszFunction);
+#include "impl.hpp"
+
+void win32_error_popup(LPCWSTR lpszFunction);
 
 // template<typename COLOUR>
 // void init_bitmap_info(lak::software_context &context)
@@ -33,36 +37,33 @@ void win32_error_popup(LPWSTR lpszFunction);
 //   }
 // }
 
-lak::window_handle *lak::create_window(const lak::platform_instance &instance,
-                                       const lak::software_settings &settings)
+lak::window_handle *lak::create_window(const lak::software_settings &)
 {
 	auto handle = lak::unique_bank_ptr<lak::window_handle>::create();
 	ASSERT(handle);
 
-	DEFER(if (handle) lak::destroy_window(instance, handle.get()));
-
-	handle->_instance = &instance;
+	DEFER(if (handle) lak::destroy_window(handle.get()));
 
 	DWORD style = WS_OVERLAPPEDWINDOW;
 
 	// CS_OWNDC means that each window has its own unique HDC that doesn't need
 	// to be released.
-	ASSERT((instance.window_class.style & CS_OWNDC) != 0);
+	ASSERT((lak::_platform_instance->window_class.style & CS_OWNDC) != 0);
 
-	handle->_platform_handle =
-	  ::CreateWindowExW(0,                                   /* styles */
-	                    instance.window_class.lpszClassName, /* class name */
-	                    L"insert window name here",          /* window name */
-	                    style,                               /* style */
-	                    CW_USEDEFAULT,                       /* x */
-	                    CW_USEDEFAULT,                       /* y */
-	                    720,                                 /* width */
-	                    480,                                 /* height */
-	                    nullptr,                             /* parent */
-	                    nullptr,                             /* menu */
-	                    instance.handle,                     /* hInstance */
-	                    handle.get()                         /* user data */
-	  );
+	handle->_platform_handle = ::CreateWindowExW(
+	  0,                                                   /* styles */
+	  lak::_platform_instance->window_class.lpszClassName, /* class name */
+	  L"insert window name here",                          /* window name */
+	  style,                                               /* style */
+	  CW_USEDEFAULT,                                       /* x */
+	  CW_USEDEFAULT,                                       /* y */
+	  720,                                                 /* width */
+	  480,                                                 /* height */
+	  nullptr,                                             /* parent */
+	  nullptr,                                             /* menu */
+	  lak::_platform_instance->handle,                     /* hInstance */
+	  handle.get()                                         /* user data */
+	);
 
 	if (!handle->_platform_handle)
 	{
@@ -84,7 +85,7 @@ lak::window_handle *lak::create_window(const lak::platform_instance &instance,
 	}
 
 	// this is also touched in handle_size_move
-	auto &context  = handle->_context.emplace<lak::software_context>();
+	auto &context  = handle->gc.emplace<lak::software_context>();
 	using colour_t = typename decltype(context.platform_handle)::value_type;
 	context.platform_handle.resize({720, 480});
 	ASSERT(context.platform_handle.contig_size_bytes() > 0);
@@ -132,36 +133,33 @@ lak::window_handle *lak::create_window(const lak::platform_instance &instance,
 	return handle.release();
 }
 
-lak::window_handle *lak::create_window(const lak::platform_instance &instance,
-                                       const lak::opengl_settings &settings)
+lak::window_handle *lak::create_window(const lak::opengl_settings &settings)
 {
 	auto handle = lak::unique_bank_ptr<lak::window_handle>::create();
 	ASSERT(handle);
 
-	DEFER(if (handle) lak::destroy_window(instance, handle.get()));
-
-	handle->_instance = &instance;
+	DEFER(if (handle) lak::destroy_window(handle.get()));
 
 	DWORD style = WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN | WS_CLIPSIBLINGS;
 
 	// CS_OWNDC means that each window has its own unique HDC that doesn't need
 	// to be released.
-	ASSERT((instance.window_class.style & CS_OWNDC) != 0);
+	ASSERT((lak::_platform_instance->window_class.style & CS_OWNDC) != 0);
 
-	handle->_platform_handle =
-	  ::CreateWindowExW(0,                                   /* styles */
-	                    instance.window_class.lpszClassName, /* class name */
-	                    L"insert window name here",          /* window name */
-	                    style,                               /* style */
-	                    CW_USEDEFAULT,                       /* x */
-	                    CW_USEDEFAULT,                       /* y */
-	                    720,                                 /* width */
-	                    480,                                 /* height */
-	                    nullptr,                             /* parent */
-	                    nullptr,                             /* menu */
-	                    instance.handle,                     /* hInstance */
-	                    handle.get()                         /* user data */
-	  );
+	handle->_platform_handle = ::CreateWindowExW(
+	  0,                                                   /* styles */
+	  lak::_platform_instance->window_class.lpszClassName, /* class name */
+	  L"insert window name here",                          /* window name */
+	  style,                                               /* style */
+	  CW_USEDEFAULT,                                       /* x */
+	  CW_USEDEFAULT,                                       /* y */
+	  720,                                                 /* width */
+	  480,                                                 /* height */
+	  nullptr,                                             /* parent */
+	  nullptr,                                             /* menu */
+	  lak::_platform_instance->handle,                     /* hInstance */
+	  handle.get()                                         /* user data */
+	);
 
 	if (!handle->_platform_handle)
 	{
@@ -182,11 +180,12 @@ lak::window_handle *lak::create_window(const lak::platform_instance &instance,
 	PIXELFORMATDESCRIPTOR format = {};
 	format.nSize                 = sizeof(PIXELFORMATDESCRIPTOR);
 	format.nVersion              = 1;
-	format.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER;
+	format.dwFlags               = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL |
+	                 (settings.double_buffered ? PFD_DOUBLEBUFFER : 0);
 	format.iPixelType   = PFD_TYPE_RGBA;
-	format.cColorBits   = 32;
-	format.cDepthBits   = 24;
-	format.cStencilBits = 8;
+	format.cColorBits   = settings.colour_size * 4;
+	format.cDepthBits   = settings.depth_size;
+	format.cStencilBits = settings.stencil_size;
 	format.iLayerType   = PFD_MAIN_PLANE;
 
 	int iformat = ::ChoosePixelFormat(handle->_device_context, &format);
@@ -200,8 +199,9 @@ lak::window_handle *lak::create_window(const lak::platform_instance &instance,
 
 	::SetPixelFormat(handle->_device_context, iformat, &format);
 
-	auto &context           = handle->_context.emplace<lak::opengl_context>();
+	auto &context           = handle->gc.emplace<lak::opengl_context>();
 	context.platform_handle = ::wglCreateContext(handle->_device_context);
+	// :TODO: check context version against settings version
 
 	if (!context.platform_handle)
 	{
@@ -222,36 +222,33 @@ lak::window_handle *lak::create_window(const lak::platform_instance &instance,
 	return handle.release();
 }
 
-lak::window_handle *lak::create_window(const lak::platform_instance &instance,
-                                       const lak::vulkan_settings &settings)
+lak::window_handle *lak::create_window(const lak::vulkan_settings &)
 {
 	auto handle = lak::unique_bank_ptr<lak::window_handle>::create();
 	ASSERT(handle);
 
-	DEFER(if (handle) lak::destroy_window(instance, handle.get()));
-
-	handle->_instance = &instance;
+	DEFER(if (handle) lak::destroy_window(handle.get()));
 
 	DWORD style = WS_OVERLAPPEDWINDOW;
 
 	// CS_OWNDC means that each window has its own unique HDC that doesn't need
 	// to be released.
-	ASSERT((instance.window_class.style & CS_OWNDC) != 0);
+	ASSERT((lak::_platform_instance->window_class.style & CS_OWNDC) != 0);
 
-	handle->_platform_handle =
-	  ::CreateWindowExW(0,                                   /* styles */
-	                    instance.window_class.lpszClassName, /* class name */
-	                    L"insert window name here",          /* window name */
-	                    style,                               /* style */
-	                    CW_USEDEFAULT,                       /* x */
-	                    CW_USEDEFAULT,                       /* y */
-	                    720,                                 /* width */
-	                    480,                                 /* height */
-	                    nullptr,                             /* parent */
-	                    nullptr,                             /* menu */
-	                    instance.handle,                     /* hInstance */
-	                    handle.get()                         /* user data */
-	  );
+	handle->_platform_handle = ::CreateWindowExW(
+	  0,                                                   /* styles */
+	  lak::_platform_instance->window_class.lpszClassName, /* class name */
+	  L"insert window name here",                          /* window name */
+	  style,                                               /* style */
+	  CW_USEDEFAULT,                                       /* x */
+	  CW_USEDEFAULT,                                       /* y */
+	  720,                                                 /* width */
+	  480,                                                 /* height */
+	  nullptr,                                             /* parent */
+	  nullptr,                                             /* menu */
+	  lak::_platform_instance->handle,                     /* hInstance */
+	  handle.get()                                         /* user data */
+	);
 
 	if (!handle->_platform_handle)
 	{
@@ -276,8 +273,7 @@ lak::window_handle *lak::create_window(const lak::platform_instance &instance,
 	return handle.release();
 }
 
-bool lak::destroy_window(const lak::platform_instance &instance,
-                         lak::window_handle *handle)
+bool lak::destroy_window(lak::window_handle *handle)
 {
 	ASSERT(handle);
 
@@ -300,17 +296,16 @@ bool lak::destroy_window(const lak::platform_instance &instance,
 			auto &context = handle->opengl_context();
 			if (context.platform_handle)
 			{
-				// wglMakeCurrent(context.device_context, NULL) isn't needed here as we
-				// aren't crossing threads.
+				// wglMakeCurrent(context.device_context, NULL) isn't needed here as
+				// we aren't crossing threads.
 				::wglDeleteContext(context.platform_handle);
 			}
 		}
 		break;
 	}
 
-	handle->_context.emplace<std::monostate>();
+	handle->gc.emplace<std::monostate>();
 	handle->_platform_handle = NULL;
-	handle->_instance        = nullptr;
 
 	lak::bank<lak::window_handle>::destroy(handle);
 
@@ -319,33 +314,33 @@ bool lak::destroy_window(const lak::platform_instance &instance,
 
 /* --- OpenGL --- */
 
-// :TODO: Actually put this in a header somewhere.
-bool lak::set_opengl_swap_interval(const lak::opengl_context &context,
-                                   int interval)
+lak::graphics_mode lak::window_graphics_mode(const lak::window_handle *w)
+{
+	return w->graphics_mode();
+}
+
+bool lak::set_opengl_swap_interval(const lak::opengl_context &, int interval)
 {
 	return has_swap_control && wglSwapIntervalEXT(interval);
 }
 
 /* --- Window helper functions --- */
 
-lak::wstring lak::window_title(const lak::platform_instance &instance,
-                               const lak::window_handle *handle)
+lak::wstring lak::window_title(const lak::window_handle *handle)
 {
 	std::vector<wchar_t> str;
 	str.resize(::GetWindowTextLengthW(handle->_platform_handle) + 1);
-	::GetWindowTextW(handle->_platform_handle, str.data(), str.size());
+	::GetWindowTextW(
+	  handle->_platform_handle, str.data(), static_cast<int>(str.size()));
 	return lak::wstring(str.begin(), str.end());
 }
 
-bool lak::set_window_title(const lak::platform_instance &instance,
-                           lak::window_handle *handle,
-                           const lak::wstring &str)
+bool lak::set_window_title(lak::window_handle *handle, const lak::wstring &str)
 {
 	return ::SetWindowTextW(handle->_platform_handle, str.c_str());
 }
 
-lak::vec2l_t lak::window_size(const lak::platform_instance &instance,
-                              const lak::window_handle *handle)
+lak::vec2l_t lak::window_size(const lak::window_handle *handle)
 {
 	RECT rect;
 	ASSERT(::GetWindowRect(handle->_platform_handle, &rect));
@@ -353,8 +348,7 @@ lak::vec2l_t lak::window_size(const lak::platform_instance &instance,
 	                    std::max(0L, rect.bottom - rect.top)};
 }
 
-lak::vec2l_t lak::window_drawable_size(const lak::platform_instance &instance,
-                                       const lak::window_handle *handle)
+lak::vec2l_t lak::window_drawable_size(const lak::window_handle *handle)
 {
 	RECT rect;
 	ASSERT(::GetClientRect(handle->_platform_handle, &rect));
@@ -362,9 +356,7 @@ lak::vec2l_t lak::window_drawable_size(const lak::platform_instance &instance,
 	                    std::max(0L, rect.bottom - rect.top)};
 }
 
-bool lak::set_window_size(const lak::platform_instance &instance,
-                          lak::window_handle *handle,
-                          lak::vec2l_t size)
+bool lak::set_window_size(lak::window_handle *handle, lak::vec2l_t size)
 {
 	RECT rect;
 	return ::GetWindowRect(handle->_platform_handle, &rect) &&
@@ -376,8 +368,7 @@ bool lak::set_window_size(const lak::platform_instance &instance,
 	                    TRUE);
 }
 
-bool lak::set_window_cursor_pos(const lak::platform_instance &instance,
-                                const lak::window_handle *handle,
+bool lak::set_window_cursor_pos(const lak::window_handle *handle,
                                 lak::vec2l_t pos)
 {
 	ASSERT(pos.x < INT_MAX && pos.x > INT_MIN);
@@ -387,8 +378,7 @@ bool lak::set_window_cursor_pos(const lak::platform_instance &instance,
 	       ::SetCursorPos(relative.x, relative.y);
 }
 
-bool lak::swap_window(const lak::platform_instance &instance,
-                      lak::window_handle *handle)
+bool lak::swap_window(lak::window_handle *handle)
 {
 	switch (handle->graphics_mode())
 	{
@@ -411,3 +401,5 @@ bool lak::swap_window(const lak::platform_instance &instance,
 		default: return false;
 	}
 }
+
+#include "../common/window.inl"

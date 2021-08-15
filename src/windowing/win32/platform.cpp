@@ -1,12 +1,12 @@
-#include "platform.hpp"
-
 #include "lak/debug.hpp"
 #include "lak/image.hpp"
 #include "lak/memmanip.hpp"
-#include "lak/platform.hpp"
 #include "lak/strconv.hpp"
 #include "lak/string_view.hpp"
-#include "lak/window.hpp"
+
+#include "impl.hpp"
+
+#include <thread>
 
 lak::wstring win32_error_string(LPCWSTR lpszFunction);
 void win32_error_popup(LPCWSTR lpszFunction);
@@ -14,19 +14,25 @@ void win32_error_popup(LPCWSTR lpszFunction);
 EXTERN_C IMAGE_DOS_HEADER __ImageBase;
 #define HINST_THISCOMPONENT ((HINSTANCE)&__ImageBase)
 
-#include <strsafe.h>
-// https://docs.microsoft.com/en-us/windows/win32/debug/retrieving-the-last-error-code
-
-#include <thread>
+PFNWGLGETEXTENSIONSSTRINGARB wglGetExtensionsStringARB       = nullptr;
+bool has_pixel_format                                        = false;
+PFNWGLCHOOSEPIXELFORMATARB wglChoosePixelFormatARB           = nullptr;
+PFNWGLGETPIXELFORMATATTRIBIVARB wglGetPixelFormatAttribivARB = nullptr;
+bool has_swap_control                                        = false;
+bool has_swap_control_tear                                   = false;
+PFNWGLGETPIXELFORMATATTRIBFVARB wglGetPixelFormatAttribfvARB = nullptr;
+PFNWGLSWAPINTERVALEXT wglSwapIntervalEXT                     = nullptr;
+PFNWGLGETSWAPINTERVALEXT wglGetSwapIntervalEXT               = nullptr;
 
 template<typename TO, typename FROM>
 bool set_bits(HBITMAP hBitmap, lak::image_view<FROM> image)
 {
-	lak::image<TO, true> bitmap_pixels(image.size());
+	lak::image<TO> bitmap_pixels(image.size());
 	lak::blit(lak::image_subview(bitmap_pixels), lak::image_subview(image));
-	return ::SetBitmapBits(
-	         hBitmap, bitmap_pixels.contig_size_bytes(), bitmap_pixels.data()) ==
-	       bitmap_pixels.contig_size_bytes();
+	return static_cast<size_t>(::SetBitmapBits(
+	         hBitmap,
+	         static_cast<DWORD>(bitmap_pixels.contig_size_bytes()),
+	         bitmap_pixels.data())) == bitmap_pixels.contig_size_bytes();
 }
 
 template<typename COLOUR>
@@ -91,8 +97,8 @@ bool paint_image(HWND hWnd, lak::image_view<COLOUR> image)
 	DEFER(::DeleteDC(memDC));
 
 	// :NOTE: not using memDC here, that would create a monochrome bitmap
-	HBITMAP hBitmap =
-	  ::CreateCompatibleBitmap(hDC, image.size().x, image.size().y);
+	HBITMAP hBitmap = ::CreateCompatibleBitmap(
+	  hDC, static_cast<int>(image.size().x), static_cast<int>(image.size().y));
 	if (!hBitmap)
 	{
 		ERROR(win32_error_string(L"CreateCompatibleBitmap"));
@@ -153,15 +159,15 @@ bool paint_image(HWND hWnd, lak::image_view<COLOUR> image)
 		return false;
 	}
 
-	return BitBlt(hDC,            /* destination device context handle */
-	              0,              /* destination x */
-	              0,              /* destination y */
-	              image.size().x, /* destination width */
-	              image.size().y, /* destination height */
-	              memDC,          /* source device context handle */
-	              0,              /* source x */
-	              0,              /* source y */
-	              SRCCOPY         /* raster-operation */
+	return BitBlt(hDC, /* destination device context handle */
+	              0,   /* destination x */
+	              0,   /* destination y */
+	              static_cast<int>(image.size().x), /* destination width */
+	              static_cast<int>(image.size().y), /* destination height */
+	              memDC,  /* source device context handle */
+	              0,      /* source x */
+	              0,      /* source y */
+	              SRCCOPY /* raster-operation */
 	              ) != 0;
 }
 
@@ -203,14 +209,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 			case WM_CREATE:
 			case WM_DESTROY:
 			case WM_WINDOWPOSCHANGED:
-				window->instance()->platform_events.push_back(
+				lak::_platform_instance->platform_events.push_back(
 				  MSG{hWnd, Msg, wParam, lParam});
 				return 0;
 
 			case WM_SYSCOMMAND:
 				if (WPARAM w = wParam & 0xFFF0; w == SC_MOVE || w == SC_SIZE)
 				{
-					window->instance()->platform_events.push_back(
+					lak::_platform_instance->platform_events.push_back(
 					  MSG{hWnd, Msg, wParam, lParam});
 					return 0;
 				}
@@ -241,33 +247,11 @@ lak::wstring win32_error_string(LPCWSTR lpszFunction)
 {
 	// Retrieve the system error message for the last-error code
 
-	DWORD dw = GetLastError();
+	DWORD dw = ::GetLastError();
 
-	LPWSTR lpMsgBuf;
-	FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM |
-	                 FORMAT_MESSAGE_IGNORE_INSERTS,           /* dwFlags */
-	               NULL,                                      /* lpSource */
-	               dw,                                        /* dwMessageId */
-	               MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), /* dwLanguageId */
-	               (LPWSTR)&lpMsgBuf,                         /* lpBuffer */
-	               0,                                         /* nSize */
-	               NULL                                       /* Arguments */
-	);
-	DEFER(::LocalFree(lpMsgBuf));
-
-	LPWSTR lpDisplayBuf = (LPWSTR)LocalAlloc(
-	  LMEM_ZEROINIT,
-	  (lstrlen(lpMsgBuf) + lstrlen(lpszFunction) + 40) * sizeof(WCHAR));
-	DEFER(::LocalFree(lpDisplayBuf));
-
-	StringCchPrintfW(lpDisplayBuf,
-	                 LocalSize(lpDisplayBuf) / sizeof(WCHAR),
-	                 L"%s failed with error %d: %s",
-	                 lpszFunction,
-	                 dw,
-	                 lpMsgBuf);
-
-	return lak::wstring(lpDisplayBuf);
+	return lak::wstring(lpszFunction) + L" failed with error " +
+	       lak::to_wstring(std::to_string(dw)) + L": " +
+	       lak::winapi::error_code_to_wstring(dw);
 }
 
 void win32_error_popup(LPCWSTR lpszFunction)
@@ -276,7 +260,7 @@ void win32_error_popup(LPCWSTR lpszFunction)
 	MessageBoxW(NULL, str.c_str(), L"Error", MB_OK);
 }
 
-bool init_opengl(lak::platform_instance *handle)
+bool init_opengl()
 {
 	return false;
 #if 0
@@ -403,23 +387,27 @@ bool init_opengl(lak::platform_instance *handle)
 #endif
 }
 
-bool lak::platform_init(lak::platform_instance *handle)
+bool lak::platform_init()
 {
-	lak::bzero(handle);
-	handle->handle = HINST_THISCOMPONENT;
+	lak::_platform_instance = new lak::platform_instance();
+	lak::bzero(lak::_platform_instance);
+	lak::_platform_instance->handle = HINST_THISCOMPONENT;
 
-	handle->window_class             = WNDCLASSW{};
-	handle->window_class.style       = CS_OWNDC;
-	handle->window_class.lpfnWndProc = &WndProc;
-	handle->window_class.hInstance   = handle->handle;
-	handle->window_class.hIcon   = LoadIconW(handle->handle, IDI_APPLICATION);
-	handle->window_class.hCursor = LoadCursorW(NULL, IDC_ARROW);
-	handle->window_class.lpszClassName = L"lak's window class";
+	lak::_platform_instance->window_class             = WNDCLASSW{};
+	lak::_platform_instance->window_class.style       = CS_OWNDC;
+	lak::_platform_instance->window_class.lpfnWndProc = &WndProc;
+	lak::_platform_instance->window_class.hInstance =
+	  lak::_platform_instance->handle;
+	lak::_platform_instance->window_class.hIcon =
+	  LoadIconW(lak::_platform_instance->handle, IDI_APPLICATION);
+	lak::_platform_instance->window_class.hCursor = LoadCursorW(NULL, IDC_ARROW);
+	lak::_platform_instance->window_class.lpszClassName = L"lak's window class";
 
-	handle->window_class_atom = RegisterClassW(&handle->window_class);
-	if (!handle->window_class_atom)
+	lak::_platform_instance->window_class_atom =
+	  RegisterClassW(&lak::_platform_instance->window_class);
+	if (!lak::_platform_instance->window_class_atom)
 	{
-		lak::bzero(handle);
+		delete lak::_platform_instance;
 		win32_error_popup(L"RegiserClassW");
 		// :TODO: get a proper error message from windows?
 		return false;
@@ -428,18 +416,19 @@ bool lak::platform_init(lak::platform_instance *handle)
 	return true;
 }
 
-bool lak::platform_quit(lak::platform_instance *handle)
+bool lak::platform_quit()
 {
-	if (!UnregisterClassW(handle->window_class.lpszClassName, handle->handle))
+	if (!UnregisterClassW(lak::_platform_instance->window_class.lpszClassName,
+	                      lak::_platform_instance->handle))
 	{
 		win32_error_popup(L"UnregisterClassW");
 		return false;
 	}
-	lak::bzero(handle);
+	delete lak::_platform_instance;
 	return true;
 }
 
-bool lak::get_clipboard(const lak::platform_instance &i, lak::u8string *s)
+bool lak::get_clipboard(lak::u8string *s)
 {
 	if (!OpenClipboard(NULL))
 	{
@@ -469,17 +458,19 @@ bool lak::get_clipboard(const lak::platform_instance &i, lak::u8string *s)
 	return true;
 }
 
-bool lak::set_clipboard(const lak::platform_instance &i, lak::u8string_view s)
+bool lak::set_clipboard(lak::u8string_view s)
 {
 	[&]() -> lak::winapi::result<lak::monostate>
 	{
 		std::wstring str = lak::to_wstring(s);
 
-		WINAPI_EXPECT(::OpenClipboard(NULL));
+		if (BOOL result = ::OpenClipboard(NULL); result == 0)
+			return lak::err_t{::GetLastError()};
 
 		DEFER(::CloseClipboard());
 
-		WINAPI_EXPECT(::EmptyClipboard());
+		if (BOOL result = ::EmptyClipboard(); result == 0)
+			return lak::err_t{::GetLastError()};
 
 		size_t size = (str.size() + 1) * sizeof(wchar_t);
 
@@ -491,44 +482,47 @@ bool lak::set_clipboard(const lak::platform_instance &i, lak::u8string_view s)
 			  wchar_t *data = (wchar_t *),
 			  lak::winapi::invoke_nullerr(::GlobalLock, clipboard_data));
 
-			DEFER(lak::winapi::invoke_bool<true>(::GlobalUnlock, clipboard_data)
-			        .EXPECT("GlobalUnlock failed"));
+			lak::memcpy(lak::span<char>(lak::span(data, size)),
+			            lak::span<const char>(lak::span(str.c_str(), size)));
 
-			std::memcpy(data, str.c_str(), size);
+			if (BOOL result = ::GlobalUnlock(clipboard_data);
+			    result == 0 && ::GetLastError() != NO_ERROR)
+				return lak::err_t{::GetLastError()};
 		}
 
-		return lak::winapi::invoke_bool<true>(
+		return lak::winapi::invoke_nullerr(
 		         ::SetClipboardData, CF_UNICODETEXT, clipboard_data)
-		  .map_err(
-		    [&](auto err)
+		  .map([](auto &&) -> lak::monostate { return lak::monostate{}; })
+		  .if_err(
+		    [&](auto &&)
 		    {
-			    lak::winapi::invoke_bool<true>(::GlobalFree, clipboard_data)
-			      .EXPECT("GlobalFree failed");
-			    return err;
+			    if (HGLOBAL result = ::GlobalFree(clipboard_data); result != NULL)
+				    lak::winapi::result<>::make_err(::GetLastError())
+				      .EXPECT("GlobalFree failed");
 		    });
 	}()
 	           .EXPECT("set_clipboard failed");
 	return true;
 }
 
-bool lak::cursor_visible(const lak::platform_instance &i)
+bool lak::cursor_visible()
 {
 	CURSORINFO info;
 	GetCursorInfo(&info);
 	return info.flags != 0;
 }
 
-void lak::show_cursor(const lak::platform_instance &i)
+void lak::show_cursor()
 {
-	if (!lak::cursor_visible(i)) ShowCursor(true);
+	if (!lak::cursor_visible()) ShowCursor(true);
 }
 
-void lak::hide_cursor(const lak::platform_instance &i)
+void lak::hide_cursor()
 {
-	if (lak::cursor_visible(i)) ShowCursor(false);
+	if (lak::cursor_visible()) ShowCursor(false);
 }
 
-void lak::set_cursor_pos(const lak::platform_instance &i, lak::vec2l_t p)
+void lak::set_cursor_pos(lak::vec2l_t p)
 {
 	ASSERT(p.x < INT_MAX && p.x > INT_MIN);
 	ASSERT(p.y < INT_MAX && p.y > INT_MIN);
@@ -536,14 +530,17 @@ void lak::set_cursor_pos(const lak::platform_instance &i, lak::vec2l_t p)
 	ASSERT(SetCursorPos((int)p.x, (int)p.y));
 }
 
-lak::vec2l_t lak::get_cursor_pos(const lak::platform_instance &i)
+lak::vec2l_t lak::get_cursor_pos()
 {
 	POINT p;
 	ASSERT(GetCursorPos(&p));
 	return {(long)p.x, (long)p.y};
 }
 
-void lak::set_cursor(const lak::platform_instance &i, const lak::cursor &c)
+void lak::set_cursor(lak::cursor *c)
 {
-	SetCursor(c.platform_handle);
+	ASSERT(c);
+	SetCursor(c->platform_handle);
 }
+
+#include "../common/platform.inl"

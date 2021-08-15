@@ -1,13 +1,6 @@
-#ifdef LAK_USE_SDL
-#	ifndef SDL_MAIN_HANDLED
-#		error SDL_MAIN_HANDLED must be defined globally
-#	endif
-#	include <SDL2/SDL.h>
-#endif
-
 #include "lak/opengl/state.hpp"
 
-#include "lak/windows.hpp"
+// #include "lak/windows.hpp"
 
 #include "lak/debug.hpp"
 #include "lak/events.hpp"
@@ -18,12 +11,18 @@
 #	define APP_NAME "basic window"
 #endif
 
+#ifndef LAK_BASIC_PROGRAM_MAIN
+#	define LAK_BASIC_PROGRAM_MAIN main
+#endif
+
 // Implement these basic_window_* functions in your program.
 lak::optional<int> basic_window_preinit(int argc, char **argv);
 void basic_window_init(lak::window &window);
 void basic_window_handle_event(lak::window &window, lak::event &event);
 void basic_window_loop(lak::window &window, uint64_t counter_delta);
 int basic_window_quit(lak::window &window);
+
+// Set these inside of basic_window_preinit
 uint32_t basic_window_target_framerate = 60;
 bool basic_window_force_software       = false;
 lak::vec2l_t basic_window_start_size   = {1200, 700};
@@ -92,7 +91,7 @@ void APIENTRY MessageCallback(GLenum source,
 	DEBUG("| Message:\n", lak::string_view(message, length), "\n");
 }
 
-int main(int argc, char **argv)
+int LAK_BASIC_PROGRAM_MAIN(int argc, char **argv)
 {
 	/* --- Debugger initialisation --- */
 
@@ -130,55 +129,47 @@ int main(int argc, char **argv)
 
 	if (auto v = basic_window_preinit(argc, argv); v) return *v;
 
-	auto instance = lak::platform_init();
-	DEFER(lak::platform_quit(&instance));
+	lak::platform_init();
+	DEFER(lak::platform_quit());
 
-	auto window = [&]
-	{
-		if (!basic_window_force_software)
-		{
-			// Attempt to open an OpenGL window first.
-			auto window = lak::window(instance, basic_window_opengl_settings);
-			window.set_title(L"" APP_NAME);
-			window.set_size(basic_window_start_size);
+	auto window =
+	  lak::window::make(basic_window_opengl_settings)
+	    .and_then(
+	      [&](auto &&window) -> lak::result<lak::window>
+	      {
+		      if (window.graphics() != lak::graphics_mode::OpenGL)
+			      return lak::err_t{};
 
-			if (window.graphics() == lak::graphics_mode::OpenGL)
-			{
-				glViewport(0, 0, window.drawable_size().x, window.drawable_size().y);
-				glClearColor(basic_window_clear_colour.r,
-				             basic_window_clear_colour.g,
-				             basic_window_clear_colour.b,
-				             basic_window_clear_colour.a);
-				glEnable(GL_DEPTH_TEST);
+		      glViewport(0, 0, window.drawable_size().x, window.drawable_size().y);
+		      glClearColor(basic_window_clear_colour.r,
+		                   basic_window_clear_colour.g,
+		                   basic_window_clear_colour.b,
+		                   basic_window_clear_colour.a);
+		      glEnable(GL_DEPTH_TEST);
 
 #ifndef NDEBUG
-				glEnable(GL_DEBUG_OUTPUT);
-				glDebugMessageCallback(&MessageCallback, 0);
+		      glEnable(GL_DEBUG_OUTPUT);
+		      glDebugMessageCallback(&MessageCallback, 0);
 #endif
-				return window;
-			}
-			else
-			{
-				WARNING("Failed to create OpenGL window");
-			}
-		}
-		{
-			// Fall back to software window if OpenGL fails to open.
-			auto window = lak::window(instance, basic_window_software_settings);
-			window.set_title(L"" APP_NAME);
-			window.set_size(basic_window_start_size);
 
-			if (window.graphics() == lak::graphics_mode::Software)
-			{
-				return window;
-			}
-			else
-			{
-				WARNING("Failed to create Software window");
-			}
-		}
-		FATAL("Failed to create a window");
-	}();
+		      return lak::ok_t{lak::move(window)};
+	      })
+	    .or_else(
+	      [&](auto &&)
+	      {
+		      return lak::window::make(basic_window_software_settings)
+		        .and_then(
+		          [&](auto &&window) -> lak::result<lak::window>
+		          {
+			          if (window.graphics() != lak::graphics_mode::Software)
+				          return lak::err_t{};
+			          return lak::ok_t{lak::move(window)};
+		          });
+	      })
+	    .UNWRAP();
+
+	window.set_title(L"" APP_NAME);
+	window.set_size(basic_window_start_size);
 
 	basic_window_init(window);
 
@@ -189,7 +180,7 @@ int main(int argc, char **argv)
 	for (bool running = true; running;)
 	{
 		/* --- Handle SDL2 events --- */
-		for (lak::event event; lak::next_event(instance, &event);
+		for (lak::event event; lak::next_event(&event);
 		     basic_window_handle_event(window, event))
 		{
 			switch (event.type)

@@ -7,10 +7,6 @@
 #if defined(_WIN32) || defined(_WIN64) || defined(__WIN32__) ||               \
   defined(__WIN64__) || defined(__TOS_WIN__) || defined(__WINDOWS__)
 #	define LAK_OS_WINDOWS
-#	if !defined(LAK_USE_XLIB) && !defined(LAK_USE_XCB) &&                      \
-	  !defined(LAK_USE_WINAPI) && !defined(LAK_USE_SDL)
-#		define LAK_USE_WINAPI
-#	endif
 #endif
 
 #if defined(__APPLE__) || defined(__MACH__)
@@ -28,10 +24,6 @@
 #if defined(__linux__) || defined(__EMSCRIPTEN__)
 // *Anything* running the Linux kernel.
 #	define LAK_OS_LINUX
-#	if !defined(LAK_USE_XLIB) && !defined(LAK_USE_XCB) &&                      \
-	  !defined(LAK_USE_WINAPI) && !defined(LAK_USE_SDL)
-#		define LAK_USE_XLIB
-#	endif
 #endif
 
 #endif

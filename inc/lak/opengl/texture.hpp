@@ -1,7 +1,7 @@
 #ifndef LAK_OPENGL_TEXTURE_HPP
 #define LAK_OPENGL_TEXTURE_HPP
 
-#include <GL/gl3w.h>
+#include "lak/opengl/gl3w.hpp"
 
 #include "lak/image.hpp"
 

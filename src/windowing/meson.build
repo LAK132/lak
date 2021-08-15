@@ -1,17 +1,1 @@
-lakwindowing = static_library(
-  'lakwindowing',
-  [
-    'events.cpp',
-    'platform.cpp',
-    'window.cpp',
-  ],
-  override_options: 'cpp_std=' + version,
-  include_directories: [
-    include_directories([
-      '..',
-      '../../inc',
-    ]),
-    sdl_include_directory,
-  ],
-  link_with: lak,
-)
+subdir(get_option('lak_backend'))

@@ -11,7 +11,6 @@ project(
 cxx = meson.get_compiler('cpp')
 
 if cxx.get_id() == 'msvc'
-
   version = 'c++latest'
 
   project_args = [
@@ -19,15 +18,16 @@ if cxx.get_id() == 'msvc'
     '-Zc:rvalueCast',
     '-Zc:wchar_t',
     '-Zc:ternary',
+    '-Zc:preprocessor',
     '-DUNICODE',
     '-DWIN32_LEAN_AND_MEAN',
     '-DNOMINMAX',
     '-wd4315',
     '-wd4366',
+    '-Wv:18',
   ]
 
   macro_test_args = project_args + ['-std:' + version]
-
 else
   version = 'c++2a'
 
@@ -37,8 +37,9 @@ else
   ]
 
   macro_test_args = project_args + ['-std=' + version]
-
 endif
+
+project_args += [ '-DSDL_MAIN_HANDLED' ]
 
 cplusplus = cxx.get_define('__cplusplus', args: macro_test_args)
 
@@ -48,8 +49,18 @@ endif
 
 add_project_arguments(project_args, language: ['c', 'cpp'])
 
+subdir('inc/sdl')
 subdir('src')
+subdir('src/opengl')
+subdir('src/windowing')
 subdir('src/tests')
+subdir('src/tests/windowing')
+
+sdl2_dll = configure_file(
+  copy: true,
+  input: sdl2_dll,
+  output: 'SDL2.dll',
+)
 
 executable(
   'lak_test',
@@ -63,5 +74,9 @@ executable(
   ],
   link_whole: [
     laktest,
+    laktestwindowing,
+  ],
+  dependencies: [
+    sdl2,
   ],
 )

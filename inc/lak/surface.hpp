@@ -1,19 +1,6 @@
 #ifndef LAK_SURFACE_HPP
 #define LAK_SURFACE_HPP
 
-#if defined(LAK_USE_WINAPI)
-#	include "lak/windows.hpp"
-void win32_error_popup(LPWSTR lpszFunction);
-#elif defined(LAK_USE_XLIB)
-#	include <X11/Xlib.h>
-#elif defined(LAK_USE_XCB)
-#	include <xcb/xcb.h>
-#elif defined(LAK_USE_SDL)
-#	include <SDL2/SDL.h>
-#else
-#	error "No implementation specified"
-#endif
-
 #include "lak/array.hpp"
 #include "lak/colour.hpp"
 #include "lak/defer.hpp"

@@ -1,15 +1,22 @@
-#include "lak/window.hpp"
+#include "lak/platform.hpp"
+#include "lak/debug.hpp"
 
 #include "impl.hpp"
 
-bool lak::platform_init()
+bool lak::platform_init(lak::platform_instance *handle)
 {
-	return false;
+	xcb_connection_t *handle = xcb_connection(NULL, NULL);
+	if (!handle) return false;
+	lak::_platform_instance         = new lak::platform_instance();
+	lak::_platform_instance->handle = handle;
+	return true;
 }
 
-bool lak::platform_quit()
+bool lak::platform_quit(lak::platform_instance *handle)
 {
-	return false;
+	xcb_disconnect(lak::_platform_instance->handle);
+	delete lak::_platform_instance;
+	return true;
 }
 
 bool lak::get_clipboard(lak::u8string *s)

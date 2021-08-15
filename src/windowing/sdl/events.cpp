@@ -1,8 +1,8 @@
-#include "lak/events.hpp"
 #include "lak/bank_ptr.hpp"
 #include "lak/debug.hpp"
 #include "lak/memmanip.hpp"
-#include "lak/window.hpp"
+
+#include "impl.hpp"
 
 SDL_Window *sdl_window_from_event(const SDL_Event &event)
 {
@@ -40,7 +40,7 @@ const lak::window_handle *window_from_event(const SDL_Event &event)
 
 	return handle ? lak::bank<lak::window_handle>::find_if(
 	                  [window = handle](const lak::window_handle &handle)
-	                  { return handle._platform_handle == window; })
+	                  { return handle.sdl_window == window; })
 	              : nullptr;
 }
 
@@ -48,6 +48,10 @@ void translate_event(const SDL_Event &sdl_event,
                      lak::event *event,
                      const lak::window_handle *window = nullptr)
 {
+	event->platform();
+	lak::platform_event_ptr platform_event = lak::move(event->_platform_event);
+	lak::memcpy(&platform_event->sdl_event, &sdl_event);
+
 	switch (sdl_event.type)
 	{
 			/* --- quit_program --- */
@@ -55,14 +59,16 @@ void translate_event(const SDL_Event &sdl_event,
 		// Quit the application entirely.
 		case SDL_QUIT:
 		{
-			*event = lak::event(lak::event_type::quit_program, window, sdl_event);
+			*event = lak::event(
+			  lak::event_type::quit_program, window, lak::move(platform_event));
 		}
 		break;
 
 		// Quit the application entirely.
 		case SDL_APP_TERMINATING:
 		{
-			*event = lak::event(lak::event_type::quit_program, window, sdl_event);
+			*event = lak::event(
+			  lak::event_type::quit_program, window, lak::move(platform_event));
 		}
 		break;
 
@@ -76,7 +82,7 @@ void translate_event(const SDL_Event &sdl_event,
 				{
 					*event = lak::event(lak::event_type::window_closed,
 					                    window,
-					                    sdl_event,
+					                    lak::move(platform_event),
 					                    lak::window_event{});
 				}
 				break;
@@ -89,7 +95,7 @@ void translate_event(const SDL_Event &sdl_event,
 					*event = lak::event(
 					  lak::event_type::window_changed,
 					  window,
-					  sdl_event,
+					  lak::move(platform_event),
 					  lak::window_event{
 					    {}, {sdl_event.window.data1, sdl_event.window.data2}});
 				}
@@ -100,7 +106,7 @@ void translate_event(const SDL_Event &sdl_event,
 					*event = lak::event(
 					  lak::event_type::window_changed,
 					  window,
-					  sdl_event,
+					  lak::move(platform_event),
 					  lak::window_event{{sdl_event.window.data1, sdl_event.window.data2},
 					                    {}});
 				}
@@ -112,7 +118,7 @@ void translate_event(const SDL_Event &sdl_event,
 				{
 					*event = lak::event(lak::event_type::window_exposed,
 					                    window,
-					                    sdl_event,
+					                    lak::move(platform_event),
 					                    lak::window_event{});
 				}
 				break;
@@ -133,7 +139,7 @@ void translate_event(const SDL_Event &sdl_event,
 
 			*event = lak::event(lak::event_type::key_down,
 			                    window,
-			                    sdl_event,
+			                    lak::move(platform_event),
 			                    lak::key_event{scancode, mod});
 		}
 		break;
@@ -152,7 +158,7 @@ void translate_event(const SDL_Event &sdl_event,
 
 			*event = lak::event(lak::event_type::key_up,
 			                    window,
-			                    sdl_event,
+			                    lak::move(platform_event),
 			                    lak::key_event{scancode, mod});
 		}
 		break;
@@ -172,7 +178,7 @@ void translate_event(const SDL_Event &sdl_event,
 			}
 			*event = lak::event(lak::event_type::button_down,
 			                    window,
-			                    sdl_event,
+			                    lak::move(platform_event),
 			                    lak::button_event{btn});
 		}
 		break;
@@ -190,8 +196,10 @@ void translate_event(const SDL_Event &sdl_event,
 				case SDL_BUTTON_X1: btn = lak::mouse_button::x1; break;
 				case SDL_BUTTON_X2: btn = lak::mouse_button::x2; break;
 			}
-			*event = lak::event(
-			  lak::event_type::button_up, window, sdl_event, lak::button_event{btn});
+			*event = lak::event(lak::event_type::button_up,
+			                    window,
+			                    lak::move(platform_event),
+			                    lak::button_event{btn});
 		}
 		break;
 
@@ -202,7 +210,7 @@ void translate_event(const SDL_Event &sdl_event,
 			*event = lak::event(
 			  lak::event_type::motion,
 			  window,
-			  sdl_event,
+			  lak::move(platform_event),
 			  lak::motion_event{{sdl_event.motion.x, sdl_event.motion.y}});
 		}
 		break;
@@ -214,7 +222,7 @@ void translate_event(const SDL_Event &sdl_event,
 			*event =
 			  lak::event(lak::event_type::wheel,
 			             window,
-			             sdl_event,
+			             lak::move(platform_event),
 			             lak::wheel_event{{static_cast<float>(sdl_event.wheel.x),
 			                               static_cast<float>(sdl_event.wheel.y)}});
 		}
@@ -222,33 +230,34 @@ void translate_event(const SDL_Event &sdl_event,
 
 		default:
 		{
-			*event = lak::event(lak::event_type::platform_event, window, sdl_event);
+			*event = lak::event(
+			  lak::event_type::platform_event, window, lak::move(platform_event));
 		}
 		break;
 	}
 }
 
-bool handle_next_event(const lak::platform_instance &,
-                       lak::event *event,
-                       SDL_eventaction action)
+bool handle_next_event(lak::event *event, SDL_eventaction action)
 {
 	SDL_PumpEvents();
 	if (SDL_Event e;
 	    SDL_PeepEvents(&e, 1, action, SDL_FIRSTEVENT, SDL_LASTEVENT) > 0)
 	{
 		translate_event(e, event, window_from_event(e));
-		lak::memcpy(&e, &event->platform_event);
+		lak::memcpy(&e, &event->platform().sdl_event);
 		return true;
 	}
 	return false;
 }
 
-bool lak::next_event(const lak::platform_instance &instance, lak::event *event)
+bool lak::next_event(lak::event *event)
 {
-	return handle_next_event(instance, event, SDL_GETEVENT);
+	return handle_next_event(event, SDL_GETEVENT);
 }
 
-bool lak::peek_event(const lak::platform_instance &instance, lak::event *event)
+bool lak::peek_event(lak::event *event)
 {
-	return handle_next_event(instance, event, SDL_PEEKEVENT);
+	return handle_next_event(event, SDL_PEEKEVENT);
 }
+
+#include "../common/events.inl"

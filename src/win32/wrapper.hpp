@@ -15,63 +15,35 @@ namespace lak
 		template<typename T = lak::monostate>
 		using result = lak::result<T, DWORD>;
 
-		lak::u8string error_code_to_string(DWORD error_code)
-		{
-			LPWSTR lpMsgBuf = nullptr;
-			::FormatMessageW(
-			  FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM |
-			    FORMAT_MESSAGE_IGNORE_INSERTS,           /* dwFlags */
-			  NULL,                                      /* lpSource */
-			  error_code,                                /* dwMessageId */
-			  MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), /* dwLanguageId */
-			  (LPWSTR)&lpMsgBuf,                         /* lpBuffer */
-			  0,                                         /* nSize */
-			  NULL                                       /* Arguments */
-			);
-			DEFER(::LocalFree(lpMsgBuf));
-
-			return lak::to_u8string(lpMsgBuf ? lpMsgBuf
-			                                 : L"failed to read error code");
-		}
+		lak::wstring error_code_to_wstring(DWORD error_code);
+		lak::u8string error_code_to_u8string(DWORD error_code);
 
 		template<typename T>
 		lak::result<T, lak::u8string> to_string(lak::winapi::result<T> result)
 		{
-			return result.map_err(lak::winapi::error_code_to_string);
+			return result.map_err(lak::winapi::error_code_to_u8string);
 		}
 
-		lak::winapi::result<LPVOID> virtual_alloc(LPVOID address,
-		                                          SIZE_T size,
-		                                          DWORD allocation_type,
-		                                          DWORD protect)
+		template<typename T, typename... U, typename... ARGS>
+		lak::winapi::result<T> invoke_nullerr(T (*f)(U...), ARGS &&...args)
 		{
-			if (LPVOID result =
-			      ::VirtualAlloc(address, size, allocation_type, protect);
-			    result != NULL)
+			if (T result = f(lak::forward<ARGS>(args)...); result != NULL)
 				return lak::ok_t{result};
 			else
 				return lak::err_t{::GetLastError()};
 		}
 
+		lak::winapi::result<LPVOID> virtual_alloc(LPVOID address,
+		                                          SIZE_T size,
+		                                          DWORD allocation_type,
+		                                          DWORD protect);
+
 		lak::winapi::result<> virtual_free(LPVOID address,
 		                                   SIZE_T size,
-		                                   DWORD free_type)
-		{
-			if (BOOL result = ::VirtualFree(address, size, free_type); result != 0)
-				return lak::ok_t{};
-			else
-				return lak::err_t{::GetLastError()};
-		}
+		                                   DWORD free_type);
 
-		lak::winapi::result<MEMORY_BASIC_INFORMATION> virtual_query(LPVOID address)
-		{
-			MEMORY_BASIC_INFORMATION info;
-			if (SIZE_T result = ::VirtualQuery(address, &info, sizeof(info));
-			    result != 0)
-				return lak::ok_t{info};
-			else
-				return lak::err_t{::GetLastError()};
-		}
+		lak::winapi::result<MEMORY_BASIC_INFORMATION> virtual_query(
+		  LPVOID address);
 	}
 }
 

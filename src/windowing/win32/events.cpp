@@ -1,17 +1,12 @@
-#include "lak/windows.hpp"
-
 #include "lak/debug.hpp"
-#include "lak/events.hpp"
 #include "lak/memmanip.hpp"
-#include "lak/window.hpp"
+
+#include "impl.hpp"
+
+#include <thread>
 
 EXTERN_C IMAGE_DOS_HEADER __ImageBase;
 #define HINST_THISCOMPONENT ((HINSTANCE)&__ImageBase)
-
-#include <strsafe.h>
-// https://docs.microsoft.com/en-us/windows/win32/debug/retrieving-the-last-error-code
-
-#include <thread>
 
 lak::wstring win32_error_string(LPCWSTR lpszFunction);
 void win32_error_popup(LPCWSTR lpszFunction);
@@ -20,7 +15,9 @@ void translate_event(const MSG &msg,
                      lak::event *event,
                      const lak::window_handle *window = nullptr)
 {
-	using namespace lak;
+	event->platform();
+	lak::platform_event_ptr platform_event = lak::move(event->_platform_event);
+	lak::memcpy(&platform_event->msg, &msg);
 
 	switch (msg.message)
 	{
@@ -30,7 +27,8 @@ void translate_event(const MSG &msg,
 		case WM_QUIT:
 		{
 			CHECKPOINT();
-			*event = lak::event(lak::event_type::quit_program, window, msg);
+			*event = lak::event(
+			  lak::event_type::quit_program, window, lak::move(platform_event));
 		}
 		break;
 
@@ -39,8 +37,10 @@ void translate_event(const MSG &msg,
 		// User is *asking* to close this window.
 		case WM_CLOSE:
 		{
-			*event = lak::event(
-			  lak::event_type::close_window, window, msg, lak::window_event{});
+			*event = lak::event(lak::event_type::close_window,
+			                    window,
+			                    lak::move(platform_event),
+			                    lak::window_event{});
 		}
 		break;
 
@@ -49,8 +49,10 @@ void translate_event(const MSG &msg,
 		// Window *has* been destroyed.
 		case WM_DESTROY:
 		{
-			*event = lak::event(
-			  lak::event_type::window_closed, window, msg, lak::window_event{});
+			*event = lak::event(lak::event_type::window_closed,
+			                    window,
+			                    lak::move(platform_event),
+			                    lak::window_event{});
 		}
 		break;
 
@@ -59,8 +61,10 @@ void translate_event(const MSG &msg,
 		case WM_WINDOWPOSCHANGED:
 		{
 			// :TODO: get position/size data
-			*event = lak::event(
-			  lak::event_type::window_changed, window, msg, lak::window_event{});
+			*event = lak::event(lak::event_type::window_changed,
+			                    window,
+			                    lak::move(platform_event),
+			                    lak::window_event{});
 		}
 		break;
 
@@ -68,8 +72,10 @@ void translate_event(const MSG &msg,
 
 		case WM_PAINT:
 		{
-			*event = lak::event(
-			  lak::event_type::window_exposed, window, msg, lak::window_event{});
+			*event = lak::event(lak::event_type::window_exposed,
+			                    window,
+			                    lak::move(platform_event),
+			                    lak::window_event{});
 		}
 		break;
 
@@ -78,8 +84,10 @@ void translate_event(const MSG &msg,
 		case WM_KEYDOWN:
 		{
 			// :TODO:
-			*event =
-			  lak::event(lak::event_type::key_down, window, msg, lak::key_event{});
+			*event = lak::event(lak::event_type::key_down,
+			                    window,
+			                    lak::move(platform_event),
+			                    lak::key_event{});
 		}
 		break;
 
@@ -88,8 +96,10 @@ void translate_event(const MSG &msg,
 		case WM_KEYUP:
 		{
 			// :TODO:
-			*event =
-			  lak::event(lak::event_type::key_up, window, msg, lak::key_event{});
+			*event = lak::event(lak::event_type::key_up,
+			                    window,
+			                    lak::move(platform_event),
+			                    lak::key_event{});
 		}
 		break;
 
@@ -102,10 +112,11 @@ void translate_event(const MSG &msg,
 			if (msg.wParam != UNICODE_NOCHAR)
 				*event = lak::event(lak::event_type::character,
 				                    window,
-				                    msg,
+				                    lak::move(platform_event),
 				                    lak::character_event{(char32_t)msg.wParam});
 			else
-				*event = lak::event(lak::event_type::platform_event, window, msg);
+				*event = lak::event(
+				  lak::event_type::platform_event, window, lak::move(platform_event));
 		}
 		break;
 
@@ -115,8 +126,8 @@ void translate_event(const MSG &msg,
 		{
 			*event = lak::event(lak::event_type::button_down,
 			                    window,
-			                    msg,
-			                    lak::button_event{mouse_button::left});
+			                    lak::move(platform_event),
+			                    lak::button_event{lak::mouse_button::left});
 		}
 		break;
 
@@ -124,8 +135,8 @@ void translate_event(const MSG &msg,
 		{
 			*event = lak::event(lak::event_type::button_down,
 			                    window,
-			                    msg,
-			                    lak::button_event{mouse_button::middle});
+			                    lak::move(platform_event),
+			                    lak::button_event{lak::mouse_button::middle});
 		}
 		break;
 
@@ -133,8 +144,8 @@ void translate_event(const MSG &msg,
 		{
 			*event = lak::event(lak::event_type::button_down,
 			                    window,
-			                    msg,
-			                    lak::button_event{mouse_button::right});
+			                    lak::move(platform_event),
+			                    lak::button_event{lak::mouse_button::right});
 		}
 		break;
 
@@ -143,12 +154,13 @@ void translate_event(const MSG &msg,
 			*event = lak::event(
 			  lak::event_type::button_down,
 			  window,
-			  msg,
-			  lak::button_event{
-			    (GET_XBUTTON_WPARAM(msg.wParam) == XBUTTON1 ? mouse_button::x1
-			                                                : mouse_button::none) |
-			    (GET_XBUTTON_WPARAM(msg.wParam) == XBUTTON2 ? mouse_button::x2
-			                                                : mouse_button::none)});
+			  lak::move(platform_event),
+			  lak::button_event{(GET_XBUTTON_WPARAM(msg.wParam) == XBUTTON1
+			                       ? lak::mouse_button::x1
+			                       : lak::mouse_button::none) |
+			                    (GET_XBUTTON_WPARAM(msg.wParam) == XBUTTON2
+			                       ? lak::mouse_button::x2
+			                       : lak::mouse_button::none)});
 		}
 		break;
 
@@ -158,8 +170,8 @@ void translate_event(const MSG &msg,
 		{
 			*event = lak::event(lak::event_type::button_up,
 			                    window,
-			                    msg,
-			                    lak::button_event{mouse_button::left});
+			                    lak::move(platform_event),
+			                    lak::button_event{lak::mouse_button::left});
 		}
 		break;
 
@@ -167,8 +179,8 @@ void translate_event(const MSG &msg,
 		{
 			*event = lak::event(lak::event_type::button_up,
 			                    window,
-			                    msg,
-			                    lak::button_event{mouse_button::middle});
+			                    lak::move(platform_event),
+			                    lak::button_event{lak::mouse_button::middle});
 		}
 		break;
 
@@ -176,8 +188,8 @@ void translate_event(const MSG &msg,
 		{
 			*event = lak::event(lak::event_type::button_up,
 			                    window,
-			                    msg,
-			                    lak::button_event{mouse_button::right});
+			                    lak::move(platform_event),
+			                    lak::button_event{lak::mouse_button::right});
 		}
 		break;
 
@@ -186,12 +198,13 @@ void translate_event(const MSG &msg,
 			*event = lak::event(
 			  lak::event_type::button_up,
 			  window,
-			  msg,
-			  lak::button_event{
-			    (GET_XBUTTON_WPARAM(msg.wParam) == XBUTTON1 ? mouse_button::x1
-			                                                : mouse_button::none) |
-			    (GET_XBUTTON_WPARAM(msg.wParam) == XBUTTON2 ? mouse_button::x2
-			                                                : mouse_button::none)});
+			  lak::move(platform_event),
+			  lak::button_event{(GET_XBUTTON_WPARAM(msg.wParam) == XBUTTON1
+			                       ? lak::mouse_button::x1
+			                       : lak::mouse_button::none) |
+			                    (GET_XBUTTON_WPARAM(msg.wParam) == XBUTTON2
+			                       ? lak::mouse_button::x2
+			                       : lak::mouse_button::none)});
 		}
 		break;
 
@@ -201,7 +214,7 @@ void translate_event(const MSG &msg,
 		{
 			*event = lak::event(lak::event_type::motion,
 			                    window,
-			                    msg,
+			                    lak::move(platform_event),
 			                    lak::motion_event{{GET_X_LPARAM(msg.lParam),
 			                                       GET_Y_LPARAM(msg.lParam)}});
 		}
@@ -214,7 +227,7 @@ void translate_event(const MSG &msg,
 			*event = lak::event(
 			  lak::event_type::wheel,
 			  window,
-			  msg,
+			  lak::move(platform_event),
 			  lak::wheel_event{
 			    {0.0f,
 			     float(GET_WHEEL_DELTA_WPARAM(msg.wParam)) / float(WHEEL_DELTA)}});
@@ -226,20 +239,21 @@ void translate_event(const MSG &msg,
 		// Window has been created.
 		case WM_CREATE:
 		{
-			*event = lak::event(lak::event_type::platform_event, window, msg);
+			*event = lak::event(
+			  lak::event_type::platform_event, window, lak::move(platform_event));
 		}
 		break;
 
 		default:
 		{
-			*event = lak::event(lak::event_type::platform_event, window, msg);
+			*event = lak::event(
+			  lak::event_type::platform_event, window, lak::move(platform_event));
 		}
 		break;
 	}
 }
 
-bool handle_size_move(const lak::platform_instance &instance,
-                      lak::window_handle &handle)
+bool handle_size_move(lak::window_handle &handle)
 {
 	if (handle._moving)
 	{
@@ -292,8 +306,7 @@ bool handle_size_move(const lak::platform_instance &instance,
 		{
 			// we need to resize the pixel buffer
 			// this is also touched in software create_window constructor
-			std::get<lak::software_context>(handle._context)
-			  .platform_handle.resize({(size_t)w, (size_t)h});
+			handle.software_context().platform_handle.resize({(size_t)w, (size_t)h});
 		}
 
 		return true;
@@ -324,9 +337,7 @@ bool is_size_move_event(const lak::window_handle *handle, const MSG &msg)
 }
 
 // Returns true if the event has handled by this function.
-bool handle_size_move_event(const lak::platform_instance &instance,
-                            lak::window_handle *handle,
-                            const MSG &msg)
+bool handle_size_move_event(lak::window_handle *handle, const MSG &msg)
 {
 	if (!handle) return false;
 
@@ -349,8 +360,8 @@ bool handle_size_move_event(const lak::platform_instance &instance,
 						case 0x7: handle->_side = handle->bottom | handle->left; break;
 						case 0x8: handle->_side = handle->bottom | handle->right; break;
 						default:
-							FATAL("Invalid side");
 							handle->_side = 0;
+							FATAL("Invalid side");
 							break;
 					}
 
@@ -398,7 +409,7 @@ bool handle_size_move_event(const lak::platform_instance &instance,
 		case WM_MOUSEHOVER:
 		case WM_NCMOUSEMOVE:
 		case WM_NCMOUSELEAVE:
-		case WM_NCMOUSEHOVER: return handle_size_move(instance, *handle);
+		case WM_NCMOUSEHOVER: return handle_size_move(*handle);
 	}
 
 	return false;
@@ -416,21 +427,21 @@ lak::window_handle *window_from_event(const MSG &event)
 // this message should be zeroed out.
 thread_local MSG previous_event = {};
 
-bool peek_next_event(const lak::platform_instance &instance,
-                     MSG *msg,
+bool peek_next_event(MSG *msg,
                      UINT filter_min,
                      UINT filter_max,
                      UINT remove,
                      bool *buffered_message = nullptr)
 {
-	if (auto *hacked_msg = instance.platform_events.front(); hacked_msg)
+	if (auto *hacked_msg = lak::_platform_instance->platform_events.front();
+	    hacked_msg)
 	{
 		if (buffered_message) *buffered_message = true;
 		lak::memcpy(msg, hacked_msg);
-		if (remove == PM_REMOVE)
-			instance.platform_events.pop_front();
+		if (remove == UINT(PM_REMOVE))
+			lak::_platform_instance->platform_events.pop_front();
 		else
-			ASSERT_EQUAL(remove, PM_NOREMOVE);
+			ASSERT_EQUAL(remove, UINT(PM_NOREMOVE));
 		return true;
 	}
 	else
@@ -440,9 +451,7 @@ bool peek_next_event(const lak::platform_instance &instance,
 	}
 }
 
-bool handle_next_event(const lak::platform_instance &instance,
-                       lak::event *event,
-                       const bool pop_messages)
+bool handle_next_event(lak::event *event, const bool pop_messages)
 {
 	// Delaying dispatch until the next time through here should let us handle
 	// WM_PAINT correctly after the call to next_event.
@@ -464,43 +473,31 @@ bool handle_next_event(const lak::platform_instance &instance,
 	{
 		do
 		{
-			if (!peek_next_event(instance,
-			                     &msg,
-			                     filter_min,
-			                     filter_max,
-			                     PM_REMOVE,
-			                     &buffered_message))
+			if (!peek_next_event(
+			      &msg, filter_min, filter_max, PM_REMOVE, &buffered_message))
 			{
 				return false;
 			}
 			handle = window_from_event(msg);
 			// handle_size_move_event calls handle_size_move
-		} while (handle_size_move_event(instance, handle, msg));
+		} while (handle_size_move_event(handle, msg));
 	}
 	else
 	{
-		if (!peek_next_event(instance,
-		                     &msg,
-		                     filter_min,
-		                     filter_max,
-		                     PM_NOREMOVE,
-		                     &buffered_message))
+		if (!peek_next_event(
+		      &msg, filter_min, filter_max, PM_NOREMOVE, &buffered_message))
 		{
 			return false;
 		}
 		handle = window_from_event(msg);
-		while (handle_size_move_event(instance, handle, msg))
+		while (handle_size_move_event(handle, msg))
 		{
 			// remove the previously peeked message as it was used in
 			// handle_size_move_event.
 			ASSERT(peek_next_event(
-			  instance, &msg, filter_min, filter_max, PM_REMOVE, &buffered_message));
-			if (!peek_next_event(instance,
-			                     &msg,
-			                     filter_min,
-			                     filter_max,
-			                     PM_NOREMOVE,
-			                     &buffered_message))
+			  &msg, filter_min, filter_max, PM_REMOVE, &buffered_message));
+			if (!peek_next_event(
+			      &msg, filter_min, filter_max, PM_NOREMOVE, &buffered_message))
 			{
 				return false;
 			}
@@ -524,12 +521,14 @@ bool handle_next_event(const lak::platform_instance &instance,
 	return true;
 }
 
-bool lak::next_event(const lak::platform_instance &instance, lak::event *event)
+bool lak::next_event(lak::event *event)
 {
-	return handle_next_event(instance, event, true);
+	return handle_next_event(event, true);
 }
 
-bool lak::peek_event(const lak::platform_instance &instance, lak::event *event)
+bool lak::peek_event(lak::event *event)
 {
-	return handle_next_event(instance, event, false);
+	return handle_next_event(event, false);
 }
+
+#include "../common/events.inl"

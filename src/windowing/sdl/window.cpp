@@ -1,69 +1,58 @@
-#ifndef SDL_MAIN_HANDLED
-#	error SDL_MAIN_HANDLED must be defined globally
-#endif
-#ifndef LAK_USE_SDL
-#	define LAK_USE_SDL
-#endif
-
-#include <SDL2/SDL.h>
-
-#include <GL/gl3w.h>
-
+#include "lak/opengl/gl3w.hpp"
 #include "lak/opengl/state.hpp"
 
 #include "lak/defer.hpp"
 #include "lak/memmanip.hpp"
-#include "lak/window.hpp"
 
-lak::window_handle *lak::create_window(const lak::platform_instance &instance,
-                                       const lak::software_settings &)
+#include "impl.hpp"
+
+lak::window_handle *lak::create_window(const lak::software_settings &)
 {
 	auto handle = lak::unique_bank_ptr<lak::window_handle>::create();
 	ASSERT(handle);
 
-	DEFER(if (handle) lak::destroy_window(instance, handle.get()););
+	DEFER(if (handle) lak::destroy_window(handle.get()););
 
-	handle->_platform_handle = SDL_CreateWindow("",
-	                                            SDL_WINDOWPOS_CENTERED,
-	                                            SDL_WINDOWPOS_CENTERED,
-	                                            720,
-	                                            480,
-	                                            SDL_WINDOW_RESIZABLE);
+	handle->sdl_window = SDL_CreateWindow("",
+	                                      SDL_WINDOWPOS_CENTERED,
+	                                      SDL_WINDOWPOS_CENTERED,
+	                                      720,
+	                                      480,
+	                                      SDL_WINDOW_RESIZABLE);
 
-	if (!handle->_platform_handle)
+	if (!handle->sdl_window)
 	{
 		ERROR("Failed to create window");
 		return nullptr;
 	}
 
-	auto &context = handle->_context.emplace<lak::software_context>();
+	auto &context = handle->gc.emplace<lak::software_context>();
 
-	context.platform_handle = SDL_GetWindowSurface(handle->_platform_handle);
+	context.sdl_surface = SDL_GetWindowSurface(handle->sdl_window);
 
-	if (!context.platform_handle)
+	if (!context.sdl_surface)
 	{
 		ERROR("Failed to get window surface");
 		return nullptr;
 	}
 
-	context.sdl_window = handle->_platform_handle;
+	context.sdl_window = handle->sdl_window;
 
 	return handle.release();
 }
 
-lak::window_handle *lak::create_window(const lak::platform_instance &instance,
-                                       const lak::opengl_settings &settings)
+lak::window_handle *lak::create_window(const lak::opengl_settings &settings)
 {
 	auto handle = lak::unique_bank_ptr<lak::window_handle>::create();
 	ASSERT(handle);
 
-	DEFER(if (handle) lak::destroy_window(instance, handle.get()););
+	DEFER(if (handle) lak::destroy_window(handle.get()););
 
 	// :TODO: SDL2 documentation says this should be called *after*
 	// SDL_GL_SetAttribute but that's causing the screen to stay perminently
 	// black? Do we need to create a "fake" context first, init gl3w, destroy the
 	// context, then set attributes and create the real context?
-	handle->_platform_handle =
+	handle->sdl_window =
 	  SDL_CreateWindow("",
 	                   SDL_WINDOWPOS_CENTERED,
 	                   SDL_WINDOWPOS_CENTERED,
@@ -71,13 +60,13 @@ lak::window_handle *lak::create_window(const lak::platform_instance &instance,
 	                   480,
 	                   SDL_WINDOW_RESIZABLE | SDL_WINDOW_OPENGL);
 
-	if (!handle->_platform_handle)
+	if (!handle->sdl_window)
 	{
 		ERROR("Failed to create window");
 		return nullptr;
 	}
 
-	auto &context = handle->_context.emplace<lak::opengl_context>();
+	auto &context = handle->gc.emplace<lak::opengl_context>();
 
 #define SET_ATTRIB(A, B)                                                      \
 	if (SDL_GL_SetAttribute(A, B))                                              \
@@ -97,8 +86,8 @@ lak::window_handle *lak::create_window(const lak::platform_instance &instance,
 	SET_ATTRIB(SDL_GL_CONTEXT_MINOR_VERSION, settings.minor);
 #undef SET_ATTRIB
 
-	if (context.platform_handle = SDL_GL_CreateContext(handle->_platform_handle);
-	    !context.platform_handle)
+	if (context.sdl_glcontext = SDL_GL_CreateContext(handle->sdl_window);
+	    !context.sdl_glcontext)
 	{
 		ERROR("Failed to create an OpenGL context");
 		ERROR(SDL_GetError());
@@ -117,8 +106,7 @@ lak::window_handle *lak::create_window(const lak::platform_instance &instance,
 		return nullptr;
 	}
 
-	if (SDL_GL_MakeCurrent(handle->_platform_handle, context.platform_handle) !=
-	    0)
+	if (SDL_GL_MakeCurrent(handle->sdl_window, context.sdl_glcontext) != 0)
 	{
 		ERROR("Failed to make context current for window");
 		ERROR(SDL_GetError());
@@ -133,20 +121,19 @@ lak::window_handle *lak::create_window(const lak::platform_instance &instance,
 		return nullptr;
 	}
 
-	context.sdl_window = handle->_platform_handle;
+	context.sdl_window = handle->sdl_window;
 
 	return handle.release();
 }
 
-lak::window_handle *lak::create_window(const lak::platform_instance &instance,
-                                       const lak::vulkan_settings &)
+lak::window_handle *lak::create_window(const lak::vulkan_settings &)
 {
 	auto handle = lak::unique_bank_ptr<lak::window_handle>::create();
 	ASSERT(handle);
 
-	DEFER(if (handle) lak::destroy_window(instance, handle.get()););
+	DEFER(if (handle) lak::destroy_window(handle.get()););
 
-	handle->_platform_handle =
+	handle->sdl_window =
 	  SDL_CreateWindow("",
 	                   SDL_WINDOWPOS_CENTERED,
 	                   SDL_WINDOWPOS_CENTERED,
@@ -154,20 +141,18 @@ lak::window_handle *lak::create_window(const lak::platform_instance &instance,
 	                   480,
 	                   SDL_WINDOW_RESIZABLE | SDL_WINDOW_VULKAN);
 
-	if (!handle->_platform_handle)
+	if (!handle->sdl_window)
 	{
 		ERROR("Failed to create window");
 		return nullptr;
 	}
 
-	[[maybe_unused]] auto &context =
-	  handle->_context.emplace<lak::vulkan_context>();
+	[[maybe_unused]] auto &context = handle->gc.emplace<lak::vulkan_context>();
 
 	return handle.release();
 }
 
-bool lak::destroy_window(const lak::platform_instance &,
-                         lak::window_handle *handle)
+bool lak::destroy_window(lak::window_handle *handle)
 {
 	ASSERT(handle);
 
@@ -185,7 +170,7 @@ bool lak::destroy_window(const lak::platform_instance &,
 
 		case lak::graphics_mode::OpenGL:
 		{
-			SDL_GL_DeleteContext(handle->opengl_context().platform_handle);
+			SDL_GL_DeleteContext(handle->opengl_context().sdl_glcontext);
 		}
 		break;
 
@@ -194,16 +179,22 @@ bool lak::destroy_window(const lak::platform_instance &,
 		}
 		break;
 	}
-	handle->_context.emplace<std::monostate>();
+	handle->gc.emplace<std::monostate>();
 
-	if (handle->_platform_handle) SDL_DestroyWindow(handle->_platform_handle);
+	if (handle->sdl_window) SDL_DestroyWindow(handle->sdl_window);
+
+	lak::bank<lak::window_handle>::destroy(handle);
 
 	return true;
 }
 
 /* --- OpenGL --- */
 
-// :TODO: Actually put this in a header somewhere.
+lak::graphics_mode lak::window_graphics_mode(const lak::window_handle *w)
+{
+	return w->graphics_mode();
+}
+
 bool lak::set_opengl_swap_interval(const lak::opengl_context &, int interval)
 {
 	return SDL_GL_SetSwapInterval(interval) == 0;
@@ -211,82 +202,72 @@ bool lak::set_opengl_swap_interval(const lak::opengl_context &, int interval)
 
 /* --- Window helper functions --- */
 
-lak::wstring lak::window_title(const lak::platform_instance &,
-                               const lak::window_handle *handle)
+lak::wstring lak::window_title(const lak::window_handle *handle)
 {
-	return lak::to_wstring(lak::as_u8string(lak::astring_view::from_c_str(
-	  SDL_GetWindowTitle(handle->_platform_handle))));
+	return lak::to_wstring(lak::as_u8string(
+	  lak::astring_view::from_c_str(SDL_GetWindowTitle(handle->sdl_window))));
 }
 
-bool lak::set_window_title(const lak::platform_instance &,
-                           lak::window_handle *handle,
-                           const lak::wstring &str)
+bool lak::set_window_title(lak::window_handle *handle, const lak::wstring &str)
 {
 	SDL_SetWindowTitle(
-	  handle->_platform_handle,
+	  handle->sdl_window,
 	  reinterpret_cast<const char *>(lak::to_u8string(str).c_str()));
 	return true;
 }
 
-lak::vec2l_t lak::window_size(const lak::platform_instance &,
-                              const lak::window_handle *handle)
+lak::vec2l_t lak::window_size(const lak::window_handle *handle)
 {
 	int w, h;
-	SDL_GetWindowSize(handle->_platform_handle, &w, &h);
+	SDL_GetWindowSize(handle->sdl_window, &w, &h);
 	return {w, h};
 }
 
-bool lak::set_window_cursor_pos(const lak::platform_instance &,
-                                const lak::window_handle *handle,
+bool lak::set_window_cursor_pos(const lak::window_handle *handle,
                                 lak::vec2l_t pos)
 {
 	ASSERT(pos.x < INT_MAX && pos.x > INT_MIN);
 	ASSERT(pos.y < INT_MAX && pos.y > INT_MIN);
 	// :TODO: clamp instead of cast
-	SDL_WarpMouseInWindow(handle->_platform_handle, (int)pos.x, (int)pos.y);
+	SDL_WarpMouseInWindow(handle->sdl_window, (int)pos.x, (int)pos.y);
 	return true;
 }
 
-lak::vec2l_t lak::window_drawable_size(const lak::platform_instance &,
-                                       const lak::window_handle *handle)
+lak::vec2l_t lak::window_drawable_size(const lak::window_handle *handle)
 {
 	int w = 0, h = 0;
 	switch (handle->graphics_mode())
 	{
 		case lak::graphics_mode::Software:
 		{
-			auto *surface = SDL_GetWindowSurface(handle->_platform_handle);
+			auto *surface = SDL_GetWindowSurface(handle->sdl_window);
 			ASSERT(surface);
 			w = surface->w;
 			h = surface->h;
 		}
 		break;
 		case lak::graphics_mode::OpenGL:
-			SDL_GL_GetDrawableSize(handle->_platform_handle, &w, &h);
+			SDL_GL_GetDrawableSize(handle->sdl_window, &w, &h);
 			break;
 		case lak::graphics_mode::Vulkan:
-			// SDL_Vulkan_GetDrawableSize(handle->_platform_handle, &w, &h);
+			// SDL_Vulkan_GetDrawableSize(handle->sdl_window, &w, &h);
 			break;
 		default: FATAL("Invalid graphics mode (", handle->graphics_mode(), ")");
 	}
 	return {w, h};
 }
 
-bool lak::set_window_size(const lak::platform_instance &,
-                          lak::window_handle *handle,
-                          lak::vec2l_t size)
+bool lak::set_window_size(lak::window_handle *handle, lak::vec2l_t size)
 {
-	ASSERT_GREATER(std::numeric_limits<int>::max(), size.x);
-	ASSERT_GREATER(std::numeric_limits<int>::max(), size.y);
+	ASSERT_LESS(size.x, INT_MAX);
+	ASSERT_LESS(size.y, INT_MAX);
 
-	SDL_SetWindowSize(handle->_platform_handle,
-	                  static_cast<int>(size.x),
-	                  static_cast<int>(size.y));
+	SDL_SetWindowSize(
+	  handle->sdl_window, static_cast<int>(size.x), static_cast<int>(size.y));
 	return true;
 }
 
-bool lak::swap_window(const lak::platform_instance &,
-                      lak::window_handle *handle)
+bool lak::swap_window(lak::window_handle *handle)
 {
 	switch (handle->graphics_mode())
 	{
@@ -305,3 +286,5 @@ bool lak::swap_window(const lak::platform_instance &,
 		default: return false;
 	}
 }
+
+#include "../common/window.inl"

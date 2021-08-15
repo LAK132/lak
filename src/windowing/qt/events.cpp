@@ -1,15 +1,15 @@
-#include "lak/events.hpp"
+#include "impl.hpp"
 
-bool lak::next_event(const lak::platform_instance &i, lak::event *e)
+bool lak::next_event(lak::event *e)
 {
-	(void)i;
 	(void)e;
 	return false;
 }
 
-bool lak::peek_event(const lak::platform_instance &i, lak::event *e)
+bool lak::peek_event(lak::event *e)
 {
-	(void)i;
 	(void)e;
 	return false;
 }
+
+#include "../common/events.inl"

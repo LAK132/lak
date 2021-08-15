@@ -1,7 +1,7 @@
 #ifndef LAK_OPENGL_STATE_HPP
 #define LAK_OPENGL_STATE_HPP
 
-#include <GL/gl3w.h>
+#include "lak/opengl/gl3w.hpp"
 
 #include "lak/compiler.hpp"
 #include "lak/debug.hpp"

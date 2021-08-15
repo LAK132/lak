@@ -1,6 +1,8 @@
 #include "lak/events.hpp"
 #include "lak/debug.hpp"
 
+#include "impl.hpp"
+
 bool lak::next_event(const lak::platform_instance &handle, lak::event *event)
 {
 	if (XPending(handle.handle) < 1) return false;
@@ -137,3 +139,5 @@ bool lak::peek_thread_event(const lak::platform_instance &instance,
 {
 	return false;
 }
+
+#include "../common/events.inl"

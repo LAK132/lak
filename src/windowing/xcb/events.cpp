@@ -1,6 +1,8 @@
 #include "lak/events.hpp"
 #include "lak/debug.hpp"
 
+#include "impl.hpp"
+
 bool lak::next_event(const lak::platform_instance &handle, lak::event *event)
 {
 	xcb_generic_event_t *e;
@@ -47,3 +49,5 @@ bool lak::peek_thread_event(const lak::platform_instance &instance,
 {
 	return false;
 }
+
+#include "../common/events.inl"

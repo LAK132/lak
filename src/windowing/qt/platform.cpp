@@ -1,61 +1,49 @@
-#include "lak/window.hpp"
+#include "impl.hpp"
 
-bool lak::platform_init(lak::platform_instance *i)
+bool lak::platform_init()
 {
-	(void)i;
 	return false;
 }
 
-bool lak::platform_quit(lak::platform_instance *i)
+bool lak::platform_quit()
 {
-	(void)i;
 	return false;
 }
 
-bool lak::get_clipboard(const lak::platform_instance &i, lak::u8string *s)
+bool lak::get_clipboard(lak::u8string *s)
 {
-	(void)i;
 	(void)s;
 	return false;
 }
 
-bool lak::set_clipboard(const lak::platform_instance &i, lak::u8string_view s)
+bool lak::set_clipboard(lak::u8string_view s)
 {
-	(void)i;
 	(void)s;
 	return false;
 }
 
-bool lak::cursor_visible(const lak::platform_instance &i)
+bool lak::cursor_visible()
 {
-	(void)i;
 	return false;
 }
 
-void lak::show_cursor(const lak::platform_instance &i)
-{
-	(void)i;
-}
+void lak::show_cursor() {}
 
-void lak::hide_cursor(const lak::platform_instance &i)
-{
-	(void)i;
-}
+void lak::hide_cursor() {}
 
-void lak::set_cursor_pos(const lak::platform_instance &i, lak::vec2l_t p)
+void lak::set_cursor_pos(lak::vec2l_t p)
 {
-	(void)i;
 	(void)p;
 }
 
-lak::vec2l_t lak::get_cursor_pos(const lak::platform_instance &i)
+lak::vec2l_t lak::get_cursor_pos()
 {
-	(void)i;
 	return {};
 }
 
-void lak::set_cursor(const lak::platform_instance &i, const lak::cursor &c)
+void lak::set_cursor(lak::cursor *c)
 {
-	(void)i;
 	(void)c;
 }
+
+#include "../common/platform.inl"

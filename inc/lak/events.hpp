@@ -5,6 +5,7 @@
 
 #include "lak/buffer.hpp"
 #include "lak/debug.hpp"
+#include "lak/memory.hpp"
 #include "lak/string.hpp"
 #include "lak/vec.hpp"
 
@@ -117,9 +118,13 @@ namespace lak
 		lak::vec2f_t wheel;
 	};
 
+	struct platform_event;
+	using platform_event_ptr = lak::unique_ptr<lak::platform_event>;
+	extern template struct lak::unique_ptr<lak::platform_event>;
+
 	struct event
 	{
-		using state_t = std::variant<std::monostate,
+		using state_t = lak::variant<lak::monostate,
 		                             lak::window_event,
 		                             lak::dropfile_event,
 		                             lak::key_event,
@@ -130,94 +135,72 @@ namespace lak
 
 		lak::event_type type             = lak::event_type::platform_event;
 		const lak::window_handle *handle = nullptr;
-#if defined(LAK_USE_WINAPI)
-		MSG platform_event;
-#elif defined(LAK_USE_XLIB)
-		XEvent platform_event;
-#elif defined(LAK_USE_XCB)
-		xcb_generic_event_t platform_event;
-#elif defined(LAK_USE_SDL)
-		SDL_Event platform_event;
-#else
-#	error "No implementation specified"
-#endif
+		mutable lak::platform_event_ptr _platform_event;
 		state_t _state;
-
-		using platform_event_t = decltype(platform_event);
 
 		const lak::window_event &window() const
 		{
-			return std::get<lak::window_event>(_state);
+			return *_state.template get<state_t::index_of<lak::window_event>>();
 		}
 
 		const lak::dropfile_event &dropfile() const
 		{
-			return std::get<lak::dropfile_event>(_state);
+			return *_state.template get<state_t::index_of<lak::dropfile_event>>();
 		}
 
 		const lak::key_event &key() const
 		{
-			return std::get<lak::key_event>(_state);
+			return *_state.template get<state_t::index_of<lak::key_event>>();
 		}
 
 		const lak::character_event &character() const
 		{
-			return std::get<lak::character_event>(_state);
+			return *_state.template get<state_t::index_of<lak::character_event>>();
 		}
 
 		const lak::motion_event &motion() const
 		{
-			return std::get<lak::motion_event>(_state);
+			return *_state.template get<state_t::index_of<lak::motion_event>>();
 		}
 
 		const lak::button_event &button() const
 		{
-			return std::get<lak::button_event>(_state);
+			return *_state.template get<state_t::index_of<lak::button_event>>();
 		}
 
 		const lak::wheel_event &wheel() const
 		{
-			return std::get<lak::wheel_event>(_state);
+			return *_state.template get<state_t::index_of<lak::wheel_event>>();
 		}
 
-		inline event(lak::event_type t,
-		             const platform_event_t &e,
-		             const state_t &s)
-		: type(t), handle(nullptr), platform_event(e), _state(s)
-		{
-		}
+		// implementations should initialise _platform_event if it is not already
+		const lak::platform_event &platform() const;
+		lak::platform_event &platform();
 
-		inline event(lak::event_type t, const platform_event_t &e)
-		: type(t), handle(nullptr), platform_event(e), _state()
-		{
-		}
+		event(lak::event_type t, lak::platform_event_ptr &&e, const state_t &s);
 
-		inline event(lak::event_type t,
-		             const lak::window_handle *w,
-		             const platform_event_t &e,
-		             const state_t &s)
-		: type(t), handle(w), platform_event(e), _state(s)
-		{
-		}
+		event(lak::event_type t, lak::platform_event_ptr &&e);
 
-		inline event(lak::event_type t,
-		             const lak::window_handle *w,
-		             const platform_event_t &e)
-		: type(t), handle(w), platform_event(e), _state()
-		{
-		}
+		event(lak::event_type t,
+		      const lak::window_handle *w,
+		      lak::platform_event_ptr &&e,
+		      const state_t &s);
 
-		event()              = default;
-		event(const event &) = default;
-		~event()             = default;
-		event &operator=(const event &) = default;
+		event(lak::event_type t,
+		      const lak::window_handle *w,
+		      lak::platform_event_ptr &&e);
+
+		event()         = default;
+		event(event &&) = default;
+		event &operator=(event &&) = default;
+		~event();
 	};
 
 	static_assert(std::is_default_constructible_v<lak::event>,
 	              "lak::event must be default constructible");
 
-	bool next_event(const lak::platform_instance &i, lak::event *e);
-	bool peek_event(const lak::platform_instance &i, lak::event *e);
+	bool next_event(lak::event *e);
+	bool peek_event(lak::event *e);
 }
 
 #endif
