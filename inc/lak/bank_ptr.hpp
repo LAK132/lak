@@ -15,6 +15,11 @@ namespace lak
 	struct bank
 	{
 	protected:
+		template<typename U>
+		friend struct shared_bank_ptr;
+		template<typename U>
+		friend struct unique_bank_ptr;
+
 		static std::mutex _mutex;
 		static lak::railcar<T> _container;
 		static lak::array<size_t> _deleted;
@@ -54,6 +59,9 @@ namespace lak
 	struct unique_bank_ptr : protected bank<T>
 	{
 	protected:
+		template<typename U>
+		friend struct shared_bank_ptr;
+
 		size_t _index; // not thread safe!
 		T *_value;
 
@@ -120,6 +128,9 @@ namespace lak
 	struct shared_bank_ptr : protected unique_bank_ptr<T>
 	{
 	protected:
+		template<typename U>
+		friend struct unique_bank_ptr;
+
 		static lak::railcar<size_t> _reference_count;
 
 		shared_bank_ptr(size_t index) : unique_bank_ptr<T>(index) {}

@@ -189,6 +189,7 @@ template<typename T>
 lak::railcar<T> &lak::railcar<T>::operator=(const railcar &other)
 {
 	_data = other._data;
+	return *this;
 }
 
 template<typename T>
@@ -373,10 +374,11 @@ T *lak::railcar<T>::erase(const T *element)
 
 	size_t page = 0;
 
-	for (; page < _data.size() && !contains(_data[page].get(), element); ++page)
+	for (; page < _data.size() && !contains(lak::span(_data[page]), element);
+	     ++page)
 		;
 
-	ASSERT(contains(_data[page].get(), element));
+	ASSERT(contains(lak::span(_data[page]), element));
 
 	T *result = _data[page].erase(element);
 

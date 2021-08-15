@@ -204,7 +204,8 @@ template<typename T>
 lak::unique_bank_ptr<T> &lak::unique_bank_ptr<T>::operator=(std::nullptr_t)
 {
 	reset();
-};
+	return *this;
+}
 
 template<typename T>
 lak::unique_bank_ptr<T>::unique_bank_ptr(unique_bank_ptr &&other)
@@ -373,7 +374,7 @@ template<typename T>
 lak::shared_bank_ptr<T> lak::shared_bank_ptr<T>::create(const T &t)
 {
 	std::lock_guard lock(bank<T>::_mutex);
-	auto index = internal_create(t);
+	auto index = bank<T>::internal_create(t);
 	_reference_count.resize(bank<T>::_container.size());
 	++_reference_count[index];
 	return {index};
@@ -383,7 +384,7 @@ template<typename T>
 lak::shared_bank_ptr<T> lak::shared_bank_ptr<T>::create(T &&t)
 {
 	std::lock_guard lock(bank<T>::_mutex);
-	auto index = internal_create(lak::move(t));
+	auto index = bank<T>::internal_create(lak::move(t));
 	_reference_count.resize(bank<T>::_container.size());
 	++_reference_count[index];
 	return {index};
@@ -394,7 +395,7 @@ template<typename... ARGS>
 lak::shared_bank_ptr<T> lak::shared_bank_ptr<T>::create(ARGS &&...args)
 {
 	std::lock_guard lock(bank<T>::_mutex);
-	auto index = internal_create(lak::forward<ARGS>(args)...);
+	auto index = bank<T>::internal_create(lak::forward<ARGS>(args)...);
 	_reference_count.resize(bank<T>::_container.size());
 	++_reference_count[index];
 	return {index};
@@ -415,7 +416,8 @@ template<typename T>
 lak::shared_bank_ptr<T> &lak::shared_bank_ptr<T>::operator=(std::nullptr_t)
 {
 	reset();
-};
+	return *this;
+}
 
 template<typename T>
 lak::shared_bank_ptr<T>::shared_bank_ptr(const shared_bank_ptr &other)

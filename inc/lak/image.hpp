@@ -34,6 +34,7 @@ namespace lak
 		{
 			lak::swap(_size, img._size);
 			lak::swap(_value, img._value);
+			return *this;
 		}
 
 		value_type &at(const size_type index)
