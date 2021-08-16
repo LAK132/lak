@@ -6,6 +6,7 @@ laktest = static_library(
     'bitflag.cpp',
     'bitset.cpp',
     'const_string.cpp',
+    'dsl.cpp',
     'json.cpp',
     'string_view.cpp',
     'test.cpp',
