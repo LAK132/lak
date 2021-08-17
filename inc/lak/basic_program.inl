@@ -132,40 +132,44 @@ int LAK_BASIC_PROGRAM_MAIN(int argc, char **argv)
 	lak::platform_init();
 	DEFER(lak::platform_quit());
 
-	auto window =
-	  lak::window::make(basic_window_opengl_settings)
-	    .and_then(
-	      [&](auto &&window) -> lak::result<lak::window>
-	      {
-		      if (window.graphics() != lak::graphics_mode::OpenGL)
-			      return lak::err_t{};
+	auto make_software = [&]()
+	{
+		return lak::window::make(basic_window_software_settings)
+		  .and_then(
+		    [&](auto &&window) -> lak::result<lak::window>
+		    {
+			    if (window.graphics() != lak::graphics_mode::Software)
+				    return lak::err_t{};
+			    return lak::ok_t{lak::move(window)};
+		    });
+	};
 
-		      glViewport(0, 0, window.drawable_size().x, window.drawable_size().y);
-		      glClearColor(basic_window_clear_colour.r,
-		                   basic_window_clear_colour.g,
-		                   basic_window_clear_colour.b,
-		                   basic_window_clear_colour.a);
-		      glEnable(GL_DEPTH_TEST);
+	auto window =
+	  (basic_window_force_software
+	     ? make_software()
+	     : lak::window::make(basic_window_opengl_settings)
+	         .and_then(
+	           [&](auto &&window) -> lak::result<lak::window>
+	           {
+		           if (window.graphics() != lak::graphics_mode::OpenGL)
+			           return lak::err_t{};
+
+		           glViewport(
+		             0, 0, window.drawable_size().x, window.drawable_size().y);
+		           glClearColor(basic_window_clear_colour.r,
+		                        basic_window_clear_colour.g,
+		                        basic_window_clear_colour.b,
+		                        basic_window_clear_colour.a);
+		           glEnable(GL_DEPTH_TEST);
 
 #ifndef NDEBUG
-		      glEnable(GL_DEBUG_OUTPUT);
-		      glDebugMessageCallback(&MessageCallback, 0);
+		           glEnable(GL_DEBUG_OUTPUT);
+		           glDebugMessageCallback(&MessageCallback, 0);
 #endif
 
-		      return lak::ok_t{lak::move(window)};
-	      })
-	    .or_else(
-	      [&](auto &&)
-	      {
-		      return lak::window::make(basic_window_software_settings)
-		        .and_then(
-		          [&](auto &&window) -> lak::result<lak::window>
-		          {
-			          if (window.graphics() != lak::graphics_mode::Software)
-				          return lak::err_t{};
-			          return lak::ok_t{lak::move(window)};
-		          });
-	      })
+		           return lak::ok_t{lak::move(window)};
+	           })
+	         .or_else([&](auto &&) { return make_software(); }))
 	    .UNWRAP();
 
 	window.set_title(L"" APP_NAME);
