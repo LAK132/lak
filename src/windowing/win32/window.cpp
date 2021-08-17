@@ -42,7 +42,7 @@ lak::window_handle *lak::create_window(const lak::software_settings &)
 	auto handle = lak::unique_bank_ptr<lak::window_handle>::create();
 	ASSERT(handle);
 
-	DEFER(if (handle) lak::destroy_window(handle.get()));
+	DEFER(if (handle) lak::destroy_window(handle.release()));
 
 	DWORD style = WS_OVERLAPPEDWINDOW;
 
@@ -138,7 +138,7 @@ lak::window_handle *lak::create_window(const lak::opengl_settings &settings)
 	auto handle = lak::unique_bank_ptr<lak::window_handle>::create();
 	ASSERT(handle);
 
-	DEFER(if (handle) lak::destroy_window(handle.get()));
+	DEFER(if (handle) lak::destroy_window(handle.release()));
 
 	DWORD style = WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN | WS_CLIPSIBLINGS;
 
@@ -227,7 +227,7 @@ lak::window_handle *lak::create_window(const lak::vulkan_settings &)
 	auto handle = lak::unique_bank_ptr<lak::window_handle>::create();
 	ASSERT(handle);
 
-	DEFER(if (handle) lak::destroy_window(handle.get()));
+	DEFER(if (handle) lak::destroy_window(handle.release()));
 
 	DWORD style = WS_OVERLAPPEDWINDOW;
 

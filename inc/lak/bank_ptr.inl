@@ -188,6 +188,7 @@ lak::unique_bank_ptr<T> lak::unique_bank_ptr<T>::create(ARGS &&...args)
 template<typename T>
 lak::unique_bank_ptr<T> lak::unique_bank_ptr<T>::from_raw_bank_ptr(T *ptr)
 {
+	if (!ptr) return {};
 	std::lock_guard lock(bank<T>::_mutex);
 	ASSERT_GREATER_OR_EQUAL(ptr, &bank<T>::_container.front());
 	ASSERT_GREATER_OR_EQUAL(&bank<T>::_container.back(), ptr);

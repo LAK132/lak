@@ -11,7 +11,7 @@ lak::window_handle *lak::create_window(const lak::software_settings &)
 	auto handle = lak::unique_bank_ptr<lak::window_handle>::create();
 	ASSERT(handle);
 
-	DEFER(if (handle) lak::destroy_window(handle.get()););
+	DEFER(if (handle) lak::destroy_window(handle.release()););
 
 	handle->sdl_window = SDL_CreateWindow("",
 	                                      SDL_WINDOWPOS_CENTERED,
@@ -46,7 +46,7 @@ lak::window_handle *lak::create_window(const lak::opengl_settings &settings)
 	auto handle = lak::unique_bank_ptr<lak::window_handle>::create();
 	ASSERT(handle);
 
-	DEFER(if (handle) lak::destroy_window(handle.get()););
+	DEFER(if (handle) lak::destroy_window(handle.release()););
 
 	// :TODO: SDL2 documentation says this should be called *after*
 	// SDL_GL_SetAttribute but that's causing the screen to stay perminently
@@ -131,7 +131,7 @@ lak::window_handle *lak::create_window(const lak::vulkan_settings &)
 	auto handle = lak::unique_bank_ptr<lak::window_handle>::create();
 	ASSERT(handle);
 
-	DEFER(if (handle) lak::destroy_window(handle.get()););
+	DEFER(if (handle) lak::destroy_window(handle.release()););
 
 	handle->sdl_window =
 	  SDL_CreateWindow("",
