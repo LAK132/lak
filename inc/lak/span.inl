@@ -502,6 +502,13 @@ lak::shift_result<T> lak::shift_right(lak::span<T> data, size_t distance)
 }
 
 template<typename T>
+void lak::reverse(lak::span<T> data)
+{
+	for (size_t steps = (data.size() / 2), i = 0; i < steps; ++i)
+		lak::swap(data[i], data[data.size() - (i + 1)]);
+}
+
+template<typename T>
 size_t lak::compare(lak::span<const T> a, lak::span<const T> b)
 {
 	if (lak::same_span(a, b)) return a.size();

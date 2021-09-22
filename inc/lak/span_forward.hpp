@@ -473,6 +473,9 @@ namespace lak
 	lak::shift_result<T> shift_right(lak::span<T> data, size_t distance = 1);
 
 	template<typename T>
+	void reverse(lak::span<T> data);
+
+	template<typename T>
 	size_t compare(lak::span<const T> a, lak::span<const T> b);
 
 	// Check if the spans are pointing to the same underlying data.
