@@ -57,11 +57,13 @@
 #undef SCOPED_CHECKPOINT
 #undef FUNCTION_CHECKPOINT
 #undef DEBUG
+#undef DEBUG_EXPR
 #if defined(NOLOG)
 #	define CHECKPOINT()
 #	define SCOPED_CHECKPOINT(...)
 #	define FUNCTION_CHECKPOINT(...)
 #	define DEBUG(...)
+#	define DEBUG_EXPR(...)
 #else
 #	if defined(LAK_NO_DEBUG_COLOURS)
 #		define DEBUG_LINE_FILE "(" LINE_TRACE_STR ")"
@@ -84,6 +86,12 @@
 #	define DEBUG(...)                                                          \
 		lak::debugger.std_out(TO_U8STRING(DEBUG_DEBUG_LINE_FILE),                 \
 		                      lak::streamify(__VA_ARGS__, "\n"));
+#	define DEBUG_EXPR(...)                                                     \
+		lak::debugger.std_out(                                                    \
+		  TO_U8STRING(DEBUG_DEBUG_LINE_FILE),                                     \
+		  lak::streamify(DEBUG_STRINGIFY_EXPR(__VA_ARGS__) ": ",                  \
+		                 lak::spaced_streamify(u8", ", __VA_ARGS__),              \
+		                 "\n"));
 #endif
 
 #undef ABORT
