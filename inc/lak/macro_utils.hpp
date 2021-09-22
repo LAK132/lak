@@ -1,7 +1,7 @@
 #undef STRINGIFY_EX
-#define STRINGIFY_EX(x) #x
+#define STRINGIFY_EX(...) #__VA_ARGS__
 #undef STRINGIFY
-#define STRINGIFY(x) STRINGIFY_EX(x)
+#define STRINGIFY(...) STRINGIFY_EX(__VA_ARGS__)
 
 #undef TOKEN_CONCAT_EX
 #define TOKEN_CONCAT_EX(x, y) x##y
