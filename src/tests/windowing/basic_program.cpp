@@ -38,6 +38,16 @@ int basic_window_quit(lak::window &window)
 
 BEGIN_TEST(basic_program)
 {
-	return LAK_BASIC_PROGRAM_MAIN(0, nullptr);
+	DEBUG("attempting to launch hardware rendered window");
+	basic_window_force_software = false;
+	if (int err = LAK_BASIC_PROGRAM_MAIN(0, nullptr); err != EXIT_SUCCESS)
+		return err;
+
+	DEBUG("attempting to launch software rendered window");
+	basic_window_force_software = true;
+	if (int err = LAK_BASIC_PROGRAM_MAIN(0, nullptr); err != EXIT_SUCCESS)
+		return err;
+
+	return EXIT_SUCCESS;
 }
 END_TEST()
