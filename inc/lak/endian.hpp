@@ -1,7 +1,9 @@
 #ifndef LAK_ENDIAN_HPP
 #define LAK_ENDIAN_HPP
 
-#if defined(__clang__) || defined(__GNUC__)
+#include "lak/compiler.hpp"
+
+#if defined(LAK_COMPILER_CLANG) || defined(LAK_COMPILER_GNUC)
 #	if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
 #		define LAK_BIG_ENDIAN
 #	elif __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
@@ -9,9 +11,8 @@
 #	else
 #		error "Endianness not supported"
 #	endif
-#elif defined(_MSC_VER)
+#elif defined(LAK_COMPILER_MSVC)
 #	include "lak/windows.hpp"
-#	include <winnt.h>
 #	if REG_DWORD == REG_DWORD_BIG_ENDIAN
 #		define LAK_BIG_ENDIAN
 #	elif REG_DWORD == REG_DWORD_LITTLE_ENDIAN
