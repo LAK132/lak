@@ -34,39 +34,42 @@
 #undef LAK_CSI
 #undef LAK_SGR_STR
 #undef LAK_SGR
+#define LAK_ESC          "\x1B"
+#define LAK_CSI          LAK_ESC "["
+#define LAK_SGR_STR(str) LAK_CSI str "m"
+#define LAK_SGR(x)       LAK_SGR_STR(STRINGIFY(x))
+
 #undef LAK_SGR_RESET
 #undef LAK_BOLD
 #undef LAK_FAINT
 #undef LAK_ITALIC
+#define LAK_SGR_RESET LAK_SGR(0)
+#define LAK_BOLD      LAK_SGR(1)
+#define LAK_FAINT     LAK_SGR(2)
+#define LAK_ITALIC    LAK_SGR(3)
+
 #undef LAK_RED
 #undef LAK_GREEN
 #undef LAK_YELLOW
+#define LAK_RED    LAK_SGR(31)
+#define LAK_GREEN  LAK_SGR(32)
+#define LAK_YELLOW LAK_SGR(33)
+
 #undef LAK_BRIGHT_BLACK
 #undef LAK_BRIGHT_RED
 #undef LAK_BRIGHT_GREEN
 #undef LAK_BRIGHT_YELLOW
+#define LAK_BRIGHT_BLACK  LAK_SGR(90)
+#define LAK_BRIGHT_RED    LAK_SGR(91)
+#define LAK_BRIGHT_GREEN  LAK_SGR(92)
+#define LAK_BRIGHT_YELLOW LAK_SGR(93)
+
 #undef LAK_SGR_FORE
 #undef LAK_SGR_FORE_8
 #undef LAK_SGR_FORE_24
 #undef LAK_SGR_BACK
 #undef LAK_SGR_BACK_8
 #undef LAK_SGR_BACK_24
-
-#define LAK_ESC           "\x1B"
-#define LAK_CSI           LAK_ESC "["
-#define LAK_SGR_STR(str)  LAK_CSI str "m"
-#define LAK_SGR(x)        LAK_SGR_STR(STRINGIFY(x))
-#define LAK_SGR_RESET     LAK_SGR(0)
-#define LAK_BOLD          LAK_SGR(1)
-#define LAK_FAINT         LAK_SGR(2)
-#define LAK_ITALIC        LAK_SGR(3)
-#define LAK_RED           LAK_SGR(31)
-#define LAK_GREEN         LAK_SGR(32)
-#define LAK_YELLOW        LAK_SGR(33)
-#define LAK_BRIGHT_BLACK  LAK_SGR(90)
-#define LAK_BRIGHT_RED    LAK_SGR(91)
-#define LAK_BRIGHT_GREEN  LAK_SGR(92)
-#define LAK_BRIGHT_YELLOW LAK_SGR(93)
 #define LAK_SGR_FORE(x)   LAK_SGR_STR("3" STRINGIFY(x))
 #define LAK_SGR_FORE_8(x) LAK_SGR_STR("38;5;" STRINGIFY(x))
 #define LAK_SGR_FORE_24(r, g, b)                                              \
