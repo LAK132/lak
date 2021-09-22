@@ -9,6 +9,14 @@
 #include <ostream>
 #include <sstream>
 
+template<typename ARG, typename... ARGS>
+lak::u8string lak::spaced_streamify(const lak::u8string &space,
+                                    const ARG &arg,
+                                    const ARGS &...args)
+{
+	return (lak::streamify(arg) + ... + (lak::streamify(space, args)));
+}
+
 template<typename... ARGS>
 lak::u8string lak::streamify(const ARGS &...args)
 {

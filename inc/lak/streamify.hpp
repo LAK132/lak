@@ -22,6 +22,11 @@ namespace lak
 		return _is_streamable<T>(0);
 	}
 
+	template<typename ARG, typename... ARGS>
+	lak::u8string spaced_streamify(const lak::u8string &space,
+	                               const ARG &arg,
+	                               const ARGS &...args);
+
 	template<typename... ARGS>
 	lak::u8string streamify(const ARGS &...args);
 }
