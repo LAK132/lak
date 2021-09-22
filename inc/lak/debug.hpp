@@ -78,8 +78,9 @@
 		                      lak::to_u8string("\n"));
 #	define SCOPED_CHECKPOINT(...)                                              \
 		lak::scoped_indenter UNIQUIFY(SCOPED_INDENTOR_)(                          \
-		  lak::streamify(__VA_ARGS__, " " DEBUG_LINE_FILE));
-#	define FUNCTION_CHECKPOINT(...) SCOPED_CHECKPOINT("" __VA_ARGS__, __func__)
+		  lak::streamify(__VA_ARGS__ __VA_OPT__(, " ") DEBUG_LINE_FILE));
+#	define FUNCTION_CHECKPOINT(...)                                            \
+		SCOPED_CHECKPOINT(__VA_ARGS__ __VA_OPT__(, ) __func__)
 #	define DEBUG(...)                                                          \
 		lak::debugger.std_out(TO_U8STRING(DEBUG_DEBUG_LINE_FILE),                 \
 		                      lak::streamify(__VA_ARGS__, "\n"));
