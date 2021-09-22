@@ -423,7 +423,7 @@ lak::span<T> lak::rotate_left(lak::span<T> data, size_t distance)
 {
 	if (data.size() == 0 || (distance % data.size()) == 0) return data;
 
-	for (size_t i = 0; i < data.size(); ++i)
+	for (size_t i = 0; i < data.size() - 1; ++i)
 	{
 		lak::swap(data[i], data[(i + distance) % data.size()]);
 	}
@@ -436,7 +436,7 @@ lak::span<T> lak::rotate_right(lak::span<T> data, size_t distance)
 {
 	if (data.size() == 0 || (distance % data.size()) == 0) return data;
 
-	for (size_t i = data.size(); i-- > 0;)
+	for (size_t i = data.size() - 1; i-- > 0;)
 	{
 		lak::swap(data[i], data[(i + distance) % data.size()]);
 	}
