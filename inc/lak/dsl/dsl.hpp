@@ -118,7 +118,7 @@ namespace lak
 		};
 
 		template<lak::dsl::parser auto... parsers>
-		inline constexpr sequence_t<parsers...> sequence;
+		inline constexpr lak::dsl::sequence_t<parsers...> sequence;
 
 		static_assert(lak::dsl::parser<lak::dsl::sequence_t<>>);
 		static_assert(
@@ -213,16 +213,16 @@ namespace lak
 		};
 
 		template<lak::dsl::parser auto parser>
-		inline constexpr repeat_t<parser> repeat;
+		inline constexpr lak::dsl::repeat_t<parser> repeat;
 
 		template<lak::dsl::parser auto parser, size_t count>
-		inline constexpr repeat_t<parser, count> repeat_at_least;
+		inline constexpr lak::dsl::repeat_t<parser, count> repeat_at_least;
 
 		template<lak::dsl::parser auto parser, size_t count>
-		inline constexpr repeat_t<parser, count, count> repeat_exact;
+		inline constexpr lak::dsl::repeat_t<parser, count, count> repeat_exact;
 
 		template<lak::dsl::parser auto parser, size_t min, size_t max>
-		inline constexpr repeat_t<parser, min, max> repeat_range;
+		inline constexpr lak::dsl::repeat_t<parser, min, max> repeat_range;
 
 		static_assert(lak::dsl::parser<lak::dsl::repeat_t<lak::dsl::sequence<>>>);
 		static_assert(
@@ -308,7 +308,7 @@ namespace lak
 		};
 
 		template<lak::dsl::parser auto... parsers>
-		inline constexpr disjunction_t<parsers...> disjunction;
+		inline constexpr lak::dsl::disjunction_t<parsers...> disjunction;
 
 		static_assert(lak::dsl::parser<lak::dsl::disjunction_t<>>);
 		static_assert(
@@ -390,7 +390,7 @@ namespace lak
 		};
 
 		template<lak::u8const_string const_str, typename auto value>
-		inline constexpr literal_t<const_str, value> literal;
+		inline constexpr lak::dsl::literal_t<const_str, value> literal;
 
 		static_assert(lak::dsl::parser<lak::dsl::literal_t<u8"a", 0>>);
 
