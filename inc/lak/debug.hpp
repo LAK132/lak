@@ -42,6 +42,14 @@
 		getchar();                                                                \
 	}
 
+#undef DEBUG_STRINGINFY_EXPR
+#if defined(LAK_NO_DEBUG_COLOURS)
+#	define DEBUG_STRINGIFY_EXPR(...) STRINGIFY(__VA_ARGS__)
+#else
+#	define DEBUG_STRINGIFY_EXPR(...)                                           \
+		LAK_BLUE STRINGIFY(__VA_ARGS__) LAK_SGR_RESET
+#endif
+
 #undef DEBUG_LINE_FILE
 #undef DEBUG_DEBUG_LINE_FILE
 #undef DEBUG_CHECKPOINT_LINE_FILE
@@ -151,7 +159,7 @@
 	{                                                                           \
 		if (!(x))                                                                 \
 		{                                                                         \
-			FATAL("Assertion '" STRINGIFY(x) "' failed");                           \
+			FATAL("Assertion '" DEBUG_STRINGIFY_EXPR(x) "' failed");                \
 		}                                                                         \
 	}
 #define ASSERT_NYI()                                                          \
@@ -168,7 +176,7 @@
 		const auto &UNIQUIFY(y) = (Y);                                            \
 		if (!(UNIQUIFY(x) == UNIQUIFY(y)))                                        \
 		{                                                                         \
-			FATAL("Assertion '" STRINGIFY(X == Y) "' failed: '",                    \
+			FATAL("Assertion '" DEBUG_STRINGIFY_EXPR(X == Y) "' failed: '",         \
 			      UNIQUIFY(x),                                                      \
 			      "' != '",                                                         \
 			      UNIQUIFY(y),                                                      \
@@ -182,7 +190,8 @@
 		const size_t UNIQUIFY(c) = UNIQUIFY(x).size();                            \
 		if (UNIQUIFY(c) != UNIQUIFY(y).size())                                    \
 		{                                                                         \
-			FATAL("Assertion '" STRINGIFY(X.size() == Y.size()) "' failed: '",      \
+			FATAL("Assertion '" DEBUG_STRINGIFY_EXPR(X.size() ==                    \
+			                                         Y.size()) "' failed: '",       \
 			      UNIQUIFY(c),                                                      \
 			      "' != '",                                                         \
 			      UNIQUIFY(y).size(),                                               \
@@ -194,9 +203,9 @@
 			const auto &UNIQUIFY(y_i) = UNIQUIFY(y)[UNIQUIFY(i)];                   \
 			if (!(UNIQUIFY(x_i) == UNIQUIFY(y_i)))                                  \
 			{                                                                       \
-				FATAL("Assertion '" STRINGIFY(X) "[",                                 \
+				FATAL("Assertion '" DEBUG_STRINGIFY_EXPR(X) "[",                      \
 				      UNIQUIFY(i),                                                    \
-				      "] == " STRINGIFY(Y) "[",                                       \
+				      "] == " DEBUG_STRINGIFY_EXPR(Y) "[",                            \
 				      UNIQUIFY(i),                                                    \
 				      "]' failed: '",                                                 \
 				      UNIQUIFY(x_i),                                                  \
@@ -212,7 +221,7 @@
 		const auto &UNIQUIFY(y) = (Y);                                            \
 		if (!(UNIQUIFY(x) != UNIQUIFY(y)))                                        \
 		{                                                                         \
-			FATAL("Assertion '" STRINGIFY(X != Y) "' failed: '",                    \
+			FATAL("Assertion '" DEBUG_STRINGIFY_EXPR(X != Y) "' failed: '",         \
 			      UNIQUIFY(x),                                                      \
 			      "' == '",                                                         \
 			      UNIQUIFY(y),                                                      \
@@ -232,9 +241,9 @@
 				const auto &UNIQUIFY(y_i) = UNIQUIFY(y)[UNIQUIFY(i)];                 \
 				if (!(UNIQUIFY(x_i) != UNIQUIFY(y_i)))                                \
 				{                                                                     \
-					FATAL("Assertion '" STRINGIFY(X) "[",                               \
+					FATAL("Assertion '" DEBUG_STRINGIFY_EXPR(X) "[",                    \
 					      UNIQUIFY(i),                                                  \
-					      "] != " STRINGIFY(Y) "[",                                     \
+					      "] != " DEBUG_STRINGIFY_EXPR(Y) "[",                          \
 					      UNIQUIFY(i),                                                  \
 					      "]' failed: '",                                               \
 					      UNIQUIFY(x_i),                                                \
@@ -251,7 +260,7 @@
 		const auto &UNIQUIFY(y) = (Y);                                            \
 		if (!(UNIQUIFY(x) > UNIQUIFY(y)))                                         \
 		{                                                                         \
-			FATAL("Assertion '" STRINGIFY(X > Y) "' failed: '",                     \
+			FATAL("Assertion '" DEBUG_STRINGIFY_EXPR(X > Y) "' failed: '",          \
 			      UNIQUIFY(x),                                                      \
 			      "' <= '",                                                         \
 			      UNIQUIFY(y),                                                      \
@@ -264,7 +273,7 @@
 		const auto &UNIQUIFY(y) = (Y);                                            \
 		if (!(UNIQUIFY(x) >= UNIQUIFY(y)))                                        \
 		{                                                                         \
-			FATAL("Assertion '" STRINGIFY(X >= Y) "' failed: '",                    \
+			FATAL("Assertion '" DEBUG_STRINGIFY_EXPR(X >= Y) "' failed: '",         \
 			      UNIQUIFY(x),                                                      \
 			      "' < '",                                                          \
 			      UNIQUIFY(y),                                                      \
@@ -277,7 +286,7 @@
 		const auto &UNIQUIFY(y) = (Y);                                            \
 		if (!(UNIQUIFY(x) < UNIQUIFY(y)))                                         \
 		{                                                                         \
-			FATAL("Assertion '" STRINGIFY(X < Y) "' failed: '",                     \
+			FATAL("Assertion '" DEBUG_STRINGIFY_EXPR(X < Y) "' failed: '",          \
 			      UNIQUIFY(x),                                                      \
 			      "' >= '",                                                         \
 			      UNIQUIFY(y),                                                      \
@@ -290,7 +299,7 @@
 		const auto &UNIQUIFY(y) = (Y);                                            \
 		if (!(UNIQUIFY(x) <= UNIQUIFY(y)))                                        \
 		{                                                                         \
-			FATAL("Assertion '" STRINGIFY(X <= Y) "' failed: '",                    \
+			FATAL("Assertion '" DEBUG_STRINGIFY_EXPR(X <= Y) "' failed: '",         \
 			      UNIQUIFY(x),                                                      \
 			      "' > '",                                                          \
 			      UNIQUIFY(y),                                                      \
@@ -301,7 +310,8 @@
 	{                                                                           \
 		if (!(X))                                                                 \
 		{                                                                         \
-			FATAL("Assertion '" STRINGIFY(X) "' failed: ", TO_U8STRING(str));       \
+			FATAL("Assertion '" DEBUG_STRINGIFY_EXPR(X) "' failed: ",               \
+			      TO_U8STRING(str));                                                \
 		}                                                                         \
 	}
 #define ASSERTF_EQUAL(X, Y, str)                                              \
@@ -310,7 +320,7 @@
 		const auto &UNIQUIFY(y) = (Y);                                            \
 		if (!(UNIQUIFY(x) == UNIQUIFY(y)))                                        \
 		{                                                                         \
-			FATAL("Assertion '" STRINGIFY(X == Y) "' failed: '",                    \
+			FATAL("Assertion '" DEBUG_STRINGIFY_EXPR(X == Y) "' failed: '",         \
 			      UNIQUIFY(x),                                                      \
 			      "' != '",                                                         \
 			      UNIQUIFY(y),                                                      \
@@ -324,7 +334,7 @@
 		const auto &UNIQUIFY(y) = (Y);                                            \
 		if (!(UNIQUIFY(x) != UNIQUIFY(y)))                                        \
 		{                                                                         \
-			FATAL("Assertion '" STRINGIFY(X != Y) "' failed: '",                    \
+			FATAL("Assertion '" DEBUG_STRINGIFY_EXPR(X != Y) "' failed: '",         \
 			      UNIQUIFY(x),                                                      \
 			      "' == '",                                                         \
 			      UNIQUIFY(y),                                                      \
@@ -338,7 +348,7 @@
 		const auto &UNIQUIFY(y) = (Y);                                            \
 		if (!(UNIQUIFY(x) > UNIQUIFY(y)))                                         \
 		{                                                                         \
-			FATAL("Assertion '" STRINGIFY(X > Y) "' failed: '",                     \
+			FATAL("Assertion '" DEBUG_STRINGIFY_EXPR(X > Y) "' failed: '",          \
 			      UNIQUIFY(x),                                                      \
 			      "' <= '",                                                         \
 			      UNIQUIFY(y),                                                      \
@@ -352,7 +362,7 @@
 		const auto &UNIQUIFY(y) = (Y);                                            \
 		if (!(UNIQUIFY(x) >= UNIQUIFY(y)))                                        \
 		{                                                                         \
-			FATAL("Assertion '" STRINGIFY(X >= Y) "' failed: '",                    \
+			FATAL("Assertion '" DEBUG_STRINGIFY_EXPR(X >= Y) "' failed: '",         \
 			      UNIQUIFY(x),                                                      \
 			      "' < '",                                                          \
 			      UNIQUIFY(y),                                                      \
@@ -366,7 +376,7 @@
 		const auto &UNIQUIFY(y) = (Y);                                            \
 		if (!(UNIQUIFY(x) < UNIQUIFY(y)))                                         \
 		{                                                                         \
-			FATAL("Assertion '" STRINGIFY(X < Y) "' failed: '",                     \
+			FATAL("Assertion '" DEBUG_STRINGIFY_EXPR(X < Y) "' failed: '",          \
 			      UNIQUIFY(x),                                                      \
 			      "' >= '",                                                         \
 			      UNIQUIFY(y),                                                      \
@@ -380,7 +390,7 @@
 		const auto &UNIQUIFY(y) = (Y);                                            \
 		if (!(UNIQUIFY(x) <= UNIQUIFY(y)))                                        \
 		{                                                                         \
-			FATAL("Assertion '" STRINGIFY(X <= Y) "' failed: '",                    \
+			FATAL("Assertion '" DEBUG_STRINGIFY_EXPR(X <= Y) "' failed: '",         \
 			      UNIQUIFY(x),                                                      \
 			      "' > '",                                                          \
 			      UNIQUIFY(y),                                                      \
