@@ -15,6 +15,9 @@ void basic_window_init(lak::window &window)
 	FUNCTION_CHECKPOINT();
 	window.set_title(L"Test Window");
 	ASSERT_EQUAL(window.title(), L"Test Window");
+
+	if (basic_window_force_software)
+		ASSERT(window.graphics() == lak::graphics_mode::Software);
 }
 
 void basic_window_handle_event(lak::window &window, lak::event &event)
