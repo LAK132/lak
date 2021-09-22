@@ -79,10 +79,30 @@ constexpr const T &lak::array<T, SIZE>::back() const
 /* --- dynamic size --- */
 
 template<typename T>
-void lak::array<T, lak::dynamic_extent>::reserve_bytes(
-  size_t new_capacity_bytes)
+void lak::array<T, lak::dynamic_extent>::right_shift(size_t count)
 {
-	if (new_capacity_bytes <= _data.size_bytes()) return;
+	if (_size == 0) return;
+
+	ASSERT_GREATER_OR_EQUAL(_committed * sizeof(T), _size + count);
+
+	for (size_t i = _size; i-- > _size - count;)
+		new (data() + i + count) T(lak::move(data()[i]));
+
+	for (size_t i = _size - count; i-- > count;)
+		data()[i + count] = lak::move(data()[i]);
+
+	for (size_t i = 0; i < count; ++i) data()[i].~T();
+}
+
+template<typename T>
+void lak::array<T, lak::dynamic_extent>::reserve_bytes(
+  size_t new_capacity_bytes, size_t right_shift_count)
+{
+	if (new_capacity_bytes <= _data.size_bytes())
+		return right_shift(right_shift_count);
+
+	ASSERT_GREATER_OR_EQUAL(new_capacity_bytes - _data.size_bytes(),
+	                        right_shift_count * sizeof(T));
 
 	new_capacity_bytes = std::max(new_capacity_bytes, _data.size_bytes() * 2);
 
@@ -97,7 +117,8 @@ void lak::array<T, lak::dynamic_extent>::reserve_bytes(
 
 		// move all the Ts from the old memory block to the new memory block
 		for (size_t i = 0; i < _size; ++i)
-			new (static_cast<T *>(new_buffer.data()) + i) T(lak::move(data()[i]));
+			new (static_cast<T *>(new_buffer.data()) + i + right_shift_count)
+			  T(lak::move(data()[i]));
 
 		// destroy the Ts in the old memory block
 		for (size_t i = 0; i < _size; ++i) data()[i].~T();
@@ -113,15 +134,20 @@ void lak::array<T, lak::dynamic_extent>::reserve_bytes(
 }
 
 template<typename T>
-void lak::array<T, lak::dynamic_extent>::commit(size_t new_size)
+void lak::array<T, lak::dynamic_extent>::commit(size_t new_size,
+                                                size_t right_shift_count)
 {
 	size_t new_size_bytes = lak::round_to_page_multiple(new_size * sizeof(T));
 	if (new_size_bytes > _committed)
 	{
-		reserve_bytes(new_size_bytes);
+		reserve_bytes(new_size_bytes, right_shift_count);
 		_committed = new_size_bytes;
 		lak::page_commit(lak::span<void>(_data.data(), _committed))
 		  .expect("commit failed");
+	}
+	else
+	{
+		right_shift(right_shift_count);
 	}
 	if (new_size != 0) ASSERT(_data.size_bytes() > 0);
 	ASSERT_GREATER_OR_EQUAL(_committed, new_size);
@@ -286,6 +312,34 @@ const T &lak::array<T, lak::dynamic_extent>::back() const
 {
 	ASSERT_GREATER(_size, 0U);
 	return data()[_size - 1];
+}
+
+template<typename T>
+template<typename... ARGS>
+T &lak::array<T, lak::dynamic_extent>::emplace_front(ARGS &&...args)
+{
+	commit(_size + 1, 1U);
+	new (data()) T(lak::forward<ARGS>(args)...);
+	++_size;
+	return back();
+}
+
+template<typename T>
+T &lak::array<T, lak::dynamic_extent>::push_front(const T &t)
+{
+	commit(_size + 1, 1U);
+	new (data()) T(t);
+	++_size;
+	return back();
+}
+
+template<typename T>
+T &lak::array<T, lak::dynamic_extent>::push_front(T &&t)
+{
+	commit(_size + 1, 1U);
+	new (data()) T(lak::move(t));
+	++_size;
+	return back();
 }
 
 template<typename T>

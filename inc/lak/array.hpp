@@ -71,9 +71,15 @@ namespace lak
 		size_t _size            = 0; // Ts
 		size_t _committed       = 0; // bytes
 
-		void reserve_bytes(size_t new_capacity_bytes);
+		// leaves the lower `count` elements uninitialised, does not move the base
+		// pointer. methods calling this should make sure to initialise the lower
+		// elements and update _size accordingly.
+		void right_shift(size_t count);
 
-		void commit(size_t new_size);
+		void reserve_bytes(size_t new_capacity_bytes,
+		                   size_t right_shift_count = 0U);
+
+		void commit(size_t new_size, size_t right_shift_count = 0U);
 
 	public:
 		using value_type      = T;
@@ -138,6 +144,12 @@ namespace lak
 
 		T &back();
 		const T &back() const;
+
+		template<typename... ARGS>
+		T &emplace_front(ARGS &&...args);
+
+		T &push_front(const T &t);
+		T &push_front(T &&t);
 
 		template<typename... ARGS>
 		T &emplace_back(ARGS &&...args);
