@@ -38,7 +38,12 @@ namespace lak
 
 	template<typename... T>
 	struct tuple;
+}
 
+#include "lak/type_pack.hpp"
+
+namespace lak
+{
 	/* --- pair --- */
 
 	template<typename T, typename U>
@@ -121,6 +126,9 @@ namespace lak
 	{
 		T value;
 		lak::tuple<U...> next;
+
+		template<typename V>
+		static constexpr size_t index_of = lak::index_of_element_v<V, T, U...>;
 
 		tuple() = default;
 		tuple(const tuple &p) : value(p.value), next(p.next) {}

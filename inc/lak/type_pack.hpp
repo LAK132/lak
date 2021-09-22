@@ -1,7 +1,6 @@
 #ifndef LAK_TYPE_PACK_HPP
 #define LAK_TYPE_PACK_HPP
 
-#include "lak/tuple.hpp"
 #include "lak/type_traits.hpp"
 
 namespace lak
@@ -10,19 +9,6 @@ namespace lak
 
 	template<typename... TYPES>
 	struct type_pack
-	{
-	};
-
-	/* --- tuple_element --- */
-
-	template<size_t I, typename T, typename... U>
-	struct tuple_element<I, lak::type_pack<T, U...>>
-	: public lak::tuple_element<I - 1, lak::type_pack<U...>>
-	{
-	};
-	template<typename T, typename... U>
-	struct tuple_element<0, lak::type_pack<T, U...>>
-	: public lak::type_identity<T>
 	{
 	};
 
@@ -247,5 +233,20 @@ namespace lak
 	template<typename PACK>
 	inline constexpr size_t sizeof_pack_args_v = sizeof_pack_args<PACK>::value;
 }
+
+#include "lak/tuple.hpp"
+
+/* --- tuple_element --- */
+
+template<size_t I, typename T, typename... U>
+struct LAK_TUPLE_ELEMENT<I, lak::type_pack<T, U...>>
+: public LAK_TUPLE_ELEMENT<I - 1, lak::type_pack<U...>>
+{
+};
+template<typename T, typename... U>
+struct LAK_TUPLE_ELEMENT<0, lak::type_pack<T, U...>>
+: public lak::type_identity<T>
+{
+};
 
 #endif
