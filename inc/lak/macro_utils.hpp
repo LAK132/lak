@@ -95,6 +95,12 @@
 #define LAK_SGR_BACK_24(r, g, b)                                              \
 	LAK_SGR_STR("48;2;" STRINGIFY(r) ";" STRINGIFY(g) ";" STRINGIFY(b))
 
+#undef do_with
+#define do_with(...)                                                          \
+	if (__VA_ARGS__; false)                                                     \
+		;                                                                         \
+	else
+
 #undef for_or
 #define for_or(PRE_STATEMENT, CONDITION, ...)                                 \
 	if (PRE_STATEMENT; CONDITION)                                               \
