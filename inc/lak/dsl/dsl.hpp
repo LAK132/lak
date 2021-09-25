@@ -95,9 +95,8 @@ namespace lak
 				    .is_ok()) &&
 				 ...);
 
-				if (result.is_ok())
-					result.unsafe_unwrap().consumed =
-					  str.first(str.size() - result.unsafe_unwrap().remaining.size());
+				if_let_ok (auto &res, result)
+					res.consumed = str.first(str.size() - res.remaining.size());
 
 				return result;
 			}

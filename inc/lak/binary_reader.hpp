@@ -129,11 +129,16 @@ namespace lak
 			const size_t old_cursor = _cursor;
 			while (max_size-- > 0ULL)
 			{
-				const auto r = read<CHAR, E>();
-				if (r.if_err([](auto &&) { ERROR("read failed"); }).is_err()) break;
-				const CHAR c = r.unsafe_unwrap();
-				if (c == 0) return lak::ok_t{lak::move(result)};
-				result += c;
+				if_let_ok (const CHAR c, read<CHAR, E>())
+				{
+					if (c == 0) return lak::ok_t{lak::move(result)};
+					result += c;
+				}
+				else
+				{
+					ERROR("read failed");
+					break;
+				}
 			}
 			_cursor = old_cursor;
 			if (max_size == SIZE_MAX) ERROR("max size reached");
@@ -146,11 +151,12 @@ namespace lak
 			lak::string<CHAR> result;
 			while (max_size-- > 0ULL)
 			{
-				const auto r = read<CHAR, E>();
-				if (r.is_err()) break;
-				const CHAR c = r.unsafe_unwrap();
-				if (c == 0) break;
-				result += c;
+				if_let_ok (const CHAR c, read<CHAR, E>())
+				{
+					if (c == 0) break;
+					result += c;
+				}
+				else break;
 			}
 			return result;
 		}

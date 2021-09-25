@@ -162,10 +162,12 @@ lak::result<> lak::JSON::parse_string()
 					for (size_t i = 0; i < 4; ++i)
 					{
 						if (empty()) return lak::err_t{};
-						auto digit = lak::from_hex_alphanumeric(read());
-						if (digit.is_err()) return lak::err_t{};
-						hex_char[0] <<= 4;
-						hex_char[0] |= char16_t(digit.unsafe_unwrap());
+						if_let_ok (uint8_t digit, lak::from_hex_alphanumeric(read()))
+						{
+							hex_char[0] <<= 4;
+							hex_char[0] |= char16_t(digit);
+						}
+						else return lak::err_t{};
 					}
 
 					if (hex_char[0] >= 0xD800 && hex_char[0] < 0xE000)
@@ -179,10 +181,12 @@ lak::result<> lak::JSON::parse_string()
 						for (size_t i = 0; i < 4; ++i)
 						{
 							if (empty()) return lak::err_t{};
-							auto digit = lak::from_hex_alphanumeric(read());
-							if (digit.is_err()) return lak::err_t{};
-							hex_char[1] <<= 4;
-							hex_char[1] |= char16_t(digit.unsafe_unwrap());
+							if_let_ok (uint8_t digit, lak::from_hex_alphanumeric(read()))
+							{
+								hex_char[1] <<= 4;
+								hex_char[1] |= char16_t(digit);
+							}
+							else return lak::err_t{};
 						}
 					}
 
@@ -343,19 +347,20 @@ lak::result<> lak::JSON::parse_number()
 
 		while (!empty())
 		{
-			v = lak::from_alphanumeric(peek());
-			if (v.is_err()) break; // not alphanumeric
-			++_position;
+			if_let_ok (const uintmax_t new_digit, lak::from_alphanumeric(peek()))
+			{
+				++_position;
 
-			const uintmax_t new_result = result * 10;
-			if (uintmax_t(new_result / 10) > result)
-				return lak::err_t{}; // integer too large
+				const uintmax_t new_result = result * 10;
+				if (uintmax_t(new_result / 10) != result)
+					return lak::err_t{}; // integer too large
 
-			const uintmax_t new_digit = v.unsafe_unwrap();
-			if (new_digit > (UINTMAX_MAX - new_result))
-				return lak::err_t{}; // integer too large
+				if (new_digit > (UINTMAX_MAX - new_result))
+					return lak::err_t{}; // integer too large
 
-			result = new_result + new_digit;
+				result = new_result + new_digit;
+			}
+			else break; // not alphanumeric
 		}
 
 		return lak::ok_t<uintmax_t>{result};
@@ -367,12 +372,13 @@ lak::result<> lak::JSON::parse_number()
 
 		// :TODO: this should probably handle "integer too large" a little more
 		// gracefully when we're dealing with floats anyway.
-		auto integer = parse_simple_integer();
-		if (integer.is_err()) return lak::err_t{};
-
-		uintmax_t chars_read = _position - pos;
-		return lak::ok_t<double>{double(integer.unsafe_unwrap()) *
-		                         std::pow(10.0, -double(chars_read))};
+		if_let_ok (uintmax_t integer, parse_simple_integer())
+		{
+			uintmax_t chars_read = _position - pos;
+			return lak::ok_t<double>{double(integer) *
+			                         std::pow(10.0, -double(chars_read))};
+		}
+		else return lak::err_t{};
 	};
 
 	// -?([1-9][0-9]*|0)(\.[0-9]+)?([eE][\+\-]?[0-9]+)?
@@ -404,10 +410,9 @@ lak::result<> lak::JSON::parse_number()
 		// ([1-9][0-9]*)(\.[0-9]+)?([eE][\+\-]?[0-9]+)?
 		// ~= ([0-9]+)(\.[0-9]+)?([eE][\+\-]?[0-9]+)?
 
-		if (auto integer_part = parse_simple_integer(); integer_part.is_ok())
-			result.integer = integer_part.unsafe_unwrap();
-		else
-			return lak::err_t{};
+		if_let_ok (uintmax_t integer_part, parse_simple_integer())
+			result.integer = integer_part;
+		else return lak::err_t{};
 	}
 
 	if (empty()) return finish();
@@ -421,10 +426,9 @@ lak::result<> lak::JSON::parse_number()
 		++_position;
 		if (empty()) return lak::err_t{};
 
-		if (auto fraction_part = parse_fraction(); fraction_part.is_ok())
-			fraction.emplace(fraction_part.unsafe_unwrap());
-		else
-			return lak::err_t{};
+		if_let_ok (double fraction_part, parse_fraction())
+			fraction.emplace(fraction_part);
+		else return lak::err_t{};
 
 		if (empty()) return finish();
 	}
@@ -449,10 +453,9 @@ lak::result<> lak::JSON::parse_number()
 
 		// ([0-9]+)
 
-		if (auto exponent_part = parse_simple_integer(); exponent_part.is_ok())
-			result.exponent = exponent_part.unsafe_unwrap();
-		else
-			return lak::err_t{};
+		if_let_ok (uintmax_t exponent_part, parse_simple_integer())
+			result.exponent = exponent_part;
+		else return lak::err_t{};
 	}
 
 	return finish();
@@ -645,10 +648,9 @@ lak::result<> lak::JSON::parse_value()
 				break;
 
 			case u8',':
-				if (auto back = _state.back()(lak::span(_data)); back.is_err())
-					return lak::err_t{};
-				else
-					switch (back.unsafe_unwrap().index())
+				if_let_ok (auto &v, _state.back()(lak::span(_data)))
+				{
+					switch (v.index())
 					{
 						case value_type::index_of<object>:
 							if (auto err = parse_object(); err.is_err()) return err;
@@ -660,6 +662,8 @@ lak::result<> lak::JSON::parse_value()
 
 						default: return lak::err_t{};
 					}
+				}
+				else return lak::err_t{};
 				break;
 
 			default:

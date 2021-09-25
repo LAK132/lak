@@ -120,24 +120,25 @@ lak::deflate_iterator::deflate_iterator(
 {
 	if (parse_header)
 	{
-		auto read = _compressed.peek_bits(16);
-		if (read.is_err())
+		if_let_ok (uintmax_t read, _compressed.peek_bits(16))
+		{
+			uint16_t zlib_header = static_cast<uint16_t>(read);
+			zlib_header          = (zlib_header >> 8) | ((zlib_header & 0xFF) << 8);
+
+			if ((zlib_header & 0x8F00) == 0x0800 && (zlib_header % 31) == 0)
+			{
+				if (zlib_header & 0x0020)
+				{
+					_state = state_t::custom_dictionary;
+					return;
+				}
+				_compressed.read_bits(16).discard();
+			}
+		}
+		else
 		{
 			_state = state_t::out_of_data;
 			return;
-		}
-
-		uint16_t zlib_header = uint16_t(read.unsafe_unwrap());
-		zlib_header          = (zlib_header >> 8) | ((zlib_header & 0xFF) << 8);
-
-		if ((zlib_header & 0x8F00) == 0x0800 && (zlib_header % 31) == 0)
-		{
-			if (zlib_header & 0x0020)
-			{
-				_state = state_t::custom_dictionary;
-				return;
-			}
-			_compressed.read_bits(16).discard();
 		}
 	}
 	_state = state_t::header;

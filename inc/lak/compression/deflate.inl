@@ -458,9 +458,8 @@ lak::error_code<lak::deflate_iterator::error_t> lak::deflate_iterator::read(
 	for (;;)
 	{
 		step();
-		if (_value.is_err())
+		if_let_err(const auto err, _value)
 		{
-			const auto err = _value.unsafe_unwrap_err();
 			if (err == error_t::ok)
 			{
 				// reached end of block
@@ -469,8 +468,7 @@ lak::error_code<lak::deflate_iterator::error_t> lak::deflate_iterator::read(
 			else
 				return lak::err_t{err};
 		}
-		else if (!func(_value.unsafe_unwrap()))
-			return lak::err_t{error_t::ok};
+		else if (!func(_value.unsafe_unwrap())) return lak::err_t{error_t::ok};
 	}
 	return lak::ok_t{};
 }

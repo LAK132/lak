@@ -658,6 +658,18 @@ namespace lak
 		  lak::is_result_v<T> && lak::is_same_v<lak::result_err_type_t<T>, ERR>;
 	}
 
+#define if_let_ok(VALUE, ...)                                                 \
+	if (auto &&UNIQUIFY(RESULT_) = __VA_ARGS__; UNIQUIFY(RESULT_).is_ok())      \
+		do_with (VALUE =                                                          \
+		           lak::forward<decltype(UNIQUIFY(RESULT_))>(UNIQUIFY(RESULT_))   \
+		             .unsafe_unwrap())
+
+#define if_let_err(VALUE, ...)                                                \
+	if (auto &&UNIQUIFY(RESULT_) = __VA_ARGS__; UNIQUIFY(RESULT_).is_err())     \
+		do_with (VALUE =                                                          \
+		           lak::forward<decltype(UNIQUIFY(RESULT_))>(UNIQUIFY(RESULT_))   \
+		             .unsafe_unwrap_err())
+
 #ifndef NOLOG
 #	define EXPECT(...)                                                         \
 		expect(lak::streamify(DEBUG_FATAL_LINE_FILE __VA_OPT__(, ) __VA_ARGS__))
@@ -697,9 +709,10 @@ namespace lak
 #define RES_TRY(...)                                                          \
 	do                                                                          \
 	{                                                                           \
-		if (auto result = __VA_ARGS__; result.is_err())                           \
-			return lak::err_t{lak::move(result).unwrap_err()};                      \
+		if_let_err (auto &&err, __VA_ARGS__)                                      \
+			return lak::err_t{lak::forward<decltype(err)>(err)};                    \
 	} while (false)
+
 }
 
 #endif
