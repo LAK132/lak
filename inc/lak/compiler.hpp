@@ -42,12 +42,7 @@
 #	define packed_struct struct [[gnu::packed]]
 #	define DEBUG_BREAK()
 #	define DLL_EXPORT [[gnu::dllexport]]
-#elif defined(LAK_COMPILER_CLANG)
-#	define force_inline  inline __attribute__((always_inline))
-#	define packed_struct struct [[gnu::packed]]
-#	define DEBUG_BREAK() asm("int $3")
-#	define DLL_EXPORT    [[gnu::dllexport]]
-#elif defined(LAK_COMPILER_GNUC)
+#elif defined(LAK_COMPILER_CLANG) || defined(LAK_COMPILER_GNUC)
 #	define force_inline  inline __attribute__((always_inline))
 #	define packed_struct struct [[gnu::packed]]
 #	define DEBUG_BREAK() asm("int $3")
