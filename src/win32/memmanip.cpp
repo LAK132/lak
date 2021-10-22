@@ -20,7 +20,7 @@ size_t lak::page_size()
 lak::page_result_t<lak::span<void>> lak::page_reserve(size_t size,
                                                       size_t *page_size_out)
 {
-	ASSERT_GREATER(size, 0);
+	ASSERT_GREATER(size, 0U);
 
 	size = lak::round_to_page_multiple(size, page_size_out);
 

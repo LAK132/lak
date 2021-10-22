@@ -551,7 +551,7 @@ namespace tinf
 						return error_t::INVALID_SYMBOL;
 					}
 
-					if (state.distance > *head - output.begin())
+					if (state.distance > static_cast<uintptr_t>(*head - output.begin()))
 					{
 						state.crc = ~icrc & 0xFFFF'FFFFUL;
 						return error_t::INVALID_DISTANCE;

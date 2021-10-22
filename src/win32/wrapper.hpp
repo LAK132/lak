@@ -25,7 +25,8 @@ namespace lak
 		}
 
 		template<typename T, typename... U, typename... ARGS>
-		lak::winapi::result<T> invoke_nullerr(T (*f)(U...), ARGS &&...args)
+		lak::winapi::result<T> invoke_nullerr(T(__stdcall *f)(U...),
+		                                      ARGS &&...args)
 		{
 			if (T result = f(lak::forward<ARGS>(args)...); result != NULL)
 				return lak::ok_t{result};

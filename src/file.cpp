@@ -102,7 +102,7 @@ lak::errno_result<lak::array<uint8_t>> lak::read_file(
 	file.seekg(0);
 	if (file.fail()) return lak::err_t{lak::errno_error::last_error()};
 
-	auto result = lak::array<uint8_t>(file_size);
+	auto result = lak::array<uint8_t>(static_cast<size_t>(file_size));
 
 	file.read(reinterpret_cast<char *>(result.data()), result.size());
 	if (file.fail()) return lak::err_t{lak::errno_error::last_error()};

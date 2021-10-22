@@ -62,14 +62,14 @@ namespace lak
 		optional &operator=(const optional &other)
 		{
 			if (other._has_value)
-				emplace(other._value);
+				emplace(other._value.value());
 			else
 				reset();
 		}
 		optional &operator=(optional &&other)
 		{
 			if (other._has_value)
-				emplace(lak::move(other._value));
+				emplace(lak::move(other._value.value()));
 			else
 				reset();
 		}
