@@ -65,7 +65,7 @@
 #elif defined(LAK_COMPILER_MSVC)
 #	include <intrin.h>
 #	define force_inline  inline __forceinline
-#	define packed_struct __pragma(pack(1)) struct
+#	define packed_struct struct [[gnu::packed]]
 #	define DEBUG_BREAK() __debugbreak()
 #	define DLL_EXPORT    __declspec(dllexport)
 #	if defined(_M_X64) || defined(_M_AMD64)
