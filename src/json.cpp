@@ -33,19 +33,18 @@ lak::result<lak::JSON::number_proxy> lak::JSON::value_proxy::get_number() const
 {
 	return _index(lak::span(_parser._data))
 	  .and_then(
-	    [](const value_type &v) -> lak::result<number> {
+	    [](const value_type &v) -> lak::result<number>
+	    {
 		    return lak::visit(
 		      v,
 		      lak::overloaded{
 		        [](const uintmax_t &v) -> lak::result<number> {
 			        return lak::ok_t{number::make<number::index_of<uintmax_t>>(v)};
 		        },
-		        [](const intmax_t &v) -> lak::result<number> {
-			        return lak::ok_t{number::make<number::index_of<intmax_t>>(v)};
-		        },
-		        [](const double &v) -> lak::result<number> {
-			        return lak::ok_t{number::make<number::index_of<double>>(v)};
-		        },
+		        [](const intmax_t &v) -> lak::result<number>
+		        { return lak::ok_t{number::make<number::index_of<intmax_t>>(v)}; },
+		        [](const double &v) -> lak::result<number>
+		        { return lak::ok_t{number::make<number::index_of<double>>(v)}; },
 		        [](auto, ...) -> lak::result<number> { return lak::err_t{}; }});
 	    })
 	  .map([&](number n) -> number_proxy { return number_proxy(_parser, n); });
@@ -60,16 +59,16 @@ lak::result<lak::u8string_view> lak::JSON::value_proxy::get_string() const
 		      v.get<value_type::index_of<subspan>>());
 	    })
 	  .and_then(
-	    [&](const subspan &s) -> lak::result<lak::u8string_view> {
-		    return s(lak::u8string_view(lak::span(_parser._string_data)));
-	    });
+	    [&](const subspan &s) -> lak::result<lak::u8string_view>
+	    { return s(lak::u8string_view(lak::span(_parser._string_data))); });
 }
 
 lak::result<bool> lak::JSON::value_proxy::get_bool() const
 {
 	return _index(lak::span(_parser._data))
 	  .and_then(
-	    [](const value_type &v) -> lak::result<bool> {
+	    [](const value_type &v) -> lak::result<bool>
+	    {
 		    return lak::copy_result_from_pointer(
 		      v.get<value_type::index_of<bool>>());
 	    });
@@ -79,7 +78,8 @@ lak::result<nullptr_t> lak::JSON::value_proxy::get_null() const
 {
 	return _index(lak::span(_parser._data))
 	  .and_then(
-	    [](const value_type &v) -> lak::result<nullptr_t> {
+	    [](const value_type &v) -> lak::result<nullptr_t>
+	    {
 		    return lak::copy_result_from_pointer(
 		      v.get<value_type::index_of<nullptr_t>>());
 	    });
@@ -539,10 +539,8 @@ lak::result<> lak::JSON::parse_object()
 
 		if (_state.empty() ||
 		    _state.back()(lak::span(_data))
-		      .and_then(
-		        [](value_type &var) -> lak::result<object &> {
-			        return get_variant<value_type::index_of<object>>(var);
-		        })
+		      .and_then([](value_type &var) -> lak::result<object &>
+		                { return get_variant<value_type::index_of<object>>(var); })
 		      .if_ok([&](object &o) { o.next.value = _data.size(); })
 		      .is_err())
 			return lak::err_t{};
@@ -604,10 +602,8 @@ lak::result<> lak::JSON::parse_array()
 
 		if (_state.empty() ||
 		    _state.back()(lak::span(_data))
-		      .and_then(
-		        [](value_type &var) -> lak::result<array &> {
-			        return get_variant<value_type::index_of<array>>(var);
-		        })
+		      .and_then([](value_type &var) -> lak::result<array &>
+		                { return get_variant<value_type::index_of<array>>(var); })
 		      .if_ok([&](array &a) { a.next.value = _data.size(); })
 		      .is_err())
 			return lak::err_t{};
