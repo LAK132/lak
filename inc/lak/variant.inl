@@ -195,7 +195,7 @@ lak::variant<T...> &lak::variant<T...>::operator=(variant &&other)
 {
 	ASSERT(lak::visit_switch(lak::make_index_sequence<_size>{},
 	                         other._index,
-	                         [&, this](auto index)
+	                         [&](auto index)
 	                         {
 		                         using I = lak::remove_cvref_t<decltype(index)>;
 		                         emplace<I::value>(

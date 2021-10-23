@@ -74,7 +74,6 @@ namespace lak
 		bool _final    = false;
 		bool _anaconda = false;
 
-		uint8_t _first_byte     = 0;
 		uint8_t _block_type     = 0;
 		uint32_t _counter       = 0;
 		uint32_t _symbol        = 0;

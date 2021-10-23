@@ -473,7 +473,7 @@ lak::result<> lak::JSON::parse_literal_value()
 	}
 }
 
-auto bool_result = [](bool value) -> lak::result<>
+[[maybe_unused]] auto bool_result = [](bool value) -> lak::result<>
 {
 	if (value)
 		return lak::ok_t{};
