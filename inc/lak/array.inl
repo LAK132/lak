@@ -217,7 +217,7 @@ lak::array<T, lak::dynamic_extent>::array(ITER &&begin, ITER &&end)
 }
 
 template<typename T>
-lak::array<T, lak::dynamic_extent>::~array()
+lak::array<T, lak::dynamic_extent>::array::~array()
 {
 	force_clear();
 }

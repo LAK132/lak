@@ -159,7 +159,7 @@ namespace lak
 	{
 		using type = lak::type_pack<typename T<TYPES>::type...>;
 	};
-	template<template<typename...> typename T, typename PACK>
+	template<template<typename> typename T, typename PACK>
 	using pack_apply_t = typename lak::pack_apply<T, PACK>::type;
 
 	/* --- pack_from_function --- */

@@ -84,7 +84,7 @@ lak::lmdb::cursor<READ_ONLY> &lak::lmdb::cursor<READ_ONLY>::operator=(
 }
 
 template<bool READ_ONLY>
-lak::lmdb::cursor<READ_ONLY>::~cursor()
+lak::lmdb::cursor<READ_ONLY>::cursor::~cursor()
 {
 	if constexpr (READ_ONLY)
 		if (_csr) close();
@@ -266,7 +266,7 @@ lak::lmdb::transaction<READ_ONLY>
 }
 
 template<bool READ_ONLY>
-lak::lmdb::transaction<READ_ONLY>::~transaction()
+lak::lmdb::transaction<READ_ONLY>::transaction::~transaction()
 {
 	if (_txn) abort();
 }

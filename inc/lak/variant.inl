@@ -224,7 +224,7 @@ lak::variant<T...> lak::variant<T...>::make(ARGS &&...args)
 }
 
 template<typename... T>
-lak::variant<T...>::~variant()
+lak::variant<T...>::variant::~variant()
 {
 	ASSERT(lak::visit_switch(lak::make_index_sequence<_size>{},
 	                         _index,

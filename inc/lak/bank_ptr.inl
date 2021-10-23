@@ -226,7 +226,7 @@ lak::unique_bank_ptr<T> &lak::unique_bank_ptr<T>::operator=(
 };
 
 template<typename T>
-lak::unique_bank_ptr<T>::~unique_bank_ptr()
+lak::unique_bank_ptr<T>::unique_bank_ptr::~unique_bank_ptr()
 {
 	reset();
 }
@@ -482,7 +482,7 @@ lak::shared_bank_ptr<T> &lak::shared_bank_ptr<T>::operator=(
 };
 
 template<typename T>
-lak::shared_bank_ptr<T>::~shared_bank_ptr()
+lak::shared_bank_ptr<T>::shared_bank_ptr::~shared_bank_ptr()
 {
 	reset();
 }

@@ -227,7 +227,7 @@ namespace lak
 		[[nodiscard]] friend constexpr lak::weak_ordering operator<=>(
 		  nullptr_t, const lak::weak_ordering val)
 		{
-			return {._value = -val._value};
+			return {._value = static_cast<signed char>(-val._value)};
 		}
 	};
 
@@ -343,7 +343,7 @@ namespace lak
 		[[nodiscard]] friend constexpr lak::strong_ordering operator<=>(
 		  nullptr_t, const lak::strong_ordering val)
 		{
-			return {._value = -val._value};
+			return {._value = static_cast<signed char>(-val._value)};
 		}
 	};
 

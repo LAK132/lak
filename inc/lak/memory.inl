@@ -25,7 +25,7 @@ lak::unique_ptr<T> &lak::unique_ptr<T>::operator=(unique_ptr &&other)
 }
 
 template<typename T>
-lak::unique_ptr<T>::~unique_ptr()
+lak::unique_ptr<T>::unique_ptr::~unique_ptr()
 {
 	reset();
 }

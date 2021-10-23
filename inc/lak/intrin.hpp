@@ -5,7 +5,7 @@
 #include "lak/stdint.hpp"
 
 #if defined(LAK_COMPILER_EMSCRIPTEN)
-#elif defined(LAK_COMPILER_GNUC)
+#elif defined(LAK_COMPILER_GNUC) || defined(LAK_COMPILER_CLANG)
 #	include <cpuid.h>
 #	include <immintrin.h>
 #elif defined(LAK_COMPILER_MSVC)

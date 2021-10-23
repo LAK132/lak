@@ -4,7 +4,7 @@
 
 #include "lak/basic_program.inl"
 
-lak::optional<int> basic_window_preinit(int argc, char **argv)
+lak::optional<int> basic_window_preinit(int, char **)
 {
 	FUNCTION_CHECKPOINT();
 	return lak::nullopt;
@@ -20,17 +20,17 @@ void basic_window_init(lak::window &window)
 		ASSERT(window.graphics() == lak::graphics_mode::Software);
 }
 
-void basic_window_handle_event(lak::window &window, lak::event &event)
+void basic_window_handle_event(lak::window &, lak::event &)
 {
 	//
 }
 
-void basic_window_loop(lak::window &window, uint64_t counter_delta)
+void basic_window_loop(lak::window &, uint64_t)
 {
 	//
 }
 
-int basic_window_quit(lak::window &window)
+int basic_window_quit(lak::window &)
 {
 	FUNCTION_CHECKPOINT();
 	return EXIT_SUCCESS;

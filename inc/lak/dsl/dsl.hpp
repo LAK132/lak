@@ -368,7 +368,7 @@ namespace lak
 
 		/* --- literal --- */
 
-		template<lak::u8const_string const_str, typename auto value>
+		template<lak::u8const_string const_str, auto value>
 		struct literal_t
 		{
 			using value_type = decltype(value);
@@ -388,7 +388,7 @@ namespace lak
 			}
 		};
 
-		template<lak::u8const_string const_str, typename auto value>
+		template<lak::u8const_string const_str, auto value>
 		inline constexpr lak::dsl::literal_t<const_str, value> literal;
 
 		static_assert(lak::dsl::parser<lak::dsl::literal_t<u8"a", 0>>);
@@ -399,7 +399,7 @@ namespace lak
 		struct is_literal : lak::false_type
 		{
 		};
-		template<typename auto rule, typename auto value>
+		template<auto rule, auto value>
 		struct is_literal<lak::dsl::literal_t<rule, value>> : lak::true_type
 		{
 		};

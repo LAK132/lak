@@ -93,7 +93,7 @@ namespace lak
 		private:
 			MDB_cursor *_csr = nullptr;
 
-			template<bool READ_ONLY>
+			template<bool RD_ONLY>
 			friend struct database;
 
 			cursor(MDB_cursor *csr);
@@ -126,7 +126,7 @@ namespace lak
 			MDB_txn *_txn;
 			MDB_dbi _dbi;
 
-			template<bool READ_ONLY>
+			template<bool RD_ONLY>
 			friend struct transaction;
 
 			database(MDB_txn *txn, MDB_dbi dbi);
@@ -163,7 +163,7 @@ namespace lak
 		private:
 			MDB_txn *_txn = nullptr;
 
-			template<bool READ_ONLY>
+			template<bool RD_ONLY>
 			friend struct database;
 			friend struct environment;
 
