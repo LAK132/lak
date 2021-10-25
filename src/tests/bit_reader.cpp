@@ -6,7 +6,7 @@
 
 BEGIN_TEST(bit_reader)
 {
-	auto data = lak::span<const uint8_t>(lak::span(lak::string_view("ABCD ")));
+	auto data = lak::span<const byte_t>(lak::span(lak::string_view("ABCD ")));
 
 	lak::bit_reader reader;
 

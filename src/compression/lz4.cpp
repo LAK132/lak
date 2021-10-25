@@ -15,11 +15,11 @@ const char *lak::lz4_error_name(lak::lz4_decode_error err)
 	}
 }
 
-lak::result<lak::array<uint8_t>, lak::lz4_decode_error> lak::decode_lz4_block(
+lak::result<lak::array<byte_t>, lak::lz4_decode_error> lak::decode_lz4_block(
   lak::binary_reader &strm, size_t output_size)
 {
-	lak::array<uint8_t> output(output_size);
-	lak::binary_span_writer writer(output);
+	lak::array<byte_t> output(output_size);
+	lak::binary_span_writer writer{lak::span<byte_t>(lak::span(output))};
 
 	auto out_of_data = [](auto &&)
 	{ return lak::lz4_decode_error::out_of_data; };
@@ -78,9 +78,9 @@ lak::result<lak::array<uint8_t>, lak::lz4_decode_error> lak::decode_lz4_block(
 			return lak::err_t{lak::lz4_decode_error::offset_too_large};
 		if (writer.remaining().size() + offset < match_length)
 			return lak::err_t{lak::lz4_decode_error::out_of_data};
-		for (const auto &v : lak::span<const uint8_t>(
+		for (const auto &v : lak::span<const byte_t>(
 		       writer.remaining().begin() - offset, match_length))
-			writer.write_u8(v).UNWRAP();
+			writer.write_u8(uint8_t(v)).UNWRAP();
 	}
 
 	if (!writer.empty()) WARNING("Expected More Output Data");

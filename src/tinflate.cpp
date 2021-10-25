@@ -90,21 +90,21 @@ namespace tinf
 		}
 	}
 
-	error_t tinflate(lak::span<const uint8_t> compressed,
-	                 lak::array<uint8_t> *output,
+	error_t tinflate(lak::span<const byte_t> compressed,
+	                 lak::array<byte_t> *output,
 	                 uint32_t *crc)
 	{
 		decompression_state_t state;
 		return tinflate(compressed, output, state, crc);
 	}
 
-	error_t tinflate(lak::span<const uint8_t> compressed,
-	                 lak::array<uint8_t> *output,
+	error_t tinflate(lak::span<const byte_t> compressed,
+	                 lak::array<byte_t> *output,
 	                 decompression_state_t &state,
 	                 uint32_t *crc)
 	{
-		auto &buffer  = *output;
-		uint8_t *head = buffer.data() + buffer.size();
+		auto &buffer = *output;
+		byte_t *head = buffer.data() + buffer.size();
 
 		auto double_size = [&]()
 		{
@@ -140,18 +140,18 @@ namespace tinf
 		return err;
 	}
 
-	error_t tinflate(lak::span<const uint8_t> compressed,
-	                 lak::span<uint8_t> output,
-	                 uint8_t **head,
+	error_t tinflate(lak::span<const byte_t> compressed,
+	                 lak::span<byte_t> output,
+	                 byte_t **head,
 	                 uint32_t *crc)
 	{
 		decompression_state_t state;
 		return tinflate(compressed, output, head, state, crc);
 	}
 
-	error_t tinflate(lak::span<const uint8_t> compressed,
-	                 lak::span<uint8_t> output,
-	                 uint8_t **head,
+	error_t tinflate(lak::span<const byte_t> compressed,
+	                 lak::span<byte_t> output,
+	                 byte_t **head,
 	                 decompression_state_t &state,
 	                 uint32_t *crc)
 	{
@@ -185,18 +185,18 @@ namespace tinf
 
 			if (state.state == state_t::INITIAL && state.data.size() == 1)
 			{
-				state.first_byte = state.data[0];
+				state.first_byte = uint8_t(state.data[0]);
 				state.state      = state_t::PARTIAL_ZLIB_HEADER;
 				return error_t::OUT_OF_DATA;
 			}
 
 			if (state.state == state_t::PARTIAL_ZLIB_HEADER)
 			{
-				zlibHeader = (state.first_byte << 8) | state.data[0];
+				zlibHeader = (state.first_byte << 8) | uint8_t(state.data[0]);
 			}
 			else
 			{
-				zlibHeader = (state.data[0] << 8) | state.data[1];
+				zlibHeader = (uint8_t(state.data[0]) << 8) | uint8_t(state.data[1]);
 			}
 
 			if ((zlibHeader & 0x8F00) == 0x0800 && (zlibHeader % 31) == 0)
@@ -219,19 +219,20 @@ namespace tinf
 		return error_t::OK;
 	}
 
-	error_t tinflate_block(lak::span<uint8_t> output,
-	                       uint8_t **head,
+	error_t tinflate_block(lak::span<byte_t> output,
+	                       byte_t **head,
 	                       decompression_state_t &state)
 	{
 		uint32_t icrc = ~state.crc;
 		if (*head < output.begin()) *head = output.begin();
 		if (*head >= output.end()) return error_t::OUTPUT_FULL;
 
-		auto push = [&](const uint8_t val) -> bool
+		auto push = [&](const byte_t val) -> bool
 		{
 			if (*head >= output.end()) return false;
 			*((*head)++) = val;
-			icrc = crc32_table[(icrc & 0xFF) ^ val] ^ ((icrc >> 8) & 0xFF'FFFFUL);
+			icrc         = crc32_table[(icrc & 0xFF) ^ uint8_t(val)] ^
+			       ((icrc >> 8) & 0xFF'FFFFUL);
 			return true;
 		};
 
@@ -496,7 +497,7 @@ namespace tinf
 					{
 						SET_STATE(PUSH_SYMBOL)
 
-						if (!push((uint8_t)state.symbol)) return error_t::OUTPUT_FULL;
+						if (!push((byte_t)state.symbol)) return error_t::OUTPUT_FULL;
 
 						continue;
 					}

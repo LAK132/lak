@@ -42,9 +42,9 @@ namespace lak
 	lak::error_code_result<> create_hard_link(const fs::path &file,
 	                                          const fs::path &link);
 
-	lak::errno_result<lak::array<uint8_t>> read_file(const fs::path &path);
+	lak::errno_result<lak::array<byte_t>> read_file(const fs::path &path);
 
-	bool save_file(const fs::path &path, lak::span<const uint8_t> data);
+	bool save_file(const fs::path &path, lak::span<const byte_t> data);
 
 	bool save_file(const fs::path &path, const lak::astring &string);
 	bool save_file(const fs::path &path, const lak::wstring &string);

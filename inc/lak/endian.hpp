@@ -9,6 +9,7 @@
 #	elif __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
 #		define LAK_LITTLE_ENDIAN
 #	else
+#		define LAK_MIDDLE_ENDIAN
 #		error "Endianness not supported"
 #	endif
 #elif defined(LAK_COMPILER_MSVC)
@@ -18,6 +19,7 @@
 #	elif REG_DWORD == REG_DWORD_LITTLE_ENDIAN
 #		define LAK_LITTLE_ENDIAN
 #	else
+#		define LAK_MIDDLE_ENDIAN
 #		error "Endianness not supported"
 #	endif
 #else
@@ -31,11 +33,29 @@ namespace lak
 		little = 0,
 		big    = 1,
 #if defined(LAK_LITTLE_ENDIAN)
-		native = little
+		native         = little,
+		reverse_native = big
 #elif defined(LAK_BIG_ENDIAN)
-		native = big
+		native         = big,
+		reverse_native = little
+#elif defined(LAK_MIDDLE_ENDIAN)
+		native,
+		reverse_native
 #endif
 	};
+
+	inline constexpr lak::endian operator~(lak::endian e)
+	{
+		switch (e)
+		{
+			case lak::endian::little: return lak::endian::big;
+			case lak::endian::big: return lak::endian::little;
+#if defined(LAK_MIDDLE_ENDIAN)
+			case lak::endian::native: return lak::endian::reverse_native;
+			case lak::endian::reverse_native: return lak::endian::native;
+#endif
+		}
+	}
 }
 
 #endif

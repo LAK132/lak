@@ -11,12 +11,47 @@
 
 namespace lak
 {
+	/* --- traits --- */
+
 	template<typename T, lak::endian E>
 	struct from_bytes_traits
 	{
 		using value_type = lak::nonesuch;
 
 		static constexpr size_t size = 0;
+	};
+
+	template<typename T, lak::endian E>
+	struct from_bytes_data
+	{
+		const lak::span<T> dst;
+		const lak::span<const byte_t> src;
+		static constexpr size_t bytes_per_element =
+		  lak::from_bytes_traits<T, E>::size;
+
+		static inline lak::result<from_bytes_data> maybe_make(
+		  lak::span<T> dst, lak::span<const byte_t> src)
+		{
+			if (src.size() * bytes_per_element == dst.size())
+				return lak::ok_t{from_bytes_data(dst, src)};
+			else
+				return lak::err_t{};
+		}
+
+		template<size_t S>
+		static inline from_bytes_data make(
+		  lak::span<T, S> dst, lak::span<const byte_t, S * bytes_per_element> src)
+		{
+			return from_bytes_data(dst, src);
+		}
+
+		from_bytes_data(const from_bytes_data &) = default;
+		from_bytes_data &operator=(const from_bytes_data &) = default;
+
+	private:
+		from_bytes_data(lak::span<T> d, lak::span<const byte_t> s) : dst(d), src(s)
+		{
+		}
 	};
 
 	template<typename T, lak::endian E>
@@ -32,27 +67,45 @@ namespace lak
 	using from_bytes_value_type_t =
 	  typename lak::from_bytes_traits<T, E>::value_type;
 
-	template<typename T, lak::endian E = lak::endian::little>
-	T from_bytes(lak::span<const uint8_t, lak::from_bytes_size_v<T, E>> bytes);
+	/* --- from_bytes --- */
 
 	template<typename T, lak::endian E = lak::endian::little>
-	lak::result<T> from_bytes(lak::span<const uint8_t> bytes);
+	T from_bytes(lak::span<const byte_t, lak::from_bytes_size_v<T, E>> bytes);
 
 	template<typename T, lak::endian E = lak::endian::little>
-	lak::result<lak::array<T>> array_from_bytes(lak::span<const uint8_t> bytes,
+	lak::result<T> from_bytes(lak::span<const byte_t> bytes);
+
+	/* --- array_from_bytes --- */
+
+	template<typename T, size_t S, lak::endian E = lak::endian::little>
+	lak::array<T, S> array_from_bytes(
+	  lak::span<const byte_t, lak::from_bytes_size_v<T, E> * S> bytes);
+
+	template<typename T, size_t S, lak::endian E = lak::endian::little>
+	lak::result<lak::array<T, S>> array_from_bytes(
+	  lak::span<const byte_t> bytes);
+
+	template<typename T, lak::endian E = lak::endian::little>
+	lak::result<lak::array<T>> array_from_bytes(lak::span<const byte_t> bytes,
 	                                            size_t count);
+
+	template<typename T, lak::endian E = lak::endian::little>
+	lak::result<> array_from_bytes(lak::span<T> values,
+	                               lak::span<const byte_t> bytes);
+
+	/* --- binary_reader --- */
 
 	struct binary_reader
 	{
-		lak::span<const uint8_t> _data = {};
-		size_t _cursor                 = 0;
+		lak::span<const byte_t> _data = {};
+		size_t _cursor                = 0;
 
 		binary_reader() = default;
-		binary_reader(lak::span<const uint8_t> bytes) : _data(bytes), _cursor(0) {}
+		binary_reader(lak::span<const byte_t> bytes) : _data(bytes), _cursor(0) {}
 		binary_reader(const binary_reader &) = default;
 		binary_reader &operator=(const binary_reader &) = default;
 
-		inline lak::span<const uint8_t> remaining() const
+		inline lak::span<const byte_t> remaining() const
 		{
 			return _data.subspan(_cursor);
 		}

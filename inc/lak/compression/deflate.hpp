@@ -62,11 +62,11 @@ namespace lak
 		static const char *error_name(error_t error);
 
 	private:
-		using value_type = lak::result<uint8_t, error_t>;
+		using value_type = lak::result<byte_t, error_t>;
 		value_type _value;
 
 		lak::bit_reader _compressed;
-		lak::buffer_span<uint8_t, 0x8000> _output_buffer;
+		lak::buffer_span<byte_t, 0x8000> _output_buffer;
 
 		state_t _state = state_t::out_of_data;
 		uint32_t _crc  = 0;
@@ -103,7 +103,7 @@ namespace lak
 
 		force_inline deflate_iterator &fail(error_t reason);
 
-		force_inline deflate_iterator &success(uint8_t value);
+		force_inline deflate_iterator &success(byte_t value);
 
 		force_inline deflate_iterator &block_complete();
 
@@ -112,8 +112,8 @@ namespace lak
 		                          lak::span<int16_t> table);
 
 	public:
-		deflate_iterator(lak::span<const uint8_t> compressed,
-		                 lak::span<uint8_t, 0x8000> output_buffer,
+		deflate_iterator(lak::span<const byte_t> compressed,
+		                 lak::span<byte_t, 0x8000> output_buffer,
 		                 bool parse_header,
 		                 bool anaconda = false);
 
@@ -122,8 +122,8 @@ namespace lak
 		// (bytes, bits)
 		auto bytes_read() const { return _compressed.bytes_read(); }
 
-		lak::span<const uint8_t> compressed() const;
-		void replace_compressed(lak::span<const uint8_t> compressed);
+		lak::span<const byte_t> compressed() const;
+		void replace_compressed(lak::span<const byte_t> compressed);
 
 		force_inline deflate_iterator &step();
 

@@ -1,4 +1,5 @@
 #include "lak/debug.hpp"
+#include "lak/span_manip.hpp"
 #include "lak/string_view.hpp"
 #include "lak/utility.hpp"
 
@@ -255,7 +256,7 @@ lak::trie<CHAR, T>::find(lak::trie<CHAR, T> *node, lak::string_view<CHAR> key)
 		ASSERT_GREATER(key.size(), common_size);
 		const auto lookup = lak::codepoint(key.substr(common_size));
 
-		if_in(lookup, node->_map, index)
+		if_in (lookup, node->_map, index)
 		{
 			ASSERT_GREATER(node->_nodes.size(), index);
 			node = node->_nodes.data() + index;

@@ -65,12 +65,13 @@ inline lak::deflate_iterator &lak::deflate_iterator::fail(error_t reason)
 	return *this;
 }
 
-inline lak::deflate_iterator &lak::deflate_iterator::success(uint8_t value)
+inline lak::deflate_iterator &lak::deflate_iterator::success(byte_t value)
 {
 	_output_buffer.push_back(value);
 	_value = value_type::make_ok(value);
-	_icrc  = crc32_table[(_icrc & 0xFF) ^ value] ^ ((_icrc >> 8) & 0xFF'FFFFUL);
-	_crc   = ~_icrc & 0xFFFF'FFFFUL;
+	_icrc  = crc32_table[(_icrc & 0xFF) ^ uint8_t(value)] ^
+	        ((_icrc >> 8) & 0xFF'FFFFUL);
+	_crc = ~_icrc & 0xFFFF'FFFFUL;
 	return *this;
 }
 
@@ -171,10 +172,10 @@ inline lak::deflate_iterator &lak::deflate_iterator::step()
 				{
 					_compressed.read_byte()
 					  .if_ok(
-					    [this](uintmax_t v)
+					    [this](byte_t v)
 					    {
 						    ++_nread;
-						    success(uint8_t(v));
+						    success(v);
 					    })
 					  .if_err([this](auto &&) { fail(error_t::out_of_data); })
 					  .discard();
@@ -376,7 +377,7 @@ inline lak::deflate_iterator &lak::deflate_iterator::step()
 					if (get_huff(_literal_table, &_symbol))
 						return fail(error_t::out_of_data);
 
-					if (_symbol < 256) return success(uint8_t(_symbol));
+					if (_symbol < 256) return success(byte_t(_symbol));
 
 					if (_symbol == 256) break;
 
@@ -458,7 +459,7 @@ lak::error_code<lak::deflate_iterator::error_t> lak::deflate_iterator::read(
 	for (;;)
 	{
 		step();
-		if_let_err(const auto err, _value)
+		if_let_err (const auto err, _value)
 		{
 			if (err == error_t::ok)
 			{

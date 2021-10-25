@@ -1084,13 +1084,12 @@ struct lak::from_bytes_traits<lak::vec2<T>, E>
 	using value_type             = lak::vec2<T>;
 	static constexpr size_t size = lak::from_bytes_size_v<T, E> * 2;
 
-	static value_type from_bytes(lak::span<const uint8_t, size> bytes)
+	static void from_bytes(lak::from_bytes_data<value_type, E> data)
 	{
-		constexpr size_t element_size = lak::from_bytes_size_v<T, E>;
-		return value_type(
-		  lak::from_bytes<T, E>(bytes.template first<element_size>()),
-		  lak::from_bytes<T, E>(
-		    bytes.template subspan<element_size, element_size>()));
+		static_assert(sizeof(lak::vec2<T>) == (sizeof(T) * 2));
+		lak::from_bytes_traits<T, E>::from_bytes(
+		  lak::from_bytes_data<T, E>::maybe_make(lak::span<T>(data.dst), data.src)
+		    .unwrap());
 	}
 };
 
@@ -1100,15 +1099,12 @@ struct lak::from_bytes_traits<lak::vec3<T>, E>
 	using value_type             = lak::vec3<T>;
 	static constexpr size_t size = lak::from_bytes_size_v<T, E> * 3;
 
-	static value_type from_bytes(lak::span<const uint8_t, size> bytes)
+	static void from_bytes(lak::from_bytes_data<value_type, E> data)
 	{
-		constexpr size_t element_size = lak::from_bytes_size_v<T, E>;
-		return value_type(
-		  lak::from_bytes<T, E>(bytes.template first<element_size>()),
-		  lak::from_bytes<T, E>(
-		    bytes.template subspan<element_size, element_size>()),
-		  lak::from_bytes<T, E>(
-		    bytes.template subspan<element_size * 2, element_size>()));
+		static_assert(sizeof(lak::vec3<T>) == (sizeof(T) * 3));
+		lak::from_bytes_traits<T, E>::from_bytes(
+		  lak::from_bytes_data<T, E>::maybe_make(lak::span<T>(data.dst), data.src)
+		    .unwrap());
 	}
 };
 
@@ -1118,17 +1114,12 @@ struct lak::from_bytes_traits<lak::vec4<T>, E>
 	using value_type             = lak::vec4<T>;
 	static constexpr size_t size = lak::from_bytes_size_v<T, E> * 4;
 
-	static value_type from_bytes(lak::span<const uint8_t, size> bytes)
+	static void from_bytes(lak::from_bytes_data<value_type, E> data)
 	{
-		constexpr size_t element_size = lak::from_bytes_size_v<T, E>;
-		return value_type(
-		  lak::from_bytes<T, E>(bytes.template first<element_size>()),
-		  lak::from_bytes<T, E>(
-		    bytes.template subspan<element_size, element_size>()),
-		  lak::from_bytes<T, E>(
-		    bytes.template subspan<element_size * 2, element_size>()),
-		  lak::from_bytes<T, E>(
-		    bytes.template subspan<element_size * 3, element_size>()));
+		static_assert(sizeof(lak::vec4<T>) == (sizeof(T) * 4));
+		lak::from_bytes_traits<T, E>::from_bytes(
+		  lak::from_bytes_data<T, E>::maybe_make(lak::span<T>(data.dst), data.src)
+		    .unwrap());
 	}
 };
 

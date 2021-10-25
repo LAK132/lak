@@ -87,7 +87,7 @@ namespace lak
 		}
 
 		template<lak::endian E = lak::endian::little>
-		static lak::result<image> from_bytes(lak::span<const uint8_t> bytes,
+		static lak::result<image> from_bytes(lak::span<const byte_t> bytes,
 		                                     size_type size)
 		{
 			return lak::array_from_bytes<value_type, E>(bytes, size.x * size.y)
@@ -429,19 +429,18 @@ namespace lak
 	using image3_t = image<color3_t>;
 	using image4_t = image<color4_t>;
 
-	[[maybe_unused]] inline image3_t ImageFromRGB24(uint8_t *pixels,
-	                                                vec2s_t size)
+	[[maybe_unused]] inline image3_t ImageFromRGB24(byte_t *pixels, vec2s_t size)
 	{
 		return image3_t::from_bytes(
-		         lak::span<const uint8_t>(pixels, size.x * size.y * 3), size)
+		         lak::span<const byte_t>(pixels, size.x * size.y * 3), size)
 		  .unwrap();
 	}
 
-	[[maybe_unused]] inline image4_t ImageFromRGBA32(uint8_t *pixels,
+	[[maybe_unused]] inline image4_t ImageFromRGBA32(byte_t *pixels,
 	                                                 vec2s_t size)
 	{
 		return image4_t::from_bytes(
-		         lak::span<const uint8_t>(pixels, size.x * size.y * 4), size)
+		         lak::span<const byte_t>(pixels, size.x * size.y * 4), size)
 		  .unwrap();
 	}
 }

@@ -70,7 +70,7 @@ namespace tinf
 
 	struct decompression_state_t
 	{
-		lak::span<const uint8_t> data;
+		lak::span<const byte_t> data;
 
 		state_t state      = state_t::INITIAL;
 		uint32_t crc       = 0;
@@ -108,7 +108,7 @@ namespace tinf
 			while (num_bits < n)
 			{
 				if (data.empty()) return true;
-				bit_accum |= data[0] << num_bits;
+				bit_accum |= uint8_t(data[0]) << num_bits;
 				num_bits += 8;
 				data = data.subspan(1);
 			}
@@ -120,7 +120,7 @@ namespace tinf
 		{
 			ASSERT_LESS_OR_EQUAL(num_bits + 8, sizeof(bit_accum) * 8);
 			if (data.empty()) return true;
-			bit_accum |= data[0] << num_bits;
+			bit_accum |= uint8_t(data[0]) << num_bits;
 			num_bits += 8;
 			data = data.subspan(1);
 			return false;
@@ -176,30 +176,30 @@ namespace tinf
 	//
 	// if *head is null it will be set to output.begin().
 
-	error_t tinflate(lak::span<const uint8_t> compressed,
-	                 lak::array<uint8_t> *output,
+	error_t tinflate(lak::span<const byte_t> compressed,
+	                 lak::array<byte_t> *output,
 	                 uint32_t *crc = nullptr);
 
-	error_t tinflate(lak::span<const uint8_t> compressed,
-	                 lak::array<uint8_t> *output,
+	error_t tinflate(lak::span<const byte_t> compressed,
+	                 lak::array<byte_t> *output,
 	                 decompression_state_t &state,
 	                 uint32_t *crc = nullptr);
 
-	error_t tinflate(lak::span<const uint8_t> compressed,
-	                 lak::span<uint8_t> output,
-	                 uint8_t **head,
+	error_t tinflate(lak::span<const byte_t> compressed,
+	                 lak::span<byte_t> output,
+	                 byte_t **head,
 	                 uint32_t *crc = nullptr);
 
-	error_t tinflate(lak::span<const uint8_t> compressed,
-	                 lak::span<uint8_t> output,
-	                 uint8_t **head,
+	error_t tinflate(lak::span<const byte_t> compressed,
+	                 lak::span<byte_t> output,
+	                 byte_t **head,
 	                 decompression_state_t &state,
 	                 uint32_t *crc = nullptr);
 
 	error_t tinflate_header(decompression_state_t &state);
 
-	error_t tinflate_block(lak::span<uint8_t> output,
-	                       uint8_t **head,
+	error_t tinflate_block(lak::span<byte_t> output,
+	                       byte_t **head,
 	                       decompression_state_t &state);
 
 	error_t gen_huffman_table(uint32_t symbols,

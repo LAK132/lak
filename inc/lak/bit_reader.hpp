@@ -10,7 +10,7 @@ namespace lak
 	struct bit_reader
 	{
 	private:
-		lak::span<const uint8_t> _data;
+		lak::span<const byte_t> _data;
 
 		uintmax_t _bit_accum  = 0;
 		uint8_t _num_bits     = 0; // number of bits accumulated.
@@ -33,13 +33,13 @@ namespace lak
 			                                     uint8_t(8 - _unused_bits));
 		}
 
-		inline bit_reader(lak::span<const uint8_t> data) : _data(data) {}
+		inline bit_reader(lak::span<const byte_t> data) : _data(data) {}
 
-		inline lak::span<const uint8_t> get() const { return _data; }
+		inline lak::span<const byte_t> get() const { return _data; }
 
 		inline bool empty() const { return _data.empty(); }
 
-		inline void reset_data(lak::span<const uint8_t> data) { _data = data; }
+		inline void reset_data(lak::span<const byte_t> data) { _data = data; }
 
 		enum struct error_t : uint8_t
 		{
@@ -54,9 +54,9 @@ namespace lak
 
 		inline lak::result<uintmax_t, error_t> read_bits(const uint8_t bits);
 
-		inline lak::result<uint8_t, error_t> peek_byte();
+		inline lak::result<byte_t, error_t> peek_byte();
 
-		inline lak::result<uint8_t, error_t> read_byte();
+		inline lak::result<byte_t, error_t> read_byte();
 	};
 }
 

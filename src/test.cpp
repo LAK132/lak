@@ -1,5 +1,6 @@
 #include "lak/test.hpp"
 #include "lak/span.hpp"
+#include "lak/span_manip.hpp"
 
 std::unordered_map<lak::u8string, int (*)()> &_registered_tests()
 {
@@ -29,7 +30,7 @@ int lak::run_tests(lak::u8string_view tests)
 
 	const auto &reg_tests = registered_tests();
 
-	while_or(!test.empty())
+	while_or (!test.empty())
 	{
 		auto [do_test, remaining_tests] =
 		  lak::split_before<const char8_t>(test, u8';');

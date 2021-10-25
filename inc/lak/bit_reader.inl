@@ -20,7 +20,7 @@ lak::bit_reader::peek_bits(const uint8_t bits)
 		if (uint8_t bits_needed = bits - _num_bits; bits_needed >= _unused_bits)
 		{
 			// there are just enough bits unused or we need more bits than are unused
-			uint8_t unused = _data[0] >> (8 - _unused_bits);
+			uint8_t unused = uint8_t(_data[0]) >> (8 - _unused_bits);
 			_bit_accum |= unused << _num_bits;
 			_num_bits += _unused_bits;
 			_unused_bits = 8;
@@ -30,8 +30,8 @@ lak::bit_reader::peek_bits(const uint8_t bits)
 		else
 		{
 			// there are more bits unused than we need
-			uint8_t unused =
-			  (_data[0] >> (8 - _unused_bits)) & ~(UINTMAX_MAX << bits_needed);
+			uint8_t unused = (uint8_t(_data[0]) >> (8 - _unused_bits)) &
+			                 ~(UINTMAX_MAX << bits_needed);
 			_bit_accum |= unused << _num_bits;
 			_num_bits += bits_needed;
 			_unused_bits -= bits_needed;
@@ -47,14 +47,14 @@ lak::bit_reader::read_bits(const uint8_t bits)
 	return peek_bits(bits).if_ok([&](auto &&) { flush_bits(bits); });
 }
 
-inline lak::result<uint8_t, lak::bit_reader::error_t>
+inline lak::result<byte_t, lak::bit_reader::error_t>
 lak::bit_reader::peek_byte()
 {
-	return peek_bits(8).map([](uintmax_t v) -> uint8_t { return uint8_t(v); });
+	return peek_bits(8).map([](uintmax_t v) -> byte_t { return byte_t(v); });
 }
 
-inline lak::result<uint8_t, lak::bit_reader::error_t>
+inline lak::result<byte_t, lak::bit_reader::error_t>
 lak::bit_reader::read_byte()
 {
-	return read_bits(8).map([](uintmax_t v) -> uint8_t { return uint8_t(v); });
+	return read_bits(8).map([](uintmax_t v) -> byte_t { return byte_t(v); });
 }

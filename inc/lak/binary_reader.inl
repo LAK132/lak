@@ -1,38 +1,108 @@
 #include "lak/binary_reader.hpp"
 #include "lak/compiler.hpp"
 #include "lak/memmanip.hpp"
+#include "lak/span_manip.hpp"
+
+/* --- from_bytes --- */
 
 template<typename T, lak::endian E>
-T lak::from_bytes(lak::span<const uint8_t, lak::from_bytes_size_v<T, E>> bytes)
+T lak::from_bytes(lak::span<const byte_t, lak::from_bytes_size_v<T, E>> bytes)
 {
-	return lak::from_bytes_traits<T, E>::from_bytes(bytes);
+	T result;
+	lak::from_bytes_traits<T, E>::from_bytes(lak::from_bytes_data<T, E>::make(
+	  lak::span<T, 1>::from_ptr(&result), bytes));
+	return result;
 }
 
 template<typename T, lak::endian E>
-lak::result<T> lak::from_bytes(lak::span<const uint8_t> bytes)
+lak::result<T> lak::from_bytes(lak::span<const byte_t> bytes)
 {
-	static constexpr size_t min_size = lak::from_bytes_size_v<T, E>;
-	if (bytes.size() < min_size) return lak::err_t{};
-	return lak::ok_t{lak::from_bytes<T, E>(bytes.first<min_size>())};
+	return lak::first_as_const_sized<lak::from_bytes_size_v<T, E>>(bytes).map(
+	  static_cast<T (*)(lak::span<const byte_t, lak::from_bytes_size_v<T, E>>)>(
+	    &lak::from_bytes<T, E>));
+}
+
+/* --- array_from_bytes --- */
+
+template<typename T, size_t S, lak::endian E>
+lak::array<T, S> lak::array_from_bytes(
+  lak::span<const byte_t, lak::from_bytes_size_v<T, E> * S> bytes)
+{
+	lak::array<T, S> result;
+	lak::from_bytes_traits<T, E>::from_bytes(
+	  lak::from_bytes_data<T, E>::make(lak::span<T, S>(result), bytes));
+	return result;
+}
+
+template<typename T, size_t S, lak::endian E>
+lak::result<lak::array<T, S>> lak::array_from_bytes(
+  lak::span<const byte_t> bytes)
+{
+	return lak::first_as_const_sized<lak::from_bytes_size_v<T, E> * S>(bytes)
+	  .map(static_cast<lak::array<T, S> (*)(
+	         lak::span<const byte_t, lak::from_bytes_size_v<T, E> * S>)>(
+	    &lak::array_from_bytes<T, S, E>));
 }
 
 template<typename T, lak::endian E>
-lak::result<lak::array<T>> lak::array_from_bytes(
-  lak::span<const uint8_t> bytes, size_t count)
+lak::result<lak::array<T>> lak::array_from_bytes(lak::span<const byte_t> bytes,
+                                                 size_t count)
 {
 	const size_t req_size = lak::from_bytes_size_v<T, E> * count;
-
-	if (req_size > bytes.size()) return lak::err_t{};
+	if (bytes.size() < req_size) return lak::err_t{};
+	bytes = bytes.first(req_size);
 
 	lak::array<T> result;
-	result.reserve(count);
+	result.resize(count);
 
-	for (; count-- > 0; bytes = bytes.subspan(lak::from_bytes_size_v<T, E>))
-		result.push_back(
-		  lak::from_bytes<T, E>(bytes.first<lak::from_bytes_size_v<T, E>>()));
-
-	return lak::ok_t{lak::move(result)};
+	return lak::from_bytes_data<T, E>::maybe_make(lak::span(result), bytes)
+	  .map(
+	    [&](lak::from_bytes_data<T, E> data)
+	    {
+		    lak::from_bytes_traits<T, E>::from_bytes(data);
+		    return lak::move(result);
+	    });
 }
+
+template<typename T, lak::endian E>
+lak::result<> lak::array_from_bytes(lak::span<T> values,
+                                    lak::span<const byte_t> bytes)
+{
+	return lak::from_bytes_data<T, E>::maybe_make(values, bytes)
+	  .map(
+	    [](auto data)
+	    {
+		    lak::from_bytes_traits<T, E>::from_bytes(data);
+		    return lak::monostate{};
+	    });
+}
+
+/* --- --- */
+
+namespace lak
+{
+	template<typename T, lak::endian E>
+	inline void _basic_memcpy_from_bytes(lak::from_bytes_data<T, E> data)
+	{
+		static_assert(E == lak::endian::native || ~E == lak::endian::native);
+		lak::memcpy(lak::span<byte_t>(data.dst), data.src);
+		if constexpr (E != lak::endian::native) lak::byte_swap(data.dst);
+	}
+}
+
+/* --- byte_t --- */
+
+template<lak::endian E>
+struct lak::from_bytes_traits<byte_t, E>
+{
+	using value_type             = byte_t;
+	static constexpr size_t size = sizeof(value_type);
+
+	static void from_bytes(lak::from_bytes_data<value_type, E> data)
+	{
+		lak::memcpy(data.dst, data.src);
+	}
+};
 
 /* --- uint8_t --- */
 
@@ -42,9 +112,9 @@ struct lak::from_bytes_traits<uint8_t, E>
 	using value_type             = uint8_t;
 	static constexpr size_t size = sizeof(value_type);
 
-	static value_type from_bytes(lak::span<const uint8_t, size> bytes)
+	static void from_bytes(lak::from_bytes_data<value_type, E> data)
 	{
-		return bytes[0];
+		lak::memcpy(lak::span<byte_t>(data.dst), data.src);
 	}
 };
 
@@ -56,9 +126,9 @@ struct lak::from_bytes_traits<int8_t, E>
 	using value_type             = int8_t;
 	static constexpr size_t size = sizeof(value_type);
 
-	static value_type from_bytes(lak::span<const uint8_t, size> bytes)
+	static void from_bytes(lak::from_bytes_data<value_type, E> data)
 	{
-		return value_type(lak::from_bytes_traits<uint8_t, E>::from_bytes(bytes));
+		lak::memcpy(lak::span<byte_t>(data.dst), data.src);
 	}
 };
 
@@ -70,14 +140,9 @@ struct lak::from_bytes_traits<uint16_t, E>
 	using value_type             = uint16_t;
 	static constexpr size_t size = sizeof(value_type);
 
-	static value_type from_bytes(lak::span<const uint8_t, size> bytes)
+	static void from_bytes(lak::from_bytes_data<value_type, E> data)
 	{
-		static_assert(E == lak::endian::little || E == lak::endian::big);
-
-		if constexpr (E == lak::endian::little)
-			return value_type(bytes[0]) | (value_type(bytes[1]) << 8);
-		else
-			return value_type(bytes[1]) | (value_type(bytes[0]) << 8);
+		lak::_basic_memcpy_from_bytes(data);
 	}
 };
 
@@ -89,9 +154,9 @@ struct lak::from_bytes_traits<int16_t, E>
 	using value_type             = int16_t;
 	static constexpr size_t size = sizeof(value_type);
 
-	static value_type from_bytes(lak::span<const uint8_t, size> bytes)
+	static void from_bytes(lak::from_bytes_data<value_type, E> data)
 	{
-		return value_type(lak::from_bytes_traits<uint16_t, E>::from_bytes(bytes));
+		lak::_basic_memcpy_from_bytes(data);
 	}
 };
 
@@ -103,16 +168,9 @@ struct lak::from_bytes_traits<uint32_t, E>
 	using value_type             = uint32_t;
 	static constexpr size_t size = sizeof(value_type);
 
-	static value_type from_bytes(lak::span<const uint8_t, size> bytes)
+	static void from_bytes(lak::from_bytes_data<value_type, E> data)
 	{
-		static_assert(E == lak::endian::little || E == lak::endian::big);
-
-		if constexpr (E == lak::endian::little)
-			return value_type(bytes[0]) | (value_type(bytes[1]) << 8) |
-			       (value_type(bytes[2]) << 16) | (value_type(bytes[3]) << 24);
-		else
-			return value_type(bytes[3]) | (value_type(bytes[2]) << 8) |
-			       (value_type(bytes[1]) << 16) | (value_type(bytes[0]) << 24);
+		lak::_basic_memcpy_from_bytes(data);
 	}
 };
 
@@ -124,9 +182,9 @@ struct lak::from_bytes_traits<int32_t, E>
 	using value_type             = int32_t;
 	static constexpr size_t size = sizeof(value_type);
 
-	static value_type from_bytes(lak::span<const uint8_t, size> bytes)
+	static void from_bytes(lak::from_bytes_data<value_type, E> data)
 	{
-		return value_type(lak::from_bytes_traits<uint32_t, E>::from_bytes(bytes));
+		lak::_basic_memcpy_from_bytes(data);
 	}
 };
 
@@ -138,20 +196,9 @@ struct lak::from_bytes_traits<uint64_t, E>
 	using value_type             = uint64_t;
 	static constexpr size_t size = sizeof(value_type);
 
-	static value_type from_bytes(lak::span<const uint8_t, size> bytes)
+	static void from_bytes(lak::from_bytes_data<value_type, E> data)
 	{
-		static_assert(E == lak::endian::little || E == lak::endian::big);
-
-		if constexpr (E == lak::endian::little)
-			return value_type(bytes[0]) | (value_type(bytes[1]) << 8) |
-			       (value_type(bytes[2]) << 16) | (value_type(bytes[3]) << 24) |
-			       (value_type(bytes[4]) << 32) | (value_type(bytes[5]) << 40) |
-			       (value_type(bytes[6]) << 48) | (value_type(bytes[7]) << 56);
-		else
-			return value_type(bytes[7]) | (value_type(bytes[6]) << 8) |
-			       (value_type(bytes[5]) << 16) | (value_type(bytes[4]) << 24) |
-			       (value_type(bytes[3]) << 32) | (value_type(bytes[2]) << 40) |
-			       (value_type(bytes[1]) << 48) | (value_type(bytes[0]) << 56);
+		lak::_basic_memcpy_from_bytes(data);
 	}
 };
 
@@ -163,9 +210,9 @@ struct lak::from_bytes_traits<int64_t, E>
 	using value_type             = int64_t;
 	static constexpr size_t size = sizeof(value_type);
 
-	static value_type from_bytes(lak::span<const uint8_t, size> bytes)
+	static void from_bytes(lak::from_bytes_data<value_type, E> data)
 	{
-		return value_type(lak::from_bytes_traits<uint64_t, E>::from_bytes(bytes));
+		lak::_basic_memcpy_from_bytes(data);
 	}
 };
 
@@ -177,10 +224,9 @@ struct lak::from_bytes_traits<f32_t, E>
 	using value_type             = f32_t;
 	static constexpr size_t size = sizeof(value_type);
 
-	static value_type from_bytes(lak::span<const uint8_t, size> bytes)
+	static void from_bytes(lak::from_bytes_data<value_type, E> data)
 	{
-		return lak::bit_cast<f32_t>(
-		  lak::from_bytes_traits<uint32_t, E>::from_bytes(bytes));
+		lak::_basic_memcpy_from_bytes(data);
 	}
 };
 
@@ -192,10 +238,9 @@ struct lak::from_bytes_traits<f64_t, E>
 	using value_type             = f64_t;
 	static constexpr size_t size = sizeof(value_type);
 
-	static value_type from_bytes(lak::span<const uint8_t, size> bytes)
+	static void from_bytes(lak::from_bytes_data<value_type, E> data)
 	{
-		return lak::bit_cast<f64_t>(
-		  lak::from_bytes_traits<uint64_t, E>::from_bytes(bytes));
+		lak::_basic_memcpy_from_bytes(data);
 	}
 };
 
@@ -207,9 +252,9 @@ struct lak::from_bytes_traits<char, E>
 	using value_type             = char;
 	static constexpr size_t size = sizeof(value_type);
 
-	static value_type from_bytes(lak::span<const uint8_t, size> bytes)
+	static void from_bytes(lak::from_bytes_data<value_type, E> data)
 	{
-		return value_type(lak::from_bytes_traits<uint8_t, E>::from_bytes(bytes));
+		lak::memcpy(lak::span<byte_t>(data.dst), data.src);
 	}
 };
 
@@ -222,9 +267,9 @@ struct lak::from_bytes_traits<char8_t, E>
 	using value_type             = char8_t;
 	static constexpr size_t size = sizeof(value_type);
 
-	static value_type from_bytes(lak::span<const uint8_t, size> bytes)
+	static void from_bytes(lak::from_bytes_data<value_type, E> data)
 	{
-		return value_type(lak::from_bytes_traits<uint8_t, E>::from_bytes(bytes));
+		lak::memcpy(lak::span<byte_t>(data.dst), data.src);
 	}
 };
 #endif
@@ -237,9 +282,9 @@ struct lak::from_bytes_traits<char16_t, E>
 	using value_type             = char16_t;
 	static constexpr size_t size = sizeof(value_type);
 
-	static value_type from_bytes(lak::span<const uint8_t, size> bytes)
+	static void from_bytes(lak::from_bytes_data<value_type, E> data)
 	{
-		return value_type(lak::from_bytes_traits<uint16_t, E>::from_bytes(bytes));
+		lak::_basic_memcpy_from_bytes(data);
 	}
 };
 
@@ -251,9 +296,9 @@ struct lak::from_bytes_traits<char32_t, E>
 	using value_type             = char32_t;
 	static constexpr size_t size = sizeof(value_type);
 
-	static value_type from_bytes(lak::span<const uint8_t, size> bytes)
+	static void from_bytes(lak::from_bytes_data<value_type, E> data)
 	{
-		return value_type(lak::from_bytes_traits<uint32_t, E>::from_bytes(bytes));
+		lak::_basic_memcpy_from_bytes(data);
 	}
 };
 
@@ -265,9 +310,8 @@ struct lak::from_bytes_traits<wchar_t, E>
 	using value_type             = wchar_t;
 	static constexpr size_t size = sizeof(value_type);
 
-	static value_type from_bytes(lak::span<const uint8_t, size> bytes)
+	static void from_bytes(lak::from_bytes_data<value_type, E> data)
 	{
-		return value_type(
-		  lak::from_bytes_traits<wchar_unicode_t, E>::from_bytes(bytes));
+		lak::_basic_memcpy_from_bytes(data);
 	}
 };

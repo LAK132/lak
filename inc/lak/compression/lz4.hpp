@@ -23,10 +23,10 @@ namespace lak
 
 	const char *lz4_error_name(lak::lz4_decode_error err);
 
-	lak::result<lak::array<uint8_t>, lak::lz4_decode_error> decode_lz4_block(
+	lak::result<lak::array<byte_t>, lak::lz4_decode_error> decode_lz4_block(
 	  lak::binary_reader &strm, size_t output_size);
 
-	inline lak::result<lak::array<uint8_t>, lak::lz4_decode_error>
+	inline lak::result<lak::array<byte_t>, lak::lz4_decode_error>
 	decode_lz4_block(lak::binary_reader &&strm, size_t output_size)
 	{
 		return decode_lz4_block(strm, output_size);

@@ -3,6 +3,7 @@
 
 #include "lak/result.hpp"
 #include "lak/span.hpp"
+#include "lak/span_manip.hpp"
 
 #include <cstring>
 
@@ -14,19 +15,19 @@ namespace lak
 	// see lak::binary_reader and lak::binary_writer for type safe manipulation
 	// of types as bytes
 	template<typename T>
-	lak::span<lak::copy_const_t<T, char>, sizeof(T)> as_bytes(T *v)
+	lak::span<lak::copy_const_t<T, byte_t>, sizeof(T)> as_bytes(T *v)
 	{
-		return lak::span<lak::copy_const_t<T, char>, sizeof(T)>::from_ptr(
-		  reinterpret_cast<lak::copy_const_t<T, char> *>(v));
+		return lak::span<lak::copy_const_t<T, byte_t>, sizeof(T)>::from_ptr(
+		  reinterpret_cast<lak::copy_const_t<T, byte_t> *>(v));
 	}
 
-	void memcpy(char *dst, const char *src, size_t count);
+	void memcpy(byte_t *dst, const byte_t *src, size_t count);
 
-	void memmove(char *dst, const char *src, size_t count);
+	void memmove(byte_t *dst, const byte_t *src, size_t count);
 
-	void memcpy(lak::span<char> dst, lak::span<const char> src);
+	void memcpy(lak::span<byte_t> dst, lak::span<const byte_t> src);
 
-	void memmove(lak::span<char> dst, lak::span<const char> src);
+	void memmove(lak::span<byte_t> dst, lak::span<const byte_t> src);
 
 	template<typename T>
 	force_inline void memcpy(T *dst, const T *src)
@@ -44,6 +45,13 @@ namespace lak
 	force_inline void bzero(T *dst)
 	{
 		lak::fill<char>(lak::as_bytes(dst), char(0));
+	}
+
+	template<typename T>
+	void byte_swap(lak::span<T> v)
+	{
+		if constexpr (sizeof(T) != sizeof(byte_t))
+			for (T &e : v) lak::reverse(lak::as_bytes(&e));
 	}
 
 	template<typename TO, typename FROM>

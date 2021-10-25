@@ -109,8 +109,8 @@ lak::deflate_iterator::error_t lak::deflate_iterator::gen_huffman_table(
 }
 
 lak::deflate_iterator::deflate_iterator(
-  lak::span<const uint8_t> compressed,
-  lak::span<uint8_t, 0x8000> output_buffer,
+  lak::span<const byte_t> compressed,
+  lak::span<byte_t, 0x8000> output_buffer,
   bool parse_header,
   bool anaconda)
 : _value(value_type::make_err(error_t::invalid_state)),
@@ -149,13 +149,13 @@ bool lak::deflate_iterator::is_final_block() const
 	return _final;
 }
 
-lak::span<const uint8_t> lak::deflate_iterator::compressed() const
+lak::span<const byte_t> lak::deflate_iterator::compressed() const
 {
 	return _compressed.get();
 }
 
 void lak::deflate_iterator::replace_compressed(
-  lak::span<const uint8_t> compressed)
+  lak::span<const byte_t> compressed)
 {
 	if (!_compressed.empty())
 		WARNING(
