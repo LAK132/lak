@@ -81,7 +81,7 @@ constexpr const T &lak::array<T, SIZE>::back() const
 template<typename T>
 void lak::array<T, lak::dynamic_extent>::right_shift(size_t count)
 {
-	if (_size == 0) return;
+	if (_size == 0 || count == 0) return;
 
 	ASSERT_GREATER_OR_EQUAL(_committed * sizeof(T), _size + count);
 
