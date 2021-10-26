@@ -32,7 +32,7 @@ namespace lak
 		static inline lak::result<from_bytes_data> maybe_make(
 		  lak::span<T> dst, lak::span<const byte_t> src)
 		{
-			if (src.size() * bytes_per_element == dst.size())
+			if (dst.size() * bytes_per_element == src.size())
 				return lak::ok_t{from_bytes_data(dst, src)};
 			else
 				return lak::err_t{};
