@@ -42,7 +42,7 @@
 		getchar();                                                                \
 	}
 
-#undef DEBUG_STRINGINFY_EXPR
+#undef DEBUG_STRINGIFY_EXPR
 #if defined(LAK_NO_DEBUG_COLOURS)
 #	define DEBUG_STRINGIFY_EXPR(...) STRINGIFY(__VA_ARGS__)
 #else
