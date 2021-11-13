@@ -2,12 +2,28 @@
 #define LAK_CONST_STRING
 
 #include "lak/array.hpp"
+#include "lak/crc.hpp"
 #include "lak/string.hpp"
 #include "lak/string_view.hpp"
 
 namespace lak
 {
-#define LAK_BASIC_CONST_STRING(CHAR, PREFIX)                                  \
+#define LAK_BASIC_CONST_STRING(CHAR, PREFIX, ...)                             \
+	constexpr size_t PREFIX##const_strlen(const CHAR *str)                      \
+	{                                                                           \
+		size_t result = 0;                                                        \
+		while (*(str++) != CHAR(0)) ++result;                                     \
+		return result;                                                            \
+	}                                                                           \
+	struct PREFIX##const_string_literal                                         \
+	{                                                                           \
+		const CHAR *data;                                                         \
+		const size_t size;                                                        \
+		constexpr PREFIX##const_string_literal(const CHAR *str)                   \
+		: data(str), size(PREFIX##const_strlen(str))                              \
+		{                                                                         \
+		}                                                                         \
+	};                                                                          \
 	template<size_t N>                                                          \
 	struct PREFIX##const_string                                                 \
 	{                                                                           \
@@ -15,6 +31,13 @@ namespace lak
 		inline constexpr PREFIX##const_string(const CHAR (&str)[N + 1])           \
 		{                                                                         \
 			for (size_t i = 0; i < N; ++i) _value[i] = str[i];                      \
+		}                                                                         \
+		inline constexpr PREFIX##const_string from_ptr(const CHAR *str)           \
+		{                                                                         \
+			static_assert(PREFIX##const_strlen(str) == N);                          \
+			PREFIX##const_string result;                                            \
+			for (size_t i = 0; i < N; ++i) result._value[i] = str[i];               \
+			return result;                                                          \
 		}                                                                         \
 		inline constexpr CHAR &operator[](size_t index) { return _value[index]; } \
 		inline constexpr const CHAR &operator[](size_t index) const               \
@@ -39,16 +62,31 @@ namespace lak
 		{                                                                         \
 			return std::basic_string<CHAR>(begin(), end());                         \
 		}                                                                         \
+                                                                              \
+		constexpr uint32_t crc32() const                                          \
+		{                                                                         \
+			uint32_t result = ~uint32_t(0);                                         \
+			for (size_t i = 0U; i < N; ++i)                                         \
+				result = lak::crc32_table[static_cast<uint8_t>(result ^ _value[i])] ^ \
+				         (result >> 8U);                                              \
+			return ~result;                                                         \
+		}                                                                         \
 	};                                                                          \
                                                                               \
 	template<size_t N>                                                          \
 	PREFIX##const_string(const CHAR(&)[N])->PREFIX##const_string<N - 1>;
 
-	LAK_BASIC_CONST_STRING(char, a)
-	LAK_BASIC_CONST_STRING(wchar_t, w)
-	LAK_BASIC_CONST_STRING(char8_t, u8)
-	LAK_BASIC_CONST_STRING(char16_t, u16)
-	LAK_BASIC_CONST_STRING(char32_t, u32)
+	// aconst_string, wconst_string, u8const_string, u16const_string and
+	// u32const_string
+	LAK_FOREACH_CHAR(LAK_BASIC_CONST_STRING)
 }
+
+#define LAK_BASIC_CONST_STRING_LITERAL_OPERATOR(CHAR, PREFIX, ...)            \
+	template<lak::PREFIX##const_string_literal STR>                             \
+	constexpr auto operator"" _##PREFIX##const()                                \
+	{                                                                           \
+		return lak::PREFIX##const_string<STR.size>::from_ptr(STR.data);           \
+	}
+LAK_FOREACH_CHAR(LAK_BASIC_CONST_STRING_LITERAL_OPERATOR)
 
 #endif
