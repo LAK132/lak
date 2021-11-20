@@ -815,21 +815,21 @@ namespace lak
 
 	/* --- conditional --- */
 
-	template<bool B, typename T, typename U>
+	template<bool B, typename T, typename F>
 	struct conditional;
 
-	template<typename T, typename U>
-	struct conditional<true, T, U> : lak::type_identity<T>
+	template<typename T, typename F>
+	struct conditional<true, T, F> : lak::type_identity<T>
 	{
 	};
 
-	template<typename T, typename U>
-	struct conditional<false, T, U> : lak::type_identity<U>
+	template<typename T, typename F>
+	struct conditional<false, T, F> : lak::type_identity<F>
 	{
 	};
 
-	template<bool B, typename T, typename U>
-	using conditional_t = typename lak::conditional<B, T, U>::type;
+	template<bool B, typename T, typename F>
+	using conditional_t = typename lak::conditional<B, T, F>::type;
 
 	/* --- deferred_conditional --- */
 
@@ -837,7 +837,7 @@ namespace lak
 	         template<typename...>
 	         typename T,
 	         template<typename...>
-	         typename U,
+	         typename F,
 	         typename... ARGS>
 	struct deferred_conditional
 	{
@@ -850,7 +850,7 @@ namespace lak
 		struct _false
 		{
 			template<typename... A>
-			using type = U<A...>;
+			using type = F<A...>;
 		};
 
 		using type =
@@ -861,10 +861,10 @@ namespace lak
 	         template<typename...>
 	         typename T,
 	         template<typename...>
-	         typename U,
+	         typename F,
 	         typename... ARGS>
 	using deferred_conditional_t =
-	  typename deferred_conditional<B, T, U, ARGS...>::type;
+	  typename deferred_conditional<B, T, F, ARGS...>::type;
 
 	/* --- enable_if --- */
 
