@@ -49,7 +49,7 @@ endif
 
 add_project_arguments(project_args, language: ['c', 'cpp'])
 
-subdir('inc/sdl')
+subdir('inc/SDL')
 subdir('src')
 subdir('src/opengl')
 subdir('src/windowing')
