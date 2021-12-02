@@ -8,6 +8,7 @@ laktest = static_library(
     'compare.cpp',
     'const_string.cpp',
     'dsl.cpp',
+    'integer_range.cpp',
     'json.cpp',
     'string_view.cpp',
     'test.cpp',
