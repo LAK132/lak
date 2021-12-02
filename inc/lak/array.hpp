@@ -71,10 +71,11 @@ namespace lak
 		size_t _size            = 0; // Ts
 		size_t _committed       = 0; // bytes
 
-		// leaves the lower `count` elements uninitialised, does not move the base
-		// pointer. methods calling this should make sure to initialise the lower
+		// leaves the `count` elements before `before` uninitialised, does not move
+		// the base pointer. methods calling this should make sure there is enough
+		// memory committed for this, and to make sure to initialise the lower
 		// elements and update _size accordingly.
-		void right_shift(size_t count);
+		void right_shift(size_t count, size_t before = 0U);
 
 		void reserve_bytes(size_t new_capacity_bytes,
 		                   size_t right_shift_count = 0U);
@@ -158,6 +159,9 @@ namespace lak
 		T &push_back(T &&t);
 
 		void pop_back();
+
+		T *insert(const T *before, const T &value);
+		T *insert(const T *before, T &&value);
 
 		T *erase(const T *first, const T *last);
 

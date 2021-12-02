@@ -2,6 +2,16 @@
 
 #include "lak/test.hpp"
 
+template<typename T>
+lak::array<T> one_page_array(const T &default_value = {})
+{
+	lak::array<T> result;
+
+	result.resize(lak::page_size() / sizeof(T), default_value);
+
+	return result;
+}
+
 BEGIN_TEST(array)
 {
 	lak::array<int> array;
@@ -47,6 +57,34 @@ BEGIN_TEST(array)
 
 	ASSERT_EQUAL(array2.size(), 0x30U);
 	ASSERT_EQUAL(array2[10], 40);
+
+	return 0;
+}
+END_TEST()
+
+BEGIN_TEST(array_insert)
+{
+	lak::array<uint8_t> arr = one_page_array<uint8_t>(10U);
+
+	const size_t size = arr.size();
+
+	ASSERT_GREATER_OR_EQUAL(size, 2U);
+
+	const uint8_t *inserted = arr.insert(arr.begin() + (size / 2U), 20U);
+
+	ASSERT_EQUAL(uintptr_t(inserted), uintptr_t(arr.begin() + (size / 2U)));
+
+	ASSERT_EQUAL(inserted[0], 20U);
+	ASSERT_EQUAL(inserted[-1], 10U);
+	ASSERT_EQUAL(inserted[1], 10U);
+
+	ASSERT_EQUAL(arr.size(), size + 1);
+
+	ASSERT_GREATER(arr.capacity(), lak::page_size());
+
+	inserted = arr.insert(arr.end(), 0U);
+	ASSERT_EQUAL(uintptr_t(inserted), uintptr_t(arr.end() - 1U));
+	ASSERT_EQUAL(uintptr_t(inserted), uintptr_t(arr.begin() + size + 1U));
 
 	return 0;
 }

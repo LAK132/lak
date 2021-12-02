@@ -1,5 +1,6 @@
 #include "lak/algorithm.hpp"
 #include "lak/compiler.hpp"
+#include "lak/integer_range.hpp"
 #include "lak/memmanip.hpp"
 #include "lak/span.hpp"
 
@@ -79,19 +80,26 @@ constexpr const T &lak::array<T, SIZE>::back() const
 /* --- dynamic size --- */
 
 template<typename T>
-void lak::array<T, lak::dynamic_extent>::right_shift(size_t count)
+void lak::array<T, lak::dynamic_extent>::right_shift(size_t count,
+                                                     size_t before)
 {
 	if (_size == 0 || count == 0) return;
 
 	ASSERT_GREATER_OR_EQUAL(_committed * sizeof(T), _size + count);
+	ASSERT_GREATER_OR_EQUAL(_size, before);
 
-	for (size_t i = _size; i-- > _size - count;)
-		new (data() + i + count) T(lak::move(data()[i]));
+	const size_t moved_count   = _size - before;
+	const size_t new_moved     = count > moved_count ? moved_count : count;
+	const size_t replace_moved = moved_count - new_moved;
 
-	for (size_t i = _size - count; i-- > count;)
+	for (size_t i : lak::size_range::from_count(before, replace_moved))
 		data()[i + count] = lak::move(data()[i]);
 
-	for (size_t i = 0; i < count; ++i) data()[i].~T();
+	for (size_t i :
+	     lak::size_range::from_count(before + replace_moved, new_moved))
+		new (data() + count + i) T(lak::move(data()[i]));
+
+	for (size_t i : lak::size_range::from_count(before, count)) data()[i].~T();
 }
 
 template<typename T>
@@ -375,6 +383,44 @@ void lak::array<T, lak::dynamic_extent>::pop_back()
 {
 	ASSERT_GREATER(_size, 0U);
 	data()[--_size].~T();
+}
+
+template<typename T>
+T *lak::array<T, lak::dynamic_extent>::insert(const T *before, const T &value)
+{
+	ASSERT_GREATER_OR_EQUAL(before, cbegin());
+	ASSERT_LESS_OR_EQUAL(before, cend());
+
+	const size_t index = before - data();
+
+	commit(_size + 1U);
+
+	right_shift(1U, index);
+
+	new (data() + index) T(value);
+
+	++_size;
+
+	return data() + index;
+}
+
+template<typename T>
+T *lak::array<T, lak::dynamic_extent>::insert(const T *before, T &&value)
+{
+	ASSERT_GREATER_OR_EQUAL(before, cbegin());
+	ASSERT_LESS_OR_EQUAL(before, cend());
+
+	const size_t index = before - data();
+
+	commit(_size + 1U);
+
+	right_shift(1U, index);
+
+	new (data() + index) T(lak::move(value));
+
+	++_size;
+
+	return data() + index;
 }
 
 template<typename T>
