@@ -1,2 +1,2 @@
 #! /bin/sh
-(cd build && meson compile)
+meson compile -C build || exit 1
