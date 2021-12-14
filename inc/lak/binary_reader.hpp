@@ -131,6 +131,20 @@ namespace lak
 			return lak::ok_t{};
 		}
 
+		lak::result<lak::span<const byte_t>> peek_bytes(size_t count) const
+		{
+			if (_cursor + count > _data.size()) return lak::err_t{};
+			return lak::ok_t{_data.subspan(_cursor, count)};
+		}
+
+		lak::result<lak::span<const byte_t>> read_bytes(size_t count)
+		{
+			if (_cursor + count > _data.size()) return lak::err_t{};
+			lak::span<const byte_t> result = _data.subspan(_cursor, count);
+			_cursor += count;
+			return lak::ok_t{result};
+		}
+
 		template<typename T, lak::endian E = lak::endian::little>
 		lak::result<T> peek()
 		{
