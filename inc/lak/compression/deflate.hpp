@@ -16,6 +16,7 @@ namespace lak
 		enum class state_t : uint8_t
 		{
 			out_of_data,
+			block_complete,
 			custom_dictionary,
 			header,
 			uncompressed_len,
@@ -62,11 +63,12 @@ namespace lak
 		static const char *error_name(error_t error);
 
 	private:
-		using value_type = lak::result<byte_t, error_t>;
+		using value_type = lak::result<lak::span<byte_t>, error_t>;
 		value_type _value;
 
 		lak::bit_reader _compressed;
 		lak::buffer_span<byte_t, 0x8000> _output_buffer;
+		size_t _unflushed = 0;
 
 		state_t _state = state_t::out_of_data;
 		uint32_t _crc  = 0;
@@ -103,9 +105,12 @@ namespace lak
 
 		force_inline deflate_iterator &fail(error_t reason);
 
-		force_inline deflate_iterator &success(byte_t value);
+		force_inline deflate_iterator &success();
 
-		force_inline deflate_iterator &block_complete();
+		// returns true when need to flush
+		force_inline [[nodiscard]] bool push_value(byte_t value);
+
+		force_inline deflate_iterator &finished();
 
 		error_t gen_huffman_table(lak::span<const uint8_t> lengths,
 		                          bool allow_no_symbols,

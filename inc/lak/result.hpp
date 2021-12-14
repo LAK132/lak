@@ -543,6 +543,76 @@ namespace lak
 			return lak::move(*this);
 		}
 
+		/* --- if_ok_copy_to --- */
+
+		template<typename T = ok_type, typename T_ = T>
+		requires(lak::is_same_v<T, T_>) //
+		  result if_ok_copy_to(T_ &out)
+		const &
+		{
+			if constexpr (lak::is_same_v<T, ok_type>)
+			{
+				if (is_ok()) out = get_ok();
+			}
+			else
+			{
+				if (is_ok()) out = T(get_ok());
+			}
+			return *this;
+		}
+
+		/* --- if_err_copy_to --- */
+
+		template<typename T = err_type, typename T_ = T>
+		requires(lak::is_same_v<T, T_>) //
+		  result if_err_copy_to(T_ &out)
+		const &
+		{
+			if constexpr (lak::is_same_v<T, err_type>)
+			{
+				if (is_err()) out = get_err();
+			}
+			else
+			{
+				if (is_err()) out = T(get_err());
+			}
+			return *this;
+		}
+
+		/* --- if_ok_move_to --- */
+
+		template<typename T = ok_type, typename T_ = T>
+		requires(lak::is_same_v<T, T_>) //
+		  result if_ok_move_to(T_ &out)
+		{
+			if constexpr (lak::is_same_v<T, ok_type>)
+			{
+				if (is_ok()) out = forward_ok();
+			}
+			else
+			{
+				if (is_ok()) out = T(forward_ok());
+			}
+			return *this;
+		}
+
+		/* --- if_err_move_to --- */
+
+		template<typename T = err_type, typename T_ = T>
+		requires(lak::is_same_v<T, T_>) //
+		  result if_err_move_to(T_ &out)
+		{
+			if constexpr (lak::is_same_v<T, err_type>)
+			{
+				if (is_err()) out = forward_err();
+			}
+			else
+			{
+				if (is_err()) out = T(forward_err());
+			}
+			return *this;
+		}
+
 		/* --- discard --- */
 
 		void discard() const {}

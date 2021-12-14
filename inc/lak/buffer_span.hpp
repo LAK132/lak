@@ -2,6 +2,7 @@
 #define LAK_BUFFER_SPAN_HPP
 
 #include "lak/span.hpp"
+#include "lak/span_manip.hpp"
 
 namespace lak
 {
@@ -18,6 +19,13 @@ namespace lak
 		buffer_span &operator=(const buffer_span &) = default;
 
 		buffer_span(lak::span<T, S> buffer) : _buffer(buffer) {}
+
+		lak::span<T> rebase()
+		{
+			lak::rotate_left(lak::span<T>(_buffer), _pos);
+			_pos = 0;
+			return _buffer.first(_size);
+		}
 
 		const T *front() const { return _size > 0 ? _buffer + _pos : nullptr; }
 		T *front() { return _size > 0 ? _buffer + _pos : nullptr; }
@@ -57,6 +65,7 @@ namespace lak
 		}
 
 		size_t size() const { return _size; }
+		constexpr size_t max_size() const { return S; }
 
 		T &operator[](size_t index) { return _buffer[(_pos + index) % S]; }
 		const T &operator[](size_t index) const
