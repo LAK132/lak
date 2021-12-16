@@ -108,7 +108,7 @@ namespace lak
 		force_inline deflate_iterator &success();
 
 		// returns true when need to flush
-		force_inline [[nodiscard]] bool push_value(byte_t value);
+		[[nodiscard]] force_inline bool push_value(byte_t value);
 
 		force_inline deflate_iterator &finished();
 
