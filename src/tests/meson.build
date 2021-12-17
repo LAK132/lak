@@ -10,6 +10,7 @@ laktest = static_library(
     'dsl.cpp',
     'integer_range.cpp',
     'json.cpp',
+    'span_manip.cpp',
     'string_view.cpp',
     'test.cpp',
     'trie.cpp',

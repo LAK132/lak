@@ -1,5 +1,7 @@
 #include "lak/span.hpp"
 
+#include "lak/math.hpp"
+
 template<size_t S, typename T>
 lak::result<lak::span<T, S>> lak::as_const_sized(lak::span<T> s)
 {
@@ -88,9 +90,15 @@ lak::span<T> lak::rotate_left(lak::span<T> data, size_t distance)
 {
 	if (data.size() == 0 || (distance % data.size()) == 0) return data;
 
-	for (size_t i = 0; i < data.size() - 1; ++i)
+	for (lak::span<T> working = data; distance > 0;)
 	{
-		lak::swap(data[i], data[(i + distance) % data.size()]);
+		for (size_t i = 0; i < working.size() - distance; ++i)
+		{
+			lak::swap(working[i], working[i + distance]);
+		}
+		const size_t prev_distance = distance;
+		distance = lak::inv_mod<size_t>(working.size(), distance);
+		working  = working.last(prev_distance);
 	}
 
 	return data;
@@ -101,9 +109,15 @@ lak::span<T> lak::rotate_right(lak::span<T> data, size_t distance)
 {
 	if (data.size() == 0 || (distance % data.size()) == 0) return data;
 
-	for (size_t i = data.size() - 1; i-- > 0;)
+	for (lak::span<T> working = data; distance > 0;)
 	{
-		lak::swap(data[i], data[(i + distance) % data.size()]);
+		for (size_t i = working.size() - distance; i-- > 0;)
+		{
+			lak::swap(working[i], working[i + distance]);
+		}
+		const size_t prev_distance = distance;
+		distance = lak::inv_mod<size_t>(working.size(), distance);
+		working  = working.first(prev_distance);
 	}
 
 	return data;
