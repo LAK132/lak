@@ -6,7 +6,7 @@
 namespace lak
 {
 	template<typename INTEGER>
-	INTEGER inv_mod(INTEGER a, INTEGER b)
+	INTEGER slack(INTEGER a, INTEGER b)
 	{
 		return (b - (a % b)) % b;
 	}

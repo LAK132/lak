@@ -97,8 +97,8 @@ lak::span<T> lak::rotate_left(lak::span<T> data, size_t distance)
 			lak::swap(working[i], working[i + distance]);
 		}
 		const size_t prev_distance = distance;
-		distance = lak::inv_mod<size_t>(working.size(), distance);
-		working  = working.last(prev_distance);
+		distance                   = lak::slack<size_t>(working.size(), distance);
+		working                    = working.last(prev_distance);
 	}
 
 	return data;
@@ -116,8 +116,8 @@ lak::span<T> lak::rotate_right(lak::span<T> data, size_t distance)
 			lak::swap(working[i], working[i + distance]);
 		}
 		const size_t prev_distance = distance;
-		distance = lak::inv_mod<size_t>(working.size(), distance);
-		working  = working.first(prev_distance);
+		distance                   = lak::slack<size_t>(working.size(), distance);
+		working                    = working.first(prev_distance);
 	}
 
 	return data;
