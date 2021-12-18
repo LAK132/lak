@@ -66,7 +66,7 @@ namespace lak
 		using value_type = lak::result<lak::span<byte_t>, error_t>;
 		value_type _value;
 
-		lak::bit_reader _compressed;
+		lak::bit_reader<lak::endian::little> _compressed;
 		lak::buffer_span<byte_t, 0x8000> _output_buffer;
 		size_t _unflushed = 0;
 

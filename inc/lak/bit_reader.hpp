@@ -7,6 +7,16 @@
 
 namespace lak
 {
+	enum struct bit_reader_error_t : uint8_t
+	{
+		// insufficent data left. this signifies that you should reset_data.
+		out_of_data,
+
+		// requested more than std::numeric_limits<uintmax_t>::digits bits.
+		too_many_bits,
+	};
+
+	template<lak::endian ENDIAN = lak::endian::little>
 	struct bit_reader
 	{
 	private:
@@ -41,22 +51,15 @@ namespace lak
 
 		inline void reset_data(lak::span<const byte_t> data) { _data = data; }
 
-		enum struct error_t : uint8_t
-		{
-			// insufficent data left. this signifies that you should reset_data.
-			out_of_data,
+		inline lak::result<uintmax_t, bit_reader_error_t> peek_bits(
+		  const uint8_t bits);
 
-			// requested more than std::numeric_limits<uintmax_t>::digits bits.
-			too_many_bits,
-		};
+		inline lak::result<uintmax_t, bit_reader_error_t> read_bits(
+		  const uint8_t bits);
 
-		inline lak::result<uintmax_t, error_t> peek_bits(const uint8_t bits);
+		inline lak::result<byte_t, bit_reader_error_t> peek_byte();
 
-		inline lak::result<uintmax_t, error_t> read_bits(const uint8_t bits);
-
-		inline lak::result<byte_t, error_t> peek_byte();
-
-		inline lak::result<byte_t, error_t> read_byte();
+		inline lak::result<byte_t, bit_reader_error_t> read_byte();
 	};
 }
 
