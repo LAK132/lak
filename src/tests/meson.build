@@ -1,6 +1,7 @@
 laktest = static_library(
   'laktest',
   [
+    'algorithm.cpp',
     'array.cpp',
     'bit_reader.cpp',
     'bitflag.cpp',

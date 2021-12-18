@@ -47,6 +47,11 @@ namespace lak
 		template<typename T>
 		concept pointer = lak::is_pointer_v<T>;
 
+		/* --- member_pointer --- */
+
+		template<typename T>
+		concept member_pointer = lak::is_member_pointer_v<T>;
+
 		/* --- array --- */
 
 		template<typename T>

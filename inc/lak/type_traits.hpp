@@ -1039,6 +1039,32 @@ namespace lak
 	static_assert(!lak::is_pointer_v<char[]>);
 	static_assert(!lak::is_pointer_v<const volatile char[]>);
 
+	/* --- is_member_pointer --- */
+
+	template<typename T>
+	struct is_member_pointer : lak::false_type
+	{
+	};
+
+	template<typename T, typename U>
+	struct is_member_pointer<U T::*> : lak::true_type
+	{
+	};
+
+	template<typename T>
+	inline constexpr bool is_member_pointer_v = lak::is_member_pointer<T>::value;
+
+	static_assert(!lak::is_member_pointer_v<char>);
+	static_assert(!lak::is_member_pointer_v<const volatile char>);
+	static_assert(!lak::is_member_pointer_v<char *>);
+	static_assert(!lak::is_member_pointer_v<const volatile char *>);
+	static_assert(!lak::is_member_pointer_v<char &>);
+	static_assert(!lak::is_member_pointer_v<const volatile char &>);
+	static_assert(!lak::is_member_pointer_v<char &&>);
+	static_assert(!lak::is_member_pointer_v<const volatile char &&>);
+	static_assert(!lak::is_member_pointer_v<char[]>);
+	static_assert(!lak::is_member_pointer_v<const volatile char[]>);
+
 	/* --- is_array --- */
 
 	template<typename T>
@@ -1182,6 +1208,37 @@ namespace lak
 	static_assert(lak::is_same_v<char, lak::nth_type_t<0, char, float, void>>);
 	static_assert(lak::is_same_v<float, lak::nth_type_t<1, char, float, void>>);
 	static_assert(lak::is_same_v<void, lak::nth_type_t<2, char, float, void>>);
+
+	/* --- nth_value --- */
+
+	template<size_t I, auto... T>
+	struct nth_value;
+
+	template<auto T, auto... U>
+	struct nth_value<0, T, U...>
+	{
+		static constexpr auto value = T;
+	};
+
+	template<size_t I, auto T, auto... U>
+	struct nth_value<I, T, U...>
+	{
+		static_assert(I <= sizeof...(U));
+		static constexpr auto value = lak::nth_value<I - 1, U...>::value;
+	};
+
+	template<size_t I, auto... T>
+	inline constexpr auto nth_value_v = lak::nth_value<I, T...>::value;
+
+	static_assert(
+	  lak::is_same_v<const char,
+	                 decltype(lak::nth_value_v<0, char{}, float{}, int{}>)>);
+	static_assert(
+	  lak::is_same_v<const float,
+	                 decltype(lak::nth_value_v<1, char{}, float{}, int{}>)>);
+	static_assert(
+	  lak::is_same_v<const int,
+	                 decltype(lak::nth_value_v<2, char{}, float{}, int{}>)>);
 
 	/* --- integer_sequence --- */
 
