@@ -38,7 +38,12 @@ lak::u8string lak::streamify(const ARGS &...args)
 		{
 			// :TODO: work out if it's possible to check if there is a stream
 			// operator overloaded for arg_t enums.
-			strm << "0x" << static_cast<uintmax_t>(arg);
+			if constexpr (std::is_unsigned_v<arg_t>)
+				strm << "0x" << static_cast<uintmax_t>(arg);
+			else if (static_cast<intmax_t>(arg) < intmax_t(0))
+				strm << "-0x" << static_cast<uintmax_t>(-static_cast<intmax_t>(arg));
+			else
+				strm << "0x" << static_cast<uintmax_t>(arg);
 		}
 		else
 		{

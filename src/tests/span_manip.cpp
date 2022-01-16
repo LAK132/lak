@@ -20,7 +20,7 @@ BEGIN_TEST(rotate_left)
 		}
 	};
 
-	auto print_arr = [&]()
+	[[maybe_unused]] auto print_arr = [&]()
 	{
 		lak::u8string str;
 		for (const auto &v : arr) str += lak::streamify(v, ", ");
@@ -84,7 +84,7 @@ BEGIN_TEST(rotate_right)
 		}
 	};
 
-	auto print_arr = [&]()
+	[[maybe_unused]] auto print_arr = [&]()
 	{
 		lak::u8string str;
 		for (const auto &v : arr) str += lak::streamify(v, ", ");

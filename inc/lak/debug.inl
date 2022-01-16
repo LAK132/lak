@@ -1,6 +1,7 @@
 #ifndef LAK_DEBUG_INL
 #define LAK_DEBUG_INL
 
+#include "lak/functional.hpp"
 #include "lak/string.hpp"
 
 #include <cstdlib>
@@ -29,6 +30,14 @@ namespace lak
 		void std_err(const lak::u8string &line_info, const lak::astring &str);
 		void std_err(const lak::u8string &line_info, const lak::wstring &str);
 		void std_err(const lak::u8string &line_info, const lak::u8string &str);
+
+		void std_out_cont(const lak::astring &str);
+		void std_out_cont(const lak::wstring &str);
+		void std_out_cont(const lak::u8string &str);
+
+		void std_err_cont(const lak::astring &str);
+		void std_err_cont(const lak::wstring &str);
+		void std_err_cont(const lak::u8string &str);
 
 		void clear();
 

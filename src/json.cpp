@@ -1,5 +1,6 @@
 #include "lak/json.hpp"
 #include "lak/char_utils.hpp"
+#include "lak/string_literals.hpp"
 #include "lak/string_utils.hpp"
 #include "lak/string_view.hpp"
 

@@ -9,14 +9,6 @@
 #include <array>
 #include <vector>
 
-// When we move to C++20 we need to allow ASSERTF to work in constexpr
-// functions.
-#ifndef LAK_COMPILER_CPP20
-#	define ASSERT_CONSTEXPR
-#else
-#	define ASSERT_CONSTEXPR constexpr
-#endif
-
 namespace lak
 {
 	template<typename T, size_t SIZE>
@@ -71,7 +63,7 @@ namespace lak
 
 		static inline constexpr span from_ptr(T *data) noexcept;
 
-		inline ASSERT_CONSTEXPR T &operator[](size_t index) const noexcept;
+		inline constexpr T &operator[](size_t index) const noexcept;
 
 		inline constexpr T *data() const noexcept;
 
@@ -86,22 +78,20 @@ namespace lak
 		inline constexpr T *end() const noexcept;
 
 		template<size_t offset, size_t count = lak::dynamic_extent>
-		inline ASSERT_CONSTEXPR span<T, count> subspan() const;
+		inline constexpr span<T, count> subspan() const;
 
-		inline ASSERT_CONSTEXPR span<T, lak::dynamic_extent> subspan(
+		inline constexpr span<T, lak::dynamic_extent> subspan(
 		  size_t offset, size_t count = lak::dynamic_extent) const;
 
 		template<size_t count>
 		inline constexpr span<T, count> first() const;
 
-		inline ASSERT_CONSTEXPR span<T, lak::dynamic_extent> first(
-		  size_t count) const;
+		inline constexpr span<T, lak::dynamic_extent> first(size_t count) const;
 
 		template<size_t count>
 		inline constexpr span<T, count> last() const;
 
-		inline ASSERT_CONSTEXPR span<T, lak::dynamic_extent> last(
-		  size_t count) const;
+		inline constexpr span<T, lak::dynamic_extent> last(size_t count) const;
 
 		inline auto to_string() const;
 		inline auto stringify() const;
@@ -256,9 +246,9 @@ namespace lak
 		{
 		}
 
-		explicit inline ASSERT_CONSTEXPR span(T *begin, T *end) noexcept;
+		explicit inline constexpr span(T *begin, T *end) noexcept;
 
-		inline ASSERT_CONSTEXPR T &operator[](size_t index) const noexcept;
+		inline constexpr T &operator[](size_t index) const noexcept;
 
 		inline constexpr T *data() const noexcept;
 
@@ -273,22 +263,20 @@ namespace lak
 		inline constexpr T *end() const noexcept;
 
 		template<size_t offset, size_t count = lak::dynamic_extent>
-		inline ASSERT_CONSTEXPR span<T, count> subspan() const;
+		inline constexpr span<T, count> subspan() const;
 
-		inline ASSERT_CONSTEXPR span<T, lak::dynamic_extent> subspan(
+		inline constexpr span<T, lak::dynamic_extent> subspan(
 		  size_t offset, size_t count = lak::dynamic_extent) const;
 
 		template<size_t count>
-		inline ASSERT_CONSTEXPR span<T, count> first() const;
+		inline constexpr span<T, count> first() const;
 
-		inline ASSERT_CONSTEXPR span<T, lak::dynamic_extent> first(
-		  size_t count) const;
+		inline constexpr span<T, lak::dynamic_extent> first(size_t count) const;
 
 		template<size_t count>
-		inline ASSERT_CONSTEXPR span<T, count> last() const;
+		inline constexpr span<T, count> last() const;
 
-		inline ASSERT_CONSTEXPR span<T, lak::dynamic_extent> last(
-		  size_t count) const;
+		inline constexpr span<T, lak::dynamic_extent> last(size_t count) const;
 
 		inline auto to_string() const;
 		inline auto stringify() const;
@@ -417,11 +405,9 @@ namespace lak
 // Check if each element of the data pointed to by the spans compare equal (not
 // that the spans point to the exact same data).
 template<typename T, size_t S1, typename U, size_t S2>
-bool operator==(lak::span<T, S1> a, lak::span<U, S2> b);
+constexpr bool operator==(lak::span<T, S1> a, lak::span<U, S2> b);
 
 template<typename T, size_t S1, typename U, size_t S2>
-bool operator!=(lak::span<T, S1> a, lak::span<U, S2> b);
-
-#undef ASSERT_CONSTEXPR
+constexpr bool operator!=(lak::span<T, S1> a, lak::span<U, S2> b);
 
 #endif

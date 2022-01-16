@@ -1,4 +1,4 @@
-#include "lak/stdint.hpp"
+#include "lak/span_forward.hpp"
 
 #include <array>
 #include <vector>
@@ -361,7 +361,7 @@ requires(!lak::is_void_v<U>) //
 }
 
 template<typename T, size_t S1, typename U, size_t S2>
-bool operator==(lak::span<T, S1> a, lak::span<U, S2> b)
+constexpr bool operator==(lak::span<T, S1> a, lak::span<U, S2> b)
 {
 	if (a.size() != b.size()) return false;
 	for (size_t i = 0; i < a.size(); ++i)
@@ -370,7 +370,7 @@ bool operator==(lak::span<T, S1> a, lak::span<U, S2> b)
 }
 
 template<typename T, size_t S1, typename U, size_t S2>
-bool operator!=(lak::span<T, S1> a, lak::span<U, S2> b)
+constexpr bool operator!=(lak::span<T, S1> a, lak::span<U, S2> b)
 {
 	return !(a == b);
 }
@@ -410,7 +410,7 @@ inline auto lak::span<T, SIZE>::stringify() const
 	lak::u8string result = lak::as_u8string("{").to_string();
 	for (const auto &element : *this)
 	{
-		result += lak::streamify(result, ", ");
+		result += lak::streamify(element, ", ");
 	}
 	if (result.size() > 2) result.resize(result.size() - 2);
 	return result + lak::as_u8string("}").to_string();
@@ -436,152 +436,134 @@ inline auto lak::span<T, lak::dynamic_extent>::stringify() const
 #include "lak/debug.hpp"
 #include "lak/strconv.hpp"
 
-#ifndef LAK_COMPILER_CPP20
-#	define ASSERT_CONSTEXPR
-#else
-#	define ASSERT_CONSTEXPR constexpr
-#endif
-
 /* --- lak::span<T, SIZE> --- */
 
 template<typename T, size_t SIZE>
-inline ASSERT_CONSTEXPR T &lak::span<T, SIZE>::operator[](
-  size_t index) const noexcept
+inline constexpr T &lak::span<T, SIZE>::operator[](size_t index) const noexcept
 {
-	ASSERTF(index < SIZE, index << " > " << SIZE);
+	ASSERT_LESS_OR_EQUAL(index, SIZE);
 	return _data[index];
 }
 
 template<typename T, size_t SIZE>
 template<size_t offset, size_t count>
-inline ASSERT_CONSTEXPR lak::span<T, count> lak::span<T, SIZE>::subspan() const
+inline constexpr lak::span<T, count> lak::span<T, SIZE>::subspan() const
 {
+	ASSERT_LESS_OR_EQUAL(offset + count, size());
 	if constexpr (count == lak::dynamic_extent)
-	{
-		ASSERTF(offset + count <= size(), offset + count << " > " << size());
 		return lak::span<T, count>{begin() + offset, count};
-	}
 	else
-	{
-		static_assert(offset + count <= SIZE, "subspan too large");
 		return lak::span<T, count>::from_ptr(begin() + offset);
-	}
 }
 
 template<typename T, size_t SIZE>
-inline ASSERT_CONSTEXPR lak::span<T, lak::dynamic_extent>
-lak::span<T, SIZE>::subspan(size_t offset, size_t count) const
+inline constexpr lak::span<T, lak::dynamic_extent> lak::span<T, SIZE>::subspan(
+  size_t offset, size_t count) const
 {
 	if (count == lak::dynamic_extent)
 	{
-		ASSERTF(offset <= size(), offset << " > " << size());
+		ASSERT_LESS_OR_EQUAL(offset, size());
 		return lak::span<T>{begin() + offset, size() - offset};
 	}
 	else
 	{
-		ASSERTF(offset + count <= size(), offset + count << " > " << size());
+		ASSERT_LESS_OR_EQUAL(offset + count, size());
 		return lak::span<T>{begin() + offset, count};
 	}
 }
 
 template<typename T, size_t SIZE>
-inline ASSERT_CONSTEXPR lak::span<T, lak::dynamic_extent>
-lak::span<T, SIZE>::first(size_t count) const
+inline constexpr lak::span<T, lak::dynamic_extent> lak::span<T, SIZE>::first(
+  size_t count) const
 {
-	ASSERTF(count <= size(), count << " > " << size());
+	ASSERT_LESS_OR_EQUAL(count, size());
 	return lak::span<T>{begin(), count};
 }
 
 template<typename T, size_t SIZE>
-inline ASSERT_CONSTEXPR lak::span<T, lak::dynamic_extent>
-lak::span<T, SIZE>::last(size_t count) const
+inline constexpr lak::span<T, lak::dynamic_extent> lak::span<T, SIZE>::last(
+  size_t count) const
 {
-	ASSERTF(count <= size(), count << " > " << size());
+	ASSERT_LESS_OR_EQUAL(count, size());
 	return lak::span<T>{begin() + (size() - count), count};
 }
 
 /* --- lak::span<T, lak::dynamic_extent> --- */
 
 template<typename T>
-inline ASSERT_CONSTEXPR lak::span<T, lak::dynamic_extent>::span(
-  T *begin, T *end) noexcept
+inline constexpr lak::span<T, lak::dynamic_extent>::span(T *begin,
+                                                         T *end) noexcept
 : _data(begin), _size(static_cast<size_t>(end - begin))
 {
-	ASSERT(end >= begin);
+	ASSERT_LESS_OR_EQUAL(begin, end);
 }
 
 template<typename T>
-inline ASSERT_CONSTEXPR T &lak::span<T, lak::dynamic_extent>::operator[](
+inline constexpr T &lak::span<T, lak::dynamic_extent>::operator[](
   size_t index) const noexcept
 {
-	ASSERTF(index < size(), index << " >= " << size());
+	ASSERT_LESS(index, size());
 	return _data[index];
 }
 
 template<typename T>
 template<size_t offset, size_t count>
-inline ASSERT_CONSTEXPR lak::span<T, count>
+inline constexpr lak::span<T, count>
 lak::span<T, lak::dynamic_extent>::subspan() const
 {
-	ASSERTF(offset + count <= size(), offset + count << " > " << size());
+	ASSERT_LESS_OR_EQUAL(offset + count, size());
 	if constexpr (count == lak::dynamic_extent)
-	{
 		return lak::span<T, count>{begin() + offset, count};
-	}
 	else
-	{
 		return lak::span<T, count>::from_ptr(begin() + offset);
-	}
 }
 
 template<typename T>
-inline ASSERT_CONSTEXPR lak::span<T, lak::dynamic_extent>
+inline constexpr lak::span<T, lak::dynamic_extent>
 lak::span<T, lak::dynamic_extent>::subspan(size_t offset, size_t count) const
 {
 	if (count == lak::dynamic_extent)
 	{
-		ASSERTF(offset <= size(), offset << " > " << size());
+		ASSERT_LESS_OR_EQUAL(offset, size());
 		return lak::span<T>{begin() + offset, size() - offset};
 	}
 	else
 	{
-		ASSERTF(offset + count <= size(), offset + count << " > " << size());
+		ASSERT_LESS_OR_EQUAL(offset + count, size());
 		return lak::span<T>{begin() + offset, count};
 	}
 }
 
 template<typename T>
 template<size_t count>
-inline ASSERT_CONSTEXPR lak::span<T, count>
-lak::span<T, lak::dynamic_extent>::first() const
+inline constexpr lak::span<T, count> lak::span<T, lak::dynamic_extent>::first()
+  const
 {
-	ASSERTF(count <= size(), count << " > " << size());
+	ASSERT_LESS_OR_EQUAL(count, size());
 	return lak::span<T, count>::from_ptr(begin());
 }
 
 template<typename T>
-inline ASSERT_CONSTEXPR lak::span<T, lak::dynamic_extent>
+inline constexpr lak::span<T, lak::dynamic_extent>
 lak::span<T, lak::dynamic_extent>::first(size_t count) const
 {
-	ASSERTF(count <= size(), count << " > " << size());
+	ASSERT_LESS_OR_EQUAL(count, size());
 	return lak::span<T>{begin(), count};
 }
 
 template<typename T>
 template<size_t count>
-inline ASSERT_CONSTEXPR lak::span<T, count>
-lak::span<T, lak::dynamic_extent>::last() const
+inline constexpr lak::span<T, count> lak::span<T, lak::dynamic_extent>::last()
+  const
 {
-	ASSERTF(count <= size(), count << " > " << size());
+	ASSERT_LESS_OR_EQUAL(count, size());
 	return lak::span<T, count>::from_ptr(begin() + (size() - count));
 }
 
 template<typename T>
-inline ASSERT_CONSTEXPR lak::span<T, lak::dynamic_extent>
+inline constexpr lak::span<T, lak::dynamic_extent>
 lak::span<T, lak::dynamic_extent>::last(size_t count) const
 {
-	ASSERTF(count <= size(), count << " > " << size());
+	ASSERT_LESS_OR_EQUAL(count, size());
 	return lak::span<T>{begin() + (size() - count), count};
 }
-
-#undef ASSERT_CONSTEXPR

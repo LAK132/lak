@@ -1,55 +1,72 @@
 #ifndef LAK_ALGORITHM_HPP
 #define LAK_ALGORITHM_HPP
 
-#include "lak/concepts.hpp"
-#include "lak/utility.hpp"
+#include "lak/functional.hpp"
+#include "lak/span_forward.hpp"
 
 namespace lak
 {
-	template<typename IN_ITER, typename OUT_ITER>
-	OUT_ITER move(IN_ITER begin, IN_ITER end, OUT_ITER output)
-	{
-		for (; begin != end; ++begin, ++output) *output = lak::move(*begin);
-		return output;
-	}
+	/* --- move --- */
 
 	template<typename IN_ITER, typename OUT_ITER>
-	OUT_ITER copy(IN_ITER begin, IN_ITER end, OUT_ITER output)
-	{
-		for (; begin != end; ++begin, ++output) *output = *begin;
-		return output;
-	}
+	OUT_ITER move(IN_ITER begin, IN_ITER end, OUT_ITER output);
 
-	template<typename T, lak::concepts::member_pointer auto... P>
-	struct less
-	{
-		static_assert(sizeof...(P) > 0);
+	/* --- copy --- */
 
-		constexpr inline bool operator()(const T &a,
-		                                 const T &b,
-		                                 lak::index_sequence<0>) const
-		{
-			return a.*(lak::nth_value_v<0, P...>) < b.*(lak::nth_value_v<0, P...>);
-		}
+	template<typename IN_ITER, typename OUT_ITER>
+	OUT_ITER copy(IN_ITER begin, IN_ITER end, OUT_ITER output);
 
-		template<size_t... I>
-		constexpr inline bool operator()(const T &a,
-		                                 const T &b,
-		                                 lak::index_sequence<0, I...>) const
-		{
-			return a.*(lak::nth_value_v<0, P...>) < b.*(lak::nth_value_v<0, P...>) ||
-			       ((!(b.*(lak::nth_value_v<I - 1, P...>) <
-			           a.*(lak::nth_value_v<I - 1, P...>)) &&
-			         a.*(lak::nth_value_v<I, P...>) <
-			           b.*(lak::nth_value_v<I, P...>)) ||
-			        ...);
-		}
+	/* --- rotate_left --- */
 
-		constexpr inline bool operator()(const T &a, const T &b) const
-		{
-			return (*this)(a, b, lak::make_index_sequence<sizeof...(P)>{});
-		}
-	};
+	template<typename T>
+	void rotate_left(T *begin, T *end, size_t distance = 1U);
+
+	/* --- rotate_right --- */
+
+	template<typename T>
+	void rotate_right(T *begin, T *end, size_t distance = 1U);
+
+	/* --- partition --- */
+
+	template<typename ITER>
+	ITER partition(ITER begin, ITER end, auto predicate);
+
+	/* --- stable_partition --- */
+
+	template<typename T>
+	T *stable_partition(T *begin, T *end, auto predicate);
+
+	/* --- mark_and_sweep_parition --- */
+
+	template<typename T, typename ITER, typename CMP = lak::less<T *>>
+	ITER mark_and_sweep_parition(
+	  T *root, auto sweep, ITER begin, ITER end, auto transform);
+
+	/* --- lower_bound --- */
+
+	template<typename T, typename U = T>
+	T *lower_bound(T *begin,
+	               T *end,
+	               const U &value,
+	               auto compare = lak::less<>{});
+
+	/* --- upper_bound --- */
+
+	template<typename T, typename U = T>
+	T *upper_bound(T *begin,
+	               T *end,
+	               const U &value,
+	               auto compare = lak::less<>{});
+
+	/* --- equal_range --- */
+
+	template<typename T, typename U = T>
+	lak::span<T> equal_range(T *begin,
+	                         T *end,
+	                         const U &value,
+	                         auto compare = lak::less<>{});
 }
+
+#include "lak/algorithm.inl"
 
 #endif

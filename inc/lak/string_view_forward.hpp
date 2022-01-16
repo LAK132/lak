@@ -41,30 +41,33 @@ namespace lak
 
 		constexpr static string_view from_c_str(const CHAR *str);
 
-		const CHAR &operator[](size_t index) const { return _value[index]; }
+		constexpr const CHAR &operator[](size_t index) const
+		{
+			return _value[index];
+		}
 
-		const CHAR *data() const { return _value.data(); }
-		size_t size() const { return _value.size(); }
-		bool empty() const { return _value.empty(); }
+		constexpr const CHAR *data() const { return _value.data(); }
+		constexpr size_t size() const { return _value.size(); }
+		constexpr bool empty() const { return _value.empty(); }
 
-		const CHAR *begin() const { return _value.begin(); }
-		const CHAR *end() const { return _value.end(); }
+		constexpr const CHAR *begin() const { return _value.begin(); }
+		constexpr const CHAR *end() const { return _value.end(); }
 
-		const CHAR *cbegin() const { return _value.cbegin(); }
-		const CHAR *cend() const { return _value.cend(); }
+		constexpr const CHAR *cbegin() const { return _value.cbegin(); }
+		constexpr const CHAR *cend() const { return _value.cend(); }
 
 		lak::string<CHAR> to_string() const;
 		operator lak::string<CHAR>() const;
 
-		lak::span<const CHAR> to_span() const;
-		operator lak::span<const CHAR>() const;
+		constexpr lak::span<const CHAR> to_span() const;
+		constexpr operator lak::span<const CHAR>() const;
 
-		string_view substr(size_t offset,
-		                   size_t count = lak::dynamic_extent) const;
-		string_view first(size_t count) const;
-		string_view last(size_t count) const;
+		constexpr string_view substr(size_t offset,
+		                             size_t count = lak::dynamic_extent) const;
+		constexpr string_view first(size_t count) const;
+		constexpr string_view last(size_t count) const;
 
-		bool operator==(const string_view &rhs) const;
+		constexpr bool operator==(const string_view &rhs) const;
 	};
 
 	template<typename CHAR, size_t N>
@@ -94,21 +97,5 @@ namespace lak
 	template<typename CHAR>
 	size_t compare(lak::string_view<CHAR> a, lak::string_view<CHAR> b);
 }
-
-inline lak::astring_view operator"" _view(const char *str, size_t size);
-inline lak::wstring_view operator"" _view(const wchar_t *str, size_t size);
-inline lak::u8string_view operator"" _view(const char8_t *str, size_t size);
-inline lak::u16string_view operator"" _view(const char16_t *str, size_t size);
-inline lak::u32string_view operator"" _view(const char32_t *str, size_t size);
-
-inline lak::span<const char> operator"" _span(const char *str, size_t size);
-inline lak::span<const wchar_t> operator"" _span(const wchar_t *str,
-                                                 size_t size);
-inline lak::span<const char8_t> operator"" _span(const char8_t *str,
-                                                 size_t size);
-inline lak::span<const char16_t> operator"" _span(const char16_t *str,
-                                                  size_t size);
-inline lak::span<const char32_t> operator"" _span(const char32_t *str,
-                                                  size_t size);
 
 #endif

@@ -59,9 +59,9 @@ namespace lak
 	template<typename T>
 	force_inline constexpr void swap(T &a, T &b)
 	{
-		auto temp = lak::move(a);
-		a         = lak::move(b);
-		b         = lak::move(temp);
+		T temp{lak::move(a)};
+		a = lak::move(b);
+		b = lak::move(temp);
 	}
 
 	template<typename T, size_t SIZE>
@@ -75,16 +75,16 @@ namespace lak
 	template<typename T>
 	inline constexpr T exchange(T &a, T &&n)
 	{
-		T result = lak::move(a);
-		a        = lak::move(n);
+		T result{lak::move(a)};
+		a = lak::move(n);
 		return result;
 	}
 
 	template<typename T, typename U>
 	inline constexpr T exchange(T &a, U &&n)
 	{
-		T result = lak::move(a);
-		a        = T(lak::forward<U>(n));
+		T result{lak::move(a)};
+		a = T(lak::forward<U>(n));
 		return result;
 	}
 

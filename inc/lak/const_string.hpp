@@ -34,7 +34,7 @@ namespace lak
 		}                                                                         \
 		inline constexpr PREFIX##const_string from_ptr(const CHAR *str)           \
 		{                                                                         \
-			static_assert(PREFIX##const_strlen(str) == N);                          \
+			ASSERT_EQUAL(PREFIX##const_strlen(str), N);                             \
 			PREFIX##const_string result;                                            \
 			for (size_t i = 0; i < N; ++i) result._value[i] = str[i];               \
 			return result;                                                          \

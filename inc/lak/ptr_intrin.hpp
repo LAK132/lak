@@ -4,6 +4,8 @@
 #include "lak/compiler.hpp"
 #include "lak/intrin.hpp"
 
+#include <functional>
+
 #if defined(LAK_ARCH_X86_64)
 using __lakc_uptrdiff = unsigned long long;
 #elif defined(LAK_ARCH_X86)
@@ -32,6 +34,7 @@ force_inline __lakc_ptr_diff_result __lakc_ptr_diff(const void *a,
 	                                 reinterpret_cast<uint32_t>(a),
 	                                 reinterpret_cast<uint32_t>(b),
 	                                 &result.diff);
+#else
 #	error Compiler/OS/Arch not supported
 #endif
 	return result;
@@ -39,50 +42,78 @@ force_inline __lakc_ptr_diff_result __lakc_ptr_diff(const void *a,
 
 /* --- a < b --- */
 
-force_inline bool __lakc_ptr_lt(const void *a, const void *b)
+constexpr force_inline bool __lakc_ptr_lt(const void *a, const void *b)
 {
-	return __lakc_ptr_diff(a, b).overflow > 0U;
+	if (std::is_constant_evaluated())
+		return std::less<const void *>{}(a, b);
+	else
+		return __lakc_ptr_diff(a, b).overflow > 0U;
 }
 
 /* --- a <= b --- */
 
-force_inline bool __lakc_ptr_le(const void *a, const void *b)
+constexpr force_inline bool __lakc_ptr_le(const void *a, const void *b)
 {
-	__lakc_ptr_diff_result result = __lakc_ptr_diff(a, b);
-	return (result.overflow > 0U) |
-	       ((result.overflow == 0U) & (result.diff == 0U));
+	if (std::is_constant_evaluated())
+		return std::less_equal<const void *>{}(a, b);
+	else
+	{
+		__lakc_ptr_diff_result result = __lakc_ptr_diff(a, b);
+		return (result.overflow > 0U) |
+		       ((result.overflow == 0U) & (result.diff == 0U));
+	}
 }
 
 /* --- a > b --- */
 
-force_inline bool __lakc_ptr_gt(const void *a, const void *b)
+constexpr force_inline bool __lakc_ptr_gt(const void *a, const void *b)
 {
-	__lakc_ptr_diff_result result = __lakc_ptr_diff(a, b);
-	return (result.overflow == 0U) & (result.diff > 0U);
+	if (std::is_constant_evaluated())
+		return std::greater<const void *>{}(a, b);
+	else
+	{
+		__lakc_ptr_diff_result result = __lakc_ptr_diff(a, b);
+		return (result.overflow == 0U) & (result.diff > 0U);
+	}
 }
 
 /* --- a >= b --- */
 
-force_inline bool __lakc_ptr_ge(const void *a, const void *b)
+constexpr force_inline bool __lakc_ptr_ge(const void *a, const void *b)
 {
-	__lakc_ptr_diff_result result = __lakc_ptr_diff(a, b);
-	return (result.overflow == 0U) & (result.diff >= 0U);
+	if (std::is_constant_evaluated())
+		return std::greater_equal<const void *>{}(a, b);
+	else
+	{
+		__lakc_ptr_diff_result result = __lakc_ptr_diff(a, b);
+		return (result.overflow == 0U) & (result.diff >= 0U);
+	}
 }
 
 /* --- a == b --- */
 
-force_inline bool __lakc_ptr_eq(const void *a, const void *b)
+constexpr force_inline bool __lakc_ptr_eq(const void *a, const void *b)
 {
-	__lakc_ptr_diff_result result = __lakc_ptr_diff(a, b);
-	return (result.overflow == 0U) & (result.diff == 0U);
+	if (std::is_constant_evaluated())
+		return std::equal_to<const void *>{}(a, b);
+	else
+	{
+		__lakc_ptr_diff_result result = __lakc_ptr_diff(a, b);
+		return (result.overflow == 0U) & (result.diff == 0U);
+	}
 }
 
 /* --- a != b --- */
 
-force_inline bool __lakc_ptr_neq(const void *a, const void *b)
+constexpr force_inline bool __lakc_ptr_neq(const void *a, const void *b)
 {
-	__lakc_ptr_diff_result result = __lakc_ptr_diff(a, b);
-	return (result.overflow > 0U) | (result.diff > 0U);
+	if (std::is_constant_evaluated())
+		return std::not_equal_to<const void *>{}(a, b);
+	else
+	{
+		__lakc_ptr_diff_result result = __lakc_ptr_diff(a, b);
+		return (result.overflow > 0U) | (result.diff > 0U);
+	}
 }
 
 /* --- a <= p < a+s --- */

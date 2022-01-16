@@ -51,6 +51,29 @@ namespace lak
 	};
 
 	using size_range = integer_range<size_t>;
+
+	inline auto size_range_count(size_t count)
+	{
+		return lak::size_range::from_count(size_t(0), count);
+	}
+
+	template<typename INTEGER>
+	inline auto integer_range_count(INTEGER count)
+	{
+		return lak::integer_range<INTEGER>::from_count(INTEGER(0), count);
+	}
+
+	template<typename T>
+	inline auto pointer_range(T *begin, T *end)
+	{
+		return lak::integer_range<T *>::from_to(begin, end);
+	}
+
+	template<typename T>
+	inline auto pointer_range(T *begin, size_t count)
+	{
+		return lak::integer_range<T *>::from_to(begin, begin + count);
+	}
 }
 
 #endif

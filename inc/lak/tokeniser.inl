@@ -78,7 +78,6 @@ lak::token_buffer<CHAR>::token_buffer(lak::string_view<CHAR> data,
   _max_size(
     std::min(max_size, lak::span(start.source.begin(), data.end()).size()))
 {
-	ASSERT_GREATER(_max_size, 0U);
 	_buffer.reserve(_max_size);
 	_buffer_token.source   = start.source.first(0);
 	_buffer_token.position = {start.position.begin, start.position.begin};
@@ -109,8 +108,6 @@ template<typename CHAR>
 std::optional<lak::token<CHAR>> lak::token_buffer<CHAR>::match(
   lak::span<const lak::u32string> operators, const lak::token<CHAR> &token)
 {
-	ASSERT(_buffer.size());
-
 	for (const auto &op : operators)
 	{
 		ASSERT(!op.empty());
@@ -175,8 +172,9 @@ void lak::token_buffer<CHAR>::operator++()
 {
 	if (_max_size == 0) return;
 
-	ASSERT_EQUAL(_buffer_token.source.begin(),
-	             _buffer_token.position.begin.find(_source).begin());
+	// slow as fuck
+	// ASSERT_EQUAL(_buffer_token.source.begin(),
+	//              _buffer_token.position.begin.find(_source).begin());
 
 	auto pre_buffer       = _buffer; // this is a full buffer copy.
 	auto pre_buffer_token = _buffer_token;
@@ -224,8 +222,9 @@ void lak::token_buffer<CHAR>::operator--()
 	ASSERT(_buffer.size());
 	ASSERT(_buffer_token.source.size());
 
-	ASSERT_EQUAL(_buffer_token.source.begin(),
-	             _buffer_token.position.begin.find(_source).begin());
+	// slow as fuck
+	// ASSERT_EQUAL(_buffer_token.source.begin(),
+	//              _buffer_token.position.begin.find(_source).begin());
 
 	const char32_t front = _buffer.front();
 
@@ -287,6 +286,44 @@ lak::tokeniser<CHAR> &lak::tokeniser<CHAR>::operator++() noexcept
 }
 
 template<typename CHAR>
+lak::token<CHAR> lak::tokeniser<CHAR>::peek_char() const noexcept
+{
+	// Don't bother caching this.
+	lak::token<CHAR> result{
+	  .source{_current.source.end(), _data.end()},
+	  .position{
+	    .begin{_current.position.end},
+	    .end{_current.position.end},
+	  },
+	};
+
+	// the following causes unreachable code warnings:
+	// for (const auto &[c, len] : lak::codepoint_range(result.source))
+	// {
+	// 	result.source = lak::string_view{result.source.begin(), len};
+	// 	result.position.end += c;
+	// 	break;
+	// }
+
+	if (lak::codepoint_range range{result.source}; range.begin() != range.end())
+	{
+		const auto &[c, len] = *range.begin();
+		result.source        = lak::string_view{result.source.begin(), len};
+		result.position.end += c;
+	}
+
+	return result;
+}
+
+template<typename CHAR>
+lak::token<CHAR> lak::tokeniser<CHAR>::read_char() noexcept
+{
+	_next = peek_char();
+	internal_pump();
+	return _current;
+}
+
+template<typename CHAR>
 lak::token<CHAR> lak::tokeniser<CHAR>::peek() const noexcept
 {
 	if (_next.source.size() > 0 || _next.source.begin() == _data.end())
@@ -300,32 +337,37 @@ lak::token<CHAR> lak::tokeniser<CHAR>::peek() const noexcept
 	lak::token_buffer<CHAR> buffer(_data, _longest_operator, _next);
 
 	// Scan until we find the first non-whitespace character.
+	lak::string_view<CHAR> previous_source;
 	for (const auto &[c, len] : lak::codepoint_range(_next.source))
 	{
 		if (!lak::is_whitespace(c)) break;
 
-		ASSERT_EQUAL(_next.source.size(),
-		             lak::string_view(buffer._buffer_token.source.begin(),
-		                              buffer._source.end())
-		               .size());
-
-		if (auto match = buffer.match(_operators, _next); match)
+		if (!buffer.source().empty())
 		{
-			if (_next.source.begin() == match->source.begin())
+			ASSERT(!lak::same_span<CHAR>(previous_source, buffer.source()));
+
+			ASSERT_EQUAL(_next.source.size(),
+			             lak::string_view(buffer._buffer_token.source.begin(),
+			                              buffer._source.end())
+			               .size());
+
+			if (auto match = buffer.match(_operators, _next); match)
 			{
-				ASSERT_EQUAL(_next.position.begin, match->position.begin);
+				if (_next.source.begin() == match->source.begin())
+				{
+					ASSERT_EQUAL(_next.position.begin, match->position.begin);
+				}
+				else
+				{
+					ASSERT_NOT_EQUAL(_next.position.begin, match->position.begin);
+				}
+				_next = *match;
+				return _next;
 			}
-			else
-			{
-				ASSERT_NOT_EQUAL(_next.position.begin, match->position.begin);
-			}
-			_next = *match;
-			return _next;
 		}
 
-		auto before = buffer.source();
+		previous_source = buffer.source();
 		++buffer;
-		ASSERT(!lak::same_span<CHAR>(before, buffer.source()));
 
 		_next.position.begin += c;
 
@@ -345,9 +387,9 @@ lak::token<CHAR> lak::tokeniser<CHAR>::peek() const noexcept
 	{
 		if (lak::is_whitespace(c)) break;
 
-		ASSERT_EQUAL(_next.source.begin() + count,
-		             buffer._buffer_token.source.begin());
-
+		if (!buffer._buffer_token.source.empty())
+			ASSERT_EQUAL(_next.source.begin() + count,
+			             buffer._buffer_token.source.begin());
 		if (auto match = buffer.match(_operators, _next); match)
 		{
 			if (_next.source.begin() == match->source.begin())
@@ -364,7 +406,8 @@ lak::token<CHAR> lak::tokeniser<CHAR>::peek() const noexcept
 
 		auto before = buffer.source();
 		++buffer;
-		ASSERT(!lak::same_span<CHAR>(before, buffer.source()));
+		if (!buffer.source().empty())
+			ASSERT(!lak::same_span<CHAR>(before, buffer.source()));
 
 		_next.position.end += c;
 

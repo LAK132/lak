@@ -166,7 +166,7 @@
 #undef ASSERTF_LESS_OR_EQUAL
 #define ASSERT(x)                                                             \
 	{                                                                           \
-		if (!(x))                                                                 \
+		if (!(x)) [[unlikely]]                                                    \
 		{                                                                         \
 			FATAL("Assertion '" DEBUG_STRINGIFY_EXPR(x) "' failed");                \
 		}                                                                         \
@@ -183,7 +183,7 @@
 	{                                                                           \
 		const auto &UNIQUIFY(x) = (X);                                            \
 		const auto &UNIQUIFY(y) = (Y);                                            \
-		if (!(UNIQUIFY(x) == UNIQUIFY(y)))                                        \
+		if (!(UNIQUIFY(x) == UNIQUIFY(y))) [[unlikely]]                           \
 		{                                                                         \
 			FATAL("Assertion '" DEBUG_STRINGIFY_EXPR(X == Y) "' failed: '",         \
 			      UNIQUIFY(x),                                                      \
@@ -197,7 +197,7 @@
 		const auto &UNIQUIFY(x)  = (X);                                           \
 		const auto &UNIQUIFY(y)  = (Y);                                           \
 		const size_t UNIQUIFY(c) = UNIQUIFY(x).size();                            \
-		if (UNIQUIFY(c) != UNIQUIFY(y).size())                                    \
+		if (UNIQUIFY(c) != UNIQUIFY(y).size()) [[unlikely]]                       \
 		{                                                                         \
 			FATAL("Assertion '" DEBUG_STRINGIFY_EXPR(X.size() ==                    \
 			                                         Y.size()) "' failed: '",       \
@@ -210,7 +210,7 @@
 		{                                                                         \
 			const auto &UNIQUIFY(x_i) = UNIQUIFY(x)[UNIQUIFY(i)];                   \
 			const auto &UNIQUIFY(y_i) = UNIQUIFY(y)[UNIQUIFY(i)];                   \
-			if (!(UNIQUIFY(x_i) == UNIQUIFY(y_i)))                                  \
+			if (!lak::equal_to<>{}(UNIQUIFY(x_i), UNIQUIFY(y_i))) [[unlikely]]      \
 			{                                                                       \
 				FATAL("Assertion '" DEBUG_STRINGIFY_EXPR(X) "[",                      \
 				      UNIQUIFY(i),                                                    \
@@ -228,7 +228,7 @@
 	{                                                                           \
 		const auto &UNIQUIFY(x) = (X);                                            \
 		const auto &UNIQUIFY(y) = (Y);                                            \
-		if (!(UNIQUIFY(x) != UNIQUIFY(y)))                                        \
+		if (!lak::not_equal_to<>{}(UNIQUIFY(x), UNIQUIFY(y))) [[unlikely]]        \
 		{                                                                         \
 			FATAL("Assertion '" DEBUG_STRINGIFY_EXPR(X != Y) "' failed: '",         \
 			      UNIQUIFY(x),                                                      \
@@ -248,7 +248,8 @@
 			{                                                                       \
 				const auto &UNIQUIFY(x_i) = UNIQUIFY(x)[UNIQUIFY(i)];                 \
 				const auto &UNIQUIFY(y_i) = UNIQUIFY(y)[UNIQUIFY(i)];                 \
-				if (!(UNIQUIFY(x_i) != UNIQUIFY(y_i)))                                \
+				if (!lak::not_equal_to<>{}(UNIQUIFY(x_i), UNIQUIFY(y_i)))             \
+				  [[unlikely]]                                                        \
 				{                                                                     \
 					FATAL("Assertion '" DEBUG_STRINGIFY_EXPR(X) "[",                    \
 					      UNIQUIFY(i),                                                  \
@@ -267,7 +268,7 @@
 	{                                                                           \
 		const auto &UNIQUIFY(x) = (X);                                            \
 		const auto &UNIQUIFY(y) = (Y);                                            \
-		if (!(UNIQUIFY(x) > UNIQUIFY(y)))                                         \
+		if (!lak::greater<>{}(UNIQUIFY(x), UNIQUIFY(y))) [[unlikely]]             \
 		{                                                                         \
 			FATAL("Assertion '" DEBUG_STRINGIFY_EXPR(X > Y) "' failed: '",          \
 			      UNIQUIFY(x),                                                      \
@@ -280,7 +281,7 @@
 	{                                                                           \
 		const auto &UNIQUIFY(x) = (X);                                            \
 		const auto &UNIQUIFY(y) = (Y);                                            \
-		if (!(UNIQUIFY(x) >= UNIQUIFY(y)))                                        \
+		if (!lak::greater_equal<>{}(UNIQUIFY(x), UNIQUIFY(y))) [[unlikely]]       \
 		{                                                                         \
 			FATAL("Assertion '" DEBUG_STRINGIFY_EXPR(X >= Y) "' failed: '",         \
 			      UNIQUIFY(x),                                                      \
@@ -293,7 +294,7 @@
 	{                                                                           \
 		const auto &UNIQUIFY(x) = (X);                                            \
 		const auto &UNIQUIFY(y) = (Y);                                            \
-		if (!(UNIQUIFY(x) < UNIQUIFY(y)))                                         \
+		if (!lak::less<>{}(UNIQUIFY(x), UNIQUIFY(y))) [[unlikely]]                \
 		{                                                                         \
 			FATAL("Assertion '" DEBUG_STRINGIFY_EXPR(X < Y) "' failed: '",          \
 			      UNIQUIFY(x),                                                      \
@@ -306,7 +307,7 @@
 	{                                                                           \
 		const auto &UNIQUIFY(x) = (X);                                            \
 		const auto &UNIQUIFY(y) = (Y);                                            \
-		if (!(UNIQUIFY(x) <= UNIQUIFY(y)))                                        \
+		if (!lak::less_equal<>{}(UNIQUIFY(x), UNIQUIFY(y))) [[unlikely]]          \
 		{                                                                         \
 			FATAL("Assertion '" DEBUG_STRINGIFY_EXPR(X <= Y) "' failed: '",         \
 			      UNIQUIFY(x),                                                      \
@@ -317,7 +318,7 @@
 	}
 #define ASSERTF(X, str)                                                       \
 	{                                                                           \
-		if (!(X))                                                                 \
+		if (!(X)) [[unlikely]]                                                    \
 		{                                                                         \
 			FATAL("Assertion '" DEBUG_STRINGIFY_EXPR(X) "' failed: ",               \
 			      TO_U8STRING(str));                                                \
@@ -327,7 +328,7 @@
 	{                                                                           \
 		const auto &UNIQUIFY(x) = (X);                                            \
 		const auto &UNIQUIFY(y) = (Y);                                            \
-		if (!(UNIQUIFY(x) == UNIQUIFY(y)))                                        \
+		if (!lak::equal_to<>{}(UNIQUIFY(x), UNIQUIFY(y))) [[unlikely]]            \
 		{                                                                         \
 			FATAL("Assertion '" DEBUG_STRINGIFY_EXPR(X == Y) "' failed: '",         \
 			      UNIQUIFY(x),                                                      \
@@ -341,7 +342,7 @@
 	{                                                                           \
 		const auto &UNIQUIFY(x) = (X);                                            \
 		const auto &UNIQUIFY(y) = (Y);                                            \
-		if (!(UNIQUIFY(x) != UNIQUIFY(y)))                                        \
+		if (!lak::not_equal_to<>{}(UNIQUIFY(x), UNIQUIFY(y))) [[unlikely]]        \
 		{                                                                         \
 			FATAL("Assertion '" DEBUG_STRINGIFY_EXPR(X != Y) "' failed: '",         \
 			      UNIQUIFY(x),                                                      \
@@ -355,7 +356,7 @@
 	{                                                                           \
 		const auto &UNIQUIFY(x) = (X);                                            \
 		const auto &UNIQUIFY(y) = (Y);                                            \
-		if (!(UNIQUIFY(x) > UNIQUIFY(y)))                                         \
+		if (!lak::greater<>{}(UNIQUIFY(x), UNIQUIFY(y))) [[unlikely]]             \
 		{                                                                         \
 			FATAL("Assertion '" DEBUG_STRINGIFY_EXPR(X > Y) "' failed: '",          \
 			      UNIQUIFY(x),                                                      \
@@ -369,7 +370,7 @@
 	{                                                                           \
 		const auto &UNIQUIFY(x) = (X);                                            \
 		const auto &UNIQUIFY(y) = (Y);                                            \
-		if (!(UNIQUIFY(x) >= UNIQUIFY(y)))                                        \
+		if (!lak::greater_equal<>{}(UNIQUIFY(x), UNIQUIFY(y))) [[unlikely]]       \
 		{                                                                         \
 			FATAL("Assertion '" DEBUG_STRINGIFY_EXPR(X >= Y) "' failed: '",         \
 			      UNIQUIFY(x),                                                      \
@@ -383,7 +384,7 @@
 	{                                                                           \
 		const auto &UNIQUIFY(x) = (X);                                            \
 		const auto &UNIQUIFY(y) = (Y);                                            \
-		if (!(UNIQUIFY(x) < UNIQUIFY(y)))                                         \
+		if (!lak::less<>{}(UNIQUIFY(x), UNIQUIFY(y))) [[unlikely]]                \
 		{                                                                         \
 			FATAL("Assertion '" DEBUG_STRINGIFY_EXPR(X < Y) "' failed: '",          \
 			      UNIQUIFY(x),                                                      \
@@ -397,7 +398,7 @@
 	{                                                                           \
 		const auto &UNIQUIFY(x) = (X);                                            \
 		const auto &UNIQUIFY(y) = (Y);                                            \
-		if (!(UNIQUIFY(x) <= UNIQUIFY(y)))                                        \
+		if (!lak::less_equal<>{}(UNIQUIFY(x), UNIQUIFY(y))) [[unlikely]]          \
 		{                                                                         \
 			FATAL("Assertion '" DEBUG_STRINGIFY_EXPR(X <= Y) "' failed: '",         \
 			      UNIQUIFY(x),                                                      \

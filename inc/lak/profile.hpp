@@ -18,6 +18,11 @@ namespace lak
 	const uint64_t UNIQUIFY(DEBUG_TIMER_) = lak::performance_counter();         \
 	DEFER(FUNC((lak::performance_counter() - UNIQUIFY(DEBUG_TIMER_))));
 
+#define DEBUG_SCOPED_TIMER(...)                                               \
+	const uint64_t UNIQUIFY(DEBUG_TIMER_) = lak::performance_counter();         \
+	DEFER(DEBUG(__VA_ARGS__ __VA_OPT__(, )(lak::performance_counter() -         \
+	                                       UNIQUIFY(DEBUG_TIMER_))));
+
 	struct timer
 	{
 		uint64_t _begin;

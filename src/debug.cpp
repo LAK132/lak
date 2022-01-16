@@ -118,6 +118,60 @@ void lak::debugger_t::std_err(const lak::u8string &line_info,
 	}
 }
 
+void lak::debugger_t::std_out_cont(const lak::astring &str)
+{
+	stream << lak::strconv<LAK_DEBUG_STREAM_CHAR>(str);
+	if (live_output_enabled && !live_errors_only)
+	{
+		std::cout << str << std::flush;
+	}
+}
+
+void lak::debugger_t::std_out_cont(const lak::wstring &str)
+{
+	stream << lak::strconv<LAK_DEBUG_STREAM_CHAR>(str);
+	if (live_output_enabled && !live_errors_only)
+	{
+		std::wcout << str << std::flush;
+	}
+}
+
+void lak::debugger_t::std_out_cont(const lak::u8string &str)
+{
+	stream << lak::strconv<LAK_DEBUG_STREAM_CHAR>(str);
+	if (live_output_enabled && !live_errors_only)
+	{
+		std::wcout << lak::to_wstring(str) << std::flush;
+	}
+}
+
+void lak::debugger_t::std_err_cont(const lak::astring &str)
+{
+	stream << lak::strconv<LAK_DEBUG_STREAM_CHAR>(str);
+	if (live_output_enabled)
+	{
+		std::cout << str << std::flush;
+	}
+}
+
+void lak::debugger_t::std_err_cont(const lak::wstring &str)
+{
+	stream << lak::strconv<LAK_DEBUG_STREAM_CHAR>(str);
+	if (live_output_enabled)
+	{
+		std::wcout << str << std::flush;
+	}
+}
+
+void lak::debugger_t::std_err_cont(const lak::u8string &str)
+{
+	stream << lak::strconv<LAK_DEBUG_STREAM_CHAR>(str);
+	if (live_output_enabled)
+	{
+		std::wcout << lak::to_wstring(str) << std::flush;
+	}
+}
+
 void lak::debugger_t::clear()
 {
 	stream.clear();

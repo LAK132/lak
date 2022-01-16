@@ -1,5 +1,6 @@
 #include "lak/span.hpp"
 
+#include "lak/algorithm.hpp"
 #include "lak/math.hpp"
 
 template<size_t S, typename T>
@@ -61,6 +62,20 @@ lak::pair<lak::span<T>, lak::span<T>> lak::split_after(lak::span<T> s,
 }
 
 template<typename T>
+lak::pair<lak::span<T>, lak::span<T>> lak::split_partition(lak::span<T> s,
+                                                           auto predicate)
+{
+	return lak::split(s, lak::partition(s.begin(), s.end(), predicate));
+}
+
+template<typename T>
+lak::pair<lak::span<T>, lak::span<T>> lak::split_stable_partition(
+  lak::span<T> s, auto predicate)
+{
+	return lak::split(s, lak::stable_partition(s.begin(), s.end(), predicate));
+}
+
+template<typename T>
 void lak::fill(lak::span<T> span, const T &value)
 {
 	for (auto &v : span) v = value;
@@ -88,18 +103,7 @@ lak::span<T> lak::common_initial_sequence(lak::span<T> a, lak::span<T> b)
 template<typename T>
 lak::span<T> lak::rotate_left(lak::span<T> data, size_t distance)
 {
-	if (data.size() == 0 || (distance % data.size()) == 0) return data;
-
-	for (lak::span<T> working = data; distance > 0;)
-	{
-		for (size_t i = 0; i < working.size() - distance; ++i)
-		{
-			lak::swap(working[i], working[i + distance]);
-		}
-		const size_t prev_distance = distance;
-		distance                   = lak::slack<size_t>(working.size(), distance);
-		working                    = working.last(prev_distance);
-	}
+	lak::rotate_left(data.begin(), data.end(), distance);
 
 	return data;
 }
@@ -107,18 +111,7 @@ lak::span<T> lak::rotate_left(lak::span<T> data, size_t distance)
 template<typename T>
 lak::span<T> lak::rotate_right(lak::span<T> data, size_t distance)
 {
-	if (data.size() == 0 || (distance % data.size()) == 0) return data;
-
-	for (lak::span<T> working = data; distance > 0;)
-	{
-		for (size_t i = working.size() - distance; i-- > 0;)
-		{
-			lak::swap(working[i], working[i + distance]);
-		}
-		const size_t prev_distance = distance;
-		distance                   = lak::slack<size_t>(working.size(), distance);
-		working                    = working.first(prev_distance);
-	}
+	lak::rotate_right(data.begin(), data.end(), distance);
 
 	return data;
 }
@@ -191,16 +184,16 @@ template<typename T>
 size_t lak::compare(lak::span<const T> a, lak::span<const T> b)
 {
 	if (lak::same_span(a, b)) return a.size();
-	size_t result = 0;
-	while (result < a.size() && result < b.size() && a[result] == b[result])
-		++result;
+	size_t result         = 0;
+	const size_t max_size = a.size() > b.size() ? b.size() : a.size();
+	while (result < max_size && a[result] == b[result]) ++result;
 	return result;
 }
 
 template<typename T>
 bool lak::same_span(lak::span<const T> a, lak::span<const T> b)
 {
-	return a.data() == b.data() && a.size() == b.size();
+	return __lakc_ptr_eq(a.data(), b.data()) && a.size() == b.size();
 }
 
 ///////////////////////////////////////////////////////////////////////////////

@@ -157,6 +157,11 @@ namespace lak
 
 		tokeniser &operator++() noexcept;
 
+		// Don't tokenise, just peek at the very next character (codepoint).
+		lak::token<CHAR> peek_char() const noexcept;
+
+		lak::token<CHAR> read_char() noexcept;
+
 		// Peek at the next token.
 		lak::token<CHAR> peek() const noexcept;
 

@@ -46,6 +46,18 @@ namespace lak
 	lak::pair<lak::span<T>, lak::span<T>> split_after(lak::span<T> s,
 	                                                  const T &v);
 
+	// .first is all elements for which predicate returned true
+	// .second is all elements for which predicate return false
+	template<typename T>
+	lak::pair<lak::span<T>, lak::span<T>> split_partition(lak::span<T> s,
+	                                                      auto predicate);
+
+	// .first is all elements for which predicate returned true
+	// .second is all elements for which predicate return false
+	template<typename T>
+	lak::pair<lak::span<T>, lak::span<T>> split_stable_partition(lak::span<T> s,
+	                                                             auto predicate);
+
 	template<typename T>
 	void fill(lak::span<T> span, const T &value);
 
