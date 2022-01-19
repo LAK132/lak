@@ -168,13 +168,28 @@ template<bool READ_ONLY>
 lak::lmdb::database<READ_ONLY>::database(MDB_txn *txn, MDB_dbi dbi)
 : _txn(txn), _dbi(dbi)
 {
+	ASSERT(_txn);
+}
+
+template<bool READ_ONLY>
+lak::lmdb::database<READ_ONLY>::database(database &&other)
+: _txn(lak::exchange(other._txn, nullptr)), _dbi(other._dbi)
+{
+}
+
+template<bool READ_ONLY>
+lak::lmdb::database<READ_ONLY> &lak::lmdb::database<READ_ONLY>::operator=(
+  database &&other)
+{
+	lak::swap(_txn, other._txn);
+	lak::swap(_dbi, other._dbi);
+	return *this;
 }
 
 template<bool READ_ONLY>
 lak::lmdb::result<lak::span<const void>> lak::lmdb::database<READ_ONLY>::get(
   lak::span<const void> key)
 {
-	ASSERT(_txn);
 	MDB_val k{.mv_size = key.size(), .mv_data = const_cast<void *>(key.data())};
 	MDB_val v;
 	if (int get_err = mdb_get(_txn, _dbi, &k, &v); get_err != MDB_SUCCESS)
@@ -188,7 +203,6 @@ lak::lmdb::result<> lak::lmdb::database<READ_ONLY>::put(
   lak::span<const void> value,
   lak::lmdb::write_flags flags)
 {
-	ASSERT(_txn);
 	MDB_val k{.mv_size = key.size(), .mv_data = const_cast<void *>(key.data())};
 	MDB_val v{.mv_size = value.size(),
 	          .mv_data = const_cast<void *>(value.data())};
@@ -203,7 +217,6 @@ template<bool READ_ONLY>
 lak::lmdb::result<> lak::lmdb::database<READ_ONLY>::del(
   lak::span<const void> key, lak::span<const void> value)
 {
-	ASSERT(_txn);
 	if (value.data() == nullptr)
 	{
 		using dbf_t   = lak::lmdb::database_flags;
@@ -219,15 +232,20 @@ lak::lmdb::result<> lak::lmdb::database<READ_ONLY>::del(
 }
 
 template<bool READ_ONLY>
-lak::lmdb::result<lak::lmdb::database_flags>
-lak::lmdb::database<READ_ONLY>::flags()
+lak::lmdb::result<> lak::lmdb::database<READ_ONLY>::del_all()
 {
-	ASSERT(_txn);
-	unsigned int flags = 0;
-	if (int flag_err = mdb_dbi_flags(_txn, _dbi, &flags);
-	    flag_err != MDB_SUCCESS)
-		return lak::err_t{lak::lmdb::error{.value = flag_err}};
-	return lak::ok_t{static_cast<lak::lmdb::database_flags>(flags)};
+	if (int drop_err = mdb_drop(_txn, _dbi, 0); drop_err != MDB_SUCCESS)
+		return lak::err_t{lak::lmdb::error{.value = drop_err}};
+	return lak::ok_t{};
+}
+
+template<bool READ_ONLY>
+lak::lmdb::result<> lak::lmdb::database<READ_ONLY>::drop()
+{
+	if (int drop_err = mdb_drop(_txn, _dbi, 1); drop_err != MDB_SUCCESS)
+		return lak::err_t{lak::lmdb::error{.value = drop_err}};
+	_txn = nullptr;
+	return lak::ok_t{};
 }
 
 template<bool READ_ONLY>
@@ -239,6 +257,26 @@ lak::lmdb::database<READ_ONLY>::open_cursor()
 	    open_err != MDB_SUCCESS)
 		return lak::err_t{lak::lmdb::error{.value = open_err}};
 	return lak::ok_t{lak::lmdb::cursor<READ_ONLY>(csr)};
+}
+
+template<bool READ_ONLY>
+lak::lmdb::result<lak::lmdb::database_flags>
+lak::lmdb::database<READ_ONLY>::flags()
+{
+	unsigned int flags = 0;
+	if (int flag_err = mdb_dbi_flags(_txn, _dbi, &flags);
+	    flag_err != MDB_SUCCESS)
+		return lak::err_t{lak::lmdb::error{.value = flag_err}};
+	return lak::ok_t{static_cast<lak::lmdb::database_flags>(flags)};
+}
+
+template<bool READ_ONLY>
+lak::lmdb::result<MDB_stat> lak::lmdb::database<READ_ONLY>::stat()
+{
+	MDB_stat result;
+	if (int stat_err = mdb_stat(_txn, _dbi, &result); stat_err != MDB_SUCCESS)
+		return lak::err_t{lak::lmdb::error{.value = stat_err}};
+	return lak::ok_t{result};
 }
 
 template struct lak::lmdb::database<true>;
@@ -255,6 +293,7 @@ template<bool READ_ONLY>
 lak::lmdb::transaction<READ_ONLY>::transaction(transaction &&other)
 : _txn(lak::exchange(other._txn, nullptr))
 {
+	ASSERT(_txn);
 }
 
 template<bool READ_ONLY>
@@ -274,7 +313,6 @@ lak::lmdb::transaction<READ_ONLY>::transaction::~transaction()
 template<bool READ_ONLY>
 lak::lmdb::result<> lak::lmdb::transaction<READ_ONLY>::commit()
 {
-	ASSERT(_txn);
 	if (int commit_err = mdb_txn_commit(_txn); commit_err != MDB_SUCCESS)
 		return lak::err_t{lak::lmdb::error{.value = commit_err}};
 	_txn = nullptr;
@@ -284,7 +322,6 @@ lak::lmdb::result<> lak::lmdb::transaction<READ_ONLY>::commit()
 template<bool READ_ONLY>
 void lak::lmdb::transaction<READ_ONLY>::abort()
 {
-	ASSERT(_txn);
 	mdb_txn_abort(_txn);
 	_txn = nullptr;
 }
@@ -293,7 +330,6 @@ template<bool READ_ONLY>
 lak::lmdb::result<lak::lmdb::database<READ_ONLY>> lak::lmdb::transaction<
   READ_ONLY>::open_database(const char *name, lak::lmdb::database_flags flags)
 {
-	ASSERT(_txn);
 	MDB_dbi dbi;
 	if (int open_err =
 	      mdb_dbi_open(_txn, name, static_cast<unsigned int>(flags), &dbi);
@@ -313,7 +349,10 @@ template struct lak::lmdb::transaction<false>;
 
 /* --- environment --- */
 
-lak::lmdb::environment::environment(MDB_env *env) : _env(env) {}
+lak::lmdb::environment::environment(MDB_env *env) : _env(env)
+{
+	ASSERT(_env);
+}
 
 lak::lmdb::environment::environment(environment &&other)
 : _env(lak::exchange(other._env, nullptr))
@@ -328,13 +367,13 @@ lak::lmdb::environment &lak::lmdb::environment::operator=(environment &&other)
 
 lak::lmdb::environment::~environment()
 {
-	if (_env) close();
+	if (_env) mdb_env_close(_env);
 }
 
 lak::lmdb::result<lak::lmdb::environment> lak::lmdb::environment::open(
   const std::filesystem::path &path,
   MDB_dbi max_dbs,
-  environment_flags flags,
+  lak::lmdb::environment_flags flags,
   mdb_mode_t mode)
 {
 	MDB_env *env;
@@ -360,22 +399,14 @@ lak::lmdb::result<lak::lmdb::environment> lak::lmdb::environment::open(
 	return lak::ok_t{environment(env)};
 }
 
-void lak::lmdb::environment::close()
-{
-	ASSERT(_env);
-	mdb_env_close(_env);
-	_env = nullptr;
-}
-
 size_t lak::lmdb::environment::max_key_size()
 {
 	return static_cast<size_t>(mdb_env_get_maxkeysize(_env));
 }
 
 lak::lmdb::result<lak::lmdb::rwtransaction>
-lak::lmdb::environment::begin_transaction(rwtransaction *parent)
+lak::lmdb::environment::begin_rwtransaction(lak::lmdb::rwtransaction *parent)
 {
-	ASSERT(_env);
 	MDB_txn *txn;
 	if (int begin_err =
 	      mdb_txn_begin(_env, parent ? parent->_txn : nullptr, 0, &txn);
@@ -385,9 +416,8 @@ lak::lmdb::environment::begin_transaction(rwtransaction *parent)
 }
 
 lak::lmdb::result<lak::lmdb::rtransaction>
-lak::lmdb::environment::begin_read_only_transaction(rwtransaction *parent)
+lak::lmdb::environment::begin_rtransaction(lak::lmdb::rwtransaction *parent)
 {
-	ASSERT(_env);
 	MDB_txn *txn;
 	if (int begin_err =
 	      mdb_txn_begin(_env, parent ? parent->_txn : nullptr, MDB_RDONLY, &txn);
@@ -397,7 +427,7 @@ lak::lmdb::environment::begin_read_only_transaction(rwtransaction *parent)
 }
 
 lak::lmdb::result<lak::lmdb::rtransaction>
-lak::lmdb::environment::begin_read_only_transaction(rtransaction *parent)
+lak::lmdb::environment::begin_rtransaction(lak::lmdb::rtransaction *parent)
 {
 	ASSERT(_env);
 	MDB_txn *txn;

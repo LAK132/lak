@@ -98,6 +98,14 @@ else
   laktestllvm = []
 endif
 
+if get_option('enable_lmdb')
+  subdir('src/lmdb')
+  subdir('src/tests/lmdb')
+else
+  laklmdb = []
+  laktestlmdb = []
+endif
+
 sdl2_dll = configure_file(
   copy: true,
   input: sdl2_dll,
@@ -114,11 +122,13 @@ executable(
   link_with: [
     lak,
     lakllvm,
+    laklmdb,
   ],
   link_whole: [
     laktest,
     laktestwindowing,
     laktestllvm,
+    laktestlmdb,
   ],
   dependencies: [
     sdl2,

@@ -1,12 +1,18 @@
+subdir('lmdb')
+
 laklmdb = static_library(
   'laklmdb',
   [
     'lmdb.cpp',
   ],
   override_options: 'cpp_std=' + version,
-  include_directories: [
-    include_directories('../..', '../../inc'),
-    lmdb_include_directory,
+  include_directories: include_directories(
+    '../..',
+    '../../inc',
+    'lmdb/lmdb/libraries/liblmdb',
+  ),
+  link_with: [
+    lak,
+    lmdb,
   ],
-  link_with: lak,
 )

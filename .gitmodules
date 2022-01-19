@@ -4,3 +4,6 @@
 [submodule "inc/LLVM"]
 	path = src/llvm/llvm
 	url = https://github.com/LAK132/LLVM
+[submodule "src/lmdb/lmdb"]
+	path = src/lmdb/lmdb
+	url = https://github.com/LAK132/lmdb
