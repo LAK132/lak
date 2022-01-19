@@ -6,3 +6,7 @@
 
 obj/**
 bin/**
+toolchain/**
+ignore/**
+
+local-llvm-config.ini

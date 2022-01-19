@@ -1,8 +1,10 @@
 @echo off
 SetLocal EnableDelayedExpansion
 
+set meson_args=
+
 if "%~1"=="msvc" (
-  set meson_args=--vsenv
+  set meson_args=!meson_args! --vsenv
   goto run
 )
 
@@ -21,12 +23,15 @@ if "%~1"=="gcc" (
 goto usage
 
 :run
-rmdir /s /q build
+shift
+if not "%~1"=="--reconfigure" (
+  rmdir /s /q build
+)
 
 :arg-loop
-shift
 if "%1"=="" goto end-arg-loop
 set meson_args=!meson_args! %1
+shift
 goto arg-loop
 :end-arg-loop
 
@@ -40,4 +45,4 @@ echo setup.bat msvc
 echo setup.bat msvc --buildtype release
 echo setup.bat gcc --buildtype debug
 echo setup.bat clang --buildtype debugoptimised
-goto :eof
+exit 1
