@@ -11,6 +11,7 @@ namespace lak
 
 using f32_t = float;
 using f64_t = double;
+
 enum struct byte_t : uint8_t
 {
 };

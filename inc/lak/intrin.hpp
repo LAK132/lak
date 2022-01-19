@@ -4,11 +4,8 @@
 #include "lak/compiler.hpp"
 #include "lak/stdint.hpp"
 
-#if defined(LAK_COMPILER_EMSCRIPTEN)
-#elif defined(LAK_COMPILER_GNUC) || defined(LAK_COMPILER_CLANG)
-#	include <cpuid.h>
-#	include <immintrin.h>
-#elif defined(LAK_COMPILER_MSVC)
+#if defined(LAK_COMPILER_GNUC) || defined(LAK_COMPILER_CLANG) ||              \
+  defined(LAK_COMPILER_MSVC)
 #	include <immintrin.h>
 #else
 #	error "Compiler not supported"
@@ -16,29 +13,7 @@
 
 namespace lak
 {
-	void cpuid(unsigned int index, unsigned int info[4]);
-
-	struct instruction_set
-	{
-		bool MMX;
-		bool SSE;
-		bool SSE2;
-		bool SSE3;
-		bool SSSE3;
-		bool SSE41;
-		bool SSE42;
-		bool AVX;
-		bool AVX2;
-		bool AVX512F;
-		bool AVX512PF;
-		bool AVX512ER;
-		bool AVX512CD;
-
-		static instruction_set get();
-	};
-
-#if defined(LAK_COMPILER_EMSCRIPTEN)
-#elif defined(LAK_COMPILER_MSVC)
+#if defined(LAK_COMPILER_MSVC)
 	using m128_t  = __m128;
 	using m256_t  = __m256;
 	using m256d_t = __m256d;

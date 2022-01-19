@@ -1,11 +1,11 @@
 lak = static_library(
   'lak',
   [
+    'architecture.cpp',
     'compression/deflate.cpp',
     'compression/lz4.cpp',
     'debug.cpp',
     'file.cpp',
-    'intrin.cpp',
     'json.cpp',
     'math.cpp',
     'memmanip.cpp',
