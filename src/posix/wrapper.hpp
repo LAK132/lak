@@ -6,8 +6,8 @@
 #include "lak/result.hpp"
 #include "lak/string.hpp"
 
-#include <cstring>
 #include <fcntl.h>
+#include <string.h>
 #include <sys/mman.h>
 #include <unistd.h>
 

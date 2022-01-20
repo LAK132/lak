@@ -59,17 +59,23 @@ endif
 
 c_cpp_args += [
   '-D_CRT_SECURE_NO_WARNINGS',
-  '-DSDL_MAIN_HANDLED',
 ]
 
 if get_option('buildtype') != 'debug'
-  c_cpp_args += [ '-DNDEBUG' ]
+  c_cpp_args += [
+    '-DNDEBUG',
+  ]
 endif
 
 if get_option('lak_backend') == 'sdl'
-  c_cpp_args += [ '-DLAK_USE_SDL' ]
+  c_cpp_args += [
+    '-DLAK_USE_SDL',
+    '-DSDL_MAIN_HANDLED',
+  ]
 elif get_option('lak_backend') == 'win32'
-  c_cpp_args += [ '-DLAK_USE_WINAPI' ]
+  c_cpp_args += [
+    '-DLAK_USE_WINAPI',
+  ]
 endif
 
 add_project_arguments(c_cpp_args + cpp_args, language: ['cpp'])
@@ -121,8 +127,6 @@ executable(
   include_directories: include_directories('inc'),
   link_with: [
     lak,
-    lakllvm,
-    laklmdb,
   ],
   link_whole: [
     laktest,
@@ -132,5 +136,7 @@ executable(
   ],
   dependencies: [
     sdl2,
+    laklmdb,
+    lakllvm,
   ],
 )

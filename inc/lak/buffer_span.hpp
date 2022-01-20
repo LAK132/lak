@@ -18,7 +18,10 @@ namespace lak
 		~buffer_span()                   = default;
 		buffer_span &operator=(const buffer_span &) = default;
 
-		buffer_span(lak::span<T, S> buffer) : _buffer(buffer) {}
+		buffer_span(lak::span<T, S> buffer, bool start_full)
+		: _buffer(buffer), _pos(0), _size(start_full ? S : 0)
+		{
+		}
 
 		lak::span<T> rebase()
 		{

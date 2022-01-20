@@ -12,9 +12,6 @@ laktestllvm = static_library(
     '../../..',
     '../../../inc',
   ),
-  link_with: [
-    lak,
-    lakllvm,
-  ],
-  dependencies: llvm,
+  link_with: lak,
+  dependencies: lakllvm,
 )

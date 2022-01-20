@@ -53,62 +53,24 @@ namespace lak
 		U second;
 
 		pair() = default;
-		pair(const pair &p) : first(p.first), second(p.second) {}
-		pair(pair &&p) : first(lak::move(p.first)), second(lak::move(p.second)) {}
+		pair(const pair &p);
+		pair(pair &&p);
 
 		template<typename V, typename W>
-		pair(V &&f, W &&s) : first(lak::forward<V>(f)), second(lak::forward<W>(s))
-		{
-		}
+		pair(V &&f, W &&s);
 
-		pair &operator=(const pair &p)
-		{
-			first  = p.first;
-			second = p.second;
-			return *this;
-		}
-		pair &operator=(pair &&p)
-		{
-			first  = lak::move(p.first);
-			second = lak::move(p.second);
-			return *this;
-		}
+		pair &operator=(const pair &p);
+		pair &operator=(pair &&p);
 
 		template<typename... V>
-		pair &operator=(const tuple<V...> &p)
-		{
-			static_assert(sizeof...(V) == 2);
-			first  = p.first;
-			second = p.second;
-			return *this;
-		}
+		pair &operator=(const tuple<V...> &p);
 		template<typename... V>
-		pair &operator=(tuple<V...> &&p)
-		{
-			static_assert(sizeof...(V) == 2);
-			first  = lak::move(p.first);
-			second = lak::move(p.second);
-			return *this;
-		}
+		pair &operator=(tuple<V...> &&p);
 
 		template<size_t I>
-		auto &get()
-		{
-			static_assert(I < 2);
-			if constexpr (I == 0)
-				return first;
-			else if constexpr (I == 1)
-				return second;
-		}
+		auto &get();
 		template<size_t I>
-		auto &get() const
-		{
-			static_assert(I < 2);
-			if constexpr (I == 0)
-				return first;
-			else if constexpr (I == 1)
-				return second;
-		}
+		auto &get() const;
 	};
 
 	template<typename T, typename U>
@@ -131,64 +93,34 @@ namespace lak
 		static constexpr size_t index_of = lak::index_of_element_v<V, T, U...>;
 
 		tuple() = default;
-		tuple(const tuple &p) : value(p.value), next(p.next) {}
-		tuple(tuple &&p) : value(lak::move(p.value)), next(lak::move(p.next)) {}
+		tuple(const tuple &p);
+		tuple(tuple &&p);
 
 		template<typename V, typename... W>
-		tuple(V &&v, W &&...n)
-		: value(lak::forward<V>(v)), next(lak::forward<W>(n)...)
-		{
-		}
+		tuple(V &&v, W &&...n);
 
-		tuple &operator=(const tuple &p)
-		{
-			value = p.value;
-			next  = p.next;
-			return *this;
-		}
-		tuple &operator=(tuple &&p)
-		{
-			value = lak::move(p.value);
-			next  = lak::move(p.next);
-			return *this;
-		}
+		tuple &operator=(const tuple &p);
+		tuple &operator=(tuple &&p);
 
 		template<typename... V>
-		tuple &operator=(const pair<V...> &p)
-		{
-			static_assert(sizeof...(U) == 1);
-			value      = p.first;
-			next.value = p.second;
-			return *this;
-		}
-
+		tuple &operator=(const pair<V...> &p);
 		template<typename... V>
-		tuple &operator=(pair<V...> &&p)
-		{
-			static_assert(sizeof...(U) == 1);
-			value      = lak::move(p.first);
-			next.value = lak::move(p.second);
-			return *this;
-		}
+		tuple &operator=(pair<V...> &&p);
+
+		template<typename F>
+		auto apply(F &&func);
+		template<typename F>
+		auto apply(F &&func) const;
+
+		template<typename F>
+		void foreach(F &&func);
+		template<typename F>
+		void foreach(F &&func) const;
 
 		template<size_t I>
-		auto &get()
-		{
-			static_assert(I <= sizeof...(U));
-			if constexpr (I == 0)
-				return value;
-			else
-				return next.template get<I - 1>();
-		}
+		auto &get();
 		template<size_t I>
-		auto &get() const
-		{
-			static_assert(I <= sizeof...(U));
-			if constexpr (I == 0)
-				return value;
-			else
-				return next.template get<I - 1>();
-		}
+		auto &get() const;
 	};
 
 	template<>
@@ -252,5 +184,7 @@ struct LAK_TUPLE_ELEMENT<I, lak::tuple<T, U...>>
 {
 	using type = typename LAK_TUPLE_ELEMENT<I - 1, lak::tuple<U...>>::type;
 };
+
+#include "lak/tuple.inl"
 
 #endif

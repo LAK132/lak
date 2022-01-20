@@ -16,6 +16,8 @@
 #undef ERROR
 
 #include <windows.h>
+
+#include <CommCtrl.h>
 #include <windowsx.h>
 #include <wingdi.h>
 #include <winnt.h>

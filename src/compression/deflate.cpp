@@ -113,7 +113,7 @@ lak::deflate_iterator::deflate_iterator(
   bool anaconda)
 : _value(value_type::make_err(error_t::invalid_state)),
   _compressed(compressed),
-  _output_buffer(output_buffer),
+  _output_buffer(output_buffer, false),
   _anaconda(anaconda)
 {
 	if (parse_header)

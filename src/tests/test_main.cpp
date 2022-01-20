@@ -14,9 +14,9 @@ int LAK_TEST_MAIN(int argc, char **argv)
 	if (argc < 2 || arg1 == "-h"_view || arg1 == "--help"_view)
 	{
 		std::cout << "options:\n"
-		             "-help: print this text\n"
-		             "-testall: run all registered tests\n"
-		             "-test[s] \"test1;test2\": run the specified tests\n";
+		             "--help: print this text\n"
+		             "--testall: run all registered tests\n"
+		             "--test[s] \"test1;test2\": run the specified tests\n";
 		return argc < 2 ? EXIT_FAILURE : EXIT_SUCCESS;
 	}
 	else if (arg1 == "--testall"_view)

@@ -99,10 +99,10 @@ BEGIN_TEST(tokeniser2)
 				result += u8"\" "_view;
 			}
 		}
-		else if (token == lak::string_view{u8"("})
+		else if (token == u8"("_view)
 		{
 		}
-		else if (token == lak::string_view{u8")"})
+		else if (token == u8")"_view)
 		{
 		}
 		else

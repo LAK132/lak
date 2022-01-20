@@ -5,16 +5,13 @@ laktestlmdb = static_library(
   ],
   override_options: [
     'cpp_std=' + version,
+    'warning_level=0',
     'werror=false',
   ],
   include_directories: include_directories(
     '../../..',
     '../../../inc',
-    '../../../..',
-    '../../lmdb/lmdb/lmdb/libraries/liblmdb',
   ),
-  link_with: [
-    lak,
-    laklmdb,
-  ],
+  link_with: lak,
+  dependencies: laklmdb,
 )
