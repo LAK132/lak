@@ -99,7 +99,8 @@ void lak::array<T, lak::dynamic_extent>::right_shift(size_t count,
 	     lak::size_range::from_count(before + replace_moved, new_moved))
 		new (data() + count + i) T(lak::move(data()[i]));
 
-	for (size_t i : lak::size_range::from_count(before, count)) data()[i].~T();
+	if constexpr (!std::is_trivially_destructible_v<T>)
+		for (size_t i : lak::size_range::from_count(before, count)) data()[i].~T();
 }
 
 template<typename T>
@@ -129,7 +130,8 @@ void lak::array<T, lak::dynamic_extent>::reserve_bytes(
 			  T(lak::move(data()[i]));
 
 		// destroy the Ts in the old memory block
-		for (size_t i = 0; i < _size; ++i) data()[i].~T();
+		if constexpr (!std::is_trivially_destructible_v<T>)
+			for (size_t i = 0; i < _size; ++i) data()[i].~T();
 	}
 	else
 	{
@@ -240,7 +242,10 @@ void lak::array<T, lak::dynamic_extent>::resize(size_t new_size)
 	}
 	else if (new_size < _size)
 	{
-		for (; _size > new_size; --_size) data()[_size - 1].~T();
+		if constexpr (std::is_trivially_destructible_v<T>)
+			_size = new_size;
+		else
+			for (; _size > new_size; --_size) data()[_size - 1].~T();
 	}
 }
 
@@ -255,7 +260,10 @@ void lak::array<T, lak::dynamic_extent>::resize(size_t new_size,
 	}
 	else if (new_size < _size)
 	{
-		for (; _size > new_size; --_size) data()[_size - 1].~T();
+		if constexpr (std::is_trivially_destructible_v<T>)
+			_size = new_size;
+		else
+			for (; _size > new_size; --_size) data()[_size - 1].~T();
 	}
 }
 
@@ -268,7 +276,8 @@ void lak::array<T, lak::dynamic_extent>::reserve(size_t new_capacity)
 template<typename T>
 void lak::array<T, lak::dynamic_extent>::clear()
 {
-	for (auto &e : *this) e.~T();
+	if constexpr (!std::is_trivially_destructible_v<T>)
+		for (auto &e : *this) e.~T();
 	_size = 0;
 }
 
@@ -382,7 +391,8 @@ template<typename T>
 void lak::array<T, lak::dynamic_extent>::pop_back()
 {
 	ASSERT_GREATER(_size, 0U);
-	data()[--_size].~T();
+	--_size;
+	if constexpr (!std::is_trivially_destructible_v<T>) data()[_size].~T();
 }
 
 template<typename T>
