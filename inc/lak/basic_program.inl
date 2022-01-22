@@ -136,10 +136,11 @@ int LAK_BASIC_PROGRAM_MAIN(int argc, char **argv)
 	{
 		return lak::window::make(basic_window_software_settings)
 		  .and_then(
-		    [&](auto &&window) -> lak::result<lak::window>
+		    [&](auto &&window) -> lak::result<lak::window, lak::u8string>
 		    {
 			    if (window.graphics() != lak::graphics_mode::Software)
-				    return lak::err_t{};
+				    return lak::err_t<lak::u8string>{lak::streamify(
+				      "Expected Software graphics, got ", window.graphics())};
 			    return lak::ok_t{lak::move(window)};
 		    });
 	};
@@ -149,10 +150,11 @@ int LAK_BASIC_PROGRAM_MAIN(int argc, char **argv)
 	     ? make_software()
 	     : lak::window::make(basic_window_opengl_settings)
 	         .and_then(
-	           [&](auto &&window) -> lak::result<lak::window>
+	           [&](auto &&window) -> lak::result<lak::window, lak::u8string>
 	           {
 		           if (window.graphics() != lak::graphics_mode::OpenGL)
-			           return lak::err_t{};
+			           return lak::err_t<lak::u8string>{lak::streamify(
+			             "Expected OpenGL graphics, got ", window.graphics())};
 
 		           glViewport(
 		             0, 0, window.drawable_size().x, window.drawable_size().y);
@@ -169,7 +171,13 @@ int LAK_BASIC_PROGRAM_MAIN(int argc, char **argv)
 
 		           return lak::ok_t{lak::move(window)};
 	           })
-	         .or_else([&](auto &&) { return make_software(); }))
+	         .or_else(
+	           [&](const lak::u8string &err)
+	           {
+		           WARNING("Failed to create an OpenGL window: ", err);
+		           WARNING("Attempting to create a Software window instead");
+		           return make_software();
+	           }))
 	    .UNWRAP();
 
 	window.set_title(L"" APP_NAME);

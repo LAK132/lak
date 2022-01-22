@@ -32,32 +32,47 @@ lak::window::window(lak::unique_bank_ptr<lak::window_handle> &&handle)
 	ASSERT(_handle);
 }
 
-lak::result<lak::window> lak::window::make(const lak::software_settings &s)
+lak::result<lak::window, lak::u8string> lak::window::make(
+  const lak::software_settings &s)
 {
-	auto handle = lak::unique_bank_ptr<lak::window_handle>::from_raw_bank_ptr(
-	  lak::create_window(s));
-	if (!handle)
-		return lak::err_t{};
+	if (auto maybe_handle{lak::create_window(s)}; maybe_handle.is_err())
+		return lak::err_t<lak::u8string>{
+		  lak::move(maybe_handle.unsafe_unwrap_err())};
+	else if (auto handle{
+	           lak::unique_bank_ptr<lak::window_handle>::from_raw_bank_ptr(
+	             maybe_handle.unsafe_unwrap())};
+	         !handle)
+		return lak::err_t<lak::u8string>{u8"Failed to create bank ptr"_str};
 	else
 		return lak::ok_t{lak::window(lak::move(handle))};
 }
 
-lak::result<lak::window> lak::window::make(const lak::opengl_settings &s)
+lak::result<lak::window, lak::u8string> lak::window::make(
+  const lak::opengl_settings &s)
 {
-	auto handle = lak::unique_bank_ptr<lak::window_handle>::from_raw_bank_ptr(
-	  lak::create_window(s));
-	if (!handle)
-		return lak::err_t{};
+	if (auto maybe_handle{lak::create_window(s)}; maybe_handle.is_err())
+		return lak::err_t<lak::u8string>{
+		  lak::move(maybe_handle.unsafe_unwrap_err())};
+	else if (auto handle{
+	           lak::unique_bank_ptr<lak::window_handle>::from_raw_bank_ptr(
+	             maybe_handle.unsafe_unwrap())};
+	         !handle)
+		return lak::err_t<lak::u8string>{u8"Failed to create bank ptr"_str};
 	else
 		return lak::ok_t{lak::window(lak::move(handle))};
 }
 
-lak::result<lak::window> lak::window::make(const lak::vulkan_settings &s)
+lak::result<lak::window, lak::u8string> lak::window::make(
+  const lak::vulkan_settings &s)
 {
-	auto handle = lak::unique_bank_ptr<lak::window_handle>::from_raw_bank_ptr(
-	  lak::create_window(s));
-	if (!handle)
-		return lak::err_t{};
+	if (auto maybe_handle{lak::create_window(s)}; maybe_handle.is_err())
+		return lak::err_t<lak::u8string>{
+		  lak::move(maybe_handle.unsafe_unwrap_err())};
+	else if (auto handle{
+	           lak::unique_bank_ptr<lak::window_handle>::from_raw_bank_ptr(
+	             maybe_handle.unsafe_unwrap())};
+	         !handle)
+		return lak::err_t<lak::u8string>{u8"Failed to create bank ptr"_str};
 	else
 		return lak::ok_t{lak::window(lak::move(handle))};
 }

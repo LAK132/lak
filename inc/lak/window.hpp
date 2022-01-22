@@ -99,11 +99,14 @@ namespace lak
 
 	/* --- create/destroy window --- */
 
-	lak::window_handle *create_window(const lak::software_settings &s);
+	lak::result<lak::window_handle *, lak::u8string> create_window(
+	  const lak::software_settings &s);
 
-	lak::window_handle *create_window(const lak::opengl_settings &s);
+	lak::result<lak::window_handle *, lak::u8string> create_window(
+	  const lak::opengl_settings &s);
 
-	lak::window_handle *create_window(const lak::vulkan_settings &s);
+	lak::result<lak::window_handle *, lak::u8string> create_window(
+	  const lak::vulkan_settings &s);
 
 	bool destroy_window(lak::window_handle *w);
 
@@ -149,11 +152,14 @@ namespace lak
 	public:
 		inline window(window &&w) : _handle(lak::move(w._handle)) {}
 
-		static lak::result<window> make(const lak::software_settings &s);
+		static lak::result<window, lak::u8string> make(
+		  const lak::software_settings &s);
 
-		static lak::result<window> make(const lak::opengl_settings &s);
+		static lak::result<window, lak::u8string> make(
+		  const lak::opengl_settings &s);
 
-		static lak::result<window> make(const lak::vulkan_settings &s);
+		static lak::result<window, lak::u8string> make(
+		  const lak::vulkan_settings &s);
 
 		~window();
 

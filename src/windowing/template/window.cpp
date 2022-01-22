@@ -2,22 +2,28 @@
 
 #include "impl.hpp"
 
-lak::window_handle *lak::create_window(const lak::software_settings &s)
+lak::result<lak::window_handle *, lak::u8string> lak::create_window(
+  const lak::software_settings &s)
 {
 	(void)s;
-	return lak::unique_bank_ptr<lak::window_handle>::create().release();
+	return lak::ok_t{
+	  lak::unique_bank_ptr<lak::window_handle>::create().release()};
 }
 
-lak::window_handle *lak::create_window(const lak::opengl_settings &s)
+lak::result<lak::window_handle *, lak::u8string> lak::create_window(
+  const lak::opengl_settings &s)
 {
 	(void)s;
-	return lak::unique_bank_ptr<lak::window_handle>::create().release();
+	return lak::ok_t{
+	  lak::unique_bank_ptr<lak::window_handle>::create().release()};
 }
 
-lak::window_handle *lak::create_window(const lak::vulkan_settings &s)
+lak::result<lak::window_handle *, lak::u8string> lak::create_window(
+  const lak::vulkan_settings &s)
 {
 	(void)s;
-	return lak::unique_bank_ptr<lak::window_handle>::create().release();
+	return lak::ok_t{
+	  lak::unique_bank_ptr<lak::window_handle>::create().release()};
 }
 
 bool lak::destroy_window(lak::window_handle *w)

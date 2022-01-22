@@ -6,7 +6,8 @@
 
 #include "impl.hpp"
 
-lak::window_handle *lak::create_window(const lak::software_settings &)
+lak::result<lak::window_handle *, lak::u8string> lak::create_window(
+  const lak::software_settings &)
 {
 	auto handle = lak::unique_bank_ptr<lak::window_handle>::create();
 	ASSERT(handle);
@@ -21,27 +22,22 @@ lak::window_handle *lak::create_window(const lak::software_settings &)
 	                                      SDL_WINDOW_RESIZABLE);
 
 	if (!handle->sdl_window)
-	{
-		ERROR("Failed to create window");
-		return nullptr;
-	}
+		return lak::err_t<lak::u8string>{u8"Failed to create window"_str};
 
 	auto &context = handle->gc.emplace<lak::software_context>();
 
 	context.sdl_surface = SDL_GetWindowSurface(handle->sdl_window);
 
 	if (!context.sdl_surface)
-	{
-		ERROR("Failed to get window surface");
-		return nullptr;
-	}
+		return lak::err_t<lak::u8string>{u8"Failed to get window surface"_str};
 
 	context.sdl_window = handle->sdl_window;
 
-	return handle.release();
+	return lak::ok_t{handle.release()};
 }
 
-lak::window_handle *lak::create_window(const lak::opengl_settings &settings)
+lak::result<lak::window_handle *, lak::u8string> lak::create_window(
+  const lak::opengl_settings &settings)
 {
 	auto handle = lak::unique_bank_ptr<lak::window_handle>::create();
 	ASSERT(handle);
@@ -61,18 +57,15 @@ lak::window_handle *lak::create_window(const lak::opengl_settings &settings)
 	                   SDL_WINDOW_RESIZABLE | SDL_WINDOW_OPENGL);
 
 	if (!handle->sdl_window)
-	{
-		ERROR("Failed to create window");
-		return nullptr;
-	}
+		lak::err_t<lak::u8string>{u8"Failed to create window"_str};
 
 	auto &context = handle->gc.emplace<lak::opengl_context>();
 
 #define SET_ATTRIB(A, B)                                                      \
 	if (SDL_GL_SetAttribute(A, B))                                              \
 	{                                                                           \
-		WARNING("Failed to set " #A " to " #B " (", B, ")");                      \
-		return nullptr;                                                           \
+		return lak::err_t<lak::u8string>{                                         \
+		  lak::streamify("Failed to set " #A " to " #B " (", B, ")")};            \
 	}
 	SET_ATTRIB(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG)
 	SET_ATTRIB(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
@@ -88,45 +81,34 @@ lak::window_handle *lak::create_window(const lak::opengl_settings &settings)
 
 	if (context.sdl_glcontext = SDL_GL_CreateContext(handle->sdl_window);
 	    !context.sdl_glcontext)
-	{
-		ERROR("Failed to create an OpenGL context");
-		ERROR(SDL_GetError());
-		return nullptr;
-	}
+		return lak::err_t<lak::u8string>{
+		  u8"Failed to create an OpenGL context: "_str +
+		  reinterpret_cast<const char8_t *>(SDL_GetError())};
 
 	if (gl3wInit() != GL3W_OK)
-	{
-		ERROR("Failed to initialise gl3w");
-		return nullptr;
-	}
+		return lak::err_t<lak::u8string>{u8"Failed to initialise gl3w"_str};
 
 	if (!lak::opengl::check_error())
-	{
-		ERROR("OpenGL in bad state");
-		return nullptr;
-	}
+		return lak::err_t<lak::u8string>{u8"OpenGL in bad state"_str};
 
 	if (SDL_GL_MakeCurrent(handle->sdl_window, context.sdl_glcontext) != 0)
-	{
-		ERROR("Failed to make context current for window");
-		ERROR(SDL_GetError());
-		return nullptr;
-	}
+		return lak::err_t<lak::u8string>{
+		  u8"Failed to make context current for window: "_str +
+		  reinterpret_cast<const char8_t *>(SDL_GetError())};
 
 	if (SDL_GL_SetSwapInterval(-1) != 0 && SDL_GL_SetSwapInterval(1) != 0 &&
 	    SDL_GL_SetSwapInterval(0) != 0)
-	{
-		ERROR("Failed to set swap interval");
-		ERROR(SDL_GetError());
-		return nullptr;
-	}
+		return lak::err_t<lak::u8string>{
+		  u8"Failed to set swap interval: "_str +
+		  reinterpret_cast<const char8_t *>(SDL_GetError())};
 
 	context.sdl_window = handle->sdl_window;
 
-	return handle.release();
+	return lak::ok_t{handle.release()};
 }
 
-lak::window_handle *lak::create_window(const lak::vulkan_settings &)
+lak::result<lak::window_handle *, lak::u8string> lak::create_window(
+  const lak::vulkan_settings &)
 {
 	auto handle = lak::unique_bank_ptr<lak::window_handle>::create();
 	ASSERT(handle);
@@ -142,14 +124,11 @@ lak::window_handle *lak::create_window(const lak::vulkan_settings &)
 	                   SDL_WINDOW_RESIZABLE | SDL_WINDOW_VULKAN);
 
 	if (!handle->sdl_window)
-	{
-		ERROR("Failed to create window");
-		return nullptr;
-	}
+		return lak::err_t<lak::u8string>{u8"Failed to create window"_str};
 
 	[[maybe_unused]] auto &context = handle->gc.emplace<lak::vulkan_context>();
 
-	return handle.release();
+	return lak::ok_t{handle.release()};
 }
 
 bool lak::destroy_window(lak::window_handle *handle)

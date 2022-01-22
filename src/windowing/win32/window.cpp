@@ -9,10 +9,12 @@
 #include "lak/debug.hpp"
 #include "lak/defer.hpp"
 #include "lak/image.hpp"
+#include "lak/string_literals.hpp"
 
 #include "impl.hpp"
 
 void win32_error_popup(LPCWSTR lpszFunction);
+lak::wstring win32_error_string(LPCWSTR lpszFunction);
 
 // template<typename COLOUR>
 // void init_bitmap_info(lak::software_context &context)
@@ -37,7 +39,8 @@ void win32_error_popup(LPCWSTR lpszFunction);
 //   }
 // }
 
-lak::window_handle *lak::create_window(const lak::software_settings &)
+lak::result<lak::window_handle *, lak::u8string> lak::create_window(
+  const lak::software_settings &)
 {
 	auto handle = lak::unique_bank_ptr<lak::window_handle>::create();
 	ASSERT(handle);
@@ -67,9 +70,9 @@ lak::window_handle *lak::create_window(const lak::software_settings &)
 
 	if (!handle->_platform_handle)
 	{
-		win32_error_popup(L"CreateWindowExW");
-		ERROR("Failed to create window");
-		return nullptr;
+		return lak::err_t<lak::u8string>{
+		  lak::streamify("Failed to create window: "_view,
+		                 win32_error_string(L"CreateWindowExW"))};
 	}
 
 	handle->_device_context = ::GetDC(handle->_platform_handle);
@@ -79,9 +82,9 @@ lak::window_handle *lak::create_window(const lak::software_settings &)
 
 	if (!handle->_device_context)
 	{
-		win32_error_popup(L"GetDC");
-		ERROR("Failed to get window device context");
-		return nullptr;
+		return lak::err_t<lak::u8string>{
+		  lak::streamify("Failed to get window device context: "_view,
+		                 win32_error_string(L"GetDC"))};
 	}
 
 	// this is also touched in handle_size_move
@@ -130,10 +133,11 @@ lak::window_handle *lak::create_window(const lak::software_settings &)
 
 	::ShowWindow(handle->_platform_handle, SW_SHOWNORMAL);
 
-	return handle.release();
+	return lak::ok_t{handle.release()};
 }
 
-lak::window_handle *lak::create_window(const lak::opengl_settings &settings)
+lak::result<lak::window_handle *, lak::u8string> lak::create_window(
+  const lak::opengl_settings &settings)
 {
 	auto handle = lak::unique_bank_ptr<lak::window_handle>::create();
 	ASSERT(handle);
@@ -163,18 +167,18 @@ lak::window_handle *lak::create_window(const lak::opengl_settings &settings)
 
 	if (!handle->_platform_handle)
 	{
-		win32_error_popup(L"CreateWindowExW");
-		ERROR("Failed to create window");
-		return nullptr;
+		return lak::err_t<lak::u8string>{
+		  lak::streamify("Failed to create window: "_view,
+		                 win32_error_string(L"CreateWindowExW"))};
 	}
 
 	handle->_device_context = ::GetDC(handle->_platform_handle);
 
 	if (!handle->_device_context)
 	{
-		win32_error_popup(L"GetDC");
-		ERROR("Failed to get window device context");
-		return nullptr;
+		return lak::err_t<lak::u8string>{
+		  lak::streamify("Failed to get window device context: "_view,
+		                 win32_error_string(L"GetDC"))};
 	}
 
 	PIXELFORMATDESCRIPTOR format = {};
@@ -192,9 +196,9 @@ lak::window_handle *lak::create_window(const lak::opengl_settings &settings)
 
 	if (!iformat)
 	{
-		win32_error_popup(L"ChoosePixelFormat");
-		ERROR("Failed to choose pixel format");
-		return nullptr;
+		return lak::err_t<lak::u8string>{
+		  lak::streamify("Failed to choose pixel format: "_view,
+		                 win32_error_string(L"ChoosePixelFormat"))};
 	}
 
 	::SetPixelFormat(handle->_device_context, iformat, &format);
@@ -205,24 +209,25 @@ lak::window_handle *lak::create_window(const lak::opengl_settings &settings)
 
 	if (!context.platform_handle)
 	{
-		win32_error_popup(L"wglCreateContext");
-		ERROR("Failed to create OpenGL context");
-		return nullptr;
+		return lak::err_t<lak::u8string>{
+		  lak::streamify("Failed to create OpenGL context: "_view,
+		                 win32_error_string(L"wglCreateContext"))};
 	}
 
 	if (!::wglMakeCurrent(handle->_device_context, context.platform_handle))
 	{
-		win32_error_popup(L"wglMakeCurrent");
-		ERROR("Failed to make OpenGL context current");
-		return nullptr;
+		return lak::err_t<lak::u8string>{
+		  lak::streamify("Failed to make OpenGL context current: "_view,
+		                 win32_error_string(L"wglMakeCurrent"))};
 	}
 
 	::ShowWindow(handle->_platform_handle, SW_SHOWNORMAL);
 
-	return handle.release();
+	return lak::ok_t{handle.release()};
 }
 
-lak::window_handle *lak::create_window(const lak::vulkan_settings &)
+lak::result<lak::window_handle *, lak::u8string> lak::create_window(
+  const lak::vulkan_settings &)
 {
 	auto handle = lak::unique_bank_ptr<lak::window_handle>::create();
 	ASSERT(handle);
@@ -252,25 +257,25 @@ lak::window_handle *lak::create_window(const lak::vulkan_settings &)
 
 	if (!handle->_platform_handle)
 	{
-		win32_error_popup(L"CreateWindowExW");
-		ERROR("Failed to create window");
-		return nullptr;
+		return lak::err_t<lak::u8string>{
+		  lak::streamify("Failed to create window: "_view,
+		                 win32_error_string(L"CreateWindowExW"))};
 	}
 
 	handle->_device_context = ::GetDC(handle->_platform_handle);
 
 	if (!handle->_device_context)
 	{
-		win32_error_popup(L"GetDC");
-		ERROR("Failed to get window device context");
-		return nullptr;
+		return lak::err_t<lak::u8string>{
+		  lak::streamify("Failed to get window device context: "_view,
+		                 win32_error_string(L"GetDC"))};
 	}
 
 	// auto &context = handle->_context.emplace<lak::vulkan_context>();
 
 	::ShowWindow(handle->_platform_handle, SW_SHOWNORMAL);
 
-	return handle.release();
+	return lak::ok_t{handle.release()};
 }
 
 bool lak::destroy_window(lak::window_handle *handle)
