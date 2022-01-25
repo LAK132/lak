@@ -93,6 +93,8 @@ namespace lak
 
 		inline constexpr span<T, lak::dynamic_extent> last(size_t count) const;
 
+		inline constexpr bool contains(const T *ptr) const noexcept;
+
 		inline auto to_string() const;
 		inline auto stringify() const;
 
@@ -150,6 +152,8 @@ namespace lak
 
 		inline constexpr size_t size_bytes() const noexcept;
 
+		inline constexpr bool contains(const void *ptr) const noexcept;
+
 		// add const
 		constexpr operator span<const void, SIZE>() const noexcept;
 
@@ -190,6 +194,8 @@ namespace lak
 		inline constexpr size_t size() const noexcept;
 
 		inline constexpr size_t size_bytes() const noexcept;
+
+		inline constexpr bool contains(const void *ptr) const noexcept;
 
 		// reinterpret cast to T
 		template<lak::concepts::ptr_reinterpret_castable_from<const void> T>
@@ -278,6 +284,8 @@ namespace lak
 
 		inline constexpr span<T, lak::dynamic_extent> last(size_t count) const;
 
+		inline constexpr bool contains(const T *ptr) const noexcept;
+
 		inline auto to_string() const;
 		inline auto stringify() const;
 
@@ -325,6 +333,8 @@ namespace lak
 
 		inline constexpr size_t size_bytes() const noexcept;
 
+		inline constexpr bool contains(const void *ptr) const noexcept;
+
 		// add const
 		constexpr operator span<const void, lak::dynamic_extent>() const noexcept;
 
@@ -362,6 +372,8 @@ namespace lak
 		inline constexpr size_t size() const noexcept;
 
 		inline constexpr size_t size_bytes() const noexcept;
+
+		inline constexpr bool contains(const void *ptr) const noexcept;
 
 		// reinterpret cast to U
 		template<lak::concepts::ptr_reinterpret_castable_from<const void> U>

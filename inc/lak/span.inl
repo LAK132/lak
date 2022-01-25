@@ -1,5 +1,7 @@
 #include "lak/span_forward.hpp"
 
+#include "lak/ptr_intrin.hpp"
+
 #include <array>
 #include <vector>
 
@@ -64,6 +66,12 @@ inline constexpr lak::span<T, count> lak::span<T, SIZE>::last() const
 {
 	static_assert(count <= SIZE, "subspan too large");
 	return lak::span<T, count>::from_ptr(begin() + (size() - count));
+}
+
+template<typename T, size_t SIZE>
+inline constexpr bool lak::span<T, SIZE>::contains(const T *ptr) const noexcept
+{
+	return lak::ptr_in_range(ptr, _data, SIZE);
 }
 
 // add const
@@ -131,6 +139,13 @@ inline constexpr size_t lak::span<void, SIZE>::size_bytes() const noexcept
 	return SIZE;
 }
 
+template<size_t SIZE>
+inline constexpr bool lak::span<void, SIZE>::contains(
+  const void *ptr) const noexcept
+{
+	return __lakc_ptr_in_range(ptr, _data, SIZE);
+}
+
 // add const
 template<size_t SIZE>
 constexpr lak::span<void, SIZE>::operator span<const void, SIZE>()
@@ -187,6 +202,13 @@ inline constexpr size_t lak::span<const void, SIZE>::size_bytes()
   const noexcept
 {
 	return SIZE;
+}
+
+template<size_t SIZE>
+inline constexpr bool lak::span<const void, SIZE>::contains(
+  const void *ptr) const noexcept
+{
+	return __lakc_ptr_in_range(ptr, _data, SIZE);
 }
 
 // reinterpret cast to T
@@ -250,6 +272,13 @@ inline constexpr T *lak::span<T, lak::dynamic_extent>::end() const noexcept
 	return _data + _size;
 }
 
+template<typename T>
+inline constexpr bool lak::span<T, lak::dynamic_extent>::contains(
+  const T *ptr) const noexcept
+{
+	return lak::ptr_in_range(ptr, _data, _size);
+}
+
 // add const
 template<typename T>
 constexpr lak::span<T, lak::dynamic_extent>::
@@ -306,6 +335,12 @@ inline constexpr size_t lak::span<void, lak::dynamic_extent>::size_bytes()
 	return _size;
 }
 
+inline constexpr bool lak::span<void, lak::dynamic_extent>::contains(
+  const void *ptr) const noexcept
+{
+	return __lakc_ptr_in_range(ptr, _data, _size);
+}
+
 // add const
 constexpr lak::span<void, lak::dynamic_extent>::
 operator span<const void, lak::dynamic_extent>() const noexcept
@@ -348,6 +383,12 @@ inline constexpr size_t
 lak::span<const void, lak::dynamic_extent>::size_bytes() const noexcept
 {
 	return _size;
+}
+
+inline constexpr bool lak::span<const void, lak::dynamic_extent>::contains(
+  const void *ptr) const noexcept
+{
+	return __lakc_ptr_in_range(ptr, _data, _size);
 }
 
 // reinterpret cast to U
