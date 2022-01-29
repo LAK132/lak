@@ -12,6 +12,7 @@ laktest = static_library(
     'functional.cpp',
     'integer_range.cpp',
     'json.cpp',
+    'macro_utils.cpp',
     'ptr_intrin.cpp',
     'result.cpp',
     'span_manip.cpp',

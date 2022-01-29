@@ -96,12 +96,15 @@
 	LAK_SGR_STR("48;2;" STRINGIFY(r) ";" STRINGIFY(g) ";" STRINGIFY(b))
 
 #undef do_with
+// do_with (var = stmt) { }
 #define do_with(...)                                                          \
 	if (__VA_ARGS__; false)                                                     \
 		;                                                                         \
 	else
 
 #undef for_or
+// for_or (pre, condition, post) { }
+// else { }
 #define for_or(PRE_STATEMENT, CONDITION, ...)                                 \
 	if (PRE_STATEMENT; CONDITION)                                               \
 		for (bool UNIQUIFY(FIRST_LOOP_) = true;                                   \
@@ -109,39 +112,57 @@
 		     (UNIQUIFY(FIRST_LOOP_) = false), (__VA_ARGS__))
 
 #undef range_for_or
-#define range_for_or(RANGE, ...)                                              \
-	if (auto &&UNIQUIFY(LOOP_RANGE_) = RANGE;                                   \
+// range_for_or (auto& v, range) { }
+// else { }
+#define range_for_or(VAR, ...)                                                \
+	if (auto &&UNIQUIFY(LOOP_RANGE_){__VA_ARGS__};                              \
 	    UNIQUIFY(LOOP_RANGE_).begin() != UNIQUIFY(LOOP_RANGE_).end())           \
-		for (__VA_ARGS__ : UNIQUIFY(LOOP_RANGE_))
+		for (VAR : UNIQUIFY(LOOP_RANGE_))
 
 #undef while_or
+// while_or (condition) { }
+// else { }
 #define while_or(...)                                                         \
 	if (__VA_ARGS__)                                                            \
 		for (bool UNIQUIFY(FIRST_LOOP_) = true;                                   \
 		     UNIQUIFY(FIRST_LOOP_) || (__VA_ARGS__);                              \
 		     UNIQUIFY(FIRST_LOOP_) = false)
 
+#undef if_ref
+// if_ref (auto &ref, ptr) { }
+#define if_ref(VAR, ...)                                                      \
+	if (auto &UNIQUIFY(PTR_){__VA_ARGS__}; UNIQUIFY(PTR_))                      \
+		do_with (VAR{*UNIQUIFY(PTR_)})
+
 #undef if_in
+// if_in (value, range, i) { range[i]; }
 #define if_in(VALUE, RANGE, INDEX)                                            \
-	auto &&UNIQUIFY(FIND_RANGE_) = RANGE;                                       \
-	auto &&UNIQUIFY(FIND_VALUE_) = VALUE;                                       \
-	size_t UNIQUIFY(FIND_INDEX_) = 0;                                           \
-	for (; UNIQUIFY(FIND_INDEX_) < UNIQUIFY(FIND_RANGE_).size();                \
-	     ++UNIQUIFY(FIND_INDEX_))                                               \
-		if (UNIQUIFY(FIND_RANGE_)[UNIQUIFY(FIND_INDEX_)] ==                       \
-		    UNIQUIFY(FIND_VALUE_))                                                \
-			break;                                                                  \
-	if (size_t INDEX = UNIQUIFY(FIND_INDEX_);                                   \
-	    INDEX < UNIQUIFY(FIND_RANGE_).size())
+	do_with (auto &&UNIQUIFY(FIND_RANGE_){RANGE})                               \
+		if (const size_t INDEX = [](auto &&value, auto &&range) -> size_t         \
+		    {                                                                     \
+			    size_t result = 0;                                                  \
+			    for (auto &v : range)                                               \
+				    if (v == value)                                                   \
+					    break;                                                          \
+				    else                                                              \
+					    ++result;                                                       \
+			    return result;                                                      \
+		    }(VALUE, UNIQUIFY(FIND_RANGE_));                                      \
+		    INDEX < UNIQUIFY(FIND_RANGE_).size())
 
 #undef if_not_in
+// if_not_in (value, range) { }
 #define if_not_in(VALUE, RANGE)                                               \
-	auto &&UNIQUIFY(FIND_RANGE_) = RANGE;                                       \
-	auto &&UNIQUIFY(FIND_VALUE_) = VALUE;                                       \
-	size_t UNIQUIFY(FIND_INDEX_) = 0;                                           \
-	for (; UNIQUIFY(FIND_INDEX_) < UNIQUIFY(FIND_RANGE_).size();                \
-	     ++UNIQUIFY(FIND_INDEX_))                                               \
-		if (UNIQUIFY(FIND_RANGE_)[UNIQUIFY(FIND_INDEX_)] ==                       \
-		    UNIQUIFY(FIND_VALUE_))                                                \
-			break;                                                                  \
-	if (UNIQUIFY(FIND_INDEX_) == UNIQUIFY(FIND_RANGE_).size())
+	do_with (auto &&UNIQUIFY(FIND_RANGE_){RANGE})                               \
+		if (const size_t UNIQUIFY(INDEX_) = [](auto &&value,                      \
+		                                       auto &&range) -> size_t            \
+		    {                                                                     \
+			    size_t result = 0;                                                  \
+			    for (auto &v : range)                                               \
+				    if (v == value)                                                   \
+					    break;                                                          \
+				    else                                                              \
+					    ++result;                                                       \
+			    return result;                                                      \
+		    }(VALUE, UNIQUIFY(FIND_RANGE_));                                      \
+		    UNIQUIFY(INDEX_) >= UNIQUIFY(FIND_RANGE_).size())
