@@ -9,6 +9,8 @@ namespace lak
 {
 	/* --- alphanumeric --- */
 
+	inline constexpr lak::span<const char8_t> alphanumerics();
+	inline constexpr bool is_alphanumeric(char8_t c);
 	// '0'-'9' -> 0-9
 	inline lak::result<uint8_t> from_alphanumeric(char8_t c);
 

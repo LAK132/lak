@@ -6,10 +6,24 @@ namespace
 {
 	namespace impl
 	{
+		constexpr char8_t alphanum[] = {
+		  u8'0',
+		  u8'1',
+		  u8'2',
+		  u8'3',
+		  u8'4',
+		  u8'5',
+		  u8'6',
+		  u8'7',
+		  u8'8',
+		  u8'9',
+		};
+
 		constexpr char8_t hex_alphanum[] = {
 		  u8'0', u8'1', u8'2', u8'3', u8'4', u8'5', u8'6', u8'7',
 		  u8'8', u8'9', u8'A', u8'B', u8'C', u8'D', u8'E', u8'F',
-		  u8'a', u8'b', u8'c', u8'd', u8'e', u8'f'};
+		  u8'a', u8'b', u8'c', u8'd', u8'e', u8'f',
+		};
 
 		constexpr char32_t control_codes[0x41] = {
 		  U'\u0000', // null
@@ -120,9 +134,19 @@ namespace
 
 /* --- alphanumeric --- */
 
+inline constexpr lak::span<const char8_t> lak::alphanumerics()
+{
+	return lak::span(impl::alphanum);
+}
+
+inline constexpr bool lak::is_alphanumeric(char8_t c)
+{
+	return c >= u8'0' && c <= u8'9';
+}
+
 inline lak::result<uint8_t> lak::from_alphanumeric(char8_t c)
 {
-	if (c >= u8'0' && c <= u8'9')
+	if (lak::is_alphanumeric(c))
 		return lak::ok_t{uint8_t(c - u8'0')};
 	else
 		return lak::err_t{};
