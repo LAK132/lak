@@ -80,7 +80,7 @@ BEGIN_TEST(tokeniser2)
 		}
 		else if (token == u8"\""_view)
 		{
-			if (auto str{tokeniser.read_char()}; str.source == u8"\""_view)
+			if (auto s{tokeniser.read_char()}; s.source == u8"\""_view)
 			{
 				// it was an empty string
 				ASSERT_UNREACHABLE();
@@ -91,11 +91,11 @@ BEGIN_TEST(tokeniser2)
 				while (t.source.last(1)[0] == u8'\\') t = tokeniser.until(U'"');
 				ASSERT_EQUAL(tokeniser.read_char().source, u8"\""_view);
 				// :TODO: handle end of input before end of string
-				str.source = lak::string_view{str.source.begin(), t.source.end()};
-				str.position.end = t.position.end;
+				s.source       = lak::string_view{s.source.begin(), t.source.end()};
+				s.position.end = t.position.end;
 
 				result += u8"\""_view;
-				result += str.source;
+				result += s.source;
 				result += u8"\" "_view;
 			}
 		}
