@@ -732,17 +732,17 @@ namespace lak
 // else { }
 #define if_let_ok(VALUE, ...)                                                 \
 	if (auto &&UNIQUIFY(RESULT_){__VA_ARGS__}; UNIQUIFY(RESULT_).is_ok())       \
-		do_with (                                                                 \
-		  VALUE{lak::forward<decltype(UNIQUIFY(RESULT_))>(UNIQUIFY(RESULT_))      \
-		          .unsafe_unwrap()})
+		do_with (VALUE{                                                           \
+		           lak::forward<decltype(UNIQUIFY(RESULT_))>(UNIQUIFY(RESULT_))   \
+		             .unsafe_unwrap()})
 
 // if_let_err (auto& err, result) { err; }
 // else { }
 #define if_let_err(VALUE, ...)                                                \
 	if (auto &&UNIQUIFY(RESULT_){__VA_ARGS__}; UNIQUIFY(RESULT_).is_err())      \
-		do_with (                                                                 \
-		  VALUE{lak::forward<decltype(UNIQUIFY(RESULT_))>(UNIQUIFY(RESULT_))      \
-		          .unsafe_unwrap_err()})
+		do_with (VALUE{                                                           \
+		           lak::forward<decltype(UNIQUIFY(RESULT_))>(UNIQUIFY(RESULT_))   \
+		             .unsafe_unwrap_err()})
 
 #ifndef NOLOG
 #	define EXPECT(...)                                                         \
