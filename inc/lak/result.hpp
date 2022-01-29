@@ -728,17 +728,21 @@ namespace lak
 		  lak::is_result_v<T> && lak::is_same_v<lak::result_err_type_t<T>, ERR>;
 	}
 
+// if_let_ok (auto& ok, result) { ok; }
+// else { }
 #define if_let_ok(VALUE, ...)                                                 \
-	if (auto &&UNIQUIFY(RESULT_) = __VA_ARGS__; UNIQUIFY(RESULT_).is_ok())      \
-		do_with (VALUE =                                                          \
-		           lak::forward<decltype(UNIQUIFY(RESULT_))>(UNIQUIFY(RESULT_))   \
-		             .unsafe_unwrap())
+	if (auto &&UNIQUIFY(RESULT_){__VA_ARGS__}; UNIQUIFY(RESULT_).is_ok())       \
+		do_with (                                                                 \
+		  VALUE{lak::forward<decltype(UNIQUIFY(RESULT_))>(UNIQUIFY(RESULT_))      \
+		          .unsafe_unwrap()})
 
+// if_let_err (auto& err, result) { err; }
+// else { }
 #define if_let_err(VALUE, ...)                                                \
-	if (auto &&UNIQUIFY(RESULT_) = __VA_ARGS__; UNIQUIFY(RESULT_).is_err())     \
-		do_with (VALUE =                                                          \
-		           lak::forward<decltype(UNIQUIFY(RESULT_))>(UNIQUIFY(RESULT_))   \
-		             .unsafe_unwrap_err())
+	if (auto &&UNIQUIFY(RESULT_){__VA_ARGS__}; UNIQUIFY(RESULT_).is_err())      \
+		do_with (                                                                 \
+		  VALUE{lak::forward<decltype(UNIQUIFY(RESULT_))>(UNIQUIFY(RESULT_))      \
+		          .unsafe_unwrap_err()})
 
 #ifndef NOLOG
 #	define EXPECT(...)                                                         \
