@@ -131,7 +131,7 @@
 #undef if_ref
 // if_ref (auto &ref, ptr) { }
 #define if_ref(VAR, ...)                                                      \
-	if (auto &UNIQUIFY(PTR_){__VA_ARGS__}; UNIQUIFY(PTR_))                      \
+	if (auto &&UNIQUIFY(PTR_){__VA_ARGS__}; UNIQUIFY(PTR_))                     \
 		do_with (VAR{*UNIQUIFY(PTR_)})
 
 #undef if_in

@@ -390,6 +390,9 @@ namespace lak
 	span(const RANGE &r)
 	  -> span<lak::remove_pointer_t<decltype(r.data())>, lak::dynamic_extent>;
 
+	template<typename T>
+	span(std::initializer_list<T> &) -> span<const T>;
+
 	template<typename T, size_t N>
 	span(const lak::array<T, N> &) -> span<const T, N>;
 

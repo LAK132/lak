@@ -265,6 +265,18 @@ namespace lak
 
 		template<size_t I>
 		const auto *get() const;
+
+		template<typename T>
+		auto *get()
+		{
+			return get<index_of<T>>();
+		}
+
+		template<typename T>
+		const auto *get() const
+		{
+			return get<index_of<T>>();
+		}
 	};
 
 	static_assert(lak::is_same_v<lak::variant<char>::value_type<0>, char>);

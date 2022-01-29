@@ -48,9 +48,8 @@ namespace lak
 
 		optional(lak::nullopt_t) {}
 		template<typename U>
-		optional(U &&other) : _has_value(true), _value(lak::forward<U>(other))
-		{
-		}
+		requires requires { value_type(lak::declval<U>()); } //
+		optional(U &&other) : _has_value(true), _value(lak::forward<U>(other)) {}
 		template<typename... ARGS>
 		optional(lak::in_place_t, ARGS &&...args)
 		: _has_value(true), _value(lak::forward<ARGS>(args)...)
@@ -65,6 +64,7 @@ namespace lak
 				emplace(other._value.value());
 			else
 				reset();
+			return *this;
 		}
 		optional &operator=(optional &&other)
 		{
@@ -72,6 +72,7 @@ namespace lak
 				emplace(lak::move(other._value.value()));
 			else
 				reset();
+			return *this;
 		}
 
 		optional &operator=(lak::nullopt_t)

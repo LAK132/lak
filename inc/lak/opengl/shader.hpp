@@ -3,11 +3,11 @@
 
 #include "lak/opengl/texture.hpp"
 
+#include "lak/optional.hpp"
 #include "lak/span.hpp"
+#include "lak/string.hpp"
 
 #include <memory>
-#include <optional>
-#include <string>
 
 namespace lak
 {
@@ -100,7 +100,7 @@ namespace lak
 			inline operator GLuint() const { return _program; }
 			inline operator GLint() const { return (GLint)_program; }
 			inline GLuint get() const { return _program; }
-			std::optional<std::string> link_error() const;
+			lak::optional<lak::astring> link_error() const;
 
 			std::vector<shader_attribute> attributes() const;
 			std::vector<shader_uniform> uniforms() const;
@@ -108,8 +108,8 @@ namespace lak
 			shader_attribute attribute(GLuint attr) const;
 			shader_uniform uniform(GLuint unif) const;
 
-			std::optional<GLuint> attrib_location(const GLchar *name) const;
-			std::optional<GLuint> uniform_location(const GLchar *name) const;
+			lak::optional<GLuint> attrib_location(const GLchar *name) const;
+			lak::optional<GLuint> uniform_location(const GLchar *name) const;
 
 			shader_attribute assert_attribute(const GLchar *name) const;
 			shader_uniform assert_uniform(const GLchar *name) const;

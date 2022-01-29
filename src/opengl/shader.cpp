@@ -16,7 +16,7 @@ namespace lak
 
 		shader &shader::operator=(shader &&other)
 		{
-			std::swap(_shader, other._shader);
+			lak::swap(_shader, other._shader);
 			return *this;
 		}
 
@@ -106,7 +106,7 @@ namespace lak
 
 		program &program::operator=(program &&other)
 		{
-			std::swap(_program, other._program);
+			lak::swap(_program, other._program);
 			return *this;
 		}
 
@@ -156,7 +156,7 @@ namespace lak
 			return *this;
 		}
 
-		std::optional<std::string> program::link_error() const
+		lak::optional<lak::astring> program::link_error() const
 		{
 			GLint linked;
 			glGetProgramiv(_program, GL_LINK_STATUS, &linked);
@@ -171,9 +171,9 @@ namespace lak
 				glGetProgramInfoLog(_program, msgSize, nullptr, msg.data());
 				ASSERT(lak::opengl::check_error());
 				msg[msgSize] = 0;
-				return std::make_optional(lak::astring(msg.data()));
+				return lak::optional<lak::astring>(lak::astring(msg.data()));
 			}
-			return std::nullopt;
+			return lak::nullopt;
 		}
 
 		program &program::clear()
@@ -212,7 +212,7 @@ namespace lak
 
 			for (GLuint i = 0; i < attributes.size(); ++i)
 			{
-				std::memset(name.data(), 0, name.size());
+				lak::fill(lak::span(name), char(0));
 				glGetActiveAttrib(_program,
 				                  i,
 				                  (GLsizei)name.size(),
@@ -245,7 +245,7 @@ namespace lak
 
 			for (GLuint i = 0; i < uniforms.size(); ++i)
 			{
-				std::memset(name.data(), 0, name.size());
+				lak::fill(lak::span(name), char(0));
 				glGetActiveUniform(_program,
 				                   i,
 				                   (GLsizei)name.size(),
@@ -273,7 +273,7 @@ namespace lak
 			  1);
 			ASSERT(lak::opengl::check_error());
 
-			std::memset(name.data(), 0, name.size());
+			lak::fill(lak::span(name), char(0));
 			glGetActiveAttrib(_program,
 			                  attr,
 			                  (GLsizei)name.size(),
@@ -299,7 +299,7 @@ namespace lak
 			            1);
 			ASSERT(lak::opengl::check_error());
 
-			std::memset(name.data(), 0, name.size());
+			lak::fill(lak::span(name), char(0));
 			glGetActiveUniform(_program,
 			                   unif,
 			                   (GLsizei)name.size(),
@@ -315,18 +315,18 @@ namespace lak
 			return result;
 		}
 
-		std::optional<GLuint> program::attrib_location(const GLchar *name) const
+		lak::optional<GLuint> program::attrib_location(const GLchar *name) const
 		{
 			auto loc = glGetAttribLocation(_program, name);
 			ASSERT(lak::opengl::check_error());
-			return loc == -1 ? std::nullopt : std::optional{(GLuint)loc};
+			return loc == -1 ? lak::nullopt : lak::optional<GLuint>{(GLuint)loc};
 		}
 
-		std::optional<GLuint> program::uniform_location(const GLchar *name) const
+		lak::optional<GLuint> program::uniform_location(const GLchar *name) const
 		{
 			auto loc = glGetUniformLocation(_program, name);
 			ASSERT(lak::opengl::check_error());
-			return loc == -1 ? std::nullopt : std::optional{(GLuint)loc};
+			return loc == -1 ? lak::nullopt : lak::optional<GLuint>{(GLuint)loc};
 		}
 
 		shader_attribute program::assert_attribute(const GLchar *name) const

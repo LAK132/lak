@@ -40,11 +40,16 @@ namespace lak
 	char32_t codepoint(const lak::string<CHAR> &str, size_t offset);
 
 	template<typename CHAR>
-	using codepoint_buffer_t = lak::span<CHAR, lak::chars_per_codepoint_v<CHAR>>;
+	using codepoint_buffer_t = CHAR[lak::chars_per_codepoint_v<CHAR>];
+
+	template<typename CHAR>
+	using codepoint_buffer_span =
+	  lak::span<CHAR, lak::chars_per_codepoint_v<CHAR>>;
+
 	template<typename CHAR,
 	         size_t SIZE,
 	         lak::enable_if_i<(SIZE >= lak::chars_per_codepoint_v<CHAR>)> = 0>
-	force_inline constexpr lak::codepoint_buffer_t<CHAR> codepoint_buffer(
+	force_inline constexpr lak::codepoint_buffer_span<CHAR> codepoint_buffer(
 	  lak::span<CHAR, SIZE> buf)
 	{
 		return buf.template first<lak::chars_per_codepoint_v<CHAR>>();
@@ -53,16 +58,16 @@ namespace lak
 	template<typename CHAR>
 	uint8_t codepoint_length(char32_t code);
 
-	lak::span<char> from_codepoint(lak::codepoint_buffer_t<char> buffer,
+	lak::span<char> from_codepoint(lak::codepoint_buffer_span<char> buffer,
 	                               char32_t code);
-	lak::span<wchar_t> from_codepoint(lak::codepoint_buffer_t<wchar_t> buffer,
+	lak::span<wchar_t> from_codepoint(lak::codepoint_buffer_span<wchar_t> buffer,
 	                                  char32_t code);
-	lak::span<char8_t> from_codepoint(lak::codepoint_buffer_t<char8_t> buffer,
+	lak::span<char8_t> from_codepoint(lak::codepoint_buffer_span<char8_t> buffer,
 	                                  char32_t code);
-	lak::span<char16_t> from_codepoint(lak::codepoint_buffer_t<char16_t> buffer,
-	                                   char32_t code);
-	lak::span<char32_t> from_codepoint(lak::codepoint_buffer_t<char32_t> buffer,
-	                                   char32_t code);
+	lak::span<char16_t> from_codepoint(
+	  lak::codepoint_buffer_span<char16_t> buffer, char32_t code);
+	lak::span<char32_t> from_codepoint(
+	  lak::codepoint_buffer_span<char32_t> buffer, char32_t code);
 
 	template<typename CHAR>
 	void append_codepoint(lak::string<CHAR> &str, char32_t code);
@@ -113,25 +118,6 @@ namespace lak
 		inline constexpr char32_t end() const noexcept;
 	};
 }
-
-#	ifndef LAK_NO_STD
-#		include <ostream>
-
-std::ostream &operator<<(std::ostream &strm,
-                         const lak::string_view<char> &str);
-
-std::ostream &operator<<(std::ostream &strm,
-                         const lak::string_view<wchar_t> &str);
-
-std::ostream &operator<<(std::ostream &strm,
-                         const lak::string_view<char8_t> &str);
-
-std::ostream &operator<<(std::ostream &strm,
-                         const lak::string_view<char16_t> &str);
-
-std::ostream &operator<<(std::ostream &strm,
-                         const lak::string_view<char32_t> &str);
-#	endif
 
 #	include "lak/unicode.inl"
 

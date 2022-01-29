@@ -21,6 +21,7 @@ laktest = static_library(
     'tokeniser.cpp',
     'trie.cpp',
     'type_pack.cpp',
+    'visit.cpp',
   ],
   override_options: 'cpp_std=' + version,
   include_directories: include_directories('../..', '../../inc'),

@@ -1,5 +1,6 @@
 #include "lak/strcast.hpp"
 #include "lak/strconv.hpp"
+#include "lak/string_ostream.hpp"
 #include "lak/string_view.hpp"
 #include "lak/type_traits.hpp"
 
@@ -45,42 +46,21 @@ lak::u8string lak::streamify(const ARGS &...args)
 			else
 				strm << "0x" << static_cast<uintmax_t>(arg);
 		}
+		else if constexpr (std::is_null_pointer_v<arg_t>)
+		{
+			strm << "nullptr";
+		}
+		else if constexpr (lak::is_string_v<lak::remove_cvref_t<arg_t>>)
+		{
+			using char_type = lak::remove_cvref_t<decltype(arg[0])>;
+			if constexpr (lak::is_pointer_v<arg_t>)
+				strm << lak::string_view<char_type>::from_c_str(arg);
+			else
+				strm << lak::string_view<char_type>(arg);
+		}
 		else
 		{
-			if constexpr (std::is_null_pointer_v<arg_t>)
-				strm << "nullptr";
-			else if constexpr (lak::is_string_v<lak::remove_cvref_t<arg_t>>)
-			{
-				using char_type = lak::remove_cvref_t<decltype(arg[0])>;
-				if constexpr (lak::is_same_v<char, char_type>)
-				{
-					// no encoding conversion required
-					if constexpr (lak::is_pointer_v<arg_t>)
-						strm << lak::string_view<char>::from_c_str(arg);
-					else
-						strm << lak::string_view(arg);
-				}
-				else if constexpr (lak::is_same_v<char8_t, char_type>)
-				{
-					// no encoding conversion required
-					if constexpr (lak::is_pointer_v<arg_t>)
-						strm << lak::string_view<char8_t>::from_c_str(arg);
-					else
-						strm << lak::string_view(arg);
-				}
-				else
-				{
-					// encoding conversion required
-					if constexpr (lak::is_pointer_v<arg_t>)
-						strm << lak::strconv<char8_t>(
-						  lak::string_view<lak::remove_const_t<
-						    lak::remove_pointer_t<arg_t>>>::from_c_str(arg));
-					else
-						strm << lak::strconv<char8_t>(lak::string_view(arg));
-				}
-			}
-			else
-				strm << arg;
+			strm << arg;
 		}
 	};
 

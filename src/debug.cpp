@@ -2,6 +2,7 @@
 
 #include "lak/os.hpp"
 #include "lak/strconv.hpp"
+#include "lak/string_ostream.hpp"
 
 #include <fstream>
 
@@ -19,10 +20,10 @@ void lak::debugger_t::std_out(const lak::u8string &line_info,
 	       << lak::strconv<LAK_DEBUG_STREAM_CHAR>(str);
 	if (live_output_enabled && !live_errors_only)
 	{
-		::operator<<(std::cout, lak::as_astring(indent));
+		std::cout << indent;
 		if (line_info_enabled)
 		{
-			::operator<<(std::cout, lak::as_astring(line_info));
+			std::cout << line_info;
 		}
 		std::cout << str << std::flush;
 	}
@@ -37,10 +38,10 @@ void lak::debugger_t::std_out(const lak::u8string &line_info,
 	       << lak::strconv<LAK_DEBUG_STREAM_CHAR>(str);
 	if (live_output_enabled && !live_errors_only)
 	{
-		std::wcout << lak::to_wstring(indent);
+		std::wcout << indent;
 		if (line_info_enabled)
 		{
-			std::wcout << lak::to_wstring(line_info);
+			std::wcout << line_info;
 		}
 		std::wcout << str << std::flush;
 	}
@@ -55,12 +56,12 @@ void lak::debugger_t::std_out(const lak::u8string &line_info,
 	       << lak::strconv<LAK_DEBUG_STREAM_CHAR>(str);
 	if (live_output_enabled && !live_errors_only)
 	{
-		std::wcout << lak::to_wstring(indent);
+		std::wcout << indent;
 		if (line_info_enabled)
 		{
-			std::wcout << lak::to_wstring(line_info);
+			std::wcout << line_info;
 		}
-		std::wcout << lak::to_wstring(str) << std::flush;
+		std::wcout << str << std::flush;
 	}
 }
 
@@ -73,10 +74,10 @@ void lak::debugger_t::std_err(const lak::u8string &line_info,
 	       << lak::strconv<LAK_DEBUG_STREAM_CHAR>(str);
 	if (live_output_enabled)
 	{
-		::operator<<(std::cout, lak::as_astring(indent));
+		std::cout << indent;
 		if (line_info_enabled)
 		{
-			::operator<<(std::cout, lak::as_astring(line_info));
+			std::cout << line_info;
 		}
 		std::cout << str << std::flush;
 	}
@@ -91,10 +92,10 @@ void lak::debugger_t::std_err(const lak::u8string &line_info,
 	       << lak::strconv<LAK_DEBUG_STREAM_CHAR>(str);
 	if (live_output_enabled)
 	{
-		std::wcout << lak::to_wstring(indent);
+		std::wcout << indent;
 		if (line_info_enabled)
 		{
-			std::wcout << lak::to_wstring(line_info);
+			std::wcout << line_info;
 		}
 		std::wcout << str << std::flush;
 	}
@@ -109,12 +110,12 @@ void lak::debugger_t::std_err(const lak::u8string &line_info,
 	       << lak::strconv<LAK_DEBUG_STREAM_CHAR>(str);
 	if (live_output_enabled)
 	{
-		std::wcout << lak::to_wstring(indent);
+		std::wcout << indent;
 		if (line_info_enabled)
 		{
-			std::wcout << lak::to_wstring(line_info);
+			std::wcout << line_info;
 		}
-		std::wcout << lak::to_wstring(str) << std::flush;
+		std::wcout << str << std::flush;
 	}
 }
 
@@ -168,7 +169,7 @@ void lak::debugger_t::std_err_cont(const lak::u8string &str)
 	stream << lak::strconv<LAK_DEBUG_STREAM_CHAR>(str);
 	if (live_output_enabled)
 	{
-		std::wcout << lak::to_wstring(str) << std::flush;
+		std::wcout << str << std::flush;
 	}
 }
 
@@ -210,7 +211,7 @@ std::filesystem::path lak::debugger_t::save(const std::filesystem::path &path)
 	if (!path.string().empty())
 	{
 		std::ofstream file(path, std::ios::out | std::ios::trunc);
-		if (file.is_open()) ::operator<<(file, lak::as_astring(str()));
+		if (file.is_open()) file << str();
 	}
 
 	std::error_code ec;

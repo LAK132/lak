@@ -1,5 +1,7 @@
 #include "lak/char_utils.hpp"
 
+#include "lak/span_manip.hpp"
+
 namespace
 {
 	namespace impl
