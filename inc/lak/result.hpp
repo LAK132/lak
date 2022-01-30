@@ -213,6 +213,39 @@ namespace lak
 				return lak::err_t{forward_err()};
 		}
 
+		/* --- map_or --- */
+
+		template<lak::concepts::invocable<ok_reference> F, typename DEF>
+		requires requires
+		{
+			lak::invoke_result_t<F, ok_reference>{lak::declval<DEF>()};
+		} //
+		auto map_or(F &&f, DEF &&def) & -> lak::invoke_result_t<F, ok_reference>
+		{
+			return is_ok() ? f(get_ok()) : lak::forward<DEF>(def);
+		}
+
+		template<lak::concepts::invocable<ok_const_reference> F, typename DEF>
+		requires requires
+		{
+			lak::invoke_result_t<F, ok_const_reference>{lak::declval<DEF>()};
+		} //
+		auto map_or(
+		  F &&f, DEF &&def) const & -> lak::invoke_result_t<F, ok_const_reference>
+		{
+			return is_ok() ? f(get_ok()) : lak::forward<DEF>(def);
+		}
+
+		template<lak::concepts::invocable<OK &&> F, typename DEF>
+		requires requires
+		{
+			lak::invoke_result_t<F, OK &&>{lak::declval<DEF>()};
+		} //
+		auto map_or(F &&f, DEF &&def) && -> lak::invoke_result_t<F, OK &&>
+		{
+			return is_ok() ? f(forward_ok()) : lak::forward<DEF>(def);
+		}
+
 		/* --- map_err --- */
 
 		template<lak::concepts::invocable<err_reference> F>
@@ -240,6 +273,40 @@ namespace lak
 				return lak::ok_t{forward_ok()};
 			else
 				return lak::err_t{f(forward_err())};
+		}
+
+		/* --- map_err_or --- */
+
+		template<lak::concepts::invocable<err_reference> F, typename DEF>
+		requires requires
+		{
+			lak::invoke_result_t<F, err_reference>{lak::declval<DEF>()};
+		} //
+		auto map_err_or(F &&f,
+		                DEF &&def) & -> lak::invoke_result_t<F, err_reference>
+		{
+			return is_err() ? f(get_err()) : lak::forward<DEF>(def);
+		}
+
+		template<lak::concepts::invocable<err_const_reference> F, typename DEF>
+		requires requires
+		{
+			lak::invoke_result_t<F, err_const_reference>{lak::declval<DEF>()};
+		} //
+		auto map_err_or(
+		  F &&f, DEF &&def) const & -> lak::invoke_result_t<F, err_const_reference>
+		{
+			return is_err() ? f(get_err()) : lak::forward<DEF>(def);
+		}
+
+		template<lak::concepts::invocable<ERR &&> F, typename DEF>
+		requires requires
+		{
+			lak::invoke_result_t<F, ERR &&>{lak::declval<DEF>()};
+		} //
+		auto map_err_or(F &&f, DEF &&def) && -> lak::invoke_result_t<F, ERR &&>
+		{
+			return is_err() ? f(forward_err()) : lak::forward<DEF>(def);
 		}
 
 		/* --- map_expect_value --- */
@@ -495,6 +562,26 @@ namespace lak
 				return forward_ok();
 			else
 				return lak::err_t{forward_err()};
+		}
+
+		/* --- visit --- */
+
+		template<typename F>
+		requires lak::concepts::invocable<F, ok_reference> &&
+		  lak::concepts::invocable<F, err_reference> //
+		auto visit(F &&f) & { return is_ok() ? f(get_ok()) : f(get_err()); }
+
+		template<typename F>
+		requires lak::concepts::invocable<F, ok_const_reference> &&
+		  lak::concepts::invocable<F, err_const_reference> //
+		auto visit(F &&f) const & { return is_ok() ? f(get_ok()) : f(get_err()); }
+
+		template<typename F>
+		requires lak::concepts::invocable<F, OK &&> &&
+		  lak::concepts::invocable<F, ERR &&> //
+		auto visit(F &&f) &&
+		{
+			return is_ok() ? f(forward_ok()) : f(forward_err());
 		}
 
 		/* --- if_ok --- */
@@ -769,13 +856,13 @@ namespace lak
 	if_err([&](const auto &err) { WARNING(__VA_ARGS__, ": ", err); })
 
 #define RES_TRY_FLUENT(...)                                                   \
-	auto UNIQUIFY(RESULT_) = __VA_ARGS__;                                       \
+	auto UNIQUIFY(RESULT_){__VA_ARGS__};                                        \
 	if (UNIQUIFY(RESULT_).is_err())                                             \
 		return lak::err_t{lak::move(UNIQUIFY(RESULT_)).unsafe_unwrap_err()};      \
 	lak::move(UNIQUIFY(RESULT_)).unsafe_unwrap()
 
 #define RES_TRY_ASSIGN(ASSIGN, ...)                                           \
-	auto UNIQUIFY(RESULT_) = __VA_ARGS__;                                       \
+	auto UNIQUIFY(RESULT_){__VA_ARGS__};                                        \
 	if (UNIQUIFY(RESULT_).is_err())                                             \
 		return lak::err_t{lak::move(UNIQUIFY(RESULT_)).unsafe_unwrap_err()};      \
 	ASSIGN lak::move(UNIQUIFY(RESULT_)).unsafe_unwrap()
