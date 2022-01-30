@@ -216,34 +216,30 @@ namespace lak
 		/* --- map_or --- */
 
 		template<lak::concepts::invocable<ok_reference> F, typename DEF>
-		requires requires
+		auto map_or(F &&f, DEF &&def) & -> decltype(f(get_ok()))
 		{
-			lak::invoke_result_t<F, ok_reference>{lak::declval<DEF>()};
-		} //
-		auto map_or(F &&f, DEF &&def) & -> lak::invoke_result_t<F, ok_reference>
-		{
-			return is_ok() ? f(get_ok()) : lak::forward<DEF>(def);
+			if (is_ok())
+				return f(get_ok());
+			else
+				return lak::forward<DEF>(def);
 		}
 
 		template<lak::concepts::invocable<ok_const_reference> F, typename DEF>
-		requires requires
+		auto map_or(F &&f, DEF &&def) const & -> decltype(f(get_ok()))
 		{
-			lak::invoke_result_t<F, ok_const_reference>{lak::declval<DEF>()};
-		} //
-		auto map_or(
-		  F &&f, DEF &&def) const & -> lak::invoke_result_t<F, ok_const_reference>
-		{
-			return is_ok() ? f(get_ok()) : lak::forward<DEF>(def);
+			if (is_ok())
+				return f(get_ok());
+			else
+				return lak::forward<DEF>(def);
 		}
 
 		template<lak::concepts::invocable<OK &&> F, typename DEF>
-		requires requires
+		auto map_or(F &&f, DEF &&def) && -> decltype(f(forward_ok()))
 		{
-			lak::invoke_result_t<F, OK &&>{lak::declval<DEF>()};
-		} //
-		auto map_or(F &&f, DEF &&def) && -> lak::invoke_result_t<F, OK &&>
-		{
-			return is_ok() ? f(forward_ok()) : lak::forward<DEF>(def);
+			if (is_ok())
+				return f(forward_ok());
+			else
+				return lak::forward<DEF>(def);
 		}
 
 		/* --- map_err --- */
@@ -278,35 +274,30 @@ namespace lak
 		/* --- map_err_or --- */
 
 		template<lak::concepts::invocable<err_reference> F, typename DEF>
-		requires requires
+		auto map_err_or(F &&f, DEF &&def) & -> decltype(f(get_err()))
 		{
-			lak::invoke_result_t<F, err_reference>{lak::declval<DEF>()};
-		} //
-		auto map_err_or(F &&f,
-		                DEF &&def) & -> lak::invoke_result_t<F, err_reference>
-		{
-			return is_err() ? f(get_err()) : lak::forward<DEF>(def);
+			if (is_err())
+				return f(get_err());
+			else
+				return lak::forward<DEF>(def);
 		}
 
 		template<lak::concepts::invocable<err_const_reference> F, typename DEF>
-		requires requires
+		auto map_err_or(F &&f, DEF &&def) const & -> decltype(f(get_err()))
 		{
-			lak::invoke_result_t<F, err_const_reference>{lak::declval<DEF>()};
-		} //
-		auto map_err_or(
-		  F &&f, DEF &&def) const & -> lak::invoke_result_t<F, err_const_reference>
-		{
-			return is_err() ? f(get_err()) : lak::forward<DEF>(def);
+			if (is_err())
+				return f(get_err());
+			else
+				return lak::forward<DEF>(def);
 		}
 
-		template<lak::concepts::invocable<ERR &&> F, typename DEF>
-		requires requires
+		template<lak::concepts::invocable<OK &&> F, typename DEF>
+		auto map_err_or(F &&f, DEF &&def) && -> decltype(f(forward_err()))
 		{
-			lak::invoke_result_t<F, ERR &&>{lak::declval<DEF>()};
-		} //
-		auto map_err_or(F &&f, DEF &&def) && -> lak::invoke_result_t<F, ERR &&>
-		{
-			return is_err() ? f(forward_err()) : lak::forward<DEF>(def);
+			if (is_err())
+				return f(forward_err());
+			else
+				return lak::forward<DEF>(def);
 		}
 
 		/* --- map_expect_value --- */
