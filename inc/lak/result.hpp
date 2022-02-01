@@ -55,6 +55,12 @@ namespace lak
 	template<typename T>
 	ok_t(T &) -> ok_t<T &>;
 
+	template<typename T>
+	lak::ok_t<T &&> move_ok(T &v)
+	{
+		return lak::ok_t<T &&>{lak::move(v)};
+	}
+
 	/* --- err_t --- */
 
 	template<typename T = lak::monostate>
@@ -68,6 +74,12 @@ namespace lak
 
 	template<typename T>
 	err_t(T &) -> err_t<T &>;
+
+	template<typename T>
+	lak::err_t<T &&> move_err(T &v)
+	{
+		return lak::err_t<T &&>{lak::move(v)};
+	}
 
 	/* --- result --- */
 
