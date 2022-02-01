@@ -527,6 +527,42 @@ namespace lak
 			return lak::forward<ERR>(expect_err("unwrap_err failed"));
 		}
 
+		/* --- unwrap_or_default --- */
+
+		OK unwrap_or_default() const &
+		{
+			if (is_ok())
+				return get_ok();
+			else
+				return OK{};
+		}
+
+		OK unwrap_or_default() &&
+		{
+			if (is_ok())
+				return forward_ok();
+			else
+				return OK{};
+		}
+
+		/* --- unwrap_err_or_default --- */
+
+		OK unwrap_err_or_default() const &
+		{
+			if (is_ok())
+				return get_ok();
+			else
+				return OK{};
+		}
+
+		OK unwrap_err_or_default() &&
+		{
+			if (is_ok())
+				return forward_ok();
+			else
+				return OK{};
+		}
+
 		/* --- unsafe_unwrap --- */
 
 		ok_reference unsafe_unwrap() & { return get_ok(); }
