@@ -4,6 +4,8 @@
 
 #include "lak/debug.hpp"
 
+/* --- pack_union --- */
+
 template<typename T, typename... U>
 template<size_t I>
 auto &lak::pack_union<T, U...>::get()
@@ -139,6 +141,8 @@ bool lak::pack_union<T>::reset_dynamic(size_t i)
 		return false;
 	}
 }
+
+/* --- variant --- */
 
 template<typename... T>
 lak::variant<T...>::variant(const variant &other)
