@@ -4,6 +4,7 @@ lak = static_library(
     'architecture.cpp',
     'compression/deflate.cpp',
     'compression/lz4.cpp',
+    'alloc.cpp',
     'debug.cpp',
     'file.cpp',
     'json.cpp',
