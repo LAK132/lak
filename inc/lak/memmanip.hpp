@@ -44,7 +44,7 @@ namespace lak
 	template<typename T>
 	force_inline void bzero(T *dst)
 	{
-		lak::fill<char>(lak::as_bytes(dst), char(0));
+		lak::fill<byte_t>(lak::as_bytes(dst), byte_t(0));
 	}
 
 	template<typename T>
