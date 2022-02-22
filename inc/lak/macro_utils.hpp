@@ -102,6 +102,10 @@
 		;                                                                         \
 	else
 
+#undef do_for
+// do_for (i < n, l = m) { }
+#define do_for(CONDITION, ...) for (__VA_ARGS__; CONDITION; __VA_ARGS__)
+
 #undef for_or
 // for_or (pre, condition, post) { }
 // else { }
