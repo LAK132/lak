@@ -170,6 +170,99 @@ namespace lak
 
 	template<typename T>
 	using dynamic_array = lak::array<T, lak::dynamic_extent>;
+
+	template<typename T, lak::alloc::locality LOC = lak::alloc::locality::global>
+	struct small_array
+	{
+		static_assert(LOC == lak::alloc::locality::local ||
+		              LOC == lak::alloc::locality::global);
+
+	private:
+		lak::span<T> _data = {};
+		size_t _size       = 0; // Ts
+
+	public:
+		using value_type      = T;
+		using size_type       = size_t;
+		using difference_type = ptrdiff_t;
+		using reference       = T &;
+		using const_reference = const T &;
+		using pointer         = T *;
+		using const_pointer   = const T *;
+		using iterator        = T *;
+		using const_iterator  = const T *;
+
+		small_array() = default;
+		small_array(const small_array &);
+		small_array &operator=(const small_array &);
+
+		small_array(small_array &&other);
+		small_array &operator=(small_array &&other);
+
+		small_array(size_t initial_size);
+
+		small_array(std::initializer_list<T> list);
+
+		template<typename ITER>
+		small_array(ITER &&begin, ITER &&end);
+
+		~small_array();
+
+		size_t size() const { return _size; }
+		size_t capacity() const { return _data.size(); }
+		size_t reserved() const { return _data.size(); }
+
+		void resize(size_t new_size);
+		void resize(size_t new_size, const T &default_value);
+		void reserve(size_t new_capacity);
+
+		void clear();
+		void force_clear();
+
+		[[nodiscard]] bool empty() const { return _size == 0; }
+
+		T *data() { return _data.data(); }
+		const T *data() const { return _data.data(); }
+
+		T *begin() { return data(); }
+		T *end() { return data() + _size; }
+
+		const T *begin() const { return data(); }
+		const T *end() const { return data() + _size; }
+
+		const T *cbegin() const { return data(); }
+		const T *cend() const { return data() + _size; }
+
+		T &at(size_t index);
+		const T &at(size_t index) const;
+
+		T &operator[](size_t index) { return data()[index]; }
+		const T &operator[](size_t index) const { return data()[index]; }
+
+		T &front();
+		const T &front() const;
+
+		T &back();
+		const T &back() const;
+
+		template<typename... ARGS>
+		T &emplace_back(ARGS &&...args);
+
+		T &push_back(const T &t);
+		T &push_back(T &&t);
+
+		void pop_back();
+
+		T *erase(const T *first, const T *last);
+
+		T *erase(const T *element) { return erase(element, element + 1); }
+	};
+
+	template<typename T>
+	using global_small_array = lak::small_array<T, lak::alloc::locality::global>;
+
+	template<typename T>
+	using local_small_array = lak::small_array<T, lak::alloc::locality::local>;
 }
 
 template<typename T, size_t S>
@@ -177,6 +270,14 @@ bool operator==(const lak::array<T, S> &a, const lak::array<T, S> &b);
 
 template<typename T, size_t S>
 bool operator!=(const lak::array<T, S> &a, const lak::array<T, S> &b);
+
+template<typename T, lak::alloc::locality LOC>
+bool operator==(const lak::small_array<T, LOC> &a,
+                const lak::small_array<T, LOC> &b);
+
+template<typename T, lak::alloc::locality LOC>
+bool operator!=(const lak::small_array<T, LOC> &a,
+                const lak::small_array<T, LOC> &b);
 
 #include "lak/array.inl"
 

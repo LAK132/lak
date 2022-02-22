@@ -1,4 +1,5 @@
 #include "lak/algorithm.hpp"
+#include "lak/alloc.hpp"
 #include "lak/compiler.hpp"
 #include "lak/integer_range.hpp"
 #include "lak/memmanip.hpp"
@@ -460,7 +461,7 @@ bool operator==(const lak::array<T, S> &a, const lak::array<T, S> &b)
 {
 	if (a.size() != b.size()) return false;
 	for (size_t i = 0; i < a.size(); ++i)
-		if (a[i] != b[i]) return false;
+		if (lak::not_equal_to<T>{}(a[i], b[i])) return false;
 	return true;
 }
 
@@ -469,3 +470,247 @@ bool operator!=(const lak::array<T, S> &a, const lak::array<T, S> &b)
 {
 	return !(a == b);
 }
+
+/* --- small_array --- */
+
+template<typename T, lak::alloc::locality LOC>
+lak::small_array<T, LOC>::small_array(size_t initial_size) : small_array()
+{
+	resize(initial_size);
+}
+
+template<typename T, lak::alloc::locality LOC>
+lak::small_array<T, LOC>::small_array(const small_array<T, LOC> &other)
+{
+	operator=(other);
+}
+
+template<typename T, lak::alloc::locality LOC>
+lak::small_array<T, LOC> &lak::small_array<T, LOC>::operator=(
+  const small_array<T, LOC> &other)
+{
+	clear();
+	reserve(other.size());
+	for (const auto &e : other) push_back(e);
+	return *this;
+}
+
+template<typename T, lak::alloc::locality LOC>
+lak::small_array<T, LOC>::small_array(small_array<T, LOC> &&other)
+: _data(lak::exchange(other._data, {})), _size(lak::exchange(other._size, 0))
+{
+}
+
+template<typename T, lak::alloc::locality LOC>
+lak::small_array<T, LOC> &lak::small_array<T, LOC>::operator=(
+  small_array<T, LOC> &&other)
+{
+	lak::swap(_data, other._data);
+	lak::swap(_size, other._size);
+	return *this;
+}
+
+template<typename T, lak::alloc::locality LOC>
+lak::small_array<T, LOC>::small_array(std::initializer_list<T> list)
+{
+	reserve(list.size());
+	ASSERT_LESS_OR_EQUAL(list.size(), _data.size());
+	for (; _size < list.size(); ++_size)
+		new (data() + _size) T(list.begin()[_size]);
+}
+
+template<typename T, lak::alloc::locality LOC>
+template<typename ITER>
+lak::small_array<T, LOC>::small_array(ITER &&begin, ITER &&end)
+{
+	const size_t sz = end - begin;
+	reserve(sz);
+	ASSERT_LESS_OR_EQUAL(sz, _data.size());
+	for (; _size < sz; ++_size, ++begin) new (data() + _size) T(*begin);
+}
+
+template<typename T, lak::alloc::locality LOC>
+lak::small_array<T, LOC>::small_array::~small_array()
+{
+	force_clear();
+}
+
+template<typename T, lak::alloc::locality LOC>
+void lak::small_array<T, LOC>::resize(size_t new_size)
+{
+	if (new_size > _size)
+	{
+		reserve(new_size);
+		for (; _size < new_size; ++_size) new (data() + _size) T();
+	}
+	else if (new_size < _size)
+	{
+		for (; _size > new_size; --_size) data()[_size - 1].~T();
+	}
+}
+
+template<typename T, lak::alloc::locality LOC>
+void lak::small_array<T, LOC>::resize(size_t new_size, const T &default_value)
+{
+	if (new_size > _size)
+	{
+		reserve(new_size);
+		for (; _size < new_size; ++_size) new (data() + _size) T(default_value);
+	}
+	else if (new_size < _size)
+	{
+		for (; _size > new_size; --_size) data()[_size - 1].~T();
+	}
+}
+
+template<typename T, lak::alloc::locality LOC>
+void lak::small_array<T, LOC>::reserve(size_t new_capacity)
+{
+	if (new_capacity > _data.size())
+	{
+		auto new_data = lak::span<T>(
+		  lak::malloc<LOC>(new_capacity * sizeof(T), alignof(T)).UNWRAP());
+
+		for (size_t i = 0; i < _size; ++i)
+		{
+			new (new_data.data() + i) T(lak::move(_data[i]));
+			_data[i].~T();
+		}
+
+		lak::free<LOC>(lak::span<byte_t>(_data));
+
+		_data = new_data;
+	}
+}
+
+template<typename T, lak::alloc::locality LOC>
+void lak::small_array<T, LOC>::clear()
+{
+	for (auto &e : *this) e.~T();
+	_size = 0;
+}
+
+template<typename T, lak::alloc::locality LOC>
+void lak::small_array<T, LOC>::force_clear()
+{
+	clear();
+	lak::free<LOC>(lak::span<byte_t>(_data));
+	_data = {};
+}
+
+template<typename T, lak::alloc::locality LOC>
+T &lak::small_array<T, LOC>::at(size_t index)
+{
+	ASSERT_GREATER(_size, index);
+	return data()[index];
+}
+
+template<typename T, lak::alloc::locality LOC>
+const T &lak::small_array<T, LOC>::at(size_t index) const
+{
+	ASSERT_GREATER(_size, index);
+	return data()[index];
+}
+
+template<typename T, lak::alloc::locality LOC>
+T &lak::small_array<T, LOC>::front()
+{
+	ASSERT_GREATER(_size, 0U);
+	return data()[0];
+}
+
+template<typename T, lak::alloc::locality LOC>
+const T &lak::small_array<T, LOC>::front() const
+{
+	ASSERT_GREATER(_size, 0U);
+	return data()[0];
+}
+
+template<typename T, lak::alloc::locality LOC>
+T &lak::small_array<T, LOC>::back()
+{
+	ASSERT_GREATER(_size, 0U);
+	return data()[_size - 1];
+}
+
+template<typename T, lak::alloc::locality LOC>
+const T &lak::small_array<T, LOC>::back() const
+{
+	ASSERT_GREATER(_size, 0U);
+	return data()[_size - 1];
+}
+
+template<typename T, lak::alloc::locality LOC>
+template<typename... ARGS>
+T &lak::small_array<T, LOC>::emplace_back(ARGS &&...args)
+{
+	reserve(_size + 1);
+	new (data() + _size) T(lak::forward<ARGS>(args)...);
+	++_size;
+	return back();
+}
+
+template<typename T, lak::alloc::locality LOC>
+T &lak::small_array<T, LOC>::push_back(const T &t)
+{
+	reserve(_size + 1);
+	new (data() + _size) T(t);
+	++_size;
+	return back();
+}
+
+template<typename T, lak::alloc::locality LOC>
+T &lak::small_array<T, LOC>::push_back(T &&t)
+{
+	reserve(_size + 1);
+	new (data() + _size) T(lak::move(t));
+	++_size;
+	return back();
+}
+
+template<typename T, lak::alloc::locality LOC>
+void lak::small_array<T, LOC>::pop_back()
+{
+	ASSERT_GREATER(_size, 0U);
+	data()[--_size].~T();
+}
+
+template<typename T, lak::alloc::locality LOC>
+T *lak::small_array<T, LOC>::erase(const T *first, const T *last)
+{
+	ASSERT_GREATER_OR_EQUAL(first, cbegin());
+	ASSERT_LESS_OR_EQUAL(first, cend());
+	ASSERT_GREATER_OR_EQUAL(last, cbegin());
+	ASSERT_LESS_OR_EQUAL(last, cend());
+
+	const size_t index  = first - cbegin();
+	const size_t length = last - first;
+
+	ASSERT_LESS_OR_EQUAL(index + length, size());
+
+	if (length == 0) return begin() + index;
+
+	lak::shift_left(lak::split(lak::span(*this), first).second, length);
+
+	for (size_t i = length; i-- > 0;) pop_back();
+
+	return begin() + index;
+}
+
+template<typename T, lak::alloc::locality LOC>
+bool operator==(const lak::small_array<T, LOC> &a,
+                const lak::small_array<T, LOC> &b)
+{
+	if (a.size() != b.size()) return false;
+	for (size_t i = 0; i < a.size(); ++i)
+		if (lak::not_equal_to<T>{}(a[i], b[i])) return false;
+	return true;
+}
+
+template<typename T, lak::alloc::locality LOC>
+bool operator!=(const lak::small_array<T, LOC> &a,
+                const lak::small_array<T, LOC> &b)
+{
+	return !(a == b);
+}
+
