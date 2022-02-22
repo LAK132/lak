@@ -4,6 +4,8 @@
 #include "lak/debug.hpp"
 #include "lak/unicode.hpp"
 
+#include <ostream>
+
 namespace lak
 {
 	struct trace
@@ -26,18 +28,15 @@ namespace lak
 		{
 			return _file + ":" + TO_STRING(_line);
 		}
+
+		friend inline std::ostream &operator<<(std::ostream &strm,
+		                                       const lak::trace &tr)
+		{
+			return strm << tr.to_string();
+		}
 	};
 
 #define LINE_TRACE lak::trace(__FILE__, __LINE__)
 }
-
-#ifndef LAK_NO_STD
-#	include <ostream>
-
-static std::ostream &operator<<(std::ostream &strm, const lak::trace &tr)
-{
-	return strm << tr.to_string();
-}
-#endif
 
 #endif

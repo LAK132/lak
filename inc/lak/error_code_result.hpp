@@ -16,16 +16,16 @@ namespace lak
 		std::error_code value;
 
 		inline lak::astring to_string() const { return value.message(); }
+
+		friend inline std::ostream &operator<<(std::ostream &strm,
+		                                       const lak::error_code_error &err)
+		{
+			return strm << err.to_string();
+		}
 	};
 
 	template<typename T = lak::monostate>
 	using error_code_result = lak::result<T, error_code_error>;
-}
-
-[[maybe_unused]] inline std::ostream &operator<<(
-  std::ostream &strm, const lak::error_code_error &err)
-{
-	return strm << err.to_string();
 }
 
 #endif

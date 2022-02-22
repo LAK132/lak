@@ -9,11 +9,6 @@ lak::astring lak::lmdb::error::to_string() const
 	return lak::to_astring(mdb_strerror(value));
 }
 
-std::ostream &operator<<(std::ostream &strm, const lak::lmdb::error &err)
-{
-	return strm << err.to_string();
-}
-
 /* --- environment_flags --- */
 
 lak::lmdb::environment_flags lak::lmdb::operator|(

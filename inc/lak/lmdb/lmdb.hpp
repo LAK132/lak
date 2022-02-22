@@ -7,6 +7,7 @@
 #include "lmdb.h"
 
 #include <filesystem>
+#include <ostream>
 
 namespace lak
 {
@@ -17,6 +18,12 @@ namespace lak
 			int value;
 
 			lak::astring to_string() const;
+
+			inline friend std::ostream &operator<<(std::ostream &strm,
+			                                       const lak::lmdb::error &err)
+			{
+				return strm << err.to_string();
+			}
 		};
 
 		template<typename T = lak::monostate>
@@ -245,9 +252,5 @@ namespace lak
 		};
 	}
 }
-
-#include <ostream>
-
-std::ostream &operator<<(std::ostream &strm, const lak::lmdb::error &err);
 
 #endif
