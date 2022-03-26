@@ -31,7 +31,7 @@ BEGIN_TEST(macro_utils)
 	{
 		do
 		{
-			for_or (size_t i = 0, i != 0, ++i)
+			for_or (size_t i = 0U, i != 0U, ++i)
 			{
 				ASSERT_UNREACHABLE();
 			}
@@ -43,7 +43,7 @@ BEGIN_TEST(macro_utils)
 			ASSERT_UNREACHABLE();
 		} while (false);
 
-		for_or (size_t i = 0, i != 10, ++i)
+		for_or (size_t i = 0U, i != 10U, ++i)
 		{
 			break;
 		}
@@ -85,11 +85,11 @@ BEGIN_TEST(macro_utils)
 	/* --- while_or --- */
 
 	{
-		size_t i = 0;
+		size_t i = 0U;
 
 		do
 		{
-			while_or (i != 0)
+			while_or (i != 0U)
 			{
 				ASSERT_UNREACHABLE();
 			}
@@ -101,7 +101,7 @@ BEGIN_TEST(macro_utils)
 			ASSERT_UNREACHABLE();
 		} while (false);
 
-		while_or (i == 0)
+		while_or (i == 0U)
 		{
 			break;
 		}
@@ -173,7 +173,7 @@ BEGIN_TEST(macro_utils)
 		{
 			if_in (2, arr, i)
 			{
-				ASSERT_EQUAL(i, 1);
+				ASSERT_EQUAL(i, 1U);
 				break;
 			}
 			else
