@@ -17,6 +17,13 @@ namespace lak
 	// Reinterpret ASCII string as a UTF-8 string.
 	force_inline lak::u8string_view as_u8string(lak::astring_view str);
 	force_inline lak::u8string_view as_u8string(lak::u8string_view str);
+
+	// Reinterpret UTF-8 string as an ASCII string.
+	force_inline const char *as_astring(const char *str);
+	force_inline const char *as_astring(const char8_t *str);
+	// Reinterpret ASCII string as a UTF-8 string.
+	force_inline const char8_t *as_u8string(const char *str);
+	force_inline const char8_t *as_u8string(const char8_t *str);
 }
 
 #include "lak/strcast.inl"
