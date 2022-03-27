@@ -125,7 +125,13 @@ namespace lak
 		bool is_final_block() const;
 
 		// (bytes, bits)
-		auto bytes_read() const { return _compressed.bytes_read(); }
+		inline auto bytes_read() const { return _compressed.bytes_read(); }
+
+		inline uintmax_t input_consumed() const
+		{
+			auto [bytes, bits] = bytes_read();
+			return bytes + (bits > 0U ? 1U : 0U);
+		}
 
 		lak::span<const byte_t> compressed() const;
 		void replace_compressed(lak::span<const byte_t> compressed);
