@@ -98,8 +98,12 @@ namespace lak
 		binary_span_writer(const binary_span_writer &) = default;
 		binary_span_writer &operator=(const binary_span_writer &) = default;
 
-		lak::span<byte_t> remaining() const { return _data.subspan(_cursor); }
-		bool empty() const { return _cursor >= _data.size(); }
+		inline lak::span<byte_t> remaining() const
+		{
+			return _data.subspan(_cursor);
+		}
+		inline size_t remaining_size() const { return _data.size() - _cursor; }
+		inline bool empty() const { return _cursor >= _data.size(); }
 		inline size_t position() const { return _cursor; }
 		inline size_t size() const { return _data.size(); }
 		inline lak::result<> seek(size_t pos)
@@ -126,24 +130,27 @@ namespace lak
 		         lak::enable_if_i<lak::has_to_bytes_traits<T, E>> = 0>
 		lak::result<> write(const T &value)
 		{
-			if (empty()) return lak::err_t{};
-			return lak::to_bytes<T, E>(remaining(), value)
-			  .if_ok([this](auto &&)
-			         { this->_cursor += lak::to_bytes_size_v<T, E>; })
-			  .map([](auto &&) -> lak::monostate { return {}; });
+			using value_type          = lak::remove_const_t<T>;
+			constexpr size_t req_size = lak::to_bytes_size_v<value_type, E>;
+			if (req_size > remaining_size()) return lak::err_t{};
+			lak::to_bytes<T, E>(remaining().template first<req_size>(), value);
+			_cursor += req_size;
+			return lak::ok_t{};
 		}
 
 		template<typename T, lak::endian E = lak::endian::little>
 		lak::result<> write(lak::span<T> values)
 		{
-			if (empty()) return lak::err_t{};
 			using value_type = lak::remove_const_t<T>;
-			return lak::array_to_bytes<value_type, E>(remaining(), values)
+			const size_t req_size =
+			  lak::to_bytes_size_v<value_type, E> * values.size();
+			if (req_size > remaining_size()) return lak::err_t{};
+			return lak::array_to_bytes<value_type, E>(remaining().first(req_size),
+			                                          values)
 			  .map(
 			    [&, this](auto &&)
 			    {
-				    this->_cursor +=
-				      lak::to_bytes_size_v<value_type, E> * values.size();
+				    this->_cursor += req_size;
 				    return lak::monostate{};
 			    });
 		}
@@ -151,23 +158,21 @@ namespace lak
 		template<typename CHAR, lak::endian E = lak::endian::little>
 		lak::result<> write_c_str(const lak::string<CHAR> &string)
 		{
-			if (empty()) return lak::err_t{};
-
 			const size_t req_size =
 			  lak::to_bytes_size_v<CHAR, E> * (string.size() + 1);
 
-			auto bytes = remaining();
+			auto bytes{remaining()};
 
 			if (req_size > bytes.size()) return lak::err_t{};
 
 			for (const CHAR &c : string)
 			{
-				lak::to_bytes<CHAR, E>(bytes.first<lak::to_bytes_size_v<CHAR, E>>(),
-				                       c);
+				lak::to_bytes<CHAR, E>(
+				  bytes.template first<lak::to_bytes_size_v<CHAR, E>>(), c);
 				bytes = bytes.subspan(lak::to_bytes_size_v<CHAR, E>);
 			}
-			lak::to_bytes<CHAR, E>(bytes.first<lak::to_bytes_size_v<CHAR, E>>(),
-			                       CHAR(0));
+			lak::to_bytes<CHAR, E>(
+			  bytes.template first<lak::to_bytes_size_v<CHAR, E>>(), CHAR(0));
 			bytes = bytes.subspan(lak::to_bytes_size_v<CHAR, E>);
 
 			_cursor += req_size;
