@@ -89,6 +89,16 @@ lak::error_code_result<> lak::create_hard_link(const fs::path &file,
 		return lak::ok_t{};
 }
 
+lak::error_code_result<bool> lak::remove_path(const fs::path &path)
+{
+	std::error_code ec;
+	bool result = fs::remove_all(path, ec) > 0U;
+	if (ec)
+		return lak::err_t{lak::error_code_error{ec}};
+	else
+		return lak::ok_t{result};
+}
+
 lak::errno_result<lak::array<byte_t>> lak::read_file(const lak::fs::path &path)
 {
 	std::ifstream file(path, std::ios::binary | std::ios::ate);
