@@ -888,11 +888,47 @@ namespace lak
 #endif
 
 #define IF_OK(...)                                                            \
-	if_ok([&](const auto &val) { DEBUG(__VA_ARGS__, ": ", val); })
+	if_ok(                                                                      \
+	  [&](const auto &val)                                                      \
+	  {                                                                         \
+			if constexpr (lak::is_same_v<lak::remove_cvref_t<decltype(err)>,        \
+			                             lak::monostate>)                           \
+			{                                                                       \
+				DEBUG(__VA_ARGS__);                                                   \
+			}                                                                       \
+			else                                                                    \
+			{                                                                       \
+				DEBUG(__VA_ARGS__, ": ", val);                                        \
+			}                                                                       \
+	  })
 #define IF_ERR(...)                                                           \
-	if_err([&](const auto &err) { ERROR(__VA_ARGS__, ": ", err); })
+	if_err(                                                                     \
+	  [&](const auto &err)                                                      \
+	  {                                                                         \
+			if constexpr (lak::is_same_v<lak::remove_cvref_t<decltype(err)>,        \
+			                             lak::monostate>)                           \
+			{                                                                       \
+				ERROR(__VA_ARGS__);                                                   \
+			}                                                                       \
+			else                                                                    \
+			{                                                                       \
+				ERROR(__VA_ARGS__, ": ", err);                                        \
+			}                                                                       \
+	  })
 #define IF_ERR_WARN(...)                                                      \
-	if_err([&](const auto &err) { WARNING(__VA_ARGS__, ": ", err); })
+	if_err(                                                                     \
+	  [&](const auto &err)                                                      \
+	  {                                                                         \
+			if constexpr (lak::is_same_v<lak::remove_cvref_t<decltype(err)>,        \
+			                             lak::monostate>)                           \
+			{                                                                       \
+				WARNING(__VA_ARGS__);                                                 \
+			}                                                                       \
+			else                                                                    \
+			{                                                                       \
+				WARNING(__VA_ARGS__, ": ", err);                                      \
+			}                                                                       \
+	  })
 
 #define RES_TRY_FLUENT(...)                                                   \
 	auto UNIQUIFY(RESULT_){__VA_ARGS__};                                        \
