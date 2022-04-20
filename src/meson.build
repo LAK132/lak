@@ -13,6 +13,7 @@ lak = static_library(
     'profile.cpp',
     'strconv.cpp',
     'string_view.cpp',
+    'tasks.cpp',
     'test.cpp',
     'tinflate.cpp',
     'tokeniser.cpp',
