@@ -55,7 +55,7 @@ lak::result<lak::array<byte_t>, lak::lz4_decode_error> lak::decode_lz4_block(
 		}
 		if (strm.remaining().size() < length)
 			return lak::err_t{lak::lz4_decode_error::out_of_data};
-		writer.write(strm.remaining().first(length)).UNWRAP();
+		writer.write(strm.remaining().first(length)).unwrap();
 		RES_TRY(strm.skip(length).map_err(out_of_data));
 
 		if (strm.empty()) break; // reached the end of the last block
@@ -92,7 +92,7 @@ lak::result<lak::array<byte_t>, lak::lz4_decode_error> lak::decode_lz4_block(
 		}
 		for (const auto &v : lak::span<const byte_t>(
 		       writer.remaining().begin() - offset, match_length))
-			writer.write_u8(uint8_t(v)).UNWRAP();
+			writer.write_u8(uint8_t(v)).unwrap();
 
 		if (allow_partial_read && writer.empty()) break;
 	}
