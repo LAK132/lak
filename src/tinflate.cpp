@@ -286,7 +286,7 @@ namespace tinf
 
 				if (state.block_type == 0)
 				{
-					state.num_bits = 0;
+					state.num_bits = 0; // go to byte boundary
 
 					SET_STATE(UNCOMPRESSED_LEN)
 
