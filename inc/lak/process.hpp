@@ -34,6 +34,13 @@ namespace lak
 		lak::result<int> join();
 
 		void release();
+
+		std::ostream *std_in() const;
+		std::istream *std_out() const;
+		std::istream *std_err() const;
+
+		void close_input();
+		void close_output();
 	};
 }
 

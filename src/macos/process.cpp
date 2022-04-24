@@ -33,4 +33,26 @@ lak::result<int> lak::process::join()
 	return lak::err_t{};
 }
 
-void lak::process::release() {}
+void lak::process::release()
+{
+	_impl.reset();
+}
+
+std::ostream *lak::process::std_in() const
+{
+	return nullptr;
+}
+
+std::istream *lak::process::std_out() const
+{
+	return nullptr;
+}
+
+std::istream *lak::process::std_err() const
+{
+	return nullptr;
+}
+
+void lak::process::close_input() {}
+
+void lak::process::close_output() {}

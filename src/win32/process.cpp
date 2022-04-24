@@ -3,10 +3,22 @@
 
 #include "wrapper.hpp"
 
+#include <fstream>
+#include <io.h>
+
 struct lak::process_impl
 {
-	STARTUPINFO startup_info;
 	PROCESS_INFORMATION process_info;
+
+	std::ofstream std_in_strm;
+	std::ifstream std_out_strm;
+	std::ifstream std_err_strm;
+
+	~process_impl()
+	{
+		if (process_info.hProcess != NULL) ::CloseHandle(process_info.hProcess);
+		if (process_info.hThread != NULL) ::CloseHandle(process_info.hThread);
+	}
 };
 
 template struct lak::unique_ptr<lak::process_impl>;
@@ -25,15 +37,82 @@ lak::result<lak::process> lak::process::create(
 	const auto app_name{app.wstring()};
 	auto command_line{L"\"" + app_name + L"\" " + lak::to_wstring(arguments)};
 
+	SECURITY_ATTRIBUTES security;
+	security.nLength              = sizeof(security);
+	security.bInheritHandle       = TRUE;
+	security.lpSecurityDescriptor = nullptr;
+
+	const DWORD pipe_size = 0;
+
+	struct proc_pipe
+	{
+		HANDLE read  = NULL;
+		HANDLE write = NULL;
+
+		~proc_pipe()
+		{
+			if (read != NULL) ::CloseHandle(read);
+			if (write != NULL) ::CloseHandle(write);
+		}
+	};
+
+	proc_pipe std_in;
+	proc_pipe std_out;
+	proc_pipe std_err;
+
+	auto make_pipe = [&](proc_pipe &pipe) -> lak::result<>
+	{
+		if (!::CreatePipe(&pipe.read, &pipe.write, &security, pipe_size))
+		{
+			ERROR(lak::winapi::error_code_to_u8string(::GetLastError()));
+			return lak::err_t{};
+		}
+		return lak::ok_t{};
+	};
+
+	RES_TRY(make_pipe(std_in));
+	RES_TRY(make_pipe(std_out));
+	RES_TRY(make_pipe(std_err));
+
+	auto open_pipe = [&](HANDLE &handle, const char *mode) -> lak::result<FILE *>
+	{
+		if (!::SetHandleInformation(handle, HANDLE_FLAG_INHERIT, 0))
+			return lak::err_t{};
+		int fd = _open_osfhandle(reinterpret_cast<intptr_t>(handle), 0);
+		if (fd == -1) return lak::err_t{};
+		handle     = NULL;
+		FILE *file = _fdopen(fd, mode);
+		if (file == nullptr) return lak::err_t{};
+		return lak::ok_t{file};
+	};
+
+	RES_TRY_ASSIGN(FILE *f_std_in =, open_pipe(std_in.write, "w"));
+	RES_TRY_ASSIGN(FILE *f_std_out =, open_pipe(std_out.read, "r"));
+	RES_TRY_ASSIGN(FILE *f_std_err =, open_pipe(std_err.read, "r"));
+
+	impl->std_in_strm  = std::ofstream(f_std_in);
+	impl->std_out_strm = std::ifstream(f_std_out);
+	impl->std_err_strm = std::ifstream(f_std_err);
+
+	STARTUPINFO startup_info;
+	lak::bzero(&startup_info);
+	startup_info.cb         = sizeof(startup_info);
+	startup_info.hStdInput  = std_in.read;
+	startup_info.hStdOutput = std_out.write;
+	startup_info.hStdError  = std_err.write;
+	startup_info.dwFlags |= STARTF_USESTDHANDLES;
+
+	lak::bzero(&impl->process_info);
+
 	if (!::CreateProcessW(app_name.c_str() /* lpApplicationName */,
 	                      command_line.data() /* lpCommandLine */,
 	                      nullptr /* lpProcessAttributes */,
 	                      nullptr /* lpThreadAttributes */,
-	                      FALSE /* bInheritHandles */,
+	                      TRUE /* bInheritHandles */,
 	                      0 /* dwCreationFlags */,
 	                      nullptr /* lpEnvironment */,
 	                      nullptr /* lpCurrentDirectory */,
-	                      &impl->startup_info /* lpStartupInfo */,
+	                      &startup_info /* lpStartupInfo */,
 	                      &impl->process_info /* lpProcessInformation */
 	                      ))
 	{
@@ -83,9 +162,36 @@ lak::result<int> lak::process::join()
 
 void lak::process::release()
 {
-	if (_impl)
-	{
-		::CloseHandle(_impl->process_info.hProcess);
-		::CloseHandle(_impl->process_info.hThread);
-	}
+	_impl.reset();
+}
+
+std::ostream *lak::process::std_in() const
+{
+	if (!_impl) return nullptr;
+	return &_impl->std_in_strm;
+}
+
+std::istream *lak::process::std_out() const
+{
+	if (!_impl) return nullptr;
+	return &_impl->std_out_strm;
+}
+
+std::istream *lak::process::std_err() const
+{
+	if (!_impl) return nullptr;
+	return &_impl->std_err_strm;
+}
+
+void lak::process::close_input()
+{
+	if (!_impl) return;
+	_impl->std_in_strm.close();
+}
+
+void lak::process::close_output()
+{
+	if (!_impl) return;
+	_impl->std_out_strm.close();
+	_impl->std_err_strm.close();
 }
