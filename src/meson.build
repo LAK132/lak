@@ -10,6 +10,7 @@ lak = static_library(
     'json.cpp',
     'math.cpp',
     'memmanip.cpp',
+    'process.cpp',
     'profile.cpp',
     'strconv.cpp',
     'string_view.cpp',
