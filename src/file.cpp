@@ -79,6 +79,15 @@ lak::error_code_result<bool> lak::create_directory(const fs::path &path)
 		return lak::ok_t{result};
 }
 
+lak::error_code_result<bool> lak::create_directories(const fs::path &path)
+{
+	std::error_code ec;
+	if (bool result = fs::create_directories(path, ec); ec)
+		return lak::err_t{lak::error_code_error{ec}};
+	else
+		return lak::ok_t{result};
+}
+
 lak::error_code_result<> lak::create_hard_link(const fs::path &file,
                                                const fs::path &link)
 {

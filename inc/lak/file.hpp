@@ -37,6 +37,11 @@ namespace lak
 	// error if an OS error occurred
 	lak::error_code_result<bool> create_directory(const fs::path &path);
 
+	// true if directory was created
+	// false if directory already exists
+	// error if an OS error occurred
+	lak::error_code_result<bool> create_directories(const fs::path &path);
+
 	// ok if copy was successful
 	// error if an OS error occurs
 	lak::error_code_result<> create_hard_link(const fs::path &file,
