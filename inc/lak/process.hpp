@@ -39,8 +39,16 @@ namespace lak
 		std::istream *std_out() const;
 		std::istream *std_err() const;
 
-		void close_input();
-		void close_output();
+		void close_std_in();
+		void close_std_out();
+		void close_std_err();
+
+		inline void close_input() { close_std_in(); }
+		inline void close_output()
+		{
+			close_std_out();
+			close_std_err();
+		}
 	};
 }
 

@@ -34,15 +34,8 @@ lak::result<lak::process> lak::process::create(
 	auto impl{lak::unique_ptr<lak::process_impl>::make()};
 	if (!impl) return lak::err_t{};
 
-	const auto app_name{app.wstring()};
+	const auto app_name{app.lexically_normal().native()};
 	auto command_line{L"\"" + app_name + L"\" " + lak::to_wstring(arguments)};
-
-	SECURITY_ATTRIBUTES security;
-	security.nLength              = sizeof(security);
-	security.bInheritHandle       = TRUE;
-	security.lpSecurityDescriptor = nullptr;
-
-	const DWORD pipe_size = 0;
 
 	struct proc_pipe
 	{
@@ -60,8 +53,15 @@ lak::result<lak::process> lak::process::create(
 	proc_pipe std_out;
 	proc_pipe std_err;
 
-	auto make_pipe = [&](proc_pipe &pipe) -> lak::result<>
+	auto make_pipe = [](proc_pipe &pipe) -> lak::result<>
 	{
+		SECURITY_ATTRIBUTES security;
+		security.nLength              = sizeof(security);
+		security.bInheritHandle       = TRUE;
+		security.lpSecurityDescriptor = nullptr;
+
+		const DWORD pipe_size = 0;
+
 		if (!::CreatePipe(&pipe.read, &pipe.write, &security, pipe_size))
 		{
 			ERROR(lak::winapi::error_code_to_u8string(::GetLastError()));
@@ -104,17 +104,16 @@ lak::result<lak::process> lak::process::create(
 
 	lak::bzero(&impl->process_info);
 
-	if (!::CreateProcessW(app_name.c_str() /* lpApplicationName */,
-	                      command_line.data() /* lpCommandLine */,
-	                      nullptr /* lpProcessAttributes */,
-	                      nullptr /* lpThreadAttributes */,
-	                      TRUE /* bInheritHandles */,
-	                      0 /* dwCreationFlags */,
-	                      nullptr /* lpEnvironment */,
-	                      nullptr /* lpCurrentDirectory */,
-	                      &startup_info /* lpStartupInfo */,
-	                      &impl->process_info /* lpProcessInformation */
-	                      ))
+	if (!::CreateProcessW(nullptr,
+	                      command_line.data(),
+	                      nullptr,
+	                      nullptr,
+	                      true,
+	                      0,
+	                      nullptr,
+	                      nullptr,
+	                      &startup_info,
+	                      &impl->process_info))
 	{
 		// ERROR(lak::winapi::error_code_to_u8string(::GetLastError()));
 		return lak::err_t{};
@@ -183,15 +182,20 @@ std::istream *lak::process::std_err() const
 	return &_impl->std_err_strm;
 }
 
-void lak::process::close_input()
+void lak::process::close_std_in()
 {
 	if (!_impl) return;
 	_impl->std_in_strm.close();
 }
 
-void lak::process::close_output()
+void lak::process::close_std_out()
 {
 	if (!_impl) return;
 	_impl->std_out_strm.close();
+}
+
+void lak::process::close_std_err()
+{
+	if (!_impl) return;
 	_impl->std_err_strm.close();
 }
