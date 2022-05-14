@@ -1,6 +1,6 @@
 [submodule "inc/SDL"]
 	path = inc/SDL
-	url = https://github.com/LAK132/SDL
+	url = https://github.com/LAK132/SDL-bin
 [submodule "inc/LLVM"]
 	path = src/llvm/llvm
 	url = https://github.com/LAK132/LLVM
