@@ -3,6 +3,7 @@
 
 #include "lak/stdint.hpp"
 
+#include <climits>
 #include <limits>
 
 namespace lak
