@@ -267,16 +267,16 @@ namespace lak
 		template<size_t I>
 		const auto *get() const;
 
-		template<typename T>
+		template<typename V>
 		auto *get()
 		{
-			return get<index_of<T>>();
+			return get<index_of<V>>();
 		}
 
-		template<typename T>
+		template<typename V>
 		const auto *get() const
 		{
-			return get<index_of<T>>();
+			return get<index_of<V>>();
 		}
 	};
 
