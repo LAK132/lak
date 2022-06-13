@@ -776,6 +776,12 @@ namespace lak
 			f(forward_err());
 			return lak::result<OK>::make_err({});
 		}
+
+		/* --- operator-> --- */
+
+		const lak::remove_reference_t<OK> *operator->() const { return &unwrap(); }
+
+		lak::remove_reference_t<OK> *operator->() { return &unwrap(); }
 	};
 
 	/* --- ok_or_err --- */
