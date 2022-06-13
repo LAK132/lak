@@ -742,6 +742,40 @@ namespace lak
 		/* --- discard --- */
 
 		void discard() const {}
+
+		/* --- discard_err --- */
+
+		lak::result<OK> discard_err() const &
+		{
+			if (is_ok())
+				return lak::result<OK>::make_ok(get_ok());
+			else
+				return lak::result<OK>::make_err({});
+		}
+
+		lak::result<OK> discard_err() &&
+		{
+			if (is_ok())
+				return lak::result<OK>::make_ok(forward_ok());
+			else
+				return lak::result<OK>::make_err({});
+		}
+
+		template<lak::concepts::invocable<const ERR &> F>
+		lak::result<OK> discard_err(F &&f) const &
+		{
+			if (is_ok()) return lak::result<OK>::make_ok(get_ok());
+			f(get_err());
+			return lak::result<OK>::make_err({});
+		}
+
+		template<lak::concepts::invocable<ERR &&> F>
+		lak::result<OK> discard_err(F &&f) &&
+		{
+			if (is_ok()) return lak::result<OK>::make_ok(forward_ok());
+			f(forward_err());
+			return lak::result<OK>::make_err({});
+		}
 	};
 
 	/* --- ok_or_err --- */
