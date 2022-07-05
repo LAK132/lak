@@ -5,22 +5,19 @@
 
 namespace lak
 {
-	template<typename T>
-	constexpr auto _is_streamable(int)
-	  -> decltype(std::declval<std::ostream &>() << std::declval<T>(), bool())
+	namespace concepts
 	{
-		return true;
+		template<typename T>
+		concept streamable = requires(T thing)
+		{
+			{
+				std::declval<std::ostream &>() << thing
+				} -> lak::concepts::same_as<std::ostream &>;
+		};
 	}
+
 	template<typename T>
-	constexpr auto _is_streamable(...) -> decltype(bool())
-	{
-		return false;
-	}
-	template<typename T>
-	constexpr bool is_streamable()
-	{
-		return _is_streamable<T>(0);
-	}
+	constexpr bool is_streamable_v = lak::concepts::streamable<T>;
 
 	template<typename ARG, typename... ARGS>
 	lak::u8string spaced_streamify(const lak::u8string &space,
