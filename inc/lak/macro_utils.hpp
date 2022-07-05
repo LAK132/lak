@@ -95,6 +95,9 @@
 #define LAK_SGR_BACK_24(r, g, b)                                              \
 	LAK_SGR_STR("48;2;" STRINGIFY(r) ";" STRINGIFY(g) ";" STRINGIFY(b))
 
+#define LAK_MEM_FN(X)                                                         \
+	[this]<typename... T>(T && ...args) { return (X)(lak::forward<T>(args)...); }
+
 #undef do_with
 // do_with (var = stmt) { }
 #define do_with(...)                                                          \
