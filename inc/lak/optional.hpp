@@ -249,6 +249,12 @@ namespace lak
 		return lak::as_ptr(p.operator->());
 	}
 #endif
+
+	template<typename T>
+	lak::optional<lak::remove_cvref_t<T>> make_optional(T &&t)
+	{
+		return {t};
+	}
 }
 
 #endif
