@@ -23,6 +23,9 @@ namespace lak
 	lak::u16string to_u16string(const fs::path &path);
 	lak::u32string to_u32string(const fs::path &path);
 
+	lak::error_code_result<fs::directory_iterator> directory_iterator(
+	  const fs::path &path);
+
 	// true if path exists
 	// false if path does not exist
 	// error if an OS error occurs

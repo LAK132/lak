@@ -47,6 +47,16 @@ lak::u32string lak::to_u32string(const fs::path &path)
 	return lak::to_u32string(path.native());
 }
 
+lak::error_code_result<lak::fs::directory_iterator> lak::directory_iterator(
+  const fs::path &path)
+{
+	std::error_code ec;
+	if (fs::directory_iterator di{path, ec}; ec)
+		return lak::err_t{lak::error_code_error{ec}};
+	else
+		return lak::ok_t{lak::move(di)};
+}
+
 lak::error_code_result<bool> lak::path_exists(const lak::fs::path &path)
 {
 	std::error_code ec;
