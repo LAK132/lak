@@ -35,11 +35,13 @@ namespace
 		{
 			strm << (arg ? "true" : "false");
 		}
+		else if constexpr (std::is_enum_v<T> && lak::is_streamable_v<T>)
+		{
+			::streamable_streamer(strm, arg);
+		}
 		else if constexpr ((std::is_integral_v<T> && !std::is_same_v<T, char>) ||
 		                   std::is_enum_v<T>)
 		{
-			// :TODO: work out if it's possible to check if there is a stream
-			// operator overloaded for T enums.
 			if constexpr (std::is_unsigned_v<T>)
 				strm << "0x" << static_cast<uintmax_t>(arg);
 			else if (static_cast<intmax_t>(arg) < intmax_t(0))
