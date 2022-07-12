@@ -301,7 +301,7 @@ lak::u8string lak::trie<CHAR, T>::to_string() const
 			result += lak::u8string((stack.size() - 1) * 2, ' ') + u8"\"" + key +
 			          u8"\" : [{";
 
-			if constexpr (lak::is_streamable<decltype(*t.value())>())
+			if constexpr (lak::is_streamable_v<decltype(*t.value())>)
 			{
 				if (t.value())
 				{
