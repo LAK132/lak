@@ -4,6 +4,7 @@
 
 #include "lak/debug.hpp"
 #include "lak/events.hpp"
+#include "lak/macro_utils.hpp"
 #include "lak/os.hpp"
 #include "lak/window.hpp"
 
@@ -15,28 +16,38 @@
 #	define LAK_BASIC_PROGRAM_MAIN main
 #endif
 
-// Implement these basic_window_* functions in your program.
-lak::optional<int> basic_window_preinit(int argc, char **argv);
-void basic_window_init(lak::window &window);
-void basic_window_handle_event(lak::window &window, lak::event &event);
-void basic_window_loop(lak::window &window, uint64_t counter_delta);
-int basic_window_quit(lak::window &window);
+#ifndef LAK_BASIC_PROGRAM_PREFIX
+#	define LAK_BASIC_PROGRAM_PREFIX basic_
+#endif
 
-// Set these inside of basic_window_preinit
-uint32_t basic_window_target_framerate = 60;
-bool basic_window_force_software       = false;
-lak::vec2l_t basic_window_start_size   = {1200, 700};
-lak::vec4f_t basic_window_clear_colour = {0.0f, 0.3125f, 0.312f, 1.0f};
-lak::opengl_settings basic_window_opengl_settings;
-lak::software_settings basic_window_software_settings;
+#define LAK_BASIC_PROGRAM(X) TOKEN_CONCAT(LAK_BASIC_PROGRAM_PREFIX, X)
 
-void APIENTRY MessageCallback(GLenum source,
-                              GLenum type,
-                              GLuint id,
-                              GLenum severity,
-                              GLsizei length,
-                              const GLchar *message,
-                              const void *userParam)
+// Implement these window_* functions in your program.
+lak::optional<int> LAK_BASIC_PROGRAM(window_preinit)(int argc, char **argv);
+void LAK_BASIC_PROGRAM(window_init)(lak::window &window);
+void LAK_BASIC_PROGRAM(window_handle_event)(lak::window &window,
+                                            lak::event &event);
+void LAK_BASIC_PROGRAM(window_loop)(lak::window &window,
+                                    uint64_t counter_delta);
+int LAK_BASIC_PROGRAM(window_quit)(lak::window &window);
+
+// Set these inside of window_preinit
+uint32_t LAK_BASIC_PROGRAM(window_target_framerate) = 60;
+bool LAK_BASIC_PROGRAM(window_force_software)       = false;
+lak::vec2l_t LAK_BASIC_PROGRAM(window_start_size)   = {1200, 700};
+lak::vec4f_t LAK_BASIC_PROGRAM(window_clear_colour) = {
+  0.0f, 0.3125f, 0.312f, 1.0f};
+lak::opengl_settings LAK_BASIC_PROGRAM(window_opengl_settings);
+lak::software_settings LAK_BASIC_PROGRAM(window_software_settings);
+
+void APIENTRY
+LAK_BASIC_PROGRAM(opengl_debug_message_callback)(GLenum source,
+                                                 GLenum type,
+                                                 GLuint id,
+                                                 GLenum severity,
+                                                 GLsizei length,
+                                                 const GLchar *message,
+                                                 const void *userParam)
 {
 	LAK_UNUSED(id);
 	LAK_UNUSED(userParam);
@@ -127,14 +138,14 @@ int LAK_BASIC_PROGRAM_MAIN(int argc, char **argv)
 
 	/* --- Window initialisation --- */
 
-	if (auto v = basic_window_preinit(argc, argv); v) return *v;
+	if (auto v = LAK_BASIC_PROGRAM(window_preinit)(argc, argv); v) return *v;
 
 	lak::platform_init();
 	DEFER(lak::platform_quit());
 
 	auto make_software = [&]()
 	{
-		return lak::window::make(basic_window_software_settings)
+		return lak::window::make(LAK_BASIC_PROGRAM(window_software_settings))
 		  .and_then(
 		    [&](auto &&window) -> lak::result<lak::window, lak::u8string>
 		    {
@@ -146,9 +157,9 @@ int LAK_BASIC_PROGRAM_MAIN(int argc, char **argv)
 	};
 
 	auto window =
-	  (basic_window_force_software
+	  (LAK_BASIC_PROGRAM(window_force_software)
 	     ? make_software()
-	     : lak::window::make(basic_window_opengl_settings)
+	     : lak::window::make(LAK_BASIC_PROGRAM(window_opengl_settings))
 	         .and_then(
 	           [&](auto &&window) -> lak::result<lak::window, lak::u8string>
 	           {
@@ -158,15 +169,16 @@ int LAK_BASIC_PROGRAM_MAIN(int argc, char **argv)
 
 		           glViewport(
 		             0, 0, window.drawable_size().x, window.drawable_size().y);
-		           glClearColor(basic_window_clear_colour.r,
-		                        basic_window_clear_colour.g,
-		                        basic_window_clear_colour.b,
-		                        basic_window_clear_colour.a);
+		           glClearColor(LAK_BASIC_PROGRAM(window_clear_colour).r,
+		                        LAK_BASIC_PROGRAM(window_clear_colour).g,
+		                        LAK_BASIC_PROGRAM(window_clear_colour).b,
+		                        LAK_BASIC_PROGRAM(window_clear_colour).a);
 		           glEnable(GL_DEPTH_TEST);
 
 #ifndef NDEBUG
 		           glEnable(GL_DEBUG_OUTPUT);
-		           glDebugMessageCallback(&MessageCallback, 0);
+		           glDebugMessageCallback(
+		             &LAK_BASIC_PROGRAM(opengl_debug_message_callback), 0);
 #endif
 
 		           return lak::ok_t{lak::move(window)};
@@ -181,19 +193,19 @@ int LAK_BASIC_PROGRAM_MAIN(int argc, char **argv)
 	    .UNWRAP();
 
 	window.set_title(L"" APP_NAME);
-	window.set_size(basic_window_start_size);
+	window.set_size(LAK_BASIC_PROGRAM(window_start_size));
 
-	basic_window_init(window);
+	LAK_BASIC_PROGRAM(window_init)(window);
 
 	uint64_t last_counter = lak::performance_counter();
 	uint64_t counter_delta =
-	  lak::performance_frequency() / basic_window_target_framerate;
+	  lak::performance_frequency() / LAK_BASIC_PROGRAM(window_target_framerate);
 
 	for (bool running = true; running;)
 	{
 		/* --- Handle SDL2 events --- */
 		for (lak::event event; lak::next_event(&event);
-		     basic_window_handle_event(window, event))
+		     LAK_BASIC_PROGRAM(window_handle_event)(window, event))
 		{
 			switch (event.type)
 			{
@@ -214,12 +226,12 @@ int LAK_BASIC_PROGRAM_MAIN(int argc, char **argv)
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		}
 
-		basic_window_loop(window, counter_delta);
+		LAK_BASIC_PROGRAM(window_loop)(window, counter_delta);
 
 		window.swap();
 
-		const auto counter =
-		  lak::yield_frame(last_counter, basic_window_target_framerate);
+		const auto counter = lak::yield_frame(
+		  last_counter, LAK_BASIC_PROGRAM(window_target_framerate));
 		counter_delta = counter - last_counter;
 		last_counter  = counter;
 	}
@@ -231,5 +243,5 @@ int LAK_BASIC_PROGRAM_MAIN(int argc, char **argv)
 	}
 #endif
 
-	return basic_window_quit(window);
+	return LAK_BASIC_PROGRAM(window_quit)(window);
 }
