@@ -49,6 +49,8 @@ int main()
 
 #include "lak/profile.hpp"
 
+#include <ostream>
+
 namespace lak
 {
 	enum struct graphics_mode
@@ -58,6 +60,20 @@ namespace lak
 		OpenGL   = 2,
 		Vulkan   = 3
 	};
+
+	inline std::ostream &operator<<(std::ostream &strm, lak::graphics_mode mode)
+	{
+		switch (mode)
+		{
+			case lak::graphics_mode::OpenGL: strm << "OpenGL"; break;
+			case lak::graphics_mode::Software: strm << "Software"; break;
+			case lak::graphics_mode::Vulkan: strm << "Vulkan"; break;
+			default: strm << "None"; break;
+		}
+		return strm;
+	}
+
+	static_assert(lak::is_streamable_v<lak::graphics_mode>);
 
 	struct software_settings
 	{
@@ -201,21 +217,6 @@ namespace lak
 
 		inline bool swap() { return lak::swap_window(handle()); }
 	};
-}
-
-#include <ostream>
-
-[[maybe_unused]] inline std::ostream &operator<<(std::ostream &strm,
-                                                 lak::graphics_mode mode)
-{
-	switch (mode)
-	{
-		case lak::graphics_mode::OpenGL: strm << "OpenGL"; break;
-		case lak::graphics_mode::Software: strm << "Software"; break;
-		case lak::graphics_mode::Vulkan: strm << "Vulkan"; break;
-		default: strm << "None"; break;
-	}
-	return strm;
 }
 
 #endif
