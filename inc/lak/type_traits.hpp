@@ -1402,7 +1402,6 @@ namespace lak
 	  lak::is_default_constructible<T>::value;
 
 	static_assert(lak::is_default_constructible_v<int>);
-	static_assert(lak::is_default_constructible_v<void>);
 
 	/* --- is_static_castable --- */
 
