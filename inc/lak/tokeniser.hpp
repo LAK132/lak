@@ -112,8 +112,8 @@ namespace lak
 			auto &&operator++() { return _tokeniser.operator++(); }
 			auto &&operator*() { return _tokeniser.operator*(); }
 			auto operator->() { return _tokeniser.operator->(); }
-			bool operator==(nullptr_t) { return _tokeniser == nullptr; }
-			bool operator!=(nullptr_t) { return _tokeniser != nullptr; }
+			bool operator==(lak::nullptr_t) { return _tokeniser == nullptr; }
+			bool operator!=(lak::nullptr_t) { return _tokeniser != nullptr; }
 		};
 
 	private:
@@ -132,7 +132,7 @@ namespace lak
 
 		inline iterator begin() noexcept { return *this; }
 
-		inline nullptr_t end() const noexcept { return nullptr; }
+		inline lak::nullptr_t end() const noexcept { return nullptr; }
 
 		inline token_position position() const noexcept
 		{
@@ -193,12 +193,12 @@ namespace lak
 
 		void reset() noexcept;
 
-		inline bool operator==(nullptr_t) const noexcept
+		inline bool operator==(lak::nullptr_t) const noexcept
 		{
 			return _current.source.begin() >= _data.end();
 		}
 
-		inline bool operator!=(nullptr_t) const noexcept
+		inline bool operator!=(lak::nullptr_t) const noexcept
 		{
 			return _current.source.begin() < _data.end();
 		}

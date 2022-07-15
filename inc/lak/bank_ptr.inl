@@ -202,7 +202,7 @@ lak::unique_bank_ptr<T>::unique_bank_ptr()
 }
 
 template<typename T>
-lak::unique_bank_ptr<T> &lak::unique_bank_ptr<T>::operator=(std::nullptr_t)
+lak::unique_bank_ptr<T> &lak::unique_bank_ptr<T>::operator=(lak::nullptr_t)
 {
 	reset();
 	return *this;
@@ -342,13 +342,13 @@ bool lak::unique_bank_ptr<T>::operator!=(
 }
 
 template<typename T>
-bool lak::unique_bank_ptr<T>::operator==(std::nullptr_t) const
+bool lak::unique_bank_ptr<T>::operator==(lak::nullptr_t) const
 {
 	return !*this;
 }
 
 template<typename T>
-bool lak::unique_bank_ptr<T>::operator!=(std::nullptr_t) const
+bool lak::unique_bank_ptr<T>::operator!=(lak::nullptr_t) const
 {
 	return !!*this;
 }
@@ -414,7 +414,7 @@ lak::shared_bank_ptr<T> lak::shared_bank_ptr<T>::find_if(FUNCTOR &&func)
 }
 
 template<typename T>
-lak::shared_bank_ptr<T> &lak::shared_bank_ptr<T>::operator=(std::nullptr_t)
+lak::shared_bank_ptr<T> &lak::shared_bank_ptr<T>::operator=(lak::nullptr_t)
 {
 	reset();
 	return *this;
@@ -564,13 +564,13 @@ bool lak::shared_bank_ptr<T>::operator!=(
 }
 
 template<typename T>
-bool lak::shared_bank_ptr<T>::operator==(std::nullptr_t) const
+bool lak::shared_bank_ptr<T>::operator==(lak::nullptr_t) const
 {
 	return !*this;
 }
 
 template<typename T>
-bool lak::shared_bank_ptr<T>::operator!=(std::nullptr_t) const
+bool lak::shared_bank_ptr<T>::operator!=(lak::nullptr_t) const
 {
 	return !!*this;
 }

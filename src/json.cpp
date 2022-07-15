@@ -75,14 +75,14 @@ lak::result<bool> lak::JSON::value_proxy::get_bool() const
 	    });
 }
 
-lak::result<nullptr_t> lak::JSON::value_proxy::get_null() const
+lak::result<lak::nullptr_t> lak::JSON::value_proxy::get_null() const
 {
 	return _index(lak::span(_parser._data))
 	  .and_then(
-	    [](const value_type &v) -> lak::result<nullptr_t>
+	    [](const value_type &v) -> lak::result<lak::nullptr_t>
 	    {
 		    return lak::copy_result_from_pointer(
-		      v.get<value_type::index_of<nullptr_t>>());
+		      v.get<value_type::index_of<lak::nullptr_t>>());
 	    });
 }
 
@@ -102,8 +102,8 @@ lak::result<lak::JSON::value_proxy::value> lak::JSON::value_proxy::get_value()
 			          str(lak::string_view(lak::span(_parser._string_data)))
 			            .unwrap());
 		        },
-		        [](const nullptr_t &) -> value
-		        { return value::make<value::index_of<nullptr_t>>(nullptr); },
+		        [](const lak::nullptr_t &) -> value
+		        { return value::make<value::index_of<lak::nullptr_t>>(nullptr); },
 		        [](const bool &v) -> value
 		        { return value::make<value::index_of<bool>>(v); },
 		        [](const uintmax_t &v) -> value
@@ -168,7 +168,8 @@ lak::result<> lak::JSON::parse_string()
 							hex_char[0] <<= 4;
 							hex_char[0] |= char16_t(digit);
 						}
-						else return lak::err_t{};
+						else
+							return lak::err_t{};
 					}
 
 					if (hex_char[0] >= 0xD800 && hex_char[0] < 0xE000)
@@ -187,7 +188,8 @@ lak::result<> lak::JSON::parse_string()
 								hex_char[1] <<= 4;
 								hex_char[1] |= char16_t(digit);
 							}
-							else return lak::err_t{};
+							else
+								return lak::err_t{};
 						}
 					}
 
@@ -234,7 +236,7 @@ lak::result<> lak::JSON::parse_null()
 	{
 		_position += 4;
 		_data.push_back(
-		  value_type::make<value_type::index_of<nullptr_t>>(nullptr));
+		  value_type::make<value_type::index_of<lak::nullptr_t>>(nullptr));
 		return lak::ok_t{};
 	}
 
@@ -361,7 +363,8 @@ lak::result<> lak::JSON::parse_number()
 
 				result = new_result + new_digit;
 			}
-			else break; // not alphanumeric
+			else
+				break; // not alphanumeric
 		}
 
 		return lak::ok_t<uintmax_t>{result};
@@ -379,7 +382,8 @@ lak::result<> lak::JSON::parse_number()
 			return lak::ok_t<double>{double(integer) *
 			                         std::pow(10.0, -double(chars_read))};
 		}
-		else return lak::err_t{};
+		else
+			return lak::err_t{};
 	};
 
 	// -?([1-9][0-9]*|0)(\.[0-9]+)?([eE][\+\-]?[0-9]+)?
@@ -413,7 +417,8 @@ lak::result<> lak::JSON::parse_number()
 
 		if_let_ok (uintmax_t integer_part, parse_simple_integer())
 			result.integer = integer_part;
-		else return lak::err_t{};
+		else
+			return lak::err_t{};
 	}
 
 	if (empty()) return finish();
@@ -429,7 +434,8 @@ lak::result<> lak::JSON::parse_number()
 
 		if_let_ok (double fraction_part, parse_fraction())
 			fraction.emplace(fraction_part);
-		else return lak::err_t{};
+		else
+			return lak::err_t{};
 
 		if (empty()) return finish();
 	}
@@ -456,7 +462,8 @@ lak::result<> lak::JSON::parse_number()
 
 		if_let_ok (uintmax_t exponent_part, parse_simple_integer())
 			result.exponent = exponent_part;
-		else return lak::err_t{};
+		else
+			return lak::err_t{};
 	}
 
 	return finish();
@@ -660,7 +667,8 @@ lak::result<> lak::JSON::parse_value()
 						default: return lak::err_t{};
 					}
 				}
-				else return lak::err_t{};
+				else
+					return lak::err_t{};
 				break;
 
 			default:

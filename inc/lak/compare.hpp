@@ -34,13 +34,13 @@ namespace lak
 		  lak::partial_ordering, lak::partial_ordering) noexcept = default;
 
 		[[nodiscard]] friend constexpr bool operator==(
-		  const lak::partial_ordering val, nullptr_t) noexcept
+		  const lak::partial_ordering val, lak::nullptr_t) noexcept
 		{
 			return val._value == 0;
 		}
 
 		[[nodiscard]] friend constexpr bool operator==(
-		  nullptr_t, const lak::partial_ordering val) noexcept
+		  lak::nullptr_t, const lak::partial_ordering val) noexcept
 		{
 			return val == 0;
 		}
@@ -48,13 +48,13 @@ namespace lak
 		/* --- operator< --- */
 
 		[[nodiscard]] friend constexpr bool operator<(
-		  const lak::partial_ordering val, nullptr_t) noexcept
+		  const lak::partial_ordering val, lak::nullptr_t) noexcept
 		{
 			return val._value == static_cast<signed char>(lak::_ordering::less);
 		}
 
 		[[nodiscard]] friend constexpr bool operator<(
-		  nullptr_t, const lak::partial_ordering val) noexcept
+		  lak::nullptr_t, const lak::partial_ordering val) noexcept
 		{
 			return val > 0;
 		}
@@ -62,13 +62,13 @@ namespace lak
 		/* --- operator> --- */
 
 		[[nodiscard]] friend constexpr bool operator>(
-		  const lak::partial_ordering val, nullptr_t)
+		  const lak::partial_ordering val, lak::nullptr_t)
 		{
 			return val._value == static_cast<signed char>(lak::_ordering::greater);
 		}
 
 		[[nodiscard]] friend constexpr bool operator>(
-		  nullptr_t, const lak::partial_ordering val)
+		  lak::nullptr_t, const lak::partial_ordering val)
 		{
 			return val < 0;
 		}
@@ -76,14 +76,14 @@ namespace lak
 		/* --- operator<= --- */
 
 		[[nodiscard]] friend constexpr bool operator<=(
-		  const lak::partial_ordering val, nullptr_t)
+		  const lak::partial_ordering val, lak::nullptr_t)
 		{
 			return static_cast<signed char>(
 			         0 - static_cast<unsigned char>(val._value)) >= 0;
 		}
 
 		[[nodiscard]] friend constexpr bool operator<=(
-		  nullptr_t, const lak::partial_ordering val)
+		  lak::nullptr_t, const lak::partial_ordering val)
 		{
 			return val >= 0;
 		}
@@ -91,13 +91,13 @@ namespace lak
 		/* --- operator>= --- */
 
 		[[nodiscard]] friend constexpr bool operator>=(
-		  const lak::partial_ordering val, nullptr_t)
+		  const lak::partial_ordering val, lak::nullptr_t)
 		{
 			return val._value >= 0;
 		}
 
 		[[nodiscard]] friend constexpr bool operator>=(
-		  nullptr_t, const lak::partial_ordering val)
+		  lak::nullptr_t, const lak::partial_ordering val)
 		{
 			return val <= 0;
 		}
@@ -105,13 +105,13 @@ namespace lak
 		/* --- operator<=> --- */
 
 		[[nodiscard]] friend constexpr lak::partial_ordering operator<=>(
-		  const lak::partial_ordering val, nullptr_t)
+		  const lak::partial_ordering val, lak::nullptr_t)
 		{
 			return val;
 		}
 
 		[[nodiscard]] friend constexpr lak::partial_ordering operator<=>(
-		  nullptr_t, const lak::partial_ordering val)
+		  lak::nullptr_t, const lak::partial_ordering val)
 		{
 			return {._value = static_cast<signed char>(
 			          0 - static_cast<unsigned char>(val._value))};
@@ -150,13 +150,13 @@ namespace lak
 		  lak::weak_ordering, lak::weak_ordering) noexcept = default;
 
 		[[nodiscard]] friend constexpr bool operator==(
-		  const lak::weak_ordering val, nullptr_t) noexcept
+		  const lak::weak_ordering val, lak::nullptr_t) noexcept
 		{
 			return val._value == 0;
 		}
 
 		[[nodiscard]] friend constexpr bool operator==(
-		  nullptr_t, const lak::weak_ordering val) noexcept
+		  lak::nullptr_t, const lak::weak_ordering val) noexcept
 		{
 			return val == 0;
 		}
@@ -164,13 +164,13 @@ namespace lak
 		/* --- operator< --- */
 
 		[[nodiscard]] friend constexpr bool operator<(const lak::weak_ordering val,
-		                                              nullptr_t) noexcept
+		                                              lak::nullptr_t) noexcept
 		{
 			return val._value < 0;
 		}
 
 		[[nodiscard]] friend constexpr bool operator<(
-		  nullptr_t, const lak::weak_ordering val) noexcept
+		  lak::nullptr_t, const lak::weak_ordering val) noexcept
 		{
 			return val > 0;
 		}
@@ -178,12 +178,12 @@ namespace lak
 		/* --- operator> --- */
 
 		[[nodiscard]] friend constexpr bool operator>(const lak::weak_ordering val,
-		                                              nullptr_t)
+		                                              lak::nullptr_t)
 		{
 			return val._value > 0;
 		}
 
-		[[nodiscard]] friend constexpr bool operator>(nullptr_t,
+		[[nodiscard]] friend constexpr bool operator>(lak::nullptr_t,
 		                                              const lak::weak_ordering val)
 		{
 			return val < 0;
@@ -192,13 +192,13 @@ namespace lak
 		/* --- operator<= --- */
 
 		[[nodiscard]] friend constexpr bool operator<=(
-		  const lak::weak_ordering val, nullptr_t)
+		  const lak::weak_ordering val, lak::nullptr_t)
 		{
 			return val._value <= 0;
 		}
 
 		[[nodiscard]] friend constexpr bool operator<=(
-		  nullptr_t, const lak::weak_ordering val)
+		  lak::nullptr_t, const lak::weak_ordering val)
 		{
 			return val >= 0;
 		}
@@ -206,13 +206,13 @@ namespace lak
 		/* --- operator>= --- */
 
 		[[nodiscard]] friend constexpr bool operator>=(
-		  const lak::weak_ordering val, nullptr_t)
+		  const lak::weak_ordering val, lak::nullptr_t)
 		{
 			return val._value >= 0;
 		}
 
 		[[nodiscard]] friend constexpr bool operator>=(
-		  nullptr_t, const lak::weak_ordering val)
+		  lak::nullptr_t, const lak::weak_ordering val)
 		{
 			return val <= 0;
 		}
@@ -220,13 +220,13 @@ namespace lak
 		/* --- operator<=> --- */
 
 		[[nodiscard]] friend constexpr lak::weak_ordering operator<=>(
-		  const lak::weak_ordering val, nullptr_t)
+		  const lak::weak_ordering val, lak::nullptr_t)
 		{
 			return val;
 		}
 
 		[[nodiscard]] friend constexpr lak::weak_ordering operator<=>(
-		  nullptr_t, const lak::weak_ordering val)
+		  lak::nullptr_t, const lak::weak_ordering val)
 		{
 			return {._value = static_cast<signed char>(-val._value)};
 		}
@@ -266,13 +266,13 @@ namespace lak
 		  lak::strong_ordering, lak::strong_ordering) noexcept = default;
 
 		[[nodiscard]] friend constexpr bool operator==(
-		  const lak::strong_ordering val, nullptr_t) noexcept
+		  const lak::strong_ordering val, lak::nullptr_t) noexcept
 		{
 			return val._value == 0;
 		}
 
 		[[nodiscard]] friend constexpr bool operator==(
-		  nullptr_t, const lak::strong_ordering val) noexcept
+		  lak::nullptr_t, const lak::strong_ordering val) noexcept
 		{
 			return val == 0;
 		}
@@ -280,13 +280,13 @@ namespace lak
 		/* --- operator< --- */
 
 		[[nodiscard]] friend constexpr bool operator<(
-		  const lak::strong_ordering val, nullptr_t) noexcept
+		  const lak::strong_ordering val, lak::nullptr_t) noexcept
 		{
 			return val._value < 0;
 		}
 
 		[[nodiscard]] friend constexpr bool operator<(
-		  nullptr_t, const lak::strong_ordering val) noexcept
+		  lak::nullptr_t, const lak::strong_ordering val) noexcept
 		{
 			return val > 0;
 		}
@@ -294,13 +294,13 @@ namespace lak
 		/* --- operator> --- */
 
 		[[nodiscard]] friend constexpr bool operator>(
-		  const lak::strong_ordering val, nullptr_t)
+		  const lak::strong_ordering val, lak::nullptr_t)
 		{
 			return val._value > 0;
 		}
 
 		[[nodiscard]] friend constexpr bool operator>(
-		  nullptr_t, const lak::strong_ordering val)
+		  lak::nullptr_t, const lak::strong_ordering val)
 		{
 			return val < 0;
 		}
@@ -308,13 +308,13 @@ namespace lak
 		/* --- operator<= --- */
 
 		[[nodiscard]] friend constexpr bool operator<=(
-		  const lak::strong_ordering val, nullptr_t)
+		  const lak::strong_ordering val, lak::nullptr_t)
 		{
 			return val._value <= 0;
 		}
 
 		[[nodiscard]] friend constexpr bool operator<=(
-		  nullptr_t, const lak::strong_ordering val)
+		  lak::nullptr_t, const lak::strong_ordering val)
 		{
 			return val >= 0;
 		}
@@ -322,13 +322,13 @@ namespace lak
 		/* --- operator>= --- */
 
 		[[nodiscard]] friend constexpr bool operator>=(
-		  const lak::strong_ordering val, nullptr_t)
+		  const lak::strong_ordering val, lak::nullptr_t)
 		{
 			return val._value >= 0;
 		}
 
 		[[nodiscard]] friend constexpr bool operator>=(
-		  nullptr_t, const lak::strong_ordering val)
+		  lak::nullptr_t, const lak::strong_ordering val)
 		{
 			return val <= 0;
 		}
@@ -336,13 +336,13 @@ namespace lak
 		/* --- operator<=> --- */
 
 		[[nodiscard]] friend constexpr lak::strong_ordering operator<=>(
-		  const lak::strong_ordering val, nullptr_t)
+		  const lak::strong_ordering val, lak::nullptr_t)
 		{
 			return val;
 		}
 
 		[[nodiscard]] friend constexpr lak::strong_ordering operator<=>(
-		  nullptr_t, const lak::strong_ordering val)
+		  lak::nullptr_t, const lak::strong_ordering val)
 		{
 			return {._value = static_cast<signed char>(-val._value)};
 		}

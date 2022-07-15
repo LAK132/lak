@@ -7,6 +7,8 @@
 namespace lak
 {
 	static const constexpr size_t dynamic_extent = SIZE_MAX;
+
+	using nullptr_t = decltype(nullptr);
 }
 
 using f32_t = float;

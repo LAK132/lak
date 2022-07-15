@@ -45,14 +45,14 @@ namespace lak
 			index next; // linked list
 		};
 
-		using value_type = lak::variant<subspan,   // string
-		                                nullptr_t, // null
-		                                bool,      // boolean
-		                                uintmax_t, // number
-		                                intmax_t,  // number
-		                                double,    // number
-		                                object,    // object
-		                                array      // array
+		using value_type = lak::variant<subspan,        // string
+		                                lak::nullptr_t, // null
+		                                bool,           // boolean
+		                                uintmax_t,      // number
+		                                intmax_t,       // number
+		                                double,         // number
+		                                object,         // object
+		                                array           // array
 		                                >;
 
 	public:
@@ -168,7 +168,7 @@ namespace lak
 
 		public:
 			using value = lak::variant<lak::u8string_view, // string
-			                           nullptr_t,          // null
+			                           lak::nullptr_t,     // null
 			                           bool,               // boolean
 			                           uintmax_t,          // number
 			                           intmax_t,           // number
@@ -182,7 +182,7 @@ namespace lak
 			lak::result<number_proxy> get_number() const;
 			lak::result<lak::u8string_view> get_string() const;
 			lak::result<bool> get_bool() const;
-			lak::result<nullptr_t> get_null() const;
+			lak::result<lak::nullptr_t> get_null() const;
 			lak::result<value> get_value() const;
 		};
 

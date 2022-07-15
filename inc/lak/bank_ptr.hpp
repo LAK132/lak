@@ -87,8 +87,8 @@ namespace lak
 
 		unique_bank_ptr();
 
-		unique_bank_ptr(std::nullptr_t) : unique_bank_ptr() {}
-		unique_bank_ptr &operator=(std::nullptr_t);
+		unique_bank_ptr(lak::nullptr_t) : unique_bank_ptr() {}
+		unique_bank_ptr &operator=(lak::nullptr_t);
 
 		unique_bank_ptr(const unique_bank_ptr &other) = delete;
 		unique_bank_ptr &operator=(const unique_bank_ptr &other) = delete;
@@ -118,8 +118,8 @@ namespace lak
 		bool operator==(const unique_bank_ptr &rhs) const;
 		bool operator!=(const unique_bank_ptr &rhs) const;
 
-		bool operator==(std::nullptr_t) const;
-		bool operator!=(std::nullptr_t) const;
+		bool operator==(lak::nullptr_t) const;
+		bool operator!=(lak::nullptr_t) const;
 
 		operator bool() const;
 	};
@@ -156,8 +156,8 @@ namespace lak
 
 		shared_bank_ptr() : unique_bank_ptr<T>() {}
 
-		shared_bank_ptr(std::nullptr_t) : unique_bank_ptr<T>() {}
-		shared_bank_ptr &operator=(std::nullptr_t);
+		shared_bank_ptr(lak::nullptr_t) : unique_bank_ptr<T>() {}
+		shared_bank_ptr &operator=(lak::nullptr_t);
 
 		shared_bank_ptr(const shared_bank_ptr &other);
 		shared_bank_ptr &operator=(const shared_bank_ptr &other);
@@ -176,8 +176,8 @@ namespace lak
 		bool operator==(const shared_bank_ptr &rhs) const;
 		bool operator!=(const shared_bank_ptr &rhs) const;
 
-		bool operator==(std::nullptr_t) const;
-		bool operator!=(std::nullptr_t) const;
+		bool operator==(lak::nullptr_t) const;
+		bool operator!=(lak::nullptr_t) const;
 	};
 
 	template<typename T>
