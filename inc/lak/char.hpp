@@ -81,6 +81,23 @@ namespace lak
 	template<typename CHAR>
 	inline constexpr size_t chars_per_codepoint_v =
 	  chars_per_codepoint<CHAR>::value;
+
+	template<typename T>
+	struct is_character_type
+	{
+		static constexpr bool value = false;
+	};
+
+#define LAK_IS_CHARACTER_MACRO(TYPE, ...)                                     \
+	template<>                                                                  \
+	struct is_character_type<TYPE>                                              \
+	{                                                                           \
+		static constexpr bool value = true;                                       \
+	};
+	LAK_FOREACH_CHAR(LAK_IS_CHARACTER_MACRO)
+
+	template<typename T>
+	inline constexpr bool is_character_type_v = lak::is_character_type<T>::value;
 }
 
 #endif
