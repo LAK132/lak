@@ -41,6 +41,8 @@ namespace lak
 		infallible() = delete;
 	};
 
+	static_assert(!lak::is_default_constructible_v<lak::infallible>);
+
 	/* --- ok_t --- */
 
 	template<typename T = lak::monostate>
