@@ -1,6 +1,7 @@
 #include "lak/algorithm.hpp"
 
 #include "lak/concepts.hpp"
+#include "lak/functional.hpp"
 #include "lak/integer_range.hpp"
 #include "lak/math.hpp"
 #include "lak/ptr_intrin.hpp"

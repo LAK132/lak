@@ -1,7 +1,9 @@
-#include "lak/span.hpp"
+#include "lak/span_manip.hpp"
 
 #include "lak/algorithm.hpp"
 #include "lak/math.hpp"
+#include "lak/result.hpp"
+#include "lak/span.hpp"
 
 template<size_t S, typename T>
 lak::result<lak::span<T, S>> lak::as_const_sized(lak::span<T> s)

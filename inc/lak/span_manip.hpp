@@ -1,13 +1,16 @@
 #ifndef LAK_SPAN_MANIP
-#define LAK_SPAN_MANIP
+#	define LAK_SPAN_MANIP
 
-#include "lak/concepts.hpp"
-#include "lak/result.hpp"
-#include "lak/stdint.hpp"
-#include "lak/tuple.hpp"
-#include "lak/type_traits.hpp"
+#	include "lak/concepts.hpp"
+#	include "lak/stdint.hpp"
+#	include "lak/tuple.hpp"
+#	include "lak/type_traits.hpp"
 
-#include "lak/span_forward.hpp"
+#	define LAK_RESULT_FORWARD_ONLY
+#	include "lak/result.hpp"
+
+#	define LAK_SPAN_FORWARD_ONLY
+#	include "lak/span.hpp"
 
 namespace lak
 {
@@ -99,6 +102,15 @@ namespace lak
 	bool same_span(lak::span<const T> a, lak::span<const T> b);
 }
 
-#include "lak/span_manip.inl"
+#endif
 
+#ifdef LAK_SPAN_MANIP_FORWARD_ONLY
+#	undef LAK_SPAN_MANIP_FORWARD_ONLY
+#else
+#	ifndef LAK_SPAN_MANIP_HPP_IMPL
+#		define LAK_SPAN_MANIP_HPP_IMPL
+
+#		include "lak/span_manip.inl"
+
+#	endif
 #endif

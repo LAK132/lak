@@ -1,15 +1,14 @@
 #ifndef LAK_DEBUG_INL
-#define LAK_DEBUG_INL
+#	define LAK_DEBUG_INL
 
-#include "lak/functional.hpp"
-#include "lak/string.hpp"
+#	include "lak/string.hpp"
 
-#include <cstdlib>
-#ifndef LAK_NO_FILESYSTEM
-#	include <filesystem>
-#endif
-#include <iostream>
-#include <sstream>
+#	include <cstdlib>
+#	ifndef LAK_NO_FILESYSTEM
+#		include <filesystem>
+#	endif
+#	include <iostream>
+#	include <sstream>
 
 namespace lak
 {
@@ -18,9 +17,9 @@ namespace lak
 
 	struct debugger_t
 	{
-#ifndef LAK_DEBUG_STREAM_CHAR
-#	define LAK_DEBUG_STREAM_CHAR char8_t
-#endif
+#	ifndef LAK_DEBUG_STREAM_CHAR
+#		define LAK_DEBUG_STREAM_CHAR char8_t
+#	endif
 		std::basic_stringstream<LAK_DEBUG_STREAM_CHAR> stream;
 
 		void std_out(const lak::u8string &line_info, const lak::astring &str);
@@ -45,13 +44,13 @@ namespace lak
 
 		[[noreturn]] void abort();
 
-#ifndef LAK_NO_FILESYSTEM
+#	ifndef LAK_NO_FILESYSTEM
 		std::filesystem::path save();
 
 		std::filesystem::path save(const std::filesystem::path &path);
 
 		std::filesystem::path crash_path;
-#endif
+#	endif
 
 		bool live_output_enabled = true;
 		bool live_errors_only    = false;
@@ -74,8 +73,19 @@ namespace lak
 	extern debugger_t debugger;
 }
 
-#include "lak/strcast.hpp"
+#	include "lak/strcast.hpp"
 
-#include "lak/streamify.hpp"
+#	include "lak/streamify.hpp"
 
+#endif
+
+#ifdef LAK_DEBUG_FORWARD_ONLY
+#	undef LAK_DEBUG_FORWARD_ONLY
+#else
+#	ifndef LAK_DEBUG_INL_IMPL
+#		define LAK_DEBUG_INL_IMPL
+
+#		include "lak/functional.hpp"
+
+#	endif
 #endif

@@ -1,8 +1,13 @@
 #ifndef LAK_ALGORITHM_HPP
 #define LAK_ALGORITHM_HPP
 
+#include "lak/tuple.hpp"
+
+#define LAK_FUNCTIONAL_FORWARD_ONLY
 #include "lak/functional.hpp"
-#include "lak/span_forward.hpp"
+
+#define LAK_SPAN_FORWARD_ONLY
+#include "lak/span.hpp"
 
 namespace lak
 {

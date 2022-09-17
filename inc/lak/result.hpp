@@ -1,11 +1,10 @@
 #ifndef LAK_RESULT_HPP
-#define LAK_RESULT_HPP
+#	define LAK_RESULT_HPP
 
-#include "lak/concepts.hpp"
-#include "lak/macro_utils.hpp"
-#include "lak/optional.hpp"
-#include "lak/type_traits.hpp"
-#include "lak/variant.hpp"
+#	include "lak/utility.hpp"
+
+#	define LAK_VARIANT_FORWARD_ONLY
+#	include "lak/variant.hpp"
 
 namespace lak
 {
@@ -86,6 +85,188 @@ namespace lak
 	/* --- result --- */
 
 	template<typename OK = lak::monostate, typename ERR = lak::monostate>
+	struct [[nodiscard]] result;
+
+	/* --- ok_or_err --- */
+
+	template<typename T>
+	T &ok_or_err(lak::result<T, T> &result);
+
+	template<typename T>
+	const T &ok_or_err(const lak::result<T, T> &result);
+
+	template<typename T>
+	T ok_or_err(lak::result<T, T> &&result);
+
+	/* --- result_from_pointer --- */
+
+	template<typename T>
+	lak::result<T &> result_from_pointer(T *ptr);
+
+	/* --- copy_result_from_pointer --- */
+
+	template<typename T>
+	lak::result<lak::remove_const_t<T>> copy_result_from_pointer(T *ptr);
+
+	/* --- typedefs --- */
+
+	template<typename OK, typename... ERR>
+	using results = lak::result<OK, lak::variant<ERR...>>;
+
+	template<typename ERR>
+	using error_code = lak::result<lak::monostate, ERR>;
+
+	template<typename... ERR>
+	using error_codes = lak::error_code<lak::variant<ERR...>>;
+
+	template<typename... T>
+	struct is_result<lak::result<T...>> : public lak::true_type
+	{
+	};
+
+	template<typename OK, typename ERR>
+	struct result_ok_type<lak::result<OK, ERR>> : public lak::type_identity<OK>
+	{
+	};
+
+	template<typename OK, typename ERR>
+	struct result_err_type<lak::result<OK, ERR>> : public lak::type_identity<ERR>
+	{
+	};
+
+	namespace concepts
+	{
+		/* --- result_with_ok --- */
+
+		template<typename T, typename OK>
+		concept result_with_ok =
+		  lak::is_result_v<T> && lak::is_same_v<lak::result_ok_type_t<T>, OK>;
+
+		/* --- result_with_err --- */
+
+		template<typename T, typename ERR>
+		concept result_with_err =
+		  lak::is_result_v<T> && lak::is_same_v<lak::result_err_type_t<T>, ERR>;
+	}
+
+// if_let_ok (auto& ok, result) { ok; }
+// else { }
+#	define if_let_ok(VALUE, ...)                                               \
+		if (auto &&UNIQUIFY(RESULT_){__VA_ARGS__}; UNIQUIFY(RESULT_).is_ok())     \
+			do_with (VALUE{                                                         \
+			           lak::forward<decltype(UNIQUIFY(RESULT_))>(UNIQUIFY(RESULT_)) \
+			             .unsafe_unwrap()})
+
+// if_let_err (auto& err, result) { err; }
+// else { }
+#	define if_let_err(VALUE, ...)                                              \
+		if (auto &&UNIQUIFY(RESULT_){__VA_ARGS__}; UNIQUIFY(RESULT_).is_err())    \
+			do_with (VALUE{                                                         \
+			           lak::forward<decltype(UNIQUIFY(RESULT_))>(UNIQUIFY(RESULT_)) \
+			             .unsafe_unwrap_err()})
+
+#	ifndef NOLOG
+#		define EXPECT(...)                                                       \
+			expect(lak::streamify(DEBUG_FATAL_LINE_FILE __VA_OPT__(, ) __VA_ARGS__))
+#		define EXPECT_ERR(...)                                                   \
+			expect_err(                                                             \
+			  lak::streamify(DEBUG_FATAL_LINE_FILE __VA_OPT__(, ) __VA_ARGS__))
+
+#		define UNWRAP()     EXPECT("unwrap failed")
+#		define UNWRAP_ERR() EXPECT_ERR("unwrap_err failed")
+#	else
+#		define EXPECT(...)     expect(lak::streamify(__VA_ARGS__))
+#		define EXPECT_ERR(...) expect_err(lak::streamify(__VA_ARGS__))
+
+#		define UNWRAP()     unwrap()
+#		define UNWRAP_ERR() unwrap_err()
+#	endif
+
+#	define IF_OK(...)                                                          \
+		if_ok(                                                                    \
+		  [&](const auto &val)                                                    \
+		  {                                                                       \
+			  if constexpr (lak::is_same_v<lak::remove_cvref_t<decltype(err)>,      \
+			                               lak::monostate>)                         \
+			  {                                                                     \
+				  DEBUG(__VA_ARGS__);                                                 \
+			  }                                                                     \
+			  else                                                                  \
+			  {                                                                     \
+				  DEBUG(__VA_ARGS__, ": ", val);                                      \
+			  }                                                                     \
+		  })
+#	define IF_ERR(...)                                                         \
+		if_err(                                                                   \
+		  [&](const auto &err)                                                    \
+		  {                                                                       \
+			  if constexpr (lak::is_same_v<lak::remove_cvref_t<decltype(err)>,      \
+			                               lak::monostate>)                         \
+			  {                                                                     \
+				  ERROR(__VA_ARGS__);                                                 \
+			  }                                                                     \
+			  else                                                                  \
+			  {                                                                     \
+				  ERROR(__VA_ARGS__, ": ", err);                                      \
+			  }                                                                     \
+		  })
+#	define IF_ERR_WARN(...)                                                    \
+		if_err(                                                                   \
+		  [&](const auto &err)                                                    \
+		  {                                                                       \
+			  if constexpr (lak::is_same_v<lak::remove_cvref_t<decltype(err)>,      \
+			                               lak::monostate>)                         \
+			  {                                                                     \
+				  WARNING(__VA_ARGS__);                                               \
+			  }                                                                     \
+			  else                                                                  \
+			  {                                                                     \
+				  WARNING(__VA_ARGS__, ": ", err);                                    \
+			  }                                                                     \
+		  })
+
+#	define RES_TRY_FLUENT(...)                                                 \
+		auto UNIQUIFY(RESULT_){__VA_ARGS__};                                      \
+		if (UNIQUIFY(RESULT_).is_err())                                           \
+			return lak::err_t{lak::move(UNIQUIFY(RESULT_)).unsafe_unwrap_err()};    \
+		lak::move(UNIQUIFY(RESULT_)).unsafe_unwrap()
+
+#	define RES_TRY_ASSIGN(ASSIGN, ...)                                         \
+		auto UNIQUIFY(RESULT_){__VA_ARGS__};                                      \
+		if (UNIQUIFY(RESULT_).is_err())                                           \
+			return lak::err_t{lak::move(UNIQUIFY(RESULT_)).unsafe_unwrap_err()};    \
+		ASSIGN lak::move(UNIQUIFY(RESULT_)).unsafe_unwrap()
+
+#	define RES_TRY(...)                                                        \
+		do                                                                        \
+		{                                                                         \
+			if_let_err (auto &&err, __VA_ARGS__)                                    \
+				return lak::err_t{lak::forward<decltype(err)>(err)};                  \
+		} while (false)
+}
+
+#endif
+
+#ifdef LAK_RESULT_FORWARD_ONLY
+#	undef LAK_RESULT_FORWARD_ONLY
+#else
+#	ifndef LAK_RESULT_HPP_IMPL
+#		define LAK_RESULT_HPP_IMPL
+
+#		define LAK_DEBUG_FORWARD_ONLY
+#		include "lak/debug.hpp"
+
+#		include "lak/concepts.hpp"
+#		include "lak/macro_utils.hpp"
+#		include "lak/optional.hpp"
+#		include "lak/type_traits.hpp"
+#		include "lak/variant.hpp"
+
+namespace lak
+{
+	/* --- result --- */
+
+	template<typename OK, typename ERR>
 	struct [[nodiscard]] result
 	{
 		using ok_type            = OK;
@@ -853,144 +1034,7 @@ namespace lak
 	static_assert(lak::is_same_v<decltype(copy_result_from_pointer(
 	                               lak::declval<const int **>())),
 	                             lak::result<const int *>>);
-
-	template<typename OK, typename... ERR>
-	using results = lak::result<OK, lak::variant<ERR...>>;
-
-	template<typename ERR>
-	using error_code = lak::result<lak::monostate, ERR>;
-
-	template<typename... ERR>
-	using error_codes = lak::error_code<lak::variant<ERR...>>;
-
-	template<typename OK>
-	using infallible_result = lak::result<OK, lak::infallible>;
-
-	template<typename... T>
-	struct is_result<lak::result<T...>> : public lak::true_type
-	{
-	};
-
-	template<typename OK, typename ERR>
-	struct result_ok_type<lak::result<OK, ERR>> : public lak::type_identity<OK>
-	{
-	};
-
-	template<typename OK, typename ERR>
-	struct result_err_type<lak::result<OK, ERR>> : public lak::type_identity<ERR>
-	{
-	};
-
-	namespace concepts
-	{
-		/* --- result_with_ok --- */
-
-		template<typename T, typename OK>
-		concept result_with_ok =
-		  lak::is_result_v<T> && lak::is_same_v<lak::result_ok_type_t<T>, OK>;
-
-		/* --- result_with_err --- */
-
-		template<typename T, typename ERR>
-		concept result_with_err =
-		  lak::is_result_v<T> && lak::is_same_v<lak::result_err_type_t<T>, ERR>;
-	}
-
-// if_let_ok (auto& ok, result) { ok; }
-// else { }
-#define if_let_ok(VALUE, ...)                                                 \
-	if (auto &&UNIQUIFY(RESULT_){__VA_ARGS__}; UNIQUIFY(RESULT_).is_ok())       \
-		do_with (VALUE{                                                           \
-		           lak::forward<decltype(UNIQUIFY(RESULT_))>(UNIQUIFY(RESULT_))   \
-		             .unsafe_unwrap()})
-
-// if_let_err (auto& err, result) { err; }
-// else { }
-#define if_let_err(VALUE, ...)                                                \
-	if (auto &&UNIQUIFY(RESULT_){__VA_ARGS__}; UNIQUIFY(RESULT_).is_err())      \
-		do_with (VALUE{                                                           \
-		           lak::forward<decltype(UNIQUIFY(RESULT_))>(UNIQUIFY(RESULT_))   \
-		             .unsafe_unwrap_err()})
-
-#ifndef NOLOG
-#	define EXPECT(...)                                                         \
-		expect(lak::streamify(DEBUG_FATAL_LINE_FILE __VA_OPT__(, ) __VA_ARGS__))
-#	define EXPECT_ERR(...)                                                     \
-		expect_err(                                                               \
-		  lak::streamify(DEBUG_FATAL_LINE_FILE __VA_OPT__(, ) __VA_ARGS__))
-
-#	define UNWRAP()     EXPECT("unwrap failed")
-#	define UNWRAP_ERR() EXPECT_ERR("unwrap_err failed")
-#else
-#	define EXPECT(...)     expect(lak::streamify(__VA_ARGS__))
-#	define EXPECT_ERR(...) expect_err(lak::streamify(__VA_ARGS__))
-
-#	define UNWRAP()     unwrap()
-#	define UNWRAP_ERR() unwrap_err()
-#endif
-
-#define IF_OK(...)                                                            \
-	if_ok(                                                                      \
-	  [&](const auto &val)                                                      \
-	  {                                                                         \
-			if constexpr (lak::is_same_v<lak::remove_cvref_t<decltype(err)>,        \
-			                             lak::monostate>)                           \
-			{                                                                       \
-				DEBUG(__VA_ARGS__);                                                   \
-			}                                                                       \
-			else                                                                    \
-			{                                                                       \
-				DEBUG(__VA_ARGS__, ": ", val);                                        \
-			}                                                                       \
-	  })
-#define IF_ERR(...)                                                           \
-	if_err(                                                                     \
-	  [&](const auto &err)                                                      \
-	  {                                                                         \
-			if constexpr (lak::is_same_v<lak::remove_cvref_t<decltype(err)>,        \
-			                             lak::monostate>)                           \
-			{                                                                       \
-				ERROR(__VA_ARGS__);                                                   \
-			}                                                                       \
-			else                                                                    \
-			{                                                                       \
-				ERROR(__VA_ARGS__, ": ", err);                                        \
-			}                                                                       \
-	  })
-#define IF_ERR_WARN(...)                                                      \
-	if_err(                                                                     \
-	  [&](const auto &err)                                                      \
-	  {                                                                         \
-			if constexpr (lak::is_same_v<lak::remove_cvref_t<decltype(err)>,        \
-			                             lak::monostate>)                           \
-			{                                                                       \
-				WARNING(__VA_ARGS__);                                                 \
-			}                                                                       \
-			else                                                                    \
-			{                                                                       \
-				WARNING(__VA_ARGS__, ": ", err);                                      \
-			}                                                                       \
-	  })
-
-#define RES_TRY_FLUENT(...)                                                   \
-	auto UNIQUIFY(RESULT_){__VA_ARGS__};                                        \
-	if (UNIQUIFY(RESULT_).is_err())                                             \
-		return lak::err_t{lak::move(UNIQUIFY(RESULT_)).unsafe_unwrap_err()};      \
-	lak::move(UNIQUIFY(RESULT_)).unsafe_unwrap()
-
-#define RES_TRY_ASSIGN(ASSIGN, ...)                                           \
-	auto UNIQUIFY(RESULT_){__VA_ARGS__};                                        \
-	if (UNIQUIFY(RESULT_).is_err())                                             \
-		return lak::err_t{lak::move(UNIQUIFY(RESULT_)).unsafe_unwrap_err()};      \
-	ASSIGN lak::move(UNIQUIFY(RESULT_)).unsafe_unwrap()
-
-#define RES_TRY(...)                                                          \
-	do                                                                          \
-	{                                                                           \
-		if_let_err (auto &&err, __VA_ARGS__)                                      \
-			return lak::err_t{lak::forward<decltype(err)>(err)};                    \
-	} while (false)
-
 }
 
+#	endif
 #endif

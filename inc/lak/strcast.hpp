@@ -6,7 +6,9 @@
 #define LAK_STRCAST_HPP
 
 #include "lak/compiler.hpp"
-#include "lak/string_view_forward.hpp"
+
+#define LAK_STRING_VIEW_FORWARD_ONLY
+#include "lak/string_view.hpp"
 
 namespace lak
 {

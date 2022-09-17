@@ -1,23 +1,92 @@
 #ifndef LAK_FUNCTIONAL_HPP
-#define LAK_FUNCTIONAL_HPP
+#	define LAK_FUNCTIONAL_HPP
 
-#include "lak/concepts.hpp"
-#include "lak/utility.hpp"
+#	include "lak/concepts.hpp"
+#	include "lak/type_pack.hpp"
 
 namespace lak
 {
 	/* --- equal_to --- */
 
-#ifdef LAK_COMPILER_MSVC
+#	ifdef LAK_COMPILER_MSVC
 	template<typename T = void, auto... P>
-#else
+#	else
 	template<typename T = void, lak::concepts::member_pointer auto... P>
+#	endif
+	struct equal_to;
+
+	/* --- not_equal_to --- */
+
+#	ifdef LAK_COMPILER_MSVC
+	template<typename T = void, auto... P>
+#	else
+	template<typename T = void, lak::concepts::member_pointer auto... P>
+#	endif
+	struct not_equal_to;
+
+	/* --- less --- */
+
+#	ifdef LAK_COMPILER_MSVC
+	template<typename T = void, auto... P>
+#	else
+	template<typename T = void, lak::concepts::member_pointer auto... P>
+#	endif
+	struct less;
+
+	/* --- greater --- */
+
+#	ifdef LAK_COMPILER_MSVC
+	template<typename T = void, auto... P>
+#	else
+	template<typename T = void, lak::concepts::member_pointer auto... P>
+#	endif
+	struct greater;
+
+	/* --- less_equal --- */
+
+#	ifdef LAK_COMPILER_MSVC
+	template<typename T = void, auto... P>
+#	else
+	template<typename T = void, lak::concepts::member_pointer auto... P>
+#	endif
+	struct less_equal;
+
+	/* --- greater_equal --- */
+
+#	ifdef LAK_COMPILER_MSVC
+	template<typename T = void, auto... P>
+#	else
+	template<typename T = void, lak::concepts::member_pointer auto... P>
+#	endif
+	struct greater_equal;
+}
+
 #endif
+
+#ifdef LAK_FUNCTIONAL_FORWARD_ONLY
+#	undef LAK_FUNCTIONAL_FORWARD_ONLY
+#else
+#	ifndef LAK_FUNCTIONAL_HPP_IMPL
+#		define LAK_FUNCTIONAL_HPP_IMPL
+
+#		include "lak/memmanip.hpp"
+#		include "lak/memory.hpp"
+#		include "lak/utility.hpp"
+
+namespace lak
+{
+	/* --- equal_to --- */
+
+#		ifdef LAK_COMPILER_MSVC
+	template<typename T, auto... P>
+#		else
+	template<typename T, lak::concepts::member_pointer auto... P>
+#		endif
 	struct equal_to
 	{
-#ifdef LAK_COMPILER_MSVC
+#		ifdef LAK_COMPILER_MSVC
 		static_assert((lak::is_member_pointer_v<decltype(P)> && ...));
-#endif
+#		endif
 
 		template<size_t... Is>
 		constexpr force_inline bool operator()(const T &lhs,
@@ -64,16 +133,16 @@ namespace lak
 
 	/* --- not_equal_to --- */
 
-#ifdef LAK_COMPILER_MSVC
-	template<typename T = void, auto... P>
-#else
-	template<typename T = void, lak::concepts::member_pointer auto... P>
-#endif
+#		ifdef LAK_COMPILER_MSVC
+	template<typename T, auto... P>
+#		else
+	template<typename T, lak::concepts::member_pointer auto... P>
+#		endif
 	struct not_equal_to
 	{
-#ifdef LAK_COMPILER_MSVC
+#		ifdef LAK_COMPILER_MSVC
 		static_assert((lak::is_member_pointer_v<decltype(P)> && ...));
-#endif
+#		endif
 
 		template<size_t... Is>
 		constexpr force_inline bool operator()(const T &lhs,
@@ -120,16 +189,16 @@ namespace lak
 
 	/* --- less --- */
 
-#ifdef LAK_COMPILER_MSVC
-	template<typename T = void, auto... P>
-#else
-	template<typename T = void, lak::concepts::member_pointer auto... P>
-#endif
+#		ifdef LAK_COMPILER_MSVC
+	template<typename T, auto... P>
+#		else
+	template<typename T, lak::concepts::member_pointer auto... P>
+#		endif
 	struct less
 	{
-#ifdef LAK_COMPILER_MSVC
+#		ifdef LAK_COMPILER_MSVC
 		static_assert((lak::is_member_pointer_v<decltype(P)> && ...));
-#endif
+#		endif
 
 		template<size_t I, size_t... Is>
 		constexpr force_inline bool operator()(
@@ -175,16 +244,16 @@ namespace lak
 
 	/* --- greater --- */
 
-#ifdef LAK_COMPILER_MSVC
-	template<typename T = void, auto... P>
-#else
-	template<typename T = void, lak::concepts::member_pointer auto... P>
-#endif
+#		ifdef LAK_COMPILER_MSVC
+	template<typename T, auto... P>
+#		else
+	template<typename T, lak::concepts::member_pointer auto... P>
+#		endif
 	struct greater
 	{
-#ifdef LAK_COMPILER_MSVC
+#		ifdef LAK_COMPILER_MSVC
 		static_assert((lak::is_member_pointer_v<decltype(P)> && ...));
-#endif
+#		endif
 
 		template<size_t I, size_t... Is>
 		constexpr force_inline bool operator()(
@@ -230,16 +299,16 @@ namespace lak
 
 	/* --- less_equal --- */
 
-#ifdef LAK_COMPILER_MSVC
-	template<typename T = void, auto... P>
-#else
-	template<typename T = void, lak::concepts::member_pointer auto... P>
-#endif
+#		ifdef LAK_COMPILER_MSVC
+	template<typename T, auto... P>
+#		else
+	template<typename T, lak::concepts::member_pointer auto... P>
+#		endif
 	struct less_equal
 	{
-#ifdef LAK_COMPILER_MSVC
+#		ifdef LAK_COMPILER_MSVC
 		static_assert((lak::is_member_pointer_v<decltype(P)> && ...));
-#endif
+#		endif
 
 		template<size_t I, size_t... Is>
 		constexpr force_inline bool operator()(
@@ -285,16 +354,16 @@ namespace lak
 
 	/* --- greater_equal --- */
 
-#ifdef LAK_COMPILER_MSVC
-	template<typename T = void, auto... P>
-#else
-	template<typename T = void, lak::concepts::member_pointer auto... P>
-#endif
+#		ifdef LAK_COMPILER_MSVC
+	template<typename T, auto... P>
+#		else
+	template<typename T, lak::concepts::member_pointer auto... P>
+#		endif
 	struct greater_equal
 	{
-#ifdef LAK_COMPILER_MSVC
+#		ifdef LAK_COMPILER_MSVC
 		static_assert((lak::is_member_pointer_v<decltype(P)> && ...));
-#endif
+#		endif
 
 		template<size_t I, size_t... Is>
 		constexpr force_inline bool operator()(
@@ -339,6 +408,7 @@ namespace lak
 	};
 }
 
-#include "lak/functional.inl"
+#		include "lak/functional.inl"
 
+#	endif
 #endif

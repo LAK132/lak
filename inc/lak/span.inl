@@ -1,4 +1,4 @@
-#include "lak/span_forward.hpp"
+#include "lak/span.hpp"
 
 #include "lak/ptr_intrin.hpp"
 

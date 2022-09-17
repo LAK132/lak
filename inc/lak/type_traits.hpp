@@ -1230,15 +1230,15 @@ namespace lak
 	template<size_t I, auto... T>
 	inline constexpr auto nth_value_v = lak::nth_value<I, T...>::value;
 
-	static_assert(lak::is_same_v<
-	              const char,
-	              decltype(lak::nth_value_v<0, char{}, unsigned{}, signed{}>)>);
-	static_assert(lak::is_same_v<
-	              const unsigned,
-	              decltype(lak::nth_value_v<1, char{}, unsigned{}, signed{}>)>);
-	static_assert(lak::is_same_v<
-	              const signed,
-	              decltype(lak::nth_value_v<2, char{}, unsigned{}, signed{}>)>);
+	static_assert(
+	  lak::is_same_v<const char,
+	                 decltype(lak::nth_value_v<0, char{}, unsigned{}, int{}>)>);
+	static_assert(
+	  lak::is_same_v<const unsigned,
+	                 decltype(lak::nth_value_v<1, char{}, unsigned{}, int{}>)>);
+	static_assert(
+	  lak::is_same_v<const int,
+	                 decltype(lak::nth_value_v<2, char{}, unsigned{}, int{}>)>);
 
 	/* --- integer_sequence --- */
 

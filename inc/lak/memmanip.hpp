@@ -1,9 +1,13 @@
 #ifndef LAK_MEMMANIP_HPP
 #define LAK_MEMMANIP_HPP
 
-#include "lak/result.hpp"
-#include "lak/span.hpp"
 #include "lak/span_manip.hpp"
+
+#define LAK_RESULT_FORWARD_ONLY
+#include "lak/result.hpp"
+
+#define LAK_SPAN_FORWARD_ONLY
+#include "lak/span.hpp"
 
 #include <cstring>
 

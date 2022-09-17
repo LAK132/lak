@@ -18,6 +18,7 @@
 #include <windows.h>
 
 #include <CommCtrl.h>
+#include <commdlg.h>
 #include <windowsx.h>
 #include <wingdi.h>
 #include <winnt.h>

@@ -1,8 +1,8 @@
 #include "lak/variant.hpp"
 
-#include "lak/visit.hpp"
-
 #include "lak/debug.hpp"
+
+#include "lak/visit.hpp"
 
 /* --- pack_union --- */
 
@@ -266,8 +266,3 @@ const auto *lak::variant<T...>::get() const
 // {
 //   return lak::visit_switch()
 // }
-
-template<typename... T>
-struct lak::is_variant<lak::variant<T...>> : public lak::true_type
-{
-};

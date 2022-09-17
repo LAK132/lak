@@ -1,10 +1,9 @@
 #ifndef LAK_VARIANT_HPP
-#define LAK_VARIANT_HPP
+#	define LAK_VARIANT_HPP
 
-#include "lak/concepts.hpp"
-#include "lak/type_pack.hpp"
-#include "lak/type_traits.hpp"
-#include "lak/utility.hpp"
+#	include "lak/type_pack.hpp"
+#	include "lak/type_traits.hpp"
+#	include "lak/utility.hpp"
 
 namespace lak
 {
@@ -48,6 +47,31 @@ namespace lak
 
 	template<typename... T>
 	struct pack_union;
+
+	/* --- variant --- */
+
+	template<typename... T>
+	struct variant;
+
+	template<typename... T>
+	struct is_variant<lak::variant<T...>> : public lak::true_type
+	{
+	};
+}
+
+#endif
+
+#ifdef LAK_VARIANT_FORWARD_ONLY
+#	undef LAK_VARIANT_FORWARD_ONLY
+#else
+#	ifndef LAK_VARIANT_HPP_IMPL
+#		define LAK_VARIANT_HPP_IMPL
+
+#		include "lak/concepts.hpp"
+
+namespace lak
+{
+	/* --- pack_union --- */
 
 	template<typename T, typename... U>
 	struct pack_union<T, U...>
@@ -283,6 +307,7 @@ namespace lak
 	static_assert(lak::is_same_v<lak::variant<char>::value_type<0>, char>);
 }
 
-#include "lak/variant.inl"
+#		include "lak/variant.inl"
 
+#	endif
 #endif
