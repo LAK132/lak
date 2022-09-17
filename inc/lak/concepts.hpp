@@ -67,6 +67,11 @@ namespace lak
 		template<typename T>
 		concept function_pointer = lak::is_function_pointer_v<T>;
 
+		/* --- member_function_pointer --- */
+
+		template<typename T>
+		concept member_function_pointer = lak::is_member_function_pointer_v<T>;
+
 		/* --- function_or_function_pointer --- */
 
 		template<typename T>
@@ -83,6 +88,8 @@ namespace lak
 		         typename OP,
 		         typename... ARGS>
 		concept detected_exact = lak::is_detected_exact_v<EXPECTED, OP, ARGS...>;
+
+		/* --- default_constructible --- */
 
 		template<typename T>
 		concept default_constructible = lak::is_default_constructible_v<T>;

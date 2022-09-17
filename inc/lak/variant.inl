@@ -28,12 +28,15 @@ const auto &lak::pack_union<T, U...>::get() const
 
 template<typename T, typename... U>
 template<size_t I, typename... ARGS>
-void lak::pack_union<T, U...>::emplace(ARGS &&...args)
+auto &lak::pack_union<T, U...>::emplace(ARGS &&...args)
 {
 	if constexpr (I == 0)
+	{
 		new (&value) T(lak::forward<ARGS>(args)...);
+		return value;
+	}
 	else
-		next.template emplace<I - 1>(lak::forward<ARGS>(args)...);
+		return next.template emplace<I - 1>(lak::forward<ARGS>(args)...);
 }
 
 template<typename T, typename... U>
@@ -99,10 +102,11 @@ const auto &lak::pack_union<T>::get() const
 
 template<typename T>
 template<size_t I, typename... ARGS>
-void lak::pack_union<T>::emplace(ARGS &&...args)
+auto &lak::pack_union<T>::emplace(ARGS &&...args)
 {
 	static_assert(I == 0);
 	new (&value) T(lak::forward<ARGS>(args)...);
+	return value;
 }
 
 template<typename T>
@@ -148,17 +152,16 @@ template<typename... T>
 lak::variant<T...>::variant(const variant &other)
 : _index(other._index), _value(lak::uninitialised_union_flag)
 {
-	ASSERT(lak::visit_switch(
-	  lak::make_index_sequence<_size>{},
-	  _index,
-	  [&, this](auto index)
-	  {
-		  using I = lak::remove_cvref_t<decltype(index)>;
-		  if constexpr (_is_ref<I::value>)
-			  _value.template emplace<I::value>(other.template get<I::value>());
-		  else
-			  _value.template emplace<I::value>(*other.template get<I::value>());
-	  }));
+	ASSERT(
+	  lak::visit_switch(lak::make_index_sequence<_size>{},
+	                    _index,
+	                    [&, this]<size_t I>(lak::size_type<I>)
+	                    {
+		                    if constexpr (_is_ref<I>)
+			                    _value.template emplace<I>(other.template get<I>());
+		                    else
+			                    _value.template emplace<I>(*other.template get<I>());
+	                    }));
 }
 
 template<typename... T>
@@ -169,14 +172,13 @@ lak::variant<T...>::variant(variant &&other)
 	ASSERT(lak::visit_switch(
 	  lak::make_index_sequence<_size>{},
 	  _index,
-	  [&, this](auto index)
+	  [&, this]<size_t I>(lak::size_type<I>)
 	  {
-		  using I = lak::remove_cvref_t<decltype(index)>;
-		  if constexpr (_is_ref<I::value>)
-			  _value.template emplace<I::value>(other.template get<I::value>());
+		  if constexpr (_is_ref<I>)
+			  _value.template emplace<I>(other.template get<I>());
 		  else
-			  _value.template emplace<I::value>(
-			    lak::forward<value_type<I::value>>(*other.template get<I::value>()));
+			  _value.template emplace<I>(
+			    lak::forward<value_type<I>>(*other.template get<I>()));
 	  }));
 }
 
@@ -185,27 +187,19 @@ lak::variant<T...> &lak::variant<T...>::operator=(const variant &other)
 {
 	ASSERT(lak::visit_switch(lak::make_index_sequence<_size>{},
 	                         other._index,
-	                         [&, this](auto index)
-	                         {
-		                         using I = lak::remove_cvref_t<decltype(index)>;
-		                         emplace<I::value>(
-		                           *other.template get<I::value>());
-	                         }));
+	                         [&, this]<size_t I>(lak::size_type<I>)
+	                         { emplace<I>(*other.template get<I>()); }));
 	return *this;
 }
 
 template<typename... T>
 lak::variant<T...> &lak::variant<T...>::operator=(variant &&other)
 {
-	ASSERT(lak::visit_switch(lak::make_index_sequence<_size>{},
-	                         other._index,
-	                         [&](auto index)
-	                         {
-		                         using I = lak::remove_cvref_t<decltype(index)>;
-		                         emplace<I::value>(
-		                           lak::forward<value_type<I::value>>(
-		                             *other.template get<I::value>()));
-	                         }));
+	ASSERT(lak::visit_switch(
+	  lak::make_index_sequence<_size>{},
+	  other._index,
+	  [&]<size_t I>(lak::size_type<I>)
+	  { emplace<I>(lak::forward<value_type<I>>(*other.template get<I>())); }));
 	return *this;
 }
 
@@ -228,15 +222,21 @@ lak::variant<T...> lak::variant<T...>::make(ARGS &&...args)
 }
 
 template<typename... T>
+template<typename U, typename... ARGS>
+lak::variant<T...> lak::variant<T...>::make(ARGS &&...args)
+{
+	static_assert(index_of<U> < _size);
+	return variant(lak::in_place_index<index_of<U>>,
+	               lak::forward<ARGS>(args)...);
+}
+
+template<typename... T>
 lak::variant<T...>::variant::~variant()
 {
 	ASSERT(lak::visit_switch(lak::make_index_sequence<_size>{},
 	                         _index,
-	                         [this](auto index)
-	                         {
-		                         using I = lak::remove_cvref_t<decltype(index)>;
-		                         _value.template reset<I::value>();
-	                         }));
+	                         [this]<size_t I>(lak::size_type<I>)
+	                         { _value.template reset<I>(); }));
 }
 
 template<typename... T>
@@ -261,8 +261,120 @@ const auto *lak::variant<T...>::get() const
 		return I == _index ? &_value.template get<I>() : nullptr;
 }
 
-// template<typename FUNCTOR>
-// auto visit(FUNCTOR&& functor)
-// {
-//   return lak::visit_switch()
-// }
+template<typename... T>
+template<typename F>
+auto lak::variant<T...>::visit(F &&func)
+{
+	return lak::visit(*this, lak::forward<F>(func));
+}
+
+template<typename... T>
+template<typename F>
+auto lak::variant<T...>::visit(F &&func) const
+{
+	return lak::visit(*this, lak::forward<F>(func));
+}
+
+template<typename... T>
+template<typename F>
+auto lak::variant<T...>::flat_visit(F &&func)
+{
+	return visit(lak::forward<F>(func));
+}
+
+template<typename... T>
+template<typename F>
+auto lak::variant<T...>::flat_visit(F &&func) const
+{
+	return visit(lak::forward<F>(func));
+}
+
+/* --- variant<variant<T...>, U...> --- */
+
+template<typename... T, typename... U>
+requires((lak::is_standard_layout_v<lak::variant<T..., U...>>)) //
+  lak::variant<lak::variant<T...>, U...>::variant(const variant &other)
+: _value(lak::uninitialised_union_flag)
+{
+	ASSERT(lak::visit_switch(
+	  lak::make_index_sequence<_size>{},
+	  other.index(),
+	  [&, this]<size_t I>(lak::size_type<I>)
+	  {
+		  if constexpr (I == 0U)
+			  _value.template emplace<0U>(other.template unsafe_get<0U>());
+		  else if constexpr (_is_ref<I>)
+			  _value.template emplace<1U>(lak::in_place_index<I + _internal_offset>,
+			                              *other.template unsafe_get<I>());
+		  else
+			  _value.template emplace<1U>(lak::in_place_index<I + _internal_offset>,
+			                              other.template unsafe_get<I>());
+	  }));
+}
+
+template<typename... T, typename... U>
+requires((lak::is_standard_layout_v<lak::variant<T..., U...>>)) //
+  lak::variant<lak::variant<T...>, U...>::variant(variant &&other)
+: _value(lak::uninitialised_union_flag)
+{
+	ASSERT(lak::visit_switch(
+	  lak::make_index_sequence<_size>{},
+	  other.index(),
+	  [&, this]<size_t I>(lak::size_type<I>)
+	  {
+		  if constexpr (I == 0U)
+			  _value.template emplace<0U>(
+			    lak::move(other.template unsafe_get<0U>()));
+		  else if constexpr (_is_ref<I>)
+			  _value.template emplace<1U>(lak::in_place_index<I + _internal_offset>,
+			                              *other.template unsafe_get<I>());
+		  else
+			  _value.template emplace<1U>(lak::in_place_index<I + _internal_offset>,
+			                              lak::move(other.template unsafe_get<I>()));
+	  }));
+}
+
+template<typename... T, typename... U>
+requires((lak::is_standard_layout_v<lak::variant<T..., U...>>)) //
+  lak::variant<lak::variant<T...>, U...>
+&lak::variant<lak::variant<T...>, U...>::operator=(const variant &other)
+{
+	ASSERT(lak::visit_switch(lak::make_index_sequence<_size>{},
+	                         other.index(),
+	                         [&, this]<size_t I>(lak::size_type<I>)
+	                         {
+		                         if constexpr (_is_ref<I>)
+			                         emplace<I>(*other.template unsafe_get<I>());
+		                         else
+			                         emplace<I>(other.template unsafe_get<I>());
+	                         }));
+	return *this;
+}
+
+template<typename... T, typename... U>
+requires((lak::is_standard_layout_v<lak::variant<T..., U...>>)) //
+  lak::variant<lak::variant<T...>, U...>
+&lak::variant<lak::variant<T...>, U...>::operator=(variant &&other)
+{
+	ASSERT(lak::visit_switch(lak::make_index_sequence<_size>{},
+	                         other.index(),
+	                         [&]<size_t I>(lak::size_type<I>)
+	                         {
+		                         if constexpr (_is_ref<I>)
+			                         emplace<I>(*other.template unsafe_get<I>());
+		                         else
+			                         emplace<I>(
+			                           lak::move(other.template unsafe_get<I>()));
+	                         }));
+	return *this;
+}
+
+template<typename... T, typename... U>
+requires((lak::is_standard_layout_v<lak::variant<T..., U...>>)) //
+  lak::variant<lak::variant<T...>, U...>::variant::~variant()
+{
+	if (internal_index() <= _internal_offset)
+		_value.reset<0U>();
+	else
+		_value.reset<1U>();
+}

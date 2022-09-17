@@ -1,9 +1,11 @@
-#define LAK_BASIC_PROGRAM_MAIN   lak_test_basic_program_main
-#define LAK_BASIC_PROGRAM_PREFIX lak_test_basic_
+#ifdef LAK_TEST_BASIC_PROGRAM
 
-#include "lak/test.hpp"
+#	define LAK_BASIC_PROGRAM_MAIN   lak_test_basic_program_main
+#	define LAK_BASIC_PROGRAM_PREFIX lak_test_basic_
 
-#include "lak/basic_program.inl"
+#	include "lak/test.hpp"
+
+#	include "lak/basic_program.inl"
 
 lak::optional<int> lak_test_basic_window_preinit(int, char **)
 {
@@ -52,3 +54,5 @@ BEGIN_TEST(basic_program)
 	return EXIT_SUCCESS;
 }
 END_TEST()
+
+#endif

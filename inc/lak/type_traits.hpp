@@ -4,6 +4,8 @@
 #include "lak/macro_utils.hpp"
 #include "lak/stdint.hpp"
 
+#include <type_traits>
+
 #define TEMPLATE_VALUE_TYPE(NAME, TEMPL_TYPE, VAL_TYPE)                       \
 	template<TEMPL_TYPE T>                                                      \
 	struct NAME;                                                                \
@@ -21,6 +23,9 @@
 
 namespace lak
 {
+	template<typename... T>
+	struct type_pack;
+
 	/* --- integral_constant --- */
 
 	template<typename T, T V>
@@ -115,6 +120,17 @@ namespace lak
 	{
 	};
 
+	/* --- is_standard_layout --- */
+
+	template<typename T>
+	struct is_standard_layout : public std::is_standard_layout<T>
+	{
+	};
+
+	template<typename T>
+	inline constexpr bool is_standard_layout_v =
+	  lak::is_standard_layout<T>::value;
+
 	/* --- type_identity --- */
 
 	template<typename T>
@@ -128,6 +144,60 @@ namespace lak
 	  lak::is_same_v<typename lak::type_identity<int &>::type, int &>);
 	static_assert(lak::is_same_v<typename lak::type_identity<const int &>::type,
 	                             const int &>);
+
+	/* --- left_flatten --- */
+
+	template<typename CONTAINER>
+	struct left_flatten;
+
+	template<template<typename...> typename CONTAINER, typename... T>
+	struct left_flatten<CONTAINER<T...>>
+	: public lak::type_identity<CONTAINER<T...>>
+	{
+		static constexpr bool is_flattened = false;
+	};
+
+	template<template<typename...> typename CONTAINER,
+	         typename... T,
+	         typename... U>
+	struct left_flatten<CONTAINER<CONTAINER<T...>, U...>>
+	: public lak::type_identity<CONTAINER<T..., U...>>
+	{
+		static constexpr bool is_flattened = true;
+	};
+
+	template<typename CONTAINER>
+	using left_flatten_t = typename lak::left_flatten<CONTAINER>::type;
+
+	template<typename CONTAINER>
+	inline constexpr bool can_flatten_v =
+	  lak::left_flatten<CONTAINER>::is_flattened;
+
+	/* --- recursive_left_flatten --- */
+
+	template<typename CONTAINER>
+	struct recursive_left_flatten;
+
+	template<template<typename...> typename CONTAINER, typename... T>
+	struct recursive_left_flatten<CONTAINER<T...>>
+	: public lak::type_identity<CONTAINER<T...>>
+	{
+		static constexpr bool is_flattened = false;
+	};
+
+	template<template<typename...> typename CONTAINER,
+	         typename... T,
+	         typename... U>
+	struct recursive_left_flatten<CONTAINER<CONTAINER<T...>, U...>>
+	: public lak::type_identity<
+	    typename recursive_left_flatten<CONTAINER<T..., U...>>::type>
+	{
+		static constexpr bool is_flattened = true;
+	};
+
+	template<typename CONTAINER>
+	using recursive_left_flatten_t =
+	  typename lak::recursive_left_flatten<CONTAINER>::type;
 
 	/* --- conjunction --- */
 
@@ -527,6 +597,14 @@ namespace lak
 	static_assert(lak::is_same_v<lak::remove_pointer_t<const volatile int &>,
 	                             const volatile int &>);
 
+	static_assert(lak::is_same_v<lak::remove_pointer_t<int *&>, int *&>);
+	static_assert(
+	  lak::is_same_v<lak::remove_pointer_t<const int *&>, const int *&>);
+	static_assert(
+	  lak::is_same_v<lak::remove_pointer_t<volatile int *&>, volatile int *&>);
+	static_assert(lak::is_same_v<lak::remove_pointer_t<const volatile int *&>,
+	                             const volatile int *&>);
+
 	static_assert(lak::is_same_v<lak::remove_pointer_t<int &&>, int &&>);
 	static_assert(
 	  lak::is_same_v<lak::remove_pointer_t<const int &&>, const int &&>);
@@ -534,6 +612,63 @@ namespace lak
 	  lak::is_same_v<lak::remove_pointer_t<volatile int &&>, volatile int &&>);
 	static_assert(lak::is_same_v<lak::remove_pointer_t<const volatile int &&>,
 	                             const volatile int &&>);
+
+	/* --- remove_cvptr --- */
+
+	template<typename T>
+	struct remove_cvptr : lak::remove_cv<lak::remove_pointer_t<T>>
+	{
+	};
+
+	template<typename T>
+	using remove_cvptr_t = typename lak::remove_cvptr<T>::type;
+
+	static_assert(lak::is_same_v<lak::remove_cvptr_t<int>, int>);
+	static_assert(lak::is_same_v<lak::remove_cvptr_t<const int>, int>);
+	static_assert(lak::is_same_v<lak::remove_cvptr_t<volatile int>, int>);
+	static_assert(lak::is_same_v<lak::remove_cvptr_t<const volatile int>, int>);
+
+	static_assert(lak::is_same_v<lak::remove_cvptr_t<int *>, int>);
+	static_assert(lak::is_same_v<lak::remove_cvptr_t<const int *>, int>);
+	static_assert(lak::is_same_v<lak::remove_cvptr_t<volatile int *>, int>);
+	static_assert(
+	  lak::is_same_v<lak::remove_cvptr_t<const volatile int *>, int>);
+
+	static_assert(lak::is_same_v<lak::remove_cvptr_t<int &>, int &>);
+	static_assert(lak::is_same_v<lak::remove_cvptr_t<const int &>, const int &>);
+	static_assert(
+	  lak::is_same_v<lak::remove_cvptr_t<volatile int &>, volatile int &>);
+	static_assert(lak::is_same_v<lak::remove_cvptr_t<const volatile int &>,
+	                             const volatile int &>);
+
+	static_assert(lak::is_same_v<lak::remove_cvptr_t<int *&>, int *&>);
+	static_assert(
+	  lak::is_same_v<lak::remove_cvptr_t<const int *&>, const int *&>);
+	static_assert(
+	  lak::is_same_v<lak::remove_cvptr_t<volatile int *&>, volatile int *&>);
+	static_assert(lak::is_same_v<lak::remove_cvptr_t<const volatile int *&>,
+	                             const volatile int *&>);
+
+	static_assert(lak::is_same_v<lak::remove_cvptr_t<int &&>, int &&>);
+	static_assert(
+	  lak::is_same_v<lak::remove_cvptr_t<const int &&>, const int &&>);
+	static_assert(
+	  lak::is_same_v<lak::remove_cvptr_t<volatile int &&>, volatile int &&>);
+	static_assert(lak::is_same_v<lak::remove_cvptr_t<const volatile int &&>,
+	                             const volatile int &&>);
+
+	static_assert(
+	  lak::is_same_v<lak::remove_cvptr_t<lak::remove_cvref_t<int *&>>, int>);
+	static_assert(
+	  lak::is_same_v<lak::remove_cvptr_t<lak::remove_cvref_t<const int *&>>,
+	                 int>);
+	static_assert(
+	  lak::is_same_v<lak::remove_cvptr_t<lak::remove_cvref_t<volatile int *&>>,
+	                 int>);
+	static_assert(
+	  lak::is_same_v<
+	    lak::remove_cvptr_t<lak::remove_cvref_t<const volatile int *&>>,
+	    int>);
 
 	/* --- remove_refs_ptrs --- */
 
@@ -1064,6 +1199,46 @@ namespace lak
 	static_assert(!lak::is_member_pointer_v<const volatile char &&>);
 	static_assert(!lak::is_member_pointer_v<char[]>);
 	static_assert(!lak::is_member_pointer_v<const volatile char[]>);
+
+	/* --- is_member_function_pointer --- */
+
+	template<typename T>
+	struct is_member_function_pointer : lak::false_type
+	{
+	};
+
+	template<typename T, typename U, typename... ARGS>
+	struct is_member_function_pointer<U (T::*)(ARGS...)> : lak::true_type
+	{
+	};
+
+	template<typename T>
+	inline constexpr bool is_member_function_pointer_v =
+	  lak::is_member_function_pointer<T>::value;
+
+	static_assert(!lak::is_member_function_pointer_v<char>);
+	static_assert(!lak::is_member_function_pointer_v<const volatile char>);
+	static_assert(!lak::is_member_function_pointer_v<char *>);
+	static_assert(!lak::is_member_function_pointer_v<const volatile char *>);
+	static_assert(!lak::is_member_function_pointer_v<char &>);
+	static_assert(!lak::is_member_function_pointer_v<const volatile char &>);
+	static_assert(!lak::is_member_function_pointer_v<char &&>);
+	static_assert(!lak::is_member_function_pointer_v<const volatile char &&>);
+	static_assert(!lak::is_member_function_pointer_v<char[]>);
+	static_assert(!lak::is_member_function_pointer_v<const volatile char[]>);
+
+	/* --- member_function_traits --- */
+
+	template<typename T>
+	struct member_function_traits;
+
+	template<typename T, typename U, typename... ARGS>
+	struct member_function_traits<U (T::*)(ARGS...)>
+	{
+		using class_type     = T;
+		using result_type    = U;
+		using argument_types = lak::type_pack<ARGS...>;
+	};
 
 	/* --- is_array --- */
 

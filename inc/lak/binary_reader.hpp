@@ -198,7 +198,7 @@ namespace lak
 			{
 				if_let_ok (const CHAR c, read<CHAR, E>())
 				{
-					if (c == 0) return lak::ok_t{lak::move(result)};
+					if (c == 0) return lak::move_ok(result);
 					result += c;
 				}
 				else
@@ -223,7 +223,8 @@ namespace lak
 					if (c == 0) break;
 					result += c;
 				}
-				else break;
+				else
+					break;
 			}
 			return result;
 		}

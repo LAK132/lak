@@ -262,8 +262,12 @@ lak::span<char8_t> lak::from_codepoint(lak::codepoint_buffer_span<char8_t> c,
 #ifdef LAK_WARNING_INVALID_CODEPOINT
 		WARNING("Bad encoding (", (size_t)code, ")");
 #endif
-		c[0] = c[1] = c[2] = c[3] = u8'\0';
-		return c.first(0);
+		code = 0xFFFDU;
+		c[0] = 0xE0U | static_cast<char8_t>(code >> 12);
+		c[1] = 0x80U | static_cast<char8_t>((code >> 6) & 0x3FU);
+		c[2] = 0x80U | static_cast<char8_t>(code & 0x3FU);
+		c[3] = u8'\0';
+		return c.first(3);
 	}
 }
 
@@ -289,8 +293,10 @@ lak::span<char16_t> lak::from_codepoint(lak::codepoint_buffer_span<char16_t> c,
 #ifdef LAK_WARNING_INVALID_CODEPOINT
 		WARNING("Bad encoding (", (size_t)code, ")");
 #endif
-		c[0] = c[1] = u'\0';
-		return c.first(0);
+		code = 0xFFFD;
+		c[0] = static_cast<char16_t>(code);
+		c[1] = u'\0';
+		return c.first(1);
 	}
 }
 
@@ -307,7 +313,7 @@ lak::span<char32_t> lak::from_codepoint(lak::codepoint_buffer_span<char32_t> c,
 #ifdef LAK_WARNING_INVALID_CODEPOINT
 		WARNING("Bad encoding (", (size_t)code, ")");
 #endif
-		c[0] = U'\0';
-		return c.first(0);
+		c[0] = 0xFFFDU;
+		return c.first(1);
 	}
 }

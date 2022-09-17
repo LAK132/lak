@@ -99,5 +99,5 @@ lak::result<lak::array<byte_t>, lak::lz4_decode_error> lak::decode_lz4_block(
 
 	if (!writer.empty()) WARNING("Expected More Output Data");
 
-	return lak::ok_t{lak::move(output)};
+	return lak::move_ok(output);
 }

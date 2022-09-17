@@ -15,7 +15,7 @@ namespace lak
 	{
 	};
 	template<typename... T>
-	constexpr bool is_result_v = is_result<T...>::value;
+	constexpr bool is_result_v = lak::is_result<T...>::value;
 
 	// the OK type of the result without reference removed
 	template<typename RESULT>
@@ -23,7 +23,7 @@ namespace lak
 	{
 	};
 	template<typename RESULT>
-	using result_ok_type_t = typename result_ok_type<RESULT>::type;
+	using result_ok_type_t = typename lak::result_ok_type<RESULT>::type;
 
 	// the ERR type of the result without references removed;
 	template<typename RESULT>
@@ -31,16 +31,9 @@ namespace lak
 	{
 	};
 	template<typename RESULT>
-	using result_err_type_t = typename result_err_type<RESULT>::type;
+	using result_err_type_t = typename lak::result_err_type<RESULT>::type;
 
-	/* --- infallible --- */
-
-	struct infallible
-	{
-		infallible() = delete;
-	};
-
-	static_assert(!lak::is_default_constructible_v<lak::infallible>);
+	static_assert(!lak::is_default_constructible_v<lak::bottom>);
 
 	/* --- ok_t --- */
 
@@ -51,7 +44,7 @@ namespace lak
 	};
 
 	template<typename T>
-	ok_t(T &&) -> ok_t<T>;
+	ok_t(T &&) -> ok_t<T &&>;
 
 	template<typename T>
 	ok_t(T &) -> ok_t<T &>;
@@ -71,7 +64,7 @@ namespace lak
 	};
 
 	template<typename T>
-	err_t(T &&) -> err_t<T>;
+	err_t(T &&) -> err_t<T &&>;
 
 	template<typename T>
 	err_t(T &) -> err_t<T &>;
@@ -107,6 +100,34 @@ namespace lak
 
 	template<typename T>
 	lak::result<lak::remove_const_t<T>> copy_result_from_pointer(T *ptr);
+
+	/* --- unwrap_infallible --- */
+
+	template<typename OK>
+	using infallible_result = lak::result<OK, lak::bottom>;
+
+	template<typename T>
+	T &unwrap_infallible(lak::infallible_result<T> &result);
+
+	template<typename T>
+	const T &unwrap_infallible(const lak::infallible_result<T> &result);
+
+	template<typename T>
+	T unwrap_infallible(lak::infallible_result<T> &&result);
+
+	/* --- unwrap_insuccible --- */
+
+	template<typename ERR>
+	using insuccible_result = lak::result<lak::bottom, ERR>;
+
+	template<typename E>
+	E &unwrap_insuccible(lak::insuccible_result<E> &result);
+
+	template<typename E>
+	const E &unwrap_insuccible(const lak::insuccible_result<E> &result);
+
+	template<typename E>
+	E unwrap_insuccible(lak::insuccible_result<E> &&result);
 
 	/* --- typedefs --- */
 
@@ -1034,6 +1055,46 @@ namespace lak
 	static_assert(lak::is_same_v<decltype(copy_result_from_pointer(
 	                               lak::declval<const int **>())),
 	                             lak::result<const int *>>);
+
+	/* --- unwrap_infallible --- */
+
+	template<typename T>
+	T &unwrap_infallible(lak::infallible_result<T> &result)
+	{
+		return result.unsafe_unwrap();
+	}
+
+	template<typename T>
+	const T &unwrap_infallible(const lak::infallible_result<T> &result)
+	{
+		return result.unsafe_unwrap();
+	}
+
+	template<typename T>
+	T unwrap_infallible(lak::infallible_result<T> &&result)
+	{
+		return lak::move(result).unsafe_unwrap();
+	}
+
+	/* --- unwrap_insuccible --- */
+
+	template<typename E>
+	E &unwrap_insuccible(lak::insuccible_result<E> &result)
+	{
+		return result.unsafe_unwrap_err();
+	}
+
+	template<typename E>
+	const E &unwrap_insuccible(const lak::insuccible_result<E> &result)
+	{
+		return result.unsafe_unwrap_err();
+	}
+
+	template<typename E>
+	E unwrap_insuccible(lak::insuccible_result<E> &&result)
+	{
+		return lak::move(result).unsafe_unwrap_err();
+	}
 }
 
 #	endif

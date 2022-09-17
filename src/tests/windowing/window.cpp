@@ -7,7 +7,7 @@
 BEGIN_TEST(window)
 {
 	DEBUG("platform init");
-	lak::platform_init();
+	ASSERT(lak::platform_init());
 
 	{
 		DEBUG("create window");

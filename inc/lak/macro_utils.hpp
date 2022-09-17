@@ -62,6 +62,7 @@
 #define LAK_MAGENTA LAK_SGR(35)
 #define LAK_CYAN    LAK_SGR(36)
 #define LAK_WHITE   LAK_SGR(37)
+#define LAK_DEFAULT LAK_SGR(39)
 
 #undef LAK_BRIGHT_BLACK
 #undef LAK_BRIGHT_RED

@@ -45,7 +45,7 @@ size_t lak::round_to_page_multiple(size_t size, size_t *page_size_out)
 {
 	const size_t page_size = lak::page_size();
 	if (page_size_out) *page_size_out = page_size;
-	return page_size * ((size % page_size > 0 ? 1 : 0) + (size / page_size));
+	return size + lak::slack<size_t>(size, page_size);
 }
 
 #ifndef LAK_DONT_AUTO_COMPILE_PLATFORM_SPECIFICS

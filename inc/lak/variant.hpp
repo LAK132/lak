@@ -13,10 +13,11 @@ namespace lak
 	struct is_variant : public lak::false_type
 	{
 	};
+
 	template<typename T>
 	static constexpr bool is_variant_v = lak::is_variant<T>::value;
 
-	/* --- _var_t --- */
+	/* --- var_t --- */
 
 	template<size_t I, typename T>
 	struct _var_t
@@ -34,6 +35,12 @@ namespace lak
 	static constexpr force_inline _var_t<I, T &> var_t(T &v)
 	{
 		return {v};
+	}
+
+	template<size_t I, typename T>
+	static constexpr force_inline _var_t<I, T &&> move_var(T &v)
+	{
+		return {lak::move(v)};
 	}
 
 	/* --- uninitialised_union_flag_t --- */
@@ -130,7 +137,7 @@ namespace lak
 		force_inline const auto &get() const;
 
 		template<size_t I, typename... ARGS>
-		force_inline void emplace(ARGS &&...args);
+		force_inline auto &emplace(ARGS &&...args);
 
 		template<typename... ARGS>
 		force_inline bool emplace_dynamic(size_t i, ARGS &&...args);
@@ -181,7 +188,7 @@ namespace lak
 		const auto &get() const;
 
 		template<size_t I, typename... ARGS>
-		force_inline void emplace(ARGS &&...args);
+		force_inline auto &emplace(ARGS &&...args);
 
 		template<typename... ARGS>
 		force_inline bool emplace_dynamic(size_t i, ARGS &&...args);
@@ -209,21 +216,39 @@ namespace lak
 		template<typename U>
 		static constexpr size_t index_of = lak::index_of_element_v<U, T...>;
 
+		template<typename... U>
+		friend struct variant;
+
 	private:
-		using union_type = pack_union<lak::lvalue_to_ptr_t<T>...>;
+		using union_type = lak::pack_union<lak::lvalue_to_ptr_t<T>...>;
 
 		template<size_t I>
 		static constexpr bool _is_ref = lak::is_lvalue_reference_v<value_type<I>>;
 
-		static constexpr size_t _size = sizeof...(T);
+		static constexpr size_t _size          = sizeof...(T);
+		static constexpr size_t _internal_size = _size;
 
-		size_t _index = 0;
+		size_t _index = 0U;
 		union_type _value;
 
+		template<size_t I>
+		force_inline auto &unsafe_get()
+		{
+			return _value.template get<I>();
+		}
+
+		template<size_t I>
+		force_inline const auto &unsafe_get() const
+		{
+			return _value.template get<I>();
+		}
+
+		force_inline size_t internal_index() const { return _index; }
+
 	public:
-		template<typename V = value_type<0>,
+		template<typename V = value_type<0U>,
 		         lak::enable_if_i<lak::is_default_constructible_v<V>> = 0>
-		variant() : _index(0), _value()
+		variant() : _index(0U), _value()
 		{
 		}
 
@@ -273,9 +298,19 @@ namespace lak
 		template<size_t I, typename... ARGS>
 		static variant make(ARGS &&...args);
 
+		template<typename V, typename... ARGS>
+		static variant make(ARGS &&...args);
+
 		~variant();
 
 		size_t index() const { return _index; }
+
+		template<size_t I>
+		requires((I < _size)) //
+		  bool holds() const
+		{
+			return _index == I;
+		}
 
 		template<typename U>
 		bool holds() const
@@ -291,6 +326,222 @@ namespace lak
 		template<size_t I>
 		const auto *get() const;
 
+		template<typename U>
+		auto *get()
+		{
+			return get<index_of<U>>();
+		}
+
+		template<typename U>
+		const auto *get() const
+		{
+			return get<index_of<U>>();
+		}
+
+		template<typename F>
+		auto visit(F &&func);
+		template<typename F>
+		auto visit(F &&func) const;
+
+		template<typename F>
+		auto flat_visit(F &&func);
+		template<typename F>
+		auto flat_visit(F &&func) const;
+	};
+
+	/* --- variant<variant<T...>, U...> --- */
+
+	template<typename... T, typename... U>
+	requires((lak::is_standard_layout_v<lak::variant<T..., U...>>)) //
+	  struct variant<variant<T...>, U...>
+	{
+		static_assert(((!lak::is_rvalue_reference_v<U>)&&...));
+
+		using indices = lak::index_sequence_for<variant<T...>, U...>;
+
+		template<size_t I>
+		using value_type = lak::nth_type_t<I, variant<T...>, U...>;
+
+		template<typename V>
+		static constexpr size_t index_of =
+		  lak::index_of_element_v<V, variant<T...>, U...>;
+
+		template<typename... V>
+		friend struct variant;
+
+	private:
+		using union_type = lak::pack_union<variant<T...>, variant<T..., U...>>;
+
+		template<size_t I>
+		static constexpr bool _is_ref = lak::is_lvalue_reference_v<value_type<I>>;
+
+		static constexpr size_t _size = sizeof...(U) + 1U;
+		static constexpr size_t _internal_size =
+		  variant<T...>::_internal_size + sizeof...(U);
+		static constexpr size_t _internal_offset =
+		  variant<T...>::_internal_size - 1U;
+
+		union_type _value;
+
+		template<size_t I>
+		force_inline auto &unsafe_get()
+		{
+			if constexpr (I == 0U)
+				return _value.value;
+			else
+				return _value.next.value.template unsafe_get<I + _internal_offset>();
+		}
+
+		template<size_t I>
+		force_inline const auto &unsafe_get() const
+		{
+			if constexpr (I == 0U)
+				return _value.value;
+			else
+				return _value.next.value.template unsafe_get<I + _internal_offset>();
+		}
+
+		force_inline size_t internal_index() const
+		{
+			return _value.value.internal_index();
+		}
+
+	public:
+		template<typename V = value_type<0U>,
+		         lak::enable_if_i<lak::is_default_constructible_v<V>> = 0>
+		variant() : _value()
+		{
+		}
+
+		template<typename... ARGS>
+		variant(lak::in_place_index_t<0U>, ARGS &&...args)
+		: _value(lak::in_place_index<0U>, lak::forward<ARGS>(args)...)
+		{
+		}
+
+		template<size_t I, typename... ARGS>
+		requires((I > 0) && (I < _size) && !_is_ref<I>) //
+		  variant(lak::in_place_index_t<I>, ARGS &&...args)
+		: _value(lak::in_place_index<1U>,
+		         lak::in_place_index<I + _internal_offset>,
+		         lak::forward<ARGS>(args)...)
+		{
+		}
+
+		template<size_t I, typename... ARGS>
+		requires((I > 0) && (I < _size) && _is_ref<I>) //
+		  variant(lak::in_place_index_t<I>, value_type<I> ref)
+		: _value(lak::in_place_index<1U>,
+		         lak::in_place_index<I + _internal_offset>,
+		         &ref)
+		{
+		}
+
+		template<size_t I, typename U>
+		variant(lak::_var_t<I, U> var)
+		: variant(lak::in_place_index<I>, lak::forward<U>(var.value))
+		{
+		}
+
+		template<lak::concepts::one_of<variant<T...>, U...> V>
+		variant(const V &val)
+		: variant(lak::in_place_index<variant::index_of<V>>, val)
+		{
+		}
+
+		template<lak::concepts::one_of<variant<T...>, U...> V>
+		variant(V &&val)
+		: variant(lak::in_place_index<variant::index_of<V>>, lak::forward<U>(val))
+		{
+		}
+
+		variant(const variant &other);
+
+		variant(variant &&other);
+
+		variant &operator=(const variant &other);
+
+		variant &operator=(variant &&other);
+
+		template<size_t I, typename... ARGS>
+		auto &emplace(ARGS &&...args)
+		{
+			if (internal_index() <= _internal_offset)
+				_value.template reset<0U>();
+			else
+				_value.template reset<1U>();
+
+			if constexpr (I <= _internal_offset)
+				return _value.template emplace<0U>(lak::forward<ARGS>(args)...);
+			else
+				return _value.template emplace<1U>(
+				  lak::in_place_index<I + _internal_offset>,
+				  lak::forward<ARGS>(args)...);
+		}
+
+		template<size_t I, typename... ARGS>
+		requires((I < _size)) //
+		  static variant make(ARGS &&...args)
+		{
+			return variant(lak::in_place_index<I>, lak::forward<ARGS>(args)...);
+		}
+
+		template<typename V, typename... ARGS>
+		requires((index_of<V> < _size)) //
+		  static variant make(ARGS &&...args)
+		{
+			return variant(lak::in_place_index<index_of<V>>,
+			               lak::forward<ARGS>(args)...);
+		}
+
+		~variant();
+
+		size_t index() const
+		{
+			const size_t ind = internal_index();
+			return ind <= _internal_offset ? 0U : ind - _internal_offset;
+		}
+
+		template<size_t I>
+		requires((I < _size)) //
+		  bool holds() const
+		{
+			if constexpr (I == 0)
+				return internal_index() <= _internal_offset;
+			else
+				return internal_index() == (I + _internal_offset);
+		}
+
+		template<typename V>
+		bool holds() const
+		{
+			return index() == index_of<V>;
+		}
+
+		constexpr size_t size() const { return _size; }
+
+		template<size_t I>
+		auto *get()
+		{
+			if constexpr (I == 0)
+				return internal_index() <= _internal_offset ? &_value.value : nullptr;
+			else
+				return internal_index() > _internal_offset
+				         ? _value.next.value.template get<I + _internal_offset>()
+				         : nullptr;
+		}
+
+		template<size_t I>
+		const auto *get() const
+		{
+			if constexpr (I == 0)
+				return internal_index() <= _internal_offset ? &_value.value : nullptr;
+			else
+				return internal_index() > _internal_offset
+				         ? _value.next.value.template get<I + _internal_offset>()
+				         : nullptr;
+		}
+
 		template<typename V>
 		auto *get()
 		{
@@ -302,7 +553,69 @@ namespace lak
 		{
 			return get<index_of<V>>();
 		}
+
+		template<typename F>
+		auto visit(F &&func)
+		{
+			if (internal_index() <= _internal_offset)
+				return func(_value.value);
+			else
+				return _value.next.value.visit(lak::forward<F>(func));
+		}
+		template<typename F>
+		auto visit(F &&func) const
+		{
+			if (internal_index() <= _internal_offset)
+				return func(_value.value);
+			else
+				return _value.next.value.visit(lak::forward<F>(func));
+		}
+
+		template<typename F>
+		auto flat_visit(F &&func)
+		{
+			if (internal_index() <= _internal_offset)
+				return _value.value.flat_visit(lak::forward<F>(func));
+			else
+				return _value.next.value.flat_visit(lak::forward<F>(func));
+		}
+		template<typename F>
+		auto flat_visit(F &&func) const
+		{
+			if (internal_index() <= _internal_offset)
+				return _value.value.flat_visit(lak::forward<F>(func));
+			else
+				return _value.next.value.flat_visit(lak::forward<F>(func));
+		}
 	};
+
+	static_assert(lak::is_standard_layout_v<lak::variant<int>>);
+
+	struct _variant_standard_layout_test_public
+	{
+	public:
+		int value;
+	};
+	struct _variant_standard_layout_test_private
+	{
+	private:
+		int value;
+	};
+	static_assert(lak::is_standard_layout_v<
+	              lak::variant<lak::_variant_standard_layout_test_public,
+	                           lak::_variant_standard_layout_test_private,
+	                           int>>);
+	static_assert(
+	  lak::is_standard_layout_v<
+	    lak::variant<lak::variant<lak::_variant_standard_layout_test_public,
+	                              lak::_variant_standard_layout_test_private,
+	                              int>,
+	                 lak::_variant_standard_layout_test_public,
+	                 lak::_variant_standard_layout_test_private,
+	                 int>>);
+
+	static_assert(sizeof(lak::variant<lak::monostate>) ==
+	              sizeof(lak::variant<lak::variant<lak::monostate>>));
 
 	static_assert(lak::is_same_v<lak::variant<char>::value_type<0>, char>);
 }

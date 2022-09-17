@@ -50,6 +50,19 @@
 		LAK_BLUE STRINGIFY(__VA_ARGS__) LAK_SGR_RESET
 #endif
 
+#undef DEBUG_EVAL_EXPR
+#if defined(LAK_NO_DEBUG_COLOURS)
+#	define DEBUG_EVAL_EXPR(...) STRINGIFY(__VA_ARGS__) " (", __VA_ARGS__, ")"
+#else
+#	define DEBUG_EVAL_EXPR(...)                                                \
+		LAK_BLUE STRINGIFY(__VA_ARGS__) " (", __VA_ARGS__, ")" LAK_SGR_RESET
+#endif
+
+#undef DEBUG_EXPR_EX
+#define DEBUG_EXPR_EX(...)                                                    \
+	DEBUG_STRINGIFY_EXPR(__VA_ARGS__)                                           \
+	": ", lak::spaced_streamify(u8", ", __VA_ARGS__)
+
 #undef DEBUG_LINE_FILE
 #undef DEBUG_DEBUG_LINE_FILE
 #undef DEBUG_CHECKPOINT_LINE_FILE
@@ -87,11 +100,8 @@
 		lak::debugger.std_out(TO_U8STRING(DEBUG_DEBUG_LINE_FILE),                 \
 		                      lak::streamify(__VA_ARGS__, "\n"));
 #	define DEBUG_EXPR(...)                                                     \
-		lak::debugger.std_out(                                                    \
-		  TO_U8STRING(DEBUG_DEBUG_LINE_FILE),                                     \
-		  lak::streamify(DEBUG_STRINGIFY_EXPR(__VA_ARGS__) ": ",                  \
-		                 lak::spaced_streamify(u8", ", __VA_ARGS__),              \
-		                 "\n"));
+		lak::debugger.std_out(TO_U8STRING(DEBUG_DEBUG_LINE_FILE),                 \
+		                      lak::streamify(DEBUG_EXPR_EX(__VA_ARGS__), "\n"));
 #endif
 
 #undef ABORT
@@ -164,11 +174,11 @@
 #undef ASSERTF_GREATER_OR_EQUAL
 #undef ASSERTF_LESS
 #undef ASSERTF_LESS_OR_EQUAL
-#define ASSERT(x)                                                             \
+#define ASSERT(...)                                                           \
 	{                                                                           \
-		if (!(x)) [[unlikely]]                                                    \
+		if (!(__VA_ARGS__)) [[unlikely]]                                          \
 		{                                                                         \
-			FATAL("Assertion '" DEBUG_STRINGIFY_EXPR(x) "' failed");                \
+			FATAL("Assertion '" DEBUG_STRINGIFY_EXPR(__VA_ARGS__) "' failed");      \
 		}                                                                         \
 	}
 #define ASSERT_NYI()                                                          \

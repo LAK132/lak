@@ -9,7 +9,11 @@ laktestwindowing = static_library(
     'warning_level=2',
     'werror=false',
   ],
-  include_directories: include_directories('../../..', '../../../inc'),
+  include_directories: include_directories(
+    '../../..',
+    '../../../inc',
+    '../../../..',
+  ),
   link_with: [
     lak,
     lakwindowing,

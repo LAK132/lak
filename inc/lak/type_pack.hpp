@@ -167,17 +167,35 @@ namespace lak
 	template<typename FUNC>
 	struct pack_from_function;
 	template<typename FUNC>
-	struct pack_from_function<FUNC *>
+	struct pack_from_function<FUNC *> : public lak::pack_from_function<FUNC>
 	{
-		using type = typename lak::pack_from_function<FUNC>::type;
 	};
 	template<typename RET, typename... ARGS>
 	struct pack_from_function<RET(ARGS...)>
 	{
 		using type = lak::type_pack<RET, ARGS...>;
+
+		using result_type = RET;
+		using arguments   = lak::type_pack<ARGS...>;
 	};
 	template<typename FUNC>
 	using pack_from_function_t = typename lak::pack_from_function<FUNC>::type;
+	template<typename FUNC>
+	using pack_from_function_arguments_t =
+	  typename lak::pack_from_function<FUNC>::type;
+
+	/* --- pack_from_templated --- */
+
+	template<typename TEMPLATED>
+	struct pack_from_templated;
+	template<template<typename...> typename TEMPLATED, typename... TYPES>
+	struct pack_from_templated<TEMPLATED<TYPES...>>
+	{
+		using type = lak::type_pack<TYPES...>;
+	};
+	template<typename TEMPLATED>
+	using pack_from_templated_t =
+	  typename lak::pack_from_templated<TEMPLATED>::type;
 
 	/* --- create_from_pack --- */
 

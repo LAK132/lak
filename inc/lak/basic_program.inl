@@ -152,7 +152,7 @@ int LAK_BASIC_PROGRAM_MAIN(int argc, char **argv)
 			    if (window.graphics() != lak::graphics_mode::Software)
 				    return lak::err_t<lak::u8string>{lak::streamify(
 				      "Expected Software graphics, got ", window.graphics())};
-			    return lak::ok_t{lak::move(window)};
+			    return lak::move_ok(window);
 		    });
 	};
 
@@ -181,7 +181,7 @@ int LAK_BASIC_PROGRAM_MAIN(int argc, char **argv)
 		             &LAK_BASIC_PROGRAM(opengl_debug_message_callback), 0);
 #endif
 
-		           return lak::ok_t{lak::move(window)};
+		           return lak::move_ok(window);
 	           })
 	         .or_else(
 	           [&](const lak::u8string &err)

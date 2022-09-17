@@ -9,7 +9,11 @@ namespace lak
 		template<typename FUNC, typename TUPLE, size_t... I>
 		auto _apply(lak::index_sequence<I...>, FUNC &&func, TUPLE &&tuple)
 		{
-			return func(lak::forward<TUPLE>(tuple).template get<I>()...);
+			if constexpr (lak::is_reference_v<TUPLE>)
+				return func(lak::forward<TUPLE>(tuple).template get<I>()...);
+			else
+				return func(lak::forward<lak::tuple_element_t<I, TUPLE>>(
+				  lak::forward<TUPLE>(tuple).template get<I>())...);
 		}
 	}
 }

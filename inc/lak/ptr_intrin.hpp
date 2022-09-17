@@ -165,6 +165,27 @@ namespace lak
 		                           static_cast<const void *>(begin),
 		                           (end - begin) * sizeof(T));
 	}
+
+	template<typename T>
+	constexpr force_inline lak::strong_ordering ptr_compare(const T *a,
+	                                                        const T *b)
+	{
+		if (std::is_constant_evaluated())
+		{
+			return __lakc_ptr_lt(a, b)
+			         ? lak::strong_ordering::less
+			         : (__lakc_ptr_gt(a, b) ? lak::strong_ordering::greater
+			                                : lak::strong_ordering::equal);
+		}
+		else
+		{
+			__lakc_ptr_diff_result result{__lakc_ptr_diff(a, b)};
+			return result.overflow > 0U
+			         ? lak::strong_ordering::less
+			         : (result.diff > 0U ? lak::strong_ordering::greater
+			                             : lak::strong_ordering::equal);
+		}
+	}
 }
 
 #endif

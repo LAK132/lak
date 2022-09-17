@@ -9,6 +9,8 @@
 #	include <utility>
 #endif
 
+#include <functional>
+
 namespace lak
 {
 	/* --- monostate --- */
@@ -17,6 +19,18 @@ namespace lak
 	{
 	};
 	static_assert(lak::is_default_constructible_v<lak::monostate>);
+
+	/* --- bottom --- */
+
+	struct bottom
+	{
+		bottom() = delete;
+	};
+
+	/* --- reference_wrapper --- */
+
+	template<typename T>
+	using reference_wrapper = std::reference_wrapper<T>;
 
 	/* --- in_place_index --- */
 
@@ -128,13 +142,13 @@ namespace lak
 
 #ifndef LAK_NO_STD
 	template<typename T>
-	force_inline T *as_ptr(std::reference_wrapper<T> *p)
+	force_inline T *as_ptr(lak::reference_wrapper<T> *p)
 	{
 		return p ? &p->get() : nullptr;
 	}
 
 	template<typename T>
-	force_inline const T *as_ptr(const std::reference_wrapper<T> *p)
+	force_inline const T *as_ptr(const lak::reference_wrapper<T> *p)
 	{
 		return p ? &p->get() : nullptr;
 	}
@@ -150,13 +164,13 @@ namespace lak
 
 #ifndef LAK_NO_STD
 	template<typename T>
-	force_inline T *as_ptr(std::reference_wrapper<T> &p)
+	force_inline T *as_ptr(lak::reference_wrapper<T> &p)
 	{
 		return &p->get();
 	}
 
 	template<typename T>
-	force_inline const T *as_ptr(const std::reference_wrapper<T> &p)
+	force_inline const T *as_ptr(const lak::reference_wrapper<T> &p)
 	{
 		return &p->get();
 	}

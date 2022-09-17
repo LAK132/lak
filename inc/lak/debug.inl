@@ -8,6 +8,7 @@
 #		include <filesystem>
 #	endif
 #	include <iostream>
+#	include <mutex>
 #	include <sstream>
 
 namespace lak
@@ -52,6 +53,7 @@ namespace lak
 		std::filesystem::path crash_path;
 #	endif
 
+		std::mutex mutex;
 		bool live_output_enabled = true;
 		bool live_errors_only    = false;
 		bool line_info_enabled   = true;
@@ -68,7 +70,7 @@ namespace lak
 		static lak::u8string u8str();
 	};
 
-	extern size_t debug_indent;
+	static thread_local size_t debug_indent = 0U;
 
 	extern debugger_t debugger;
 }

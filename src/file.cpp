@@ -135,7 +135,7 @@ lak::errno_result<lak::array<byte_t>> lak::read_file(const lak::fs::path &path)
 	file.read(reinterpret_cast<char *>(result.data()), result.size());
 	if (file.fail()) return lak::err_t{lak::errno_error::last_error()};
 
-	return lak::ok_t{lak::move(result)};
+	return lak::move_ok(result);
 }
 
 bool lak::save_file(const lak::fs::path &path, lak::span<const byte_t> data)

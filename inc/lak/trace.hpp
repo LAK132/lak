@@ -91,6 +91,8 @@ namespace lak
 		return [message = lak::move(message),
 		        l       = lak::move(l)]<typename T>(T &&err) -> lak::stack_trace
 		{
+			static_assert(!lak::is_same_v<lak::remove_cvref_t<T>, lak::stack_trace>,
+			              "Use lak::add_trace to append traces to the stack trace");
 			if constexpr (lak::is_same_v<lak::remove_cvref_t<T>, lak::monostate>)
 				return lak::stack_trace{.message = message}.add(lak::trace({}, l));
 			else
@@ -130,6 +132,11 @@ namespace lak
 		{ return trace.add(lak::trace(message, l)); };
 	}
 }
+
+#define RES_MAP_TO_TRACE(...)                                                 \
+	map_err(lak::to_stack_trace(lak::streamify(__VA_ARGS__)))
+
+#define RES_ADD_TRACE(...) map_err(lak::add_trace(lak::streamify(__VA_ARGS__)))
 
 #define RES_TRY_TRACE(...)                                                    \
 	do                                                                          \

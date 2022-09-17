@@ -14,6 +14,7 @@ void lak::terminate_handler()
 void lak::debugger_t::std_out(const lak::u8string &line_info,
                               const lak::astring &str)
 {
+	std::lock_guard lock{mutex};
 	const auto indent = scoped_indenter::u8str();
 	stream << lak::strconv<LAK_DEBUG_STREAM_CHAR>(indent)
 	       << lak::strconv<LAK_DEBUG_STREAM_CHAR>(line_info)
@@ -32,6 +33,7 @@ void lak::debugger_t::std_out(const lak::u8string &line_info,
 void lak::debugger_t::std_out(const lak::u8string &line_info,
                               const lak::wstring &str)
 {
+	std::lock_guard lock{mutex};
 	const auto indent = scoped_indenter::u8str();
 	stream << lak::strconv<LAK_DEBUG_STREAM_CHAR>(indent)
 	       << lak::strconv<LAK_DEBUG_STREAM_CHAR>(line_info)
@@ -50,6 +52,7 @@ void lak::debugger_t::std_out(const lak::u8string &line_info,
 void lak::debugger_t::std_out(const lak::u8string &line_info,
                               const lak::u8string &str)
 {
+	std::lock_guard lock{mutex};
 	const auto indent = scoped_indenter::u8str();
 	stream << lak::strconv<LAK_DEBUG_STREAM_CHAR>(indent)
 	       << lak::strconv<LAK_DEBUG_STREAM_CHAR>(line_info)
@@ -68,6 +71,7 @@ void lak::debugger_t::std_out(const lak::u8string &line_info,
 void lak::debugger_t::std_err(const lak::u8string &line_info,
                               const lak::astring &str)
 {
+	std::lock_guard lock{mutex};
 	const auto indent = scoped_indenter::u8str();
 	stream << lak::strconv<LAK_DEBUG_STREAM_CHAR>(indent)
 	       << lak::strconv<LAK_DEBUG_STREAM_CHAR>(line_info)
@@ -86,6 +90,7 @@ void lak::debugger_t::std_err(const lak::u8string &line_info,
 void lak::debugger_t::std_err(const lak::u8string &line_info,
                               const lak::wstring &str)
 {
+	std::lock_guard lock{mutex};
 	const auto indent = scoped_indenter::u8str();
 	stream << lak::strconv<LAK_DEBUG_STREAM_CHAR>(indent)
 	       << lak::strconv<LAK_DEBUG_STREAM_CHAR>(line_info)
@@ -104,6 +109,7 @@ void lak::debugger_t::std_err(const lak::u8string &line_info,
 void lak::debugger_t::std_err(const lak::u8string &line_info,
                               const lak::u8string &str)
 {
+	std::lock_guard lock{mutex};
 	const auto indent = scoped_indenter::u8str();
 	stream << lak::strconv<LAK_DEBUG_STREAM_CHAR>(indent)
 	       << lak::strconv<LAK_DEBUG_STREAM_CHAR>(line_info)
@@ -121,6 +127,7 @@ void lak::debugger_t::std_err(const lak::u8string &line_info,
 
 void lak::debugger_t::std_out_cont(const lak::astring &str)
 {
+	std::lock_guard lock{mutex};
 	stream << lak::strconv<LAK_DEBUG_STREAM_CHAR>(str);
 	if (live_output_enabled && !live_errors_only)
 	{
@@ -130,6 +137,7 @@ void lak::debugger_t::std_out_cont(const lak::astring &str)
 
 void lak::debugger_t::std_out_cont(const lak::wstring &str)
 {
+	std::lock_guard lock{mutex};
 	stream << lak::strconv<LAK_DEBUG_STREAM_CHAR>(str);
 	if (live_output_enabled && !live_errors_only)
 	{
@@ -139,6 +147,7 @@ void lak::debugger_t::std_out_cont(const lak::wstring &str)
 
 void lak::debugger_t::std_out_cont(const lak::u8string &str)
 {
+	std::lock_guard lock{mutex};
 	stream << lak::strconv<LAK_DEBUG_STREAM_CHAR>(str);
 	if (live_output_enabled && !live_errors_only)
 	{
@@ -148,6 +157,7 @@ void lak::debugger_t::std_out_cont(const lak::u8string &str)
 
 void lak::debugger_t::std_err_cont(const lak::astring &str)
 {
+	std::lock_guard lock{mutex};
 	stream << lak::strconv<LAK_DEBUG_STREAM_CHAR>(str);
 	if (live_output_enabled)
 	{
@@ -157,6 +167,7 @@ void lak::debugger_t::std_err_cont(const lak::astring &str)
 
 void lak::debugger_t::std_err_cont(const lak::wstring &str)
 {
+	std::lock_guard lock{mutex};
 	stream << lak::strconv<LAK_DEBUG_STREAM_CHAR>(str);
 	if (live_output_enabled)
 	{
@@ -166,6 +177,7 @@ void lak::debugger_t::std_err_cont(const lak::wstring &str)
 
 void lak::debugger_t::std_err_cont(const lak::u8string &str)
 {
+	std::lock_guard lock{mutex};
 	stream << lak::strconv<LAK_DEBUG_STREAM_CHAR>(str);
 	if (live_output_enabled)
 	{
@@ -175,11 +187,13 @@ void lak::debugger_t::std_err_cont(const lak::u8string &str)
 
 void lak::debugger_t::clear()
 {
+	std::lock_guard lock{mutex};
 	stream.clear();
 }
 
 lak::string<LAK_DEBUG_STREAM_CHAR> lak::debugger_t::str()
 {
+	std::lock_guard lock{mutex};
 	return stream.str();
 }
 
@@ -203,11 +217,13 @@ void lak::debugger_t::abort()
 #ifndef LAK_NO_FILESYSTEM
 std::filesystem::path lak::debugger_t::save()
 {
+	std::lock_guard lock{mutex};
 	return save(crash_path);
 }
 
 std::filesystem::path lak::debugger_t::save(const std::filesystem::path &path)
 {
+	std::lock_guard lock{mutex};
 	if (!path.string().empty())
 	{
 		std::ofstream file(path, std::ios::out | std::ios::trunc);
@@ -260,7 +276,5 @@ lak::u8string lak::scoped_indenter::u8str()
 		s += ((lak::debug_indent - i) & 1U) ? bar : dot;
 	return s;
 }
-
-size_t lak::debug_indent = 0;
 
 lak::debugger_t lak::debugger;
