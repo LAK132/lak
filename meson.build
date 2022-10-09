@@ -1,81 +1,85 @@
 project(
-  'lak',
-  ['c', 'cpp'],
-  default_options: [
-    'warning_level=3',
-    'werror=true',
-    'b_vscrt=static_from_buildtype',
-  ],
+	'lak',
+	['c', 'cpp'],
 )
 
 cxx = meson.get_compiler('cpp')
 
 if cxx.get_id() == 'msvc'
-  version = 'c++latest'
+	version = 'c++latest'
 
-  c_cpp_args = [
-    '-DUNICODE',
-    '-DWIN32_LEAN_AND_MEAN',
-    '-DNOMINMAX',
-    '-wd4315',
-    '-wd4366',
-    '-Wv:18',
-  ]
+	c_cpp_args = [
+		'-DUNICODE',
+		'-DWIN32_LEAN_AND_MEAN',
+		'-DNOMINMAX',
+		'-wd4315',
+		'-wd4366',
+		'-Wv:18',
+	]
 
-  cpp_args = [
-    '-Zc:__cplusplus',
-    '-Zc:rvalueCast',
-    '-Zc:wchar_t',
-    '-Zc:ternary',
-    '-Zc:preprocessor',
-  ]
+	cpp_args = [
+		'-Zc:__cplusplus',
+		'-Zc:rvalueCast',
+		'-Zc:wchar_t',
+		'-Zc:ternary',
+		'-Zc:preprocessor',
+	]
 
-  c_args = [
-    '-W0',
-  ]
+	c_args = [
+		'-W0',
+	]
 
-  macro_test_args = c_cpp_args + cpp_args + ['-std:' + version]
+	system_libraries = [
+		'Winmm.lib',
+		'Setupapi.lib',
+		'Version.lib',
+		'Imm32.lib',
+	]
+
+	macro_test_args = c_cpp_args + cpp_args + ['-std:' + version]
 else
-  version = 'c++20'
+	version = 'c++20'
 
-  c_cpp_args = [
-    '-Wno-gnu-zero-variadic-macro-arguments',
-    '-Wno-language-extension-token',
-    '-Wno-dangling-else',
-    '-Wno-microsoft-cast',
-    '-Wno-pragma-pack',
-    '-Wno-deprecated-declarations',
-    '-Wno-unused-private-field',
-    '-Wfatal-errors',
-    # '-mavx',
-  ]
+	c_cpp_args = [
+		'-Wno-gnu-zero-variadic-macro-arguments',
+		'-Wno-language-extension-token',
+		'-Wno-dangling-else',
+		'-Wno-microsoft-cast',
+		'-Wno-pragma-pack',
+		'-Wno-deprecated-declarations',
+		'-Wno-unused-private-field',
+		'-Wfatal-errors',
+		# '-mavx',
+	]
 
-  cpp_args = []
+	cpp_args = []
 
-  c_args = []
+	c_args = []
 
-  macro_test_args = c_cpp_args + cpp_args + ['-std=' + version]
+	system_libraries = []
+
+	macro_test_args = c_cpp_args + cpp_args + ['-std=' + version]
 endif
 
 c_cpp_args += [
-  '-D_CRT_SECURE_NO_WARNINGS',
+	'-D_CRT_SECURE_NO_WARNINGS',
 ]
 
 if get_option('buildtype') != 'debug'
-  c_cpp_args += [
-    '-DNDEBUG',
-  ]
+	c_cpp_args += [
+		'-DNDEBUG',
+	]
 endif
 
 if get_option('lak_backend') == 'sdl'
-  c_cpp_args += [
-    '-DLAK_USE_SDL',
-    '-DSDL_MAIN_HANDLED',
-  ]
+	c_cpp_args += [
+		'-DLAK_USE_SDL',
+		'-DSDL_MAIN_HANDLED',
+	]
 elif get_option('lak_backend') == 'win32'
-  c_cpp_args += [
-    '-DLAK_USE_WINAPI',
-  ]
+	c_cpp_args += [
+		'-DLAK_USE_WINAPI',
+	]
 endif
 
 add_project_arguments(c_cpp_args + cpp_args, language: ['cpp'])
@@ -84,59 +88,65 @@ add_project_arguments(c_cpp_args + c_args, language: ['c'])
 cplusplus = cxx.get_define('__cplusplus', args: macro_test_args)
 
 if cxx.compute_int(cplusplus) < 202002
-  error('C++ version insufficient, expected 202002L got ' + cplusplus)
+	error('C++ version insufficient, expected 202002L got ' + cplusplus)
 endif
 
-subdir('inc/SDL')
+dependencies = []
+whole_libraries = []
 
 subdir('src')
+dependencies += lakcore_dep
+
 subdir('src/opengl')
+dependencies += lakopengl_dep
+
 subdir('src/windowing')
+dependencies += lakwindowing_dep
 
 subdir('src/tests')
+whole_libraries += laktest
+
 subdir('src/tests/windowing')
+whole_libraries += laktestwindowing
 
 if get_option('enable_llvm')
-  subdir('src/llvm')
-  subdir('src/tests/llvm')
-else
-  lakllvm = []
-  laktestllvm = []
+	error('NYI')
+	# subdir('src/llvm')
+	# subdir('src/tests/llvm')
+	# dependencies += lakllvm_dep
+	# whole_libraries += laktestllvm_dep
 endif
 
 if get_option('enable_lmdb')
-  subdir('src/lmdb')
-  subdir('src/tests/lmdb')
-else
-  laklmdb = []
-  laktestlmdb = []
+	subdir('src/lmdb')
+	subdir('src/tests/lmdb')
+	dependencies += laklmdb_dep
+	whole_libraries += laktestlmdb
 endif
 
-sdl2_dll = configure_file(
-  copy: true,
-  input: sdl2_dll,
-  output: 'SDL2.dll',
+if get_option('enable_imgui')
+	imgui_dep = subproject('imgui').get_variable('imgui_dep')
+	dependencies += imgui_dep
+endif
+
+lak = static_library(
+	'lak',
+	link_whole: whole_libraries,
+	dependencies: dependencies,
 )
 
-executable(
-  'lak_test',
-  [
-    'src/tests/test_main.cpp',
-  ],
-  override_options: 'cpp_std=' + version,
-  include_directories: include_directories('inc'),
-  link_with: [
-    lak,
-  ],
-  link_whole: [
-    laktest,
-    laktestwindowing,
-    laktestllvm,
-    laktestlmdb,
-  ],
-  dependencies: [
-    sdl2,
-    laklmdb,
-    lakllvm,
-  ],
+lak_dep = declare_dependency(
+	link_with: lak,
+	dependencies: dependencies,
+)
+
+lak_test_prog = executable(
+	'lak_test',
+	[
+		'src/tests/test_main.cpp',
+	],
+	override_options: 'cpp_std=' + version,
+	include_directories: include_directories('include'),
+	link_args: system_libraries,
+	link_whole: lak,
 )

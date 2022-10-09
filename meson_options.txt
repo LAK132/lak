@@ -22,8 +22,8 @@ option(
 option(
   'enable_llvm',
   type: 'boolean',
-  value: true,
-  yield: false,
+  value: false,
+  yield: true,
 )
 
 option(
@@ -65,5 +65,12 @@ option(
   'enable_lmdb',
   type: 'boolean',
   value: true,
-  yield: false,
+  yield: true,
+)
+
+option(
+  'enable_imgui',
+  type: 'boolean',
+  value: true,
+  yield: true,
 )

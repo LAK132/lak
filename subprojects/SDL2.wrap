@@ -1,0 +1,6 @@
+[wrap-git]
+url = https://github.com/libsdl-org/SDL
+revision = release-2.24.0
+depth = 1
+diff_files = patchfiles/SDL2/0001-fix-building-with-meson.patch
+patch_directory = SDL2

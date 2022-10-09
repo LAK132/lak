@@ -1,10 +1,13 @@
 #include "lak/test.hpp"
 
+#include "lak/file.hpp"
 #include "lak/lmdb/lmdb.hpp"
 #include "lak/string_literals.hpp"
 
 BEGIN_TEST(lmdb)
 {
+	lak::create_directory("ignore").UNWRAP();
+
 	lak::lmdb::environment env =
 	  lak::lmdb::environment::open(
 	    "ignore/lmdb.db", 10, lak::lmdb::environment_flags::no_subdir)
