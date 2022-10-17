@@ -14,3 +14,7 @@ laktestwindowing = static_library(
 		lakwindowing_dep,
 	],
 )
+
+laktestwindowing_dep = declare_dependency(
+	link_whole: laktestwindowing,
+)

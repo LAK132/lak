@@ -1,5 +1,5 @@
-laktest = static_library(
-	'laktest',
+laktestcore = static_library(
+	'laktestcore',
 	[
 		'algorithm.cpp',
 		'alloc.cpp',
@@ -27,4 +27,8 @@ laktest = static_library(
 	],
 	override_options: 'cpp_std=' + version,
 	dependencies: lakcore_dep,
+)
+
+laktestcore_dep = declare_dependency(
+	link_whole: laktestcore,
 )

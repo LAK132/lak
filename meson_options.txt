@@ -1,76 +1,89 @@
-option(
-  'use_vendored_windows_sdl',
-  type: 'boolean',
-  value: true,
-  yield: false,
+# testing options
+
+option('lak_enable_tests',
+	type: 'boolean',
+	value: false,
+	yield: true,
 )
 
-option(
-  'lak_backend',
-  type: 'combo',
-  choices: [
-    'win32',
-    'xlib',
-    'xcb',
-    'sdl',
-    'qt',
-  ],
-  value: 'sdl',
-  yield: false,
+# windowing options
+
+option('lak_enable_windowing',
+	type: 'boolean',
+	value: false,
+	yield: true,
 )
 
-option(
-  'enable_llvm',
-  type: 'boolean',
-  value: false,
-  yield: true,
+option('use_vendored_windows_sdl',
+	type: 'boolean',
+	value: true,
+	yield: false,
 )
 
-option(
-  'use_vendored_llvm',
-  type: 'boolean',
-  value: true,
-  yield: false,
+option('lak_backend',
+	type: 'combo',
+	choices: [
+		'win32',
+		'xlib',
+		'xcb',
+		'sdl',
+		'qt',
+	],
+	value: 'sdl',
+	yield: false,
 )
 
-option(
-  'llvm_components',
-  type: 'array',
-  value: [
-    'Native',
-  ],
-  yield: false,
+# llvm options
+
+option('lak_enable_llvm',
+	type: 'boolean',
+	value: false,
+	yield: true,
 )
 
-option(
-  'llvm_install_components',
-  type: 'array',
-  value: [
-    'Core',
-    'ExecutionEngine',
-    'OrcJIT',
-    'Support',
-  ],
-  yield: false,
+option('use_vendored_llvm',
+	type: 'boolean',
+	value: true,
+	yield: true,
 )
 
-option(
-  'llvm_parallel_link_jobs',
-  type: 'string',
-  value: '4',
-  yield: false,
+option('llvm_components',
+	type: 'array',
+	value: [
+		'Native',
+	],
+	yield: false,
 )
 
-option(
-  'enable_lmdb',
-  type: 'boolean',
-  value: true,
-  yield: true,
+option('llvm_install_components',
+	type: 'array',
+	value: [
+		'Core',
+		'ExecutionEngine',
+		'OrcJIT',
+		'Support',
+	],
+	yield: false,
 )
 
-option(
-  'enable_imgui',
-  type: 'boolean',
-  value: true,
-  yield: true,
+option('llvm_parallel_link_jobs',
+	type: 'string',
+	value: '4',
+	yield: false,
+)
+
+# lmdb options
+
+option('lak_enable_lmdb',
+	type: 'boolean',
+	value: false,
+	yield: true,
+)
+
+# dear imgui options
+
+option('lak_enable_imgui',
+	type: 'boolean',
+	value: false,
+	yield: true,
 )

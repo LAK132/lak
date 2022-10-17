@@ -1,0 +1,30 @@
+option('use_vendored_llvm',
+  type: 'boolean',
+  value: true,
+  yield: true,
+)
+
+option('llvm_components',
+  type: 'array',
+  value: [
+    'Native',
+  ],
+  yield: true,
+)
+
+option('llvm_install_components',
+  type: 'array',
+  value: [
+    'Core',
+    'ExecutionEngine',
+    'OrcJIT',
+    'Support',
+  ],
+  yield: true,
+)
+
+option('llvm_parallel_link_jobs',
+  type: 'string',
+  value: '4',
+  yield: true,
+)

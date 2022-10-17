@@ -13,3 +13,7 @@ laktestllvm = static_library(
 		lakllvm_dep,
 	],
 )
+
+laktestllvm_dep = declare_dependency(
+	link_whole: laktestllvm,
+)

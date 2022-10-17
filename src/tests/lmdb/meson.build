@@ -13,3 +13,7 @@ laktestlmdb = static_library(
 		laklmdb_dep,
 	],
 )
+
+laktestlmdb_dep = declare_dependency(
+	link_whole: laktestlmdb,
+)

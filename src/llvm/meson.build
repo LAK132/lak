@@ -1,9 +1,15 @@
-llvm_dep = subproject('llvm').get_variable('llvm_dep')
+llvm_subprj = subproject('llvm')
+llvm_dep = llvm_subprj.get_variable('llvm_dep')
+
+# :HACK: meson appears to have some strange dependency management issues going
+# on with custom targets and static libraries
+llvm_headers = llvm_subprj.get_variable('cmake_generated_headers')
 
 lakllvm = static_library(
 	'lakllvm',
 	[
 		'llvm.cpp',
+		llvm_headers,
 	],
 	override_options: [
 		'cpp_std=' + version,
@@ -18,5 +24,4 @@ lakllvm = static_library(
 
 lakllvm_dep = declare_dependency(
 	link_with: lakllvm,
-	dependencies: llvm_dep,
 )

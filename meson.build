@@ -92,51 +92,54 @@ if cxx.compute_int(cplusplus) < 202002
 endif
 
 dependencies = []
-whole_libraries = []
 
 subdir('src')
 dependencies += lakcore_dep
 
-subdir('src/opengl')
-dependencies += lakopengl_dep
-
-subdir('src/windowing')
-dependencies += lakwindowing_dep
-
-subdir('src/tests')
-whole_libraries += laktest
-
-subdir('src/tests/windowing')
-whole_libraries += laktestwindowing
-
-if get_option('enable_llvm')
-	error('NYI')
-	# subdir('src/llvm')
-	# subdir('src/tests/llvm')
-	# dependencies += lakllvm_dep
-	# whole_libraries += laktestllvm_dep
+if get_option('lak_enable_tests')
+	subdir('src/tests')
+	dependencies += laktestcore_dep
 endif
 
-if get_option('enable_lmdb')
+if get_option('lak_enable_windowing')
+	subdir('src/opengl')
+	dependencies += lakopengl_dep
+
+	subdir('src/windowing')
+	dependencies += lakwindowing_dep
+
+	if get_option('lak_enable_tests')
+		subdir('src/tests/windowing')
+		dependencies += laktestwindowing_dep
+	endif
+endif
+
+if get_option('lak_enable_llvm')
+	subdir('src/llvm')
+	dependencies += lakllvm_dep
+
+	if get_option('lak_enable_tests')
+		subdir('src/tests/llvm')
+		dependencies += laktestllvm_dep
+	endif
+endif
+
+if get_option('lak_enable_lmdb')
 	subdir('src/lmdb')
-	subdir('src/tests/lmdb')
 	dependencies += laklmdb_dep
-	whole_libraries += laktestlmdb
+
+	if get_option('lak_enable_tests')
+		subdir('src/tests/lmdb')
+		dependencies += laktestlmdb_dep
+	endif
 endif
 
-if get_option('enable_imgui')
+if get_option('lak_enable_imgui')
 	imgui_dep = subproject('imgui').get_variable('imgui_dep')
 	dependencies += imgui_dep
 endif
 
-lak = static_library(
-	'lak',
-	link_whole: whole_libraries,
-	dependencies: dependencies,
-)
-
 lak_dep = declare_dependency(
-	link_with: lak,
 	dependencies: dependencies,
 )
 
@@ -148,5 +151,5 @@ lak_test_prog = executable(
 	override_options: 'cpp_std=' + version,
 	include_directories: include_directories('include'),
 	link_args: system_libraries,
-	link_whole: lak,
+	dependencies: lak_dep,
 )
