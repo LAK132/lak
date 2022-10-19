@@ -374,7 +374,7 @@ requires((lak::is_standard_layout_v<lak::variant<T..., U...>>)) //
   lak::variant<lak::variant<T...>, U...>::variant::~variant()
 {
 	if (internal_index() <= _internal_offset)
-		_value.reset<0U>();
+		_value.template reset<0U>();
 	else
-		_value.reset<1U>();
+		_value.template reset<1U>();
 }

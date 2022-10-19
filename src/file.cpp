@@ -13,6 +13,8 @@
 #	include <unistd.h>
 #endif
 
+#include "lak/functional.hpp"
+
 #include "lak/debug.hpp"
 #include "lak/file.hpp"
 

@@ -70,7 +70,7 @@ namespace lak
 		static lak::u8string u8str();
 	};
 
-	static thread_local size_t debug_indent = 0U;
+	[[maybe_unused]] static thread_local size_t debug_indent = 0U;
 
 	extern debugger_t debugger;
 }

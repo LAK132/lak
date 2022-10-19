@@ -3,8 +3,9 @@
 #include "lak/streamify.hpp"
 #include "lak/string_view.hpp"
 
-#include "lak/debug.hpp"
 #include "lak/functional.hpp"
+
+#include "lak/debug.hpp"
 
 template<typename TO, typename FROM>
 size_t lak::converted_string_length(lak::string_view<FROM> str)

@@ -437,9 +437,9 @@ namespace lak
 		{
 		}
 
-		template<size_t I, typename U>
-		variant(lak::_var_t<I, U> var)
-		: variant(lak::in_place_index<I>, lak::forward<U>(var.value))
+		template<size_t I, typename V>
+		variant(lak::_var_t<I, V> var)
+		: variant(lak::in_place_index<I>, lak::forward<V>(var.value))
 		{
 		}
 
@@ -451,7 +451,7 @@ namespace lak
 
 		template<lak::concepts::one_of<variant<T...>, U...> V>
 		variant(V &&val)
-		: variant(lak::in_place_index<variant::index_of<V>>, lak::forward<U>(val))
+		: variant(lak::in_place_index<variant::index_of<V>>, lak::forward<V>(val))
 		{
 		}
 

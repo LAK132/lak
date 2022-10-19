@@ -52,7 +52,3 @@ std::istream *lak::process::std_err() const
 {
 	return nullptr;
 }
-
-void lak::process::close_input() {}
-
-void lak::process::close_output() {}

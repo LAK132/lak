@@ -91,7 +91,7 @@ constexpr force_inline bool __lakc_ptr_ge(const void *a, const void *b)
 	else
 	{
 		__lakc_ptr_diff_result result = __lakc_ptr_diff(a, b);
-		return (result.overflow == 0U) & (result.diff >= 0U);
+		return (result.overflow == 0U);
 	}
 }
 

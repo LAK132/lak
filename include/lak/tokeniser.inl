@@ -290,7 +290,7 @@ lak::token<CHAR> lak::tokeniser<CHAR>::peek_char() const noexcept
 {
 	// Don't bother caching this.
 	lak::token<CHAR> result{
-	  .source{_current.source.end(), _data.end()},
+	  .source{lak::string_view<CHAR>{_current.source.end(), _data.end()}},
 	  .position{
 	    .begin{_current.position.end},
 	    .end{_current.position.end},

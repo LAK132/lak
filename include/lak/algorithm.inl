@@ -167,8 +167,8 @@ ITER lak::mark_and_sweep_parition(
 
 /* --- lower_bound --- */
 
-template<typename T, typename U>
-T *lak::lower_bound(T *begin, T *end, const U &value, auto compare)
+template<typename T, typename U, typename CMP>
+T *lak::lower_bound(T *begin, T *end, const U &value, CMP compare)
 {
 	ASSERT_LESS_OR_EQUAL(begin, end);
 	auto diff = end - begin;
@@ -193,8 +193,8 @@ T *lak::lower_bound(T *begin, T *end, const U &value, auto compare)
 
 /* --- upper_bound --- */
 
-template<typename T, typename U>
-T *lak::upper_bound(T *begin, T *end, const U &value, auto compare)
+template<typename T, typename U, typename CMP>
+T *lak::upper_bound(T *begin, T *end, const U &value, CMP compare)
 {
 	ASSERT_LESS_OR_EQUAL(begin, end);
 	auto diff = end - begin;
@@ -219,8 +219,8 @@ T *lak::upper_bound(T *begin, T *end, const U &value, auto compare)
 
 /* --- equal_range --- */
 
-template<typename T, typename U>
-lak::span<T> lak::equal_range(T *begin, T *end, const U &value, auto compare)
+template<typename T, typename U, typename CMP>
+lak::span<T> lak::equal_range(T *begin, T *end, const U &value, CMP compare)
 {
 	begin = lak::lower_bound(begin, end, value, compare);
 	end   = lak::upper_bound(begin, end, value, compare);

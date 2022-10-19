@@ -49,27 +49,18 @@ namespace lak
 
 	/* --- lower_bound --- */
 
-	template<typename T, typename U = T>
-	T *lower_bound(T *begin,
-	               T *end,
-	               const U &value,
-	               auto compare = lak::less<>{});
+	template<typename T, typename U = T, typename CMP = lak::less<>>
+	T *lower_bound(T *begin, T *end, const U &value, CMP compare = {});
 
 	/* --- upper_bound --- */
 
-	template<typename T, typename U = T>
-	T *upper_bound(T *begin,
-	               T *end,
-	               const U &value,
-	               auto compare = lak::less<>{});
+	template<typename T, typename U = T, typename CMP = lak::less<>>
+	T *upper_bound(T *begin, T *end, const U &value, CMP compare = {});
 
 	/* --- equal_range --- */
 
-	template<typename T, typename U = T>
-	lak::span<T> equal_range(T *begin,
-	                         T *end,
-	                         const U &value,
-	                         auto compare = lak::less<>{});
+	template<typename T, typename U = T, typename CMP = lak::less<>>
+	lak::span<T> equal_range(T *begin, T *end, const U &value, CMP compare = {});
 }
 
 #include "lak/algorithm.inl"

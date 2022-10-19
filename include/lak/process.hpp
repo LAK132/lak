@@ -9,7 +9,7 @@
 namespace lak
 {
 	struct process_impl;
-	extern template lak::unique_ptr<lak::process_impl>;
+	extern template struct lak::unique_ptr<lak::process_impl>;
 
 	struct process
 	{

@@ -1,4 +1,7 @@
 #include "lak/unique_pages.hpp"
+
+#include "lak/result.hpp"
+
 #include "lak/memmanip.hpp"
 
 void lak::unique_pages::clear()

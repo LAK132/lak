@@ -4,59 +4,63 @@
 #	include "lak/concepts.hpp"
 #	include "lak/type_pack.hpp"
 
+#	ifndef LAK_COMPILER_MSVC
+#		define LAK_CAN_USE_CONCEPT_AUTO
+#	endif
+
 namespace lak
 {
 	/* --- equal_to --- */
 
-#	ifdef LAK_COMPILER_MSVC
-	template<typename T = void, auto... P>
-#	else
+#	ifdef LAK_CAN_USE_CONCEPT_AUTO
 	template<typename T = void, lak::concepts::member_pointer auto... P>
+#	else
+	template<typename T = void, auto... P>
 #	endif
 	struct equal_to;
 
 	/* --- not_equal_to --- */
 
-#	ifdef LAK_COMPILER_MSVC
-	template<typename T = void, auto... P>
-#	else
+#	ifdef LAK_CAN_USE_CONCEPT_AUTO
 	template<typename T = void, lak::concepts::member_pointer auto... P>
+#	else
+	template<typename T = void, auto... P>
 #	endif
 	struct not_equal_to;
 
 	/* --- less --- */
 
-#	ifdef LAK_COMPILER_MSVC
-	template<typename T = void, auto... P>
-#	else
+#	ifdef LAK_CAN_USE_CONCEPT_AUTO
 	template<typename T = void, lak::concepts::member_pointer auto... P>
+#	else
+	template<typename T = void, auto... P>
 #	endif
 	struct less;
 
 	/* --- greater --- */
 
-#	ifdef LAK_COMPILER_MSVC
-	template<typename T = void, auto... P>
-#	else
+#	ifdef LAK_CAN_USE_CONCEPT_AUTO
 	template<typename T = void, lak::concepts::member_pointer auto... P>
+#	else
+	template<typename T = void, auto... P>
 #	endif
 	struct greater;
 
 	/* --- less_equal --- */
 
-#	ifdef LAK_COMPILER_MSVC
-	template<typename T = void, auto... P>
-#	else
+#	ifdef LAK_CAN_USE_CONCEPT_AUTO
 	template<typename T = void, lak::concepts::member_pointer auto... P>
+#	else
+	template<typename T = void, auto... P>
 #	endif
 	struct less_equal;
 
 	/* --- greater_equal --- */
 
-#	ifdef LAK_COMPILER_MSVC
-	template<typename T = void, auto... P>
-#	else
+#	ifdef LAK_CAN_USE_CONCEPT_AUTO
 	template<typename T = void, lak::concepts::member_pointer auto... P>
+#	else
+	template<typename T = void, auto... P>
 #	endif
 	struct greater_equal;
 }
@@ -69,22 +73,30 @@ namespace lak
 #	ifndef LAK_FUNCTIONAL_HPP_IMPL
 #		define LAK_FUNCTIONAL_HPP_IMPL
 
+#		ifndef LAK_SPAN_MANIP_FORWARD_ONLY
+#			define LAK_SPAN_MANIP_FORWARD_ONLY
+#		endif
 #		include "lak/memmanip.hpp"
+
+#		ifndef LAK_RESULT_FORWARD_ONLY
+#			define LAK_RESULT_FORWARD_ONLY
+#		endif
 #		include "lak/memory.hpp"
+
 #		include "lak/utility.hpp"
 
 namespace lak
 {
 	/* --- equal_to --- */
 
-#		ifdef LAK_COMPILER_MSVC
-	template<typename T, auto... P>
-#		else
+#		ifdef LAK_CAN_USE_CONCEPT_AUTO
 	template<typename T, lak::concepts::member_pointer auto... P>
+#		else
+	template<typename T, auto... P>
 #		endif
 	struct equal_to
 	{
-#		ifdef LAK_COMPILER_MSVC
+#		ifndef LAK_CAN_USE_CONCEPT_AUTO
 		static_assert((lak::is_member_pointer_v<decltype(P)> && ...));
 #		endif
 
@@ -133,14 +145,14 @@ namespace lak
 
 	/* --- not_equal_to --- */
 
-#		ifdef LAK_COMPILER_MSVC
-	template<typename T, auto... P>
-#		else
+#		ifdef LAK_CAN_USE_CONCEPT_AUTO
 	template<typename T, lak::concepts::member_pointer auto... P>
+#		else
+	template<typename T, auto... P>
 #		endif
 	struct not_equal_to
 	{
-#		ifdef LAK_COMPILER_MSVC
+#		ifndef LAK_CAN_USE_CONCEPT_AUTO
 		static_assert((lak::is_member_pointer_v<decltype(P)> && ...));
 #		endif
 
@@ -189,14 +201,14 @@ namespace lak
 
 	/* --- less --- */
 
-#		ifdef LAK_COMPILER_MSVC
-	template<typename T, auto... P>
-#		else
+#		ifdef LAK_CAN_USE_CONCEPT_AUTO
 	template<typename T, lak::concepts::member_pointer auto... P>
+#		else
+	template<typename T, auto... P>
 #		endif
 	struct less
 	{
-#		ifdef LAK_COMPILER_MSVC
+#		ifndef LAK_CAN_USE_CONCEPT_AUTO
 		static_assert((lak::is_member_pointer_v<decltype(P)> && ...));
 #		endif
 
@@ -244,14 +256,14 @@ namespace lak
 
 	/* --- greater --- */
 
-#		ifdef LAK_COMPILER_MSVC
-	template<typename T, auto... P>
-#		else
+#		ifdef LAK_CAN_USE_CONCEPT_AUTO
 	template<typename T, lak::concepts::member_pointer auto... P>
+#		else
+	template<typename T, auto... P>
 #		endif
 	struct greater
 	{
-#		ifdef LAK_COMPILER_MSVC
+#		ifndef LAK_CAN_USE_CONCEPT_AUTO
 		static_assert((lak::is_member_pointer_v<decltype(P)> && ...));
 #		endif
 
@@ -299,14 +311,14 @@ namespace lak
 
 	/* --- less_equal --- */
 
-#		ifdef LAK_COMPILER_MSVC
-	template<typename T, auto... P>
-#		else
+#		ifdef LAK_CAN_USE_CONCEPT_AUTO
 	template<typename T, lak::concepts::member_pointer auto... P>
+#		else
+	template<typename T, auto... P>
 #		endif
 	struct less_equal
 	{
-#		ifdef LAK_COMPILER_MSVC
+#		ifndef LAK_CAN_USE_CONCEPT_AUTO
 		static_assert((lak::is_member_pointer_v<decltype(P)> && ...));
 #		endif
 
@@ -354,14 +366,14 @@ namespace lak
 
 	/* --- greater_equal --- */
 
-#		ifdef LAK_COMPILER_MSVC
-	template<typename T, auto... P>
-#		else
+#		ifdef LAK_CAN_USE_CONCEPT_AUTO
 	template<typename T, lak::concepts::member_pointer auto... P>
+#		else
+	template<typename T, auto... P>
 #		endif
 	struct greater_equal
 	{
-#		ifdef LAK_COMPILER_MSVC
+#		ifndef LAK_CAN_USE_CONCEPT_AUTO
 		static_assert((lak::is_member_pointer_v<decltype(P)> && ...));
 #		endif
 
