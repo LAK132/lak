@@ -45,4 +45,4 @@ echo setup.bat msvc
 echo setup.bat msvc --buildtype release
 echo setup.bat gcc --buildtype debug
 echo setup.bat clang --buildtype debugoptimized
-exit 1
+exit /b 1
