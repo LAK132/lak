@@ -1,4 +1,14 @@
+boost/**
+eigen/**
 imgui/**
+libfive/**
+libpng/**
 llvm/**
 lmdb/**
 SDL2/**
+zlib/**
+
+boost.wrap
+eigen.wrap
+libpng.wrap
+zlib.wrap

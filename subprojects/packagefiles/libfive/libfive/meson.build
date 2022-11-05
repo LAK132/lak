@@ -1,0 +1,173 @@
+
+cmake = import('cmake')
+
+# --- eigen ---
+
+eigen_opts = cmake.subproject_options()
+
+eigen_opts.add_cmake_defines({
+	'EIGEN_TEST_CXX11': 'OFF',
+	'EIGEN_BUILD_BTL': 'OFF',
+	'EIGEN_BUILD_PKGCONFIG': 'OFF',
+	# 'EIGEN_DEFAULT_TO_ROW_MAJOR': 'OFF',
+	'EIGEN_BUILD_DOC': 'OFF',
+	'BUILD_TESTING': 'OFF',
+})
+
+if meson.get_compiler('cpp').has_argument('bigobj')
+	eigen_opts.append_compile_args('cpp', '-bigobj')
+endif
+
+eigen_subprj = cmake.subproject('eigen', options: eigen_opts)
+
+# Available targets (use: cmake --build . --target TARGET):
+# | -- ---------+--------------------------------------------------------------
+# | -- Target   |   Description
+# | -- ---------+--------------------------------------------------------------
+# | -- install  | Install Eigen. Headers will be installed to:
+# | --          |     <CMAKE_INSTALL_PREFIX>/<INCLUDE_INSTALL_DIR>
+# | --          |   Using the following values:
+# | --          |     CMAKE_INSTALL_PREFIX: C:/
+# | --          |     INCLUDE_INSTALL_DIR:  include/eigen3
+# | --          |   Change the install location of Eigen headers using:
+# | --          |     cmake . -DCMAKE_INSTALL_PREFIX=yourprefix
+# | --          |   Or:
+# | --          |     cmake . -DINCLUDE_INSTALL_DIR=yourdir
+# | -- doc      | Generate the API documentation, requires Doxygen & LaTeX
+# | -- check    | Build and run the unit-tests. Read this page:
+# | --          |   http://eigen.tuxfamily.org/index.php?title=Tests
+# | -- blas     | Build BLAS library (not the same thing as Eigen)
+# | -- uninstall| Remove files installed by the install target
+# | -- ---------+--------------------------------------------------------------
+
+# message('CMake targets:\n - ' + '\n - '.join(eigen_subprj.target_list()))
+
+eigen_dep = [
+	# eigen_subprj.dependency('eigen'),
+	eigen_subprj.dependency('eigen_blas_static'),
+]
+
+# --- zlib ---
+
+zlib_opts = cmake.subproject_options()
+
+zlib_opts.add_cmake_defines({
+	# 'INSTALL_BIN_DIR': ,
+	# 'INSTALL_LIB_DIR': ,
+	# 'INSTALL_INC_DIR': ,
+	# 'INSTALL_MAN_DIR': ,
+	# 'INSTALL_PKGCONFIG_DIR': ,
+})
+
+zlib_subprj = cmake.subproject('zlib', options: zlib_opts)
+# zlib_dep
+# zlibstatic_dep
+# minigzip_exe
+
+# zlib_build = meson.build_root()/'subprojects/zlib'
+# zlib_src = meson.source_root()/'subprojects/zlib'
+
+zlib_dep = zlib_subprj.dependency('zlibstatic')
+
+# --- libpng ---
+
+# TODO: Create MSVC import lib for MinGW-compiled shared lib.
+# pexports libpng.dll > libpng.def
+# lib /def:libpng.def /machine:x86
+
+libpng_opts = cmake.subproject_options()
+
+libpng_opts.add_cmake_defines({
+	'PNG_SHARED': 'OFF',
+	'PNG_STATIC': 'ON',
+	'PNG_EXECUTABLES': 'OFF',
+	'PNG_TEST': 'OFF',
+	'PNG_BUILD_ZLIB': 'ON',
+	# 'CMAKE_CXX_FLAGS': '-I"'+meson.source_root()/'subprojects/zlib'+'"',
+	# 'CMAKE_C_FLAGS': '-I"'+meson.source_root()/'subprojects/zlib'+'"',
+	# 'ZLIB_INCLUDE_DIRS': meson.source_root()/'subprojects/zlib',
+	# 'ZLIB_LIBRARY': zlib_build/'lib',
+})
+
+libpng_opts.append_compile_args(
+	'c',
+	'-I'+(meson.source_root()/'subprojects/zlib'),
+	'-I'+(meson.build_root()/'subprojects/zlib/__CMake_build'),
+)
+
+libpng_subprj = cmake.subproject('libpng', options: libpng_opts)
+
+# libpng_build = meson.build_root()/'subprojects/libpng'
+# libpng_src = meson.source_root()/'subprojects/libpng'
+
+libpng_dep = libpng_subprj.dependency('png_static')
+
+# --- boost ---
+
+boost_opts = cmake.subproject_options()
+
+boost_opts.add_cmake_defines({
+	'BOOST_LOG_WITHOUT_EVENT_LOG': 'ON'
+})
+
+if meson.get_compiler('cpp').has_argument('bigobj')
+	boost_opts.append_compile_args('cpp', '-bigobj')
+endif
+
+boost_subprj = cmake.subproject('boost', options: boost_opts)
+
+# boost_build = meson.build_root()/'subprojects/boost'
+# boost_src = meson.source_root()/'subprojects/boost'
+
+boost_dep = [
+	boost_subprj.dependency('boost_bimap'),
+	boost_subprj.dependency('boost_functional'),
+	boost_subprj.dependency('boost_numeric_interval'),
+	boost_subprj.dependency('boost_lockfree'),
+	boost_subprj.dependency('boost_container'),
+]
+
+# --- libfive ---
+
+subdir('src')
+
+includes = include_directories('include')
+
+if meson.get_compiler('cpp').has_argument('bigobj')
+	bigobj = '-bigobj'
+else
+	bigobj = []
+endif
+
+libfive_dependencies = declare_dependency(
+	dependencies: [
+		eigen_dep,
+		zlib_dep,
+		libpng_dep,
+		boost_dep,
+	],
+)
+
+libfive = static_library(
+	'libfive',
+	libfive_src,
+	cpp_args: [
+		'-D_USE_MATH_DEFINES',
+		bigobj,
+	],
+	override_options: [
+		'cpp_std=c++17',
+		'warning_level=0',
+	],
+	dependencies: libfive_dependencies,
+	include_directories: includes,
+)
+
+libfive_dep = declare_dependency(
+	link_with: libfive,
+	compile_args: '-D_USE_MATH_DEFINES',
+	include_directories: includes,
+	dependencies: libfive_dependencies.partial_dependency(includes: true),
+)
+
+meson.override_dependency('libfive', libfive_dep)

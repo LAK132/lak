@@ -87,3 +87,11 @@ option('lak_enable_imgui',
 	value: false,
 	yield: true,
 )
+
+# libfive options
+
+option('lak_enable_libfive',
+	type: 'boolean',
+	value: false,
+	yield: true,
+)

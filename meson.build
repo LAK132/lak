@@ -139,6 +139,16 @@ if get_option('lak_enable_imgui')
 	dependencies += imgui_dep
 endif
 
+if get_option('lak_enable_libfive')
+	subdir('src/libfive')
+	dependencies += laklibfive_dep
+
+	if get_option('lak_enable_tests')
+		subdir('src/tests/libfive')
+		dependencies += laktestlibfive_dep
+	endif
+endif
+
 lak_dep = declare_dependency(
 	dependencies: dependencies,
 )
