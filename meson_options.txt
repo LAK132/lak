@@ -17,7 +17,7 @@ option('lak_enable_windowing',
 option('use_vendored_windows_sdl',
 	type: 'boolean',
 	value: true,
-	yield: false,
+	yield: true,
 )
 
 option('lak_backend',
@@ -30,7 +30,7 @@ option('lak_backend',
 		'qt',
 	],
 	value: 'sdl',
-	yield: false,
+	yield: true,
 )
 
 # llvm options
@@ -52,7 +52,7 @@ option('llvm_components',
 	value: [
 		'Native',
 	],
-	yield: false,
+	yield: true,
 )
 
 option('llvm_install_components',
@@ -63,13 +63,13 @@ option('llvm_install_components',
 		'OrcJIT',
 		'Support',
 	],
-	yield: false,
+	yield: true,
 )
 
 option('llvm_parallel_link_jobs',
 	type: 'string',
 	value: '4',
-	yield: false,
+	yield: true,
 )
 
 # lmdb options
