@@ -18,6 +18,26 @@ namespace lak
 	};
 	static constexpr lak::nullopt_t nullopt;
 
+	/* --- some_t --- */
+
+	template<typename T = lak::monostate>
+	struct some_t
+	{
+		T value;
+	};
+
+	template<typename T>
+	some_t(T &&) -> some_t<T &&>;
+
+	template<typename T>
+	some_t(T &) -> some_t<T &>;
+
+	template<typename T>
+	lak::some_t<T &&> move_some(T &v)
+	{
+		return lak::some_t<T &&>{lak::move(v)};
+	}
+
 	/* --- optional --- */
 
 	template<typename T = void>
@@ -47,12 +67,19 @@ namespace lak
 		}
 
 		optional(lak::nullopt_t) {}
+
 		template<typename U>
 		requires requires { value_type(lak::declval<U>()); } //
 		optional(U &&other) : _has_value(true), _value(lak::forward<U>(other)) {}
+
 		template<typename... ARGS>
 		optional(lak::in_place_t, ARGS &&...args)
 		: _has_value(true), _value(lak::forward<ARGS>(args)...)
+		{
+		}
+
+		template<typename U>
+		optional(lak::some_t<U> value) : optional(lak::forward<U>(value.value))
 		{
 		}
 
