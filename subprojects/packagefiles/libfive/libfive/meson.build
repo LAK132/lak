@@ -9,9 +9,9 @@ eigen_opts.add_cmake_defines({
 	'EIGEN_TEST_CXX11': 'OFF',
 	'EIGEN_BUILD_BTL': 'OFF',
 	'EIGEN_BUILD_PKGCONFIG': 'OFF',
-	# 'EIGEN_DEFAULT_TO_ROW_MAJOR': 'OFF',
 	'EIGEN_BUILD_DOC': 'OFF',
 	'BUILD_TESTING': 'OFF',
+	'CMAKE_Fortran_COMPILER': 'NOTFOUND',
 })
 
 if meson.get_compiler('cpp').has_argument('bigobj')
@@ -19,28 +19,6 @@ if meson.get_compiler('cpp').has_argument('bigobj')
 endif
 
 eigen_subprj = cmake.subproject('eigen', options: eigen_opts)
-
-# Available targets (use: cmake --build . --target TARGET):
-# | -- ---------+--------------------------------------------------------------
-# | -- Target   |   Description
-# | -- ---------+--------------------------------------------------------------
-# | -- install  | Install Eigen. Headers will be installed to:
-# | --          |     <CMAKE_INSTALL_PREFIX>/<INCLUDE_INSTALL_DIR>
-# | --          |   Using the following values:
-# | --          |     CMAKE_INSTALL_PREFIX: C:/
-# | --          |     INCLUDE_INSTALL_DIR:  include/eigen3
-# | --          |   Change the install location of Eigen headers using:
-# | --          |     cmake . -DCMAKE_INSTALL_PREFIX=yourprefix
-# | --          |   Or:
-# | --          |     cmake . -DINCLUDE_INSTALL_DIR=yourdir
-# | -- doc      | Generate the API documentation, requires Doxygen & LaTeX
-# | -- check    | Build and run the unit-tests. Read this page:
-# | --          |   http://eigen.tuxfamily.org/index.php?title=Tests
-# | -- blas     | Build BLAS library (not the same thing as Eigen)
-# | -- uninstall| Remove files installed by the install target
-# | -- ---------+--------------------------------------------------------------
-
-# message('CMake targets:\n - ' + '\n - '.join(eigen_subprj.target_list()))
 
 eigen_dep = [
 	# eigen_subprj.dependency('eigen'),
@@ -52,11 +30,6 @@ eigen_dep = [
 zlib_opts = cmake.subproject_options()
 
 zlib_opts.add_cmake_defines({
-	# 'INSTALL_BIN_DIR': ,
-	# 'INSTALL_LIB_DIR': ,
-	# 'INSTALL_INC_DIR': ,
-	# 'INSTALL_MAN_DIR': ,
-	# 'INSTALL_PKGCONFIG_DIR': ,
 })
 
 zlib_subprj = cmake.subproject('zlib', options: zlib_opts)
@@ -64,16 +37,9 @@ zlib_subprj = cmake.subproject('zlib', options: zlib_opts)
 # zlibstatic_dep
 # minigzip_exe
 
-# zlib_build = meson.build_root()/'subprojects/zlib'
-# zlib_src = meson.source_root()/'subprojects/zlib'
-
 zlib_dep = zlib_subprj.dependency('zlibstatic')
 
 # --- libpng ---
-
-# TODO: Create MSVC import lib for MinGW-compiled shared lib.
-# pexports libpng.dll > libpng.def
-# lib /def:libpng.def /machine:x86
 
 libpng_opts = cmake.subproject_options()
 
@@ -83,10 +49,6 @@ libpng_opts.add_cmake_defines({
 	'PNG_EXECUTABLES': 'OFF',
 	'PNG_TEST': 'OFF',
 	'PNG_BUILD_ZLIB': 'ON',
-	# 'CMAKE_CXX_FLAGS': '-I"'+meson.source_root()/'subprojects/zlib'+'"',
-	# 'CMAKE_C_FLAGS': '-I"'+meson.source_root()/'subprojects/zlib'+'"',
-	# 'ZLIB_INCLUDE_DIRS': meson.source_root()/'subprojects/zlib',
-	# 'ZLIB_LIBRARY': zlib_build/'lib',
 })
 
 libpng_opts.append_compile_args(
@@ -96,9 +58,6 @@ libpng_opts.append_compile_args(
 )
 
 libpng_subprj = cmake.subproject('libpng', options: libpng_opts)
-
-# libpng_build = meson.build_root()/'subprojects/libpng'
-# libpng_src = meson.source_root()/'subprojects/libpng'
 
 libpng_dep = libpng_subprj.dependency('png_static')
 
@@ -115,9 +74,6 @@ if meson.get_compiler('cpp').has_argument('bigobj')
 endif
 
 boost_subprj = cmake.subproject('boost', options: boost_opts)
-
-# boost_build = meson.build_root()/'subprojects/boost'
-# boost_src = meson.source_root()/'subprojects/boost'
 
 boost_dep = [
 	boost_subprj.dependency('boost_bimap'),
