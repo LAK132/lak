@@ -17,20 +17,29 @@ sdl2_subprj = cmake.subproject('SDL2', options: sdl2_opts)
 # SDL2_test
 # SDL2main
 # message('CMake targets:\n - ' + '\n - '.join(sdl2_subprj.target_list()))
-sdl2_dep = sdl2_subprj.dependency('SDL2_static')
-sdl2_lib = sdl2_subprj.target('SDL2_static')
 
-# There appears to be an issue with copying the headers into the build
-# directory, if anything that depends on them is built too quickly then the
-# compiler complains that it can't find some of the headers. inserting a delay
-# in here seems to fix it
-sdl2_build_delay = custom_target(
-	'sdl2-dep-delay',
-	output: 'sdl2-dep-delay.h',
-	depends: sdl2_lib,
-	command: [
-		find_program('python'), '-c',
-		'import time;time.sleep(5);open(\'@OUTPUT@\', \'w\').close()'
+sdl2_dep = declare_dependency(
+	dependencies: sdl2_subprj.dependency('SDL2_static'),
+
+	# the meson cmake module isn't picking up on the fact that the SDL2_static
+	# target is generating headers that later build steps depend on. so here we
+	# introduce a custom_target which depends on the SDL2_static lib, and
+	# generates a header which is marked as a source file for any later build
+	# steps that depen on sdl2_dep
+	sources: custom_target(
+		'sdl2-dep-delay',
+		output: 'sdl2-dep-delay.hpp',
+		input: sdl2_subprj.target('SDL2_static'),
+		capture: true,
+		command: [find_program('python'), '-c', 'print("")'],
+	),
+)
+
+lakwindowing_dependencies = declare_dependency(
+	dependencies: [
+		lakcore_dep,
+		lakopengl_dep,
+		sdl2_dep,
 	],
 )
 
@@ -40,12 +49,7 @@ lakwindowing = static_library(
 		'events.cpp',
 		'platform.cpp',
 		'window.cpp',
-		sdl2_build_delay,
 	],
 	override_options: 'cpp_std=' + version,
-	dependencies: [
-		lakcore_dep,
-		lakopengl_dep,
-		sdl2_dep,
-	],
+	dependencies: lakwindowing_dependencies,
 )

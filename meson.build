@@ -142,6 +142,16 @@ endif
 if get_option('lak_enable_imgui')
 	imgui_dep = subproject('imgui').get_variable('imgui_dep')
 	dependencies += imgui_dep
+
+	if get_option('lak_enable_windowing')
+		subdir('src/imgui')
+		dependencies += lakimgui_dep
+
+		if get_option('lak_enable_tests')
+			subdir('src/tests/imgui')
+			dependencies += laktestimgui_dep
+		endif
+	endif
 endif
 
 if get_option('lak_enable_libfive')
