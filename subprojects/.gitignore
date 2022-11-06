@@ -1,5 +1,6 @@
 boost/**
 eigen/**
+glm/**
 imgui/**
 libfive/**
 libpng/**

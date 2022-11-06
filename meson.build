@@ -134,6 +134,11 @@ if get_option('lak_enable_lmdb')
 	endif
 endif
 
+if get_option('lak_enable_glm')
+	glm_dep = subproject('glm').get_variable('glm_dep')
+	dependencies += glm_dep
+endif
+
 if get_option('lak_enable_imgui')
 	imgui_dep = subproject('imgui').get_variable('imgui_dep')
 	dependencies += imgui_dep

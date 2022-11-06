@@ -80,6 +80,14 @@ option('lak_enable_lmdb',
 	yield: true,
 )
 
+# glm options
+
+option('lak_enable_glm',
+	type: 'boolean',
+	value: false,
+	yield: true,
+)
+
 # dear imgui options
 
 option('lak_enable_imgui',
