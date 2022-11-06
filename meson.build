@@ -151,6 +151,7 @@ endif
 
 lak_dep = declare_dependency(
 	dependencies: dependencies,
+	link_args: system_libraries,
 )
 
 lak_test_prog = executable(
@@ -160,6 +161,5 @@ lak_test_prog = executable(
 	],
 	override_options: 'cpp_std=' + version,
 	include_directories: include_directories('include'),
-	link_args: system_libraries,
 	dependencies: lak_dep,
 )
