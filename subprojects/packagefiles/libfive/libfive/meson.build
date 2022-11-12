@@ -59,7 +59,17 @@ libpng_opts.append_compile_args(
 
 libpng_subprj = cmake.subproject('libpng', options: libpng_opts)
 
-libpng_dep = libpng_subprj.dependency('png_static')
+# force zlib to be built at compile stage, while libpng is built at link stage
+libpng_dep = declare_dependency(
+	dependencies: libpng_subprj.dependency('png_static'),
+	sources: custom_target(
+		'zlib-libpng-chain-dep',
+		output: 'zlib-libpng-chain-dep.hpp',
+		input: zlib_subprj.target('zlibstatic'),
+		capture: true,
+		command: [find_program('python'), '-c', 'print("")'],
+	),
+)
 
 # --- boost ---
 
