@@ -25,51 +25,15 @@ eigen_dep = [
 	eigen_subprj.dependency('eigen_blas_static'),
 ]
 
-# --- zlib ---
-
-zlib_opts = cmake.subproject_options()
-
-zlib_opts.add_cmake_defines({
-})
-
-zlib_subprj = cmake.subproject('zlib', options: zlib_opts)
-# zlib_dep
-# zlibstatic_dep
-# minigzip_exe
-
-zlib_dep = zlib_subprj.dependency('zlibstatic')
-
 # --- libpng ---
 
-libpng_opts = cmake.subproject_options()
+libpng_subprj = subproject('libpng')
 
-libpng_opts.add_cmake_defines({
-	'PNG_SHARED': 'OFF',
-	'PNG_STATIC': 'ON',
-	'PNG_EXECUTABLES': 'OFF',
-	'PNG_TEST': 'OFF',
-	'PNG_BUILD_ZLIB': 'ON',
-})
+libpng_dep = libpng_subprj.get_variable('libpng_dep')
 
-libpng_opts.append_compile_args(
-	'c',
-	'-I'+(meson.source_root()/'subprojects/zlib'),
-	'-I'+(meson.build_root()/'subprojects/zlib/__CMake_build'),
-)
+# --- zlib ---
 
-libpng_subprj = cmake.subproject('libpng', options: libpng_opts)
-
-# force zlib to be built at compile stage, while libpng is built at link stage
-libpng_dep = declare_dependency(
-	dependencies: libpng_subprj.dependency('png_static'),
-	sources: custom_target(
-		'zlib-libpng-chain-dep',
-		output: 'zlib-libpng-chain-dep.hpp',
-		input: zlib_subprj.target('zlibstatic'),
-		capture: true,
-		command: [find_program('python'), '-c', 'print("")'],
-	),
-)
+zlib_dep = libpng_subprj.get_variable('zlib_dep')
 
 # --- boost ---
 

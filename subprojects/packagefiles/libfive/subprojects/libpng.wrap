@@ -2,3 +2,4 @@
 url = https://github.com/glennrp/libpng
 revision = v1.6.38
 depth = 1
+patch_directory = libpng
