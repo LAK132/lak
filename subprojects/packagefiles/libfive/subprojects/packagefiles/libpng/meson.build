@@ -48,9 +48,9 @@ libpng_build = custom_target(
 		'-DPNG_EXECUTABLES=OFF',
 		'-DPNG_TESTS=OFF',
 		'-DPNG_BUILD_ZLIB=ON',
-		'-DZLIB_INCLUDE_DIRS='
-			+ (meson.source_root()/'subprojects/zlib') + ';'
-			+ (meson.build_root()/'subprojects/zlib/__CMake_build'),
+		'-DZLIB_INCLUDE_DIRS:LIST=@0@;@1@'.format(
+			meson.source_root() / 'subprojects' / 'zlib',
+			meson.build_root() / 'subprojects' / 'zlib' / '__CMake_build'),
 		'-DZLIB_LIBRARIES=' + zlib_subprj.target('zlibstatic').full_path(),
 		'-DCMAKE_BUILD_TYPE=' + libpng_build_type,
 		'-DCMAKE_INSTALL_PREFIX=@CURRENT_SOURCE_DIR@/build',
@@ -89,7 +89,7 @@ pnglibconf_h = custom_target(
 	depends: libpng_build,
 	output: 'pnglibconf.h',
 	console: true,
-	command: [find_program('python', 'python3'), '-c', ''],
+	command: [find_program('python3'), '-c', ''],
 )
 
 libpng = static_library(
