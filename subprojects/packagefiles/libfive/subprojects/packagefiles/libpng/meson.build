@@ -48,7 +48,7 @@ libpng_build = custom_target(
 		'-DPNG_EXECUTABLES=OFF',
 		'-DPNG_TESTS=OFF',
 		'-DPNG_BUILD_ZLIB=ON',
-		'-DZLIB_INCLUDE_DIRS:LIST=@0@;@1@'.format(
+		'-DCMAKE_C_FLAGS=-I@0@ -I@1@'.format(
 			meson.source_root() / 'subprojects' / 'zlib',
 			meson.build_root() / 'subprojects' / 'zlib' / '__CMake_build'),
 		'-DZLIB_LIBRARIES=' + zlib_subprj.target('zlibstatic').full_path(),
