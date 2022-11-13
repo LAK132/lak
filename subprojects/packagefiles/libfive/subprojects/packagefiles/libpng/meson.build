@@ -84,6 +84,14 @@ cmake_generated_libpng_lib = custom_target(
 	],
 )
 
+pnglibconf_h = custom_target(
+	'pnglibconf_h',
+	depends: libpng_build,
+	output: 'pnglibconf.h',
+	console: true,
+	command: [find_program('python', 'python3'), '-c', ''],
+)
+
 libpng = static_library(
 	'libpng',
 	[
@@ -97,4 +105,5 @@ libpng_dep = declare_dependency(
 	link_with: libpng,
 	include_directories: libpng_inc,
 	dependencies: zlib_dep,
+	sources: pnglibconf_h,
 )
