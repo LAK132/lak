@@ -40,7 +40,8 @@ zlib_dep = libpng_subprj.get_variable('zlib_dep')
 boost_opts = cmake.subproject_options()
 
 boost_opts.add_cmake_defines({
-	'BOOST_LOG_WITHOUT_EVENT_LOG': 'ON'
+	'BOOST_LOG_WITHOUT_EVENT_LOG': 'ON',
+	'BOOST_INCLUDE_LIBRARIES': 'bimap;functional;numeric/interval;lockfree;container',
 })
 
 if meson.get_compiler('cpp').has_argument('bigobj')
