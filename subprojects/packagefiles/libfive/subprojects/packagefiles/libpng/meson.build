@@ -68,10 +68,11 @@ if target_machine.system() == 'windows'
 	else
 		lib_suffix = '_static.lib'
 	endif
+else
 	lib_suffix = '.a'
 endif
 
-cmake_generated_libpng_c_lib = custom_target(
+cmake_generated_libpng_lib = custom_target(
 	'compile-libpng',
 	depends: libpng_build,
 	output: 'libpng16' + lib_suffix,
@@ -86,7 +87,7 @@ cmake_generated_libpng_c_lib = custom_target(
 libpng = static_library(
 	'libpng',
 	[
-		cmake_generated_libpng_c_lib,
+		cmake_generated_libpng_lib,
 	],
 )
 
