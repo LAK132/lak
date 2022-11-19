@@ -31,7 +31,7 @@ sdl2_dep = declare_dependency(
 		output: 'sdl2-dep-delay.hpp',
 		input: sdl2_subprj.target('SDL2_static'),
 		capture: true,
-		command: [find_program('python'), '-c', 'print("")'],
+		command: [find_program('python3'), '-c', ''],
 	),
 )
 
