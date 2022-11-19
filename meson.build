@@ -92,6 +92,8 @@ if cxx.compute_int(cplusplus) < 202002
 endif
 
 dependencies = []
+dll_depends = []
+dlls = []
 
 subdir('src')
 dependencies += lakcore_dep
@@ -164,9 +166,47 @@ if get_option('lak_enable_libfive')
 	endif
 endif
 
+if get_option('lak_enable_libgphoto2')
+	libgphoto2_subprj = subproject('libgphoto2')
+	libgphoto2_dep = libgphoto2_subprj.get_variable('libgphoto2_dep')
+	dependencies += libgphoto2_dep
+
+	if get_option('lak_enable_tests')
+		subdir('src/tests/libgphoto2')
+		dependencies += laktestlibgphoto2_dep
+	endif
+
+	if target_machine.system() == 'windows'
+		foreach dll : libgphoto2_subprj.get_variable('libgphoto2_dlls')
+			dlls += dll
+		endforeach
+		dll_depends += libgphoto2_subprj.get_variable('libgphoto2_msys')
+	endif
+endif
+
+if target_machine.system() == 'windows'
+	lakdlls_h = custom_target(
+		'configure-dlls',
+		depends: dll_depends,
+		output: 'lakdlls.hpp',
+		capture: true,
+		command: [
+			find_program('python3'),
+			'-c',
+			'import shutil;' +
+			'import sys;' +
+			'[shutil.copy(x, \'@OUTDIR@\') for x in sys.argv[4:]]',
+			dlls,
+		]
+	)
+else
+	lakdlls_h = []
+endif
+
 lak_dep = declare_dependency(
 	dependencies: dependencies,
 	link_args: system_libraries,
+	sources: lakdlls_h,
 )
 
 lak_test_prog = executable(
