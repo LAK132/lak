@@ -165,6 +165,54 @@ ITER lak::mark_and_sweep_parition(
 	  [&](auto &elem) -> bool { return marked_set.contains(transform(elem)); });
 }
 
+/* --- minmax_element --- */
+
+template<typename ITER, typename CMP>
+lak::pair<ITER, ITER> lak::minmax_element(ITER begin, ITER end, CMP compare)
+{
+	if (begin == end) return {begin, begin};
+
+	lak::pair<ITER, ITER> result{begin, begin};
+
+	for (++begin; begin != end; ++begin)
+		if (compare(*begin, *result.first))
+			result.first = begin;
+		else if (!compare(*begin, *result.second))
+			result.second = begin;
+
+	return result;
+}
+
+/* --- max_element --- */
+
+template<typename ITER, typename CMP>
+ITER lak::max_element(ITER begin, ITER end, CMP compare)
+{
+	if (begin == end) return end;
+
+	ITER result = begin;
+
+	for (++begin; begin != end; ++begin)
+		if (compare(*result, *begin)) result = begin;
+
+	return result;
+}
+
+/* --- min_element --- */
+
+template<typename ITER, typename CMP>
+ITER lak::min_element(ITER begin, ITER end, CMP compare)
+{
+	if (begin == end) return end;
+
+	ITER result = begin;
+
+	for (++begin; begin != end; ++begin)
+		if (compare(*begin, *result)) result = begin;
+
+	return result;
+}
+
 /* --- lower_bound --- */
 
 template<typename T, typename U, typename CMP>

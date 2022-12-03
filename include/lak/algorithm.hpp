@@ -47,6 +47,21 @@ namespace lak
 	ITER mark_and_sweep_parition(
 	  T *root, auto sweep, ITER begin, ITER end, auto transform);
 
+	/* --- minmax_element --- */
+
+	template<typename ITER, typename CMP = lak::less<>>
+	lak::pair<ITER, ITER> minmax_element(ITER begin, ITER end, CMP compare = {});
+
+	/* --- max_element --- */
+
+	template<typename ITER, typename CMP = lak::less<>>
+	ITER max_element(ITER begin, ITER end, CMP compare = {});
+
+	/* --- min_element --- */
+
+	template<typename ITER, typename CMP = lak::less<>>
+	ITER min_element(ITER begin, ITER end, CMP compare = {});
+
 	/* --- lower_bound --- */
 
 	template<typename T, typename U = T, typename CMP = lak::less<>>
