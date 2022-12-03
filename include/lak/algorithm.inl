@@ -166,19 +166,19 @@ bool lak::is_permutation(ITER_A begin_a,
 template<typename ITER>
 void lak::rotate_left(ITER begin, ITER end, size_t distance)
 {
-	static_assert(std::random_access_iterator<ITER>);
+	static_assert(std::forward_iterator<ITER>);
 
-	const size_t data_size = end - begin;
+	const size_t data_size = lak::distance(begin, end);
 	if (data_size == 0 || distance % data_size == 0) return;
 
 	for (ITER iter_begin = begin; distance > 0;)
 	{
-		const size_t working_size = end - iter_begin;
+		const size_t working_size = lak::distance(iter_begin, end);
 
-		for (size_t i = 0; i < working_size - distance; ++i)
-			lak::swap(iter_begin[i], iter_begin[i + distance]);
+		ITER b = lak::next(iter_begin, distance);
+		for (size_t i = 0; i < working_size - distance; ++i, ++iter_begin, ++b)
+			lak::swap(*iter_begin, *b);
 
-		iter_begin += working_size - distance;
 		distance = lak::slack<size_t>(working_size, distance);
 	}
 }
@@ -188,19 +188,23 @@ void lak::rotate_left(ITER begin, ITER end, size_t distance)
 template<typename ITER>
 void lak::rotate_right(ITER begin, ITER end, size_t distance)
 {
-	static_assert(std::random_access_iterator<ITER>);
+	static_assert(std::forward_iterator<ITER>);
 
-	const size_t data_size = end - begin;
+	const size_t data_size = lak::distance(begin, end);
 	if (data_size == 0 || distance % data_size == 0) return;
 
-	for (ITER iter_end = end; distance > 0;)
+	// change direction so we can use the forward_iterator friendly rotate_left
+	// algorithm
+	distance = lak::slack<size_t>(distance, data_size);
+
+	for (ITER iter_begin = begin; distance > 0;)
 	{
-		const size_t working_size = iter_end - begin;
+		const size_t working_size = lak::distance(iter_begin, end);
 
-		for (size_t i = working_size - distance; i-- > 0;)
-			lak::swap(begin[i], begin[i + distance]);
+		ITER b = lak::next(iter_begin, distance);
+		for (size_t i = 0; i < working_size - distance; ++i, ++iter_begin, ++b)
+			lak::swap(*iter_begin, *b);
 
-		iter_end -= working_size - distance;
 		distance = lak::slack<size_t>(working_size, distance);
 	}
 }
