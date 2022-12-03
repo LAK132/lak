@@ -29,6 +29,11 @@ namespace lak
 	                               ITER_B begin_b,
 	                               ITER_B end_b);
 
+	/* --- count --- */
+
+	template<typename ITER, typename T>
+	size_t count(ITER begin, ITER end, const T &value);
+
 	/* --- rotate_left --- */
 
 	template<typename T>

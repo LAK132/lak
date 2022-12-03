@@ -42,6 +42,19 @@ lak::pair<ITER_A, ITER_B> lak::swap(ITER_A begin_a,
 	return {begin_a, begin_b};
 }
 
+/* --- count --- */
+
+template<typename ITER, typename T>
+size_t lak::count(ITER begin, ITER end, const T &value)
+{
+	size_t result = 0;
+
+	for (; begin != end; ++begin)
+		if (*begin == value) ++result;
+
+	return result;
+}
+
 /* --- rotate_left --- */
 
 template<typename T>
