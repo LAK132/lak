@@ -1,6 +1,35 @@
 #include "lak/test.hpp"
 
 #include "lak/algorithm.hpp"
+#include "lak/array.hpp"
+
+#include "iterator_wrappers.hpp"
+
+BEGIN_TEST(iterator_wrapper)
+{
+	lak::array values{1, 2, 3};
+
+	lak::swap(*forward_iterator_wrapper(values.begin()),
+	          *forward_iterator_wrapper(values.begin() + 1));
+
+	ASSERT_EQUAL(values[0], 2);
+	ASSERT_EQUAL(values[1], 1);
+
+	lak::swap(*bidirectional_iterator_wrapper(values.begin()),
+	          *bidirectional_iterator_wrapper(values.begin() + 1));
+
+	ASSERT_EQUAL(values[0], 1);
+	ASSERT_EQUAL(values[1], 2);
+
+	lak::swap(*random_access_iterator_wrapper(values.begin()),
+	          *random_access_iterator_wrapper(values.begin() + 1));
+
+	ASSERT_EQUAL(values[0], 2);
+	ASSERT_EQUAL(values[1], 1);
+
+	return EXIT_SUCCESS;
+}
+END_TEST()
 
 BEGIN_TEST(minmax_element)
 {
