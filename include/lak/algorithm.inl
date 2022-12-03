@@ -6,6 +6,7 @@
 #include "lak/math.hpp"
 #include "lak/ptr_intrin.hpp"
 #include "lak/span.hpp"
+#include "lak/tuple.hpp"
 #include "lak/utility.hpp"
 
 #include <set>
@@ -98,6 +99,30 @@ lak::pair<ITER_A, ITER_B> lak::mismatch(ITER_A begin_a,
 	     ++begin_a, ++begin_b)
 		;
 	return {begin_a, begin_b};
+}
+
+/* --- is_permutation --- */
+
+template<typename ITER_A, typename ITER_B>
+bool lak::is_permutation(ITER_A begin_a,
+                         ITER_A end_a,
+                         ITER_B begin_b,
+                         ITER_B end_b)
+{
+	lak::tie(begin_a, begin_b) = lak::mismatch(begin_a, end_a, begin_b, end_b);
+
+	if (lak::distance(begin_a, end_a) != lak::distance(begin_b, end_b))
+		return false;
+
+	for (auto it = begin_a; it != end_a; ++it)
+	{
+		if (lak::find(begin_a, it, *it) != it) continue;
+		if (size_t other_count = lak::count(begin_b, end_b, *it);
+		    other_count == 0 || other_count != lak::count(begin_a, end_a, *it))
+			return false;
+	}
+
+	return true;
 }
 
 /* --- rotate_left --- */

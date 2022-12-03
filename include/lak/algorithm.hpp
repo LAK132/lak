@@ -55,6 +55,12 @@ namespace lak
 
 	/* --- is_permutation --- */
 
+	template<typename ITER_A, typename ITER_B>
+	bool is_permutation(ITER_A begin_a,
+	                    ITER_A end_a,
+	                    ITER_B begin_b,
+	                    ITER_B end_b);
+
 	/* --- rotate_left --- */
 
 	template<typename T>

@@ -61,6 +61,20 @@ END_TEST()
 // }
 // END_TEST()
 
+BEGIN_TEST(is_permutation)
+{
+	auto a = {1, 2, 3, 4, 5};
+	auto b = {4, 3, 5, 2, 1};
+	auto c = {4, 3, 5, 2, 2};
+
+	ASSERT(lak::is_permutation(a.begin(), a.end(), b.begin(), b.end()));
+	ASSERT(!lak::is_permutation(a.begin() + 1, a.end(), b.begin(), b.end()));
+	ASSERT(!lak::is_permutation(a.begin(), a.end(), c.begin(), c.end()));
+
+	return EXIT_SUCCESS;
+}
+END_TEST()
+
 BEGIN_TEST(minmax_element)
 {
 	auto values = {0, 1, 2, 4, -10, 100, -1000, 4};
