@@ -64,7 +64,7 @@ typename std::iterator_traits<ITER>::difference_type lak::distance(ITER begin,
 {
 	static_assert(std::input_iterator<ITER>);
 
-	if (std::random_access_iterator<ITER>)
+	if constexpr (std::random_access_iterator<ITER>)
 	{
 		return end - begin;
 	}
@@ -75,6 +75,42 @@ typename std::iterator_traits<ITER>::difference_type lak::distance(ITER begin,
 			;
 		return result;
 	}
+}
+
+/* --- advance --- */
+
+template<typename ITER>
+void lak::advance(ITER &it,
+                  typename std::iterator_traits<ITER>::difference_type offset)
+{
+	static_assert(std::input_iterator<ITER>);
+
+	if constexpr (std::random_access_iterator<ITER>)
+	{
+		it += offset;
+	}
+	else if constexpr (std::bidirectional_iterator<ITER>)
+	{
+		if (offset >= 0)
+			while (offset-- > 0) ++it;
+		else
+			while (offset++ < 0) --it;
+	}
+	else
+	{
+		ASSERT_GREATER_OR_EQUAL(offset, 0);
+		while (offset-- > 0) ++it;
+	}
+}
+
+/* --- next --- */
+
+template<typename ITER>
+ITER lak::next(ITER it,
+               typename std::iterator_traits<ITER>::difference_type offset)
+{
+	lak::advance(it, offset);
+	return it;
 }
 
 /* --- find --- */

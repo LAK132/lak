@@ -49,6 +49,18 @@ END_TEST()
 // }
 // END_TEST()
 
+// BEGIN_TEST(advance)
+// {
+// 	return EXIT_SUCCESS;
+// }
+// END_TEST()
+
+// BEGIN_TEST(next)
+// {
+// 	return EXIT_SUCCESS;
+// }
+// END_TEST()
+
 // BEGIN_TEST(find)
 // {
 // 	return EXIT_SUCCESS;

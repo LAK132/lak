@@ -40,6 +40,18 @@ namespace lak
 	typename std::iterator_traits<ITER>::difference_type distance(ITER begin,
 	                                                              ITER end);
 
+	/* --- advance --- */
+
+	template<typename ITER>
+	void advance(ITER &it,
+	             typename std::iterator_traits<ITER>::difference_type offset);
+
+	/* --- next --- */
+
+	template<typename ITER>
+	ITER next(ITER it,
+	          typename std::iterator_traits<ITER>::difference_type offset = 1);
+
 	/* --- find --- */
 
 	template<typename ITER, typename T>
