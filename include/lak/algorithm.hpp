@@ -127,13 +127,13 @@ namespace lak
 
 	/* --- lower_bound --- */
 
-	template<typename T, typename U = T, typename CMP = lak::less<>>
-	T *lower_bound(T *begin, T *end, const U &value, CMP compare = {});
+	template<typename ITER, typename U, typename CMP = lak::less<>>
+	ITER lower_bound(ITER begin, ITER end, const U &value, CMP compare = {});
 
 	/* --- upper_bound --- */
 
-	template<typename T, typename U = T, typename CMP = lak::less<>>
-	T *upper_bound(T *begin, T *end, const U &value, CMP compare = {});
+	template<typename ITER, typename U, typename CMP = lak::less<>>
+	ITER upper_bound(ITER begin, ITER end, const U &value, CMP compare = {});
 
 	/* --- equal_range --- */
 

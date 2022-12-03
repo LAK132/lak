@@ -275,3 +275,21 @@ BEGIN_TEST(max_element)
 	return EXIT_SUCCESS;
 }
 END_TEST()
+
+// BEGIN_TEST(lower_bound)
+// {
+// 	return EXIT_SUCCESS;
+// }
+// END_TEST()
+
+// BEGIN_TEST(upper_bound)
+// {
+// 	return EXIT_SUCCESS;
+// }
+// END_TEST()
+
+// BEGIN_TEST(equal_range)
+// {
+// 	return EXIT_SUCCESS;
+// }
+// END_TEST()

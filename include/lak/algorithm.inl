@@ -537,20 +537,21 @@ ITER lak::min_element(ITER begin, ITER end, CMP compare)
 
 /* --- lower_bound --- */
 
-template<typename T, typename U, typename CMP>
-T *lak::lower_bound(T *begin, T *end, const U &value, CMP compare)
+template<typename ITER, typename U, typename CMP>
+ITER lak::lower_bound(ITER begin, ITER end, const U &value, CMP compare)
 {
-	ASSERT_LESS_OR_EQUAL(begin, end);
-	auto diff = end - begin;
+	static_assert(std::forward_iterator<ITER>);
 
-	for (T *iter = begin; diff > 0;)
+	auto diff{lak::distance(begin, end)};
+
+	for (ITER iter = begin; diff > 0;)
 	{
 		const auto step = diff / 2;
-		iter += step;
+		lak::advance(iter, step);
 		if (compare(*iter, value))
 		{
 			// move the lower bound up
-			begin = iter + 1;
+			begin = lak::next(iter);
 			diff -= step + 1;
 		}
 		else
@@ -563,20 +564,21 @@ T *lak::lower_bound(T *begin, T *end, const U &value, CMP compare)
 
 /* --- upper_bound --- */
 
-template<typename T, typename U, typename CMP>
-T *lak::upper_bound(T *begin, T *end, const U &value, CMP compare)
+template<typename ITER, typename U, typename CMP>
+ITER lak::upper_bound(ITER begin, ITER end, const U &value, CMP compare)
 {
-	ASSERT_LESS_OR_EQUAL(begin, end);
-	auto diff = end - begin;
+	static_assert(std::forward_iterator<ITER>);
 
-	for (T *iter = begin; diff > 0;)
+	auto diff{lak::distance(begin, end)};
+
+	for (ITER iter = begin; diff > 0;)
 	{
 		const auto step = diff / 2;
-		iter += step;
+		lak::advance(iter, step);
 		if (!compare(value, *iter))
 		{
 			// move the lower bound up
-			begin = iter + 1;
+			begin = lak::next(iter);
 			diff -= step + 1;
 		}
 		else
