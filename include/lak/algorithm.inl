@@ -76,6 +76,30 @@ typename std::iterator_traits<ITER>::difference_type lak::distance(ITER begin,
 	}
 }
 
+/* --- find --- */
+
+template<typename ITER, typename T>
+ITER lak::find(ITER begin, ITER end, const T &value)
+{
+	for (; begin != end && *begin != value; ++begin)
+		;
+	return begin;
+}
+
+/* --- mismatch --- */
+
+template<typename ITER_A, typename ITER_B>
+lak::pair<ITER_A, ITER_B> lak::mismatch(ITER_A begin_a,
+                                        ITER_A end_a,
+                                        ITER_B begin_b,
+                                        ITER_B end_b)
+{
+	for (; begin_a != end_a && begin_b != end_b && *begin_a == *begin_b;
+	     ++begin_a, ++begin_b)
+		;
+	return {begin_a, begin_b};
+}
+
 /* --- rotate_left --- */
 
 template<typename T>

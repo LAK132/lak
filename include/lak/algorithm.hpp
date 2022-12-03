@@ -40,6 +40,21 @@ namespace lak
 	typename std::iterator_traits<ITER>::difference_type distance(ITER begin,
 	                                                              ITER end);
 
+	/* --- find --- */
+
+	template<typename ITER, typename T>
+	ITER find(ITER begin, ITER end, const T &value);
+
+	/* --- mismatch --- */
+
+	template<typename ITER_A, typename ITER_B>
+	lak::pair<ITER_A, ITER_B> mismatch(ITER_A begin_a,
+	                                   ITER_A end_a,
+	                                   ITER_B begin_b,
+	                                   ITER_B end_b);
+
+	/* --- is_permutation --- */
+
 	/* --- rotate_left --- */
 
 	template<typename T>
