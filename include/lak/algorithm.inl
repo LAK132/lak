@@ -55,6 +55,27 @@ size_t lak::count(ITER begin, ITER end, const T &value)
 	return result;
 }
 
+/* --- distance --- */
+
+template<typename ITER>
+typename std::iterator_traits<ITER>::difference_type lak::distance(ITER begin,
+                                                                   ITER end)
+{
+	static_assert(std::input_iterator<ITER>);
+
+	if (std::random_access_iterator<ITER>)
+	{
+		return end - begin;
+	}
+	else
+	{
+		typename std::iterator_traits<ITER>::difference_type result = 0;
+		for (; begin != end; ++begin, ++result)
+			;
+		return result;
+	}
+}
+
 /* --- rotate_left --- */
 
 template<typename T>

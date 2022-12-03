@@ -43,6 +43,12 @@ END_TEST()
 // }
 // END_TEST()
 
+// BEGIN_TEST(distance)
+// {
+// 	return EXIT_SUCCESS;
+// }
+// END_TEST()
+
 BEGIN_TEST(minmax_element)
 {
 	auto values = {0, 1, 2, 4, -10, 100, -1000, 4};

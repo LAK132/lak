@@ -34,6 +34,12 @@ namespace lak
 	template<typename ITER, typename T>
 	size_t count(ITER begin, ITER end, const T &value);
 
+	/* --- distance --- */
+
+	template<typename ITER>
+	typename std::iterator_traits<ITER>::difference_type distance(ITER begin,
+	                                                              ITER end);
+
 	/* --- rotate_left --- */
 
 	template<typename T>
