@@ -294,9 +294,11 @@ ITER lak::partition(ITER begin, ITER end, auto predicate)
 
 /* --- stable_partition --- */
 
-template<typename T>
-T *lak::stable_partition(T *begin, T *end, auto predicate)
+template<typename ITER>
+ITER lak::stable_partition(ITER begin, ITER end, auto predicate)
 {
+	static_assert(std::random_access_iterator<ITER>);
+
 	// TTTTTFFFFFFTTTTTTTFFFFTTTTFFFFFTTTFFFF
 	//      ^~~~~~^~~~~~~^ <- rotate
 	// TTTTTTTTTTTTFFFFFFFFFFTTTTFFFFFTTTFFFF
@@ -306,18 +308,18 @@ T *lak::stable_partition(T *begin, T *end, auto predicate)
 	// TTTTTTTTTTTTTTTTTTTFFFFFFFFFFFFFFFFFFF
 	//                    ^ <- return
 
-	T *first_false = begin;
+	ITER first_false = begin;
 
 	while (first_false != end && predicate(*first_false)) ++first_false;
 
-	for (T *last_end = first_false; first_false != end;)
+	for (ITER last_end = first_false; first_false != end;)
 	{
-		T *first_true = last_end;
+		ITER first_true = last_end;
 		while (first_true != end && !predicate(*first_true)) ++first_true;
 
 		if (first_true == end) break;
 
-		T *second_false = first_true;
+		ITER second_false = first_true;
 		while (second_false != end && predicate(*second_false)) ++second_false;
 
 		const size_t false_count  = first_true - first_false;

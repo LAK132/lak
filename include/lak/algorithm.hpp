@@ -83,8 +83,9 @@ namespace lak
 
 	/* --- stable_partition --- */
 
-	template<typename T>
-	T *stable_partition(T *begin, T *end, auto predicate);
+	template<typename ITER>
+	ITER stable_partition(ITER begin, ITER end, auto predicate);
+
 
 	/* --- mark_and_sweep_parition --- */
 

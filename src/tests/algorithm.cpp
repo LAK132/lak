@@ -164,6 +164,27 @@ BEGIN_TEST(partition)
 }
 END_TEST()
 
+BEGIN_TEST(stable_partition)
+{
+	auto source   = {-4, 3, -2, -1, 0, 1, 2, -3, 4, 5};
+	auto expected = {3, 0, 1, 2, 4, 5, -4, -2, -1, -3};
+
+	lak::array<intmax_t> values{source.begin(), source.end()};
+
+	auto mid = lak::stable_partition(
+	  values.begin(), values.end(), [](intmax_t v) { return v >= 0; });
+
+	ASSERT_EQUAL(mid - values.begin(), 6);
+
+	for (size_t i = 0; i < expected.size(); ++i)
+	{
+		ASSERT_EQUAL(expected.begin()[i], values[i]);
+	}
+
+	return EXIT_SUCCESS;
+}
+END_TEST()
+
 BEGIN_TEST(minmax_element)
 {
 	auto values = {0, 1, 2, 4, -10, 100, -1000, 4};
