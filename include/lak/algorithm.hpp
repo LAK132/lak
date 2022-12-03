@@ -110,6 +110,14 @@ namespace lak
 	ITER mark_and_sweep_parition(
 	  T *root, auto sweep, ITER begin, ITER end, auto transform);
 
+	/* --- merge --- */
+
+	// Merge the sorted ranges [begin, mid) and [mid, end) into a single sorted
+	// range
+
+	template<typename ITER, typename CMP = lak::less<>>
+	ITER merge(ITER begin, ITER mid, ITER end, CMP cmp = {});
+
 	/* --- minmax_element --- */
 
 	template<typename ITER, typename CMP = lak::less<>>

@@ -239,6 +239,12 @@ BEGIN_TEST(binary_partition)
 }
 END_TEST()
 
+// BEGIN_TEST(merge)
+// {
+// 	return EXIT_SUCCESS;
+// }
+// END_TEST()
+
 BEGIN_TEST(minmax_element)
 {
 	auto values = {0, 1, 2, 4, -10, 100, -1000, 4};

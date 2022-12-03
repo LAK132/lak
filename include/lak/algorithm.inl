@@ -491,6 +491,43 @@ ITER lak::mark_and_sweep_parition(
 	  [&](auto &elem) -> bool { return marked_set.contains(transform(elem)); });
 }
 
+/* --- merge --- */
+
+template<typename ITER, typename CMP>
+ITER lak::merge(ITER begin, ITER mid, ITER end, CMP compare)
+{
+	static_assert(std::forward_iterator<ITER>);
+
+	while (begin != mid && mid != end)
+	{
+		begin = lak::lower_bound(begin, mid, *mid, compare);
+
+		// [old begin, begin): < *mid
+		// [begin, mid):      >= *mid
+
+		size_t offset = 0;
+		if constexpr (std::random_access_iterator<ITER>)
+		{
+			auto new_mid{lak::lower_bound(mid, end, *begin, compare)};
+			offset = size_t(new_mid - mid);
+			mid    = new_mid;
+		}
+		else
+		{
+			while (mid != end && !compare(*begin, *mid))
+			{
+				++mid;
+				++offset;
+			}
+		}
+
+		// [old mid, mid): < *begin
+		// [mid, end):    >= *begin
+
+		lak::rotate_right(begin, mid, offset);
+	}
+}
+
 /* --- minmax_element --- */
 
 template<typename ITER, typename CMP>
