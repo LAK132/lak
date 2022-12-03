@@ -118,6 +118,11 @@ namespace lak
 	template<typename ITER, typename CMP = lak::less<>>
 	ITER merge(ITER begin, ITER mid, ITER end, CMP cmp = {});
 
+	/* --- heapsort --- */
+
+	template<typename ITER, typename CMP = lak::less<>>
+	void heapsort(ITER begin, ITER end, CMP compare = {});
+
 	/* --- minmax_element --- */
 
 	template<typename ITER, typename CMP = lak::less<>>

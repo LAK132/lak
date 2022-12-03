@@ -245,6 +245,23 @@ END_TEST()
 // }
 // END_TEST()
 
+BEGIN_TEST(heapsort)
+{
+	auto source   = {5, 2, 4, 3, 6, 1};
+	auto expected = {1, 2, 3, 4, 5, 6};
+
+	lak::array<intmax_t> values{source.begin(), source.end()};
+
+	lak::heapsort(values.begin(), values.end());
+
+	for (size_t i = 0; i < expected.size(); ++i)
+	{
+		ASSERT_EQUAL(expected.begin()[i], values[i]);
+	}
+	return EXIT_SUCCESS;
+}
+END_TEST()
+
 BEGIN_TEST(minmax_element)
 {
 	auto values = {0, 1, 2, 4, -10, 100, -1000, 4};

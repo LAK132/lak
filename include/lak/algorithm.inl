@@ -528,6 +528,61 @@ ITER lak::merge(ITER begin, ITER mid, ITER end, CMP compare)
 	}
 }
 
+/* --- heapsort --- */
+
+template<typename ITER, typename CMP>
+void lak::heapsort(ITER begin, ITER end, CMP compare)
+{
+	static_assert(std::random_access_iterator<ITER>);
+
+	if ((end - begin) < 2) return;
+
+	auto index_of = [&](const ITER &iter) -> size_t
+	{ return size_t(iter - begin); };
+
+	auto parent      = [](size_t index) -> size_t { return (index - 1U) / 2U; };
+	auto parent_iter = [&](const ITER &iter) -> ITER
+	{ return begin + parent(index_of(iter)); };
+
+	auto left_child = [](size_t index) -> size_t { return (index * 2U) + 1U; };
+	auto left_child_iter = [&](const ITER &iter) -> ITER
+	{ return begin + left_child(index_of(iter)); };
+
+	// Repair the heap whose root element is at index 'start', assuming the heaps
+	// rooted at its children are valid
+	auto sift_down = [&](ITER sift_begin, ITER sift_end)
+	{
+		for (size_t end_index   = index_of(sift_end),
+		            child_index = left_child(index_of(sift_begin));
+		     child_index <= end_index;
+		     child_index = left_child(index_of(sift_begin)))
+		{
+			ITER largest = sift_begin;
+			ITER child   = begin + child_index;
+
+			if (compare(*largest, *child)) largest = child;
+
+			if (child++ != sift_end && compare(*largest, *child)) largest = child;
+
+			if (largest == sift_begin) return;
+
+			lak::swap(*sift_begin, *largest);
+			sift_begin = largest;
+		}
+	};
+
+	--end; // make begin-end an inclusive range
+
+	// initialise the heap
+	for (ITER it = parent_iter(end) + 1; it != begin;) sift_down(--it, end);
+
+	while (begin != end)
+	{
+		lak::swap(*begin, *end);
+		sift_down(begin, --end);
+	}
+}
+
 /* --- minmax_element --- */
 
 template<typename ITER, typename CMP>
