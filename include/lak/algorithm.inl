@@ -29,6 +29,19 @@ OUT_ITER lak::copy(IN_ITER begin, IN_ITER end, OUT_ITER output)
 	return output;
 }
 
+/* --- swap --- */
+
+template<typename ITER_A, typename ITER_B>
+lak::pair<ITER_A, ITER_B> lak::swap(ITER_A begin_a,
+                                    ITER_A end_a,
+                                    ITER_B begin_b,
+                                    ITER_B end_b)
+{
+	for (; begin_a != end_a && begin_b != end_b; ++begin_a, ++begin_b)
+		lak::swap(*begin_a, *begin_b);
+	return {begin_a, begin_b};
+}
+
 /* --- rotate_left --- */
 
 template<typename T>

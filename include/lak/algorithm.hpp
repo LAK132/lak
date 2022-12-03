@@ -21,6 +21,14 @@ namespace lak
 	template<typename IN_ITER, typename OUT_ITER>
 	OUT_ITER copy(IN_ITER begin, IN_ITER end, OUT_ITER output);
 
+	/* --- swap --- */
+
+	template<typename ITER_A, typename ITER_B>
+	lak::pair<ITER_A, ITER_B> swap(ITER_A begin_a,
+	                               ITER_A end_a,
+	                               ITER_B begin_b,
+	                               ITER_B end_b);
+
 	/* --- rotate_left --- */
 
 	template<typename T>
