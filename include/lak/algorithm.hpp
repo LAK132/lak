@@ -86,6 +86,11 @@ namespace lak
 	template<typename ITER>
 	ITER stable_partition(ITER begin, ITER end, auto predicate);
 
+	/* --- binary_partition --- */
+
+	template<typename ITER, typename CMP = lak::less<>>
+	ITER binary_partition(ITER begin, ITER mid, ITER end, CMP cmp = {});
+
 
 	/* --- mark_and_sweep_parition --- */
 

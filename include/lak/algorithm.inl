@@ -335,6 +335,90 @@ ITER lak::stable_partition(ITER begin, ITER end, auto predicate)
 	return first_false;
 }
 
+/* --- binary_partition --- */
+
+template<typename ITER, typename CMP>
+ITER lak::binary_partition(ITER begin, ITER mid, ITER end, CMP cmp)
+{
+	static_assert(std::forward_iterator<ITER>);
+
+	// XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+	// ^ <- begin       ^ <- mid             ^ <- end
+	//
+	//                   v~~~~~~~~~~~~~~~~~~~v <- partition
+	// TTTTFFFFFFTTTTTTTAFFFFTTTTFFFFFTTTFFFF
+	// ^~~~~~~~~~~~~~~~~^ <- partition
+	//
+	// TTTTTTTTTTTFFFFFFATTTTTTTFFFFFFFFFFFFF
+	//            ^~~~~~~~~~~~~~^ <- reverse
+	//
+	// TTTTTTTTTTTTTTTTTTAFFFFFFFFFFFFFFFFFFF
+	//                   ^ <- result
+
+	if (begin == end) return end;
+
+	auto after_mid{mid};
+	++after_mid;
+	auto left{
+	  lak::partition(begin, mid, [&](const auto &v) { return cmp(v, *mid); })};
+	auto right{lak::partition(
+	  after_mid, end, [&](const auto &v) { return cmp(v, *mid); })};
+
+	if constexpr (std::random_access_iterator<ITER>)
+	{
+		// TTTTTTTTTTTFFFFFFATTTTTTTFFFFFFFFFFFFF
+		//            ^~~~~~~~~~~~~~^ <- reverse
+
+		lak::reverse(left, right);
+		return left + (right - after_mid);
+	}
+	else
+	{
+		// TTTTTTTTTTTFFFFFFATTTTTTTFFFFFFFFFFFFF
+		//            ^~~~~~^^~~~~~~^ <- swap
+
+		auto [sleft, sright] = lak::swap(left, mid, after_mid, right);
+
+		if (sleft != mid)
+		{
+			// TTTTTTTTTTTFFFFFFATTTFFFFFFFFFFFFFFFFF
+			//            ^~~~~~^^~~^ <- swap
+			//
+			//                  v <- mid
+			// TTTTTTTTTTTTTTFFFAFFFFFFFFFFFFFFFFFFFF
+			//               ^ <- sleft
+			//
+			// TTTTTTTTTTTTTTFFFAFFFFFFFFFFFFFFFFFFFF
+			//               ^  ^ <- swap
+
+			lak::swap(*sleft, *mid);
+			return sleft;
+		}
+		else if (sright != right)
+		{
+			// TTTTTTTTTTTFFFFFFATTTTTTTTTFFFFFFFFFFF
+			//            ^~~~~~^^~~~~~~~~^ <- swap
+			//
+			//                         v <- sright
+			// TTTTTTTTTTTTTTTTTAFFFFFFTTTFFFFFFFFFFF
+			//                  ^ <- mid  ^ <- right
+			//
+			// TTTTTTTTTTTTTTTTTAFFFFFFTTTFFFFFFFFFFF
+			//                  ^~~~~~~^~~^ <- swap
+			//
+			//                         v <- sright
+			// TTTTTTTTTTTTTTTTTTTTFFFFAFFFFFFFFFFFFF
+			//                     ^ .first
+
+			auto result{lak::swap(mid, sright, sright, right).first};
+			lak::swap(*sright, *result);
+			return result;
+		}
+		else
+			return mid;
+	}
+}
+
 /* --- mark_and_sweep_parition --- */
 
 template<typename T, typename ITER, typename CMP>
