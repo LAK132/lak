@@ -205,22 +205,91 @@ void lak::reverse(ITER begin, ITER end)
 template<typename ITER>
 ITER lak::partition(ITER begin, ITER end, auto predicate)
 {
-	ITER first_false = begin;
-	while (first_false != end && predicate(*first_false)) ++first_false;
+	static_assert(std::forward_iterator<ITER>);
 
-	ITER iter = first_false;
-	if (iter != end) ++iter;
+	if (begin == end) return end;
 
-	for (; iter != end; ++iter)
+	if constexpr (std::random_access_iterator<ITER>)
 	{
-		if (predicate(*iter))
-		{
-			lak::swap(*iter, *first_false);
-			++first_false;
-		}
-	}
+		// XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+		// ^ <- begin                            ^ <- end
+		//
+		// TTTTFFFFFFTTTTTTTTFFFFTTTTFFFFFTTTFFFF
+		//     ^ <- first false             ^ <- last true
+		//
+		// TTTTFFFFFFTTTTTTTTFFFFTTTTFFFFFTTTFFFF
+		//     ^                            ^ <- swap
+		// TTTTTFFFFFTTTTTTTTFFFFTTTTFFFFFTTFFFFF
+		//      ^                          ^ <- swap
+		// TTTTTTFFFFTTTTTTTTFFFFTTTTFFFFFTFFFFFF
+		//       ^                        ^ <- swap
+		// TTTTTTTFFFTTTTTTTTFFFFTTTTFFFFFFFFFFFF
+		//        ^                 ^ <- swap
+		// TTTTTTTTFFTTTTTTTTFFFFTTTFFFFFFFFFFFFF
+		//         ^               ^ <- swap
+		// TTTTTTTTTFTTTTTTTTFFFFTTFFFFFFFFFFFFFF
+		//          ^             ^ <- swap
+		// TTTTTTTTTTTTTTTTTTFFFFTFFFFFFFFFFFFFFF
+		//                   ^   ^ <- swap
+		//
+		// TTTTTTTTTTTTTTTTTTTFFFFFFFFFFFFFFFFFFF
+		//                    ^ <- result
 
-	return first_false;
+		ITER first_false = begin;
+		ITER last_true   = end - 1;
+
+		while (first_false != last_true && predicate(*first_false)) ++first_false;
+		while (last_true != first_false && !predicate(*last_true)) --last_true;
+
+		while (first_false < last_true)
+		{
+			lak::swap(*first_false, *last_true);
+			while (first_false != last_true && predicate(*first_false))
+				++first_false;
+			while (last_true != first_false && !predicate(*last_true)) --last_true;
+		}
+
+		return first_false;
+	}
+	else
+	{
+		// XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+		// ^ <- begin                            ^ <- end
+		//
+		// TTTTFFFFFFTTTTTTTTFFFFTTTTFFFFFTTTFFFF
+		//     ^ <- first false
+		//
+		// TTTTFFFFFFTTTTTTTTFFFFTTTTFFFFFTTTFFFF
+		//     ^     ^ <- swap
+		// TTTTTFFFFFFTTTTTTTFFFFTTTTFFFFFTTTFFFF
+		//      ^     ^ <- swap
+		// TTTTTTFFFFFFTTTTTTFFFFTTTTFFFFFTTTFFFF
+		//       ^     ^ <- swap
+		// ...
+		// TTTTTTTTTTTTFFFFFFFFFFTTTTFFFFFTTTFFFF
+		//             ^         ^ <- swap
+		// ...
+		//
+		// TTTTTTTTTTTTTTTTTTTFFFFFFFFFFFFFFFFFFF
+		//                    ^ <- result
+
+		ITER first_false = begin;
+		while (first_false != end && predicate(*first_false)) ++first_false;
+
+		ITER iter = first_false;
+		if (iter != end) ++iter;
+
+		for (; iter != end; ++iter)
+		{
+			if (predicate(*iter))
+			{
+				lak::swap(*iter, *first_false);
+				++first_false;
+			}
+		}
+
+		return first_false;
+	}
 }
 
 /* --- stable_partition --- */

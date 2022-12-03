@@ -129,6 +129,41 @@ BEGIN_TEST(reverse)
 }
 END_TEST()
 
+BEGIN_TEST(partition)
+{
+	auto wrapped_test = []<typename WRAPPER>(WRAPPER &&)
+	{
+		auto source = {-4, 3, -2, -1, 0, 1, 2, -3, 4, 5};
+
+		lak::array<intmax_t> values{source.begin(), source.end()};
+
+		using wrapper_t = WRAPPER::template type<lak::array<intmax_t>::iterator>;
+
+		auto mid = lak::partition(wrapper_t{values.begin()},
+		                          wrapper_t{values.end()},
+		                          [](intmax_t v) { return v >= 0; })
+		             ._iter;
+
+		ASSERT(lak::is_permutation(
+		  source.begin(), source.end(), values.begin(), values.end()));
+
+		auto [pos, neg] = lak::split(lak::span(values), mid);
+
+		ASSERT_EQUAL(pos.size(), 6);
+		ASSERT_EQUAL(neg.size(), 4);
+
+		for (const auto &p : pos) ASSERT_GREATER_OR_EQUAL(p, intmax_t(0));
+		for (const auto &n : neg) ASSERT_LESS(n, intmax_t(0));
+	};
+
+	wrapped_test(forward_iterator_wrapper<void>{});
+	wrapped_test(bidirectional_iterator_wrapper<void>{});
+	wrapped_test(random_access_iterator_wrapper<void>{});
+
+	return EXIT_SUCCESS;
+}
+END_TEST()
+
 BEGIN_TEST(minmax_element)
 {
 	auto values = {0, 1, 2, 4, -10, 100, -1000, 4};
