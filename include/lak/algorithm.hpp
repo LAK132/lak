@@ -63,13 +63,14 @@ namespace lak
 
 	/* --- rotate_left --- */
 
-	template<typename T>
-	void rotate_left(T *begin, T *end, size_t distance = 1U);
+	template<typename ITER>
+	void rotate_left(ITER begin, ITER end, size_t distance = 1U);
 
 	/* --- rotate_right --- */
 
-	template<typename T>
-	void rotate_right(T *begin, T *end, size_t distance = 1U);
+	template<typename ITER>
+	void rotate_right(ITER begin, ITER end, size_t distance = 1U);
+
 
 	/* --- partition --- */
 

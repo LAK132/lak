@@ -127,13 +127,15 @@ bool lak::is_permutation(ITER_A begin_a,
 
 /* --- rotate_left --- */
 
-template<typename T>
-void lak::rotate_left(T *begin, T *end, size_t distance)
+template<typename ITER>
+void lak::rotate_left(ITER begin, ITER end, size_t distance)
 {
+	static_assert(std::random_access_iterator<ITER>);
+
 	const size_t data_size = end - begin;
 	if (data_size == 0 || distance % data_size == 0) return;
 
-	for (T *iter_begin = begin; distance > 0;)
+	for (ITER iter_begin = begin; distance > 0;)
 	{
 		const size_t working_size = end - iter_begin;
 
@@ -147,13 +149,15 @@ void lak::rotate_left(T *begin, T *end, size_t distance)
 
 /* --- rotate_right --- */
 
-template<typename T>
-void lak::rotate_right(T *begin, T *end, size_t distance)
+template<typename ITER>
+void lak::rotate_right(ITER begin, ITER end, size_t distance)
 {
+	static_assert(std::random_access_iterator<ITER>);
+
 	const size_t data_size = end - begin;
 	if (data_size == 0 || distance % data_size == 0) return;
 
-	for (T *iter_end = end; distance > 0;)
+	for (ITER iter_end = end; distance > 0;)
 	{
 		const size_t working_size = iter_end - begin;
 
