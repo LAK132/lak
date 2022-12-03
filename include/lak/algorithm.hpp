@@ -71,6 +71,10 @@ namespace lak
 	template<typename ITER>
 	void rotate_right(ITER begin, ITER end, size_t distance = 1U);
 
+	/* --- reverse --- */
+
+	template<typename ITER>
+	void reverse(ITER begin, ITER end);
 
 	/* --- partition --- */
 

@@ -169,6 +169,37 @@ void lak::rotate_right(ITER begin, ITER end, size_t distance)
 	}
 }
 
+/* --- reverse --- */
+
+template<typename ITER>
+void lak::reverse(ITER begin, ITER end)
+{
+	static_assert(std::bidirectional_iterator<ITER>);
+
+	if (begin == end) return;
+	--end;
+
+	if constexpr (std::random_access_iterator<ITER>)
+	{
+		while (begin < end)
+		{
+			lak::swap(*begin, *end);
+			++begin;
+			--end;
+		}
+	}
+	else
+	{
+		while (begin != end)
+		{
+			lak::swap(*begin, *end);
+			++begin;
+			if (begin == end) return;
+			--end;
+		}
+	}
+}
+
 /* --- partition --- */
 
 template<typename ITER>

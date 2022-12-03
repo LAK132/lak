@@ -87,6 +87,48 @@ END_TEST()
 // }
 // END_TEST()
 
+BEGIN_TEST(reverse)
+{
+	auto wrapped_test = []<typename WRAPPER>(WRAPPER &&)
+	{
+		using wrapper_t = WRAPPER::template type<lak::array<intmax_t>::iterator>;
+
+		{
+			auto source   = {1, 2, 3, 4, 5, 6};
+			auto expected = {6, 5, 4, 3, 2, 1};
+
+			lak::array<intmax_t> values{source.begin(), source.end()};
+
+			lak::reverse(wrapper_t{values.begin()}, wrapper_t{values.end()});
+
+			for (size_t i = 0; i < expected.size(); ++i)
+			{
+				ASSERT_EQUAL(expected.begin()[i], values[i]);
+			}
+		}
+
+		{
+			auto source   = {1, 2, 3, 4, 5, 6, 7};
+			auto expected = {7, 6, 5, 4, 3, 2, 1};
+
+			lak::array<intmax_t> values{source.begin(), source.end()};
+
+			lak::reverse(wrapper_t{values.begin()}, wrapper_t{values.end()});
+
+			for (size_t i = 0; i < expected.size(); ++i)
+			{
+				ASSERT_EQUAL(expected.begin()[i], values[i]);
+			}
+		}
+	};
+
+	wrapped_test(bidirectional_iterator_wrapper<void>{});
+	wrapped_test(random_access_iterator_wrapper<void>{});
+
+	return EXIT_SUCCESS;
+}
+END_TEST()
+
 BEGIN_TEST(minmax_element)
 {
 	auto values = {0, 1, 2, 4, -10, 100, -1000, 4};
