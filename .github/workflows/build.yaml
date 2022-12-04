@@ -8,7 +8,27 @@ on:
   workflow_dispatch:
 
 jobs:
+  build-min-x86-64:
+    runs-on: windows-2019
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+      - uses: actions/setup-python@v1
+        with:
+          python-version: '3.9.x'
+      - uses: bus1/cabuild/action/msdevshell@v1
+        with:
+          architecture: x64
+      - uses: BSFishy/meson-build@v1.0.3
+        with:
+          action: build
+          directory: build
+          setup-options: --buildtype debugoptimized -Dlak_enable_tests=true
+          meson-version: 0.63.3
+      - run: build/lak_test.exe --testall
   build-x86-64:
+    needs: build-min-x86-64
     runs-on: windows-2019
     steps:
       - uses: actions/checkout@v2
@@ -28,6 +48,7 @@ jobs:
           meson-version: 0.63.3
       - run: build/lak_test.exe --testall
   build-x86:
+    needs: build-x86-64
     runs-on: windows-2019
     steps:
       - uses: actions/checkout@v2
