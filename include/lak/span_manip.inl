@@ -205,7 +205,7 @@ bool lak::same_span(lak::span<const T> a, lak::span<const T> b)
 #include "lak/strconv.hpp"
 
 template<typename T>
-lak::pair<lak::span<T>, lak::span<T>> lak::split(lak::span<T> s, T *at)
+inline lak::pair<lak::span<T>, lak::span<T>> lak::split(lak::span<T> s, T *at)
 {
 	ASSERT_GREATER_OR_EQUAL(at, s.begin());
 	ASSERT_LESS_OR_EQUAL(at, s.end());
@@ -214,7 +214,8 @@ lak::pair<lak::span<T>, lak::span<T>> lak::split(lak::span<T> s, T *at)
 }
 
 template<typename T, lak::enable_if_i<!lak::is_const_v<T>>>
-lak::pair<lak::span<T>, lak::span<T>> lak::split(lak::span<T> s, const T *at)
+inline lak::pair<lak::span<T>, lak::span<T>> lak::split(lak::span<T> s,
+                                                        const T *at)
 {
 	ASSERT_GREATER_OR_EQUAL(at, s.begin());
 	ASSERT_LESS_OR_EQUAL(at, s.end());
@@ -223,7 +224,8 @@ lak::pair<lak::span<T>, lak::span<T>> lak::split(lak::span<T> s, const T *at)
 }
 
 template<typename T>
-lak::pair<lak::span<T>, lak::span<T>> lak::split(lak::span<T> s, size_t at)
+inline lak::pair<lak::span<T>, lak::span<T>> lak::split(lak::span<T> s,
+                                                        size_t at)
 {
 	ASSERT_LESS_OR_EQUAL(at, s.size());
 	return {lak::span(s.begin(), s.begin() + at),
