@@ -358,7 +358,7 @@ ITER lak::partition(ITER begin, ITER end, auto predicate)
 {
 	if (begin == end) return end;
 
-	if constexpr (std::random_access_iterator<ITER>)
+	if constexpr (std::bidirectional_iterator<ITER>)
 	{
 		// XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 		// ^ <- begin                            ^ <- end
@@ -385,12 +385,12 @@ ITER lak::partition(ITER begin, ITER end, auto predicate)
 		//                    ^ <- result
 
 		ITER first_false = begin;
-		ITER last_true   = end - 1;
+		ITER last_true   = lak::next(end, -1);
 
 		while (first_false != last_true && predicate(*first_false)) ++first_false;
 		while (last_true != first_false && !predicate(*last_true)) --last_true;
 
-		while (first_false < last_true)
+		while (first_false != last_true)
 		{
 			lak::swap(*first_false, *last_true);
 			while (first_false != last_true && predicate(*first_false))
