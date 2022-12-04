@@ -31,16 +31,13 @@ namespace lak
 	constexpr bool contains(lak::span<const T> s, const T &v);
 
 	template<typename T>
-	static inline lak::pair<lak::span<T>, lak::span<T>> split(lak::span<T> s,
-	                                                          T *at);
+	lak::pair<lak::span<T>, lak::span<T>> split(lak::span<T> s, T *at);
 
 	template<typename T, lak::enable_if_i<!lak::is_const_v<T>> = 0>
-	static inline lak::pair<lak::span<T>, lak::span<T>> split(lak::span<T> s,
-	                                                          const T *at);
+	lak::pair<lak::span<T>, lak::span<T>> split(lak::span<T> s, const T *at);
 
 	template<typename T>
-	static inline lak::pair<lak::span<T>, lak::span<T>> split(lak::span<T> s,
-	                                                          size_t at);
+	lak::pair<lak::span<T>, lak::span<T>> split(lak::span<T> s, size_t at);
 
 	// {s, s.last(0)} if s does not contain a v
 	template<typename T>

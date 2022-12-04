@@ -2,6 +2,7 @@
 
 #include "lak/algorithm.hpp"
 #include "lak/array.hpp"
+#include "lak/span_manip.hpp"
 
 #include "iterator_wrappers.hpp"
 
