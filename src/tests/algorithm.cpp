@@ -184,8 +184,14 @@ BEGIN_TEST(reverse)
 		}
 	};
 
-	wrapped_test(bidirectional_iterator_wrapper<void>{});
-	wrapped_test(random_access_iterator_wrapper<void>{});
+	{
+		SCOPED_CHECKPOINT("bidirectional iterator");
+		wrapped_test(bidirectional_iterator_wrapper<void>{});
+	}
+	{
+		SCOPED_CHECKPOINT("random access iterator");
+		wrapped_test(random_access_iterator_wrapper<void>{});
+	}
 
 	return EXIT_SUCCESS;
 }
@@ -219,9 +225,18 @@ BEGIN_TEST(partition)
 		for (const auto &n : neg) ASSERT_LESS(n, intmax_t(0));
 	};
 
-	wrapped_test(forward_iterator_wrapper<void>{});
-	wrapped_test(bidirectional_iterator_wrapper<void>{});
-	wrapped_test(random_access_iterator_wrapper<void>{});
+	{
+		SCOPED_CHECKPOINT("forward iterator");
+		wrapped_test(forward_iterator_wrapper<void>{});
+	}
+	{
+		SCOPED_CHECKPOINT("bidirectional iterator");
+		wrapped_test(bidirectional_iterator_wrapper<void>{});
+	}
+	{
+		SCOPED_CHECKPOINT("random access iterator");
+		wrapped_test(random_access_iterator_wrapper<void>{});
+	}
 
 	return EXIT_SUCCESS;
 }
@@ -283,9 +298,18 @@ BEGIN_TEST(binary_partition)
 		for (const auto &n : neg) ASSERT_LESS(n, intmax_t(0));
 	};
 
-	wrapped_test(forward_iterator_wrapper<void>{});
-	wrapped_test(bidirectional_iterator_wrapper<void>{});
-	wrapped_test(random_access_iterator_wrapper<void>{});
+	{
+		SCOPED_CHECKPOINT("forward iterator");
+		wrapped_test(forward_iterator_wrapper<void>{});
+	}
+	{
+		SCOPED_CHECKPOINT("bidirectional iterator");
+		wrapped_test(bidirectional_iterator_wrapper<void>{});
+	}
+	{
+		SCOPED_CHECKPOINT("random access iterator");
+		wrapped_test(random_access_iterator_wrapper<void>{});
+	}
 
 	return EXIT_SUCCESS;
 }
