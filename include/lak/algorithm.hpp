@@ -40,6 +40,9 @@ namespace lak
 	/* --- swap --- */
 
 	template<std::forward_iterator ITER_A, std::forward_iterator ITER_B>
+	lak::pair<ITER_A, ITER_B> swap(ITER_A begin_a, ITER_B begin_b, size_t count);
+
+	template<std::forward_iterator ITER_A, std::forward_iterator ITER_B>
 	lak::pair<ITER_A, ITER_B> swap(ITER_A begin_a,
 	                               ITER_A end_a,
 	                               ITER_B begin_b,

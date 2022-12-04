@@ -32,11 +32,59 @@ BEGIN_TEST(iterator_wrapper)
 }
 END_TEST()
 
-// BEGIN_TEST(range_swap)
-// {
-// 	return EXIT_SUCCESS;
-// }
-// END_TEST()
+BEGIN_TEST(range_swap)
+{
+	auto wrapped_test = []<typename WRAPPER>(WRAPPER &&)
+	{
+		using wrapper_t = WRAPPER::template type<lak::array<intmax_t>::iterator>;
+
+		lak::array<intmax_t> values{-4, 3, -2, -1, 0, 1, 2, -3, 4, 5};
+
+		{
+			auto [a, b] = lak::swap(wrapper_t{values.begin()},
+			                        wrapper_t{values.begin() + 5},
+			                        wrapper_t{values.begin() + 5},
+			                        wrapper_t{values.end()});
+			ASSERT(a._iter == values.begin() + 5);
+			ASSERT(b._iter == values.end());
+
+			for (auto it = values.begin();
+			     const auto &v : {1, 2, -3, 4, 5, -4, 3, -2, -1, 0})
+			{
+				ASSERT_EQUAL(*it++, v);
+			}
+		}
+
+		{
+			auto [a, b] =
+			  lak::swap(wrapper_t{values.begin()}, wrapper_t{values.begin() + 3}, 3);
+			ASSERT(a._iter == values.begin() + 3);
+			ASSERT(b._iter == values.begin() + 6);
+
+			for (auto it = values.begin();
+			     const auto &v : {4, 5, -4, 1, 2, -3, 3, -2, -1, 0})
+			{
+				ASSERT_EQUAL(*it++, v);
+			}
+		}
+	};
+
+	{
+		SCOPED_CHECKPOINT("forward iterator");
+		wrapped_test(forward_iterator_wrapper<void>{});
+	}
+	{
+		SCOPED_CHECKPOINT("bidirectional iterator");
+		wrapped_test(bidirectional_iterator_wrapper<void>{});
+	}
+	{
+		SCOPED_CHECKPOINT("random access iterator");
+		wrapped_test(random_access_iterator_wrapper<void>{});
+	}
+
+	return EXIT_SUCCESS;
+}
+END_TEST()
 
 // BEGIN_TEST(count)
 // {
