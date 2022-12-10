@@ -1,5 +1,0 @@
-option('lak_msys_prefix',
-	type: 'string',
-	value: 'C:/msys64',
-	yield: true,
-)

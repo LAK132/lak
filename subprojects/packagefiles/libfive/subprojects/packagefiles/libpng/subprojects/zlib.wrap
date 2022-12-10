@@ -1,4 +1,0 @@
-[wrap-git]
-url = https://github.com/madler/zlib
-revision = v1.2.13
-depth = 1
