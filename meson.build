@@ -180,7 +180,7 @@ if get_option('lak_enable_libgphoto2')
 		foreach dll : libgphoto2_subprj.get_variable('libgphoto2_dlls')
 			dlls += dll
 		endforeach
-		dll_depends += libgphoto2_subprj.get_variable('libgphoto2_msys')
+		dll_depends += libgphoto2_subprj.get_variable('libgphoto2_dlls_dep')
 	endif
 endif
 

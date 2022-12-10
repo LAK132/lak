@@ -3,7 +3,7 @@ llvm_dep = llvm_subprj.get_variable('llvm_dep')
 
 # :HACK: meson appears to have some strange dependency management issues going
 # on with custom targets and static libraries
-llvm_headers = llvm_subprj.get_variable('cmake_generated_headers')
+llvm_headers = llvm_subprj.get_variable('llvm_cmake_generated_headers')
 
 lakllvm = static_library(
 	'lakllvm',

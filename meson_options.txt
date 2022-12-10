@@ -14,7 +14,7 @@ option('lak_enable_windowing',
 	yield: true,
 )
 
-option('use_vendored_windows_sdl',
+option('sdl2_from_source',
 	type: 'boolean',
 	value: true,
 	yield: true,
@@ -41,7 +41,7 @@ option('lak_enable_llvm',
 	yield: true,
 )
 
-option('use_vendored_llvm',
+option('llvm_from_source',
 	type: 'boolean',
 	value: true,
 	yield: true,
@@ -112,7 +112,7 @@ option('lak_enable_libgphoto2',
 	yield: true,
 )
 
-option('lak_msys_prefix',
+option('libgphoto2_msys_prefix',
 	type: 'string',
 	value: 'C:/msys64',
 	yield: true,

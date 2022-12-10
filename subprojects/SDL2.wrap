@@ -1,5 +1,4 @@
 [wrap-git]
-url = https://github.com/libsdl-org/SDL
-revision = release-2.24.0
+url = https://github.com/LAK132/wraps
+revision = SDL2
 depth = 1
-patch_directory = SDL2

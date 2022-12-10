@@ -1,5 +1,4 @@
 [wrap-git]
-url = https://github.com/libfive/libfive
-revision = 6f844b12188b607d1364eb7742d905d303a5ebed
+url = https://github.com/LAK132/wraps
+revision = libfive
 depth = 1
-patch_directory = libfive

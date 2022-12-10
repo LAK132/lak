@@ -8,8 +8,10 @@ llvm/**
 lmdb/**
 SDL2/**
 zlib/**
+*-wrap/
 
 boost.wrap
 eigen.wrap
 libpng.wrap
 zlib.wrap
+*-wrap.wrap
