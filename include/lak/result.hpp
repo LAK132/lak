@@ -170,7 +170,7 @@ namespace lak
 		  lak::is_result_v<T> && lak::is_same_v<lak::result_err_type_t<T>, ERR>;
 	}
 
-// if_let_ok (auto& ok, result) { ok; }
+// if_let_ok (auto ok, result) { ok; }
 // else { }
 #	define if_let_ok(VALUE, ...)                                               \
 		if (auto &&UNIQUIFY(RESULT_){__VA_ARGS__}; UNIQUIFY(RESULT_).is_ok())     \
@@ -178,13 +178,42 @@ namespace lak
 			           lak::forward<decltype(UNIQUIFY(RESULT_))>(UNIQUIFY(RESULT_)) \
 			             .unsafe_unwrap()})
 
-// if_let_err (auto& err, result) { err; }
+// if_let_err (auto err, result) { err; }
 // else { }
 #	define if_let_err(VALUE, ...)                                              \
 		if (auto &&UNIQUIFY(RESULT_){__VA_ARGS__}; UNIQUIFY(RESULT_).is_err())    \
 			do_with (VALUE{                                                         \
 			           lak::forward<decltype(UNIQUIFY(RESULT_))>(UNIQUIFY(RESULT_)) \
 			             .unsafe_unwrap_err()})
+
+// match_result(result)
+// {
+//   match_let_ok(auto ok, { handle_ok(ok); });
+//   match_let_err(auto err, { handle_err(err); });
+// }
+#	define match_result(...)                                                   \
+		do_with (auto &&lak_match_result_{__VA_ARGS__})                           \
+			switch (lak_match_result_.is_ok())
+
+#	define match_let_ok(VALUE, ...)                                            \
+		case true:                                                                \
+			do_with (VALUE{                                                         \
+			           lak::forward<decltype(lak_match_result_)>(lak_match_result_) \
+			             .unsafe_unwrap()})                                         \
+			{                                                                       \
+				__VA_ARGS__                                                           \
+			}                                                                       \
+			break;
+
+#	define match_let_err(VALUE, ...)                                           \
+		case false:                                                               \
+			do_with (VALUE{                                                         \
+			           lak::forward<decltype(lak_match_result_)>(lak_match_result_) \
+			             .unsafe_unwrap_err()})                                     \
+			{                                                                       \
+				__VA_ARGS__                                                           \
+			}                                                                       \
+			break;
 
 #	ifndef NOLOG
 #		define EXPECT(...)                                                       \
@@ -825,6 +854,38 @@ namespace lak
 		auto visit(F &&f) &&
 		{
 			return is_ok() ? f(forward_ok()) : f(forward_err());
+		}
+
+		/* --- match --- */
+
+		template<lak::concepts::invocable<ok_reference> OK_F,
+		         lak::concepts::invocable<err_reference> ERR_F>
+		auto match(OK_F &&ok_f, ERR_F &&err_f) &
+		{
+			if (is_ok())
+				return ok_f(get_ok());
+			else
+				return err_f(get_err());
+		}
+
+		template<lak::concepts::invocable<ok_const_reference> OK_F,
+		         lak::concepts::invocable<err_const_reference> ERR_F>
+		auto match(OK_F &&ok_f, ERR_F &&err_f) const &
+		{
+			if (is_ok())
+				return ok_f(get_ok());
+			else
+				return err_f(get_err());
+		}
+
+		template<lak::concepts::invocable<OK &&> OK_F,
+		         lak::concepts::invocable<ERR &&> ERR_F>
+		auto match(OK_F &&ok_f, ERR_F &&err_f) &&
+		{
+			if (is_ok())
+				return ok_f(forward_ok());
+			else
+				return err_f(forward_err());
 		}
 
 		/* --- if_ok --- */
