@@ -2,6 +2,7 @@
 #define LAK_POSIX_WRAPPER_HPP
 
 #include "lak/defer.hpp"
+#include "lak/errno_result.hpp"
 #include "lak/os.hpp"
 #include "lak/result.hpp"
 #include "lak/string.hpp"
@@ -16,18 +17,7 @@ namespace lak
 	namespace posix
 	{
 		template<typename T = lak::monostate>
-		using result = lak::result<T, int /* errno */>;
-
-		lak::u8string error_code_to_string(int error_code)
-		{
-			return lak::to_u8string(::strerrordesc_np(error_code));
-		}
-
-		template<typename T>
-		lak::result<T, lak::u8string> to_string(lak::posix::result<T> result)
-		{
-			return result.map_err(lak::posix::error_code_to_string);
-		}
+		using result = lak::errno_result<T>;
 
 		template<typename... ARGS>
 		lak::posix::result<int> open(const char *path, int oflag, ARGS &&...args)
@@ -36,7 +26,7 @@ namespace lak
 			    result != -1)
 				return lak::ok_t{result};
 			else
-				return lak::err_t{errno};
+				return lak::err_t{lak::errno_error::last_error()};
 		}
 
 		lak::posix::result<void *> mmap(void *address,
@@ -51,7 +41,7 @@ namespace lak
 			    result != MAP_FAILED)
 				return lak::ok_t{result};
 			else
-				return lak::err_t{errno};
+				return lak::err_t{lak::errno_error::last_error()};
 		}
 
 		lak::posix::result<int> munmap(void *address, size_t length)
@@ -59,7 +49,7 @@ namespace lak
 			if (int result = ::munmap(address, length); result != -1)
 				return lak::ok_t{result};
 			else
-				return lak::err_t{errno};
+				return lak::err_t{lak::errno_error::last_error()};
 		}
 
 		lak::posix::result<int> mprotect(void *address, size_t length, int protect)
@@ -67,7 +57,7 @@ namespace lak
 			if (int result = ::mprotect(address, length, protect); result != -1)
 				return lak::ok_t{result};
 			else
-				return lak::err_t{errno};
+				return lak::err_t{lak::errno_error::last_error()};
 		}
 
 		lak::posix::result<int> madvise(void *address, size_t length, int advise)
@@ -75,7 +65,7 @@ namespace lak
 			if (int result = ::madvise(address, length, advise); result != -1)
 				return lak::ok_t{result};
 			else
-				return lak::err_t{errno};
+				return lak::err_t{lak::errno_error::last_error()};
 		}
 	}
 }
