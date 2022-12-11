@@ -27,6 +27,10 @@ namespace lak
 		bottom() = delete;
 	};
 
+	/* --- unreachable --- */
+
+	[[noreturn]] inline void unreachable() { UNREACHABLE(); }
+
 	/* --- reference_wrapper --- */
 
 	template<typename T>

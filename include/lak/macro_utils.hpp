@@ -99,11 +99,13 @@
 #define LAK_MEM_FN(X)                                                         \
 	[this]<typename... T>(T && ...args) { return (X)(lak::forward<T>(args)...); }
 
+#include "lak/compiler.hpp"
+
 #undef do_with
 // do_with (var = stmt) { }
 #define do_with(...)                                                          \
 	if (__VA_ARGS__; false)                                                     \
-		;                                                                         \
+		UNREACHABLE();                                                            \
 	else
 
 #undef do_for
