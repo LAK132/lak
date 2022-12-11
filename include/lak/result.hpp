@@ -193,7 +193,8 @@ namespace lak
 // }
 #	define match_result(...)                                                   \
 		do_with (auto &&lak_match_result_{__VA_ARGS__})                           \
-			switch (lak_match_result_.is_ok())
+			do_with (const bool UNIQUIFY(IS_OK_) = !!lak_match_result_.is_ok())     \
+				switch (UNIQUIFY(IS_OK_))
 
 #	define match_let_ok(VALUE, ...)                                            \
 		case true:                                                                \
