@@ -4,6 +4,7 @@
 #include "lak/windows.hpp"
 
 #include "lak/defer.hpp"
+#include "lak/errno_result.hpp"
 #include "lak/os.hpp"
 #include "lak/result.hpp"
 #include "lak/string.hpp"
@@ -12,16 +13,33 @@ namespace lak
 {
 	namespace winapi
 	{
-		template<typename T = lak::monostate>
-		using result = lak::result<T, DWORD>;
-
 		lak::wstring error_code_to_wstring(DWORD error_code);
-		lak::u8string error_code_to_u8string(DWORD error_code);
-
-		template<typename T>
-		lak::result<T, lak::u8string> to_string(lak::winapi::result<T> result)
+		template<typename CHAR>
+		lak::string<CHAR> error_code_to_string(DWORD error_code)
 		{
-			return result.map_err(lak::winapi::error_code_to_u8string);
+			return lak::strconv<CHAR>(error_code_to_wstring(error_code));
+		}
+
+		struct dword_error
+		{
+			DWORD value;
+
+			static dword_error last_error() { return {::GetLastError()}; }
+
+			inline lak::astring to_string() const
+			{
+				return lak::winapi::error_code_to_string<char>(value);
+			}
+		};
+
+		template<typename T = lak::monostate>
+		using result = lak::result<T, lak::winapi::dword_error>;
+
+		template<typename CHAR>
+		std::basic_ostream<CHAR> &operator<<(std::basic_ostream<CHAR> &strm,
+		                                     const lak::winapi::dword_error &err)
+		{
+			return strm << lak::string_view{err.to_string()};
 		}
 
 		template<typename R, typename... T, typename... ARGS>
@@ -31,7 +49,7 @@ namespace lak
 			if (R result = f(lak::forward<ARGS>(args)...); result != NULL)
 				return lak::ok_t{result};
 			else
-				return lak::err_t{::GetLastError()};
+				return lak::err_t{lak::winapi::dword_error::last_error()};
 		}
 
 		template<typename... T, typename... ARGS>
@@ -41,7 +59,7 @@ namespace lak
 			if (BOOL result = f(lak::forward<ARGS>(args)...); result != FALSE)
 				return lak::ok_t{};
 			else
-				return lak::err_t{::GetLastError()};
+				return lak::err_t{lak::winapi::dword_error::last_error()};
 		}
 
 		lak::winapi::result<LPVOID> virtual_alloc(LPVOID address,

@@ -18,11 +18,6 @@ lak::wstring lak::winapi::error_code_to_wstring(DWORD error_code)
 	return lak::wstring(lpMsgBuf ? lpMsgBuf : L"failed to read error code");
 }
 
-lak::u8string lak::winapi::error_code_to_u8string(DWORD error_code)
-{
-	return lak::to_u8string(lak::winapi::error_code_to_wstring(error_code));
-}
-
 lak::winapi::result<LPVOID> lak::winapi::virtual_alloc(LPVOID address,
                                                        SIZE_T size,
                                                        DWORD allocation_type,
@@ -39,7 +34,7 @@ lak::winapi::result<> lak::winapi::virtual_free(LPVOID address,
 	if (BOOL result = ::VirtualFree(address, size, free_type); result != 0)
 		return lak::ok_t{};
 	else
-		return lak::err_t{::GetLastError()};
+		return lak::err_t{lak::winapi::dword_error::last_error()};
 }
 
 lak::winapi::result<MEMORY_BASIC_INFORMATION> lak::winapi::virtual_query(

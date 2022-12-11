@@ -64,7 +64,7 @@ lak::result<lak::process> lak::process::create(
 
 		if (!::CreatePipe(&pipe.read, &pipe.write, &security, pipe_size))
 		{
-			ERROR(lak::winapi::error_code_to_u8string(::GetLastError()));
+			ERROR(lak::winapi::error_code_to_wstring(::GetLastError()));
 			return lak::err_t{};
 		}
 		return lak::ok_t{};
