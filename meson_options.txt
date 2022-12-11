@@ -2,7 +2,7 @@
 
 option('lak_enable_tests',
 	type: 'boolean',
-	value: false,
+	value: true,
 	yield: true,
 )
 

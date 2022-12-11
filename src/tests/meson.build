@@ -25,6 +25,7 @@ laktestcore = static_library(
 		'trie.cpp',
 		'type_pack.cpp',
 		'visit.cpp',
+		'wrapper.cpp',
 	],
 	override_options: 'cpp_std=' + version,
 	dependencies: lakcore_dep,
