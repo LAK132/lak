@@ -28,7 +28,7 @@ lak::winapi::result<LPVOID> lak::winapi::virtual_alloc(LPVOID address,
                                                        DWORD allocation_type,
                                                        DWORD protect)
 {
-	return lak::winapi::invoke_nullerr(
+	return lak::winapi::invoke_null_err(
 	  ::VirtualAlloc, address, size, allocation_type, protect);
 }
 
@@ -46,7 +46,7 @@ lak::winapi::result<MEMORY_BASIC_INFORMATION> lak::winapi::virtual_query(
   LPVOID address)
 {
 	MEMORY_BASIC_INFORMATION info;
-	return lak::winapi::invoke_nullerr(
+	return lak::winapi::invoke_null_err(
 	         ::VirtualQuery, address, &info, sizeof(info))
 	  .map([&](SIZE_T) -> MEMORY_BASIC_INFORMATION { return info; });
 }

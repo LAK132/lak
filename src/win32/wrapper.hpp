@@ -24,11 +24,11 @@ namespace lak
 			return result.map_err(lak::winapi::error_code_to_u8string);
 		}
 
-		template<typename T, typename... U, typename... ARGS>
-		lak::winapi::result<T> invoke_nullerr(T(__stdcall *f)(U...),
-		                                      ARGS &&...args)
+		template<typename R, typename... T, typename... ARGS>
+		lak::winapi::result<R> invoke_null_err(R(__stdcall *f)(T...),
+		                                       ARGS &&...args)
 		{
-			if (T result = f(lak::forward<ARGS>(args)...); result != NULL)
+			if (R result = f(lak::forward<ARGS>(args)...); result != NULL)
 				return lak::ok_t{result};
 			else
 				return lak::err_t{::GetLastError()};
