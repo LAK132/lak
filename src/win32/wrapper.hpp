@@ -34,6 +34,16 @@ namespace lak
 				return lak::err_t{::GetLastError()};
 		}
 
+		template<typename... T, typename... ARGS>
+		lak::winapi::result<> invoke_false_err(BOOL(__stdcall *f)(T...),
+		                                       ARGS &&...args)
+		{
+			if (BOOL result = f(lak::forward<ARGS>(args)...); result != FALSE)
+				return lak::ok_t{};
+			else
+				return lak::err_t{::GetLastError()};
+		}
+
 		lak::winapi::result<LPVOID> virtual_alloc(LPVOID address,
 		                                          SIZE_T size,
 		                                          DWORD allocation_type,
