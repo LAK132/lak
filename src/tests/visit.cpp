@@ -12,8 +12,7 @@ BEGIN_TEST(visit)
 	  [](const bool &) -> lak::optional<lak::monostate> { return lak::nullopt; },
 	};
 
-	lak::visit_switch(decltype(var)::indices{},
-	                  var.index(),
+	lak::visit_switch(var.index_set(),
 	                  [&]<lak::concepts::integral_constant I>(const I &)
 	                  { return visitor(*var.template get<I::value>()); });
 
