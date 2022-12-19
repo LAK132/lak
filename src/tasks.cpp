@@ -1,5 +1,7 @@
 #include "lak/tasks.hpp"
 
+#include "lak/span_manip.hpp"
+
 std::mutex &lak::tasks::await_not_full()
 {
 	for (;;)

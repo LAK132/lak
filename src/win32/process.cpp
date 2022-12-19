@@ -1,5 +1,6 @@
 #include "lak/process.hpp"
 #include "lak/memmanip.hpp"
+#include "lak/span_manip.hpp"
 
 #include "wrapper.hpp"
 
