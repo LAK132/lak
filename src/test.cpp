@@ -64,8 +64,13 @@ int lak::run_tests(lak::u8string_view tests)
 
 bool lak::register_test(lak::u8string_view test_name, int (*test_function)())
 {
-	bool registered =
-	  _registered_tests().try_emplace(test_name, test_function).second;
-	ASSERT(registered);
+	auto [it, registered] =
+	  _registered_tests().try_emplace(test_name, test_function);
+	if (!registered && it != _registered_tests().end())
+	{
+		ERROR("test '", it->first, "' already exists");
+	}
+	ASSERTF(registered,
+	        lak::streamify("registering test '", test_name, "' failed"));
 	return registered;
 }
