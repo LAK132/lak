@@ -97,7 +97,7 @@ namespace lak
 		tuple(tuple &&p);
 
 		template<typename V, typename... W>
-		tuple(V &&v, W &&...n);
+		explicit tuple(V &&v, W &&...n);
 
 		tuple &operator=(const tuple &p);
 		tuple &operator=(tuple &&p);
@@ -130,6 +130,17 @@ namespace lak
 
 	template<typename... T>
 	tuple(const T &...) -> tuple<T...>;
+
+	template<typename T>
+	struct is_tuple : lak::false_type
+	{
+	};
+	template<typename... T>
+	struct is_tuple<lak::tuple<T...>> : lak::true_type
+	{
+	};
+	template<typename T>
+	inline constexpr bool is_tuple_v = lak::is_tuple<T>::value;
 
 	template<typename... T>
 	struct is_lak_type<lak::tuple<T...>> : lak::true_type

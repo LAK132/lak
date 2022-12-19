@@ -4,7 +4,7 @@
 namespace lak
 {
 	template<typename FUNC, typename TUPLE>
-	auto apply(FUNC &&func, TUPLE &&tuple) requires(tuple.template get<0>());
+	auto apply(FUNC &&func, TUPLE &&tuple);
 }
 
 #include "lak/apply.inl"

@@ -19,9 +19,10 @@ namespace lak
 }
 
 template<typename FUNC, typename TUPLE>
-auto lak::apply(FUNC &&func, TUPLE &&tuple) requires(tuple.template get<0>())
+auto lak::apply(FUNC &&func, TUPLE &&tuple)
 {
-	lak::_apply(lak::make_index_sequence<lak::tuple_size_v<TUPLE>>{},
-	            lak::forward<FUNC>(func),
-	            lak::forward<TUPLE>(tuple));
+	static_assert(lak::is_tuple_v<lak::remove_cvref_t<TUPLE>>);
+	return lak::_apply(lak::make_index_sequence<lak::tuple_size_v<TUPLE>>{},
+	                   lak::forward<FUNC>(func),
+	                   lak::forward<TUPLE>(tuple));
 }
