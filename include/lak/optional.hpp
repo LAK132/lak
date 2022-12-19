@@ -284,4 +284,10 @@ namespace lak
 	}
 }
 
+template<typename T>
+lak::optional<T> operator|(lak::optional<T> a, lak::optional<T> b)
+{
+	return a ? a : b;
+}
+
 #endif

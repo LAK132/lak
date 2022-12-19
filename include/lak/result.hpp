@@ -1132,6 +1132,27 @@ namespace lak
 	                               lak::declval<const int **>())),
 	                             lak::result<const int *>>);
 
+	/* --- move_result_from_pointer --- */
+
+	template<typename T>
+	lak::result<lak::remove_const_t<T>> move_result_from_pointer(T *ptr)
+	{
+		if (ptr)
+			return lak::move_ok(*ptr);
+		else
+			return lak::err_t{};
+	}
+
+	static_assert(
+	  lak::is_same_v<decltype(move_result_from_pointer(lak::declval<int *>())),
+	                 lak::result<int>>);
+	static_assert(lak::is_same_v<decltype(move_result_from_pointer(
+	                               lak::declval<const int *>())),
+	                             lak::result<int>>);
+	static_assert(lak::is_same_v<decltype(move_result_from_pointer(
+	                               lak::declval<const int **>())),
+	                             lak::result<const int *>>);
+
 	/* --- unwrap_infallible --- */
 
 	template<typename T>
@@ -1171,6 +1192,41 @@ namespace lak
 	{
 		return lak::move(result).unsafe_unwrap_err();
 	}
+
+	/* --- variant get --- */
+
+	template<typename T, typename... U>
+	lak::result<T &> get(lak::variant<U...> &v)
+	{
+		return lak::result_from_pointer(v.template get<T>());
+	}
+
+	template<typename T, typename... U>
+	lak::result<const T &> get(const lak::variant<U...> &v)
+	{
+		return lak::result_from_pointer(v.template get<T>());
+	}
+
+	template<typename T, typename... U>
+	lak::result<T> get(lak::variant<U...> &&v)
+	{
+		if (auto *p = v.template get<T>(); p)
+			return lak::move_ok(*p);
+		else
+			return lak::err_t{};
+	}
+}
+
+template<typename T, typename E1, typename E2>
+lak::result<T, E2> operator|(lak::result<T, E1> a, lak::result<T, E2> b)
+{
+	return a.is_ok() ? lak::result<T, E2>::make_ok(a.unsafe_unwrap()) : b;
+}
+
+template<typename T1, typename T2, typename E>
+lak::result<T2, E> operator&(lak::result<T1, E> a, lak::result<T2, E> b)
+{
+	return a.is_err() ? lak::result<T2, E>::make_err(a.unsafe_unwrap_err()) : b;
 }
 
 #	endif

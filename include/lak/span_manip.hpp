@@ -33,8 +33,9 @@ namespace lak
 	template<typename T>
 	lak::pair<lak::span<T>, lak::span<T>> split(lak::span<T> s, T *at);
 
-	template<typename T, lak::enable_if_i<!lak::is_const_v<T>> = 0>
-	lak::pair<lak::span<T>, lak::span<T>> split(lak::span<T> s, const T *at);
+	template<typename T>
+	requires(!lak::is_const_v<T>) //
+	  lak::pair<lak::span<T>, lak::span<T>> split(lak::span<T> s, const T *at);
 
 	template<typename T>
 	lak::pair<lak::span<T>, lak::span<T>> split(lak::span<T> s, size_t at);

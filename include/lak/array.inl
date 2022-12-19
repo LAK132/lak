@@ -3,6 +3,7 @@
 #include "lak/compiler.hpp"
 #include "lak/integer_range.hpp"
 #include "lak/memmanip.hpp"
+#include "lak/result.hpp"
 #include "lak/span.hpp"
 
 /* --- fixed size --- */
@@ -361,6 +362,15 @@ T &lak::array<T, lak::dynamic_extent>::push_front(T &&t)
 }
 
 template<typename T>
+void lak::array<T, lak::dynamic_extent>::pop_front()
+{
+	ASSERT_GREATER(_size, 0U);
+	lak::rotate_left(begin(), end());
+	--_size;
+	if constexpr (!std::is_trivially_destructible_v<T>) data()[_size].~T();
+}
+
+template<typename T>
 template<typename... ARGS>
 T &lak::array<T, lak::dynamic_extent>::emplace_back(ARGS &&...args)
 {
@@ -435,6 +445,27 @@ T *lak::array<T, lak::dynamic_extent>::insert(const T *before, T &&value)
 }
 
 template<typename T>
+T *lak::array<T, lak::dynamic_extent>::insert(const T *before,
+                                              std::initializer_list<T> values)
+{
+	ASSERT_GREATER_OR_EQUAL(before, cbegin());
+	ASSERT_LESS_OR_EQUAL(before, cend());
+
+	const size_t index = before - data();
+
+	commit(_size + values.size());
+
+	right_shift(values.size(), index);
+
+	for (size_t i = index; const auto &value : values)
+		new (data() + i++) T(value);
+
+	++_size;
+
+	return data() + index;
+}
+
+template<typename T>
 T *lak::array<T, lak::dynamic_extent>::erase(const T *first, const T *last)
 {
 	ASSERT_GREATER_OR_EQUAL(first, cbegin());
@@ -472,6 +503,29 @@ bool operator!=(const lak::array<T, S> &a, const lak::array<T, S> &b)
 }
 
 /* --- small_array --- */
+
+template<typename T, lak::alloc::locality LOC>
+void lak::small_array<T, LOC>::right_shift(size_t count, size_t before)
+{
+	if (_size == 0 || count == 0) return;
+
+	ASSERT_GREATER_OR_EQUAL(_data.size(), _size + count);
+	ASSERT_GREATER_OR_EQUAL(_size, before);
+
+	const size_t moved_count   = _size - before;
+	const size_t new_moved     = count > moved_count ? moved_count : count;
+	const size_t replace_moved = moved_count - new_moved;
+
+	for (size_t i : lak::size_range::from_count(before, replace_moved))
+		data()[i + count] = lak::move(data()[i]);
+
+	for (size_t i :
+	     lak::size_range::from_count(before + replace_moved, new_moved))
+		new (data() + count + i) T(lak::move(data()[i]));
+
+	if constexpr (!std::is_trivially_destructible_v<T>)
+		for (size_t i : lak::size_range::from_count(before, count)) data()[i].~T();
+}
 
 template<typename T, lak::alloc::locality LOC>
 lak::small_array<T, LOC>::small_array(size_t initial_size) : small_array()
@@ -642,6 +696,43 @@ const T &lak::small_array<T, LOC>::back() const
 
 template<typename T, lak::alloc::locality LOC>
 template<typename... ARGS>
+T &lak::small_array<T, LOC>::emplace_front(ARGS &&...args)
+{
+	reserve(_size + 1, 1U);
+	new (data()) T(lak::forward<ARGS>(args)...);
+	++_size;
+	return back();
+}
+
+template<typename T, lak::alloc::locality LOC>
+T &lak::small_array<T, LOC>::push_front(const T &t)
+{
+	reserve(_size + 1, 1U);
+	new (data()) T(t);
+	++_size;
+	return back();
+}
+
+template<typename T, lak::alloc::locality LOC>
+T &lak::small_array<T, LOC>::push_front(T &&t)
+{
+	reserve(_size + 1, 1U);
+	new (data()) T(lak::move(t));
+	++_size;
+	return back();
+}
+
+template<typename T, lak::alloc::locality LOC>
+void lak::small_array<T, LOC>::pop_front()
+{
+	ASSERT_GREATER(_size, 0U);
+	lak::rotate_left(begin(), end());
+	--_size;
+	if constexpr (!std::is_trivially_destructible_v<T>) data()[_size].~T();
+}
+
+template<typename T, lak::alloc::locality LOC>
+template<typename... ARGS>
 T &lak::small_array<T, LOC>::emplace_back(ARGS &&...args)
 {
 	reserve(_size + 1);
@@ -672,7 +763,67 @@ template<typename T, lak::alloc::locality LOC>
 void lak::small_array<T, LOC>::pop_back()
 {
 	ASSERT_GREATER(_size, 0U);
-	data()[--_size].~T();
+	--_size;
+	if constexpr (!std::is_trivially_destructible_v<T>) data()[_size].~T();
+}
+
+template<typename T, lak::alloc::locality LOC>
+T *lak::small_array<T, LOC>::insert(const T *before, const T &value)
+{
+	ASSERT_GREATER_OR_EQUAL(before, cbegin());
+	ASSERT_LESS_OR_EQUAL(before, cend());
+
+	const size_t index = before - data();
+
+	reserve(_size + 1U);
+
+	right_shift(1U, index);
+
+	new (data() + index) T(value);
+
+	++_size;
+
+	return data() + index;
+}
+
+template<typename T, lak::alloc::locality LOC>
+T *lak::small_array<T, LOC>::insert(const T *before, T &&value)
+{
+	ASSERT_GREATER_OR_EQUAL(before, cbegin());
+	ASSERT_LESS_OR_EQUAL(before, cend());
+
+	const size_t index = before - data();
+
+	reserve(_size + 1U);
+
+	right_shift(1U, index);
+
+	new (data() + index) T(lak::move(value));
+
+	++_size;
+
+	return data() + index;
+}
+
+template<typename T, lak::alloc::locality LOC>
+T *lak::small_array<T, LOC>::insert(const T *before,
+                                    std::initializer_list<T> values)
+{
+	ASSERT_GREATER_OR_EQUAL(before, cbegin());
+	ASSERT_LESS_OR_EQUAL(before, cend());
+
+	const size_t index = before - data();
+
+	reserve(_size + values.size());
+
+	right_shift(values.size(), index);
+
+	for (size_t i = index; const auto &value : values)
+		new (data() + i++) T(value);
+
+	++_size;
+
+	return data() + index;
 }
 
 template<typename T, lak::alloc::locality LOC>
@@ -713,4 +864,3 @@ bool operator!=(const lak::small_array<T, LOC> &a,
 {
 	return !(a == b);
 }
-

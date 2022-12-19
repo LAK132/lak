@@ -213,8 +213,9 @@ lak::pair<lak::span<T>, lak::span<T>> lak::split(lak::span<T> s, T *at)
 	return lak::split(s, index);
 }
 
-template<typename T, lak::enable_if_i<!lak::is_const_v<T>>>
-lak::pair<lak::span<T>, lak::span<T>> lak::split(lak::span<T> s, const T *at)
+template<typename T>
+requires(!lak::is_const_v<T>) //
+  lak::pair<lak::span<T>, lak::span<T>> lak::split(lak::span<T> s, const T *at)
 {
 	ASSERT_GREATER_OR_EQUAL(at, s.begin());
 	ASSERT_LESS_OR_EQUAL(at, s.end());

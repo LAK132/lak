@@ -5,6 +5,7 @@
 #	include "lak/stdint.hpp"
 #	include "lak/type_traits.hpp"
 #	include "lak/overloaded.hpp"
+#	include "lak/index_set.hpp"
 
 namespace lak
 {
@@ -15,15 +16,13 @@ namespace lak
 	template<size_t S>
 	void some_function();
 
-	ASSERT(lak::visit_switch(lak::index_sequence<0, 1, 2>{}, 1, [](auto index) {
-	  using I = lak::remove_cvref_t<decltype(index)>;
-	  static_assert(lak::is_integral_constant_v<I>);
-	  some_function<I::value>();
-	}));
+	lak::visit_switch(
+	  lak::index_set<0, 1, 2>::make(1).unwrap(),
+	  []<size_t I>(lak::size_type<I>) { some_function<I>(); });
 
 	*/
-	template<typename FUNCTOR, typename T, T I, T... J>
-	auto visit_switch(lak::integer_sequence<T, I, J...>, T i, FUNCTOR &&functor);
+	template<typename FUNC, size_t... I>
+	auto visit_switch(lak::index_set<I...> index, FUNC &&func);
 
 	/*
 
@@ -31,20 +30,20 @@ namespace lak
 
 	lak::variant<char, int> my_variant;
 
-	lak::visit(my_variant, [](auto &value) {
-	  if constexpr (lak::is_same_v<decltype(value), char>)
+	lak::visit([]<typename T>(T &value) {
+	  if constexpr (lak::is_same_v<T, char>)
 	  {
 	    //
 	  }
-	  else if constexpr (lak::is_same_v<decltype(value), int>)
+	  else if constexpr (lak::is_same_v<T, int>)
 	  {
 	    //
 	  }
-	});
+	}, my_variant);
 
 	*/
-	template<typename VAR, typename FUNCTOR>
-	auto visit(VAR &&variant, FUNCTOR &&functor);
+	template<typename FUNC, typename... VAR>
+	auto visit(FUNC &&func, VAR &&...variants);
 }
 
 #endif

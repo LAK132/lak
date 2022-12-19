@@ -9,10 +9,10 @@ namespace lak
 
 	lak::variant<char, int> my_variant;
 
-	lak::visit(my_variant, lak::overloaded{
+	lak::visit(lak::overloaded{
 	  [](char value) { },
 	  [](int value) { },
-	});
+	}, my_variant);
 
 	*/
 

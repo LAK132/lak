@@ -4,12 +4,22 @@
 #	include "lak/concepts.hpp"
 #	include "lak/type_pack.hpp"
 
+#	include <functional>
+
 #	ifndef LAK_COMPILER_MSVC
 #		define LAK_CAN_USE_CONCEPT_AUTO
 #	endif
 
 namespace lak
 {
+	/* --- bind_front --- */
+
+	template<typename F, typename... ARGS>
+	auto bind_front(F &&f, ARGS &&...args)
+	{
+		return std::bind_front(lak::forward<F>(f), lak::forward<ARGS>(args)...);
+	}
+
 	/* --- equal_to --- */
 
 #	ifdef LAK_CAN_USE_CONCEPT_AUTO
@@ -73,16 +83,8 @@ namespace lak
 #	ifndef LAK_FUNCTIONAL_HPP_IMPL
 #		define LAK_FUNCTIONAL_HPP_IMPL
 
-#		ifndef LAK_SPAN_MANIP_FORWARD_ONLY
-#			define LAK_SPAN_MANIP_FORWARD_ONLY
-#		endif
 #		include "lak/memmanip.hpp"
-
-#		ifndef LAK_RESULT_FORWARD_ONLY
-#			define LAK_RESULT_FORWARD_ONLY
-#		endif
 #		include "lak/memory.hpp"
-
 #		include "lak/utility.hpp"
 
 namespace lak

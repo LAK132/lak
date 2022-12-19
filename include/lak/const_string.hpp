@@ -1,6 +1,7 @@
 #ifndef LAK_CONST_STRING
 #define LAK_CONST_STRING
 
+#define LAK_ARRAY_FORWARD_ONLY
 #include "lak/array.hpp"
 #include "lak/crc.hpp"
 #include "lak/string.hpp"

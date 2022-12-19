@@ -37,7 +37,6 @@ lak::result<lak::JSON::number_proxy> lak::JSON::value_proxy::get_number() const
 	    [](const value_type &v) -> lak::result<number>
 	    {
 		    return lak::visit(
-		      v,
 		      lak::overloaded{
 		        [](const uintmax_t &v) -> lak::result<number> {
 			        return lak::ok_t{number::make<number::index_of<uintmax_t>>(v)};
@@ -46,7 +45,8 @@ lak::result<lak::JSON::number_proxy> lak::JSON::value_proxy::get_number() const
 		        { return lak::ok_t{number::make<number::index_of<intmax_t>>(v)}; },
 		        [](const double &v) -> lak::result<number>
 		        { return lak::ok_t{number::make<number::index_of<double>>(v)}; },
-		        [](auto, ...) -> lak::result<number> { return lak::err_t{}; }});
+		        [](auto, ...) -> lak::result<number> { return lak::err_t{}; }},
+		      v);
 	    })
 	  .map([&](number n) -> number_proxy { return number_proxy(_parser, n); });
 }
@@ -94,7 +94,6 @@ lak::result<lak::JSON::value_proxy::value> lak::JSON::value_proxy::get_value()
 	    [&](const value_type &v) -> value
 	    {
 		    return lak::visit(
-		      v,
 		      lak::overloaded{
 		        [&](const lak::JSON::subspan &str) -> value
 		        {
@@ -120,7 +119,8 @@ lak::result<lak::JSON::value_proxy::value> lak::JSON::value_proxy::get_value()
 		        [&](const array &a) -> value {
 			        return value::make<value::index_of<array_proxy>>(
 			          array_proxy(_parser, a));
-		        }});
+		        }},
+		      v);
 	    });
 }
 
@@ -148,14 +148,30 @@ lak::result<> lak::JSON::parse_string()
 		{
 			switch (c)
 			{
-				case u8'"': _string_data.push_back(u8'"'); break;
-				case u8'\\': _string_data.push_back(u8'\\'); break;
-				case u8'/': _string_data.push_back(u8'/'); break;
-				case u8'b': _string_data.push_back(u8'\x08'); break;
-				case u8'f': _string_data.push_back(u8'\x0C'); break;
-				case u8'n': _string_data.push_back(u8'\x0A'); break;
-				case u8'r': _string_data.push_back(u8'\x0D'); break;
-				case u8't': _string_data.push_back(u8'\x09'); break;
+				case u8'"':
+					_string_data.push_back(u8'"');
+					break;
+				case u8'\\':
+					_string_data.push_back(u8'\\');
+					break;
+				case u8'/':
+					_string_data.push_back(u8'/');
+					break;
+				case u8'b':
+					_string_data.push_back(u8'\x08');
+					break;
+				case u8'f':
+					_string_data.push_back(u8'\x0C');
+					break;
+				case u8'n':
+					_string_data.push_back(u8'\x0A');
+					break;
+				case u8'r':
+					_string_data.push_back(u8'\x0D');
+					break;
+				case u8't':
+					_string_data.push_back(u8'\x09');
+					break;
 				case u8'u':
 				{
 					char16_t hex_char[2] = {0, 0};
@@ -206,7 +222,8 @@ lak::result<> lak::JSON::parse_string()
 					}
 				}
 				break;
-				default: return lak::err_t{};
+				default:
+					return lak::err_t{};
 			}
 			in_escape_char = false;
 		}
@@ -473,11 +490,16 @@ lak::result<> lak::JSON::parse_literal_value()
 {
 	switch (peek())
 	{
-		case u8'"': return parse_string();
-		case u8'n': return parse_null();
-		case u8't': [[fallthrough]];
-		case u8'f': return parse_bool();
-		default: return parse_number();
+		case u8'"':
+			return parse_string();
+		case u8'n':
+			return parse_null();
+		case u8't':
+			[[fallthrough]];
+		case u8'f':
+			return parse_bool();
+		default:
+			return parse_number();
 	}
 }
 
@@ -641,12 +663,14 @@ lak::result<> lak::JSON::parse_value()
 
 		switch (peek())
 		{
-			case u8'{': [[fallthrough]];
+			case u8'{':
+				[[fallthrough]];
 			case u8'}':
 				if (auto err = parse_object(); err.is_err()) return err;
 				break;
 
-			case u8'[': [[fallthrough]];
+			case u8'[':
+				[[fallthrough]];
 			case u8']':
 				if (auto err = parse_array(); err.is_err()) return err;
 				break;
@@ -664,7 +688,8 @@ lak::result<> lak::JSON::parse_value()
 							if (auto err = parse_array(); err.is_err()) return err;
 							break;
 
-						default: return lak::err_t{};
+						default:
+							return lak::err_t{};
 					}
 				}
 				else

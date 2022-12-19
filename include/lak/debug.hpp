@@ -69,6 +69,7 @@
 #undef CHECKPOINT
 #undef SCOPED_CHECKPOINT
 #undef FUNCTION_CHECKPOINT
+#undef MEMBER_FUNCTION_CHECKPOINT
 #undef DEBUG
 #undef DEBUG_EXPR
 #if defined(NOLOG)
@@ -96,6 +97,8 @@
 		  lak::streamify(__VA_ARGS__ __VA_OPT__(, " ") DEBUG_LINE_FILE));
 #	define FUNCTION_CHECKPOINT(...)                                            \
 		SCOPED_CHECKPOINT(__VA_ARGS__ __VA_OPT__(, ) __func__)
+#	define MEMBER_FUNCTION_CHECKPOINT(...)                                     \
+		FUNCTION_CHECKPOINT(__VA_ARGS__ __VA_OPT__(, ) typeid(*this).name(), "::");
 #	define DEBUG(...)                                                          \
 		lak::debugger.std_out(TO_U8STRING(DEBUG_DEBUG_LINE_FILE),                 \
 		                      lak::streamify(__VA_ARGS__, "\n"));

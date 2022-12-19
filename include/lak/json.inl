@@ -40,17 +40,17 @@ inline lak::result<double> lak::JSON::number_proxy::floating_point()
 
 inline uintmax_t lak::JSON::number_proxy::as_unsigned_integer()
 {
-	return lak::visit(_number, [](auto v) { return uintmax_t(v); });
+	return lak::visit([](auto v) { return uintmax_t(v); }, _number);
 }
 
 inline intmax_t lak::JSON::number_proxy::as_signed_integer()
 {
-	return lak::visit(_number, [](auto v) { return intmax_t(v); });
+	return lak::visit([](auto v) { return intmax_t(v); }, _number);
 }
 
 inline double lak::JSON::number_proxy::as_floating_point()
 {
-	return lak::visit(_number, [](auto v) { return double(v); });
+	return lak::visit([](auto v) { return double(v); }, _number);
 }
 
 /* --- JSON::object_proxy --- */

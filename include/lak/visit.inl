@@ -7,81 +7,89 @@ namespace lak
 {
 	namespace
 	{
-		template<typename FUNCTOR, typename T, T I, T... J>
-		requires(lak::is_void_v<
-		         lak::invoke_result_t<FUNCTOR, lak::integral_constant<T, I>>>) //
-		  force_inline auto _visit_switch(lak::integer_sequence<T, I, J...>,
-		                                  T i,
-		                                  FUNCTOR &&functor) -> lak::optional<>
+		template<typename FUNC, size_t I, size_t... J>
+		requires(lak::is_void_v<lak::invoke_result_t<FUNC, lak::size_type<I>>>) //
+		  force_inline
+		  void _visit_switch(lak::index_set<I, J...> index, FUNC &&func)
 		{
-			if (I == i)
+			auto caller = [&]<size_t K>(lak::size_type<K> k) -> bool
 			{
-				functor(lak::integral_constant<T, I>{});
-				return lak::optional<>(lak::in_place);
-			}
-			else if constexpr (sizeof...(J) > 0)
-			{
-				lak::optional<> result{_visit_switch(lak::integer_sequence<T, J...>{},
-				                                     i,
-				                                     lak::forward<FUNCTOR>(functor))};
+				if (K == index.value())
+				{
+					func(k);
+					return true;
+				}
+				else
+					return false;
+			};
 
-				return result;
-			}
-			else
-			{
-				return lak::optional<>(lak::nullopt);
-			}
+			(caller(lak::size_type<I>{}) || ... || caller(lak::size_type<J>{}));
 		}
 
-		template<typename FUNCTOR, typename T, T I, T... J>
-		requires(!lak::is_void_v<
-		         lak::invoke_result_t<FUNCTOR, lak::integral_constant<T, I>>>) //
-		  force_inline auto _visit_switch(lak::integer_sequence<T, I, J...>,
-		                                  T i,
-		                                  FUNCTOR &&functor)
-		    -> lak::optional<
-		      lak::invoke_result_t<FUNCTOR, lak::integral_constant<T, I>>>
+		template<typename FUNC, size_t I, size_t... J>
+		requires(!lak::is_void_v<lak::invoke_result_t<FUNC, lak::size_type<I>>>) //
+		  force_inline
+		  auto _visit_switch(lak::index_set<I, J...> index, FUNC &&func)
+		    -> lak::invoke_result_t<FUNC, lak::size_type<I>>
 		{
-			using result_type = lak::optional<
-			  lak::invoke_result_t<FUNCTOR, lak::integral_constant<T, I>>>;
-			if (I == i)
-			{
-				return result_type(lak::in_place,
-				                   functor(lak::integral_constant<T, I>{}));
-			}
-			else if constexpr (sizeof...(J) > 0)
-			{
-				result_type result{_visit_switch(lak::integer_sequence<T, J...>{},
-				                                 i,
-				                                 lak::forward<FUNCTOR>(functor))};
+			using result_type = lak::invoke_result_t<FUNC, lak::size_type<I>>;
 
-				return result;
-			}
-			else
+			auto caller =
+			  [&]<size_t K>(lak::size_type<K> k) -> lak::optional<result_type>
 			{
-				return result_type(lak::nullopt);
-			}
+				if (K == index.value())
+					return lak::make_optional<result_type>(func(k));
+				else
+					return lak::nullopt;
+			};
+
+			return *(caller(lak::size_type<I>{}) | ... |
+			         caller(lak::size_type<J>{}));
+		}
+
+		template<typename FUNC, typename VAR>
+		force_inline auto _visit(FUNC &&func, VAR &&variant)
+		{
+			static_assert(lak::is_variant_v<lak::remove_cvref_t<VAR>>);
+
+			return _visit_switch(
+			  variant.index_set(),
+			  [&]<size_t I>(lak::size_type<I>)
+			  { return func(*lak::forward<VAR>(variant).template get<I>()); });
+		}
+
+		template<typename FUNC, typename VAR, typename VAR2, typename... VARS>
+		force_inline auto _visit(FUNC &&func,
+		                         VAR &&variant,
+		                         VAR2 &&variant2,
+		                         VARS &&...variants)
+		{
+			static_assert(lak::is_variant_v<lak::remove_cvref_t<VAR>> &&
+			              (lak::is_variant_v<lak::remove_cvref_t<VAR2>> && ... &&
+			               lak::is_variant_v<lak::remove_cvref_t<VARS>>));
+
+			return _visit_switch(
+			  variant.index_set(),
+			  [&]<size_t I>(lak::size_type<I>)
+			  {
+				  return _visit(
+				    lak::bind_front(lak::forward<FUNC>(func),
+				                    *lak::forward<VAR>(variant).template get<I>()),
+				    lak::forward<VAR2>(variant2),
+				    lak::forward<VARS>(variants)...);
+			  });
 		}
 	}
 }
 
-template<typename FUNCTOR, typename T, T I, T... J>
-auto lak::visit_switch(lak::integer_sequence<T, I, J...>,
-                       T i,
-                       FUNCTOR &&functor)
+template<typename FUNC, size_t... I>
+auto lak::visit_switch(lak::index_set<I...> index, FUNC &&func)
 {
-	return lak::_visit_switch(
-	  lak::integer_sequence<T, I, J...>{}, i, lak::forward<FUNCTOR>(functor));
+	return lak::_visit_switch(index, lak::forward<FUNC>(func));
 }
 
-template<typename VAR, typename FUNCTOR>
-auto lak::visit(VAR &&variant, FUNCTOR &&functor)
+template<typename FUNC, typename... VAR>
+auto lak::visit(FUNC &&func, VAR &&...variants)
 {
-	static_assert(lak::is_variant_v<lak::remove_cvref_t<VAR>>);
-
-	return *lak::visit_switch(
-	  typename lak::remove_cvref_t<VAR>::indices{},
-	  variant.index(),
-	  [&]<lak::concepts::integral_constant I>(const I &)
-	  { return functor(*variant.template get<I::value>()); });
+	return lak::_visit(lak::forward<FUNC>(func), lak::forward<VAR>(variants)...);
 }

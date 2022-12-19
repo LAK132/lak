@@ -74,6 +74,7 @@ namespace lak
 #	ifndef LAK_VARIANT_HPP_IMPL
 #		define LAK_VARIANT_HPP_IMPL
 
+#		include "lak/index_set.hpp"
 #		include "lak/concepts.hpp"
 
 namespace lak
@@ -140,12 +141,13 @@ namespace lak
 		force_inline auto &emplace(ARGS &&...args);
 
 		template<typename... ARGS>
-		force_inline bool emplace_dynamic(size_t i, ARGS &&...args);
+		force_inline void emplace_dynamic(lak::index_set_for<T, U...> i,
+		                                  ARGS &&...args);
 
 		template<size_t I>
 		force_inline void reset();
 
-		force_inline bool reset_dynamic(size_t i);
+		force_inline void reset_dynamic(lak::index_set_for<T, U...> i);
 	};
 
 	template<typename T>
@@ -191,12 +193,12 @@ namespace lak
 		force_inline auto &emplace(ARGS &&...args);
 
 		template<typename... ARGS>
-		force_inline bool emplace_dynamic(size_t i, ARGS &&...args);
+		force_inline void emplace_dynamic(lak::index_set<0>, ARGS &&...args);
 
 		template<size_t I>
 		force_inline void reset();
 
-		force_inline bool reset_dynamic(size_t i);
+		force_inline void reset_dynamic(lak::index_set<0>);
 	};
 
 	static_assert(lak::is_same_v<lak::pack_union<char>::value_type<0>, char>);
@@ -221,6 +223,7 @@ namespace lak
 
 	private:
 		using union_type = lak::pack_union<lak::lvalue_to_ptr_t<T>...>;
+		using index_type = lak::index_set_for<T...>;
 
 		template<size_t I>
 		static constexpr bool _is_ref = lak::is_lvalue_reference_v<value_type<I>>;
@@ -228,7 +231,7 @@ namespace lak
 		static constexpr size_t _size          = sizeof...(T);
 		static constexpr size_t _internal_size = _size;
 
-		size_t _index = 0U;
+		index_type _index = lak::size_type<0U>{};
 		union_type _value;
 
 		template<size_t I>
@@ -243,26 +246,27 @@ namespace lak
 			return _value.template get<I>();
 		}
 
-		force_inline size_t internal_index() const { return _index; }
+		force_inline index_type internal_index() const { return _index; }
 
 	public:
 		template<typename V = value_type<0U>,
 		         lak::enable_if_i<lak::is_default_constructible_v<V>> = 0>
-		variant() : _index(0U), _value()
+		variant() : _index(lak::size_type<0U>{}), _value()
 		{
 		}
 
 		template<size_t I, typename... ARGS>
 		requires((I < _size) && !_is_ref<I>) //
 		  variant(lak::in_place_index_t<I>, ARGS &&...args)
-		: _index(I), _value(lak::in_place_index<I>, lak::forward<ARGS>(args)...)
+		: _index(lak::size_type<I>{}),
+		  _value(lak::in_place_index<I>, lak::forward<ARGS>(args)...)
 		{
 		}
 
 		template<size_t I, typename... ARGS>
 		requires((I < _size) && _is_ref<I>) //
 		  variant(lak::in_place_index_t<I>, value_type<I> ref)
-		: _index(I), _value(lak::in_place_index<I>, &ref)
+		: _index(lak::size_type<I>{}), _value(lak::in_place_index<I>, &ref)
 		{
 		}
 
@@ -304,18 +308,19 @@ namespace lak
 		~variant();
 
 		size_t index() const { return _index; }
+		index_type index_set() const { return _index; }
 
 		template<size_t I>
 		requires((I < _size)) //
 		  bool holds() const
 		{
-			return _index == I;
+			return _index.value() == I;
 		}
 
 		template<typename U>
 		bool holds() const
 		{
-			return _index == index_of<U>;
+			return _index.value() == index_of<U>;
 		}
 
 		constexpr size_t size() const { return _size; }
@@ -371,6 +376,7 @@ namespace lak
 
 	private:
 		using union_type = lak::pack_union<variant<T...>, variant<T..., U...>>;
+		using index_type = lak::index_set_for<T..., U...>;
 
 		template<size_t I>
 		static constexpr bool _is_ref = lak::is_lvalue_reference_v<value_type<I>>;
@@ -401,9 +407,9 @@ namespace lak
 				return _value.next.value.template unsafe_get<I + _internal_offset>();
 		}
 
-		force_inline size_t internal_index() const
+		force_inline index_type internal_index() const
 		{
-			return _value.value.internal_index();
+			return _value.next.value.internal_index();
 		}
 
 	public:
@@ -500,6 +506,16 @@ namespace lak
 		{
 			const size_t ind = internal_index();
 			return ind <= _internal_offset ? 0U : ind - _internal_offset;
+		}
+		lak::index_set_from_sequence<indices> index_set() const
+		{
+			const auto &i{internal_index()};
+			if (i.value() <= _internal_offset)
+				return lak::index_set_from_sequence<indices>(lak::size_type<0U>{});
+			else
+				return lak::index_set_from_sequence<indices>::make(i.value() -
+				                                                   _internal_offset)
+				  .unsafe_unwrap();
 		}
 
 		template<size_t I>

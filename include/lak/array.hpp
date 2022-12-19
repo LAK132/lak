@@ -1,11 +1,11 @@
 #ifndef LAK_ARRAY_HPP
-#define LAK_ARRAY_HPP
+#	define LAK_ARRAY_HPP
 
-#include "lak/alloc.hpp"
-#include "lak/stdint.hpp"
-#include "lak/type_traits.hpp"
-#include "lak/unique_pages.hpp"
-#include "lak/utility.hpp"
+#	include "lak/alloc.hpp"
+#	include "lak/stdint.hpp"
+#	include "lak/type_traits.hpp"
+#	include "lak/unique_pages.hpp"
+#	include "lak/utility.hpp"
 
 namespace lak
 {
@@ -159,10 +159,12 @@ namespace lak
 		T &push_back(const T &t);
 		T &push_back(T &&t);
 
+		void pop_front();
 		void pop_back();
 
 		T *insert(const T *before, const T &value);
 		T *insert(const T *before, T &&value);
+		T *insert(const T *before, std::initializer_list<T>);
 
 		T *erase(const T *first, const T *last);
 
@@ -181,6 +183,12 @@ namespace lak
 	private:
 		lak::span<T> _data = {};
 		size_t _size       = 0; // Ts
+
+		// leaves the `count` elements before `before` uninitialised, does not move
+		// the base pointer. methods calling this should make sure there is enough
+		// memory committed for this, and to make sure to initialise the lower
+		// elements and update _size accordingly.
+		void right_shift(size_t count, size_t before = 0U);
 
 	public:
 		using value_type      = T;
@@ -247,12 +255,24 @@ namespace lak
 		const T &back() const;
 
 		template<typename... ARGS>
+		T &emplace_front(ARGS &&...args);
+
+		T &push_front(const T &t);
+		T &push_front(T &&t);
+
+		void pop_front();
+
+		template<typename... ARGS>
 		T &emplace_back(ARGS &&...args);
 
 		T &push_back(const T &t);
 		T &push_back(T &&t);
 
 		void pop_back();
+
+		T *insert(const T *before, const T &value);
+		T *insert(const T *before, T &&value);
+		T *insert(const T *before, std::initializer_list<T> values);
 
 		T *erase(const T *first, const T *last);
 
@@ -264,6 +284,9 @@ namespace lak
 
 	template<typename T>
 	using local_small_array = lak::small_array<T, lak::alloc::locality::local>;
+
+	template<typename T>
+	using vector = global_small_array<T>;
 }
 
 template<typename T, size_t S>
@@ -280,6 +303,13 @@ template<typename T, lak::alloc::locality LOC>
 bool operator!=(const lak::small_array<T, LOC> &a,
                 const lak::small_array<T, LOC> &b);
 
-#include "lak/array.inl"
+#endif
 
+#ifdef LAK_ARRAY_FORWARD_ONLY
+#	undef LAK_ARRAY_FORWARD_ONLY
+#else
+#	ifndef LAK_ARRAY_HPP_IMPL
+#		define LAK_ARRAY_HPP_IMPL
+#		include "lak/array.inl"
+#	endif
 #endif

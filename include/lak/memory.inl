@@ -60,7 +60,7 @@ template<typename... ARGS>
 lak::shared_ptr<T> lak::shared_ptr<T>::make(ARGS &&...args)
 {
 	lak::shared_ptr<T> result;
-	auto d{new internal_value_type<T>{.ref_count{1},
+	auto d{new internal_value_type<T>{.ref_count{.value{1U}},
 	                                  .value{lak::forward<ARGS>(args)...}}};
 	ASSERT(d);
 	if (d)
@@ -85,7 +85,7 @@ lak::shared_ptr<T>::shared_ptr(const shared_ptr &other)
   _value(other._value),
   _deleter(other._deleter)
 {
-	if (_ref_count) (*_ref_count)++;
+	if (_ref_count) ++*_ref_count;
 }
 
 template<typename T>
@@ -95,7 +95,7 @@ lak::shared_ptr<T> &lak::shared_ptr<T>::operator=(const shared_ptr &other)
 	_ref_count = other._ref_count;
 	_value     = other._value;
 	_deleter   = other._deleter;
-	if (_ref_count) (*_ref_count)++;
+	if (_ref_count) ++*_ref_count;
 	return *this;
 }
 
@@ -116,12 +116,6 @@ lak::shared_ptr<T> &lak::shared_ptr<T>::operator=(shared_ptr &&other)
 	lak::swap(_value, other._value);
 	lak::swap(_deleter, other._deleter);
 	return *this;
-}
-
-template<typename T>
-lak::shared_ptr<T>::shared_ptr::~shared_ptr()
-{
-	reset();
 }
 
 template<typename T>

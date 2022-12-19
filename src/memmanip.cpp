@@ -3,6 +3,7 @@
 #include "lak/math.hpp"
 #include "lak/os.hpp"
 #include "lak/span.hpp"
+#include "lak/span_manip.hpp"
 
 byte_t *lak::align_ptr(byte_t *ptr, size_t align)
 {
