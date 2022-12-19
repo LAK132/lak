@@ -154,6 +154,29 @@ namespace lak
 	{
 		return {args...};
 	}
+
+	template<typename... T, typename... U>
+	lak::tuple<T..., U...> tuple_cat(lak::tuple<T...> a, lak::tuple<U...> b)
+	{
+		auto _tuple_cat = [&]<size_t... I, size_t... J>(lak::index_sequence<I...>,
+		                                                lak::index_sequence<J...>)
+		                    ->lak::tuple<T..., U...>
+		{
+			static_assert(sizeof...(T) == sizeof...(I));
+			static_assert(sizeof...(U) == sizeof...(J));
+			return lak::tuple<T..., U...>{lak::forward<T>(a.template get<I>())...,
+			                              lak::forward<U>(b.template get<J>())...};
+		};
+
+		return _tuple_cat(lak::index_sequence_for<T...>{},
+		                  lak::index_sequence_for<U...>{});
+	}
+
+	template<typename... T>
+	lak::tuple<T &&...> forward_as_tuple(T &&...args)
+	{
+		return lak::tuple<T &&...>(lak::forward<T>(args)...);
+	}
 }
 
 /* --- pair --- */
