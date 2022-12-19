@@ -1,6 +1,12 @@
 #include "lak/test.hpp"
 
+#include "lak/compiler.hpp"
 #include "lak/result.hpp"
+
+#ifdef LAK_COMPILER_MSVC
+#	pragma warning(push)
+#	pragma warning(disable : 4702)
+#endif
 
 BEGIN_TEST(result)
 {
@@ -67,3 +73,7 @@ BEGIN_TEST(result)
 	return 0;
 }
 END_TEST()
+
+#ifdef LAK_COMPILER_MSVC
+#	pragma warning(pop)
+#endif
