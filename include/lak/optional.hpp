@@ -53,24 +53,22 @@ namespace lak
 		optional() = default;
 		optional(const optional &other) : _has_value(other._has_value)
 		{
-			if (_has_value)
-			{
-				_value.create(other._value.value());
-			}
+			if (_has_value) _value.create(other._value.value());
 		}
 		optional(optional &&other) : _has_value(other._has_value)
 		{
-			if (_has_value)
-			{
-				_value.create(lak::move(other._value.value()));
-			}
+			if (_has_value) _value.create(lak::move(other._value.value()));
 		}
 
 		optional(lak::nullopt_t) {}
 
 		template<typename U>
-		requires requires { value_type(lak::declval<U>()); } //
-		optional(U &&other) : _has_value(true), _value(lak::forward<U>(other)) {}
+		requires(!lak::is_same_v<optional, lak::remove_cvref_t<U>> &&
+		         requires { value_type(lak::declval<U>()); }) //
+		  optional(U &&other)
+		: _has_value(true), _value(lak::forward<U>(other))
+		{
+		}
 
 		template<typename... ARGS>
 		optional(lak::in_place_t, ARGS &&...args)
