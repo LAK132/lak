@@ -71,41 +71,75 @@ LAK_BASIC_PROGRAM(opengl_debug_message_callback)(GLenum source,
 		case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR:
 			DEBUG("| Type: DEPRECATED BEHAVIOR");
 			break;
-		case GL_DEBUG_TYPE_ERROR: DEBUG("| Type: ERROR"); break;
-		case GL_DEBUG_TYPE_MARKER: DEBUG("| Type: MARKER"); break;
-		case GL_DEBUG_TYPE_OTHER: DEBUG("| Type: OTHER"); break;
-		case GL_DEBUG_TYPE_PERFORMANCE: DEBUG("| Type: PERFORMANCE"); break;
-		case GL_DEBUG_TYPE_POP_GROUP: DEBUG("| Type: POP GROUP"); break;
-		case GL_DEBUG_TYPE_PORTABILITY: DEBUG("| Type: PORTABILITY"); break;
-		case GL_DEBUG_TYPE_PUSH_GROUP: DEBUG("| Type: PUSH GROUP"); break;
+		case GL_DEBUG_TYPE_ERROR:
+			DEBUG("| Type: ERROR");
+			break;
+		case GL_DEBUG_TYPE_MARKER:
+			DEBUG("| Type: MARKER");
+			break;
+		case GL_DEBUG_TYPE_OTHER:
+			DEBUG("| Type: OTHER");
+			break;
+		case GL_DEBUG_TYPE_PERFORMANCE:
+			DEBUG("| Type: PERFORMANCE");
+			break;
+		case GL_DEBUG_TYPE_POP_GROUP:
+			DEBUG("| Type: POP GROUP");
+			break;
+		case GL_DEBUG_TYPE_PORTABILITY:
+			DEBUG("| Type: PORTABILITY");
+			break;
+		case GL_DEBUG_TYPE_PUSH_GROUP:
+			DEBUG("| Type: PUSH GROUP");
+			break;
 		case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:
 			DEBUG("| Type: UNDEFINED BEHAVIOR");
 			break;
-		default: DEBUG("| Type: ", type); break;
+		default:
+			DEBUG("| Type: ", type);
+			break;
 	}
 	switch (severity)
 	{
-		case GL_DEBUG_SEVERITY_HIGH: DEBUG("| Severity: HIGH"); break;
-		case GL_DEBUG_SEVERITY_MEDIUM: DEBUG("| Severity: MEDIUM"); break;
-		case GL_DEBUG_SEVERITY_LOW: DEBUG("| Severity: LOW"); break;
+		case GL_DEBUG_SEVERITY_HIGH:
+			DEBUG("| Severity: HIGH");
+			break;
+		case GL_DEBUG_SEVERITY_MEDIUM:
+			DEBUG("| Severity: MEDIUM");
+			break;
+		case GL_DEBUG_SEVERITY_LOW:
+			DEBUG("| Severity: LOW");
+			break;
 		case GL_DEBUG_SEVERITY_NOTIFICATION:
 			DEBUG("| Severity: NOTIFICATION");
 			break;
-		default: DEBUG("| Severity: ", severity); break;
+		default:
+			DEBUG("| Severity: ", severity);
+			break;
 	}
 	switch (source)
 	{
-		case GL_DEBUG_SOURCE_API: DEBUG("| Source: API"); break;
-		case GL_DEBUG_SOURCE_APPLICATION: DEBUG("| Source: APPLICATION"); break;
-		case GL_DEBUG_SOURCE_OTHER: DEBUG("| Source: OTHER"); break;
+		case GL_DEBUG_SOURCE_API:
+			DEBUG("| Source: API");
+			break;
+		case GL_DEBUG_SOURCE_APPLICATION:
+			DEBUG("| Source: APPLICATION");
+			break;
+		case GL_DEBUG_SOURCE_OTHER:
+			DEBUG("| Source: OTHER");
+			break;
 		case GL_DEBUG_SOURCE_SHADER_COMPILER:
 			DEBUG("| Source: SHADER COMPILER");
 			break;
-		case GL_DEBUG_SOURCE_THIRD_PARTY: DEBUG("| Source: THIRD PARTY"); break;
+		case GL_DEBUG_SOURCE_THIRD_PARTY:
+			DEBUG("| Source: THIRD PARTY");
+			break;
 		case GL_DEBUG_SOURCE_WINDOW_SYSTEM:
 			DEBUG("| Source: WINDOW SYSTEM");
 			break;
-		default: DEBUG("| Source: ", source); break;
+		default:
+			DEBUG("| Source: ", source);
+			break;
 	}
 	DEBUG("| Message:\n", lak::string_view(message, length), "\n");
 }
@@ -235,14 +269,16 @@ int LAK_BASIC_PROGRAM_MAIN(int argc, char **argv)
 		{
 			switch (event.type)
 			{
-				case lak::event_type::close_window: [[fallthrough]];
+				case lak::event_type::close_window:
+					[[fallthrough]];
 				case lak::event_type::quit_program:
 				{
 					running = false;
 				}
 				break;
 
-				default: break;
+				default:
+					break;
 			}
 
 #ifdef LAK_BASIC_PROGRAM_IMGUI_WINDOW_IMPL
