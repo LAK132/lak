@@ -8,6 +8,10 @@
 #include "lak/os.hpp"
 #include "lak/window.hpp"
 
+#ifdef LAK_BASIC_PROGRAM_IMGUI_WINDOW_IMPL
+#	include "lak/imgui/imgui.hpp"
+#endif
+
 #ifndef APP_NAME
 #	define APP_NAME "basic window"
 #endif
@@ -39,6 +43,10 @@ lak::vec4f_t LAK_BASIC_PROGRAM(window_clear_colour) = {
   0.0f, 0.3125f, 0.312f, 1.0f};
 lak::opengl_settings LAK_BASIC_PROGRAM(window_opengl_settings);
 lak::software_settings LAK_BASIC_PROGRAM(window_software_settings);
+
+#ifdef LAK_BASIC_PROGRAM_IMGUI_WINDOW_IMPL
+ImGui::ImplContext LAK_BASIC_PROGRAM(imgui_context) = nullptr;
+#endif
 
 void APIENTRY
 LAK_BASIC_PROGRAM(opengl_debug_message_callback)(GLenum source,
@@ -195,6 +203,25 @@ int LAK_BASIC_PROGRAM_MAIN(int argc, char **argv)
 	window.set_title(L"" APP_NAME);
 	window.set_size(LAK_BASIC_PROGRAM(window_start_size));
 
+#ifdef LAK_BASIC_PROGRAM_IMGUI_WINDOW_IMPL
+	LAK_BASIC_PROGRAM(imgui_context) =
+	  ImGui::ImplCreateContext(window.graphics());
+	ImGui::ImplInit();
+	ImGui::ImplInitContext(LAK_BASIC_PROGRAM(imgui_context), window);
+
+	if (window.graphics() == lak::graphics_mode::Software)
+	{
+		ImGuiStyle &style      = ImGui::GetStyle();
+		style.AntiAliasedLines = false;
+		style.AntiAliasedFill  = false;
+		style.WindowRounding   = 0.0f;
+	}
+
+	ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+	ImGui::StyleColorsDark();
+	ImGui::GetStyle().WindowRounding = 0;
+#endif
+
 	LAK_BASIC_PROGRAM(window_init)(window);
 
 	uint64_t last_counter = lak::performance_counter();
@@ -204,8 +231,7 @@ int LAK_BASIC_PROGRAM_MAIN(int argc, char **argv)
 	for (bool running = true; running;)
 	{
 		/* --- Handle SDL2 events --- */
-		for (lak::event event; lak::next_event(&event);
-		     LAK_BASIC_PROGRAM(window_handle_event)(window, event))
+		for (lak::event event; lak::next_event(&event);)
 		{
 			switch (event.type)
 			{
@@ -218,6 +244,12 @@ int LAK_BASIC_PROGRAM_MAIN(int argc, char **argv)
 
 				default: break;
 			}
+
+#ifdef LAK_BASIC_PROGRAM_IMGUI_WINDOW_IMPL
+			ImGui::ImplProcessEvent(LAK_BASIC_PROGRAM(imgui_context), event);
+#endif
+
+			LAK_BASIC_PROGRAM(window_handle_event)(window, event);
 		}
 
 		if (window.graphics() == lak::graphics_mode::OpenGL)
@@ -226,7 +258,39 @@ int LAK_BASIC_PROGRAM_MAIN(int argc, char **argv)
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		}
 
+#ifdef LAK_BASIC_PROGRAM_IMGUI_WINDOW_IMPL
+		{
+			const float frame_time =
+			  (float)counter_delta / lak::performance_frequency();
+			ImGui::ImplNewFrame(
+			  LAK_BASIC_PROGRAM(imgui_context), window, frame_time);
+
+			bool mainOpen = true;
+
+			ImGuiStyle &style = ImGui::GetStyle();
+			ImGuiIO &io       = ImGui::GetIO();
+
+			ImGui::SetNextWindowPos(ImVec2(0, 0));
+			ImGui::SetNextWindowSize(io.DisplaySize);
+			ImVec2 old_window_padding = style.WindowPadding;
+			style.WindowPadding       = ImVec2(0.0f, 0.0f);
+			if (ImGui::Begin(
+			      APP_NAME,
+			      &mainOpen,
+			      ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoScrollbar |
+			        ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoSavedSettings |
+			        ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove))
+			{
+				style.WindowPadding = old_window_padding;
+				LAK_BASIC_PROGRAM(window_loop)(window, counter_delta);
+				ImGui::End();
+			}
+
+			ImGui::ImplRender(LAK_BASIC_PROGRAM(imgui_context));
+		}
+#else
 		LAK_BASIC_PROGRAM(window_loop)(window, counter_delta);
+#endif
 
 		window.swap();
 
@@ -243,5 +307,9 @@ int LAK_BASIC_PROGRAM_MAIN(int argc, char **argv)
 	}
 #endif
 
-	return LAK_BASIC_PROGRAM(window_quit)(window);
+	const int result = LAK_BASIC_PROGRAM(window_quit)(window);
+
+	ImGui::ImplShutdownContext(LAK_BASIC_PROGRAM(imgui_context));
+
+	return result;
 }
