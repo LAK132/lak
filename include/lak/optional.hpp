@@ -142,6 +142,11 @@ namespace lak
 
 		T *operator->() { return get(); }
 		const T *operator->() const { return get(); }
+
+		inline friend optional operator|(optional a, optional b)
+		{
+			return a ? a : b;
+		}
 	};
 
 	/* --- optional<void> --- */
@@ -280,12 +285,6 @@ namespace lak
 	{
 		return {t};
 	}
-}
-
-template<typename T>
-lak::optional<T> operator|(lak::optional<T> a, lak::optional<T> b)
-{
-	return a ? a : b;
 }
 
 #endif
