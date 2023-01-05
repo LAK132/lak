@@ -84,23 +84,42 @@ namespace lak
 		}
 	};
 
+	struct _shared_ptr_metadata
+	{
+		lak::reference_count ref_count;
+		void (*deleter)(void *);
+		union
+		{
+			void *data;
+			const void *cdata;
+		};
+	};
+
+	template<typename T>
+	struct _shared_ptr_value_type : public lak::_shared_ptr_metadata
+	{
+		T value;
+	};
+
 	template<typename T>
 	struct shared_ptr
 	{
 	private:
-		template<typename U>
-		struct internal_value_type
-		{
-			lak::reference_count ref_count;
-			U value;
-		};
-		void *_data                      = nullptr;
-		lak::reference_count *_ref_count = nullptr;
-		T *_value                        = nullptr;
-		void (*_deleter)(void *)         = nullptr;
+		using internal_value_type = lak::_shared_ptr_value_type<T>;
+
+		internal_value_type *_data = nullptr;
 
 		template<typename U>
 		friend struct shared_ptr;
+
+		shared_ptr(lak::_shared_ptr_metadata *d);
+
+		void reset(lak::_shared_ptr_metadata *d);
+
+		lak::_shared_ptr_metadata *release();
+
+		// increments the ref count and returns a copy of the data pointer
+		lak::_shared_ptr_metadata *release_copy() const;
 
 	public:
 		template<typename... ARGS>
@@ -112,86 +131,88 @@ namespace lak
 		shared_ptr(shared_ptr &&other);
 		shared_ptr &operator=(shared_ptr &&other);
 
-		template<typename U>
-		requires(requires { static_cast<T *>(lak::declval<U *>()); }) //
-		  explicit shared_ptr(const shared_ptr<U> &other)
-		: _data(other._data),
-		  _ref_count(other._ref_count),
-		  _value(static_cast<T *>(other._value)),
-		  _deleter(other._deleter)
-		{
-			if (_ref_count) ++*_ref_count;
-		}
-
 		~shared_ptr() { reset(); }
 
 		void reset();
 
 		size_t use_count() const
 		{
-			return _ref_count ? _ref_count->value.load() : 0U;
+			return _data ? _data->ref_count.value.load() : 0U;
 		}
 
-		inline operator bool() const { return _value != nullptr; }
+		inline operator bool() const { return _data != nullptr; }
 
-		inline T &operator*() const { return *_value; }
+		inline T &operator*() const { return _data->value; }
 
-		inline T *operator->() const { return _value; }
+		inline T *operator->() const { return &_data->value; }
 
-		inline T *get() const { return _value; }
+		inline T *get() const { return _data ? &_data->value : nullptr; }
 	};
 
 	template<>
 	struct shared_ptr<void>
 	{
 	private:
-		void *_data                      = nullptr;
-		lak::reference_count *_ref_count = nullptr;
-		void *_value                     = nullptr;
-		void (*_deleter)(void *)         = nullptr;
+		lak::_shared_ptr_metadata *_data = nullptr;
 
 		template<typename U>
 		friend struct shared_ptr;
 
+		shared_ptr(lak::_shared_ptr_metadata *d) : _data(d) {}
+
+		void reset(lak::_shared_ptr_metadata *d)
+		{
+			reset();
+			_data = d;
+		}
+
+		lak::_shared_ptr_metadata *release()
+		{
+			return lak::exchange(_data, nullptr);
+		}
+
+		lak::_shared_ptr_metadata *release_copy() const
+		{
+			if (_data) ++_data->ref_count;
+			return _data;
+		}
+
 	public:
 		shared_ptr() = default;
 
-		shared_ptr(const shared_ptr &other)
-		: _data(other._data),
-		  _ref_count(other._ref_count),
-		  _value(other._value),
-		  _deleter(other._deleter)
+		shared_ptr(const shared_ptr &other) : shared_ptr(other.release_copy())
 		{
-			if (_ref_count) ++*_ref_count;
+			if (_data) ++_data->ref_count;
 		}
 
-		template<typename T>
-		shared_ptr(const shared_ptr<T> &other)
-		: _data(other._data),
-		  _ref_count(other._ref_count),
-		  _value(other._value),
-		  _deleter(other._deleter)
-		{
-			if (_ref_count) ++*_ref_count;
-		}
+		shared_ptr(shared_ptr &&other) : shared_ptr(other.release()) {}
 
-		template<typename T>
-		shared_ptr &operator=(const shared_ptr<T> &other)
+		shared_ptr &operator=(shared_ptr &&other)
 		{
-			_data      = other._data;
-			_ref_count = other._ref_count;
-			_value     = other._value;
-			_deleter   = other._deleter;
-			if (_ref_count) ++*_ref_count;
+			reset(other.release());
 			return *this;
 		}
 
 		template<typename T>
-		shared_ptr(shared_ptr<T> &&other)
-		: _data(lak::exchange(other._data, nullptr)),
-		  _ref_count(lak::exchange(other._ref_count, nullptr)),
-		  _value(lak::exchange(other._value, nullptr)),
-		  _deleter(lak::exchange(other._deleter, nullptr))
+		requires(!lak::is_const_v<T>) //
+		  shared_ptr(const shared_ptr<T> &other)
+		: shared_ptr(other.release_copy())
+		{
+		}
+
+		template<typename T>
+		requires(!lak::is_const_v<T>) //
+		  shared_ptr &
+		  operator=(const shared_ptr<T> &other)
+		{
+			reset(other.release_copy());
+			return *this;
+		}
+
+		template<typename T>
+		requires(requires { lak::declval<T>().release(); } && !lak::is_const_v<T>)
+		  shared_ptr(shared_ptr<T> &&other)
+		: shared_ptr(other.release())
 		{
 		}
 
@@ -199,35 +220,23 @@ namespace lak
 
 		void reset()
 		{
-			if (_deleter) _deleter(_data);
-			_data      = nullptr;
-			_ref_count = nullptr;
-			_value     = nullptr;
-			_deleter   = nullptr;
+			if (_data) _data->deleter(_data);
+			_data = nullptr;
 		}
 
 		size_t use_count() const
 		{
-			return _ref_count ? _ref_count->value.load() : 0U;
+			return _data ? _data->ref_count.value.load() : 0U;
 		}
 
-		inline operator bool() const { return _value != nullptr; }
+		inline operator bool() const { return _data != nullptr; }
 
-		inline void *get() const { return _value; }
+		inline void *get() const { return _data ? _data->data : nullptr; }
 
 		template<typename T>
-		operator shared_ptr<T>() const
+		explicit operator shared_ptr<T>() const
 		{
-			lak::shared_ptr<T> result;
-			if (_ref_count)
-			{
-				result._data      = _data;
-				result._ref_count = _ref_count;
-				result._value     = static_cast<T *>(_value);
-				result._deleter   = _deleter;
-				++*_ref_count;
-			}
-			return result;
+			return lak::shared_ptr<T>(release_copy());
 		}
 	};
 
@@ -235,53 +244,59 @@ namespace lak
 	struct shared_ptr<const void>
 	{
 	private:
-		void *_data                      = nullptr;
-		lak::reference_count *_ref_count = nullptr;
-		const void *_value               = nullptr;
-		void (*_deleter)(void *)         = nullptr;
+		lak::_shared_ptr_metadata *_data = nullptr;
 
 		template<typename U>
 		friend struct shared_ptr;
 
+		shared_ptr(lak::_shared_ptr_metadata *d) : _data(d) {}
+
+		void reset(lak::_shared_ptr_metadata *d)
+		{
+			reset();
+			_data = d;
+		}
+
+		lak::_shared_ptr_metadata *release()
+		{
+			return lak::exchange(_data, nullptr);
+		}
+
+		lak::_shared_ptr_metadata *release_copy() const
+		{
+			if (_data) ++_data->ref_count;
+			return _data;
+		}
+
 	public:
 		shared_ptr() = default;
 
-		shared_ptr(const shared_ptr &other)
-		: _data(other._data),
-		  _ref_count(other._ref_count),
-		  _value(other._value),
-		  _deleter(other._deleter)
+		shared_ptr(const shared_ptr &other) : shared_ptr(other.release_copy()) {}
+
+		shared_ptr(shared_ptr &&other) : shared_ptr(other.release()) {}
+
+		shared_ptr &operator=(shared_ptr &&other)
 		{
-			if (_ref_count) ++*_ref_count;
+			reset(other.release());
+			return *this;
 		}
 
 		template<typename T>
-		shared_ptr(const shared_ptr<T> &other)
-		: _data(other._data),
-		  _ref_count(other._ref_count),
-		  _value(other._value),
-		  _deleter(other._deleter)
+		shared_ptr(const shared_ptr<T> &other) : shared_ptr(other.release_copy())
 		{
-			if (_ref_count) ++*_ref_count;
 		}
 
 		template<typename T>
 		shared_ptr &operator=(const shared_ptr<T> &other)
 		{
-			_data      = other._data;
-			_ref_count = other._ref_count;
-			_value     = other._value;
-			_deleter   = other._deleter;
-			if (_ref_count) ++*_ref_count;
+			reset(other.release_copy());
 			return *this;
 		}
 
 		template<typename T>
-		shared_ptr(shared_ptr<T> &&other)
-		: _data(lak::exchange(other._data, nullptr)),
-		  _ref_count(lak::exchange(other._ref_count, nullptr)),
-		  _value(lak::exchange(other._value, nullptr)),
-		  _deleter(lak::exchange(other._deleter, nullptr))
+		requires(requires { lak::declval<T>().release(); })
+		  shared_ptr(shared_ptr<T> &&other)
+		: shared_ptr(other.release())
 		{
 		}
 
@@ -289,35 +304,23 @@ namespace lak
 
 		void reset()
 		{
-			if (_deleter) _deleter(_data);
-			_data      = nullptr;
-			_ref_count = nullptr;
-			_value     = nullptr;
-			_deleter   = nullptr;
+			if (_data) _data->deleter(_data);
+			_data = nullptr;
 		}
 
 		size_t use_count() const
 		{
-			return _ref_count ? _ref_count->value.load() : 0U;
+			return _data ? _data->ref_count.value.load() : 0U;
 		}
 
-		inline operator bool() const { return _value != nullptr; }
+		inline operator bool() const { return _data != nullptr; }
 
-		inline const void *get() const { return _value; }
+		inline const void *get() const { return _data ? _data->cdata : nullptr; }
 
 		template<typename T>
 		operator shared_ptr<const T>() const
 		{
-			lak::shared_ptr<const T> result;
-			if (_ref_count)
-			{
-				result._data      = _data;
-				result._ref_count = _ref_count;
-				result._value     = static_cast<const T *>(_value);
-				result._deleter   = _deleter;
-				++*_ref_count;
-			}
-			return result;
+			return lak::shared_ptr<const T>(release_copy());
 		}
 	};
 
