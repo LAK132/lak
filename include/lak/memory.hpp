@@ -112,6 +112,17 @@ namespace lak
 		shared_ptr(shared_ptr &&other);
 		shared_ptr &operator=(shared_ptr &&other);
 
+		template<typename U>
+		requires(requires { static_cast<T *>(lak::declval<U *>()); }) //
+		  explicit shared_ptr(const shared_ptr<U> &other)
+		: _data(other._data),
+		  _ref_count(other._ref_count),
+		  _value(static_cast<T *>(other._value)),
+		  _deleter(other._deleter)
+		{
+			if (_ref_count) ++*_ref_count;
+		}
+
 		~shared_ptr() { reset(); }
 
 		void reset();
