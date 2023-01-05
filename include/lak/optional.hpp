@@ -216,10 +216,7 @@ namespace lak
 
 		optional(lak::nullopt_t) : _value(nullptr) {}
 		optional(T &other) : _value(&other) {}
-		template<typename ARGS>
-		optional(lak::in_place_t, T &other) : _value(other)
-		{
-		}
+		optional(lak::in_place_t, T &other) : _value(&other) {}
 
 		optional &operator=(const optional &) = default;
 		optional &operator=(optional &&) = default;
