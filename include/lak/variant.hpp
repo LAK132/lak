@@ -221,9 +221,10 @@ namespace lak
 		template<typename... U>
 		friend struct variant;
 
+		using index_type = lak::index_set_for<T...>;
+
 	private:
 		using union_type = lak::pack_union<lak::lvalue_to_ptr_t<T>...>;
-		using index_type = lak::index_set_for<T...>;
 
 		template<size_t I>
 		static constexpr bool _is_ref = lak::is_lvalue_reference_v<value_type<I>>;
@@ -374,9 +375,10 @@ namespace lak
 		template<typename... V>
 		friend struct variant;
 
+		using index_type = lak::index_set_for<T..., U...>;
+
 	private:
 		using union_type = lak::pack_union<variant<T...>, variant<T..., U...>>;
-		using index_type = lak::index_set_for<T..., U...>;
 
 		template<size_t I>
 		static constexpr bool _is_ref = lak::is_lvalue_reference_v<value_type<I>>;
