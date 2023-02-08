@@ -115,6 +115,15 @@ namespace lak
 	template<typename T>
 	T unwrap_infallible(lak::infallible_result<T> &&result);
 
+	template<typename OK, typename ERR>
+	auto &unwrap_if_infallible(lak::result<OK, ERR> &result);
+
+	template<typename OK, typename ERR>
+	const auto &unwrap_if_infallible(const lak::result<OK, ERR> &result);
+
+	template<typename OK, typename ERR>
+	auto unwrap_if_infallible(lak::result<OK, ERR> &&result);
+
 	/* --- unwrap_insuccible --- */
 
 	template<typename ERR>
@@ -128,6 +137,15 @@ namespace lak
 
 	template<typename E>
 	E unwrap_insuccible(lak::insuccible_result<E> &&result);
+
+	template<typename OK, typename ERR>
+	auto &unwrap_if_insuccible(lak::result<OK, ERR> &result);
+
+	template<typename OK, typename ERR>
+	const auto &unwrap_if_insuccible(const lak::result<OK, ERR> &result);
+
+	template<typename OK, typename ERR>
+	auto unwrap_if_insuccible(lak::result<OK, ERR> &&result);
 
 	/* --- typedefs --- */
 
@@ -1173,6 +1191,33 @@ namespace lak
 		return lak::move(result).unsafe_unwrap();
 	}
 
+	template<typename OK, typename ERR>
+	auto &unwrap_if_infallible(lak::result<OK, ERR> &result)
+	{
+		if constexpr (lak::is_same_v<ERR, lak::bottom>)
+			return result.unsafe_unwrap();
+		else
+			return result;
+	}
+
+	template<typename OK, typename ERR>
+	const auto &unwrap_if_infallible(const lak::result<OK, ERR> &result)
+	{
+		if constexpr (lak::is_same_v<ERR, lak::bottom>)
+			return result.unsafe_unwrap();
+		else
+			return result;
+	}
+
+	template<typename OK, typename ERR>
+	auto unwrap_if_infallible(lak::result<OK, ERR> &&result)
+	{
+		if constexpr (lak::is_same_v<ERR, lak::bottom>)
+			return lak::move(result).unsafe_unwrap();
+		else
+			return result;
+	}
+
 	/* --- unwrap_insuccible --- */
 
 	template<typename E>
@@ -1191,6 +1236,33 @@ namespace lak
 	E unwrap_insuccible(lak::insuccible_result<E> &&result)
 	{
 		return lak::move(result).unsafe_unwrap_err();
+	}
+
+	template<typename OK, typename ERR>
+	auto &unwrap_if_insuccible(lak::result<OK, ERR> &result)
+	{
+		if constexpr (lak::is_same_v<OK, lak::bottom>)
+			return result.unsafe_unwrap_err();
+		else
+			return result;
+	}
+
+	template<typename OK, typename ERR>
+	const auto &unwrap_if_insuccible(const lak::result<OK, ERR> &result)
+	{
+		if constexpr (lak::is_same_v<OK, lak::bottom>)
+			return result.unsafe_unwrap_err();
+		else
+			return result;
+	}
+
+	template<typename OK, typename ERR>
+	auto unwrap_if_insuccible(lak::result<OK, ERR> &&result)
+	{
+		if constexpr (lak::is_same_v<OK, lak::bottom>)
+			return lak::move(result).unsafe_unwrap_err();
+		else
+			return result;
 	}
 
 	/* --- variant get --- */
