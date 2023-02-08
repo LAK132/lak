@@ -345,7 +345,9 @@ int LAK_BASIC_PROGRAM_MAIN(int argc, char **argv)
 
 	const int result = LAK_BASIC_PROGRAM(window_quit)(window);
 
+#ifdef LAK_BASIC_PROGRAM_IMGUI_WINDOW_IMPL
 	ImGui::ImplShutdownContext(LAK_BASIC_PROGRAM(imgui_context));
+#endif
 
 	return result;
 }
