@@ -136,6 +136,16 @@ if get_option('lak_enable_lmdb')
 	endif
 endif
 
+if get_option('lak_enable_lua')
+	subdir('src/lua')
+	dependencies += laklua_dep
+
+	if get_option('lak_enable_tests')
+		subdir('src/tests/lua')
+		dependencies += laktestlua_dep
+	endif
+endif
+
 if get_option('lak_enable_glm')
 	glm_dep = subproject('glm').get_variable('glm_dep')
 	dependencies += glm_dep

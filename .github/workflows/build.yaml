@@ -44,7 +44,7 @@ jobs:
         with:
           action: build
           directory: build
-          setup-options: --buildtype debugoptimized -Dlak_enable_tests=true -Dlak_enable_lmdb=true -Dlak_enable_libfive=true
+          setup-options: --buildtype debugoptimized -Dlak_enable_tests=true -Dlak_enable_lmdb=true -Dlak_enable_libfive=true -Dlak_enable_lua=true
           meson-version: 0.63.3
       - run: build/lak_test.exe --testall
   build-x86:
@@ -64,6 +64,6 @@ jobs:
         with:
           action: build
           directory: build
-          setup-options: --buildtype debugoptimized -Dlak_enable_tests=true -Dlak_enable_lmdb=true -Dlak_enable_libfive=true
+          setup-options: --buildtype debugoptimized -Dlak_enable_tests=true -Dlak_enable_lmdb=true -Dlak_enable_libfive=true -Dlak_enable_lua=true
           meson-version: 0.63.3
       - run: build/lak_test.exe --testall

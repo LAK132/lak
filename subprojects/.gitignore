@@ -6,6 +6,9 @@ libfive/**
 libpng/**
 llvm/**
 lmdb/**
+lua/**
+lua-*/**
+packagecache/**
 SDL2/**
 zlib/**
 *-wrap/

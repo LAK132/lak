@@ -245,6 +245,24 @@ namespace lak
 	static_assert(lak::disjunction_v<lak::false_type, lak::true_type>);
 	static_assert(!lak::disjunction_v<lak::false_type, lak::false_type>);
 
+	/* --- are_all_same --- */
+
+	template<typename... T>
+	struct are_all_same;
+
+	template<typename T, typename... U>
+	struct are_all_same<T, U...> : lak::conjunction<lak::is_same<T, U>...>
+	{
+	};
+
+	template<>
+	struct are_all_same<> : lak::conjunction<>
+	{
+	};
+
+	template<typename... T>
+	inline constexpr bool are_all_same_v = lak::are_all_same<T...>::value;
+
 	/* --- remove_const --- */
 
 	template<typename T>
