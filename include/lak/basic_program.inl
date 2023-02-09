@@ -46,6 +46,10 @@ lak::software_settings LAK_BASIC_PROGRAM(window_software_settings);
 
 #ifdef LAK_BASIC_PROGRAM_IMGUI_WINDOW_IMPL
 ImGui::ImplContext LAK_BASIC_PROGRAM(imgui_context) = nullptr;
+ImGuiWindowFlags LAK_BASIC_PROGRAM(imgui_main_window_flags) =
+  ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoScrollbar
+  | ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoSavedSettings
+  | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove;
 #endif
 
 void APIENTRY
@@ -311,11 +315,7 @@ int LAK_BASIC_PROGRAM_MAIN(int argc, char **argv)
 			ImVec2 old_window_padding = style.WindowPadding;
 			style.WindowPadding       = ImVec2(0.0f, 0.0f);
 			if (ImGui::Begin(
-			      APP_NAME,
-			      &mainOpen,
-			      ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoScrollbar |
-			        ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoSavedSettings |
-			        ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove))
+			      APP_NAME, &mainOpen, LAK_BASIC_PROGRAM(imgui_main_window_flags)))
 			{
 				style.WindowPadding = old_window_padding;
 				LAK_BASIC_PROGRAM(window_loop)(window, counter_delta);
