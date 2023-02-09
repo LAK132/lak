@@ -152,7 +152,7 @@ namespace lak
 	template<typename... T>
 	lak::tuple<T &...> tie(T &...args)
 	{
-		return {args...};
+		return lak::tuple<T &...>{args...};
 	}
 
 	template<typename... T, typename... U>

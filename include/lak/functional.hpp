@@ -84,7 +84,6 @@ namespace lak
 #		define LAK_FUNCTIONAL_HPP_IMPL
 
 #		include "lak/memmanip.hpp"
-#		include "lak/memory.hpp"
 #		include "lak/utility.hpp"
 
 namespace lak

@@ -21,7 +21,7 @@ constexpr lak::index_set<I...> &lak::index_set<I...>::operator=(
 }
 
 template<size_t... I>
-constexpr static lak::result<lak::index_set<I...>> lak::index_set<I...>::make(
+constexpr lak::result<lak::index_set<I...>> lak::index_set<I...>::make(
   size_t index)
 {
 	if (((index == I) || ...))

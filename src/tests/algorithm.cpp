@@ -162,8 +162,8 @@ BEGIN_TEST(partition)
 
 		auto [pos, neg] = lak::split(lak::span(values), mid);
 
-		ASSERT_EQUAL(pos.size(), 6);
-		ASSERT_EQUAL(neg.size(), 4);
+		ASSERT_EQUAL(pos.size(), 6U);
+		ASSERT_EQUAL(neg.size(), 4U);
 
 		for (const auto &p : pos) ASSERT_GREATER_OR_EQUAL(p, intmax_t(0));
 		for (const auto &n : neg) ASSERT_LESS(n, intmax_t(0));
@@ -225,8 +225,8 @@ BEGIN_TEST(binary_partition)
 
 		auto [neg, pos] = lak::split(lak::span(values), mid);
 
-		ASSERT_EQUAL(pos.size(), 6);
-		ASSERT_EQUAL(neg.size(), 4);
+		ASSERT_EQUAL(pos.size(), 6U);
+		ASSERT_EQUAL(neg.size(), 4U);
 
 		for (const auto &p : pos) ASSERT_GREATER_OR_EQUAL(p, intmax_t(0));
 		for (const auto &n : neg) ASSERT_LESS(n, intmax_t(0));

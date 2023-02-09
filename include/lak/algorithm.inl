@@ -362,9 +362,9 @@ ITER lak::stable_partition(ITER begin, ITER end, auto predicate)
 		ITER second_false = first_true;
 		while (second_false != end && predicate(*second_false)) ++second_false;
 
-		const size_t false_count  = first_true - first_false;
-		const size_t true_count   = second_false - first_true;
-		const size_t total_extent = false_count + true_count;
+		const size_t false_count                   = first_true - first_false;
+		const size_t true_count                    = second_false - first_true;
+		[[maybe_unused]] const size_t total_extent = false_count + true_count;
 
 		lak::rotate_left(first_false, second_false, false_count);
 
@@ -545,7 +545,7 @@ void lak::heapsort(ITER begin, ITER end, CMP compare)
 	{ return begin + parent(index_of(iter)); };
 
 	auto left_child = [](size_t index) -> size_t { return (index * 2U) + 1U; };
-	auto left_child_iter = [&](const ITER &iter) -> ITER
+	[[maybe_unused]] auto left_child_iter = [&](const ITER &iter) -> ITER
 	{ return begin + left_child(index_of(iter)); };
 
 	// Repair the heap whose root element is at index 'start', assuming the heaps

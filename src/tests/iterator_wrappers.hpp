@@ -59,7 +59,8 @@ template<typename ITER>
 struct output_iterator_wrapper
 {
 	static_assert(
-	  std::output_iterator<ITER, std::iterator_traits<ITER>::value_type>);
+	  std::output_iterator<ITER,
+	                       typename std::iterator_traits<ITER>::value_type>);
 
 	ITER _iter;
 
@@ -271,7 +272,7 @@ struct random_access_iterator_wrapper
 		return {_iter + rhs};
 	}
 
-	friend static random_access_iterator_wrapper operator+(
+	friend random_access_iterator_wrapper operator+(
 	  difference_type lhs, const random_access_iterator_wrapper &rhs)
 	{
 		return {lhs + rhs._iter};
