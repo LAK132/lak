@@ -45,7 +45,7 @@ namespace lak
 		template<typename... ARGS>
 		static lak::result<unique_ref> make(ARGS &&...args);
 
-		unique_ref(unique_ref &&) = default;
+		unique_ref(unique_ref &&)            = default;
 		unique_ref &operator=(unique_ref &&) = default;
 
 		inline T &operator*() const { return *_value; }
@@ -194,16 +194,14 @@ namespace lak
 		}
 
 		template<typename T>
-		requires(!lak::is_const_v<T>) //
-		  shared_ptr(const shared_ptr<T> &other)
-		: shared_ptr(other.release_copy())
+		requires(!lak::is_const_v<T>)
+		shared_ptr(const shared_ptr<T> &other) : shared_ptr(other.release_copy())
 		{
 		}
 
 		template<typename T>
-		requires(!lak::is_const_v<T>) //
-		  shared_ptr &
-		  operator=(const shared_ptr<T> &other)
+		requires(!lak::is_const_v<T>)
+		shared_ptr &operator=(const shared_ptr<T> &other)
 		{
 			reset(other.release_copy());
 			return *this;
@@ -211,8 +209,7 @@ namespace lak
 
 		template<typename T>
 		requires(requires { lak::declval<T>().release(); } && !lak::is_const_v<T>)
-		  shared_ptr(shared_ptr<T> &&other)
-		: shared_ptr(other.release())
+		shared_ptr(shared_ptr<T> &&other) : shared_ptr(other.release())
 		{
 		}
 
@@ -295,8 +292,7 @@ namespace lak
 
 		template<typename T>
 		requires(requires { lak::declval<T>().release(); })
-		  shared_ptr(shared_ptr<T> &&other)
-		: shared_ptr(other.release())
+		shared_ptr(shared_ptr<T> &&other) : shared_ptr(other.release())
 		{
 		}
 
@@ -336,11 +332,11 @@ namespace lak
 		template<typename... ARGS>
 		static lak::result<shared_ref> make(ARGS &&...args);
 
-		shared_ref()                   = delete;
-		shared_ref(const shared_ref &) = default;
-		shared_ref(shared_ref &&)      = default;
+		shared_ref()                              = delete;
+		shared_ref(const shared_ref &)            = default;
+		shared_ref(shared_ref &&)                 = default;
 		shared_ref &operator=(const shared_ref &) = default;
-		shared_ref &operator=(shared_ref &&) = default;
+		shared_ref &operator=(shared_ref &&)      = default;
 
 		size_t use_count() const { return _value.use_count(); }
 

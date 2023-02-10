@@ -65,10 +65,18 @@ namespace lak
 	{
 		switch (mode)
 		{
-			case lak::graphics_mode::OpenGL: strm << "OpenGL"; break;
-			case lak::graphics_mode::Software: strm << "Software"; break;
-			case lak::graphics_mode::Vulkan: strm << "Vulkan"; break;
-			default: strm << "None"; break;
+			case lak::graphics_mode::OpenGL:
+				strm << "OpenGL";
+				break;
+			case lak::graphics_mode::Software:
+				strm << "Software";
+				break;
+			case lak::graphics_mode::Vulkan:
+				strm << "Vulkan";
+				break;
+			default:
+				strm << "None";
+				break;
 		}
 		return strm;
 	}

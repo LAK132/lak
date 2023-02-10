@@ -231,7 +231,8 @@ lak::vec2l_t lak::window_drawable_size(const lak::window_handle *handle)
 		case lak::graphics_mode::Vulkan:
 			// SDL_Vulkan_GetDrawableSize(handle->sdl_window, &w, &h);
 			break;
-		default: FATAL("Invalid graphics mode (", handle->graphics_mode(), ")");
+		default:
+			FATAL("Invalid graphics mode (", handle->graphics_mode(), ")");
 	}
 	return {w, h};
 }
@@ -262,7 +263,8 @@ bool lak::swap_window(lak::window_handle *handle)
 			return true;
 		}
 
-		default: return false;
+		default:
+			return false;
 	}
 }
 

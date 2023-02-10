@@ -25,7 +25,7 @@ namespace lak
 
 		lifetime_view() = default;
 
-		lifetime_view(const lifetime_view &) = delete;
+		lifetime_view(const lifetime_view &)            = delete;
 		lifetime_view &operator=(const lifetime_view &) = delete;
 
 		lifetime_view(lifetime_view &&other);

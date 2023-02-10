@@ -1309,9 +1309,9 @@ namespace lak
 	// LAK_ALL_CVTS(LAK_IS_FUNCTION, RET(ARGS......), &&)
 	LAK_ALL_CVTS(LAK_IS_FUNCTION, RET(ARGS...), noexcept)
 	// LAK_ALL_CVTS(LAK_IS_FUNCTION, RET(ARGS......), noexcept)
-	LAK_ALL_CVTS(LAK_IS_FUNCTION, RET(ARGS...), &noexcept)
+	LAK_ALL_CVTS(LAK_IS_FUNCTION, RET(ARGS...), & noexcept)
 	// LAK_ALL_CVTS(LAK_IS_FUNCTION, RET(ARGS......), &noexcept)
-	LAK_ALL_CVTS(LAK_IS_FUNCTION, RET(ARGS...), &&noexcept)
+	LAK_ALL_CVTS(LAK_IS_FUNCTION, RET(ARGS...), && noexcept)
 	// LAK_ALL_CVTS(LAK_IS_FUNCTION, RET(ARGS......), &&noexcept)
 #undef LAK_IS_FUNCTION
 
@@ -1494,8 +1494,8 @@ namespace lak
 
 	struct nonesuch
 	{
-		~nonesuch()                = delete;
-		nonesuch(const nonesuch &) = delete;
+		~nonesuch()                      = delete;
+		nonesuch(const nonesuch &)       = delete;
 		void operator=(const nonesuch &) = delete;
 	};
 
@@ -1571,7 +1571,11 @@ namespace lak
 	};
 
 	template<typename T, typename... ARGS>
-	requires requires { {T{lak::declval<ARGS>()...}}; }
+	requires requires {
+		{
+			T{lak::declval<ARGS>()...}
+		};
+	}
 	struct is_constructible<T, ARGS...> : lak::true_type
 	{
 	};
@@ -1604,7 +1608,11 @@ namespace lak
 	};
 
 	template<typename T, typename U>
-	requires requires(T t) { {static_cast<U>(t)}; }
+	requires requires(T t) {
+		{
+			static_cast<U>(t)
+		};
+	}
 	struct is_static_castable<T, U> : lak::true_type
 	{
 	};
@@ -1623,7 +1631,11 @@ namespace lak
 	};
 
 	template<typename T, typename U>
-	requires requires(T t) { {reinterpret_cast<U>(t)}; }
+	requires requires(T t) {
+		{
+			reinterpret_cast<U>(t)
+		};
+	}
 	struct is_reinterpret_castable<T, U> : lak::true_type
 	{
 	};
@@ -1644,7 +1656,11 @@ namespace lak
 	};
 
 	template<typename T>
-	requires requires(T t) { {t.resize(0)}; }
+	requires requires(T t) {
+		{
+			t.resize(0)
+		};
+	}
 	struct is_resizable<T> : lak::true_type
 	{
 	};
@@ -1702,7 +1718,11 @@ namespace lak
 	};
 
 	template<typename F, typename... ARGS>
-	requires requires(F f) { {f(lak::declval<ARGS>()...)}; }
+	requires requires(F f) {
+		{
+			f(lak::declval<ARGS>()...)
+		};
+	}
 	struct is_invocable<F, ARGS...> : lak::true_type
 	{
 	};
@@ -1737,7 +1757,7 @@ namespace lak
 	  lak::has_type_size_signature<T>::value;
 
 	template<typename T>
-	requires lak::has_type_size_signature_v<T> //
+	requires lak::has_type_size_signature_v<T>
 	static constexpr size_t type_size_signature_size_v =
 	  lak::has_type_size_signature<T>::value;
 }

@@ -8,29 +8,38 @@ SDL_Window *sdl_window_from_event(const SDL_Event &event)
 {
 	switch (event.type)
 	{
-		case SDL_WINDOWEVENT: return SDL_GetWindowFromID(event.window.windowID);
+		case SDL_WINDOWEVENT:
+			return SDL_GetWindowFromID(event.window.windowID);
 
 		case SDL_KEYDOWN:
-		case SDL_KEYUP: return SDL_GetWindowFromID(event.key.windowID);
+		case SDL_KEYUP:
+			return SDL_GetWindowFromID(event.key.windowID);
 
 		case SDL_TEXTEDITING:
-		case SDL_TEXTINPUT: return SDL_GetWindowFromID(event.text.windowID);
+		case SDL_TEXTINPUT:
+			return SDL_GetWindowFromID(event.text.windowID);
 
-		case SDL_MOUSEMOTION: return SDL_GetWindowFromID(event.motion.windowID);
+		case SDL_MOUSEMOTION:
+			return SDL_GetWindowFromID(event.motion.windowID);
 
 		case SDL_MOUSEBUTTONDOWN:
-		case SDL_MOUSEBUTTONUP: return SDL_GetWindowFromID(event.button.windowID);
+		case SDL_MOUSEBUTTONUP:
+			return SDL_GetWindowFromID(event.button.windowID);
 
-		case SDL_MOUSEWHEEL: return SDL_GetWindowFromID(event.wheel.windowID);
+		case SDL_MOUSEWHEEL:
+			return SDL_GetWindowFromID(event.wheel.windowID);
 
 		case SDL_DROPFILE:
 		case SDL_DROPTEXT:
 		case SDL_DROPBEGIN:
-		case SDL_DROPCOMPLETE: return SDL_GetWindowFromID(event.drop.windowID);
+		case SDL_DROPCOMPLETE:
+			return SDL_GetWindowFromID(event.drop.windowID);
 
-		case SDL_USEREVENT: return SDL_GetWindowFromID(event.user.windowID);
+		case SDL_USEREVENT:
+			return SDL_GetWindowFromID(event.user.windowID);
 
-		default: return nullptr;
+		default:
+			return nullptr;
 	}
 }
 
@@ -170,11 +179,21 @@ void translate_event(const SDL_Event &sdl_event,
 			lak::mouse_button btn = lak::mouse_button::none;
 			switch (sdl_event.button.button)
 			{
-				case SDL_BUTTON_LEFT: btn = lak::mouse_button::left; break;
-				case SDL_BUTTON_RIGHT: btn = lak::mouse_button::right; break;
-				case SDL_BUTTON_MIDDLE: btn = lak::mouse_button::middle; break;
-				case SDL_BUTTON_X1: btn = lak::mouse_button::x1; break;
-				case SDL_BUTTON_X2: btn = lak::mouse_button::x2; break;
+				case SDL_BUTTON_LEFT:
+					btn = lak::mouse_button::left;
+					break;
+				case SDL_BUTTON_RIGHT:
+					btn = lak::mouse_button::right;
+					break;
+				case SDL_BUTTON_MIDDLE:
+					btn = lak::mouse_button::middle;
+					break;
+				case SDL_BUTTON_X1:
+					btn = lak::mouse_button::x1;
+					break;
+				case SDL_BUTTON_X2:
+					btn = lak::mouse_button::x2;
+					break;
 			}
 			*event = lak::event(lak::event_type::button_down,
 			                    window,
@@ -190,11 +209,21 @@ void translate_event(const SDL_Event &sdl_event,
 			lak::mouse_button btn = lak::mouse_button::none;
 			switch (sdl_event.button.button)
 			{
-				case SDL_BUTTON_LEFT: btn = lak::mouse_button::left; break;
-				case SDL_BUTTON_RIGHT: btn = lak::mouse_button::right; break;
-				case SDL_BUTTON_MIDDLE: btn = lak::mouse_button::middle; break;
-				case SDL_BUTTON_X1: btn = lak::mouse_button::x1; break;
-				case SDL_BUTTON_X2: btn = lak::mouse_button::x2; break;
+				case SDL_BUTTON_LEFT:
+					btn = lak::mouse_button::left;
+					break;
+				case SDL_BUTTON_RIGHT:
+					btn = lak::mouse_button::right;
+					break;
+				case SDL_BUTTON_MIDDLE:
+					btn = lak::mouse_button::middle;
+					break;
+				case SDL_BUTTON_X1:
+					btn = lak::mouse_button::x1;
+					break;
+				case SDL_BUTTON_X2:
+					btn = lak::mouse_button::x2;
+					break;
 			}
 			*event = lak::event(lak::event_type::button_up,
 			                    window,
@@ -247,8 +276,10 @@ void translate_event(const SDL_Event &sdl_event,
 			SDL_free(sdl_event.drop.file);
 		}
 			[[fallthrough]];
-		case SDL_DROPBEGIN: [[fallthrough]];
-		case SDL_DROPCOMPLETE: [[fallthrough]];
+		case SDL_DROPBEGIN:
+			[[fallthrough]];
+		case SDL_DROPCOMPLETE:
+			[[fallthrough]];
 		default:
 		{
 			*event = lak::event(

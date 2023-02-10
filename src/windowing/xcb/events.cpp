@@ -38,7 +38,8 @@ bool lak::next_event(const lak::platform_instance &handle, lak::event *event)
 
 			/* --- mouse_wheel --- */
 
-		default: event->type = event_type::platform_event;
+		default:
+			event->type = event_type::platform_event;
 	}
 
 	return true;

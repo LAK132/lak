@@ -48,11 +48,15 @@ namespace lak
 	{
 		switch (e)
 		{
-			case lak::endian::little: return lak::endian::big;
-			case lak::endian::big: return lak::endian::little;
+			case lak::endian::little:
+				return lak::endian::big;
+			case lak::endian::big:
+				return lak::endian::little;
 #if defined(LAK_MIDDLE_ENDIAN)
-			case lak::endian::native: return lak::endian::reverse_native;
-			case lak::endian::reverse_native: return lak::endian::native;
+			case lak::endian::native:
+				return lak::endian::reverse_native;
+			case lak::endian::reverse_native:
+				return lak::endian::native;
 #endif
 		}
 	}

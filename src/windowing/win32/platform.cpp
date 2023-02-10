@@ -140,7 +140,9 @@ bool paint_image(HWND hWnd, lak::image_view<COLOUR> image)
 				}
 				break;
 
-			default: FATAL(pfd.cColorBits); return false;
+			default:
+				FATAL(pfd.cColorBits);
+				return false;
 		}
 	}
 	else if (pfd.iPixelType == PFD_TYPE_COLORINDEX)
@@ -150,7 +152,9 @@ bool paint_image(HWND hWnd, lak::image_view<COLOUR> image)
 			case 256: // lak::colour::i8
 			case 16:  // lak::colour::i4
 			case 2:   // lak::colour::i1
-			default: FATAL(pfd.cColorBits); return false;
+			default:
+				FATAL(pfd.cColorBits);
+				return false;
 		}
 	}
 	else

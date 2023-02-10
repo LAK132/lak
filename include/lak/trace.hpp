@@ -25,7 +25,7 @@ namespace lak
 		trace(trace &&)      = default;
 		trace(const trace &) = default;
 
-		trace &operator=(trace &&) = default;
+		trace &operator=(trace &&)      = default;
 		trace &operator=(const trace &) = default;
 
 		inline lak::u8string to_string() const { return TO_U8STRING(*this); }

@@ -46,13 +46,12 @@ namespace lak
 		/* --- parser --- */
 
 		template<typename T>
-		concept parser = requires(const T t)
-		{
+		concept parser = requires(const T t) {
 			typename T::value_type;
 
 			{
 				t.parse(lak::u8string_view{})
-				} -> lak::concepts::same_as<lak::dsl::result<typename T::value_type>>;
+			} -> lak::concepts::same_as<lak::dsl::result<typename T::value_type>>;
 		};
 
 		/* --- sequence --- */
@@ -143,25 +142,22 @@ namespace lak
 		/* --- operator+ --- */
 
 		template<lak::dsl::parser L, lak::dsl::parser R>
-		requires(!lak::dsl::is_sequence_v<L> && !lak::dsl::is_sequence_v<R>) //
-		  inline constexpr auto
-		  operator+(L, R)
+		requires(!lak::dsl::is_sequence_v<L> && !lak::dsl::is_sequence_v<R>)
+		inline constexpr auto operator+(L, R)
 		{
 			return lak::dsl::sequence<L{}, R{}>;
 		}
 
 		template<lak::dsl::parser auto... L, lak::dsl::parser R>
-		requires(!lak::dsl::is_sequence_v<R>) //
-		  inline constexpr auto
-		  operator+(lak::dsl::sequence_t<L...>, R)
+		requires(!lak::dsl::is_sequence_v<R>)
+		inline constexpr auto operator+(lak::dsl::sequence_t<L...>, R)
 		{
 			return lak::dsl::sequence<L..., R{}>;
 		}
 
 		template<lak::dsl::parser L, lak::dsl::parser auto... R>
-		requires(!lak::dsl::is_sequence_v<L>) //
-		  inline constexpr auto
-		  operator+(L, lak::dsl::sequence_t<R...>)
+		requires(!lak::dsl::is_sequence_v<L>)
+		inline constexpr auto operator+(L, lak::dsl::sequence_t<R...>)
 		{
 			return lak::dsl::sequence<L{}, R...>;
 		}
@@ -243,9 +239,8 @@ namespace lak
 		/* --- operator* --- */
 
 		template<lak::dsl::parser R>
-		requires(!lak::dsl::is_repeat_v<R>) //
-		  inline constexpr auto
-		  operator*(R)
+		requires(!lak::dsl::is_repeat_v<R>)
+		inline constexpr auto operator*(R)
 		{
 			return lak::dsl::repeat<R{}>;
 		}
@@ -335,26 +330,22 @@ namespace lak
 		/* --- operator| --- */
 
 		template<lak::dsl::parser L, lak::dsl::parser R>
-		requires(!lak::dsl::is_disjunction_v<L> &&
-		         !lak::dsl::is_disjunction_v<R>) //
-		  inline constexpr auto
-		  operator|(L, R)
+		requires(!lak::dsl::is_disjunction_v<L> && !lak::dsl::is_disjunction_v<R>)
+		inline constexpr auto operator|(L, R)
 		{
 			return lak::dsl::disjunction<L{}, R{}>;
 		}
 
 		template<lak::dsl::parser auto... L, lak::dsl::parser R>
-		requires(!lak::dsl::is_disjunction_v<R>) //
-		  inline constexpr auto
-		  operator|(lak::dsl::disjunction_t<L...>, R)
+		requires(!lak::dsl::is_disjunction_v<R>)
+		inline constexpr auto operator|(lak::dsl::disjunction_t<L...>, R)
 		{
 			return lak::dsl::disjunction<L..., R{}>;
 		}
 
 		template<lak::dsl::parser L, lak::dsl::parser auto... R>
-		requires(!lak::dsl::is_disjunction_v<L>) //
-		  inline constexpr auto
-		  operator|(L, lak::dsl::disjunction_t<R...>)
+		requires(!lak::dsl::is_disjunction_v<L>)
+		inline constexpr auto operator|(L, lak::dsl::disjunction_t<R...>)
 		{
 			return lak::dsl::disjunction<L{}, R...>;
 		}

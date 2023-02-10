@@ -271,8 +271,8 @@ auto lak::variant<T...>::flat_visit(F &&func) const
 /* --- variant<variant<T...>, U...> --- */
 
 template<typename... T, typename... U>
-requires((lak::is_standard_layout_v<lak::variant<T..., U...>>)) //
-  lak::variant<lak::variant<T...>, U...>::variant(const variant &other)
+requires((lak::is_standard_layout_v<lak::variant<T..., U...>>))
+lak::variant<lak::variant<T...>, U...>::variant(const variant &other)
 : _value(lak::uninitialised_union_flag)
 {
 	lak::visit_switch(other.internal_index(),
@@ -293,8 +293,8 @@ requires((lak::is_standard_layout_v<lak::variant<T..., U...>>)) //
 }
 
 template<typename... T, typename... U>
-requires((lak::is_standard_layout_v<lak::variant<T..., U...>>)) //
-  lak::variant<lak::variant<T...>, U...>::variant(variant &&other)
+requires((lak::is_standard_layout_v<lak::variant<T..., U...>>))
+lak::variant<lak::variant<T...>, U...>::variant(variant &&other)
 : _value(lak::uninitialised_union_flag)
 {
 	lak::visit_switch(
@@ -316,9 +316,9 @@ requires((lak::is_standard_layout_v<lak::variant<T..., U...>>)) //
 }
 
 template<typename... T, typename... U>
-requires((lak::is_standard_layout_v<lak::variant<T..., U...>>)) //
-  lak::variant<lak::variant<T...>, U...>
-&lak::variant<lak::variant<T...>, U...>::operator=(const variant &other)
+requires((lak::is_standard_layout_v<lak::variant<T..., U...>>))
+lak::variant<lak::variant<T...>, U...> &
+lak::variant<lak::variant<T...>, U...>::operator=(const variant &other)
 {
 	lak::visit_switch(other.internal_index(),
 	                  [&, this]<size_t I>(lak::size_type<I>)
@@ -334,9 +334,9 @@ requires((lak::is_standard_layout_v<lak::variant<T..., U...>>)) //
 }
 
 template<typename... T, typename... U>
-requires((lak::is_standard_layout_v<lak::variant<T..., U...>>)) //
-  lak::variant<lak::variant<T...>, U...>
-&lak::variant<lak::variant<T...>, U...>::operator=(variant &&other)
+requires((lak::is_standard_layout_v<lak::variant<T..., U...>>))
+lak::variant<lak::variant<T...>, U...> &
+lak::variant<lak::variant<T...>, U...>::operator=(variant &&other)
 {
 	lak::visit_switch(
 	  other.internal_index(),
@@ -352,8 +352,8 @@ requires((lak::is_standard_layout_v<lak::variant<T..., U...>>)) //
 }
 
 template<typename... T, typename... U>
-requires((lak::is_standard_layout_v<lak::variant<T..., U...>>)) //
-  lak::variant<lak::variant<T...>, U...>::variant::~variant()
+requires((lak::is_standard_layout_v<lak::variant<T..., U...>>))
+lak::variant<lak::variant<T...>, U...>::variant::~variant()
 {
 	if (internal_index().value() <= _internal_offset)
 		_value.template reset<0U>();

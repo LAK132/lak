@@ -292,8 +292,8 @@ lak::lmdb::transaction<READ_ONLY>::transaction(transaction &&other)
 }
 
 template<bool READ_ONLY>
-lak::lmdb::transaction<READ_ONLY>
-  &lak::lmdb::transaction<READ_ONLY>::operator=(transaction &&other)
+lak::lmdb::transaction<READ_ONLY> &
+lak::lmdb::transaction<READ_ONLY>::operator=(transaction &&other)
 {
 	lak::swap(_txn, other._txn);
 	return *this;
@@ -344,10 +344,7 @@ template struct lak::lmdb::transaction<false>;
 
 /* --- environment --- */
 
-lak::lmdb::environment::environment(MDB_env *env) : _env(env)
-{
-	ASSERT(_env);
-}
+lak::lmdb::environment::environment(MDB_env *env) : _env(env) { ASSERT(_env); }
 
 lak::lmdb::environment::environment(environment &&other)
 : _env(lak::exchange(other._env, nullptr))
@@ -433,7 +430,4 @@ lak::lmdb::environment::begin_rtransaction(lak::lmdb::rtransaction *parent)
 	return lak::ok_t{lak::lmdb::rtransaction(txn)};
 }
 
-lak::lmdb::environment::operator bool() const
-{
-	return _env != nullptr;
-}
+lak::lmdb::environment::operator bool() const { return _env != nullptr; }

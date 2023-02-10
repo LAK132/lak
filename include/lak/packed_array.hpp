@@ -23,8 +23,8 @@ namespace lak
 		using reference       = T &;
 		using const_reference = const T &;
 
-		constexpr packed_array()                     = default;
-		constexpr packed_array(const packed_array &) = default;
+		constexpr packed_array()                                = default;
+		constexpr packed_array(const packed_array &)            = default;
 		constexpr packed_array &operator=(const packed_array &) = default;
 
 		constexpr packed_array(packed_array && other);
@@ -59,8 +59,8 @@ namespace lak
 		using reference       = T &;
 		using const_reference = const T &;
 
-		constexpr packed_array()                     = default;
-		constexpr packed_array(const packed_array &) = default;
+		constexpr packed_array()                                = default;
+		constexpr packed_array(const packed_array &)            = default;
 		constexpr packed_array &operator=(const packed_array &) = default;
 
 		constexpr packed_array(packed_array && other);

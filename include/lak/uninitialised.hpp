@@ -23,13 +23,15 @@ namespace lak
 		}
 
 		template<typename... ARGS>
-		requires requires { value_type(lak::declval<ARGS>()...); } //
-		uninitialised(ARGS &&...args) : _value(lak::forward<ARGS>(args)...) {}
+		requires requires { value_type(lak::declval<ARGS>()...); }
+		uninitialised(ARGS &&...args) : _value(lak::forward<ARGS>(args)...)
+		{
+		}
 
 		~uninitialised() {}
 
 		template<typename... ARGS>
-		requires requires { value_type(lak::declval<ARGS>()...); } //
+		requires requires { value_type(lak::declval<ARGS>()...); }
 		value_type &create(ARGS &&...args)
 		{
 			new (&_value) value_type(lak::forward<ARGS>(args)...);

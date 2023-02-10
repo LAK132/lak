@@ -22,7 +22,7 @@ namespace lak
 		static lak::result<process> create(
 		  const lak::fs::path &app, lak::string_view<char8_t> arguments = {});
 
-		process(process &&) = default;
+		process(process &&)            = default;
 		process &operator=(process &&) = default;
 
 		~process();

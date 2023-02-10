@@ -34,8 +34,8 @@ namespace lak
 		friend struct span;
 
 	public:
-		constexpr span()             = default;
-		constexpr span(const span &) = default;
+		constexpr span()                        = default;
+		constexpr span(const span &)            = default;
 		constexpr span &operator=(const span &) = default;
 
 		template<lak::concepts::fixed_contiguous_range_of<T, SIZE> RANGE>
@@ -55,7 +55,8 @@ namespace lak
 		}
 
 		template<size_t S = SIZE>
-		inline constexpr span(T (&data)[S]) noexcept requires(S == SIZE)
+		inline constexpr span(T (&data)[S]) noexcept
+		requires(S == SIZE)
 		: _data(data)
 		{
 		}
@@ -102,13 +103,14 @@ namespace lak
 
 		// reinterpret cast to U
 		template<lak::concepts::ptr_reinterpret_castable_from<T> U>
-		constexpr explicit operator span<U, (SIZE * sizeof(T)) / sizeof(U)>() const
-		  noexcept requires(!lak::concepts::same_as<U, T> && !lak::is_void_v<U>);
+		constexpr explicit operator span<U, (SIZE * sizeof(T)) / sizeof(U)>()
+		  const noexcept
+		requires(!lak::concepts::same_as<U, T> && !lak::is_void_v<U>);
 
 		// reinterpret cast to void
 		template<lak::concepts::void_type V>
 		constexpr operator span<V, SIZE * sizeof(T)>() const noexcept
-		  requires(lak::is_reinterpret_castable_v<T *, V *>);
+		requires(lak::is_reinterpret_castable_v<T *, V *>);
 
 		// static cast to dynamic size
 		template<lak::concepts::ptr_static_castable_from<T> U>
@@ -125,13 +127,13 @@ namespace lak
 		friend struct span;
 
 	public:
-		constexpr span()             = default;
-		constexpr span(const span &) = default;
+		constexpr span()                        = default;
+		constexpr span(const span &)            = default;
 		constexpr span &operator=(const span &) = default;
 
 		template<typename T>
 		inline constexpr span(T (&data)[SIZE / sizeof(T)]) noexcept
-		  requires(!lak::is_character_type_v<T>)
+		requires(!lak::is_character_type_v<T>)
 		: _data(data)
 		{
 		}
@@ -152,7 +154,7 @@ namespace lak
 		// reinterpret cast to T
 		template<lak::concepts::ptr_reinterpret_castable_from<void> T>
 		constexpr explicit operator span<T, (SIZE / sizeof(T))>() const noexcept
-		  requires(!lak::is_void_v<T>);
+		requires(!lak::is_void_v<T>);
 
 		// static cast to dynamic size
 		template<lak::concepts::void_type V>
@@ -169,8 +171,8 @@ namespace lak
 		friend struct span;
 
 	public:
-		constexpr span()             = default;
-		constexpr span(const span &) = default;
+		constexpr span()                        = default;
+		constexpr span(const span &)            = default;
 		constexpr span &operator=(const span &) = default;
 
 		template<typename T>
@@ -191,7 +193,7 @@ namespace lak
 		// reinterpret cast to T
 		template<lak::concepts::ptr_reinterpret_castable_from<const void> T>
 		constexpr explicit operator span<T, SIZE / sizeof(T)>() const noexcept
-		  requires(!lak::is_void_v<T>);
+		requires(!lak::is_void_v<T>);
 
 		// static cast to dynamic size
 		constexpr operator span<const void, lak::dynamic_extent>() const noexcept;
@@ -210,8 +212,8 @@ namespace lak
 		friend struct span;
 
 	public:
-		constexpr span()             = default;
-		constexpr span(const span &) = default;
+		constexpr span()                        = default;
+		constexpr span(const span &)            = default;
 		constexpr span &operator=(const span &) = default;
 
 		template<lak::concepts::contiguous_range_of<T> RANGE>
@@ -285,12 +287,12 @@ namespace lak
 		// reinterpret cast to U
 		template<lak::concepts::ptr_reinterpret_castable_from<T> U>
 		constexpr explicit operator span<U, lak::dynamic_extent>() const noexcept
-		  requires(!lak::concepts::same_as<U, T> && !lak::is_void_v<U>);
+		requires(!lak::concepts::same_as<U, T> && !lak::is_void_v<U>);
 
 		// reinterpret cast to void
 		template<lak::concepts::void_type V>
 		constexpr operator span<V, lak::dynamic_extent>() const noexcept
-		  requires(lak::is_reinterpret_castable_v<T *, V *>);
+		requires(lak::is_reinterpret_castable_v<T *, V *>);
 	};
 
 	template<>
@@ -304,8 +306,8 @@ namespace lak
 		friend struct span;
 
 	public:
-		constexpr span()             = default;
-		constexpr span(const span &) = default;
+		constexpr span()                        = default;
+		constexpr span(const span &)            = default;
 		constexpr span &operator=(const span &) = default;
 
 		inline constexpr span(void *data, size_t size) noexcept
@@ -329,7 +331,7 @@ namespace lak
 		// reinterpret cast to U
 		template<lak::concepts::ptr_reinterpret_castable_from<void> U>
 		constexpr explicit operator span<U, lak::dynamic_extent>() const noexcept
-		  requires(!lak::is_void_v<U>);
+		requires(!lak::is_void_v<U>);
 	};
 
 	template<>
@@ -343,8 +345,8 @@ namespace lak
 		friend struct span;
 
 	public:
-		constexpr span()             = default;
-		constexpr span(const span &) = default;
+		constexpr span()                        = default;
+		constexpr span(const span &)            = default;
 		constexpr span &operator=(const span &) = default;
 
 		inline constexpr span(const void *data, size_t size) noexcept
@@ -365,7 +367,7 @@ namespace lak
 		// reinterpret cast to U
 		template<lak::concepts::ptr_reinterpret_castable_from<const void> U>
 		constexpr explicit operator span<U, lak::dynamic_extent>() const noexcept
-		  requires(!lak::is_void_v<U>);
+		requires(!lak::is_void_v<U>);
 	};
 
 	template<lak::concepts::contiguous_range RANGE>

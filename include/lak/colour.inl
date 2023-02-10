@@ -205,8 +205,8 @@ namespace lak
 	{
 // We can replace this with nice stuff when we finally get a C++20 compiler
 #define LAK_COLOUR_DEFAULTS(TYPE, ...)                                        \
-	TYPE()             = default;                                               \
-	TYPE(const TYPE &) = default;                                               \
+	TYPE()                        = default;                                    \
+	TYPE(const TYPE &)            = default;                                    \
 	TYPE &operator=(const TYPE &) = default;                                    \
 	force_inline bool operator==(const TYPE &rhs) const { return __VA_ARGS__; } \
 	force_inline bool operator!=(const TYPE &rhs) const                         \

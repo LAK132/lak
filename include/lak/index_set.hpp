@@ -16,8 +16,8 @@ namespace lak
 		index_set(size_t index) : _value(index) {}
 
 	public:
-		index_set()                  = delete;
-		index_set(const index_set &) = default;
+		index_set()                             = delete;
+		index_set(const index_set &)            = default;
 		index_set &operator=(const index_set &) = default;
 
 		template<size_t INDEX>

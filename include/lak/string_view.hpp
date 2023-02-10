@@ -26,8 +26,8 @@ namespace lak
 		lak::span<const CHAR> _value;
 
 	public:
-		constexpr string_view()                    = default;
-		constexpr string_view(const string_view &) = default;
+		constexpr string_view()                               = default;
+		constexpr string_view(const string_view &)            = default;
 		constexpr string_view &operator=(const string_view &) = default;
 
 		template<size_t N>

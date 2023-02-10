@@ -109,14 +109,12 @@ namespace lak
 		constexpr inline bool operator()(const T &lhs, const T &rhs) const;
 
 		template<typename U>
-		requires(sizeof...(P) == 1) //
-		  constexpr inline bool
-		  operator()(const T &lhs, const U &rhs) const;
+		requires(sizeof...(P) == 1)
+		constexpr inline bool operator()(const T &lhs, const U &rhs) const;
 
 		template<typename U>
-		requires(sizeof...(P) == 1) //
-		  constexpr inline bool
-		  operator()(const U &lhs, const T &rhs) const;
+		requires(sizeof...(P) == 1)
+		constexpr inline bool operator()(const U &lhs, const T &rhs) const;
 	};
 
 	template<>
@@ -126,9 +124,8 @@ namespace lak
 		constexpr bool operator()(const T &lhs, const T &rhs) const;
 
 		template<typename T, typename U>
-		requires(!lak::is_same_v<T, U>) //
-		  constexpr auto
-		  operator()(T &&lhs, U &&rhs) const
+		requires(!lak::is_same_v<T, U>)
+		constexpr auto operator()(T &&lhs, U &&rhs) const
 		  -> decltype(lak::forward<T>(lhs) == lak::forward<U>(rhs));
 	};
 
@@ -165,14 +162,12 @@ namespace lak
 		constexpr inline bool operator()(const T &lhs, const T &rhs) const;
 
 		template<typename U>
-		requires(sizeof...(P) == 1) //
-		  constexpr inline bool
-		  operator()(const T &lhs, const U &rhs) const;
+		requires(sizeof...(P) == 1)
+		constexpr inline bool operator()(const T &lhs, const U &rhs) const;
 
 		template<typename U>
-		requires(sizeof...(P) == 1) //
-		  constexpr inline bool
-		  operator()(const U &lhs, const T &rhs) const;
+		requires(sizeof...(P) == 1)
+		constexpr inline bool operator()(const U &lhs, const T &rhs) const;
 	};
 
 	template<>
@@ -182,9 +177,8 @@ namespace lak
 		constexpr bool operator()(const T &lhs, const T &rhs) const;
 
 		template<typename T, typename U>
-		requires(!lak::is_same_v<T, U>) //
-		  constexpr auto
-		  operator()(T &&lhs, U &&rhs) const
+		requires(!lak::is_same_v<T, U>)
+		constexpr auto operator()(T &&lhs, U &&rhs) const
 		  -> decltype(lak::forward<T>(lhs) != lak::forward<U>(rhs));
 	};
 
@@ -220,14 +214,12 @@ namespace lak
 		constexpr inline bool operator()(const T &lhs, const T &rhs) const;
 
 		template<typename U>
-		requires(sizeof...(P) == 1) //
-		  constexpr inline bool
-		  operator()(const T &lhs, const U &rhs) const;
+		requires(sizeof...(P) == 1)
+		constexpr inline bool operator()(const T &lhs, const U &rhs) const;
 
 		template<typename U>
-		requires(sizeof...(P) == 1) //
-		  constexpr inline bool
-		  operator()(const U &lhs, const T &rhs) const;
+		requires(sizeof...(P) == 1)
+		constexpr inline bool operator()(const U &lhs, const T &rhs) const;
 	};
 
 	template<>
@@ -237,9 +229,8 @@ namespace lak
 		constexpr bool operator()(const T &lhs, const T &rhs) const;
 
 		template<typename T, typename U>
-		requires(!lak::is_same_v<T, U>) //
-		  constexpr auto
-		  operator()(T &&lhs, U &&rhs) const
+		requires(!lak::is_same_v<T, U>)
+		constexpr auto operator()(T &&lhs, U &&rhs) const
 		  -> decltype(lak::forward<T>(lhs) < lak::forward<U>(rhs));
 	};
 
@@ -275,14 +266,12 @@ namespace lak
 		constexpr inline bool operator()(const T &lhs, const T &rhs) const;
 
 		template<typename U>
-		requires(sizeof...(P) == 1) //
-		  constexpr inline bool
-		  operator()(const T &lhs, const U &rhs) const;
+		requires(sizeof...(P) == 1)
+		constexpr inline bool operator()(const T &lhs, const U &rhs) const;
 
 		template<typename U>
-		requires(sizeof...(P) == 1) //
-		  constexpr inline bool
-		  operator()(const U &lhs, const T &rhs) const;
+		requires(sizeof...(P) == 1)
+		constexpr inline bool operator()(const U &lhs, const T &rhs) const;
 	};
 
 	template<>
@@ -292,9 +281,8 @@ namespace lak
 		constexpr bool operator()(const T &lhs, const T &rhs) const;
 
 		template<typename T, typename U>
-		requires(!lak::is_same_v<T, U>) //
-		  constexpr auto
-		  operator()(T &&lhs, U &&rhs) const
+		requires(!lak::is_same_v<T, U>)
+		constexpr auto operator()(T &&lhs, U &&rhs) const
 		  -> decltype(lak::forward<T>(lhs) > lak::forward<U>(rhs));
 	};
 
@@ -330,14 +318,12 @@ namespace lak
 		constexpr inline bool operator()(const T &lhs, const T &rhs) const;
 
 		template<typename U>
-		requires(sizeof...(P) == 1) //
-		  constexpr inline bool
-		  operator()(const T &lhs, const U &rhs) const;
+		requires(sizeof...(P) == 1)
+		constexpr inline bool operator()(const T &lhs, const U &rhs) const;
 
 		template<typename U>
-		requires(sizeof...(P) == 1) //
-		  constexpr inline bool
-		  operator()(const U &lhs, const T &rhs) const;
+		requires(sizeof...(P) == 1)
+		constexpr inline bool operator()(const U &lhs, const T &rhs) const;
 	};
 
 	template<>
@@ -347,9 +333,8 @@ namespace lak
 		constexpr bool operator()(const T &lhs, const T &rhs) const;
 
 		template<typename T, typename U>
-		requires(!lak::is_same_v<T, U>) //
-		  constexpr auto
-		  operator()(T &&lhs, U &&rhs) const
+		requires(!lak::is_same_v<T, U>)
+		constexpr auto operator()(T &&lhs, U &&rhs) const
 		  -> decltype(lak::forward<T>(lhs) <= lak::forward<U>(rhs));
 	};
 
@@ -385,14 +370,12 @@ namespace lak
 		constexpr inline bool operator()(const T &lhs, const T &rhs) const;
 
 		template<typename U>
-		requires(sizeof...(P) == 1) //
-		  constexpr inline bool
-		  operator()(const T &lhs, const U &rhs) const;
+		requires(sizeof...(P) == 1)
+		constexpr inline bool operator()(const T &lhs, const U &rhs) const;
 
 		template<typename U>
-		requires(sizeof...(P) == 1) //
-		  constexpr inline bool
-		  operator()(const U &lhs, const T &rhs) const;
+		requires(sizeof...(P) == 1)
+		constexpr inline bool operator()(const U &lhs, const T &rhs) const;
 	};
 
 	template<>
@@ -402,9 +385,8 @@ namespace lak
 		constexpr bool operator()(const T &lhs, const T &rhs) const;
 
 		template<typename T, typename U>
-		requires(!lak::is_same_v<T, U>) //
-		  constexpr auto
-		  operator()(T &&lhs, U &&rhs) const
+		requires(!lak::is_same_v<T, U>)
+		constexpr auto operator()(T &&lhs, U &&rhs) const
 		  -> decltype(lak::forward<T>(lhs) >= lak::forward<U>(rhs));
 	};
 

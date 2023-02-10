@@ -48,9 +48,13 @@ BEGIN_TEST(imgui)
 
 				switch (e.type)
 				{
-					case lak::event_type::close_window: [[fallthrough]];
-					case lak::event_type::quit_program: running = false; break;
-					default: break;
+					case lak::event_type::close_window:
+						[[fallthrough]];
+					case lak::event_type::quit_program:
+						running = false;
+						break;
+					default:
+						break;
 				}
 			}
 

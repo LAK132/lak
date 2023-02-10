@@ -103,7 +103,6 @@ namespace lak
 	template<typename ITER, typename CMP = lak::less<>>
 	ITER binary_partition(ITER begin, ITER mid, ITER end, CMP cmp = {});
 
-
 	/* --- mark_and_sweep_parition --- */
 
 	template<typename T, typename ITER, typename CMP = lak::less<T *>>

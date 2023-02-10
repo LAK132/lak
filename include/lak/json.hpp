@@ -228,11 +228,11 @@ namespace lak
 		lak::result<> parse_value(lak::u8string_view str);
 
 	public:
-		JSON()             = default;
-		JSON(const JSON &) = default;
-		JSON(JSON &&)      = default;
+		JSON()                        = default;
+		JSON(const JSON &)            = default;
+		JSON(JSON &&)                 = default;
 		JSON &operator=(const JSON &) = default;
-		JSON &operator=(JSON &&) = default;
+		JSON &operator=(JSON &&)      = default;
 
 		static lak::result<JSON> parse(lak::u8string_view str);
 

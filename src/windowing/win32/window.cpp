@@ -403,7 +403,8 @@ bool lak::swap_window(lak::window_handle *handle)
 			return ::SwapBuffers(handle->_device_context);
 		}
 
-		default: return false;
+		default:
+			return false;
 	}
 }
 

@@ -590,7 +590,8 @@ namespace lak
 					glUniform4uiv(unif, count, (GLuint *)data.data());
 					ASSERT(lak::opengl::check_error());
 					break;
-				default: FATAL("Unsupported type ", info.type);
+				default:
+					FATAL("Unsupported type ", info.type);
 			}
 			return *this;
 		}

@@ -8,9 +8,8 @@ namespace lak
 	namespace
 	{
 		template<typename FUNC, size_t I, size_t... J>
-		requires(lak::is_void_v<lak::invoke_result_t<FUNC, lak::size_type<I>>>) //
-		  force_inline
-		  void _visit_switch(lak::index_set<I, J...> index, FUNC &&func)
+		requires(lak::is_void_v<lak::invoke_result_t<FUNC, lak::size_type<I>>>)
+		force_inline void _visit_switch(lak::index_set<I, J...> index, FUNC &&func)
 		{
 			auto caller = [&]<size_t K>(lak::size_type<K> k) -> bool
 			{
@@ -27,10 +26,9 @@ namespace lak
 		}
 
 		template<typename FUNC, size_t I, size_t... J>
-		requires(!lak::is_void_v<lak::invoke_result_t<FUNC, lak::size_type<I>>>) //
-		  force_inline
-		  auto _visit_switch(lak::index_set<I, J...> index, FUNC &&func)
-		    -> lak::invoke_result_t<FUNC, lak::size_type<I>>
+		requires(!lak::is_void_v<lak::invoke_result_t<FUNC, lak::size_type<I>>>)
+		force_inline auto _visit_switch(lak::index_set<I, J...> index, FUNC &&func)
+		  -> lak::invoke_result_t<FUNC, lak::size_type<I>>
 		{
 			using result_type = lak::invoke_result_t<FUNC, lak::size_type<I>>;
 

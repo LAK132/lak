@@ -6,12 +6,18 @@ const char *lak::lz4_error_name(lak::lz4_decode_error err)
 {
 	switch (err)
 	{
-		case lak::lz4_decode_error::too_many_literals: return "too many literals";
-		case lak::lz4_decode_error::out_of_data: return "out of data";
-		case lak::lz4_decode_error::zero_offset: return "zero offset";
-		case lak::lz4_decode_error::offset_too_large: return "offset too large";
-		case lak::lz4_decode_error::match_too_long: return "match too long";
-		default: return "invalid error code";
+		case lak::lz4_decode_error::too_many_literals:
+			return "too many literals";
+		case lak::lz4_decode_error::out_of_data:
+			return "out of data";
+		case lak::lz4_decode_error::zero_offset:
+			return "zero offset";
+		case lak::lz4_decode_error::offset_too_large:
+			return "offset too large";
+		case lak::lz4_decode_error::match_too_long:
+			return "match too long";
+		default:
+			return "invalid error code";
 	}
 }
 

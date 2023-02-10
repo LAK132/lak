@@ -15,8 +15,8 @@ namespace lak
 		integer_range(INTEGER value, INTEGER end) : _value(value), _end(end) {}
 
 	public:
-		integer_range()                      = delete;
-		integer_range(const integer_range &) = default;
+		integer_range()                                 = delete;
+		integer_range(const integer_range &)            = default;
 		integer_range &operator=(const integer_range &) = default;
 
 		static integer_range from_count(INTEGER from, INTEGER count)

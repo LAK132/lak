@@ -123,15 +123,9 @@ lak::result<lak::process> lak::process::create(
 	return lak::ok_t{lak::process(lak::move(impl))};
 }
 
-lak::process::~process()
-{
-	release();
-}
+lak::process::~process() { release(); }
 
-lak::process::operator bool() const
-{
-	return bool(_impl);
-}
+lak::process::operator bool() const { return bool(_impl); }
 
 lak::result<int> lak::process::join()
 {
@@ -160,10 +154,7 @@ lak::result<int> lak::process::join()
 	return lak::err_t{};
 }
 
-void lak::process::release()
-{
-	_impl.reset();
-}
+void lak::process::release() { _impl.reset(); }
 
 std::ostream *lak::process::std_in() const
 {

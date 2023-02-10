@@ -34,7 +34,7 @@ namespace lak
 		await(await &&)      = delete;
 
 		await &operator=(const await &) = delete;
-		await &operator=(await &&) = delete;
+		await &operator=(await &&)      = delete;
 
 		template<typename FUNCTOR, typename... ARGS>
 		lak::await_result<T> operator()(FUNCTOR &&functor, ARGS &&...args)
@@ -90,9 +90,15 @@ inline std::ostream &operator<<(std::ostream &strm,
 {
 	switch (err)
 	{
-		case lak::await_error::running: strm << "await running"; break;
-		case lak::await_error::failed: strm << "await failed"; break;
-		default: ASSERT_NYI(); break;
+		case lak::await_error::running:
+			strm << "await running";
+			break;
+		case lak::await_error::failed:
+			strm << "await failed";
+			break;
+		default:
+			ASSERT_NYI();
+			break;
 	}
 	return strm;
 }

@@ -176,7 +176,8 @@ namespace lak
 		/* --- invocable_result_of --- */
 
 		template<typename F, typename R, typename... ARGS>
-		concept invocable_result_of = lak::concepts::invocable<F, ARGS...> &&
+		concept invocable_result_of =
+		  lak::concepts::invocable<F, ARGS...> &&
 		  lak::concepts::same_as<lak::invoke_result_t<F, ARGS...>, R>;
 
 		/* --- invocable_result_static_castable_to --- */
@@ -196,24 +197,22 @@ namespace lak
 		/* --- contiguous_range --- */
 
 		template<typename R>
-		concept contiguous_range = requires(R range)
-		{
+		concept contiguous_range = requires(R range) {
 			typename R::value_type;
 			typename R::size_type;
 
 			{
 				range.data()
-				} -> lak::concepts::same_as<typename R::value_type *>;
+			} -> lak::concepts::same_as<typename R::value_type *>;
 			{
 				range.size()
-				} -> lak::concepts::same_as<typename R::size_type>;
+			} -> lak::concepts::same_as<typename R::size_type>;
 		};
 
 		/* --- fixed_contiguous_range --- */
 
 		template<typename R>
-		concept fixed_contiguous_range = requires(R range)
-		{
+		concept fixed_contiguous_range = requires(R range) {
 			requires lak::concepts::contiguous_range<R>;
 			requires lak::has_type_size_signature_v<R>;
 		};
@@ -221,8 +220,7 @@ namespace lak
 		/* --- contiguous_range_of --- */
 
 		template<typename R, typename T>
-		concept contiguous_range_of = requires(R range)
-		{
+		concept contiguous_range_of = requires(R range) {
 			requires lak::concepts::contiguous_range<R>;
 			requires lak::concepts::static_castable<typename R::value_type *, T *>;
 		};
@@ -230,12 +228,10 @@ namespace lak
 		/* --- fixed_contiguous_range_of --- */
 
 		template<typename R, typename T, size_t S>
-		concept fixed_contiguous_range_of = requires(R range)
-		{
+		concept fixed_contiguous_range_of = requires(R range) {
 			requires lak::concepts::fixed_contiguous_range<R>;
 			requires lak::concepts::static_castable<typename R::value_type *, T *>;
-			requires lak::type_size_signature_size_v<R>
-			== S;
+			requires lak::type_size_signature_size_v<R> == S;
 		};
 	}
 }

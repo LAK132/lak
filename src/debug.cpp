@@ -6,10 +6,7 @@
 
 #include <fstream>
 
-void lak::terminate_handler()
-{
-	ABORT();
-}
+void lak::terminate_handler() { ABORT(); }
 
 void lak::debugger_t::std_out(const lak::u8string &line_info,
                               const lak::astring &str)

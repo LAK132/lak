@@ -93,13 +93,12 @@ namespace lak
 		lak::result<lak::tuple<T...>> tuple_get(
 		  lua_State *state, lak::span<const int, sizeof...(T)> index)
 		{
-			return [&]<size_t... I>(lak::index_sequence<I...>)
-			  ->lak::result<lak::tuple<T...>>
+			return [&]<size_t... I>(
+			         lak::index_sequence<I...>) -> lak::result<lak::tuple<T...>>
 			{
 				return lak::combine_ok(
 				  lak::bind_front(lak::lua::get<T>, state, index[I])...);
-			}
-			(lak::index_sequence_for<T...>{});
+			}(lak::index_sequence_for<T...>{});
 		}
 
 		template<typename FUNC>
@@ -122,8 +121,7 @@ namespace lak
 				{
 					lak::array<int, sizeof...(ARGS)> index{I...};
 					return lak::lua::tuple_get<ARGS...>(state, index);
-				}
-				(lak::index_sequence_for<int, ARGS...>{});
+				}(lak::index_sequence_for<int, ARGS...>{});
 			}
 		};
 

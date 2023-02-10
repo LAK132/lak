@@ -26,7 +26,7 @@ namespace lak
 		image() = default;
 		image(size_type size) { resize(size); }
 
-		image(const image &) = default;
+		image(const image &)            = default;
 		image &operator=(const image &) = default;
 
 		image(image &&img) : _size(img._size), _value(lak::move(img._value)) {}

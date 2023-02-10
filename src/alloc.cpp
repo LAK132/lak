@@ -16,10 +16,7 @@ lak::alloc::result<lak::span<byte_t>> lak::local_alloc(size_t, size_t)
 	ASSERT_UNREACHABLE();
 }
 
-void lak::local_free(lak::span<byte_t>)
-{
-	ASSERT_UNREACHABLE();
-}
+void lak::local_free(lak::span<byte_t>) { ASSERT_UNREACHABLE(); }
 
 /* --- global alloc --- */
 

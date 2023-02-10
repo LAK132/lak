@@ -45,7 +45,7 @@ namespace lak
 			return from_bytes_data(dst, src);
 		}
 
-		from_bytes_data(const from_bytes_data &) = default;
+		from_bytes_data(const from_bytes_data &)            = default;
 		from_bytes_data &operator=(const from_bytes_data &) = default;
 
 	private:
@@ -102,7 +102,7 @@ namespace lak
 
 		binary_reader() = default;
 		binary_reader(lak::span<const byte_t> bytes) : _data(bytes), _cursor(0) {}
-		binary_reader(const binary_reader &) = default;
+		binary_reader(const binary_reader &)            = default;
 		binary_reader &operator=(const binary_reader &) = default;
 
 		inline lak::span<const byte_t> remaining() const

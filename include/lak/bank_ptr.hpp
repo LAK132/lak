@@ -90,7 +90,7 @@ namespace lak
 		unique_bank_ptr(lak::nullptr_t) : unique_bank_ptr() {}
 		unique_bank_ptr &operator=(lak::nullptr_t);
 
-		unique_bank_ptr(const unique_bank_ptr &other) = delete;
+		unique_bank_ptr(const unique_bank_ptr &other)            = delete;
 		unique_bank_ptr &operator=(const unique_bank_ptr &other) = delete;
 
 		unique_bank_ptr(unique_bank_ptr &&other);

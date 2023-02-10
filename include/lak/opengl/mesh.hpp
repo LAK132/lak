@@ -35,7 +35,7 @@ namespace lak
 			~buffer();
 			buffer &operator=(buffer &&other);
 
-			buffer(const buffer &other) = delete;
+			buffer(const buffer &other)            = delete;
 			buffer &operator=(const buffer &other) = delete;
 
 			static buffer create(GLenum target);
@@ -88,7 +88,7 @@ namespace lak
 			vertex_buffer(vertex_buffer &&other);
 			vertex_buffer &operator=(vertex_buffer &&other);
 
-			vertex_buffer(const vertex_buffer &other) = delete;
+			vertex_buffer(const vertex_buffer &other)            = delete;
 			vertex_buffer &operator=(const vertex_buffer &other) = delete;
 
 			// create will unbind the current Vertex Array Object.
@@ -143,7 +143,7 @@ namespace lak
 			~vertex_array();
 			vertex_array &operator=(vertex_array &&other);
 
-			vertex_array(const vertex_array &other) = delete;
+			vertex_array(const vertex_array &other)            = delete;
 			vertex_array &operator=(const vertex_array &other) = delete;
 
 			static vertex_array create();
@@ -177,7 +177,7 @@ namespace lak
 
 			static_object_part &clear();
 
-			static_object_part(const static_object_part &other) = delete;
+			static_object_part(const static_object_part &other)            = delete;
 			static_object_part &operator=(const static_object_part &other) = delete;
 
 			void draw(GLuint instanced = 1);

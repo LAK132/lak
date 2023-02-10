@@ -64,9 +64,8 @@ namespace lak
 
 		template<typename U>
 		requires(!lak::is_same_v<optional, lak::remove_cvref_t<U>> &&
-		         requires { value_type(lak::declval<U>()); }) //
-		  optional(U &&other)
-		: _has_value(true), _value(lak::forward<U>(other))
+		         requires { value_type(lak::declval<U>()); })
+		optional(U &&other) : _has_value(true), _value(lak::forward<U>(other))
 		{
 		}
 
@@ -172,7 +171,7 @@ namespace lak
 		}
 
 		optional &operator=(const optional &) = default;
-		optional &operator=(optional &&) = default;
+		optional &operator=(optional &&)      = default;
 
 		optional &operator=(lak::nullopt_t)
 		{
@@ -219,7 +218,7 @@ namespace lak
 		optional(lak::in_place_t, T &other) : _value(&other) {}
 
 		optional &operator=(const optional &) = default;
-		optional &operator=(optional &&) = default;
+		optional &operator=(optional &&)      = default;
 
 		optional &operator=(lak::nullopt_t)
 		{

@@ -12,9 +12,9 @@ namespace lak
 		size_t _pos  = 0;
 		size_t _size = 0;
 
-		buffer()               = default;
-		buffer(const buffer &) = default;
-		~buffer()              = default;
+		buffer()                          = default;
+		buffer(const buffer &)            = default;
+		~buffer()                         = default;
 		buffer &operator=(const buffer &) = default;
 
 		const T *front() const { return _size > 0 ? _buffer + _pos : nullptr; }

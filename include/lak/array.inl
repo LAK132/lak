@@ -179,9 +179,8 @@ lak::array<T, lak::dynamic_extent>::array(
 }
 
 template<typename T>
-lak::array<T, lak::dynamic_extent>
-  &lak::array<T, lak::dynamic_extent>::operator=(
-    const array<T, lak::dynamic_extent> &other)
+lak::array<T, lak::dynamic_extent> &lak::array<T, lak::dynamic_extent>::
+operator=(const array<T, lak::dynamic_extent> &other)
 {
 	clear();
 	reserve(other.size());
@@ -199,9 +198,8 @@ lak::array<T, lak::dynamic_extent>::array(
 }
 
 template<typename T>
-lak::array<T, lak::dynamic_extent>
-  &lak::array<T, lak::dynamic_extent>::operator=(
-    array<T, lak::dynamic_extent> &&other)
+lak::array<T, lak::dynamic_extent> &lak::array<T, lak::dynamic_extent>::
+operator=(array<T, lak::dynamic_extent> &&other)
 {
 	lak::swap(_data, other._data);
 	lak::swap(_size, other._size);

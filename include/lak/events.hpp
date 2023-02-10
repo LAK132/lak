@@ -190,8 +190,8 @@ namespace lak
 		      const lak::window_handle *w,
 		      lak::platform_event_ptr &&e);
 
-		event()         = default;
-		event(event &&) = default;
+		event()                    = default;
+		event(event &&)            = default;
 		event &operator=(event &&) = default;
 		~event();
 	};

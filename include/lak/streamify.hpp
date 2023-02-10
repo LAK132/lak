@@ -8,11 +8,10 @@ namespace lak
 	namespace concepts
 	{
 		template<typename T>
-		concept streamable = requires(T thing)
-		{
+		concept streamable = requires(T thing) {
 			{
 				std::declval<std::ostream &>() << thing
-				} -> lak::concepts::same_as<std::ostream &>;
+			} -> lak::concepts::same_as<std::ostream &>;
 		};
 	}
 

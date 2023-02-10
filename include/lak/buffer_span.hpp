@@ -13,9 +13,9 @@ namespace lak
 		size_t _pos  = 0;
 		size_t _size = 0;
 
-		buffer_span()                    = default;
-		buffer_span(const buffer_span &) = default;
-		~buffer_span()                   = default;
+		buffer_span()                               = default;
+		buffer_span(const buffer_span &)            = default;
+		~buffer_span()                              = default;
 		buffer_span &operator=(const buffer_span &) = default;
 
 		buffer_span(lak::span<T, S> buffer, bool start_full)

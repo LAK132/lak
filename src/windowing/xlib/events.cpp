@@ -84,14 +84,29 @@ bool lak::next_event(const lak::platform_instance &handle, lak::event *event)
 			lak::bzero(&event->mouse);
 			switch (xevent.xbutton.button)
 			{
-				case 1: event->mouse.button = mouse_button::left; break;
-				case 2: event->mouse.button = mouse_button::right; break;
-				case 3: event->mouse.button = mouse_button::middle; break;
-				case 4: event->mouse.wheel.y = 1.0f; break;
-				case 5: event->mouse.wheel.y = -1.0f; break;
-				case 6: event->mouse.wheel.x = 1.0f; break;
-				case 7: event->mouse.wheel.x = -1.0f; break;
-				default: break;
+				case 1:
+					event->mouse.button = mouse_button::left;
+					break;
+				case 2:
+					event->mouse.button = mouse_button::right;
+					break;
+				case 3:
+					event->mouse.button = mouse_button::middle;
+					break;
+				case 4:
+					event->mouse.wheel.y = 1.0f;
+					break;
+				case 5:
+					event->mouse.wheel.y = -1.0f;
+					break;
+				case 6:
+					event->mouse.wheel.x = 1.0f;
+					break;
+				case 7:
+					event->mouse.wheel.x = -1.0f;
+					break;
+				default:
+					break;
 			}
 			// event->mouse.mod = ;
 			event->mouse.position.x = xevent.xbutton.x;
@@ -109,10 +124,17 @@ bool lak::next_event(const lak::platform_instance &handle, lak::event *event)
 			lak::bzero(&event->mouse);
 			switch (xevent.xbutton.button)
 			{
-				case 1: event->mouse.button = mouse_button::left; break;
-				case 2: event->mouse.button = mouse_button::right; break;
-				case 3: event->mouse.button = mouse_button::middle; break;
-				default: break;
+				case 1:
+					event->mouse.button = mouse_button::left;
+					break;
+				case 2:
+					event->mouse.button = mouse_button::right;
+					break;
+				case 3:
+					event->mouse.button = mouse_button::middle;
+					break;
+				default:
+					break;
 			}
 			// event->mouse.mod = ;
 			event->mouse.position.x = xevent.xbutton.x;
@@ -128,7 +150,8 @@ bool lak::next_event(const lak::platform_instance &handle, lak::event *event)
 			event->mouse.position.y = xevent.xbutton.y;
 			break;
 
-		default: event->type = event_type::platform_event;
+		default:
+			event->type = event_type::platform_event;
 	}
 
 	return true;

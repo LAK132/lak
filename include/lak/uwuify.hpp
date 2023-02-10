@@ -13,11 +13,17 @@ namespace lak
 		{
 			switch (*it)
 			{
-				case CHAR('r'): [[fallthrough]];
-				case CHAR('l'): *it = CHAR('w'); break;
+				case CHAR('r'):
+					[[fallthrough]];
+				case CHAR('l'):
+					*it = CHAR('w');
+					break;
 
-				case CHAR('R'): [[fallthrough]];
-				case CHAR('L'): *it = CHAR('W'); break;
+				case CHAR('R'):
+					[[fallthrough]];
+				case CHAR('L'):
+					*it = CHAR('W');
+					break;
 
 				case CHAR('o'):
 					it = str.insert(str.insert(it + 1, CHAR('w')) + 1, CHAR('o'));
@@ -44,7 +50,8 @@ namespace lak
 						it = str.insert(str.erase(it, it + 2), CHAR('D'));
 					break;
 
-				case CHAR('h'): [[fallthrough]];
+				case CHAR('h'):
+					[[fallthrough]];
 				case CHAR('H'):
 					if (it + 1 != str.end())
 					{
@@ -55,21 +62,34 @@ namespace lak
 					}
 					break;
 
-				case CHAR('n'): [[fallthrough]];
+				case CHAR('n'):
+					[[fallthrough]];
 				case CHAR('N'):
 					if (it + 1 != str.end()) switch (*++it)
 						{
-							case CHAR('a'): [[fallthrough]];
-							case CHAR('e'): [[fallthrough]];
-							case CHAR('i'): [[fallthrough]];
-							case CHAR('o'): [[fallthrough]];
-							case CHAR('u'): it = str.insert(it, CHAR('y')) + 1; break;
+							case CHAR('a'):
+								[[fallthrough]];
+							case CHAR('e'):
+								[[fallthrough]];
+							case CHAR('i'):
+								[[fallthrough]];
+							case CHAR('o'):
+								[[fallthrough]];
+							case CHAR('u'):
+								it = str.insert(it, CHAR('y')) + 1;
+								break;
 
-							case CHAR('A'): [[fallthrough]];
-							case CHAR('E'): [[fallthrough]];
-							case CHAR('I'): [[fallthrough]];
-							case CHAR('O'): [[fallthrough]];
-							case CHAR('U'): it = str.insert(it, CHAR('Y')) + 1; break;
+							case CHAR('A'):
+								[[fallthrough]];
+							case CHAR('E'):
+								[[fallthrough]];
+							case CHAR('I'):
+								[[fallthrough]];
+							case CHAR('O'):
+								[[fallthrough]];
+							case CHAR('U'):
+								it = str.insert(it, CHAR('Y')) + 1;
+								break;
 						}
 					break;
 

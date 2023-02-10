@@ -23,17 +23,32 @@ namespace lak
 			auto error = glGetError();
 			switch (error)
 			{
-				case GL_NO_ERROR: return true;
-				case GL_INVALID_ENUM: ERROR("OpenGL: Invalid enum."); break;
-				case GL_INVALID_VALUE: ERROR("OpenGL: Invalid value."); break;
-				case GL_INVALID_OPERATION: ERROR("OpenGL: Invalid operation."); break;
+				case GL_NO_ERROR:
+					return true;
+				case GL_INVALID_ENUM:
+					ERROR("OpenGL: Invalid enum.");
+					break;
+				case GL_INVALID_VALUE:
+					ERROR("OpenGL: Invalid value.");
+					break;
+				case GL_INVALID_OPERATION:
+					ERROR("OpenGL: Invalid operation.");
+					break;
 				case GL_INVALID_FRAMEBUFFER_OPERATION:
 					ERROR("OpenGL: Invalid framebuffer operation.");
 					break;
-				case GL_OUT_OF_MEMORY: ERROR("OpenGL: Out of memory."); break;
-				case GL_STACK_UNDERFLOW: ERROR("OpenGL: Stack underflow."); break;
-				case GL_STACK_OVERFLOW: ERROR("OpenGL: Stack overflow."); break;
-				default: ERROR("Unknown error: ", error, "."); break;
+				case GL_OUT_OF_MEMORY:
+					ERROR("OpenGL: Out of memory.");
+					break;
+				case GL_STACK_UNDERFLOW:
+					ERROR("OpenGL: Stack underflow.");
+					break;
+				case GL_STACK_OVERFLOW:
+					ERROR("OpenGL: Stack overflow.");
+					break;
+				default:
+					ERROR("Unknown error: ", error, ".");
+					break;
 			}
 			return false;
 		}

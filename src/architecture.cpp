@@ -62,10 +62,7 @@ lak::instruction_set lak::instruction_set::get()
 	return result;
 }
 
-unsigned int lak::max_cpuid_index()
-{
-	return lak::cpuid(0U)[0];
-}
+unsigned int lak::max_cpuid_index() { return lak::cpuid(0U)[0]; }
 
 unsigned int lak::max_extended_cpuid_index()
 {

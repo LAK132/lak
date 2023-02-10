@@ -44,7 +44,7 @@ namespace lak
 			return to_bytes_data(dst, src);
 		}
 
-		to_bytes_data(const to_bytes_data &) = default;
+		to_bytes_data(const to_bytes_data &)            = default;
 		to_bytes_data &operator=(const to_bytes_data &) = default;
 
 	private:
@@ -95,7 +95,7 @@ namespace lak
 
 		binary_span_writer() = default;
 		binary_span_writer(lak::span<byte_t> bytes) : _data(bytes), _cursor(0) {}
-		binary_span_writer(const binary_span_writer &) = default;
+		binary_span_writer(const binary_span_writer &)            = default;
 		binary_span_writer &operator=(const binary_span_writer &) = default;
 
 		inline lak::span<byte_t> remaining() const

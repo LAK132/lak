@@ -4,21 +4,36 @@ const char *lak::deflate_iterator::error_name(error_t error)
 {
 	switch (error)
 	{
-		case error_t::ok: return "Ok";
-		case error_t::no_data: return "No data";
-		case error_t::invalid_parameter: return "Invalid parameter";
-		case error_t::custom_dictionary: return "Custom dictionary";
-		case error_t::invalid_state: return "Invalid state";
-		case error_t::invalid_block_code: return "Invalid block code";
-		case error_t::out_of_data: return "Out of data";
-		case error_t::corrupt_stream: return "Corrupt stream";
-		case error_t::huffman_table_gen_failed: return "Huffman table gen failed";
-		case error_t::invalid_symbol: return "Invalid symbol";
-		case error_t::invalid_distance: return "Invalid distance";
-		case error_t::no_symbols: return "No symbols";
-		case error_t::too_many_symbols: return "Too many symbols";
-		case error_t::incomplete_tree: return "Incomplete tree";
-		default: return "Not a deflate error";
+		case error_t::ok:
+			return "Ok";
+		case error_t::no_data:
+			return "No data";
+		case error_t::invalid_parameter:
+			return "Invalid parameter";
+		case error_t::custom_dictionary:
+			return "Custom dictionary";
+		case error_t::invalid_state:
+			return "Invalid state";
+		case error_t::invalid_block_code:
+			return "Invalid block code";
+		case error_t::out_of_data:
+			return "Out of data";
+		case error_t::corrupt_stream:
+			return "Corrupt stream";
+		case error_t::huffman_table_gen_failed:
+			return "Huffman table gen failed";
+		case error_t::invalid_symbol:
+			return "Invalid symbol";
+		case error_t::invalid_distance:
+			return "Invalid distance";
+		case error_t::no_symbols:
+			return "No symbols";
+		case error_t::too_many_symbols:
+			return "Too many symbols";
+		case error_t::incomplete_tree:
+			return "Incomplete tree";
+		default:
+			return "Not a deflate error";
 	}
 }
 
@@ -142,10 +157,7 @@ lak::deflate_iterator::deflate_iterator(
 	_state = state_t::header;
 }
 
-bool lak::deflate_iterator::is_final_block() const
-{
-	return _final;
-}
+bool lak::deflate_iterator::is_final_block() const { return _final; }
 
 lak::span<const byte_t> lak::deflate_iterator::compressed() const
 {
@@ -162,10 +174,7 @@ void lak::deflate_iterator::replace_compressed(
 	_compressed.reset_data(compressed);
 }
 
-lak::deflate_iterator &lak::deflate_iterator::operator++()
-{
-	return step();
-}
+lak::deflate_iterator &lak::deflate_iterator::operator++() { return step(); }
 
 lak::deflate_iterator::value_type lak::deflate_iterator::operator*()
 {

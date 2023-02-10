@@ -383,10 +383,10 @@ namespace lak
 		using rebind_err = lak::result<OK, T>;
 
 		template<typename F, typename... T>
-		requires lak::concepts::invocable<F, T...> //
+		requires lak::concepts::invocable<F, T...>
 		using invoke_rebind_ok = rebind_ok<lak::invoke_result_t<F, T...>>;
 		template<typename F, typename... T>
-		requires lak::concepts::invocable<F, T...> //
+		requires lak::concepts::invocable<F, T...>
 		using invoke_rebind_err = rebind_err<lak::invoke_result_t<F, T...>>;
 
 	private:
@@ -420,7 +420,7 @@ namespace lak
 		result(result &&)      = default;
 
 		result &operator=(const result &) = default;
-		result &operator=(result &&) = default;
+		result &operator=(result &&)      = default;
 
 		static inline result make_ok(OK value)
 		{
@@ -880,17 +880,23 @@ namespace lak
 
 		template<typename F>
 		requires lak::concepts::invocable<F, ok_reference> &&
-		  lak::concepts::invocable<F, err_reference> //
-		auto visit(F &&f) & { return is_ok() ? f(get_ok()) : f(get_err()); }
+		         lak::concepts::invocable<F, err_reference>
+		auto visit(F &&f) &
+		{
+			return is_ok() ? f(get_ok()) : f(get_err());
+		}
 
 		template<typename F>
 		requires lak::concepts::invocable<F, ok_const_reference> &&
-		  lak::concepts::invocable<F, err_const_reference> //
-		auto visit(F &&f) const & { return is_ok() ? f(get_ok()) : f(get_err()); }
+		         lak::concepts::invocable<F, err_const_reference>
+		auto visit(F &&f) const &
+		{
+			return is_ok() ? f(get_ok()) : f(get_err());
+		}
 
 		template<typename F>
 		requires lak::concepts::invocable<F, OK &&> &&
-		  lak::concepts::invocable<F, ERR &&> //
+		         lak::concepts::invocable<F, ERR &&>
 		auto visit(F &&f) &&
 		{
 			return is_ok() ? f(forward_ok()) : f(forward_err());
@@ -977,9 +983,8 @@ namespace lak
 		/* --- if_ok_copy_to --- */
 
 		template<typename T = ok_type, typename T_ = T>
-		requires(lak::is_same_v<T, T_>) //
-		  result if_ok_copy_to(T_ &out)
-		const &
+		requires(lak::is_same_v<T, T_>)
+		result if_ok_copy_to(T_ &out) const &
 		{
 			if constexpr (lak::is_same_v<T, ok_type>)
 			{
@@ -995,9 +1000,8 @@ namespace lak
 		/* --- if_err_copy_to --- */
 
 		template<typename T = err_type, typename T_ = T>
-		requires(lak::is_same_v<T, T_>) //
-		  result if_err_copy_to(T_ &out)
-		const &
+		requires(lak::is_same_v<T, T_>)
+		result if_err_copy_to(T_ &out) const &
 		{
 			if constexpr (lak::is_same_v<T, err_type>)
 			{
@@ -1013,8 +1017,8 @@ namespace lak
 		/* --- if_ok_move_to --- */
 
 		template<typename T = ok_type, typename T_ = T>
-		requires(lak::is_same_v<T, T_>) //
-		  result if_ok_move_to(T_ &out)
+		requires(lak::is_same_v<T, T_>)
+		result if_ok_move_to(T_ &out)
 		{
 			if constexpr (lak::is_same_v<T, ok_type>)
 			{
@@ -1030,8 +1034,8 @@ namespace lak
 		/* --- if_err_move_to --- */
 
 		template<typename T = err_type, typename T_ = T>
-		requires(lak::is_same_v<T, T_>) //
-		  result if_err_move_to(T_ &out)
+		requires(lak::is_same_v<T, T_>)
+		result if_err_move_to(T_ &out)
 		{
 			if constexpr (lak::is_same_v<T, err_type>)
 			{
@@ -1221,19 +1225,19 @@ namespace lak
 			  });
 		};
 
-		if_let_err (
-		  err_type err, [&]<size_t... I>(lak::index_sequence<I...>) {
-			  return ((do_func(lak::size_type<I>{}, lak::forward<FUNCS>(funcs))) &
-			          ...);
-		  }(lak::index_sequence_for<FUNCS...>{}))
+		if_let_err (err_type err,
+		            [&]<size_t... I>(lak::index_sequence<I...>) {
+			            return ((do_func(lak::size_type<I>{},
+			                             lak::forward<FUNCS>(funcs))) &
+			                    ...);
+		            }(lak::index_sequence_for<FUNCS...>{}))
 			return result_type::make_err(err);
 
-		return [&]<size_t... I>(lak::index_sequence<I...>)->result_type
+		return [&]<size_t... I>(lak::index_sequence<I...>) -> result_type
 		{
 			return lak::ok_t{ok_type(lak::forward<lak::tuple_element_t<I, ok_type>>(
 			  result.template get<I>().value())...)};
-		}
-		(lak::index_sequence_for<FUNCS...>{});
+		}(lak::index_sequence_for<FUNCS...>{});
 	}
 
 	/* --- unwrap_infallible --- */

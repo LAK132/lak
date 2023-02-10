@@ -48,10 +48,9 @@ namespace lak
 
 	// :TODO: lak::astring is just std::string
 	template<typename OUT_CHAR, typename IN_CHAR>
-	requires(!lak::is_same_v<OUT_CHAR, IN_CHAR>) //
-	  inline std::basic_ostream<OUT_CHAR>
-	    &operator<<(std::basic_ostream<OUT_CHAR> &strm,
-	                const lak::string<IN_CHAR> &str)
+	requires(!lak::is_same_v<OUT_CHAR, IN_CHAR>)
+	inline std::basic_ostream<OUT_CHAR> &operator<<(
+	  std::basic_ostream<OUT_CHAR> &strm, const lak::string<IN_CHAR> &str)
 	{
 		return strm << lak::string_view<IN_CHAR>(str);
 	}

@@ -97,7 +97,7 @@
 	LAK_SGR_STR("48;2;" STRINGIFY(r) ";" STRINGIFY(g) ";" STRINGIFY(b))
 
 #define LAK_MEM_FN(X)                                                         \
-	[this]<typename... T>(T && ...args) { return (X)(lak::forward<T>(args)...); }
+	[this]<typename... T>(T &&...args) { return (X)(lak::forward<T>(args)...); }
 
 #include "lak/compiler.hpp"
 

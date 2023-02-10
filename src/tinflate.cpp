@@ -70,23 +70,38 @@ namespace tinf
 	{
 		switch (error)
 		{
-			case error_t::OK: return "Ok";
-			case error_t::NO_DATA: return "No data";
-			case error_t::INVALID_PARAMETER: return "Invalid parameter";
-			case error_t::CUSTOM_DICTIONARY: return "Custom dictionary";
-			case error_t::INVALID_STATE: return "Invalid state";
-			case error_t::INVALID_BLOCK_CODE: return "Invalid block code";
-			case error_t::OUT_OF_DATA: return "Out of data";
-			case error_t::OUTPUT_FULL: return "Output buffer full";
-			case error_t::CORRUPT_STREAM: return "Corrupt stream";
+			case error_t::OK:
+				return "Ok";
+			case error_t::NO_DATA:
+				return "No data";
+			case error_t::INVALID_PARAMETER:
+				return "Invalid parameter";
+			case error_t::CUSTOM_DICTIONARY:
+				return "Custom dictionary";
+			case error_t::INVALID_STATE:
+				return "Invalid state";
+			case error_t::INVALID_BLOCK_CODE:
+				return "Invalid block code";
+			case error_t::OUT_OF_DATA:
+				return "Out of data";
+			case error_t::OUTPUT_FULL:
+				return "Output buffer full";
+			case error_t::CORRUPT_STREAM:
+				return "Corrupt stream";
 			case error_t::HUFFMAN_TABLE_GEN_FAILED:
 				return "Huffman table gen failed";
-			case error_t::INVALID_SYMBOL: return "Invalid symbol";
-			case error_t::INVALID_DISTANCE: return "Invalid distance";
-			case error_t::NO_SYMBOLS: return "No symbols";
-			case error_t::TOO_MANY_SYMBOLS: return "Too many symbols";
-			case error_t::INCOMPLETE_TREE: return "Incomplete tree";
-			default: return "Not a tinflate error";
+			case error_t::INVALID_SYMBOL:
+				return "Invalid symbol";
+			case error_t::INVALID_DISTANCE:
+				return "Invalid distance";
+			case error_t::NO_SYMBOLS:
+				return "No symbols";
+			case error_t::TOO_MANY_SYMBOLS:
+				return "Too many symbols";
+			case error_t::INCOMPLETE_TREE:
+				return "Incomplete tree";
+			default:
+				return "Not a tinflate error";
 		}
 	}
 
@@ -568,9 +583,12 @@ namespace tinf
 				}
 				break;
 
-			case state_t::INITIAL: [[fallthrough]];
-			case state_t::PARTIAL_ZLIB_HEADER: [[fallthrough]];
-			default: return error_t::INVALID_STATE;
+			case state_t::INITIAL:
+				[[fallthrough]];
+			case state_t::PARTIAL_ZLIB_HEADER:
+				[[fallthrough]];
+			default:
+				return error_t::INVALID_STATE;
 		}
 #undef SET_STATE
 

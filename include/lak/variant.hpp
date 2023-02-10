@@ -257,16 +257,16 @@ namespace lak
 		}
 
 		template<size_t I, typename... ARGS>
-		requires((I < _size) && !_is_ref<I>) //
-		  variant(lak::in_place_index_t<I>, ARGS &&...args)
+		requires((I < _size) && !_is_ref<I>)
+		variant(lak::in_place_index_t<I>, ARGS &&...args)
 		: _index(lak::size_type<I>{}),
 		  _value(lak::in_place_index<I>, lak::forward<ARGS>(args)...)
 		{
 		}
 
 		template<size_t I, typename... ARGS>
-		requires((I < _size) && _is_ref<I>) //
-		  variant(lak::in_place_index_t<I>, value_type<I> ref)
+		requires((I < _size) && _is_ref<I>)
+		variant(lak::in_place_index_t<I>, value_type<I> ref)
 		: _index(lak::size_type<I>{}), _value(lak::in_place_index<I>, &ref)
 		{
 		}
@@ -312,8 +312,8 @@ namespace lak
 		index_type index_set() const { return _index; }
 
 		template<size_t I>
-		requires((I < _size)) //
-		  bool holds() const
+		requires((I < _size))
+		bool holds() const
 		{
 			return _index.value() == I;
 		}
@@ -358,8 +358,8 @@ namespace lak
 	/* --- variant<variant<T...>, U...> --- */
 
 	template<typename... T, typename... U>
-	requires((lak::is_standard_layout_v<lak::variant<T..., U...>>)) //
-	  struct variant<variant<T...>, U...>
+	requires((lak::is_standard_layout_v<lak::variant<T..., U...>>))
+	struct variant<variant<T...>, U...>
 	{
 		static_assert(((!lak::is_rvalue_reference_v<U>)&&...));
 
@@ -428,8 +428,8 @@ namespace lak
 		}
 
 		template<size_t I, typename... ARGS>
-		requires((I > 0) && (I < _size) && !_is_ref<I>) //
-		  variant(lak::in_place_index_t<I>, ARGS &&...args)
+		requires((I > 0) && (I < _size) && !_is_ref<I>)
+		variant(lak::in_place_index_t<I>, ARGS &&...args)
 		: _value(lak::in_place_index<1U>,
 		         lak::in_place_index<I + _internal_offset>,
 		         lak::forward<ARGS>(args)...)
@@ -437,8 +437,8 @@ namespace lak
 		}
 
 		template<size_t I, typename... ARGS>
-		requires((I > 0) && (I < _size) && _is_ref<I>) //
-		  variant(lak::in_place_index_t<I>, value_type<I> ref)
+		requires((I > 0) && (I < _size) && _is_ref<I>)
+		variant(lak::in_place_index_t<I>, value_type<I> ref)
 		: _value(lak::in_place_index<1U>,
 		         lak::in_place_index<I + _internal_offset>,
 		         &ref)
@@ -488,15 +488,15 @@ namespace lak
 		}
 
 		template<size_t I, typename... ARGS>
-		requires((I < _size)) //
-		  static variant make(ARGS &&...args)
+		requires((I < _size))
+		static variant make(ARGS &&...args)
 		{
 			return variant(lak::in_place_index<I>, lak::forward<ARGS>(args)...);
 		}
 
 		template<typename V, typename... ARGS>
-		requires((index_of<V> < _size)) //
-		  static variant make(ARGS &&...args)
+		requires((index_of<V> < _size))
+		static variant make(ARGS &&...args)
 		{
 			return variant(lak::in_place_index<index_of<V>>,
 			               lak::forward<ARGS>(args)...);
@@ -521,8 +521,8 @@ namespace lak
 		}
 
 		template<size_t I>
-		requires((I < _size)) //
-		  bool holds() const
+		requires((I < _size))
+		bool holds() const
 		{
 			if constexpr (I == 0)
 				return internal_index() <= _internal_offset;

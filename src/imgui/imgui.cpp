@@ -105,7 +105,7 @@ namespace ImGui
 #else
 #	error "No software render colour bit depth specified"
 #endif
-	} * ImplSRContext;
+	} *ImplSRContext;
 
 	typedef struct _ImplGLContext
 	{
@@ -119,11 +119,11 @@ namespace ImGui
 		GLuint vertex_array;
 		lak::opengl::program shader;
 		lak::opengl::texture font;
-	} * ImplGLContext;
+	} *ImplGLContext;
 
 	typedef struct _ImplVkContext
 	{
-	} * ImplVkContext;
+	} *ImplVkContext;
 
 	typedef struct _ImplContext
 	{
@@ -139,7 +139,7 @@ namespace ImGui
 			ImplGLContext gl_context;
 			ImplVkContext vk_context;
 		};
-	} * ImplContext;
+	} *ImplContext;
 
 	ImplContext ImplCreateContext(lak::graphics_mode mode)
 	{
@@ -156,7 +156,9 @@ namespace ImGui
 			case lak::graphics_mode::Vulkan:
 				result->vk_context = new _ImplVkContext();
 				break;
-			default: result->vd_context = nullptr; break;
+			default:
+				result->vd_context = nullptr;
+				break;
 		}
 		result->imgui_context = CreateContext();
 		return result;
@@ -170,10 +172,18 @@ namespace ImGui
 			{
 				switch (context->mode)
 				{
-					case lak::graphics_mode::Software: delete context->sr_context; break;
-					case lak::graphics_mode::OpenGL: delete context->gl_context; break;
-					case lak::graphics_mode::Vulkan: delete context->vk_context; break;
-					default: FATAL("Invalid graphics mode"); break;
+					case lak::graphics_mode::Software:
+						delete context->sr_context;
+						break;
+					case lak::graphics_mode::OpenGL:
+						delete context->gl_context;
+						break;
+					case lak::graphics_mode::Vulkan:
+						delete context->vk_context;
+						break;
+					default:
+						FATAL("Invalid graphics mode");
+						break;
 				}
 			}
 			delete context;
@@ -253,7 +263,9 @@ namespace ImGui
 			}
 			break;
 
-			default: FATAL("Invalid Context Mode"); break;
+			default:
+				FATAL("Invalid Context Mode");
+				break;
 		}
 	}
 
@@ -491,7 +503,9 @@ namespace ImGui
 			case lak::graphics_mode::Vulkan:
 				ImplInitVkContext(context->vk_context, window);
 				break;
-			default: ASSERTF(false, "Invalid Context Mode"); break;
+			default:
+				ASSERTF(false, "Invalid Context Mode");
+				break;
 		}
 
 		ImplUpdateDisplaySize(context, window.handle());
@@ -587,7 +601,9 @@ namespace ImGui
 			case lak::graphics_mode::Vulkan:
 				ImplShutdownVkContext(context->vk_context);
 				break;
-			default: ASSERTF(false, "Invalid Context Mode"); break;
+			default:
+				ASSERTF(false, "Invalid Context Mode");
+				break;
 		}
 
 		if (context->imgui_context != nullptr)
@@ -733,7 +749,8 @@ namespace ImGui
 						context->mouse_release[2] = false;
 					}
 					break;
-					default: return false;
+					default:
+						return false;
 				}
 #if defined(LAK_USE_WINAPI)
 				SetCapture(event.handle->_platform_handle);
@@ -768,7 +785,8 @@ namespace ImGui
 						context->mouse_release[2] = true;
 					}
 					break;
-					default: return false;
+					default:
+						return false;
 				}
 #if defined(LAK_USE_WINAPI)
 				ReleaseCapture();
@@ -784,7 +802,8 @@ namespace ImGui
 				return true;
 			}
 
-			case lak::event_type::key_down: [[fallthrough]];
+			case lak::event_type::key_down:
+				[[fallthrough]];
 			case lak::event_type::key_up:
 			{
 				const int key = event.key().scancode;
@@ -802,7 +821,8 @@ namespace ImGui
 				return true;
 			}
 
-			default: break;
+			default:
+				break;
 		}
 
 #if defined(LAK_USE_WINAPI)
@@ -1109,9 +1129,15 @@ namespace ImGui
 			case lak::graphics_mode::Software:
 				ImplSRRender(context, draw_data);
 				break;
-			case lak::graphics_mode::OpenGL: ImplGLRender(context, draw_data); break;
-			case lak::graphics_mode::Vulkan: ImplVkRender(context, draw_data); break;
-			default: FATAL("Invalid context mode"); break;
+			case lak::graphics_mode::OpenGL:
+				ImplGLRender(context, draw_data);
+				break;
+			case lak::graphics_mode::Vulkan:
+				ImplVkRender(context, draw_data);
+				break;
+			default:
+				FATAL("Invalid context mode");
+				break;
 		}
 
 		ImGuiIO &io = ImGui::GetIO();
@@ -1160,7 +1186,9 @@ namespace ImGui
 			case lak::graphics_mode::OpenGL:
 				return (ImTextureID)(uintptr_t)context->gl_context->font.get();
 			case lak::graphics_mode::Vulkan:
-			default: FATAL("Invalid context mode"); break;
+			default:
+				FATAL("Invalid context mode");
+				break;
 		}
 	}
 }

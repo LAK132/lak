@@ -321,7 +321,8 @@ bool is_size_move_event(const lak::window_handle *handle, const MSG &msg)
 
 	switch (msg.message)
 	{
-		case WM_SYSCOMMAND: return true;
+		case WM_SYSCOMMAND:
+			return true;
 
 		case WM_LBUTTONUP:
 		case WM_NCLBUTTONUP:
@@ -330,9 +331,11 @@ bool is_size_move_event(const lak::window_handle *handle, const MSG &msg)
 		case WM_MOUSEHOVER:
 		case WM_NCMOUSEMOVE:
 		case WM_NCMOUSELEAVE:
-		case WM_NCMOUSEHOVER: return handle->_moving || handle->_resizing;
+		case WM_NCMOUSEHOVER:
+			return handle->_moving || handle->_resizing;
 
-		default: return false;
+		default:
+			return false;
 	}
 }
 
@@ -351,14 +354,30 @@ bool handle_size_move_event(lak::window_handle *handle, const MSG &msg)
 				{
 					switch (msg.wParam & 0xF)
 					{
-						case 0x1: handle->_side = handle->left; break;
-						case 0x2: handle->_side = handle->right; break;
-						case 0x3: handle->_side = handle->top; break;
-						case 0x4: handle->_side = handle->top | handle->left; break;
-						case 0x5: handle->_side = handle->top | handle->right; break;
-						case 0x6: handle->_side = handle->bottom; break;
-						case 0x7: handle->_side = handle->bottom | handle->left; break;
-						case 0x8: handle->_side = handle->bottom | handle->right; break;
+						case 0x1:
+							handle->_side = handle->left;
+							break;
+						case 0x2:
+							handle->_side = handle->right;
+							break;
+						case 0x3:
+							handle->_side = handle->top;
+							break;
+						case 0x4:
+							handle->_side = handle->top | handle->left;
+							break;
+						case 0x5:
+							handle->_side = handle->top | handle->right;
+							break;
+						case 0x6:
+							handle->_side = handle->bottom;
+							break;
+						case 0x7:
+							handle->_side = handle->bottom | handle->left;
+							break;
+						case 0x8:
+							handle->_side = handle->bottom | handle->right;
+							break;
 						default:
 							handle->_side = 0;
 							FATAL("Invalid side");
@@ -409,7 +428,8 @@ bool handle_size_move_event(lak::window_handle *handle, const MSG &msg)
 		case WM_MOUSEHOVER:
 		case WM_NCMOUSEMOVE:
 		case WM_NCMOUSELEAVE:
-		case WM_NCMOUSEHOVER: return handle_size_move(*handle);
+		case WM_NCMOUSEHOVER:
+			return handle_size_move(*handle);
 	}
 
 	return false;

@@ -25,7 +25,7 @@ namespace lak
 			~shader();
 			shader &operator=(shader &&other);
 
-			shader(const shader &other) = delete;
+			shader(const shader &other)            = delete;
 			shader &operator=(const shader &other) = delete;
 
 			static shader create(const lak::astring &code, GLenum shader_type);
@@ -81,7 +81,7 @@ namespace lak
 			~program();
 			program &operator=(program &&other);
 
-			program(const program &other) = delete;
+			program(const program &other)            = delete;
 			program &operator=(const program &other) = delete;
 
 			static program create();

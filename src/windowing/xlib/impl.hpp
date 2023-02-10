@@ -42,11 +42,16 @@ namespace lak
 		{
 			switch (gc.index())
 			{
-				case 1: return lak::graphics_mode::Software;
-				case 2: return lak::graphics_mode::OpenGL;
-				case 3: return lak::graphics_mode::Vulkan;
-				default: FATAL("Invalid graphics mode");
-				case 0: return lak::graphics_mode::None;
+				case 1:
+					return lak::graphics_mode::Software;
+				case 2:
+					return lak::graphics_mode::OpenGL;
+				case 3:
+					return lak::graphics_mode::Vulkan;
+				default:
+					FATAL("Invalid graphics mode");
+				case 0:
+					return lak::graphics_mode::None;
 			}
 		}
 

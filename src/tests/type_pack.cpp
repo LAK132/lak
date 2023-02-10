@@ -52,8 +52,5 @@ CHECK_SAME(
   test_type<int, long, double>,
   lak::create_from_pack_t<test_type, lak::type_pack<int, long, double>>);
 
-BEGIN_TEST(type_pack)
-{
-	return 0;
-}
+BEGIN_TEST(type_pack) { return 0; }
 END_TEST()

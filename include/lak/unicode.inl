@@ -83,15 +83,15 @@ void lak::append_codepoint(lak::string<CHAR> &str, char32_t code)
 }
 
 template<typename CHAR>
-inline constexpr const lak::pair<char32_t, uint8_t>
-  &lak::codepoint_iterator<CHAR>::operator*() const noexcept
+inline constexpr const lak::pair<char32_t, uint8_t> &
+lak::codepoint_iterator<CHAR>::operator*() const noexcept
 {
 	return _current;
 }
 
 template<typename CHAR>
-inline constexpr lak::codepoint_iterator<CHAR>
-  &lak::codepoint_iterator<CHAR>::operator++() noexcept
+inline constexpr lak::codepoint_iterator<CHAR> &
+lak::codepoint_iterator<CHAR>::operator++() noexcept
 {
 	_current.second = lak::character_length(_data);
 	_current.first  = _current.second ? codepoint(_data) : 0;

@@ -158,9 +158,9 @@ namespace lak
 	template<typename... T, typename... U>
 	lak::tuple<T..., U...> tuple_cat(lak::tuple<T...> a, lak::tuple<U...> b)
 	{
-		auto _tuple_cat = [&]<size_t... I, size_t... J>(lak::index_sequence<I...>,
-		                                                lak::index_sequence<J...>)
-		                    ->lak::tuple<T..., U...>
+		auto _tuple_cat = [&]<size_t... I, size_t... J>(
+		                    lak::index_sequence<I...>,
+		                    lak::index_sequence<J...>) -> lak::tuple<T..., U...>
 		{
 			static_assert(sizeof...(T) == sizeof...(I));
 			static_assert(sizeof...(U) == sizeof...(J));
