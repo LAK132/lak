@@ -970,26 +970,7 @@ namespace ImGui
 
 		const bool using_scissor_test = true;
 
-		glUseProgram(gl_context->shader.get());
-		glBindTexture(GL_TEXTURE_2D, gl_context->font.get());
-		glActiveTexture(GL_TEXTURE0);
-		glBindVertexArray(gl_context->vertex_array);
-		glBindBuffer(GL_ARRAY_BUFFER, gl_context->array_buffer);
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gl_context->elements);
-		glBlendEquationSeparate(GL_FUNC_ADD, GL_FUNC_ADD);
-		glBlendFuncSeparate(GL_SRC_ALPHA,
-		                    GL_ONE_MINUS_SRC_ALPHA,
-		                    GL_SRC_ALPHA,
-		                    GL_ONE_MINUS_SRC_ALPHA);
-		glEnable(GL_BLEND);
-		glDisable(GL_CULL_FACE);
-		glDisable(GL_DEPTH_TEST);
-		lak::opengl::enable_if(GL_SCISSOR_TEST, using_scissor_test);
-		glViewport(static_cast<GLsizei>(viewport.x),
-		           static_cast<GLsizei>(viewport.y),
-		           static_cast<GLsizei>(viewport.z),
-		           static_cast<GLsizei>(viewport.w));
-
+		const auto viewport_matrix = [&]()
 		{
 			const float &W = draw_data->DisplaySize.x;
 			const float &H = draw_data->DisplaySize.y;
@@ -1019,13 +1000,41 @@ namespace ImGui
 			            2.0 / -draw_data->DisplaySize.y,
 			            1.0));
 			// const glm::mat4x4 transform = orthoProj * glm::mat4x4(1.0f);
+			return transform;
+		}();
+
+		auto set_state = [&]()
+		{
+			glUseProgram(gl_context->shader.get());
+			glBindTexture(GL_TEXTURE_2D, gl_context->font.get());
+			glActiveTexture(GL_TEXTURE0);
+			glBindVertexArray(gl_context->vertex_array);
+			glBlendEquationSeparate(GL_FUNC_ADD, GL_FUNC_ADD);
+			glBlendFuncSeparate(GL_SRC_ALPHA,
+			                    GL_ONE_MINUS_SRC_ALPHA,
+			                    GL_SRC_ALPHA,
+			                    GL_ONE_MINUS_SRC_ALPHA);
+			glEnable(GL_BLEND);
+			glDisable(GL_CULL_FACE);
+			glDisable(GL_DEPTH_TEST);
+			lak::opengl::enable_if(GL_SCISSOR_TEST, using_scissor_test);
+			glViewport(static_cast<GLint>(viewport.x),
+			           static_cast<GLint>(viewport.y),
+			           static_cast<GLsizei>(viewport.z),
+			           static_cast<GLsizei>(viewport.w));
+
 			glUniformMatrix4fv(
-			  gl_context->attrib_view_proj, 1, GL_FALSE, &transform[0][0]);
-		}
-		glUniform1i(gl_context->attrib_tex, 0);
-		// #ifdef GL_SAMPLER_BINDING
-		// glBindSampler(0, 0);
-		// #endif
+			  gl_context->attrib_view_proj, 1, GL_FALSE, &viewport_matrix[0][0]);
+			glUniform1i(gl_context->attrib_tex, 0);
+			// #ifdef GL_SAMPLER_BINDING
+			// glBindSampler(0, 0);
+			// #endif
+		};
+
+		set_state();
+
+		glBindBuffer(GL_ARRAY_BUFFER, gl_context->array_buffer);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gl_context->elements);
 
 		glEnableVertexAttribArray(gl_context->attrib_pos);
 		glVertexAttribPointer(gl_context->attrib_pos,
@@ -1072,6 +1081,7 @@ namespace ImGui
 				if (pcmd.UserCallback)
 				{
 					pcmd.UserCallback(cmdList, &pcmd);
+					set_state(); // reset state in case user changed anything
 				}
 				else if (!using_scissor_test)
 				{
