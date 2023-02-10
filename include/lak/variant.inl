@@ -2,6 +2,7 @@
 
 #include "lak/debug.hpp"
 
+#include "lak/utility.hpp"
 #include "lak/visit.hpp"
 
 /* --- pack_union --- */
@@ -61,7 +62,7 @@ template<size_t I>
 void lak::pack_union<T, U...>::reset()
 {
 	if constexpr (I == 0)
-		value.~T();
+		lak::destroy_at(&value);
 	else
 		next.template reset<I - 1>();
 }
@@ -73,7 +74,7 @@ void lak::pack_union<T, U...>::reset_dynamic(lak::index_set_for<T, U...> i)
 	                  [&]<size_t I>(lak::size_type<I>)
 	                  {
 		                  if constexpr (I == 0)
-			                  value.~T();
+			                  lak::destroy_at(&value);
 		                  else
 			                  next.reset_dynamic(
 			                    lak::index_set_for<U...>{lak::size_type<I - 1>{}});
@@ -123,13 +124,13 @@ template<size_t I>
 void lak::pack_union<T>::reset()
 {
 	static_assert(I == 0);
-	value.~T();
+	lak::destroy_at(&value);
 }
 
 template<typename T>
 void lak::pack_union<T>::reset_dynamic(lak::index_set<0>)
 {
-	value.~T();
+	lak::destroy_at(&value);
 }
 
 /* --- variant --- */
