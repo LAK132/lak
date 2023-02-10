@@ -17,9 +17,11 @@ jobs:
       - uses: actions/setup-python@v1
         with:
           python-version: '3.9.x'
-      - uses: bus1/cabuild/action/msdevshell@v1
+      - uses: ilammy/msvc-dev-cmd@v1
         with:
-          architecture: x64
+          arch: x64
+          toolset: 19
+          vsversion: 2022
       - uses: BSFishy/meson-build@v1.0.3
         with:
           action: build
@@ -37,9 +39,11 @@ jobs:
       - uses: actions/setup-python@v1
         with:
           python-version: '3.9.x'
-      - uses: bus1/cabuild/action/msdevshell@v1
+      - uses: ilammy/msvc-dev-cmd@v1
         with:
-          architecture: x64
+          arch: x64
+          toolset: 19
+          vsversion: 2022
       - uses: BSFishy/meson-build@v1.0.3
         with:
           action: build
@@ -57,9 +61,11 @@ jobs:
       - uses: actions/setup-python@v1
         with:
           python-version: '3.9.x'
-      - uses: bus1/cabuild/action/msdevshell@v1
+      - uses: ilammy/msvc-dev-cmd@v1
         with:
-          architecture: x86
+          arch: x86
+          toolset: 19
+          vsversion: 2022
       - uses: BSFishy/meson-build@v1.0.3
         with:
           action: build
