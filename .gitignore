@@ -6,6 +6,7 @@
 
 obj/**
 bin/**
+build/**
 toolchain/**
 ignore/**
 

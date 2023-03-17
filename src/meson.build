@@ -2,6 +2,7 @@ lakcore = static_library(
 	'lakcore',
 	[
 		'architecture.cpp',
+		'bigint.cpp',
 		'compression/deflate.cpp',
 		'compression/lz4.cpp',
 		'alloc.cpp',

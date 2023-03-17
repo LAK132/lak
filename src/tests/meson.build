@@ -4,6 +4,7 @@ laktestcore = static_library(
 		'algorithm.cpp',
 		'alloc.cpp',
 		'array.cpp',
+		'bigint.cpp',
 		'bit_reader.cpp',
 		'bitflag.cpp',
 		'bitset.cpp',

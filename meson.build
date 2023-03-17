@@ -220,12 +220,23 @@ lak_dep = declare_dependency(
 	sources: lakdlls_h,
 )
 
-lak_test_prog = executable(
-	'lak_test',
-	[
-		'src/tests/test_main.cpp',
-	],
-	override_options: 'cpp_std=' + version,
-	include_directories: include_directories('include'),
-	dependencies: lak_dep,
-)
+if get_option('lak_enable_tests')
+	lak_test_prog = executable(
+		'lak_test',
+		[
+			'src/tests/test_main.cpp',
+		],
+		override_options: 'cpp_std=' + version,
+		include_directories: include_directories('include'),
+		dependencies: lak_dep,
+	)
+
+	lak_test_bigint_standalone_prog = executable(
+		'lak_test_bigint_standalone',
+		[
+			'src/tests/bigint_standalone.cpp',
+		],
+		override_options: 'cpp_std=' + version,
+		include_directories: include_directories('include'),
+	)
+endif
