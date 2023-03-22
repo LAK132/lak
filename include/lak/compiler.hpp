@@ -99,6 +99,10 @@
 #	error "Compiler not supported"
 #endif
 
+#if defined(LAK_ARCH_X86) || defined(LAK_ARCH_X86_64) || defined(LAK_ARCH_IA64)
+#	define LAK_ARCH_X86_COMPAT
+#endif
+
 #if defined(LAK_ARCH_X86_64)
 #	define LAK_ARCH x86_64
 #endif
