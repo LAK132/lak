@@ -30,12 +30,13 @@ namespace lak
 		constexpr array(const array &)            = default;
 		constexpr array &operator=(const array &) = default;
 
-		constexpr array(array &&other);
-		constexpr array &operator=(array &&other);
+		constexpr array(array &&other)            = default;
+		constexpr array &operator=(array &&other) = default;
 
 		array(std::initializer_list<T> list);
 
 		constexpr size_t size() const { return SIZE; }
+		constexpr size_t max_size() const { return SIZE; }
 		constexpr size_t capacity() const { return SIZE; }
 		[[nodiscard]] constexpr bool empty() const { return SIZE == 0; }
 
@@ -111,6 +112,7 @@ namespace lak
 		~array();
 
 		size_t size() const { return _size; }
+		constexpr size_t max_size() const { return SIZE_MAX; }
 		size_t capacity() const { return _committed / sizeof(T); }
 		size_t reserved() const { return _data.size_bytes() / sizeof(T); }
 
@@ -218,6 +220,7 @@ namespace lak
 		~small_array();
 
 		size_t size() const { return _size; }
+		constexpr size_t max_size() const { return SIZE_MAX; }
 		size_t capacity() const { return _data.size(); }
 		size_t reserved() const { return _data.size(); }
 
@@ -287,6 +290,73 @@ namespace lak
 
 	template<typename T>
 	using vector = global_small_array<T>;
+
+	template<typename T, size_t MAX_SIZE>
+	struct stack_array
+	{
+	private:
+		T _data[MAX_SIZE] = {};
+		size_t _size      = 0U;
+
+	public:
+		using value_type      = T;
+		using size_type       = size_t;
+		using difference_type = ptrdiff_t;
+		using reference       = T &;
+		using const_reference = const T &;
+		using pointer         = T *;
+		using const_pointer   = const T *;
+		using iterator        = T *;
+		using const_iterator  = const T *;
+
+		constexpr stack_array()                               = default;
+		constexpr stack_array(const stack_array &)            = default;
+		constexpr stack_array &operator=(const stack_array &) = default;
+
+		constexpr stack_array(stack_array &&other)            = default;
+		constexpr stack_array &operator=(stack_array &&other) = default;
+
+		stack_array(std::initializer_list<T> list);
+
+		template<typename ITER>
+		stack_array(ITER &&begin, ITER &&end);
+
+		constexpr size_t size() const { return _size; }
+		constexpr size_t max_size() const { return MAX_SIZE; }
+		constexpr size_t capacity() const { return MAX_SIZE; }
+		constexpr size_t reserved() const { return MAX_SIZE; }
+
+		[[nodiscard]] constexpr bool empty() const { return _size == 0; }
+
+		constexpr T *data() { return begin(); }
+		constexpr const T *data() const { return begin(); }
+
+		constexpr T *begin() { return &_data[0]; }
+		constexpr T *end() { return &_data[_size]; }
+
+		constexpr const T *begin() const { return &_data[0]; }
+		constexpr const T *end() const { return &_data[_size]; }
+
+		constexpr const T *cbegin() const { return &_data[0]; }
+		constexpr const T *cend() const { return &_data[_size]; }
+
+		T &at(size_t index);
+		const T &at(size_t index) const;
+
+		constexpr T &operator[](size_t index);
+		constexpr const T &operator[](size_t index) const;
+
+		constexpr T &front();
+		constexpr const T &front() const;
+
+		constexpr T &back();
+		constexpr const T &back() const;
+
+		T &push_back(const T &t);
+		T &push_back(T &&t);
+
+		void pop_back();
+	};
 }
 
 template<typename T, size_t S>

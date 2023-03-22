@@ -9,24 +9,10 @@
 /* --- fixed size --- */
 
 template<typename T, size_t SIZE>
-constexpr lak::array<T, SIZE>::array(array<T, SIZE> &&other)
-{
-	lak::swap(_data, other._data);
-}
-
-template<typename T, size_t SIZE>
-constexpr lak::array<T, SIZE> &lak::array<T, SIZE>::operator=(
-  array<T, SIZE> &&other)
-{
-	lak::swap(_data, other._data);
-	return *this;
-}
-
-template<typename T, size_t SIZE>
 lak::array<T, SIZE>::array(std::initializer_list<T> list)
 {
 	ASSERT_EQUAL(list.size(), SIZE);
-	lak::copy(list.begin(), list.end(), static_cast<T *>(_data));
+	lak::copy(list.begin(), list.end(), data(), data() + SIZE);
 }
 
 template<typename T, size_t SIZE>
@@ -861,4 +847,96 @@ bool operator!=(const lak::small_array<T, LOC> &a,
                 const lak::small_array<T, LOC> &b)
 {
 	return !(a == b);
+}
+
+template<typename T, size_t MAX_SIZE>
+lak::stack_array<T, MAX_SIZE>::stack_array(std::initializer_list<T> list)
+{
+	_size =
+	  lak::copy(list.begin(), list.end(), data(), data() + MAX_SIZE) - data();
+}
+
+template<typename T, size_t MAX_SIZE>
+template<typename ITER>
+lak::stack_array<T, MAX_SIZE>::stack_array(ITER &&begin, ITER &&end)
+{
+	_size = lak::copy(begin, end, data(), data() + MAX_SIZE) - data();
+}
+
+template<typename T, size_t MAX_SIZE>
+T &lak::stack_array<T, MAX_SIZE>::at(size_t index)
+{
+	ASSERT_LESS(index, _size);
+	return _data[index];
+}
+
+template<typename T, size_t MAX_SIZE>
+const T &lak::stack_array<T, MAX_SIZE>::at(size_t index) const
+{
+	ASSERT_LESS(index, _size);
+	return _data[index];
+}
+
+template<typename T, size_t MAX_SIZE>
+constexpr T &lak::stack_array<T, MAX_SIZE>::operator[](size_t index)
+{
+	return _data[index];
+}
+
+template<typename T, size_t MAX_SIZE>
+constexpr const T &lak::stack_array<T, MAX_SIZE>::operator[](
+  size_t index) const
+{
+	return _data[index];
+}
+
+template<typename T, size_t MAX_SIZE>
+constexpr T &lak::stack_array<T, MAX_SIZE>::front()
+{
+	ASSERT(!empty());
+	return _data[0U];
+}
+
+template<typename T, size_t MAX_SIZE>
+constexpr const T &lak::stack_array<T, MAX_SIZE>::front() const
+{
+	ASSERT(!empty());
+	return _data[0U];
+}
+
+template<typename T, size_t MAX_SIZE>
+constexpr T &lak::stack_array<T, MAX_SIZE>::back()
+{
+	ASSERT(!empty());
+	return _data[_size - 1U];
+}
+
+template<typename T, size_t MAX_SIZE>
+constexpr const T &lak::stack_array<T, MAX_SIZE>::back() const
+{
+	ASSERT(!empty());
+	return _data[_size - 1U];
+}
+
+template<typename T, size_t MAX_SIZE>
+T &lak::stack_array<T, MAX_SIZE>::push_back(const T &t)
+{
+	ASSERT_LESS(_size, MAX_SIZE);
+	_data[_size] = t;
+	return _data[_size++];
+}
+
+template<typename T, size_t MAX_SIZE>
+T &lak::stack_array<T, MAX_SIZE>::push_back(T &&t)
+{
+	ASSERT_LESS(_size, MAX_SIZE);
+	_data[_size] = lak::move(t);
+	return _data[_size++];
+}
+
+template<typename T, size_t MAX_SIZE>
+void lak::stack_array<T, MAX_SIZE>::pop_back()
+{
+	ASSERT(!empty());
+	--_size;
 }

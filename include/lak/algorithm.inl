@@ -30,6 +30,17 @@ OUT_ITER lak::copy(IN_ITER begin, IN_ITER end, OUT_ITER output)
 	return output;
 }
 
+template<typename IN_ITER, typename OUT_ITER>
+OUT_ITER lak::copy(IN_ITER begin,
+                   IN_ITER end,
+                   OUT_ITER out_begin,
+                   OUT_ITER out_end)
+{
+	for (; begin != end && out_begin != out_end; ++begin, ++out_begin)
+		*out_begin = *begin;
+	return out_begin;
+}
+
 /* --- swap --- */
 
 template<typename ITER_A, typename ITER_B>

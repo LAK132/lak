@@ -21,6 +21,12 @@ namespace lak
 	template<typename IN_ITER, typename OUT_ITER>
 	OUT_ITER copy(IN_ITER begin, IN_ITER end, OUT_ITER output);
 
+	template<typename IN_ITER, typename OUT_ITER>
+	OUT_ITER copy(IN_ITER begin,
+	              IN_ITER end,
+	              OUT_ITER out_begin,
+	              OUT_ITER out_end);
+
 	/* --- swap --- */
 
 	template<typename ITER_A, typename ITER_B>

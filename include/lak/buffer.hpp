@@ -17,6 +17,9 @@ namespace lak
 		~buffer()                         = default;
 		buffer &operator=(const buffer &) = default;
 
+		size_t size() const { return _size; }
+		bool empty() const { return _size == 0; }
+
 		const T *front() const { return _size > 0 ? _buffer + _pos : nullptr; }
 		T *front() { return _size > 0 ? _buffer + _pos : nullptr; }
 
