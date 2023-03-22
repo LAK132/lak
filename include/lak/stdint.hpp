@@ -1,6 +1,7 @@
 #ifndef LAK_STDINT_HPP
 #define LAK_STDINT_HPP
 
+#include <climits>
 #include <cstddef>
 #include <cstdint>
 
