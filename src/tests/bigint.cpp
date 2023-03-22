@@ -7,7 +7,6 @@ BEGIN_TEST(bigint)
 	lak::bigint value;
 
 	value = 0;
-
 	ASSERT_EQUAL(value.to_uintmax().UNWRAP(), 0U);
 
 	value += UINTMAX_MAX;
@@ -17,6 +16,12 @@ BEGIN_TEST(bigint)
 	value.to_uintmax().UNWRAP_ERR();
 
 	value -= UINTMAX_MAX;
+	ASSERT_EQUAL(value.to_uintmax().UNWRAP(), UINTMAX_MAX);
+
+	value -= UINTMAX_MAX;
+	ASSERT_EQUAL(value.to_uintmax().UNWRAP(), 0U);
+
+	value += UINTMAX_MAX;
 	ASSERT_EQUAL(value.to_uintmax().UNWRAP(), UINTMAX_MAX);
 
 	value *= UINTMAX_MAX;

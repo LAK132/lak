@@ -2,10 +2,31 @@
 
 #include "lak/debug.hpp"
 
+#include "lak/array.hpp"
 #include "lak/span_manip.hpp"
 #include "lak/wide_math.hpp"
 
 bool is_negative(uintmax_t v) { return (v & (~(UINTMAX_MAX >> 1U))) != 0U; }
+
+lak::stack_array<lak::bigint::value_type,
+                 lak::ceil_div<size_t>(sizeof(uintmax_t),
+                                       sizeof(lak::bigint::value_type))>
+split_umax(uintmax_t v)
+{
+	lak::stack_array<lak::bigint::value_type,
+	                 lak::ceil_div<size_t>(sizeof(uintmax_t),
+	                                       sizeof(lak::bigint::value_type))>
+	  result;
+
+	for (size_t i = 0; i < result.max_size(); ++i)
+	{
+		result.push_back(static_cast<lak::bigint::value_type>(
+		  v >> (sizeof(lak::bigint::value_type) * CHAR_BIT * i)));
+	}
+	while (!result.empty() && result.back() == 0U) result.pop_back();
+
+	return result;
+}
 
 lak::bigint &lak::bigint::negate()
 {
@@ -15,8 +36,10 @@ lak::bigint &lak::bigint::negate()
 
 void lak::bigint::reserve(size_t count)
 {
-	if (_data.size() >= count) return normalise(count);
-	_data.resize(count, 0U);
+	if (_data.size() >= count)
+		normalise(count);
+	else
+		_data.resize(count, 0U);
 }
 
 void lak::bigint::normalise(size_t min_count)
@@ -33,50 +56,14 @@ size_t lak::bigint::min_size() const
 	return result;
 }
 
-lak::bigint::_span<const uintmax_t> lak::bigint::min_span() const
+lak::span<const lak::bigint::value_type> lak::bigint::min_span() const
 {
 	return lak::span(_data).first(min_size());
 }
 
-void lak::bigint::add(uintmax_t value)
-{
-	reserve(1U);
+void lak::bigint::add(uintmax_t value) { add(split_umax(value), 0U); }
 
-	uintmax_t carry = 0U;
-	{
-		lak::uintmax2_t result = lak::add_uintmax2(_data[0U], value);
-		_data[0U]              = result.low;
-		carry                  = result.high;
-	}
-	for (size_t i = 1U; i < _data.size() && carry != 0U; ++i)
-	{
-		lak::uintmax2_t result = lak::add_uintmax2(_data[i], carry);
-		_data[i]               = result.low;
-		carry                  = result.high;
-	}
-	if (carry != 0U) _data.push_back(carry);
-
-	normalise();
-}
-
-void lak::bigint::sub(uintmax_t value)
-{
-	uintmax_t carry = 0U;
-	{
-		lak::uintmax2_t result = lak::sub_uintmax2(_data[0U], value);
-		_data[0U]              = result.low;
-		carry                  = result.high;
-	}
-	for (size_t i = 1U; i < _data.size() && carry != 0U; ++i)
-	{
-		lak::uintmax2_t result = lak::sub_uintmax2(_data[i], 0U, carry);
-		_data[i]               = result.low;
-		carry                  = result.high;
-	}
-	ASSERT_EQUAL(carry, 0U);
-
-	normalise();
-}
+void lak::bigint::sub(uintmax_t value) { sub(split_umax(value)); }
 
 lak::bigint::div_rem_result lak::bigint::div_rem_impl(uintmax_t value,
                                                       bool negate_output) const
@@ -85,7 +72,8 @@ lak::bigint::div_rem_result lak::bigint::div_rem_impl(uintmax_t value,
 
 	lak::bigint::div_rem_result result;
 
-	for (uintmax_t i = min_bit_count(); i-- > 0U;)
+	const auto bits{min_bit_count()};
+	for (auto i{bits}; i-- > 0U;)
 	{
 		result.second <<= 1U;
 		result.second.set_bit(0U, bit(i));
@@ -94,6 +82,12 @@ lak::bigint::div_rem_result lak::bigint::div_rem_impl(uintmax_t value,
 			result.second -= value;
 			result.first.set_bit(i, 1U);
 		}
+	}
+
+	while (result.second >= value)
+	{
+		result.second -= value;
+		result.first += 1U;
 	}
 
 	result.first.normalise();
@@ -108,54 +102,9 @@ lak::bigint::div_rem_result lak::bigint::div_rem_impl(uintmax_t value,
 	return result;
 }
 
-void lak::bigint::add(const lak::bigint &value)
-{
-	reserve(value._data.size());
+void lak::bigint::add(const lak::bigint &value) { add(value.min_span(), 0U); }
 
-	uintmax_t carry = 0U;
-	for (size_t i = 0; i < value._data.size(); ++i)
-	{
-		lak::uintmax2_t result =
-		  lak::add_uintmax2(_data[i], value._data[i], carry);
-		_data[i] = result.low;
-		carry    = result.high;
-	}
-	for (size_t i = value._data.size(); i < _data.size(); ++i)
-	{
-		lak::uintmax2_t result = lak::add_uintmax2(_data[i], carry);
-		_data[i]               = result.low;
-		carry                  = result.high;
-	}
-	if (carry != 0U) _data.push_back(carry);
-
-	normalise();
-}
-
-void lak::bigint::sub(const lak::bigint &value)
-{
-	const size_t l_max = min_size();
-	const size_t r_max = value.min_size();
-	ASSERT_GREATER_OR_EQUAL(l_max, r_max);
-
-	for (size_t i = 0U; i < r_max; ++i)
-	{
-		uintmax_t carry = 0U;
-		{
-			lak::uintmax2_t result = lak::sub_uintmax2(_data[i], value._data[i]);
-			_data[i]               = result.low;
-			carry                  = result.high;
-		}
-		for (size_t carry_i = i; carry_i < l_max && carry != 0U; ++carry_i)
-		{
-			lak::uintmax2_t result = lak::sub_uintmax2(_data[carry_i], 0U, carry);
-			_data[carry_i]         = result.low;
-			carry                  = result.high;
-		}
-		ASSERT_EQUAL(carry, 0U);
-	}
-
-	normalise();
-}
+void lak::bigint::sub(const lak::bigint &value) { sub(value.min_span()); }
 
 lak::bigint::div_rem_result lak::bigint::div_rem_impl(const lak::bigint &value,
                                                       bool negate_output) const
@@ -187,12 +136,103 @@ lak::bigint::div_rem_result lak::bigint::div_rem_impl(const lak::bigint &value,
 	return result;
 }
 
+void lak::bigint::add(lak::span<const value_type> value, size_t offset)
+{
+	reserve(value.size() + offset);
+
+	unsigned char carry =
+	  lak::add_carry_u32(lak::span(_data).subspan(offset), value);
+
+	if (carry != 0U) _data.push_back(carry);
+}
+
+void lak::bigint::sub(lak::span<const value_type> value)
+{
+	const size_t l_max = min_size();
+	const size_t r_max = value.size();
+	ASSERT_GREATER_OR_EQUAL(l_max, r_max);
+
+	for (size_t i = 0U; i < r_max; ++i)
+	{
+		unsigned char carry = lak::sub_carry_u32(_data[i], value[i], &_data[i]);
+
+		for (size_t carry_i = i + 1U; carry_i < l_max && carry != 0U; ++carry_i)
+			carry = lak::sub_carry_u32(_data[carry_i], 0U, &_data[carry_i], carry);
+
+		ASSERT_EQUAL(carry, 0U);
+	}
+
+	normalise();
+}
+
+void lak::bigint::mul(value_type value, size_t offset)
+{
+	if (offset != 0U)
+	{
+		_data.resize(_data.size() + offset);
+		lak::shift_right<value_type>(_data, offset);
+		lak::fill<value_type>(lak::span(_data).first(offset), 0U);
+	}
+
+	value_type carry = 0U;
+	for (size_t i = offset; i < _data.size(); ++i)
+		carry = lak::mul_carry_u32(_data[i], value, &_data[i], carry);
+	if (carry != 0) _data.push_back(carry);
+}
+
+void lak::bigint::mul(lak::span<const value_type> value)
+{
+	if (value.empty() || is_zero())
+	{
+		_data.clear();
+		return;
+	}
+
+	_data.reserve(_data.size() + value.size());
+
+	auto mspan{min_span()};
+
+	lak::bigint result;
+	{
+		lak::bigint copy;
+		copy._data.reserve(mspan.size() + value.size());
+
+		for (size_t i = 0U; i < value.size(); ++i)
+		{
+			copy._data.resize(mspan.size() + i);
+			lak::fill(lak::span(copy._data).first(i), 0U);
+			lak::copy(_data.begin(), _data.end(), copy._data.begin() + i);
+
+			copy.mul(value[i], i);
+			result += copy;
+		}
+	}
+
+	lak::swap(_data, result._data);
+}
+
+lak::result<uintmax_t> lak::bigint::to_uintmax_ignore_sign() const
+{
+	auto mspan{min_span()};
+	if (mspan.size() * sizeof(value_type) > sizeof(uintmax_t))
+		return lak::err_t{};
+
+	uintmax_t result = 0U;
+	size_t i         = 0U;
+	for (const auto &v : mspan)
+		result |= static_cast<uintmax_t>(v)
+		          << (sizeof(value_type) * CHAR_BIT * i++);
+
+	return lak::ok_t<uintmax_t>{result};
+}
+
 lak::bigint::bigint(uintmax_t value)
 {
 	if (value != 0U)
 	{
-		_data.resize(1U);
-		_data[0U] = value;
+		auto split{split_umax(value)};
+		_data.resize(split.size());
+		for (size_t i = 0U; i < _data.size(); ++i) _data[i] = split[i];
 	}
 }
 
@@ -208,8 +248,9 @@ lak::bigint &lak::bigint::operator=(uintmax_t value)
 {
 	if (value != 0U)
 	{
-		_data.resize(1U);
-		_data[0U] = value;
+		auto split{split_umax(value)};
+		_data.resize(split.size());
+		for (size_t i = 0U; i < _data.size(); ++i) _data[i] = split[i];
 	}
 	else
 		_data.empty();
@@ -227,37 +268,34 @@ lak::bigint &lak::bigint::operator=(intmax_t value)
 
 lak::result<uintmax_t> lak::bigint::to_uintmax() const
 {
-	if (is_negative() || min_size() > 1U) return lak::err_t{};
-	return lak::ok_t<uintmax_t>{_data.empty() ? 0U : _data[0U]};
+	if (is_negative()) return lak::err_t{};
+	return to_uintmax_ignore_sign();
 }
 
 lak::result<intmax_t> lak::bigint::to_intmax() const
 {
-	if (min_size() > 1U) return lak::err_t{};
-	if (_data[0U] > static_cast<uintmax_t>(INTMAX_MAX)) return lak::err_t{};
-
-	intmax_t result = static_cast<intmax_t>(_data.empty() ? 0U : _data[0U]);
-	return lak::ok_t<intmax_t>{is_negative() ? -result : result};
+	if_let_ok (uintmax_t uvalue, to_uintmax_ignore_sign())
+	{
+		if (uvalue > INTMAX_MAX) return lak::err_t{};
+		intmax_t result = static_cast<intmax_t>(uvalue);
+		return lak::ok_t<intmax_t>(is_negative() ? -result : result);
+	}
+	return lak::err_t{};
 }
 
 double lak::bigint::to_double() const
 {
-	size_t i = _data.size();
-	while (i > 0 && _data[--i] == 0)
-		;
-	uintmax_t v = _data[i];
-	int lz      = 0;
-	if (i > 0)
-	{
-		lz = std::countl_zero(v);
-		if (lz > 0)
-		{
-			v <<= lz;
-			v |= _data[i - 1] >> ((sizeof(uintmax_t) * CHAR_BIT) - lz);
-		}
-	}
-	double result = static_cast<double>(v) *
-	                std::pow(2.0, (i * sizeof(uintmax_t) * CHAR_BIT) - lz);
+	const size_t bits       = min_bit_count();
+	uintmax_t v             = 0U;
+	constexpr size_t v_bits = sizeof(v) * CHAR_BIT;
+	const size_t max_bits   = std::max(bits, v_bits);
+	const size_t min_bits   = std::min(bits, v_bits);
+
+	for (size_t i = 0U; i < min_bits; ++i)
+		v = (v << 1U) | (bit(bits - (i + 1U)));
+
+	double result = static_cast<double>(v) * std::pow(2.0, max_bits - v_bits);
+
 	return is_negative() ? -result : result;
 }
 
@@ -265,44 +303,47 @@ bool lak::bigint::is_negative() const { return _negative; }
 
 bool lak::bigint::is_zero() const
 {
-	for (const uintmax_t &v : _data)
+	for (const auto &v : _data)
 		if (v != 0U) return false;
 	return true;
 }
 
-bool lak::bigint::is_big() const { return min_size() > 1U; }
+bool lak::bigint::is_big() const
+{
+	return min_size() * sizeof(value_type) > sizeof(uintmax_t);
+}
 
 uintmax_t lak::bigint::bit_count() const
 {
-	return _data.size() * sizeof(uintmax_t) * CHAR_BIT;
+	return _data.size() * sizeof(value_type) * CHAR_BIT;
 }
 
 uintmax_t lak::bigint::min_bit_count() const
 {
 	size_t min_sz = min_size();
 	if (min_sz == 0U) return 0U;
-	return (min_sz * sizeof(uintmax_t) * CHAR_BIT) -
+	return (min_sz * sizeof(value_type) * CHAR_BIT) -
 	       std::countl_zero(_data[min_sz - 1U]);
 }
 
 unsigned lak::bigint::bit(uintmax_t index) const
 {
-	return (_data[index / (sizeof(uintmax_t) * CHAR_BIT)] >>
-	        (index % (sizeof(uintmax_t) * CHAR_BIT))) &
+	return (_data[index / (sizeof(value_type) * CHAR_BIT)] >>
+	        (index % (sizeof(value_type) * CHAR_BIT))) &
 	       1U;
 }
 
 void lak::bigint::set_bit(uintmax_t index, unsigned value)
 {
-	const uintmax_t bit_index = index % (sizeof(uintmax_t) * CHAR_BIT);
+	const uintmax_t bit_index = index % (sizeof(value_type) * CHAR_BIT);
 	const uintmax_t bit_mask  = ~(uintmax_t(1U) << bit_index);
-	const size_t uint_index   = index / (sizeof(uintmax_t) * CHAR_BIT);
+	const size_t uint_index   = index / (sizeof(value_type) * CHAR_BIT);
 
 	if (uint_index >= _data.size()) reserve(uint_index + 1U);
 
-	uintmax_t &v = _data[uint_index];
+	value_type &v = _data[uint_index];
 
-	v = (v & bit_mask) | (uintmax_t(value & 1U) << bit_index);
+	v = (v & bit_mask) | (value_type(value & 1U) << bit_index);
 }
 
 /* --- uintmax_t --- */
@@ -318,10 +359,18 @@ lak::bigint &lak::bigint::operator+=(uintmax_t rhs)
 
 	if (is_negative())
 	{
-		if (_data.size() > 1 || _data[0U] >= rhs)
-			sub(rhs);
+		if_let_ok (uintmax_t v, to_uintmax_ignore_sign())
+		{
+			if (v > rhs)
+				sub(rhs);
+			else
+				*this = static_cast<uintmax_t>(rhs - v);
+		}
 		else
-			*this = static_cast<uintmax_t>(rhs - _data[0U]);
+		{
+			ASSERT(is_big());
+			sub(rhs);
+		}
 	}
 	else
 		add(rhs);
@@ -335,12 +384,20 @@ lak::bigint &lak::bigint::operator-=(uintmax_t rhs)
 
 	if (is_positive())
 	{
-		if (_data.size() > 1 || _data[0U] >= rhs)
-			sub(rhs);
+		if_let_ok (uintmax_t v, to_uintmax_ignore_sign())
+		{
+			if (v >= rhs)
+				sub(rhs);
+			else
+			{
+				*this     = static_cast<uintmax_t>(rhs - v);
+				_negative = true;
+			}
+		}
 		else
 		{
-			*this     = static_cast<uintmax_t>(rhs - _data[0U]);
-			_negative = true;
+			ASSERT(is_big());
+			sub(rhs);
 		}
 	}
 	else
@@ -353,17 +410,9 @@ lak::bigint &lak::bigint::operator*=(uintmax_t rhs)
 {
 	normalise();
 
-	lak::uintmax2_t carry = {.high = 0U, .low = 0U};
-	for (uintmax_t &v : _data)
-	{
-		lak::uintmax2_t mul = lak::mul_uintmax2(v, rhs);
-		lak::uintmax2_t add = lak::add_uintmax2(mul.low, carry.low);
-		v                   = add.low;
-		carry               = lak::add_uintmax2(add.high, mul.high, carry.high);
-	}
+	mul(split_umax(rhs));
 
-	if (carry.high != 0U || carry.low != 0U) _data.push_back(carry.low);
-	if (carry.high != 0U) _data.push_back(carry.high);
+	normalise();
 
 	return *this;
 }
@@ -384,8 +433,8 @@ lak::bigint &lak::bigint::operator<<=(uintmax_t rhs)
 {
 	if (rhs == 0) return *this;
 
-	const size_t whole_shift  = rhs / (sizeof(uintmax_t) * CHAR_BIT);
-	const uintmax_t bit_shift = rhs % (sizeof(uintmax_t) * CHAR_BIT);
+	const size_t whole_shift  = rhs / (sizeof(value_type) * CHAR_BIT);
+	const uintmax_t bit_shift = rhs % (sizeof(value_type) * CHAR_BIT);
 	const size_t old_size     = _data.size();
 
 	reserve(old_size + whole_shift + 1U);
@@ -403,15 +452,15 @@ lak::bigint &lak::bigint::operator<<=(uintmax_t rhs)
 		const uintmax_t low_mask  = ~high_mask;
 		for (size_t i = old_size; i-- > 0;)
 		{
-			uintmax_t value        = _data[i];
+			value_type value       = _data[i];
 			_data[i + whole_shift] = value << bit_shift;
 			_data[i + whole_shift + 1U] =
 			  (_data[i + whole_shift + 1U] & high_mask) |
-			  (value >> ((sizeof(uintmax_t) * CHAR_BIT) - bit_shift));
+			  (value >> ((sizeof(value_type) * CHAR_BIT) - bit_shift));
 		}
 	}
 
-	lak::fill(lak::span(_data).first(whole_shift), uintmax_t(0));
+	lak::fill(lak::span(_data).first(whole_shift), value_type(0));
 
 	normalise();
 
@@ -422,8 +471,8 @@ lak::bigint &lak::bigint::operator>>=(uintmax_t rhs)
 {
 	if (rhs == 0) return *this;
 
-	const size_t whole_shift  = rhs / (sizeof(uintmax_t) * CHAR_BIT);
-	const uintmax_t bit_shift = rhs % (sizeof(uintmax_t) * CHAR_BIT);
+	const size_t whole_shift  = rhs / (sizeof(value_type) * CHAR_BIT);
+	const uintmax_t bit_shift = rhs % (sizeof(value_type) * CHAR_BIT);
 	const size_t new_size     = _data.size() - whole_shift;
 
 	reserve(new_size + 1U);
@@ -441,9 +490,9 @@ lak::bigint &lak::bigint::operator>>=(uintmax_t rhs)
 		const uintmax_t high_mask = ~low_mask;
 		for (size_t i = 0; i < new_size; ++i)
 		{
-			uintmax_t value = _data[i + whole_shift];
-			_data[i]        = (_data[i] & high_mask) | (value >> bit_shift);
-			_data[i + 1U] = (value << ((sizeof(uintmax_t) * CHAR_BIT) - bit_shift));
+			value_type value = _data[i + whole_shift];
+			_data[i]         = (_data[i] & high_mask) | (value >> bit_shift);
+			_data[i + 1U] = (value << ((sizeof(value_type) * CHAR_BIT) - bit_shift));
 		}
 	}
 
@@ -674,31 +723,9 @@ lak::bigint &lak::bigint::operator*=(const lak::bigint &rhs)
 {
 	normalise();
 
-	const lak::bigint::_span<const uintmax_t> rhs_span = rhs.min_span();
-	const size_t rhs_size                              = rhs_span.size();
-	const bool negative_result = is_negative() != rhs.is_negative();
+	_negative = is_negative() != rhs.is_negative();
 
-	_negative = false;
-
-	if (rhs_size == 0U || is_zero() || rhs.is_zero())
-	{
-		_data.clear();
-		return *this;
-	}
-
-	_data.reserve(_data.size() + rhs_size);
-
-	lak::bigint result;
-
-	for (const uintmax_t &v : rhs_span)
-	{
-		result += *this * v;
-		_data.insert(_data.begin(), 0U);
-	}
-
-	lak::swap(*this, result);
-
-	_negative = negative_result;
+	mul(rhs.min_span());
 
 	normalise();
 

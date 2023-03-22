@@ -17,31 +17,29 @@ namespace lak
 #ifndef LAK_BIGINT_STANDALONE_HPP
 		template<typename T>
 		using _array = lak::array<T>;
-		template<typename T>
-		using _span = lak::span<T>;
 		template<typename T, typename U>
 		using _pair = lak::pair<T, U>;
 #else
 		template<typename T>
 		using _array = std::vector<T>;
-		template<typename T>
-		using _span = std::span<T>;
 		template<typename T, typename U>
 		using _pair = std::pair<T, U>;
 #endif
 
 		using div_rem_result = _pair<lak::bigint, lak::bigint>;
 
+		using value_type = uint32_t;
+
 	private:
 		bool _negative = false;
-		_array<uintmax_t> _data;
+		_array<value_type> _data;
 
 		lak::bigint &negate();
 		void reserve(size_t count);
 		void normalise(size_t min_count = 0U);
 		size_t min_size() const;
 
-		_span<const uintmax_t> min_span() const;
+		lak::span<const value_type> min_span() const;
 
 		// ignores _negative
 		void add(uintmax_t value);
@@ -52,6 +50,13 @@ namespace lak
 		void sub(const lak::bigint &value); // must not overflow
 		[[nodicard]] div_rem_result div_rem_impl(const lak::bigint &value,
 		                                         bool negate_result) const;
+
+		void add(lak::span<const value_type> value, size_t offset);
+		void sub(lak::span<const value_type> value); // must not overflow
+		void mul(value_type value, size_t offset);
+		void mul(lak::span<const value_type> value);
+
+		lak::result<uintmax_t> to_uintmax_ignore_sign() const;
 
 	public:
 		lak::bigint()                               = default;
@@ -77,6 +82,9 @@ namespace lak
 		bool is_negative() const;
 		bool is_positive() const { return !is_negative(); }
 		bool is_zero() const;
+
+		// false = will fit in a uintmax_t
+		// true = probably won't fit in a uintmax_t
 		bool is_big() const;
 
 		uintmax_t bit_count() const;
@@ -345,7 +353,7 @@ namespace lak
 
 			for (size_t i = val._data.size(); i-- > 0U;)
 			{
-				strm << std::setw(sizeof(uintmax_t) * 2U) << val._data[i];
+				strm << std::setw(sizeof(value_type) * 2U) << val._data[i];
 				if (i != 0U) strm << '\'';
 			}
 
