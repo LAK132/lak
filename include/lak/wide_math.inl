@@ -73,7 +73,7 @@ unsigned char lak::add_carry_u64(uint64_t A, uint64_t B, uint64_t *O)
 	  static_cast<uint32_t>(B >> 32U),
 	  &result_high,
 	  lak::add_carry_u32(
-	    static_cast<uint32_t>(A), static_cast<uint32_t>(B), &result_low, C));
+	    static_cast<uint32_t>(A), static_cast<uint32_t>(B), &result_low));
 
 	*O = (static_cast<uint64_t>(result_high) << 32U) |
 	     static_cast<uint64_t>(result_low);
@@ -245,7 +245,7 @@ uint64_t lak::mul_u64(uint32_t A, uint32_t B)
 
 lak::uint128_t lak::mul_u128(uint64_t A, uint64_t B)
 {
-#if 0 && defined(LAK_COMPILER_MSVC) && defined(LAK_ARCH_X86_64)
+#if defined(LAK_COMPILER_MSVC) && defined(LAK_ARCH_X86_64)
 	lak::uint128_t result;
 	result.low = _umul128(A, B, &result.high);
 	return result;

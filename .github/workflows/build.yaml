@@ -34,10 +34,10 @@ jobs:
     needs: build-min-x86-64
     runs-on: windows-2022
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           submodules: recursive
-      - uses: actions/setup-python@v1
+      - uses: actions/setup-python@v4
         with:
           python-version: '3.9.x'
       - uses: ilammy/msvc-dev-cmd@v1
@@ -57,10 +57,10 @@ jobs:
     needs: build-x86-64
     runs-on: windows-2022
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           submodules: recursive
-      - uses: actions/setup-python@v1
+      - uses: actions/setup-python@v4
         with:
           python-version: '3.9.x'
       - uses: ilammy/msvc-dev-cmd@v1

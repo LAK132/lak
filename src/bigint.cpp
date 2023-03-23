@@ -140,8 +140,8 @@ void lak::bigint::add(lak::span<const value_type> value, size_t offset)
 {
 	reserve(value.size() + offset);
 
-	unsigned char carry =
-	  lak::add_carry_u32(lak::span(_data).subspan(offset), value);
+	const auto carry{
+	  lak::add_carry_u32(lak::span(_data).subspan(offset), value)};
 
 	if (carry != 0U) _data.push_back(carry);
 }
@@ -285,11 +285,11 @@ lak::result<intmax_t> lak::bigint::to_intmax() const
 
 double lak::bigint::to_double() const
 {
-	const size_t bits       = min_bit_count();
+	const auto bits{min_bit_count()};
 	uintmax_t v             = 0U;
 	constexpr size_t v_bits = sizeof(v) * CHAR_BIT;
-	const size_t max_bits   = std::max(bits, v_bits);
-	const size_t min_bits   = std::min(bits, v_bits);
+	const auto max_bits{std::max<uintmax_t>(bits, v_bits)};
+	const auto min_bits{static_cast<size_t>(std::min<uintmax_t>(bits, v_bits))};
 
 	for (size_t i = 0U; i < min_bits; ++i)
 		v = (v << 1U) | (bit(bits - (i + 1U)));
@@ -328,16 +328,19 @@ uintmax_t lak::bigint::min_bit_count() const
 
 unsigned lak::bigint::bit(uintmax_t index) const
 {
-	return (_data[index / (sizeof(value_type) * CHAR_BIT)] >>
-	        (index % (sizeof(value_type) * CHAR_BIT))) &
-	       1U;
+	const size_t uint_index =
+	  static_cast<size_t>(index / (sizeof(value_type) * CHAR_BIT));
+	const size_t offset =
+	  static_cast<size_t>(index % (sizeof(value_type) * CHAR_BIT));
+	return (_data[uint_index] >> offset) & 1U;
 }
 
 void lak::bigint::set_bit(uintmax_t index, unsigned value)
 {
 	const uintmax_t bit_index = index % (sizeof(value_type) * CHAR_BIT);
 	const uintmax_t bit_mask  = ~(uintmax_t(1U) << bit_index);
-	const size_t uint_index   = index / (sizeof(value_type) * CHAR_BIT);
+	const size_t uint_index =
+	  static_cast<size_t>(index / (sizeof(value_type) * CHAR_BIT));
 
 	if (uint_index >= _data.size()) reserve(uint_index + 1U);
 
@@ -433,7 +436,8 @@ lak::bigint &lak::bigint::operator<<=(uintmax_t rhs)
 {
 	if (rhs == 0) return *this;
 
-	const size_t whole_shift  = rhs / (sizeof(value_type) * CHAR_BIT);
+	const size_t whole_shift =
+	  static_cast<size_t>(rhs / (sizeof(value_type) * CHAR_BIT));
 	const uintmax_t bit_shift = rhs % (sizeof(value_type) * CHAR_BIT);
 	const size_t old_size     = _data.size();
 
@@ -471,7 +475,8 @@ lak::bigint &lak::bigint::operator>>=(uintmax_t rhs)
 {
 	if (rhs == 0) return *this;
 
-	const size_t whole_shift  = rhs / (sizeof(value_type) * CHAR_BIT);
+	const size_t whole_shift =
+	  static_cast<size_t>(rhs / (sizeof(value_type) * CHAR_BIT));
 	const uintmax_t bit_shift = rhs % (sizeof(value_type) * CHAR_BIT);
 	const size_t new_size     = _data.size() - whole_shift;
 
