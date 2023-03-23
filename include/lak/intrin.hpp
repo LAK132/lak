@@ -4,8 +4,9 @@
 #include "lak/compiler.hpp"
 #include "lak/stdint.hpp"
 
-#if defined(LAK_COMPILER_GNUC) || defined(LAK_COMPILER_CLANG) ||              \
-  defined(LAK_COMPILER_MSVC)
+#if (defined(LAK_COMPILER_GNUC) || defined(LAK_COMPILER_CLANG) ||             \
+     defined(LAK_COMPILER_MSVC)) &&                                           \
+  defined(LAK_ARCH_X86_COMPAT)
 #	include <immintrin.h>
 #else
 #	error "Compiler not supported"
