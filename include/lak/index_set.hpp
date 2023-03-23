@@ -44,7 +44,7 @@ namespace lak
 
 	template<typename... T>
 	using index_set_for =
-	  index_set_from_sequence<lak::index_sequence_for<T...>>::type;
+	  typename index_set_from_sequence<lak::index_sequence_for<T...>>::type;
 
 	template<size_t... I>
 	lak::result<lak::index_set<I...>> make_index_set(lak::index_sequence<I...>,
