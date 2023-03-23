@@ -386,16 +386,21 @@ namespace lak
 
 		/* --- is_literal --- */
 
-		template<typename T>
-		struct is_literal : lak::false_type
-		{
-		};
-		template<auto rule, auto value>
-		struct is_literal<lak::dsl::literal_t<rule, value>> : lak::true_type
-		{
-		};
-		template<typename T>
-		inline constexpr bool is_literal_v = lak::dsl::is_literal<T>::value;
+		// :TODO: ubuntu g++11
+		// error: class template argument deduction failed:
+		// struct is_literal<lak::dsl::literal_t<rule, value>> : lak::true_type
+		//                                             ^~~~~
+
+		// template<typename T>
+		// struct is_literal : lak::false_type
+		// {
+		// };
+		// template<auto rule, auto value>
+		// struct is_literal<lak::dsl::literal_t<rule, value>> : lak::true_type
+		// {
+		// };
+		// template<typename T>
+		// inline constexpr bool is_literal_v = lak::dsl::is_literal<T>::value;
 	}
 }
 
