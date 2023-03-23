@@ -45,8 +45,8 @@ jobs:
           directory: build
           setup-options: --buildtype debugoptimized ${{ matrix.setup-options }}
           meson-version: 0.63.3
-      - run: build/lak_test.exe --testall
-      - run: build/lak_test_bigint_standalone.exe --testall
+      - run: build/lak_test --testall
+      - run: build/lak_test_bigint_standalone --testall
   push-staging:
     needs: run-tests
     runs-on: windows-2022
