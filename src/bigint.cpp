@@ -6,6 +6,7 @@
 #include "lak/span_manip.hpp"
 #include "lak/wide_math.hpp"
 
+#include <algorithm>
 #include <bit>
 #include <cmath>
 
