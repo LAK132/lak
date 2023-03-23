@@ -44,12 +44,12 @@ namespace lak
 		// ignores _negative
 		void add(uintmax_t value);
 		void sub(uintmax_t value); // must not overflow
-		[[nodicard]] div_rem_result div_rem_impl(uintmax_t value,
-		                                         bool negate_result) const;
+		[[nodiscard]] div_rem_result div_rem_impl(uintmax_t value,
+		                                          bool negate_result) const;
 		void add(const lak::bigint &value);
 		void sub(const lak::bigint &value); // must not overflow
-		[[nodicard]] div_rem_result div_rem_impl(const lak::bigint &value,
-		                                         bool negate_result) const;
+		[[nodiscard]] div_rem_result div_rem_impl(const lak::bigint &value,
+		                                          bool negate_result) const;
 
 		void add(lak::span<const value_type> value, size_t offset);
 		void sub(lak::span<const value_type> value); // must not overflow
@@ -59,16 +59,16 @@ namespace lak
 		lak::result<uintmax_t> to_uintmax_ignore_sign() const;
 
 	public:
-		lak::bigint()                               = default;
-		lak::bigint(const lak::bigint &)            = default;
-		lak::bigint(lak::bigint &&)                 = default;
+		bigint()                                    = default;
+		bigint(const lak::bigint &)                 = default;
+		bigint(lak::bigint &&)                      = default;
 		lak::bigint &operator=(const lak::bigint &) = default;
 		lak::bigint &operator=(lak::bigint &&)      = default;
 
-		lak::bigint(uintmax_t value);
-		lak::bigint(intmax_t value);
-		lak::bigint(unsigned value) : lak::bigint(uintmax_t(value)) {}
-		lak::bigint(signed value) : lak::bigint(intmax_t(value)) {}
+		bigint(uintmax_t value);
+		bigint(intmax_t value);
+		bigint(unsigned value) : bigint(uintmax_t(value)) {}
+		bigint(signed value) : bigint(intmax_t(value)) {}
 
 		lak::bigint &operator=(uintmax_t value);
 		lak::bigint &operator=(intmax_t value);
