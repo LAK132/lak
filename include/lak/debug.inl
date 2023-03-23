@@ -2,6 +2,7 @@
 #	define LAK_DEBUG_INL
 
 #	include "lak/string.hpp"
+#	include "lak/os.hpp"
 
 #	include <cstdlib>
 #	ifndef LAK_NO_FILESYSTEM
@@ -19,7 +20,11 @@ namespace lak
 	struct debugger_t
 	{
 #	ifndef LAK_DEBUG_STREAM_CHAR
-#		define LAK_DEBUG_STREAM_CHAR char8_t
+#		ifdef LAK_OS_APPLE
+#			define LAK_DEBUG_STREAM_CHAR char
+#		else
+#			define LAK_DEBUG_STREAM_CHAR char8_t
+#		endif
 #	endif
 		std::basic_stringstream<LAK_DEBUG_STREAM_CHAR> stream;
 
