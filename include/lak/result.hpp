@@ -333,6 +333,12 @@ namespace lak
 		} while (false)
 }
 
+template<typename T, typename E1, typename E2>
+lak::result<T, E2> operator|(lak::result<T, E1> a, lak::result<T, E2> b);
+
+template<typename T1, typename T2, typename E>
+lak::result<T2, E> operator&(lak::result<T1, E> a, lak::result<T2, E> b);
+
 #endif
 
 #ifdef LAK_RESULT_FORWARD_ONLY
