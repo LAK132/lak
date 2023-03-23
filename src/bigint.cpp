@@ -457,7 +457,6 @@ lak::bigint &lak::bigint::operator<<=(uintmax_t rhs)
 	else
 	{
 		const uintmax_t high_mask = UINTMAX_MAX << bit_shift;
-		const uintmax_t low_mask  = ~high_mask;
 		for (size_t i = old_size; i-- > 0;)
 		{
 			value_type value       = _data[i];
