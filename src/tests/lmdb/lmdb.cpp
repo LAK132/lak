@@ -49,8 +49,8 @@ BEGIN_TEST(lmdb)
 
 		lak::lmdb::rwdatabase db = txn.open_database().UNWRAP();
 
-		db.put("hello"_span, "world"_span);
-		db.put("how"_span, "are you"_span);
+		db.put("hello"_span, "world"_span).UNWRAP();
+		db.put("how"_span, "are you"_span).UNWRAP();
 
 		txn.commit().UNWRAP();
 	}

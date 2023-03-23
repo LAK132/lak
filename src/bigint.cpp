@@ -6,6 +6,9 @@
 #include "lak/span_manip.hpp"
 #include "lak/wide_math.hpp"
 
+#include <bit>
+#include <cmath>
+
 bool is_negative(uintmax_t v) { return (v & (~(UINTMAX_MAX >> 1U))) != 0U; }
 
 lak::stack_array<lak::bigint::value_type,
@@ -253,7 +256,7 @@ lak::bigint &lak::bigint::operator=(uintmax_t value)
 		for (size_t i = 0U; i < _data.size(); ++i) _data[i] = split[i];
 	}
 	else
-		_data.empty();
+		_data.clear();
 	return *this;
 }
 
@@ -278,7 +281,7 @@ lak::result<intmax_t> lak::bigint::to_intmax() const
 	{
 		if (uvalue > INTMAX_MAX) return lak::err_t{};
 		intmax_t result = static_cast<intmax_t>(uvalue);
-		return lak::ok_t<intmax_t>(is_negative() ? -result : result);
+		return lak::ok_t<intmax_t>{is_negative() ? -result : result};
 	}
 	return lak::err_t{};
 }

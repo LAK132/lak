@@ -146,7 +146,7 @@ namespace lak
 		{                                                                         \
 			if constexpr (lak::is_void_v<typename func_wrapper::return_type>)       \
 			{                                                                       \
-				lak::apply((__VA_ARGS__), lak::move(args));                           \
+				(void)lak::apply((__VA_ARGS__), lak::move(args));                     \
 				return 0;                                                             \
 			}                                                                       \
 			else                                                                    \

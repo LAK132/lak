@@ -1214,7 +1214,8 @@ namespace lak
 		auto _foreach = [&]<size_t... I>(lak::index_set<0U, I...> set, auto &&func)
 		{
 			if (set.value() == 0U) return;
-			((func(result.template get<I - 1U>()), I + 1U != set.value()) && ...);
+			(void)((func(result.template get<I - 1U>()), I + 1U != set.value()) &&
+			       ...);
 		};
 
 		DEFER(_foreach(succeeded, [](auto &value) { value.destroy(); }));
