@@ -195,7 +195,9 @@ size_t lak::compare(lak::span<const T> a, lak::span<const T> b)
 template<typename T>
 bool lak::same_span(lak::span<const T> a, lak::span<const T> b)
 {
-	return __lakc_ptr_eq(a.data(), b.data()) && a.size() == b.size();
+	return __lakc_ptr_eq(reinterpret_cast<const byte_t *>(a.data()),
+	                     reinterpret_cast<const byte_t *>(b.data())) &&
+	       a.size() == b.size();
 }
 
 ///////////////////////////////////////////////////////////////////////////////

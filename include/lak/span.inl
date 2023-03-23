@@ -338,7 +338,9 @@ inline constexpr size_t lak::span<void, lak::dynamic_extent>::size_bytes()
 inline constexpr bool lak::span<void, lak::dynamic_extent>::contains(
   const void *ptr) const noexcept
 {
-	return __lakc_ptr_in_range(ptr, _data, _size);
+	return __lakc_ptr_in_range(static_cast<const byte_t *>(ptr),
+	                           static_cast<const byte_t *>(_data),
+	                           _size);
 }
 
 // add const
@@ -388,7 +390,9 @@ lak::span<const void, lak::dynamic_extent>::size_bytes() const noexcept
 inline constexpr bool lak::span<const void, lak::dynamic_extent>::contains(
   const void *ptr) const noexcept
 {
-	return __lakc_ptr_in_range(ptr, _data, _size);
+	return __lakc_ptr_in_range(static_cast<const byte_t *>(ptr),
+	                           static_cast<const byte_t *>(_data),
+	                           _size);
 }
 
 // reinterpret cast to U
