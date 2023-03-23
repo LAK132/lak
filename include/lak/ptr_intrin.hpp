@@ -118,24 +118,26 @@ namespace lak
 	template<typename T>
 	constexpr force_inline bool ptr_in_range(const T *ptr,
 	                                         const T *begin,
-	                                         size_t size)
-	{
-		if (std::is_constant_evaluated())
-			return !std::less<void>{}(ptr, begin) &&
-			       std::less<void>{}(ptr, begin + size);
-		else
-			return __lakc_ptr_in_range(ptr, begin, size * sizeof(T));
-	}
-
-	template<typename T>
-	constexpr force_inline bool ptr_in_range(const T *ptr,
-	                                         const T *begin,
 	                                         const T *end)
 	{
 		if (std::is_constant_evaluated())
 			return !std::less<void>{}(ptr, begin) && std::less<void>{}(ptr, end);
 		else
-			return __lakc_ptr_in_range(ptr, begin, (end - begin) * sizeof(T));
+			return !__lakc_ptr_lt(ptr, begin) && __lakc_ptr_lt(ptr, end);
+	}
+
+	template<typename T>
+	constexpr force_inline bool ptr_in_range(const T *ptr,
+	                                         const T *begin,
+	                                         size_t size)
+	{
+		if constexpr (lak::is_void_v<T>)
+			return lak::ptr_in_range(
+			  ptr,
+			  begin,
+			  static_cast<const void *>(static_cast<const byte_t *>(begin) + size));
+		else
+			return lak::ptr_in_range(ptr, begin, begin + size);
 	}
 
 	template<typename T>

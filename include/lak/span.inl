@@ -143,7 +143,7 @@ template<size_t SIZE>
 inline constexpr bool lak::span<void, SIZE>::contains(
   const void *ptr) const noexcept
 {
-	return __lakc_ptr_in_range(ptr, _data, SIZE);
+	return lak::ptr_in_range(ptr, _data, SIZE);
 }
 
 // add const
@@ -208,7 +208,7 @@ template<size_t SIZE>
 inline constexpr bool lak::span<const void, SIZE>::contains(
   const void *ptr) const noexcept
 {
-	return __lakc_ptr_in_range(ptr, _data, SIZE);
+	return lak::ptr_in_range(ptr, _data, SIZE);
 }
 
 // reinterpret cast to T
@@ -338,9 +338,7 @@ inline constexpr size_t lak::span<void, lak::dynamic_extent>::size_bytes()
 inline constexpr bool lak::span<void, lak::dynamic_extent>::contains(
   const void *ptr) const noexcept
 {
-	return __lakc_ptr_in_range(static_cast<const byte_t *>(ptr),
-	                           static_cast<const byte_t *>(_data),
-	                           _size);
+	return lak::ptr_in_range(ptr, _data, _size);
 }
 
 // add const
@@ -390,9 +388,7 @@ lak::span<const void, lak::dynamic_extent>::size_bytes() const noexcept
 inline constexpr bool lak::span<const void, lak::dynamic_extent>::contains(
   const void *ptr) const noexcept
 {
-	return __lakc_ptr_in_range(static_cast<const byte_t *>(ptr),
-	                           static_cast<const byte_t *>(_data),
-	                           _size);
+	return lak::ptr_in_range(ptr, _data, _size);
 }
 
 // reinterpret cast to U
