@@ -10,20 +10,20 @@ BEGIN_TEST(iterator_wrapper)
 {
 	lak::array values{1, 2, 3};
 
-	lak::swap(*forward_iterator_wrapper(values.begin()),
-	          *forward_iterator_wrapper(values.begin() + 1));
+	lak::swap(*forward_iterator_wrapper{values.begin()},
+	          *forward_iterator_wrapper{values.begin() + 1});
 
 	ASSERT_EQUAL(values[0], 2);
 	ASSERT_EQUAL(values[1], 1);
 
-	lak::swap(*bidirectional_iterator_wrapper(values.begin()),
-	          *bidirectional_iterator_wrapper(values.begin() + 1));
+	lak::swap(*bidirectional_iterator_wrapper{values.begin()},
+	          *bidirectional_iterator_wrapper{values.begin() + 1});
 
 	ASSERT_EQUAL(values[0], 1);
 	ASSERT_EQUAL(values[1], 2);
 
-	lak::swap(*random_access_iterator_wrapper(values.begin()),
-	          *random_access_iterator_wrapper(values.begin() + 1));
+	lak::swap(*random_access_iterator_wrapper{values.begin()},
+	          *random_access_iterator_wrapper{values.begin() + 1});
 
 	ASSERT_EQUAL(values[0], 2);
 	ASSERT_EQUAL(values[1], 1);
@@ -104,7 +104,8 @@ BEGIN_TEST(reverse)
 {
 	auto wrapped_test = []<typename WRAPPER>(WRAPPER &&)
 	{
-		using wrapper_t = WRAPPER::template type<lak::array<intmax_t>::iterator>;
+		using wrapper_t =
+		  typename WRAPPER::template type<lak::array<intmax_t>::iterator>;
 
 		{
 			auto source   = {1, 2, 3, 4, 5, 6};
@@ -150,7 +151,8 @@ BEGIN_TEST(partition)
 
 		lak::array<intmax_t> values{source.begin(), source.end()};
 
-		using wrapper_t = WRAPPER::template type<lak::array<intmax_t>::iterator>;
+		using wrapper_t =
+		  typename WRAPPER::template type<lak::array<intmax_t>::iterator>;
 
 		auto mid = lak::partition(wrapper_t{values.begin()},
 		                          wrapper_t{values.end()},
@@ -206,7 +208,8 @@ BEGIN_TEST(binary_partition)
 
 		lak::array<intmax_t> values{source.begin(), source.end()};
 
-		using wrapper_t = WRAPPER::template type<lak::array<intmax_t>::iterator>;
+		using wrapper_t =
+		  typename WRAPPER::template type<lak::array<intmax_t>::iterator>;
 
 		auto zero = lak::find(values.begin(), values.end(), 0);
 		ASSERT(zero != values.end());

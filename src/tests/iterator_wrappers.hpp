@@ -11,10 +11,10 @@ struct input_iterator_wrapper
 
 	ITER _iter;
 
-	using difference_type   = std::iterator_traits<ITER>::difference_type;
-	using value_type        = std::iterator_traits<ITER>::value_type;
-	using pointer           = std::iterator_traits<ITER>::pointer;
-	using reference         = std::iterator_traits<ITER>::reference;
+	using difference_type = typename std::iterator_traits<ITER>::difference_type;
+	using value_type      = typename std::iterator_traits<ITER>::value_type;
+	using pointer         = typename std::iterator_traits<ITER>::pointer;
+	using reference       = typename std::iterator_traits<ITER>::reference;
 	using iterator_category = std::input_iterator_tag;
 
 	bool operator!=(const input_iterator_wrapper &rhs) const
@@ -64,10 +64,10 @@ struct output_iterator_wrapper
 
 	ITER _iter;
 
-	using difference_type   = std::iterator_traits<ITER>::difference_type;
-	using value_type        = std::iterator_traits<ITER>::value_type;
-	using pointer           = std::iterator_traits<ITER>::pointer;
-	using reference         = std::iterator_traits<ITER>::reference;
+	using difference_type = typename std::iterator_traits<ITER>::difference_type;
+	using value_type      = typename std::iterator_traits<ITER>::value_type;
+	using pointer         = typename std::iterator_traits<ITER>::pointer;
+	using reference       = typename std::iterator_traits<ITER>::reference;
 	using iterator_category = std::output_iterator_tag;
 
 	struct assign_proxy
@@ -114,10 +114,10 @@ struct forward_iterator_wrapper
 
 	ITER _iter;
 
-	using difference_type   = std::iterator_traits<ITER>::difference_type;
-	using value_type        = std::iterator_traits<ITER>::value_type;
-	using pointer           = std::iterator_traits<ITER>::pointer;
-	using reference         = std::iterator_traits<ITER>::reference;
+	using difference_type = typename std::iterator_traits<ITER>::difference_type;
+	using value_type      = typename std::iterator_traits<ITER>::value_type;
+	using pointer         = typename std::iterator_traits<ITER>::pointer;
+	using reference       = typename std::iterator_traits<ITER>::reference;
 	using iterator_category = std::forward_iterator_tag;
 
 	bool operator!=(const forward_iterator_wrapper &rhs) const
@@ -165,10 +165,10 @@ struct bidirectional_iterator_wrapper
 
 	ITER _iter;
 
-	using difference_type   = std::iterator_traits<ITER>::difference_type;
-	using value_type        = std::iterator_traits<ITER>::value_type;
-	using pointer           = std::iterator_traits<ITER>::pointer;
-	using reference         = std::iterator_traits<ITER>::reference;
+	using difference_type = typename std::iterator_traits<ITER>::difference_type;
+	using value_type      = typename std::iterator_traits<ITER>::value_type;
+	using pointer         = typename std::iterator_traits<ITER>::pointer;
+	using reference       = typename std::iterator_traits<ITER>::reference;
 	using iterator_category = std::bidirectional_iterator_tag;
 
 	bool operator!=(const bidirectional_iterator_wrapper &rhs) const
@@ -225,10 +225,10 @@ struct random_access_iterator_wrapper
 
 	ITER _iter;
 
-	using difference_type   = std::iterator_traits<ITER>::difference_type;
-	using value_type        = std::iterator_traits<ITER>::value_type;
-	using pointer           = std::iterator_traits<ITER>::pointer;
-	using reference         = std::iterator_traits<ITER>::reference;
+	using difference_type = typename std::iterator_traits<ITER>::difference_type;
+	using value_type      = typename std::iterator_traits<ITER>::value_type;
+	using pointer         = typename std::iterator_traits<ITER>::pointer;
+	using reference       = typename std::iterator_traits<ITER>::reference;
 	using iterator_category = std::random_access_iterator_tag;
 
 	bool operator!=(const random_access_iterator_wrapper &rhs) const
