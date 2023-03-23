@@ -3,18 +3,22 @@
 
 #include "lak/compare.hpp"
 #include "lak/compiler.hpp"
-#include "lak/intrin.hpp"
+#include "lak/memmanip.hpp"
 
 #include <functional>
 
-#if defined(LAK_ARCH_X86_64)
+#if defined(LAK_ARCH_X86_64) || defined(LAK_ARCH_ARM64)
 using __lakc_uptrdiff = unsigned long long;
 #	define LAKC_UPTRDIFF_MAX 0xFFFF'FFFF'FFFF'FFFFU
-#elif defined(LAK_ARCH_X86)
+#elif defined(LAK_ARCH_X86) || defined(LAK_ARCH_ARM)
 using __lakc_uptrdiff = uint32_t;
 #	define LAKC_UPTRDIFF_MAX 0xFFFF'FFFFU
 #else
 #	error Arch not supported
+#endif
+
+#if defined(LAK_ARCH_X86) || defined(LAK_ARCH_X86_64)
+#	include <intrin.h>
 #endif
 
 struct __lakc_ptr_diff_result
@@ -40,108 +44,69 @@ force_inline __lakc_ptr_diff_result __lakc_ptr_diff(const void *a,
 	                                 reinterpret_cast<uint32_t>(b),
 	                                 &result.diff);
 #else
-#	error Compiler/OS/Arch not supported
+	const auto a2{lak::bit_cast<__lakc_uptrdiff>(a)};
+	const auto b2{lak::bit_cast<__lakc_uptrdiff>(b)};
+	result.diff     = __lakc_uptrdiff(a2 - b2);
+	result.overflow = a2 < b2 ? 1U : 0U;
 #endif
 	return result;
 }
 
 /* --- a < b --- */
 
-constexpr force_inline bool __lakc_ptr_lt(const void *a, const void *b)
+force_inline bool __lakc_ptr_lt(const void *a, const void *b)
 {
-	if (std::is_constant_evaluated())
-		return std::less<const void *>{}(a, b);
-	else
-		return __lakc_ptr_diff(a, b).overflow > 0U;
+	return __lakc_ptr_diff(a, b).overflow > 0U;
 }
 
 /* --- a <= b --- */
 
-constexpr force_inline bool __lakc_ptr_le(const void *a, const void *b)
+force_inline bool __lakc_ptr_le(const void *a, const void *b)
 {
-	if (std::is_constant_evaluated())
-		return !std::less<const void *>{}(b, a);
-	else
-	{
-		__lakc_ptr_diff_result result = __lakc_ptr_diff(a, b);
-		return (result.overflow > 0U) |
-		       ((result.overflow == 0U) & (result.diff == 0U));
-	}
+	__lakc_ptr_diff_result result = __lakc_ptr_diff(a, b);
+	return (result.overflow > 0U) |
+	       ((result.overflow == 0U) & (result.diff == 0U));
 }
 
 /* --- a > b --- */
 
-constexpr force_inline bool __lakc_ptr_gt(const void *a, const void *b)
+force_inline bool __lakc_ptr_gt(const void *a, const void *b)
 {
-	if (std::is_constant_evaluated())
-		return std::less<const void *>{}(b, a);
-	else
-	{
-		__lakc_ptr_diff_result result = __lakc_ptr_diff(a, b);
-		return (result.overflow == 0U) & (result.diff > 0U);
-	}
+	__lakc_ptr_diff_result result = __lakc_ptr_diff(a, b);
+	return (result.overflow == 0U) & (result.diff > 0U);
 }
 
 /* --- a >= b --- */
 
-constexpr force_inline bool __lakc_ptr_ge(const void *a, const void *b)
+force_inline bool __lakc_ptr_ge(const void *a, const void *b)
 {
-	if (std::is_constant_evaluated())
-		return !std::less<const void *>{}(a, b);
-	else
-	{
-		__lakc_ptr_diff_result result = __lakc_ptr_diff(a, b);
-		return (result.overflow == 0U);
-	}
+	__lakc_ptr_diff_result result = __lakc_ptr_diff(a, b);
+	return (result.overflow == 0U);
 }
 
 /* --- a == b --- */
 
-constexpr force_inline bool __lakc_ptr_eq(const void *a, const void *b)
+force_inline bool __lakc_ptr_eq(const void *a, const void *b)
 {
-	if (std::is_constant_evaluated())
-		return !std::less<const void *>{}(a, b) &&
-		       !std::less<const void *>{}(b, a);
-	else
-	{
-		__lakc_ptr_diff_result result = __lakc_ptr_diff(a, b);
-		return (result.overflow == 0U) & (result.diff == 0U);
-	}
+	__lakc_ptr_diff_result result = __lakc_ptr_diff(a, b);
+	return (result.overflow == 0U) & (result.diff == 0U);
 }
 
 /* --- a != b --- */
 
-constexpr force_inline bool __lakc_ptr_neq(const void *a, const void *b)
+force_inline bool __lakc_ptr_neq(const void *a, const void *b)
 {
-	if (std::is_constant_evaluated())
-		return std::less<const void *>{}(a, b) || std::less<const void *>{}(b, a);
-	else
-	{
-		__lakc_ptr_diff_result result = __lakc_ptr_diff(a, b);
-		return (result.overflow > 0U) | (result.diff > 0U);
-	}
+	__lakc_ptr_diff_result result = __lakc_ptr_diff(a, b);
+	return (result.overflow > 0U) | (result.diff > 0U);
 }
 
 /* --- begin <= ptr < begin+size --- */
 
-constexpr force_inline bool __lakc_ptr_in_range(const void *ptr,
-                                                const void *begin,
-                                                __lakc_uptrdiff size)
+force_inline bool __lakc_ptr_in_range(const void *ptr,
+                                      const void *begin,
+                                      __lakc_uptrdiff size)
 {
-	if (std::is_constant_evaluated())
-	{
-		if (size == 0) return false;
-
-		if (const void *end{reinterpret_cast<const char *>(begin) + size};
-		    __lakc_ptr_lt(begin, end))
-			return __lakc_ptr_ge(ptr, begin) && __lakc_ptr_lt(ptr, end);
-		else
-			return __lakc_ptr_ge(ptr, begin) || __lakc_ptr_lt(ptr, end);
-	}
-	else
-	{
-		return __lakc_ptr_diff(ptr, begin).diff < size;
-	}
+	return __lakc_ptr_diff(ptr, begin).diff < size;
 }
 
 namespace lak
@@ -151,9 +116,11 @@ namespace lak
 	                                         const T *begin,
 	                                         size_t size)
 	{
-		return __lakc_ptr_in_range(static_cast<const void *>(ptr),
-		                           static_cast<const void *>(begin),
-		                           size * sizeof(T));
+		if (std::is_constant_evaluated())
+			return !std::less<void>{}(ptr, begin) &&
+			       std::less<void>{}(ptr, begin + size);
+		else
+			return __lakc_ptr_in_range(ptr, begin, size * sizeof(T));
 	}
 
 	template<typename T>
@@ -161,9 +128,10 @@ namespace lak
 	                                         const T *begin,
 	                                         const T *end)
 	{
-		return __lakc_ptr_in_range(static_cast<const void *>(ptr),
-		                           static_cast<const void *>(begin),
-		                           (end - begin) * sizeof(T));
+		if (std::is_constant_evaluated())
+			return !std::less<void>{}(ptr, begin) && std::less<void>{}(ptr, end);
+		else
+			return __lakc_ptr_in_range(ptr, begin, (end - begin) * sizeof(T));
 	}
 
 	template<typename T>
@@ -172,10 +140,10 @@ namespace lak
 	{
 		if (std::is_constant_evaluated())
 		{
-			return __lakc_ptr_lt(a, b)
+			return std::less<void>{}(a, b)
 			         ? lak::strong_ordering::less
-			         : (__lakc_ptr_gt(a, b) ? lak::strong_ordering::greater
-			                                : lak::strong_ordering::equal);
+			         : (std::greater<void>{}(a, b) ? lak::strong_ordering::greater
+			                                       : lak::strong_ordering::equal);
 		}
 		else
 		{

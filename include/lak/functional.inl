@@ -87,7 +87,7 @@ template<typename T>
 constexpr inline bool lak::equal_to<T *>::operator()(const T *lhs,
                                                      const T *rhs) const
 {
-	return __lakc_ptr_eq(lhs, rhs);
+	return lak::ptr_compare(lhs, rhs) == lak::strong_ordering::equal;
 }
 
 /* --- not_equal_to<T, P...> --- */
@@ -175,7 +175,7 @@ template<typename T>
 constexpr inline bool lak::not_equal_to<T *>::operator()(const T *lhs,
                                                          const T *rhs) const
 {
-	return __lakc_ptr_neq(lhs, rhs);
+	return lak::ptr_compare(lhs, rhs) != lak::strong_ordering::equal;
 }
 
 /* --- less<T, P...> --- */
@@ -268,7 +268,7 @@ template<typename T>
 constexpr inline bool lak::less<T *>::operator()(const T *lhs,
                                                  const T *rhs) const
 {
-	return __lakc_ptr_lt(lhs, rhs);
+	return lak::ptr_compare(lhs, rhs) == lak::strong_ordering::less;
 }
 
 /* --- greater<T, P...> --- */
@@ -361,7 +361,7 @@ template<typename T>
 constexpr inline bool lak::greater<T *>::operator()(const T *lhs,
                                                     const T *rhs) const
 {
-	return __lakc_ptr_gt(lhs, rhs);
+	return lak::ptr_compare(lhs, rhs) == lak::strong_ordering::greater;
 }
 
 /* --- less_equal<T, P...> --- */
@@ -455,7 +455,7 @@ template<typename T>
 constexpr inline bool lak::less_equal<T *>::operator()(const T *lhs,
                                                        const T *rhs) const
 {
-	return __lakc_ptr_le(lhs, rhs);
+	return lak::ptr_compare(lhs, rhs) != lak::strong_ordering::greater;
 }
 
 /* --- greater_equal<T, P...> --- */
@@ -549,5 +549,5 @@ template<typename T>
 constexpr inline bool lak::greater_equal<T *>::operator()(const T *lhs,
                                                           const T *rhs) const
 {
-	return __lakc_ptr_ge(lhs, rhs);
+	return lak::ptr_compare(lhs, rhs) != lak::strong_ordering::less;
 }
