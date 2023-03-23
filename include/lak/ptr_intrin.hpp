@@ -17,8 +17,12 @@ using __lakc_uptrdiff = uint32_t;
 #	error Arch not supported
 #endif
 
-#if defined(LAK_ARCH_X86) || defined(LAK_ARCH_X86_64)
-#	include <intrin.h>
+#if defined(LAK_ARCH_X86_COMPAT)
+#	if defined(LAK_COMPILER_MSVC)
+#		include <intrin.h>
+#	else
+#		include <immintrin.h>
+#	endif
 #endif
 
 struct __lakc_ptr_diff_result
