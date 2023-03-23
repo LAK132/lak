@@ -196,7 +196,7 @@
 	{                                                                           \
 		const auto &UNIQUIFY(x) = (X);                                            \
 		const auto &UNIQUIFY(y) = (Y);                                            \
-		if (!(UNIQUIFY(x) == UNIQUIFY(y))) [[unlikely]]                           \
+		if (!lak::equal_to<>{}(UNIQUIFY(x), UNIQUIFY(y))) [[unlikely]]            \
 		{                                                                         \
 			FATAL("Assertion '" DEBUG_STRINGIFY_EXPR(X == Y) "' failed: '",         \
 			      UNIQUIFY(x),                                                      \
