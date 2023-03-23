@@ -1,12 +1,17 @@
 #include "lak/architecture.hpp"
 
-#if defined(LAK_COMPILER_GNUC) || defined(LAK_COMPILER_CLANG)
-#	include <cpuid.h>
-#	include <immintrin.h>
-#elif defined(LAK_COMPILER_MSVC)
-#	include <immintrin.h>
+#if defined(LAK_ARCH_X86_COMPAT)
+#	if defined(LAK_COMPILER_GNUC) || defined(LAK_COMPILER_CLANG)
+#		include <cpuid.h>
+#		include <immintrin.h>
+#	elif defined(LAK_COMPILER_MSVC)
+#		include <immintrin.h>
+#	else
+#		error Compiler not supported
+#	endif
+#elif defined(LAK_ARCH_ARM) || defined(LAK_ARCH_ARM64)
 #else
-#	error "Compiler not supported"
+#	error Arch not supported
 #endif
 
 lak::architecture lak::host_cpu_architecture()
@@ -74,6 +79,7 @@ lak::array<unsigned int, 4> lak::cpuid(unsigned int index)
 {
 #if !(defined(LAK_ARCH_X86_64) || defined(LAK_ARCH_X86) ||                    \
       defined(LAK_ARCH_IA64))
+	(void)index;
 	return {0U, 0U, 0U, 0U};
 #elif defined(LAK_COMPILER_GNUC) || defined(LAK_COMPILER_CLANG)
 	lak::array<unsigned int, 4> info;

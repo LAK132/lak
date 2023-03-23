@@ -3,6 +3,8 @@
 
 #if defined(LAK_OS_WINDOWS)
 #	include "lak/windows.hpp"
+#elif defined(LAK_OS_APPLE)
+#	include <mach/mach_time.h>
 #elif defined(LAK_OS_LINUX)
 #	include <unistd.h>
 #	if _POSIX_TIMERS <= 0
@@ -24,6 +26,10 @@ uint64_t lak::performance_frequency()
 	LARGE_INTEGER result;
 	ASSERT(::QueryPerformanceFrequency(&result));
 	return result.QuadPart;
+#elif defined(LAK_OS_APPLE)
+	mach_timebase_info_data_t timebase_info;
+	ASSERT(mach_timebase_info(&timebase_info) == KERN_SUCCESS);
+	return timebase_info.numer * (1'000'000'000 / timebase_info.denom);
 #elif defined(LAK_OS_LINUX)
 	return 1'000'000'000;
 #else
@@ -37,6 +43,8 @@ uint64_t lak::performance_counter()
 	LARGE_INTEGER result;
 	ASSERT(::QueryPerformanceCounter(&result));
 	return result.QuadPart;
+#elif defined(LAK_OS_APPLE)
+	return mach_absolute_time();
 #elif defined(LAK_OS_LINUX)
 	struct timespec time;
 	ASSERT(clock_gettime(CLOCK_MONOTONIC, &time) == 0);

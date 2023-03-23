@@ -5,6 +5,7 @@
 #include "lak/string_ostream.hpp"
 
 #include <fstream>
+#include <locale>
 
 void lak::terminate_handler() { ABORT(); }
 

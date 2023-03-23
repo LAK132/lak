@@ -7,7 +7,6 @@
 
 #include <cstddef>
 #include <cstdlib>
-#include <malloc.h>
 
 /* --- local alloc --- */
 

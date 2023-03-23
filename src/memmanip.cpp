@@ -56,13 +56,8 @@ size_t lak::round_to_page_multiple(size_t size, size_t *page_size_out)
 #		include "win32/wrapper.cpp"
 #	endif
 
-#	if defined(LAK_OS_LINUX)
-#		include "linux/memmanip.cpp"
+#	if defined(LAK_OS_LINUX) || defined(LAK_OS_APPLE)
 #		include "posix/memmanip.cpp"
 #	endif
 
-#	if defined(LAK_OS_APPLE)
-#		include "macos/memmanip.cpp"
-#		include "posix/memmanip.cpp"
-#	endif
 #endif

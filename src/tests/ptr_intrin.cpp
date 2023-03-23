@@ -4,7 +4,12 @@
 
 BEGIN_TEST(ptr_intrin)
 {
-	const char str[14]{"hello, world!"};
+	static constinit const char str[14]{"hello, world!"};
+
+	static_assert(lak::ptr_compare(str, str + 2) == lak::strong_ordering::less);
+	static_assert(lak::ptr_compare(str + 2, str) ==
+	              lak::strong_ordering::greater);
+	static_assert(lak::ptr_compare(str, str) == lak::strong_ordering::equal);
 
 	ASSERT_EQUAL(__lakc_ptr_diff(str, str).diff, 0U);
 	ASSERT_EQUAL(__lakc_ptr_diff(str, str).overflow, 0U);
@@ -15,51 +20,33 @@ BEGIN_TEST(ptr_intrin)
 	ASSERT_EQUAL(__lakc_ptr_diff(str, str + 2).diff, LAKC_UPTRDIFF_MAX - 1U);
 	ASSERT_EQUAL(__lakc_ptr_diff(str, str + 2).overflow, 1U);
 
-	static_assert(__lakc_ptr_lt(str, str + 2));
-	static_assert(!__lakc_ptr_lt(str + 2, str));
-	static_assert(!__lakc_ptr_lt(str, str));
 	ASSERT(__lakc_ptr_lt(str, str + 2));
 	ASSERT(!__lakc_ptr_lt(str + 2, str));
 	ASSERT(!__lakc_ptr_lt(str, str));
 	ASSERT_LESS(str, str + 2);
 
-	static_assert(__lakc_ptr_le(str, str + 2));
-	static_assert(!__lakc_ptr_le(str + 2, str));
-	static_assert(__lakc_ptr_le(str, str));
 	ASSERT(__lakc_ptr_le(str, str + 2));
 	ASSERT(!__lakc_ptr_le(str + 2, str));
 	ASSERT(__lakc_ptr_le(str, str));
 	ASSERT_LESS_OR_EQUAL(str, str + 2);
 	ASSERT_LESS_OR_EQUAL(str, str);
 
-	static_assert(!__lakc_ptr_gt(str, str + 2));
-	static_assert(__lakc_ptr_gt(str + 2, str));
-	static_assert(!__lakc_ptr_gt(str, str));
 	ASSERT(!__lakc_ptr_gt(str, str + 2));
 	ASSERT(__lakc_ptr_gt(str + 2, str));
 	ASSERT(!__lakc_ptr_gt(str, str));
 	ASSERT_GREATER(str + 2, str);
 
-	static_assert(!__lakc_ptr_ge(str, str + 2));
-	static_assert(__lakc_ptr_ge(str + 2, str));
-	static_assert(__lakc_ptr_ge(str, str));
 	ASSERT(!__lakc_ptr_ge(str, str + 2));
 	ASSERT(__lakc_ptr_ge(str + 2, str));
 	ASSERT(__lakc_ptr_ge(str, str));
 	ASSERT_GREATER_OR_EQUAL(str + 2, str);
 	ASSERT_GREATER_OR_EQUAL(str, str);
 
-	static_assert(!__lakc_ptr_eq(str, str + 2));
-	static_assert(!__lakc_ptr_eq(str + 2, str));
-	static_assert(__lakc_ptr_eq(str, str));
 	ASSERT(!__lakc_ptr_eq(str, str + 2));
 	ASSERT(!__lakc_ptr_eq(str + 2, str));
 	ASSERT(__lakc_ptr_eq(str, str));
 	ASSERT_EQUAL(str, str);
 
-	static_assert(__lakc_ptr_neq(str, str + 2));
-	static_assert(__lakc_ptr_neq(str + 2, str));
-	static_assert(!__lakc_ptr_neq(str, str));
 	ASSERT(__lakc_ptr_neq(str, str + 2));
 	ASSERT(__lakc_ptr_neq(str + 2, str));
 	ASSERT(!__lakc_ptr_neq(str, str));
