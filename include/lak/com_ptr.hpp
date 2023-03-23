@@ -11,8 +11,8 @@ namespace lak
 	template<typename T>
 	struct unique_com_ptr_traits
 	{
-		using handle_type  = T::handle_type;
-		using exposed_type = T::exposed_type;
+		using handle_type  = typename T::handle_type;
+		using exposed_type = typename T::exposed_type;
 
 		template<typename... ARGS>
 		inline static auto ctor(ARGS &&...args)
@@ -30,8 +30,8 @@ namespace lak
 	template<typename T>
 	struct unique_com_ptr
 	{
-		using handle_type  = lak::unique_com_ptr_traits<T>::handle_type;
-		using exposed_type = lak::unique_com_ptr_traits<T>::exposed_type;
+		using handle_type  = typename lak::unique_com_ptr_traits<T>::handle_type;
+		using exposed_type = typename lak::unique_com_ptr_traits<T>::exposed_type;
 
 		unique_com_ptr() = default;
 
@@ -79,8 +79,8 @@ namespace lak
 	template<typename T>
 	struct shared_com_ptr_traits
 	{
-		using handle_type  = T::handle_type;
-		using exposed_type = T::exposed_type;
+		using handle_type  = typename T::handle_type;
+		using exposed_type = typename T::exposed_type;
 
 		template<typename... ARGS>
 		inline static auto ctor(ARGS &&...args)
@@ -104,8 +104,8 @@ namespace lak
 	template<typename T>
 	struct shared_com_ptr
 	{
-		using handle_type  = lak::shared_com_ptr_traits<T>::handle_type;
-		using exposed_type = lak::shared_com_ptr_traits<T>::exposed_type;
+		using handle_type  = typename lak::shared_com_ptr_traits<T>::handle_type;
+		using exposed_type = typename lak::shared_com_ptr_traits<T>::exposed_type;
 
 		shared_com_ptr() = default;
 
