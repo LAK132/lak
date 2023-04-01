@@ -56,6 +56,8 @@ jobs:
     runs-on: windows-2022
     steps:
       - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
       - name: Push staging branch to trunk
         if: github.event_name == 'push'
-        run: git fetch origin trunk && git switch trunk && git merge --ff-only staging && git push origin trunk
+        run: git switch trunk && git merge --ff-only staging && git push origin trunk
