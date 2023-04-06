@@ -10,6 +10,7 @@ lua/**
 lua-*/**
 packagecache/**
 SDL2/**
+stb/**
 zlib/**
 *-wrap/
 

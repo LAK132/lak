@@ -16,14 +16,15 @@ jobs:
         arch: [x86, x64]
         setup-options:
           - -Dlak_enable_tests=true
-          - -Dlak_enable_tests=true -Dlak_enable_lmdb=true -Dlak_enable_libfive=true -Dlak_enable_lua=true
+          - -Dlak_enable_tests=true -Dlak_enable_lua=true -Dlak_enable_stb=true -Dlak_enable_stb_image=true -Dlak_enable_stb_image_write=true
+          - -Dlak_enable_tests=true -Dlak_enable_lmdb=true -Dlak_enable_libfive=true
         exclude:
           - os: ubuntu-20.04
-            setup-options: -Dlak_enable_tests=true -Dlak_enable_lmdb=true -Dlak_enable_libfive=true -Dlak_enable_lua=true
+            setup-options: -Dlak_enable_tests=true -Dlak_enable_lmdb=true -Dlak_enable_libfive=true
           - os: macos-12
             arch: x86
           - os: macos-12
-            setup-options: -Dlak_enable_tests=true -Dlak_enable_lmdb=true -Dlak_enable_libfive=true -Dlak_enable_lua=true
+            setup-options: -Dlak_enable_tests=true -Dlak_enable_lmdb=true -Dlak_enable_libfive=true
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v3

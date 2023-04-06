@@ -195,6 +195,18 @@ if get_option('lak_enable_libgphoto2')
 	endif
 endif
 
+if get_option('lak_enable_stb')
+	stb_subprj = subproject('stb')
+
+	if get_option('lak_enable_stb_image')
+		dependencies += stb_subprj.get_variable('stb_image_dep')
+	endif
+
+	if get_option('lak_enable_stb_image_write')
+		dependencies += stb_subprj.get_variable('stb_image_write_dep')
+	endif
+endif
+
 if target_machine.system() == 'windows'
 	lakdlls_h = custom_target(
 		'configure-dlls',
