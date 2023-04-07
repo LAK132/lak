@@ -1,5 +1,7 @@
 #include "lak/window.hpp"
 
+#include <thread>
+
 template struct lak::array<lak::window_handle, lak::dynamic_extent>;
 template struct lak::railcar<lak::window_handle>;
 template struct lak::bank<lak::window_handle>;
