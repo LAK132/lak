@@ -390,7 +390,7 @@ namespace ImGui
 		using namespace lak::opengl::literals;
 
 		context->shader = lak::opengl::program::create(
-		  "#version 130\n"
+		  "#version 150\n"
 		  "uniform mat4 viewProj;\n"
 		  "in vec2 vPosition;\n"
 		  "in vec2 vUV;\n"
@@ -403,7 +403,7 @@ namespace ImGui
 		  "   fColor = vColor;\n"
 		  "   gl_Position = viewProj * vec4(vPosition.xy, 0, 1);\n"
 		  "}"_vertex_shader,
-		  "#version 130\n"
+		  "#version 150\n"
 		  "uniform sampler2D fTexture;\n"
 		  "in vec2 fUV;\n"
 		  "in vec4 fColor;\n"
