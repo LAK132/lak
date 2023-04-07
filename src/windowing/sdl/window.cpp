@@ -57,7 +57,7 @@ lak::result<lak::window_handle *, lak::u8string> lak::create_window(
 	                   SDL_WINDOW_RESIZABLE | SDL_WINDOW_OPENGL);
 
 	if (!handle->sdl_window)
-		lak::err_t<lak::u8string>{u8"Failed to create window"_str};
+		return lak::err_t<lak::u8string>{u8"Failed to create window"_str};
 
 	auto &context = handle->gc.emplace<lak::opengl_context>();
 
