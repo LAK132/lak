@@ -62,35 +62,36 @@ namespace lak
 		}
 
 		template<typename T>
-		lak::result<T> get(lua_State *state, int index);
+		inline lak::result<T> get(lua_State *state, int index);
 
 		template<>
-		lak::result<lak::astring_view> get<lak::astring_view>(lua_State *state,
-		                                                      int index)
+		inline lak::result<lak::astring_view> get<lak::astring_view>(
+		  lua_State *state, int index)
 		{
 			return lak::lua::to_string(state, index);
 		}
 
 		template<>
-		lak::result<lua_Number> get<lua_Number>(lua_State *state, int index)
+		inline lak::result<lua_Number> get<lua_Number>(lua_State *state, int index)
 		{
 			return lak::lua::to_number(state, index);
 		}
 
 		template<>
-		lak::result<lua_Integer> get<lua_Integer>(lua_State *state, int index)
+		inline lak::result<lua_Integer> get<lua_Integer>(lua_State *state,
+		                                                 int index)
 		{
 			return lak::lua::to_integer(state, index);
 		}
 
 		template<>
-		lak::result<bool> get<bool>(lua_State *state, int index)
+		inline lak::result<bool> get<bool>(lua_State *state, int index)
 		{
 			return lak::ok_t{lak::lua::to_boolean(state, index)};
 		}
 
 		template<typename... T>
-		lak::result<lak::tuple<T...>> tuple_get(
+		inline lak::result<lak::tuple<T...>> tuple_get(
 		  lua_State *state, lak::span<const int, sizeof...(T)> index)
 		{
 			return [&]<size_t... I>(
