@@ -236,7 +236,7 @@ namespace lak
 			force_inline channel0(uint8_t V) : _v(V & max_value) {}
 			template<typename CHANNEL,
 			         lak::enable_if_i<lak::is_colour_channel_v<CHANNEL>> = 0>
-			force_inline channel0(CHANNEL c)
+			force_inline channel0(CHANNEL c) : _v(c._v)
 			{
 			}
 
