@@ -106,6 +106,80 @@ namespace lak
 	                  float bottomMin = 8.0f,
 	                  float length    = -1.0f);
 
+	struct vert_split_child
+	{
+		float left_size;
+		float right_size;
+
+		inline vert_split_child()
+		{
+			const auto content_size{ImGui::GetContentRegionAvail()};
+			left_size  = content_size.x / 2;
+			right_size = content_size.x / 2;
+		}
+
+		inline bool begin(const char *id, bool border = true)
+		{
+			ImGui::PushID(id);
+			lak::VertSplitter(
+			  left_size, right_size, ImGui::GetContentRegionAvail().x);
+			return ImGui::BeginChild(
+			  "##left", {left_size, 0}, border, ImGuiWindowFlags_NoSavedSettings);
+		}
+
+		inline bool split(bool border = true) const
+		{
+			ImGui::EndChild();
+			ImGui::SameLine();
+			return ImGui::BeginChild(
+			  "##right", {right_size, 0}, border, ImGuiWindowFlags_NoSavedSettings);
+		}
+
+		inline void end() const
+		{
+			ImGui::EndChild();
+			ImGui::PopID();
+		}
+	};
+
+	struct hori_split_child
+	{
+		float top_size;
+		float bottom_size;
+
+		inline hori_split_child()
+		{
+			const auto content_size{ImGui::GetContentRegionAvail()};
+			top_size    = content_size.y / 2;
+			bottom_size = content_size.y / 2;
+		}
+
+		inline bool begin(const char *id, bool border = true)
+		{
+			ImGui::PushID(id);
+			lak::HoriSplitter(
+			  top_size, bottom_size, ImGui::GetContentRegionAvail().y);
+			return ImGui::BeginChild(
+			  "##top", {0, top_size}, border, ImGuiWindowFlags_NoSavedSettings);
+		}
+
+		inline bool split(bool border = true) const
+		{
+			ImGui::EndChild();
+			ImGui::Spacing();
+			return ImGui::BeginChild("##bottom",
+			                         {0, bottom_size},
+			                         border,
+			                         ImGuiWindowFlags_NoSavedSettings);
+		}
+
+		inline void end() const
+		{
+			ImGui::EndChild();
+			ImGui::PopID();
+		}
+	};
+
 	bool TreeNode(const char *fmt, ...);
 
 	struct tree_node
