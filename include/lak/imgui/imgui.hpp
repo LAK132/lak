@@ -101,7 +101,7 @@ namespace lak
 
 	bool HoriSplitter(float &top,
 	                  float &bottom,
-	                  float width,
+	                  float height,
 	                  float topMin    = 8.0f,
 	                  float bottomMin = 8.0f,
 	                  float length    = -1.0f);

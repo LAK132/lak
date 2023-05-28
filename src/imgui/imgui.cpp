@@ -1205,33 +1205,6 @@ namespace ImGui
 
 namespace lak
 {
-	bool HoriSplitter(float &top,
-	                  float &bottom,
-	                  float width,
-	                  float topMin,
-	                  float bottomMin,
-	                  float length)
-	{
-		const float thickness = ImGui::GetStyle().FramePadding.x * 2;
-		const float maxLeft   = width - (bottomMin + thickness);
-		if (top > maxLeft) top = maxLeft;
-		bottom = width - (top + thickness);
-
-		ImGuiID id    = ImGui::GetID("##Splitter");
-		ImVec2 cursor = ImGui::GetCursorScreenPos();
-		ImRect bb;
-
-		bb.Min.x = cursor.x + top;
-		bb.Min.y = cursor.y;
-
-		bb.Max = ImGui::CalcItemSize(ImVec2(thickness, length), 0.0f, 0.0f);
-		bb.Max.x += bb.Min.x;
-		bb.Max.y += bb.Min.y;
-
-		return ImGui::SplitterBehavior(
-		  bb, id, ImGuiAxis_X, &top, &bottom, topMin, bottomMin);
-	}
-
 	bool VertSplitter(float &left,
 	                  float &right,
 	                  float width,
@@ -1240,23 +1213,50 @@ namespace lak
 	                  float length)
 	{
 		const float thickness = ImGui::GetStyle().FramePadding.x * 2;
-		const float maxTop    = width - (rightMin + thickness);
-		if (left > maxTop) left = maxTop;
+		const float maxLeft   = width - (rightMin + thickness);
+		if (left > maxLeft) left = maxLeft;
 		right = width - (left + thickness);
 
 		ImGuiID id    = ImGui::GetID("##Splitter");
 		ImVec2 cursor = ImGui::GetCursorScreenPos();
 		ImRect bb;
 
+		bb.Min.x = cursor.x + left;
+		bb.Min.y = cursor.y;
+
+		bb.Max = ImGui::CalcItemSize(ImVec2(thickness, length), 0.0f, 0.0f);
+		bb.Max.x += bb.Min.x;
+		bb.Max.y += bb.Min.y;
+
+		return ImGui::SplitterBehavior(
+		  bb, id, ImGuiAxis_X, &left, &right, leftMin, rightMin);
+	}
+
+	bool HoriSplitter(float &top,
+	                  float &bottom,
+	                  float height,
+	                  float topMin,
+	                  float bottomMin,
+	                  float length)
+	{
+		const float thickness = ImGui::GetStyle().FramePadding.x * 2;
+		const float maxTop    = height - (bottomMin + thickness);
+		if (top > maxTop) top = maxTop;
+		bottom = height - (top + thickness);
+
+		ImGuiID id    = ImGui::GetID("##Splitter");
+		ImVec2 cursor = ImGui::GetCursorScreenPos();
+		ImRect bb;
+
 		bb.Min.x = cursor.x;
-		bb.Min.y = cursor.y + left;
+		bb.Min.y = cursor.y + top;
 
 		bb.Max = ImGui::CalcItemSize(ImVec2(length, thickness), 0.0f, 0.0f);
 		bb.Max.x += bb.Min.x;
 		bb.Max.y += bb.Min.y;
 
 		return ImGui::SplitterBehavior(
-		  bb, id, ImGuiAxis_Y, &left, &right, leftMin, rightMin);
+		  bb, id, ImGuiAxis_Y, &top, &bottom, topMin, bottomMin);
 	}
 
 	bool TreeNode(const char *fmt, ...)
