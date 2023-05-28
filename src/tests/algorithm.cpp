@@ -249,6 +249,132 @@ END_TEST()
 // }
 // END_TEST()
 
+BEGIN_TEST(make_heap)
+{
+	{
+		auto values = lak::fixed_array(0);
+		auto copy   = values;
+		lak::make_heap(values.begin(), values.end());
+		ASSERT(lak::is_heap(values.begin(), values.end()));
+		ASSERT(lak::is_permutation(
+		  values.begin(), values.end(), copy.begin(), copy.end()));
+	}
+
+	{
+		auto values = lak::fixed_array(1, 2, 3, 4, 5, 6, 7);
+		auto copy   = values;
+		ASSERT(!lak::is_heap(values.begin(), values.end()));
+		lak::make_heap(values.begin(), values.end());
+		ASSERT(lak::is_heap(values.begin(), values.end()));
+		ASSERT(lak::is_permutation(
+		  values.begin(), values.end(), copy.begin(), copy.end()));
+	}
+
+	{
+		auto values = lak::fixed_array(1, 2, 3, 5, 6, 4, 0, -1);
+		auto copy   = values;
+		ASSERT(!lak::is_heap(values.begin(), values.end()));
+		lak::make_heap(values.begin(), values.end());
+		ASSERT(lak::is_heap(values.begin(), values.end()));
+		ASSERT(lak::is_permutation(
+		  values.begin(), values.end(), copy.begin(), copy.end()));
+	}
+
+	return EXIT_SUCCESS;
+}
+END_TEST()
+
+BEGIN_TEST(is_heap)
+{
+	{
+		auto values = lak::fixed_array(0);
+		ASSERT_EQUAL(
+		  lak::is_heap_until(values.begin(), values.end()) - values.end(), 0U);
+		ASSERT(lak::is_heap(values.begin(), values.end()));
+	}
+
+	{
+		auto values = lak::fixed_array(0, 0, 0, 0, 0);
+		ASSERT_EQUAL(
+		  lak::is_heap_until(values.begin(), values.end()) - values.end(), 0U);
+		ASSERT(lak::is_heap(values.begin(), values.end()));
+	}
+
+	{
+		auto values = lak::fixed_array(7, 6, 5, 4, 3, 3, 2, 1);
+		ASSERT_EQUAL(
+		  lak::is_heap_until(values.begin(), values.end()) - values.end(), 0U);
+		ASSERT(lak::is_heap(values.begin(), values.end()));
+	}
+
+	{
+		auto values = lak::fixed_array(1, 2, 3, 4, 5, 6);
+		ASSERT_EQUAL(
+		  lak::is_heap_until(values.begin(), values.end()) - values.begin(), 1U);
+		ASSERT(!lak::is_heap(values.begin(), values.end()));
+	}
+
+	{
+		auto values = lak::fixed_array(7, 6, 5, 4, 1, 2, 3, 4, 5, 6);
+		ASSERT_EQUAL(
+		  lak::is_heap_until(values.begin(), values.end()) - values.begin(), 8U);
+		ASSERT(!lak::is_heap(values.begin(), values.end()));
+	}
+
+	return EXIT_SUCCESS;
+}
+END_TEST()
+
+BEGIN_TEST(sift_down_heap)
+{
+	{
+		auto values = lak::fixed_array(1, 2, 3, 5, 6, 4, 0, -1);
+
+		auto index_of = [&](const auto &iter) -> size_t
+		{ return size_t(iter - values.begin()); };
+
+		auto parent = [](size_t index) -> size_t { return (index - 1U) >> 1U; };
+		auto parent_iter = [&](const auto &iter)
+		{ return values.begin() + parent(index_of(iter)); };
+
+		for (auto it = parent_iter(values.end() - 1) + 1; it != values.begin();)
+			lak::sift_down_heap(values.begin(), --it, values.end());
+
+		ASSERT(lak::is_heap(values.begin(), values.end()));
+	}
+
+	return EXIT_SUCCESS;
+}
+END_TEST()
+
+// BEGIN_TEST(sift_up_heap)
+// {
+// 	//
+// 	return EXIT_SUCCESS;
+// }
+// END_TEST()
+
+// BEGIN_TEST(push_heap)
+// {
+// 	//
+// 	return EXIT_SUCCESS;
+// }
+// END_TEST()
+
+// BEGIN_TEST(pop_heap)
+// {
+// 	//
+// 	return EXIT_SUCCESS;
+// }
+// END_TEST()
+
+// BEGIN_TEST(sort_heap)
+// {
+// 	//
+// 	return EXIT_SUCCESS;
+// }
+// END_TEST()
+
 BEGIN_TEST(heapsort)
 {
 	auto source   = {5, 2, 4, 3, 6, 1};
@@ -258,10 +384,8 @@ BEGIN_TEST(heapsort)
 
 	lak::heapsort(values.begin(), values.end());
 
-	for (size_t i = 0; i < expected.size(); ++i)
-	{
-		ASSERT_EQUAL(expected.begin()[i], values[i]);
-	}
+	ASSERT_ARRAY_EQUAL(lak::span(values), lak::span(expected));
+
 	return EXIT_SUCCESS;
 }
 END_TEST()

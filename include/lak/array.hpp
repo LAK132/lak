@@ -65,6 +65,12 @@ namespace lak
 		constexpr const T &back() const;
 	};
 
+	template<typename T, typename... U>
+	constexpr lak::array<T, sizeof...(U) + 1> fixed_array(T t, U... u)
+	{
+		return {lak::move(t), lak::move(u)...};
+	}
+
 	template<typename T>
 	struct array<T, lak::dynamic_extent>
 	{

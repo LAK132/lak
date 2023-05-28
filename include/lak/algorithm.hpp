@@ -107,7 +107,7 @@ namespace lak
 	/* --- binary_partition --- */
 
 	template<typename ITER, typename CMP = lak::less<>>
-	ITER binary_partition(ITER begin, ITER mid, ITER end, CMP cmp = {});
+	ITER binary_partition(ITER begin, ITER mid, ITER end, CMP compare = {});
 
 	/* --- mark_and_sweep_parition --- */
 
@@ -121,7 +121,60 @@ namespace lak
 	// range
 
 	template<typename ITER, typename CMP = lak::less<>>
-	ITER merge(ITER begin, ITER mid, ITER end, CMP cmp = {});
+	ITER merge(ITER begin, ITER mid, ITER end, CMP compare = {});
+
+	/* --- make_heap --- */
+
+	template<typename ITER, typename CMP = lak::less<>>
+	void make_heap(ITER begin, ITER end, CMP compare = {});
+
+	/* --- is_heap --- */
+
+	template<typename ITER, typename CMP = lak::less<>>
+	bool is_heap(ITER begin, ITER end, CMP compare = {});
+
+	/* --- is_heap_until --- */
+
+	template<typename ITER, typename CMP = lak::less<>>
+	ITER is_heap_until(ITER begin, ITER end, CMP compare = {});
+
+	/* --- sift_down_heap --- */
+
+	// Precondition: to_sift's children form valid heaps
+
+	template<typename ITER, typename CMP = lak::less<>>
+	void sift_down_heap(ITER begin, ITER to_sift, ITER end, CMP compare = {});
+
+	/* --- sift_up_heap --- */
+
+	// Precondition: to_sift's parents form a valid heap
+
+	template<typename ITER, typename CMP = lak::less<>>
+	void sift_up_heap(ITER begin, ITER to_sift, CMP compare = {});
+
+	/* --- push_heap --- */
+
+	// Push end-1 into the heap [begin, end-1)
+
+	template<typename ITER, typename CMP = lak::less<>>
+	void push_heap(ITER begin, ITER end, CMP compare = {});
+
+	/* --- pop_heap --- */
+
+	// Move begin to end-1 and repair heap [begin, end-1)
+
+	template<typename ITER, typename CMP = lak::less<>>
+	void pop_heap(ITER begin, ITER end, CMP compare = {});
+
+	/* --- sort_heap --- */
+
+	template<typename ITER, typename CMP = lak::less<>>
+	void sort_heap(ITER begin, ITER end, CMP compare = {});
+
+	/* --- reverse_sort_heap --- */
+
+	template<typename ITER, typename CMP = lak::less<>>
+	void reverse_sort_heap(ITER begin, ITER end, CMP compare = {});
 
 	/* --- heapsort --- */
 

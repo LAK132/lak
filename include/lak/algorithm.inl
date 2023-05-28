@@ -389,7 +389,7 @@ ITER lak::stable_partition(ITER begin, ITER end, auto predicate)
 /* --- binary_partition --- */
 
 template<typename ITER, typename CMP>
-ITER lak::binary_partition(ITER begin, ITER mid, ITER end, CMP cmp)
+ITER lak::binary_partition(ITER begin, ITER mid, ITER end, CMP compare)
 {
 	static_assert(std::forward_iterator<ITER>);
 
@@ -410,10 +410,10 @@ ITER lak::binary_partition(ITER begin, ITER mid, ITER end, CMP cmp)
 
 	auto after_mid{mid};
 	++after_mid;
-	auto left{
-	  lak::partition(begin, mid, [&](const auto &v) { return cmp(v, *mid); })};
+	auto left{lak::partition(
+	  begin, mid, [&](const auto &v) { return compare(v, *mid); })};
 	auto right{lak::partition(
-	  after_mid, end, [&](const auto &v) { return cmp(v, *mid); })};
+	  after_mid, end, [&](const auto &v) { return compare(v, *mid); })};
 
 	if constexpr (std::random_access_iterator<ITER>)
 	{
@@ -539,6 +539,179 @@ ITER lak::merge(ITER begin, ITER mid, ITER end, CMP compare)
 	}
 }
 
+/* --- make_heap --- */
+
+template<typename ITER, typename CMP>
+void lak::make_heap(ITER begin, ITER end, CMP compare)
+{
+	static_assert(std::random_access_iterator<ITER>);
+
+	auto index_of = [&](const ITER &iter) -> size_t
+	{ return size_t(iter - begin); };
+
+	auto parent      = [](size_t index) -> size_t { return (index - 1U) >> 1U; };
+	auto parent_iter = [&](const ITER &iter) -> ITER
+	{ return begin + parent(index_of(iter)); };
+
+	for (ITER it = parent_iter(end - 1) + 1; it != begin;)
+		lak::sift_down_heap(begin, --it, end, compare);
+}
+
+/* --- is_heap --- */
+
+template<typename ITER, typename CMP>
+bool lak::is_heap(ITER begin, ITER end, CMP compare)
+{
+	return lak::is_heap_until(begin, end, compare) == end;
+}
+
+/* --- is_heap_until --- */
+
+template<typename ITER, typename CMP>
+ITER lak::is_heap_until(ITER begin, ITER end, CMP compare)
+{
+	static_assert(std::random_access_iterator<ITER>);
+
+	if ((end - begin) <= 1U) return end;
+
+	auto parent_iter = [&](size_t index) -> ITER
+	{ return begin + ((index - 1U) >> 1U); };
+
+	ITER it = begin + 1U;
+	for (size_t i = 1U; it != end && !compare(*parent_iter(i), *it); ++it, ++i)
+		;
+	return it;
+}
+
+/* --- sift_down_heap --- */
+
+template<typename ITER, typename CMP>
+void lak::sift_down_heap(ITER begin, ITER to_sift, ITER end, CMP compare)
+{
+	static_assert(std::random_access_iterator<ITER>);
+
+	auto index_of = [&](const ITER &iter) -> size_t
+	{ return size_t(iter - begin); };
+
+	if (index_of(end) <= 1) return;
+
+	// end index rounded to the nearest left <= end
+	auto left_end = [&]() -> size_t
+	{
+		const size_t last = index_of(end);
+		return last - (1U - (last & 1U));
+	};
+
+	auto left_child = [](size_t index) -> size_t { return (index << 1U) + 1U; };
+
+	// if there's an odd number of elements in the heap, then there's always a
+	// left and right child. if there's an even number of elements, then the last
+	// element is a left child (which has no right sibling).
+
+	for (size_t end_index   = left_end(),
+	            child_index = left_child(index_of(to_sift));
+	     child_index < end_index;
+	     child_index = left_child(index_of(to_sift)))
+	{
+		ITER left         = begin + child_index;
+		ITER right        = left + 1;
+		ITER bigger_child = compare(*left, *right) ? right : left;
+
+		if (compare(*to_sift, *bigger_child))
+		{
+			lak::swap(*to_sift, *bigger_child);
+			to_sift = bigger_child;
+		}
+		else
+			return;
+	}
+
+	if (size_t left_index = left_child(index_of(to_sift));
+	    left_index < index_of(end))
+	{
+		ITER left = begin + left_index;
+		if (compare(*to_sift, *left)) lak::swap(*to_sift, *left);
+	}
+}
+
+/* --- sift_up_heap --- */
+
+template<typename ITER, typename CMP>
+void lak::sift_up_heap(ITER begin, ITER to_sift, CMP compare)
+{
+	static_assert(std::random_access_iterator<ITER>);
+
+	if (to_sift == begin) return;
+
+	auto index_of = [&](const ITER &iter) -> size_t
+	{ return size_t(iter - begin); };
+
+	auto parent      = [](size_t index) -> size_t { return (index - 1U) >> 1U; };
+	auto parent_iter = [&](const ITER &iter) -> ITER
+	{ return begin + parent(index_of(iter)); };
+
+	for (ITER sift_parent = parent_iter(to_sift);
+	     compare(*sift_parent, *to_sift);)
+	{
+		lak::swap(*sift_parent, *to_sift);
+		if (sift_parent == begin) break;
+		to_sift     = sift_parent;
+		sift_parent = parent_iter(to_sift);
+	}
+}
+
+/* --- push_heap --- */
+
+template<typename ITER, typename CMP>
+void lak::push_heap(ITER begin, ITER end, CMP compare)
+{
+	static_assert(std::random_access_iterator<ITER>);
+
+	if ((end - begin) <= 1U) return;
+
+	lak::sift_up_heap(begin, end - 1, compare);
+}
+
+/* --- pop_heap --- */
+
+template<typename ITER, typename CMP>
+void lak::pop_heap(ITER begin, ITER end, CMP compare)
+{
+	static_assert(std::random_access_iterator<ITER>);
+
+	if ((end - begin) <= 2U) return;
+
+	--end;
+	lak::swap(*begin, *end);
+	lak::sift_down_heap(begin, begin, end, compare);
+}
+
+/* --- sort_heap --- */
+
+template<typename ITER, typename CMP>
+void lak::sort_heap(ITER begin, ITER end, CMP compare)
+{
+	static_assert(std::random_access_iterator<ITER>);
+
+	if (begin != end) --end;
+	for (; begin != end; --end)
+	{
+		lak::swap(*begin, *end);
+		lak::sift_down_heap(begin, begin, end, compare);
+	}
+}
+
+/* --- reverse_sort_heap --- */
+
+template<typename ITER, typename CMP>
+void lak::reverse_sort_heap(ITER begin, ITER end, CMP compare)
+{
+	static_assert(std::random_access_iterator<ITER>);
+
+	lak::sort_heap(begin, end, compare);
+	lak::reverse(begin, end);
+}
+
 /* --- heapsort --- */
 
 template<typename ITER, typename CMP>
@@ -546,52 +719,10 @@ void lak::heapsort(ITER begin, ITER end, CMP compare)
 {
 	static_assert(std::random_access_iterator<ITER>);
 
-	if ((end - begin) < 2) return;
+	if ((end - begin) <= 1U) return;
 
-	auto index_of = [&](const ITER &iter) -> size_t
-	{ return size_t(iter - begin); };
-
-	auto parent      = [](size_t index) -> size_t { return (index - 1U) / 2U; };
-	auto parent_iter = [&](const ITER &iter) -> ITER
-	{ return begin + parent(index_of(iter)); };
-
-	auto left_child = [](size_t index) -> size_t { return (index * 2U) + 1U; };
-	[[maybe_unused]] auto left_child_iter = [&](const ITER &iter) -> ITER
-	{ return begin + left_child(index_of(iter)); };
-
-	// Repair the heap whose root element is at index 'start', assuming the heaps
-	// rooted at its children are valid
-	auto sift_down = [&](ITER sift_begin, ITER sift_end)
-	{
-		for (size_t end_index   = index_of(sift_end),
-		            child_index = left_child(index_of(sift_begin));
-		     child_index <= end_index;
-		     child_index = left_child(index_of(sift_begin)))
-		{
-			ITER largest = sift_begin;
-			ITER child   = begin + child_index;
-
-			if (compare(*largest, *child)) largest = child;
-
-			if (child++ != sift_end && compare(*largest, *child)) largest = child;
-
-			if (largest == sift_begin) return;
-
-			lak::swap(*sift_begin, *largest);
-			sift_begin = largest;
-		}
-	};
-
-	--end; // make begin-end an inclusive range
-
-	// initialise the heap
-	for (ITER it = parent_iter(end) + 1; it != begin;) sift_down(--it, end);
-
-	while (begin != end)
-	{
-		lak::swap(*begin, *end);
-		sift_down(begin, --end);
-	}
+	lak::make_heap(begin, end, compare);
+	lak::sort_heap(begin, end, compare);
 }
 
 /* --- minmax_element --- */
