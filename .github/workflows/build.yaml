@@ -35,12 +35,10 @@ jobs:
           python-version: '3.9.x'
 
       - if: startsWith(matrix.os, 'windows')
-        env:
-          VSCMD_DEBUG: 3
         uses: ilammy/msvc-dev-cmd@v1
         with:
           arch: ${{ matrix.arch }}
-          toolset: 19
+          # toolset: 19
           vsversion: 2022
       - if: startsWith(matrix.os, 'windows')
         run: |
