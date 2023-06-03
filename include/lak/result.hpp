@@ -475,6 +475,46 @@ namespace lak
 			return is_err() ? lak::optional<ERR>(forward_err()) : lak::nullopt;
 		}
 
+		/* --- replace --- */
+
+		template<typename T>
+		lak::result<T, ERR> replace(T &&value) const &
+		{
+			if (is_ok())
+				return lak::ok_t{lak::forward<T>(value)};
+			else
+				return lak::err_t{get_err()};
+		}
+
+		template<typename T>
+		lak::result<T, ERR> replace(T &&value) &&
+		{
+			if (is_ok())
+				return lak::ok_t{lak::forward<T>(value)};
+			else
+				return lak::err_t{forward_err()};
+		}
+
+		/* --- replace_err --- */
+
+		template<typename T>
+		lak::result<OK, T> replace_err(T &&value) const &
+		{
+			if (is_err())
+				return lak::err_t{lak::forward<T>(value)};
+			else
+				return lak::ok_t{get_ok()};
+		}
+
+		template<typename T>
+		lak::result<OK, T> replace_err(T &&value) &&
+		{
+			if (is_err())
+				return lak::err_t{lak::forward<T>(value)};
+			else
+				return lak::ok_t{forward_ok()};
+		}
+
 		/* --- map --- */
 
 		template<lak::concepts::invocable<ok_reference> F>

@@ -28,6 +28,13 @@ namespace lak
 		trace &operator=(trace &&)      = default;
 		trace &operator=(const trace &) = default;
 
+		inline lak::u8string line_string() const
+		{
+			return TO_U8STRING(location.file_name()
+			                   << ":" << std::dec << location.line() << ":"
+			                   << location.column());
+		}
+
 		inline lak::u8string to_string() const { return TO_U8STRING(*this); }
 
 		friend inline std::ostream &operator<<(std::ostream &strm,
@@ -187,5 +194,25 @@ namespace lak
 		  u8"" __VA_OPT__(STRINGIFY(__VA_ARGS__) ": ") "unwrap failed")(          \
 		  UNIQUIFY(RESULT_).unsafe_unwrap_err())};                                \
 	ASSIGN lak::move(UNIQUIFY(RESULT_)).unsafe_unwrap()
+
+#ifndef NOLOG
+#	define TRACE_EXPECT(trace, ...)                                            \
+		expect(lak::streamify(LAK_BRIGHT_RED LAK_BOLD                             \
+		                      "FATAL " LAK_SGR_RESET LAK_BRIGHT_BLACK "(",        \
+		                      trace.line_string(),                                \
+		                      ")" LAK_SGR_RESET ": " __VA_OPT__(, ) __VA_ARGS__))
+#	define TRACE_EXPECT_ERR(trace, ...)                                        \
+		expect_err(lak::streamify(                                                \
+		  LAK_BRIGHT_RED LAK_BOLD "FATAL " LAK_SGR_RESET LAK_BRIGHT_BLACK "(",    \
+		  trace.line_string(),                                                    \
+		  ")" LAK_SGR_RESET ": " __VA_OPT__(, ) __VA_ARGS__))
+#	define TRACE_UNWRAP(trace)     TRACE_EXPECT(trace, "unwrap failed")
+#	define TRACE_UNWRAP_ERR(trace) TRACE_EXPECT_ERR(trace, "unwrap_err failed")
+#else
+#	define TRACE_EXPECT(trace, ...)     expect(lak::streamify(__VA_ARGS__))
+#	define TRACE_EXPECT_ERR(trace, ...) expect_err(lak::streamify(__VA_ARGS__))
+#	define TRACE_UNWRAP(trace)          unwrap()
+#	define TRACE_UNWRAP_ERR(trace)      unwrap_err()
+#endif
 
 #endif

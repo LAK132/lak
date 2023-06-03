@@ -4,13 +4,13 @@
 #include "lak/opengl/shader.hpp"
 #include "lak/opengl/texture.hpp"
 
+#include "lak/array.hpp"
+#include "lak/memory.hpp"
 #include "lak/span.hpp"
 #include "lak/string.hpp"
+#include "lak/tuple.hpp"
 
-#include <memory>
-#include <tuple>
 #include <unordered_map>
-#include <vector>
 
 namespace lak
 {
@@ -21,7 +21,7 @@ namespace lak
 		// remember which Buffers were bound to them, so Buffers do no need to be
 		// rebound when rebinding a Vertex Array Object.
 		struct buffer;
-		using shared_buffer = std::shared_ptr<buffer>;
+		using shared_buffer = lak::shared_ptr<buffer>;
 		struct buffer
 		{
 		private:
@@ -41,12 +41,40 @@ namespace lak
 			static buffer create(GLenum target);
 
 			buffer &bind();
+			const buffer &bind() const;
 			// set_data unbinds the current vertex array and binds this buffer.
-			buffer &set_data(span<const void> data, GLenum usage);
+			buffer &set_data(lak::span<const void> data, GLenum usage);
 
 			inline operator bool() const { return _buffer != 0U; }
 			inline operator GLuint() const { return _buffer; }
 			inline operator GLint() const { return (GLint)_buffer; }
+			inline GLuint get() const { return _buffer; }
+		};
+
+		struct uniform_buffer;
+		using shared_uniform_buffer = lak::shared_ptr<uniform_buffer>;
+		struct uniform_buffer
+		{
+		private:
+			buffer _buffer;
+
+		public:
+			uniform_buffer() = default;
+			~uniform_buffer();
+			uniform_buffer(uniform_buffer &&other);
+			uniform_buffer &operator=(uniform_buffer &&other);
+			uniform_buffer(const uniform_buffer &)            = delete;
+			uniform_buffer &operator=(const uniform_buffer &) = delete;
+
+			static uniform_buffer create();
+
+			uniform_buffer &bind();
+			const uniform_buffer &bind() const;
+			uniform_buffer &set_data();
+
+			inline operator bool() const { return _buffer; }
+			inline operator GLuint() const { return _buffer; }
+			inline operator GLint() const { return _buffer; }
 			inline GLuint get() const { return _buffer; }
 		};
 
@@ -71,13 +99,13 @@ namespace lak
 		// Vertex Array Object. vertex_buffer tracks the vertex attributes of the
 		// data it holds.
 		struct vertex_buffer;
-		using shared_vertex_buffer = std::shared_ptr<vertex_buffer>;
+		using shared_vertex_buffer = lak::shared_ptr<vertex_buffer>;
 		struct vertex_buffer
 		{
 		private:
 			buffer _vertex_buffer;
 			buffer _index_buffer;
-			std::vector<vertex_attribute> _attributes;
+			lak::vector<vertex_attribute> _attributes;
 			// number of elements in _index_buffer if it exists, otherwise the number
 			// of elements in _vertex_buffer.
 			size_t _vertex_count = 0;
@@ -93,41 +121,43 @@ namespace lak
 
 			// create will unbind the current Vertex Array Object.
 			static vertex_buffer create(
-			  span<const void> vertex_data,
+			  lak::span<const void> vertex_data,
 			  GLenum draw_mode,
 			  size_t vertex_count,
-			  span<const vertex_attribute> vertex_attributes,
+			  lak::span<const vertex_attribute> vertex_attributes,
 			  GLenum usage);
 			static vertex_buffer create(
-			  span<const void> vertex_data,
+			  lak::span<const void> vertex_data,
 			  GLenum draw_mode,
-			  span<const GLuint> index_data,
-			  span<const vertex_attribute> vertex_attributes,
+			  lak::span<const GLuint> index_data,
+			  lak::span<const vertex_attribute> vertex_attributes,
 			  GLenum usage);
 
 			static shared_vertex_buffer create_shared(
-			  span<const void> vertex_data,
+			  lak::span<const void> vertex_data,
 			  GLenum draw_mode,
 			  size_t vertex_count,
-			  span<const vertex_attribute> vertex_attributes,
+			  lak::span<const vertex_attribute> vertex_attributes,
 			  GLenum usage);
 			static shared_vertex_buffer create_shared(
-			  span<const void> vertex_data,
+			  lak::span<const void> vertex_data,
 			  GLenum draw_mode,
-			  span<const GLuint> index_data,
-			  span<const vertex_attribute> vertex_attributes,
+			  lak::span<const GLuint> index_data,
+			  lak::span<const vertex_attribute> vertex_attributes,
 			  GLenum usage);
 
 			vertex_buffer &bind();
+			const vertex_buffer &bind() const;
 			// apply vertex attributes to the bound Vertex Array Object.
-			vertex_buffer &apply_attributes(span<const GLuint> attribute_positions);
+			vertex_buffer &apply_attributes(
+			  lak::span<const GLuint> attribute_positions);
 
-			void draw(GLuint instances = 1);
+			void draw(GLuint instances = 1) const;
 			void draw_part(const GLuint *offset,
 			               GLsizei count,
-			               GLuint instances = 1);
+			               GLuint instances = 1) const;
 
-			const std::vector<vertex_attribute> &attributes() const;
+			const lak::vector<vertex_attribute> &attributes() const;
 
 			inline operator bool() const { return _vertex_buffer; }
 		};
@@ -149,6 +179,7 @@ namespace lak
 			static vertex_array create();
 
 			vertex_array &bind();
+			const vertex_array &bind() const;
 
 			inline operator bool() const { return _array != 0U; }
 			inline operator GLuint() const { return _array; }
@@ -161,7 +192,7 @@ namespace lak
 		private:
 			shared_vertex_buffer _vertex_buffer;
 			shared_program _shader;
-			std::vector<std::shared_ptr<texture>> _textures;
+			lak::vector<lak::shared_ptr<texture>> _textures;
 			vertex_array _vertex_array;
 
 		public:
@@ -172,18 +203,20 @@ namespace lak
 			static static_object_part create(
 			  shared_vertex_buffer vertices,
 			  shared_program shader_program,
-			  span<const GLuint> attribute_positions,
-			  span<const std::shared_ptr<texture>> textures);
+			  lak::span<const GLuint> attribute_positions,
+			  lak::span<const lak::shared_ptr<texture>> textures);
 
 			static_object_part &clear();
 
 			static_object_part(const static_object_part &other)            = delete;
 			static_object_part &operator=(const static_object_part &other) = delete;
 
-			void draw(GLuint instanced = 1);
+			void draw(GLuint instanced = 1) const;
 			void draw_part(const GLuint *offset,
 			               GLsizei count,
-			               GLuint instances = 1);
+			               GLuint instances = 1) const;
+
+			const shared_program &shader() const { return _shader; }
 
 			inline operator bool() const { return _vertex_array; }
 		};

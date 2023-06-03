@@ -4,6 +4,7 @@
 #include "lak/debug.hpp"
 #include "lak/defer.hpp"
 #include "lak/image.hpp"
+#include "lak/trace.hpp"
 
 #include "lak/opengl/shader.hpp"
 #include "lak/opengl/state.hpp"
@@ -42,6 +43,16 @@
 #include <algorithm>
 #include <cstdlib>
 #include <cstring>
+
+auto _call_checked = []<typename RET, typename... ARGS, typename... ARGS2>(
+                       lak::trace trace, RET (*func)(ARGS...), ARGS2... args)
+{
+	return lak::opengl::call_checked(func, lak::forward<ARGS2>(args)...)
+	  .TRACE_UNWRAP(trace);
+};
+
+#define GL_DEFER_CALL(FUNC, ...)                                              \
+	DEFER_CALL(_call_checked, lak::trace{}, FUNC, __VA_ARGS__)
 
 #if !defined(LAK_SOFTWARE_RENDER_32BIT) &&                                    \
   !defined(LAK_SOFTWARE_RENDER_24BIT) &&                                      \
@@ -389,29 +400,31 @@ namespace ImGui
 	{
 		using namespace lak::opengl::literals;
 
-		context->shader = lak::opengl::program::create(
-		  "#version 150\n"
-		  "uniform mat4 viewProj;\n"
-		  "in vec2 vPosition;\n"
-		  "in vec2 vUV;\n"
-		  "in vec4 vColor;\n"
-		  "out vec2 fUV;\n"
-		  "out vec4 fColor;\n"
-		  "void main()\n"
-		  "{\n"
-		  "   fUV = vUV;\n"
-		  "   fColor = vColor;\n"
-		  "   gl_Position = viewProj * vec4(vPosition.xy, 0, 1);\n"
-		  "}"_vertex_shader,
-		  "#version 150\n"
-		  "uniform sampler2D fTexture;\n"
-		  "in vec2 fUV;\n"
-		  "in vec4 fColor;\n"
-		  "out vec4 pColor;\n"
-		  "void main()\n"
-		  "{\n"
-		  "   pColor = fColor * texture(fTexture, fUV.st);\n"
-		  "}"_fragment_shader);
+		context->shader =
+		  lak::opengl::program::create(
+		    "#version 150\n"
+		    "uniform mat4 viewProj;\n"
+		    "in vec2 vPosition;\n"
+		    "in vec2 vUV;\n"
+		    "in vec4 vColor;\n"
+		    "out vec2 fUV;\n"
+		    "out vec4 fColor;\n"
+		    "void main()\n"
+		    "{\n"
+		    "   fUV = vUV;\n"
+		    "   fColor = vColor;\n"
+		    "   gl_Position = viewProj * vec4(vPosition.xy, 0, 1);\n"
+		    "}"_vertex_shader.UNWRAP(),
+		    "#version 150\n"
+		    "uniform sampler2D fTexture;\n"
+		    "in vec2 fUV;\n"
+		    "in vec4 fColor;\n"
+		    "out vec4 pColor;\n"
+		    "void main()\n"
+		    "{\n"
+		    "   pColor = fColor * texture(fTexture, fUV.st);\n"
+		    "}"_fragment_shader.UNWRAP())
+		    .UNWRAP();
 
 		context->attrib_tex       = *context->shader.uniform_location("fTexture");
 		context->attrib_view_proj = *context->shader.uniform_location("viewProj");
@@ -419,8 +432,9 @@ namespace ImGui
 		context->attrib_UV        = *context->shader.attrib_location("vUV");
 		context->attrib_col       = *context->shader.attrib_location("vColor");
 
-		glGenBuffers(1, &context->array_buffer);
-		glGenBuffers(1, &context->elements);
+		lak::opengl::call_checked(glGenBuffers, 1, &context->array_buffer)
+		  .UNWRAP();
+		lak::opengl::call_checked(glGenBuffers, 1, &context->elements).UNWRAP();
 
 		ImGuiIO &io = ImGui::GetIO();
 
@@ -429,13 +443,13 @@ namespace ImGui
 		lak::vec2i_t size;
 		io.Fonts->GetTexDataAsRGBA32(&pixels, &size.x, &size.y);
 
-		auto old_texture = lak::opengl::get_uint(GL_TEXTURE_BINDING_2D);
+		auto old_texture = lak::opengl::get_uint(GL_TEXTURE_BINDING_2D).UNWRAP();
 		DEFER(glBindTexture(GL_TEXTURE_2D, old_texture));
 
 		context->font.init(GL_TEXTURE_2D)
 		  .bind()
 		  .apply(GL_TEXTURE_MIN_FILTER, GL_LINEAR)
-		  .apply(GL_TEXTURE_MAG_FILTER, GL_LINEAR)
+		  .apply(GL_TEXTURE_MAG_FILTER, GL_NEAREST)
 		  .store_mode(GL_UNPACK_ROW_LENGTH, 0)
 		  .build(0, GL_RGBA, size, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
 
@@ -929,44 +943,53 @@ namespace ImGui
 		// As these are deferred, they are evaluated in reverse order to how they
 		// appear here.
 		DEFER(gl_context->vertex_array = 0);
-		DEFER_CALL(glDeleteVertexArrays, 1, &gl_context->vertex_array);
-		auto old_scissor = lak::opengl::get_int<4>(GL_SCISSOR_BOX);
+		GL_DEFER_CALL(glDeleteVertexArrays, 1, &gl_context->vertex_array);
+		auto old_scissor = lak::opengl::get_int<4>(GL_SCISSOR_BOX).UNWRAP();
 #ifdef GL_CLIP_ORIGIN
-		auto old_clip_origin = lak::opengl::get_enum(GL_CLIP_ORIGIN);
+		auto old_clip_origin = lak::opengl::get_enum(GL_CLIP_ORIGIN).UNWRAP();
 #endif
-		DEFER_CALL(glScissor,
-		           old_scissor[0],
-		           old_scissor[1],
-		           old_scissor[2],
-		           old_scissor[3]);
-		auto old_viewport = lak::opengl::get_int<4>(GL_VIEWPORT);
-		DEFER_CALL(glViewport,
-		           old_viewport[0],
-		           old_viewport[1],
-		           old_viewport[2],
-		           old_viewport[3]);
-		DEFER_CALL(
+		GL_DEFER_CALL(glScissor,
+		              old_scissor[0],
+		              old_scissor[1],
+		              std::max<GLsizei>(0, old_scissor[2]),
+		              std::max<GLsizei>(0, old_scissor[3]));
+		auto old_viewport = lak::opengl::get_int<4>(GL_VIEWPORT).UNWRAP();
+		GL_DEFER_CALL(glViewport,
+		              old_viewport[0],
+		              old_viewport[1],
+		              std::max<GLsizei>(0, old_viewport[2]),
+		              std::max<GLsizei>(0, old_viewport[3]));
+		GL_DEFER_CALL(
 		  lak::opengl::enable_if, GL_SCISSOR_TEST, glIsEnabled(GL_SCISSOR_TEST));
-		DEFER_CALL(
+		GL_DEFER_CALL(
 		  lak::opengl::enable_if, GL_DEPTH_TEST, glIsEnabled(GL_DEPTH_TEST));
-		DEFER_CALL(
+		GL_DEFER_CALL(
 		  lak::opengl::enable_if, GL_CULL_FACE, glIsEnabled(GL_CULL_FACE));
-		DEFER_CALL(lak::opengl::enable_if, GL_BLEND, glIsEnabled(GL_BLEND));
-		DEFER_CALL(glBindBuffer,
-		           GL_ELEMENT_ARRAY_BUFFER,
-		           lak::opengl::get_uint(GL_ELEMENT_ARRAY_BUFFER_BINDING));
-		DEFER_CALL(glBindBuffer,
-		           GL_ARRAY_BUFFER,
-		           lak::opengl::get_uint(GL_ARRAY_BUFFER_BINDING));
-		DEFER_CALL(glBindVertexArray,
-		           lak::opengl::get_uint(GL_VERTEX_ARRAY_BINDING));
-		DEFER_CALL(glBindTexture,
-		           GL_TEXTURE_2D,
-		           lak::opengl::get_uint(GL_TEXTURE_BINDING_2D));
-		DEFER_CALL(glActiveTexture, lak::opengl::get_uint(GL_ACTIVE_TEXTURE));
-		DEFER_CALL(glUseProgram, lak::opengl::get_uint(GL_CURRENT_PROGRAM));
+		GL_DEFER_CALL(lak::opengl::enable_if, GL_BLEND, glIsEnabled(GL_BLEND));
+		GL_DEFER_CALL(
+		  glBindBuffer,
+		  GL_ELEMENT_ARRAY_BUFFER,
+		  lak::opengl::get_uint(GL_ELEMENT_ARRAY_BUFFER_BINDING).UNWRAP());
+		GL_DEFER_CALL(glBindBuffer,
+		              GL_ARRAY_BUFFER,
+		              lak::opengl::get_uint(GL_ARRAY_BUFFER_BINDING).UNWRAP());
+		GL_DEFER_CALL(glBindVertexArray,
+		              lak::opengl::get_uint(GL_VERTEX_ARRAY_BINDING).UNWRAP());
+		GL_DEFER_CALL(glBindTexture,
+		              GL_TEXTURE_2D,
+		              lak::opengl::get_uint(GL_TEXTURE_BINDING_2D).UNWRAP());
+		// GL_DEFER_CALL(
+		//   glActiveTexture,
+		//   std::min<GLuint>(
+		//     lak::opengl::get_uint(GL_ACTIVE_TEXTURE).UNWRAP(),
+		//     (GL_TEXTURE0 +
+		//      (lak::opengl::get_uint(GL_MAX_TEXTURE_IMAGE_UNITS).UNWRAP() -
+		//      1U))));
+		GL_DEFER_CALL(glUseProgram,
+		              lak::opengl::get_uint(GL_CURRENT_PROGRAM).UNWRAP());
 
-		glGenVertexArrays(1, &gl_context->vertex_array);
+		lak::opengl::call_checked(glGenVertexArrays, 1, &gl_context->vertex_array)
+		  .UNWRAP();
 
 		const bool using_scissor_test = true;
 
@@ -1005,27 +1028,39 @@ namespace ImGui
 
 		auto set_state = [&]()
 		{
-			glUseProgram(gl_context->shader.get());
-			glBindTexture(GL_TEXTURE_2D, gl_context->font.get());
-			glActiveTexture(GL_TEXTURE0);
-			glBindVertexArray(gl_context->vertex_array);
-			glBlendEquationSeparate(GL_FUNC_ADD, GL_FUNC_ADD);
-			glBlendFuncSeparate(GL_SRC_ALPHA,
-			                    GL_ONE_MINUS_SRC_ALPHA,
-			                    GL_SRC_ALPHA,
-			                    GL_ONE_MINUS_SRC_ALPHA);
-			glEnable(GL_BLEND);
-			glDisable(GL_CULL_FACE);
-			glDisable(GL_DEPTH_TEST);
-			lak::opengl::enable_if(GL_SCISSOR_TEST, using_scissor_test);
-			glViewport(static_cast<GLint>(viewport.x),
-			           static_cast<GLint>(viewport.y),
-			           static_cast<GLsizei>(viewport.z),
-			           static_cast<GLsizei>(viewport.w));
+			gl_context->shader.use().UNWRAP();
+			gl_context->font.bind();
+			lak::opengl::call_checked(glActiveTexture, GL_TEXTURE0).UNWRAP();
+			lak::opengl::call_checked(glBindVertexArray, gl_context->vertex_array)
+			  .UNWRAP();
+			lak::opengl::call_checked(
+			  glBlendEquationSeparate, GL_FUNC_ADD, GL_FUNC_ADD)
+			  .UNWRAP();
+			lak::opengl::call_checked(glBlendFuncSeparate,
+			                          GL_SRC_ALPHA,
+			                          GL_ONE_MINUS_SRC_ALPHA,
+			                          GL_SRC_ALPHA,
+			                          GL_ONE_MINUS_SRC_ALPHA)
+			  .UNWRAP();
+			lak::opengl::enable_if(GL_BLEND, true).UNWRAP();
+			lak::opengl::enable_if(GL_CULL_FACE, false).UNWRAP();
+			lak::opengl::enable_if(GL_DEPTH_TEST, false).UNWRAP();
+			lak::opengl::enable_if(GL_SCISSOR_TEST, using_scissor_test).UNWRAP();
+			lak::opengl::call_checked(glViewport,
+			                          static_cast<GLint>(viewport.x),
+			                          static_cast<GLint>(viewport.y),
+			                          static_cast<GLsizei>(viewport.z),
+			                          static_cast<GLsizei>(viewport.w))
+			  .UNWRAP();
 
-			glUniformMatrix4fv(
-			  gl_context->attrib_view_proj, 1, GL_FALSE, &viewport_matrix[0][0]);
-			glUniform1i(gl_context->attrib_tex, 0);
+			lak::opengl::call_checked(glUniformMatrix4fv,
+			                          gl_context->attrib_view_proj,
+			                          1,
+			                          GL_FALSE,
+			                          &viewport_matrix[0][0])
+			  .UNWRAP();
+			lak::opengl::call_checked(glUniform1i, gl_context->attrib_tex, 0)
+			  .UNWRAP();
 			// #ifdef GL_SAMPLER_BINDING
 			// glBindSampler(0, 0);
 			// #endif
@@ -1033,47 +1068,68 @@ namespace ImGui
 
 		set_state();
 
-		glBindBuffer(GL_ARRAY_BUFFER, gl_context->array_buffer);
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gl_context->elements);
+		lak::opengl::call_checked(
+		  glBindBuffer, GL_ARRAY_BUFFER, gl_context->array_buffer)
+		  .UNWRAP();
+		lak::opengl::call_checked(
+		  glBindBuffer, GL_ELEMENT_ARRAY_BUFFER, gl_context->elements)
+		  .UNWRAP();
 
-		glEnableVertexAttribArray(gl_context->attrib_pos);
-		glVertexAttribPointer(gl_context->attrib_pos,
-		                      2,
-		                      GL_FLOAT,
-		                      GL_FALSE,
-		                      sizeof(ImDrawVert),
-		                      (GLvoid *)IM_OFFSETOF(ImDrawVert, pos));
+		lak::opengl::call_checked(glEnableVertexAttribArray,
+		                          gl_context->attrib_pos)
+		  .UNWRAP();
+		lak::opengl::call_checked(glVertexAttribPointer,
+		                          gl_context->attrib_pos,
+		                          2,
+		                          GL_FLOAT,
+		                          GL_FALSE,
+		                          sizeof(ImDrawVert),
+		                          (GLvoid *)IM_OFFSETOF(ImDrawVert, pos))
+		  .UNWRAP();
 
-		glEnableVertexAttribArray(gl_context->attrib_UV);
-		glVertexAttribPointer(gl_context->attrib_UV,
-		                      2,
-		                      GL_FLOAT,
-		                      GL_FALSE,
-		                      sizeof(ImDrawVert),
-		                      (GLvoid *)IM_OFFSETOF(ImDrawVert, uv));
+		lak::opengl::call_checked(glEnableVertexAttribArray, gl_context->attrib_UV)
+		  .UNWRAP();
+		lak::opengl::call_checked(glVertexAttribPointer,
+		                          gl_context->attrib_UV,
+		                          2,
+		                          GL_FLOAT,
+		                          GL_FALSE,
+		                          sizeof(ImDrawVert),
+		                          (GLvoid *)IM_OFFSETOF(ImDrawVert, uv))
+		  .UNWRAP();
 
-		glEnableVertexAttribArray(gl_context->attrib_col);
-		glVertexAttribPointer(gl_context->attrib_col,
-		                      4,
-		                      GL_UNSIGNED_BYTE,
-		                      GL_TRUE,
-		                      sizeof(ImDrawVert),
-		                      (GLvoid *)IM_OFFSETOF(ImDrawVert, col));
+		lak::opengl::call_checked(glEnableVertexAttribArray,
+		                          gl_context->attrib_col)
+		  .UNWRAP();
+		lak::opengl::call_checked(glVertexAttribPointer,
+		                          gl_context->attrib_col,
+		                          4,
+		                          GL_UNSIGNED_BYTE,
+		                          GL_TRUE,
+		                          sizeof(ImDrawVert),
+		                          (GLvoid *)IM_OFFSETOF(ImDrawVert, col))
+		  .UNWRAP();
 
 		for (int n = 0; n < draw_data->CmdListsCount; ++n)
 		{
 			const ImDrawList *cmdList        = draw_data->CmdLists[n];
 			const ImDrawIdx *idxBufferOffset = 0;
 
-			glBufferData(GL_ARRAY_BUFFER,
-			             (GLsizeiptr)cmdList->VtxBuffer.Size * sizeof(ImDrawVert),
-			             (const GLvoid *)cmdList->VtxBuffer.Data,
-			             GL_STREAM_DRAW);
+			lak::opengl::call_checked(glBufferData,
+			                          GL_ARRAY_BUFFER,
+			                          (GLsizeiptr)cmdList->VtxBuffer.Size *
+			                            sizeof(ImDrawVert),
+			                          (const GLvoid *)cmdList->VtxBuffer.Data,
+			                          GL_STREAM_DRAW)
+			  .UNWRAP();
 
-			glBufferData(GL_ELEMENT_ARRAY_BUFFER,
-			             (GLsizeiptr)cmdList->IdxBuffer.Size * sizeof(ImDrawIdx),
-			             (const GLvoid *)cmdList->IdxBuffer.Data,
-			             GL_STREAM_DRAW);
+			lak::opengl::call_checked(glBufferData,
+			                          GL_ELEMENT_ARRAY_BUFFER,
+			                          (GLsizeiptr)cmdList->IdxBuffer.Size *
+			                            sizeof(ImDrawIdx),
+			                          (const GLvoid *)cmdList->IdxBuffer.Data,
+			                          GL_STREAM_DRAW)
+			  .UNWRAP();
 
 			for (int cmdI = 0; cmdI < cmdList->CmdBuffer.Size; ++cmdI)
 			{
@@ -1085,12 +1141,16 @@ namespace ImGui
 				}
 				else if (!using_scissor_test)
 				{
-					glBindTexture(GL_TEXTURE_2D, (GLuint)(intptr_t)pcmd.TextureId);
-					glDrawElements(GL_TRIANGLES,
-					               (GLsizei)pcmd.ElemCount,
-					               sizeof(ImDrawIdx) == 2 ? GL_UNSIGNED_SHORT
-					                                      : GL_UNSIGNED_INT,
-					               idxBufferOffset);
+					lak::opengl::call_checked(
+					  glBindTexture, GL_TEXTURE_2D, (GLuint)(intptr_t)pcmd.TextureId)
+					  .UNWRAP();
+					lak::opengl::call_checked(glDrawElements,
+					                          GL_TRIANGLES,
+					                          (GLsizei)pcmd.ElemCount,
+					                          sizeof(ImDrawIdx) == 2 ? GL_UNSIGNED_SHORT
+					                                                 : GL_UNSIGNED_INT,
+					                          idxBufferOffset)
+					  .UNWRAP();
 				}
 				else
 				{
@@ -1106,21 +1166,31 @@ namespace ImGui
 #ifdef GL_CLIP_ORIGIN
 						if (old_clip_origin == GL_UPPER_LEFT)
 							// Support for GL 4.5's glClipControl(GL_UPPER_LEFT)
-							glScissor(
-							  (GLint)clip.x, (GLint)clip.y, (GLint)clip.z, (GLint)clip.w);
+							lak::opengl::call_checked(glScissor,
+							                          (GLint)clip.x,
+							                          (GLint)clip.y,
+							                          (GLsizei)clip.z,
+							                          (GLsizei)clip.w)
+							  .UNWRAP();
 						else
 #endif
-							glScissor((GLint)clip.x,
-							          (GLint)(viewport.w - clip.w),
-							          (GLint)(clip.z - clip.x),
-							          (GLint)(clip.w - clip.y));
+							lak::opengl::call_checked(glScissor,
+							                          (GLint)clip.x,
+							                          (GLint)(viewport.w - clip.w),
+							                          (GLsizei)(clip.z - clip.x),
+							                          (GLsizei)(clip.w - clip.y))
+							  .UNWRAP();
 
-						glBindTexture(GL_TEXTURE_2D, (GLuint)(intptr_t)pcmd.TextureId);
-						glDrawElements(GL_TRIANGLES,
-						               (GLsizei)pcmd.ElemCount,
-						               sizeof(ImDrawIdx) == 2 ? GL_UNSIGNED_SHORT
-						                                      : GL_UNSIGNED_INT,
-						               idxBufferOffset);
+						lak::opengl::call_checked(
+						  glBindTexture, GL_TEXTURE_2D, (GLuint)(intptr_t)pcmd.TextureId)
+						  .UNWRAP();
+						lak::opengl::call_checked(
+						  glDrawElements,
+						  GL_TRIANGLES,
+						  (GLsizei)pcmd.ElemCount,
+						  sizeof(ImDrawIdx) == 2 ? GL_UNSIGNED_SHORT : GL_UNSIGNED_INT,
+						  idxBufferOffset)
+						  .UNWRAP();
 					}
 				}
 				idxBufferOffset += pcmd.ElemCount;

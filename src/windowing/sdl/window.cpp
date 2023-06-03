@@ -88,8 +88,9 @@ lak::result<lak::window_handle *, lak::u8string> lak::create_window(
 	if (gl3wInit() != GL3W_OK)
 		return lak::err_t<lak::u8string>{u8"Failed to initialise gl3w"_str};
 
-	if (!lak::opengl::check_error())
-		return lak::err_t<lak::u8string>{u8"OpenGL in bad state"_str};
+	if_let_err (const auto err, lak::opengl::get_error())
+		return lak::err_t<lak::u8string>{
+		  lak::streamify("OpenGL in bad state ("_view, err, ")"_view)};
 
 	if (SDL_GL_MakeCurrent(handle->sdl_window, context.sdl_glcontext) != 0)
 		return lak::err_t<lak::u8string>{

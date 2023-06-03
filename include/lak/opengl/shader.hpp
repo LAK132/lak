@@ -1,13 +1,14 @@
 #ifndef LAK_OPENGL_SHADER_HPP
 #define LAK_OPENGL_SHADER_HPP
 
+#include "lak/opengl/state.hpp"
 #include "lak/opengl/texture.hpp"
 
+#include "lak/memory.hpp"
 #include "lak/optional.hpp"
+#include "lak/result.hpp"
 #include "lak/span.hpp"
 #include "lak/string.hpp"
-
-#include <memory>
 
 namespace lak
 {
@@ -28,7 +29,8 @@ namespace lak
 			shader(const shader &other)            = delete;
 			shader &operator=(const shader &other) = delete;
 
-			static shader create(const lak::astring &code, GLenum shader_type);
+			static lak::opengl::result<shader> create(const lak::astring &code,
+			                                          GLenum shader_type);
 
 			shader &clear();
 
@@ -39,12 +41,18 @@ namespace lak
 
 		namespace literals
 		{
-			shader operator""_vertex_shader(const char *str, size_t);
-			shader operator""_fragment_shader(const char *str, size_t);
-			shader operator""_tess_control_shader(const char *str, size_t);
-			shader operator""_tess_eval_shader(const char *str, size_t);
-			shader operator""_geometry_shader(const char *str, size_t);
-			shader operator""_compute_shader(const char *str, size_t);
+			lak::opengl::result<shader> operator""_vertex_shader(const char *str,
+			                                                     size_t);
+			lak::opengl::result<shader> operator""_fragment_shader(const char *str,
+			                                                       size_t);
+			lak::opengl::result<shader> operator""_tess_control_shader(
+			  const char *str, size_t);
+			lak::opengl::result<shader> operator""_tess_eval_shader(const char *str,
+			                                                        size_t);
+			lak::opengl::result<shader> operator""_geometry_shader(const char *str,
+			                                                       size_t);
+			lak::opengl::result<shader> operator""_compute_shader(const char *str,
+			                                                      size_t);
 		}
 
 		struct shader_attribute
@@ -69,7 +77,7 @@ namespace lak
 		};
 
 		struct program;
-		using shared_program = std::shared_ptr<program>;
+		using shared_program = lak::shared_ptr<program>;
 		struct program
 		{
 		private:
@@ -84,26 +92,27 @@ namespace lak
 			program(const program &other)            = delete;
 			program &operator=(const program &other) = delete;
 
-			static program create();
-			static program create(const shader &vertex, const shader &fragment);
+			static lak::opengl::result<program> create();
+			static lak::opengl::result<program> create(const shader &vertex,
+			                                           const shader &fragment);
 
-			static shared_program create_shared();
-			static shared_program create_shared(const shader &vertex,
-			                                    const shader &fragment);
+			static lak::opengl::result<shared_program> create_shared();
+			static lak::opengl::result<shared_program> create_shared(
+			  const shader &vertex, const shader &fragment);
 
-			program &attach(const shader &shader);
-			program &link();
-			program &clear();
-			program &use();
+			lak::opengl::result<program &> attach(const shader &shader);
+			lak::opengl::result<program &> link();
+			lak::opengl::result<program &> clear();
+			lak::opengl::result<program &> use();
 
 			inline operator bool() const { return _program != 0; }
 			inline operator GLuint() const { return _program; }
 			inline operator GLint() const { return (GLint)_program; }
 			inline GLuint get() const { return _program; }
-			lak::optional<lak::astring> link_error() const;
+			lak::opengl::result<lak::optional<lak::astring>> link_error() const;
 
-			std::vector<shader_attribute> attributes() const;
-			std::vector<shader_uniform> uniforms() const;
+			lak::vector<shader_attribute> attributes() const;
+			lak::vector<shader_uniform> uniforms() const;
 
 			shader_attribute attribute(GLuint attr) const;
 			shader_uniform uniform(GLuint unif) const;
