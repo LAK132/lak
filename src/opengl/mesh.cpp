@@ -320,7 +320,7 @@ lak::opengl::static_object_part &lak::opengl::static_object_part::clear()
 
 void lak::opengl::static_object_part::draw(GLuint instances) const
 {
-	_shader->use();
+	_shader->use().UNWRAP();
 
 	_vertex_array.bind();
 

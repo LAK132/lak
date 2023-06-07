@@ -116,7 +116,7 @@ lak::opengl::program::program(program &&other)
 {
 }
 
-lak::opengl::program::~program() { clear(); }
+lak::opengl::program::~program() { clear().discard(); }
 
 lak::opengl::program &lak::opengl::program::operator=(program &&other)
 {
@@ -137,9 +137,9 @@ lak::opengl::result<lak::opengl::program> lak::opengl::program::create(
 {
 	ASSERT(vertex && fragment);
 	RES_TRY_ASSIGN(auto prog =, program::create());
-	prog.attach(vertex);
-	prog.attach(fragment);
-	prog.link();
+	RES_TRY(prog.attach(vertex));
+	RES_TRY(prog.attach(fragment));
+	RES_TRY(prog.link());
 	return lak::move_ok(prog);
 }
 
