@@ -269,7 +269,7 @@ lak::fs::path lak::parent(const lak::fs::path &path)
 	return lak::normalised(path).parent_path();
 }
 
-lak::result<lak::deepest_folder_result, std::error_code> lak::deepest_folder(
+lak::error_code_result<lak::deepest_folder_result> lak::deepest_folder(
   const lak::fs::path &path)
 {
 	lak::fs::path folder = lak::normalised(path);
@@ -284,7 +284,7 @@ lak::result<lak::deepest_folder_result, std::error_code> lak::deepest_folder(
 		ec.clear();
 		entry = lak::fs::directory_entry(folder, ec);
 	}
-	if (ec) return lak::err_t{ec};
+	if (ec) return lak::err_t<lak::error_code_error>{ec};
 	return lak::ok_t{lak::deepest_folder_result{lak::normalised(folder),
 	                                            lak::relative(path, folder)}};
 }

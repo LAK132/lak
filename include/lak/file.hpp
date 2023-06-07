@@ -80,7 +80,7 @@ namespace lak
 		fs::path folder;
 		fs::path file;
 	};
-	lak::result<lak::deepest_folder_result, std::error_code> deepest_folder(
+	lak::error_code_result<lak::deepest_folder_result> deepest_folder(
 	  const fs::path &path);
 }
 
