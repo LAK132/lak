@@ -4,7 +4,11 @@
 #include "lak/platform.hpp"
 #include "lak/window.hpp"
 
+#ifdef LAK_RUN_WINDOWING_TESTS
 BEGIN_TEST(window)
+#else
+int window_compile_test()
+#endif
 {
 	DEBUG("platform init");
 	ASSERT(lak::platform_init());
@@ -43,4 +47,6 @@ BEGIN_TEST(window)
 
 	return 0;
 }
+#ifdef LAK_RUN_WINDOWING_TESTS
 END_TEST()
+#endif

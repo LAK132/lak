@@ -1,11 +1,9 @@
-#ifdef LAK_TEST_BASIC_PROGRAM
+#define LAK_BASIC_PROGRAM_MAIN   lak_test_basic_program_main
+#define LAK_BASIC_PROGRAM_PREFIX lak_test_basic_
 
-#	define LAK_BASIC_PROGRAM_MAIN   lak_test_basic_program_main
-#	define LAK_BASIC_PROGRAM_PREFIX lak_test_basic_
+#include "lak/test.hpp"
 
-#	include "lak/test.hpp"
-
-#	include "lak/basic_program.inl"
+#include "lak/basic_program.inl"
 
 lak::optional<int> lak_test_basic_window_preinit(int, char **)
 {
@@ -39,7 +37,11 @@ int lak_test_basic_window_quit(lak::window &)
 	return EXIT_SUCCESS;
 }
 
+#ifdef LAK_RUN_WINDOWING_TESTS
 BEGIN_TEST(basic_program)
+#else
+int basic_program_compile_test()
+#endif
 {
 	DEBUG("attempting to launch hardware rendered window");
 	lak_test_basic_window_force_software = false;
@@ -53,6 +55,6 @@ BEGIN_TEST(basic_program)
 
 	return EXIT_SUCCESS;
 }
+#ifdef LAK_RUN_WINDOWING_TESTS
 END_TEST()
-
 #endif

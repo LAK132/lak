@@ -83,6 +83,12 @@ elif get_option('lak_backend') == 'win32'
 	]
 endif
 
+if get_option('lak_run_windowing_tests')
+	c_cpp_args += [
+		'-DLAK_RUN_WINDOWING_TESTS',
+	]
+endif
+
 add_project_arguments(c_cpp_args + cpp_args, language: ['cpp'])
 add_project_arguments(c_cpp_args + c_args, language: ['c'])
 
