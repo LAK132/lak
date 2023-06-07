@@ -864,6 +864,33 @@ namespace lak
 				return value;
 		}
 
+		template<lak::concepts::invocable<error_reference> F>
+		OK unwrap_or(F &&f) &
+		{
+			if (is_ok())
+				return get_ok();
+			else
+				return f(get_err());
+		}
+
+		template<lak::concepts::invocable<error_const_reference> F>
+		OK unwrap_or(F &&f) const &
+		{
+			if (is_ok())
+				return get_ok();
+			else
+				return f(get_err());
+		}
+
+		template<lak::concepts::invocable<ERR &&> F>
+		OK unwrap_or(F &&f) &&
+		{
+			if (is_ok())
+				return forward_ok();
+			else
+				return f(forward_err());
+		}
+
 		/* --- unwrap_err_or --- */
 
 		ERR unwrap_err_or(ERR value) const &
@@ -880,6 +907,33 @@ namespace lak
 				return forward_err();
 			else
 				return value;
+		}
+
+		template<lak::concepts::invocable<ok_reference> F>
+		ERR unwrap_err_or(F &&f) &
+		{
+			if (is_err())
+				return get_err();
+			else
+				return f(get_ok());
+		}
+
+		template<lak::concepts::invocable<ok_const_reference> F>
+		ERR unwrap_err_or(F &&f) const &
+		{
+			if (is_err())
+				return get_err();
+			else
+				return f(get_ok());
+		}
+
+		template<lak::concepts::invocable<OK &&> F>
+		ERR unwrap_err_or(F &&f) &&
+		{
+			if (is_err())
+				return forward_err();
+			else
+				return f(forward_ok());
 		}
 
 		/* --- unwrap_or_default --- */
