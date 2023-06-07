@@ -18,7 +18,7 @@ jobs:
           - -Dlak_enable_tests=true
           - -Dlak_enable_tests=true -Dlak_enable_lua=true -Dlak_enable_stb=true -Dlak_enable_stb_image=true -Dlak_enable_stb_image_write=true
           - -Dlak_enable_tests=true -Dlak_enable_lmdb=true -Dlak_enable_libfive=true
-          - -Dlak_enable_tests=true -Dlak_enable_windowing=true -Dlak_sdl2_from_source=true -Dlak_backed=sdl -Dlak_enable_glm -Dlak_enable_imgui
+          - -Dlak_enable_tests=true -Dlak_enable_windowing=true -Dlak_sdl2_from_source=true -Dlak_backed=sdl -Dlak_enable_glm=true -Dlak_enable_imgui=true
         exclude:
           - os: ubuntu-20.04
             setup-options: -Dlak_enable_tests=true -Dlak_enable_lmdb=true -Dlak_enable_libfive=true
