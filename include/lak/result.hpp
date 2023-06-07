@@ -864,7 +864,7 @@ namespace lak
 				return value;
 		}
 
-		template<lak::concepts::invocable<error_reference> F>
+		template<lak::concepts::invocable<err_reference> F>
 		OK unwrap_or(F &&f) &
 		{
 			if (is_ok())
@@ -873,7 +873,7 @@ namespace lak
 				return f(get_err());
 		}
 
-		template<lak::concepts::invocable<error_const_reference> F>
+		template<lak::concepts::invocable<err_const_reference> F>
 		OK unwrap_or(F &&f) const &
 		{
 			if (is_ok())
