@@ -44,8 +44,9 @@
 #include <cstdlib>
 #include <cstring>
 
-auto _call_checked = []<typename RET, typename... ARGS, typename... ARGS2>(
-                       lak::trace trace, RET (*func)(ARGS...), ARGS2... args)
+auto _call_checked =
+  []<typename RET, typename... ARGS, typename... ARGS2>(
+    lak::trace trace, RET(APIENTRYP func)(ARGS...), ARGS2... args)
 {
 	return lak::opengl::call_checked(func, lak::forward<ARGS2>(args)...)
 	  .TRACE_UNWRAP(trace);
