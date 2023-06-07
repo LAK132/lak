@@ -10,7 +10,8 @@ lakimgui_dependencies = declare_dependency(
 lakimgui = static_library(
 	'lakimgui',
 	[
-		'imgui.cpp',
+		'backend.cpp',
+		'widgets.cpp',
 	],
 	override_options: 'cpp_std=' + version,
 	dependencies: lakimgui_dependencies,

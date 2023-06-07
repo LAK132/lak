@@ -9,7 +9,8 @@
 #include "lak/window.hpp"
 
 #ifdef LAK_BASIC_PROGRAM_IMGUI_WINDOW_IMPL
-#	include "lak/imgui/imgui.hpp"
+#	include "lak/imgui/backend.hpp"
+#	include "lak/imgui/widgets.hpp"
 #endif
 
 #ifndef APP_NAME

@@ -4,7 +4,8 @@
 #include "lak/platform.hpp"
 #include "lak/window.hpp"
 
-#include "lak/imgui/imgui.hpp"
+#include "lak/imgui/backend.hpp"
+#include "lak/imgui/widgets.hpp"
 
 BEGIN_TEST(imgui)
 {
