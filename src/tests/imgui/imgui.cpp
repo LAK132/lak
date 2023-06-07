@@ -7,7 +7,11 @@
 #include "lak/imgui/backend.hpp"
 #include "lak/imgui/widgets.hpp"
 
+#ifdef LAK_RUN_WINDOWING_TESTS
 BEGIN_TEST(imgui)
+#else
+int imgui_compile_test()
+#endif
 {
 	DEBUG("platform init");
 	ASSERT(lak::platform_init());
@@ -109,4 +113,6 @@ BEGIN_TEST(imgui)
 
 	return result;
 }
+#ifdef LAK_RUN_WINDOWING_TESTS
 END_TEST()
+#endif
