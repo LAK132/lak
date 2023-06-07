@@ -340,7 +340,7 @@ void lak::opengl::static_object_part::draw_part(const GLuint *offset,
                                                 GLsizei count,
                                                 GLuint instances) const
 {
-	_shader->use();
+	_shader->use().UNWRAP();
 
 	_vertex_array.bind();
 
