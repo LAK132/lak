@@ -78,7 +78,8 @@ namespace lak
 
 		template<typename RTN, typename... ARGS, typename... ARGS2>
 		requires(!lak::is_void_v<RTN>)
-		lak::opengl::result<RTN> call_checked(RTN (*func)(ARGS...), ARGS2... args)
+		lak::opengl::result<RTN> call_checked(RTN(APIENTRYP func)(ARGS...),
+		                                      ARGS2... args)
 		{
 			RTN result{func(args...)};
 			if_let_err (const auto err, lak::opengl::get_error())
@@ -88,7 +89,8 @@ namespace lak
 		}
 
 		template<typename... ARGS, typename... ARGS2>
-		lak::opengl::result<> call_checked(void (*func)(ARGS...), ARGS2... args)
+		lak::opengl::result<> call_checked(void(APIENTRYP func)(ARGS...),
+		                                   ARGS2... args)
 		{
 			func(args...);
 			return lak::opengl::get_error();
