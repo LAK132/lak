@@ -15,7 +15,7 @@
 namespace lak
 {
 #ifdef __cpp_lib_source_location
-	using source_location = std::source_location
+	using source_location = std::source_location;
 #else
 	struct source_location
 	{
@@ -27,7 +27,7 @@ namespace lak
 	};
 #endif
 
-	  struct trace
+	struct trace
 	{
 		lak::source_location location;
 		lak::u8string message;
