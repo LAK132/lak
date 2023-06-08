@@ -29,9 +29,13 @@ uint64_t lak::performance_frequency()
 #elif defined(LAK_OS_APPLE)
 	mach_timebase_info_data_t timebase_info;
 	ASSERT(mach_timebase_info(&timebase_info) == KERN_SUCCESS);
-	return timebase_info.numer * (1'000'000'000 / timebase_info.denom);
+	// ticks * (.numer / .denom) = nanoseconds
+	// ticks / (.denom / .numer) = nanoseconds
+	// ticks / (1'000'000'000 * (.denom / .numer)) = seconds
+	return uint64_t((1'000'000'000U * uintmax_t(timebase_info.denom)) /
+	                timebase_info.numer);
 #elif defined(LAK_OS_LINUX)
-	return 1'000'000'000;
+	return 1'000'000'000U;
 #else
 #	error "OS not supported"
 #endif
@@ -48,7 +52,8 @@ uint64_t lak::performance_counter()
 #elif defined(LAK_OS_LINUX)
 	struct timespec time;
 	ASSERT(clock_gettime(CLOCK_MONOTONIC, &time) == 0);
-	return (time.tv_sec * 1'000'000'000) + time.tv_nsec;
+	return uint64_t((uintmax_t(time.tv_sec) * 1'000'000'000U) +
+	                uintmax_t(time.tv_nsec));
 #else
 #	error "OS not supported"
 #endif
