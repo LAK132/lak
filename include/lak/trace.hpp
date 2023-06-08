@@ -117,9 +117,10 @@ namespace lak
 			static_assert(!lak::is_same_v<lak::remove_cvref_t<T>, lak::stack_trace>,
 			              "Use lak::add_trace to append traces to the stack trace");
 			if constexpr (lak::is_same_v<lak::remove_cvref_t<T>, lak::monostate>)
-				return lak::stack_trace{.message = message}.add(lak::trace({}, l));
+				return lak::stack_trace{.message = message, .traces = {}}.add(
+				  lak::trace({}, l));
 			else
-				return lak::stack_trace{.message = message}.add(
+				return lak::stack_trace{.message = message, .traces = {}}.add(
 				  lak::trace(lak::streamify(err), l));
 		};
 	}
