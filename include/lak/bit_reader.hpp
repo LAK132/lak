@@ -29,6 +29,10 @@ namespace lak
 
 		inline void flush_bits(const uint8_t bits);
 
+		inline void accumulate_to(const uint8_t bits);
+
+		inline void accumulate_bits(const uint8_t bits);
+
 	public:
 		bit_reader() = default;
 
@@ -60,6 +64,12 @@ namespace lak
 		inline lak::result<byte_t, bit_reader_error_t> peek_byte();
 
 		inline lak::result<byte_t, bit_reader_error_t> read_byte();
+
+		inline lak::error_code<bit_reader_error_t> skip(size_t bytes, size_t bits);
+
+		inline lak::error_code<bit_reader_error_t> skip_bits(const size_t bits);
+
+		inline lak::error_code<bit_reader_error_t> skip_bytes(const size_t bytes);
 	};
 }
 
