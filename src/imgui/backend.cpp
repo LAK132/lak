@@ -58,7 +58,11 @@ auto _call_checked =
 #if !defined(LAK_SOFTWARE_RENDER_32BIT) &&                                    \
   !defined(LAK_SOFTWARE_RENDER_24BIT) &&                                      \
   !defined(LAK_SOFTWARE_RENDER_16BIT) && !defined(LAK_SOFTWARE_RENDER_8BIT)
-#	define LAK_SOFTWARE_RENDER_16BIT
+#	if defined(LAK_OS_APPLE) && defined(LAK_ARCH_ARM64)
+#		define LAK_SOFTWARE_RENDER_32BIT
+#	else
+#		define LAK_SOFTWARE_RENDER_16BIT
+#	endif
 #endif
 
 [[maybe_unused]] static const char *GetClipboardTextFn_DefaultImpl(void *);
