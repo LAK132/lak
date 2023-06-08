@@ -7,17 +7,33 @@
 #include "lak/unicode.hpp"
 
 #include <ostream>
-#include <source_location>
+#include <version>
+#ifdef __cpp_lib_source_location
+#	include <source_location>
+#endif
 
 namespace lak
 {
-	struct trace
+#ifdef __cpp_lib_source_location
+	using source_location = std::source_location
+#else
+	struct source_location
 	{
-		std::source_location location;
+		static source_location current() { return {}; }
+		constexpr const char *file_name() const { return {}; }
+		constexpr const char *function_name() const { return {}; }
+		constexpr uint_least32_t line() const { return 0U; }
+		constexpr uint_least32_t column() const { return 0U; }
+	};
+#endif
+
+	  struct trace
+	{
+		lak::source_location location;
 		lak::u8string message;
 
 		inline trace(lak::u8string m        = {},
-		             std::source_location l = std::source_location::current())
+		             lak::source_location l = lak::source_location::current())
 		: location(l), message(lak::move(m))
 		{
 		}
@@ -93,7 +109,7 @@ namespace lak
 
 	inline auto to_stack_trace(
 	  lak::u8string message  = {},
-	  std::source_location l = std::source_location::current())
+	  lak::source_location l = lak::source_location::current())
 	{
 		return [message = lak::move(message),
 		        l       = lak::move(l)]<typename T>(T &&err) -> lak::stack_trace
@@ -115,7 +131,7 @@ namespace lak
 	inline lak::trace_result<T> to_stack_trace(
 	  const lak::result<T, E> &result,
 	  lak::u8string message  = {},
-	  std::source_location l = std::source_location::current())
+	  lak::source_location l = lak::source_location::current())
 	{
 		return result.map_err(lak::to_stack_trace(lak::move(message), l));
 	}
@@ -124,7 +140,7 @@ namespace lak
 	inline lak::trace_result<T> to_stack_trace(
 	  lak::result<T, E> &&result,
 	  lak::u8string message  = {},
-	  std::source_location l = std::source_location::current())
+	  lak::source_location l = lak::source_location::current())
 	{
 		return lak::move(result).map_err(
 		  lak::to_stack_trace(lak::move(message), l));
@@ -132,7 +148,7 @@ namespace lak
 
 	inline auto add_trace(
 	  lak::u8string message  = {},
-	  std::source_location l = std::source_location::current())
+	  lak::source_location l = lak::source_location::current())
 	{
 		return [message = lak::move(message),
 		        l       = lak::move(l)](lak::stack_trace trace) -> lak::stack_trace
