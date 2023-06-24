@@ -1,7 +1,11 @@
 #ifndef LAK_MEMORY_HPP
 #define LAK_MEMORY_HPP
 
+#include "lak/math.hpp"
+#include "lak/memmanip.hpp"
 #include "lak/result.hpp"
+#include "lak/span.hpp"
+#include "lak/stdint.hpp"
 
 #include <atomic>
 
@@ -147,6 +151,144 @@ namespace lak
 		inline T *operator->() const { return &_data->value; }
 
 		inline T *get() const { return _data ? &_data->value : nullptr; }
+	};
+
+	template<typename T>
+	struct shared_ptr<T[]>
+	{
+	private:
+		using internal_value_type = lak::_shared_ptr_value_type<lak::span<T>>;
+
+		internal_value_type *_data = nullptr;
+
+		template<typename U>
+		friend struct shared_ptr;
+
+		shared_ptr(lak::_shared_ptr_metadata *d)
+		: _data(static_cast<internal_value_type *>(d))
+		{
+		}
+
+		void reset(lak::_shared_ptr_metadata *d)
+		{
+			reset();
+			_data = static_cast<internal_value_type *>(d);
+		}
+
+		lak::_shared_ptr_metadata *release()
+		{
+			return lak::exchange(_data, nullptr);
+		}
+
+		// increments the ref count and returns a copy of the data pointer
+		lak::_shared_ptr_metadata *release_copy() const
+		{
+			if (_data) ++_data->ref_count;
+			return _data;
+		}
+
+	public:
+		template<typename... ARGS>
+		static shared_ptr make(size_t count, ARGS &&...args)
+		{
+			lak::shared_ptr<T[]> result;
+
+			do
+			{
+				byte_t *pre;
+				byte_t *fam;
+				if constexpr (alignof(internal_value_type) >= alignof(T))
+				{
+					auto p = reinterpret_cast<byte_t *>(lak::aligned_alloc(
+					  alignof(internal_value_type),
+					  lak::to_multiple(sizeof(internal_value_type) + (sizeof(T) * count),
+					                   alignof(internal_value_type))));
+
+					if (!p) break;
+
+					pre = p;
+					fam = p + sizeof(internal_value_type);
+				}
+				else
+				{
+					constexpr size_t aligned_size =
+					  lak::to_multiple(sizeof(internal_value_type), alignof(T));
+
+					auto p = reinterpret_cast<byte_t *>(lak::aligned_alloc(
+					  alignof(T), aligned_size + (sizeof(T) * count)));
+
+					if (!p) break;
+
+					pre = p;
+					fam = p + aligned_size;
+				}
+
+				result._data = new (pre) internal_value_type{
+				  {
+				    .ref_count{.value{1U}},
+				    .deleter{
+				      [](void *d)
+				      {
+					      if (auto data{static_cast<internal_value_type *>(
+					            reinterpret_cast<lak::_shared_ptr_metadata *>(d))};
+					          data && (--data->ref_count) == 0)
+					      {
+						      for (auto &v : data->value) v.~T();
+						      data->~internal_value_type();
+						      lak::aligned_free(data);
+					      }
+				      }},
+				    .data{nullptr},
+				  },
+				  lak::span<T>(new (fam) T[count]{lak::forward<ARGS>(args)...}, count),
+				};
+			} while (false);
+
+			if (result._data)
+			{
+				result._data->data = result._data->value.data();
+			}
+
+			return result;
+		}
+
+		shared_ptr() = default;
+		shared_ptr(const shared_ptr &other) : shared_ptr(other.release_copy()) {}
+		shared_ptr &operator=(const shared_ptr &other)
+		{
+			reset(other.release_copy());
+			return *this;
+		}
+		shared_ptr(shared_ptr &&other) : shared_ptr(other.release()) {}
+		shared_ptr &operator=(shared_ptr &&other)
+		{
+			reset(other.release());
+			return *this;
+		}
+
+		~shared_ptr() { reset(); }
+
+		void reset()
+		{
+			if (_data) _data->deleter(_data);
+			_data = nullptr;
+		}
+
+		size_t use_count() const
+		{
+			return _data ? _data->ref_count.value.load() : 0U;
+		}
+
+		inline operator bool() const { return _data != nullptr; }
+
+		inline lak::span<T> &operator*() const { return _data->value; }
+
+		inline lak::span<T> *operator->() const { return &_data->value; }
+
+		inline lak::span<T> *get() const
+		{
+			return _data ? &_data->value : nullptr;
+		}
 	};
 
 	template<>
