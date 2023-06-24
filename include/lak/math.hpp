@@ -17,6 +17,13 @@ namespace lak
 		return (a / b) + ((a % b) != INTEGER(0) ? INTEGER(1) : INTEGER(0));
 	}
 
+	// round a up to a multiple of b
+	template<typename INTEGER>
+	constexpr INTEGER to_multiple(INTEGER a, INTEGER b)
+	{
+		return a + lak::slack<INTEGER>(a, b);
+	}
+
 	bool close_to(double a, double b, uint32_t epsilon_count = 1);
 
 	bool close_to(float a, float b, uint32_t epsilon_count = 1);
