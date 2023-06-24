@@ -5,6 +5,8 @@
 #include "lak/span.hpp"
 #include "lak/span_manip.hpp"
 
+#include <cstdlib>
+
 byte_t *lak::align_ptr(byte_t *ptr, size_t align)
 {
 	return reinterpret_cast<byte_t *>(
@@ -41,6 +43,24 @@ void lak::memmove(lak::span<byte_t> dst, lak::span<const byte_t> src)
 {
 	lak::memmove(
 	  dst.data(), src.data(), dst.size() < src.size() ? dst.size() : src.size());
+}
+
+void *lak::aligned_alloc(size_t alignment, size_t size)
+{
+#ifdef LAK_COMPILER_MSVC
+	return _aligned_malloc(size, alignment);
+#else
+	return std::aligned_alloc(alignment, size);
+#endif
+}
+
+void lak::aligned_free(void *p)
+{
+#ifdef LAK_COMPILER_MSVC
+	return _aligned_free(p);
+#else
+	std::free(p);
+#endif
 }
 
 size_t lak::round_to_page_multiple(size_t size, size_t *page_size_out)

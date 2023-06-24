@@ -67,6 +67,10 @@ namespace lak
 		return result;
 	}
 
+	void *aligned_alloc(size_t alignment, size_t size);
+
+	void aligned_free(void *p);
+
 	size_t page_size();
 
 	size_t round_to_page_multiple(size_t size, size_t *page_size_out = nullptr);
