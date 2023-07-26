@@ -2,9 +2,9 @@
 
 #include "lak/span_manip.hpp"
 
-namespace
+namespace lak
 {
-	namespace impl
+	namespace char_utils_impl
 	{
 		constexpr char8_t alphanum[] = {
 		  u8'0',
@@ -102,6 +102,15 @@ namespace
 		  u8'\x20', // space
 		};
 
+		constexpr char32_t ascii_spaces32[] = {
+		  U'\x09', // tab
+		  U'\x0A', // line feed
+		  U'\x0B', // line tab
+		  U'\x0C', // form feed
+		  U'\x0D', // carriage return
+		  U'\x20', // space
+		};
+
 		constexpr char32_t spaces[25] = {
 		  U'\u0009', // tab
 		  U'\u000A', // line feed
@@ -136,7 +145,7 @@ namespace
 
 inline constexpr lak::span<const char8_t> lak::alphanumerics()
 {
-	return lak::span(impl::alphanum);
+	return lak::span(lak::char_utils_impl::alphanum);
 }
 
 inline constexpr bool lak::is_alphanumeric(char8_t c)
@@ -156,7 +165,7 @@ inline lak::result<uint8_t> lak::from_alphanumeric(char8_t c)
 
 inline constexpr lak::span<const char8_t> lak::hex_alphanumerics()
 {
-	return lak::span(impl::hex_alphanum);
+	return lak::span(lak::char_utils_impl::hex_alphanum);
 }
 
 inline constexpr bool lak::is_hex_alphanumeric(char8_t c)
@@ -181,7 +190,7 @@ inline lak::result<uint8_t> lak::from_hex_alphanumeric(char8_t c)
 
 inline constexpr lak::span<const char32_t> lak::control_codes()
 {
-	return lak::span(impl::control_codes);
+	return lak::span(lak::char_utils_impl::control_codes);
 }
 
 inline constexpr bool lak::is_control_code(char32_t c)
@@ -193,7 +202,7 @@ inline constexpr bool lak::is_control_code(char32_t c)
 
 inline constexpr lak::span<const char32_t> lak::whitespaces()
 {
-	return lak::span(impl::spaces);
+	return lak::span(lak::char_utils_impl::spaces);
 }
 
 inline constexpr bool lak::is_whitespace(char32_t c)
@@ -205,7 +214,7 @@ inline constexpr bool lak::is_whitespace(char32_t c)
 
 inline constexpr lak::span<const char8_t> lak::ascii_whitespaces()
 {
-	return lak::span(impl::ascii_spaces);
+	return lak::span(lak::char_utils_impl::ascii_spaces);
 }
 
 inline constexpr bool lak::is_ascii_whitespace(char8_t c)

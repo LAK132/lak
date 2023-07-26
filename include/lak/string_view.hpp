@@ -2,6 +2,7 @@
 #	define LAK_STRING_VIEW_HPP
 
 #	include "lak/string.hpp"
+#	include "lak/compare.hpp"
 
 #	define LAK_SPAN_FORWARD_ONLY
 #	include "lak/span.hpp"
@@ -98,6 +99,10 @@ namespace lak
 
 	template<typename CHAR>
 	size_t compare(lak::string_view<CHAR> a, lak::string_view<CHAR> b);
+
+	template<typename CHAR>
+	lak::strong_ordering lexical_compare(lak::string_view<CHAR> a,
+	                                     lak::string_view<CHAR> b);
 }
 
 #endif

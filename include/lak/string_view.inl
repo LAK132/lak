@@ -102,3 +102,23 @@ size_t lak::compare(lak::string_view<CHAR> a, lak::string_view<CHAR> b)
 		++result;
 	return result;
 }
+
+template<typename CHAR>
+lak::strong_ordering lak::lexical_compare(lak::string_view<CHAR> a,
+                                          lak::string_view<CHAR> b)
+{
+	auto x = char(0) <=> char(1);
+
+	if (a.size() > b.size())
+		return lak::strong_ordering::greater;
+	else if (a.size() < b.size())
+		return lak::strong_ordering::less;
+	else
+		for (size_t i = a.size(); i-- > 0;)
+			if (a[i] > b[i])
+				return lak::strong_ordering::greater;
+			else if (a[i] < b[i])
+				return lak::strong_ordering::less;
+
+	return lak::strong_ordering::equal;
+}

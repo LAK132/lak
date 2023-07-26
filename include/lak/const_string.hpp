@@ -6,6 +6,7 @@
 #include "lak/crc.hpp"
 #include "lak/string.hpp"
 #include "lak/string_view.hpp"
+#include "lak/type_traits.hpp"
 
 namespace lak
 {
@@ -73,9 +74,29 @@ namespace lak
 			return ~result;                                                         \
 		}                                                                         \
 	};                                                                          \
-                                                                              \
 	template<size_t N>                                                          \
-	PREFIX##const_string(const CHAR(&)[N])->PREFIX##const_string<N - 1>;
+	PREFIX##const_string(const CHAR(&)[N])->PREFIX##const_string<N - 1>;        \
+                                                                              \
+	template<template<CHAR...> typename T, PREFIX##const_string str, typename>  \
+	struct _##PREFIX##apply_const_string;                                       \
+	template<template<CHAR...> typename T,                                      \
+	         PREFIX##const_string str,                                          \
+	         size_t... I>                                                       \
+	struct _##PREFIX##apply_const_string<T, str, lak::index_sequence<I...>>     \
+	{                                                                           \
+		using type = T<str[I]...>;                                                \
+	};                                                                          \
+	template<template<CHAR...> typename T, PREFIX##const_string str>            \
+	struct PREFIX##apply_const_string                                           \
+	{                                                                           \
+		using type = typename _##PREFIX##apply_const_string<                      \
+		  T,                                                                      \
+		  str,                                                                    \
+		  lak::make_index_sequence<str.size()>>::type;                            \
+	};                                                                          \
+	template<template<CHAR...> typename T, PREFIX##const_string str>            \
+	using PREFIX##apply_const_string_t =                                        \
+	  typename PREFIX##apply_const_string<T, str>::type;
 
 	// aconst_string, wconst_string, u8const_string, u16const_string and
 	// u32const_string

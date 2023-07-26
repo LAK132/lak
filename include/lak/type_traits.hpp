@@ -1443,14 +1443,14 @@ namespace lak
 	template<size_t... I>
 	using index_sequence = lak::integer_sequence<size_t, I...>;
 
-	template<typename T, T I, T... Is>
+	template<typename T, T STOP, T I, T... Is>
 	struct _make_integer_sequence
 	{
 		struct cont
 		{
 			template<typename U, U J, U... Js>
-			using type =
-			  typename lak::_make_integer_sequence<U, J - 1, J - 1, Js...>::type;
+			using type = typename lak::
+			  _make_integer_sequence<U, STOP, J - 1, J - 1, Js...>::type;
 		};
 
 		struct done
@@ -1460,7 +1460,7 @@ namespace lak
 		};
 
 		template<typename U, U... Js>
-		using next = typename lak::conditional_t<I == 0, done, cont>::
+		using next = typename lak::conditional_t<I == STOP, done, cont>::
 		  template type<U, I, Js...>;
 
 		using type = next<T, Is...>;
@@ -1468,11 +1468,18 @@ namespace lak
 
 	template<typename T, T I>
 	using make_integer_sequence =
-	  typename lak::_make_integer_sequence<T, I>::type;
+	  typename lak::_make_integer_sequence<T, T{0}, I>::type;
 
 	template<size_t I>
-	using make_index_sequence =
-	  typename lak::_make_integer_sequence<size_t, I>::type;
+	using make_index_sequence = lak::make_integer_sequence<size_t, I>;
+
+	template<typename T, T BEGIN, T END>
+	using make_integer_sequence_range =
+	  typename lak::_make_integer_sequence<T, BEGIN, END>::type;
+
+	template<size_t BEGIN, size_t END>
+	using make_index_sequence_range =
+	  lak::make_integer_sequence_range<size_t, BEGIN, END>;
 
 	static_assert(
 	  lak::is_same_v<lak::make_index_sequence<0>, lak::index_sequence<>>);
@@ -1481,6 +1488,8 @@ namespace lak
 	static_assert(
 	  lak::is_same_v<lak::make_index_sequence<10>,
 	                 lak::index_sequence<0, 1, 2, 3, 4, 5, 6, 7, 8, 9>>);
+	static_assert(lak::is_same_v<lak::make_index_sequence_range<5, 10>,
+	                             lak::index_sequence<5, 6, 7, 8, 9>>);
 
 	template<typename... T>
 	using index_sequence_for = lak::make_index_sequence<sizeof...(T)>;
