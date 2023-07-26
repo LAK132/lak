@@ -24,7 +24,8 @@ BEGIN_TEST(dsl)
 	(void)disjunction;
 
 	{
-		DEBUG("a+b")
+		DEBUG("a+b");
+
 		lak::dsl::sequence_t<lak::dsl::literal<u8"a", u8'a'>,
 		                     lak::dsl::literal<u8"b", u8'b'>>
 		  string_sequence =
@@ -38,7 +39,8 @@ BEGIN_TEST(dsl)
 	}
 
 	{
-		DEBUG("a|b")
+		DEBUG("a|b");
+
 		lak::variant<char8_t> result =
 		  (lak::dsl::literal<u8"a", u8'a'> | lak::dsl::literal<u8"b", u8'b'>)
 		    .parse(u8"ab")
@@ -49,7 +51,8 @@ BEGIN_TEST(dsl)
 	}
 
 	{
-		DEBUG("(a|b)+(a|b)")
+		DEBUG("(a|b)+(a|b)");
+
 		((lak::dsl::literal<u8"a", u8'a'> | lak::dsl::literal<u8"b", u8'b'>)+(
 		   lak::dsl::literal<u8"a", u8'a'> | lak::dsl::literal<u8"b", u8'b'>))
 		  .parse(u8"acab")
@@ -57,7 +60,8 @@ BEGIN_TEST(dsl)
 	}
 
 	{
-		DEBUG("{2}(a|b)")
+		DEBUG("{2}(a|b)");
+
 		auto result = (lak::dsl::repeat_exact<(lak::dsl::literal<u8"a", u8'a'> |
 		                                       lak::dsl::literal<u8"b", u8'b'>),
 		                                      2>)
@@ -70,7 +74,8 @@ BEGIN_TEST(dsl)
 	}
 
 	{
-		DEBUG("*(a|b)")
+		DEBUG("*(a|b)");
+
 		auto result =
 		  (*(lak::dsl::literal<u8"a", u8'a'> | lak::dsl::literal<u8"b", u8'b'>))
 		    .parse(u8"abab")
