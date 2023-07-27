@@ -81,9 +81,9 @@ namespace lak
 			}
 
 			template<size_t... I>
-			requires !is_pure_match
-			         lak::dsl::result<value_type> parse(
-			           lak::u8string_view str, lak::index_sequence<I...>) const
+			requires(!is_pure_match)
+			lak::dsl::result<value_type> parse(lak::u8string_view str,
+			                                   lak::index_sequence<I...>) const
 			{
 				// :TODO: an uninitialised tuple type could be an interesting
 				// optimisation here, so that we aren't default constructing
@@ -116,7 +116,7 @@ namespace lak
 			}
 
 			template<size_t... I>
-			requires is_pure_match
+			requires(is_pure_match)
 			lak::dsl::result<value_type> parse(lak::u8string_view str,
 			                                   lak::index_sequence<I...>) const
 			{
@@ -227,7 +227,7 @@ namespace lak
 			                     lak::array<typename decltype(par)::value_type>>;
 
 			lak::dsl::result<value_type> parse(lak::u8string_view str) const
-			requires !is_pure_match
+			requires(!is_pure_match)
 			{
 				lak::dsl::parse_result<value_type> result =
 				  lak::dsl::parse_result<value_type>{
@@ -256,7 +256,7 @@ namespace lak
 			}
 
 			lak::dsl::result<value_type> parse(lak::u8string_view str) const
-			requires is_pure_match
+			requires(is_pure_match)
 			{
 				lak::dsl::parse_result<value_type> result =
 				  lak::dsl::parse_result<value_type>{
