@@ -300,6 +300,9 @@ namespace lak
 		template<size_t I, typename... ARGS>
 		auto &emplace(ARGS &&...args);
 
+		template<typename V, typename... ARGS>
+		auto &emplace(ARGS &&...args);
+
 		template<size_t I, typename... ARGS>
 		static variant make(ARGS &&...args);
 
@@ -485,6 +488,12 @@ namespace lak
 				return _value.template emplace<1U>(
 				  lak::in_place_index<I + _internal_offset>,
 				  lak::forward<ARGS>(args)...);
+		}
+
+		template<typename V, typename... ARGS>
+		auto &emplace(ARGS &&...args)
+		{
+			return emplace<index_of<V>>(lak::forward<ARGS>(args)...);
 		}
 
 		template<size_t I, typename... ARGS>

@@ -194,6 +194,13 @@ auto &lak::variant<T...>::emplace(ARGS &&...args)
 }
 
 template<typename... T>
+template<typename V, typename... ARGS>
+auto &lak::variant<T...>::emplace(ARGS &&...args)
+{
+	return emplace<index_of<V>>(lak::forward<ARGS>(args)...);
+}
+
+template<typename... T>
 template<size_t I, typename... ARGS>
 lak::variant<T...> lak::variant<T...>::make(ARGS &&...args)
 {
