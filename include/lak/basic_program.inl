@@ -207,7 +207,7 @@ int LAK_BASIC_PROGRAM_MAIN(int argc, char **argv)
 			    return lak::move_ok(window);
 		    });
 #else
-		return lak::err_t<lak::u8string>{u8"Softrender not enabled"};
+		return lak::err_t<lak::u8string>{u8"Softrender not enabled"_str};
 #endif
 	};
 
@@ -238,7 +238,7 @@ int LAK_BASIC_PROGRAM_MAIN(int argc, char **argv)
 			    return lak::move_ok(window);
 		    });
 #else
-		return lak::err_t<lak::u8string>{u8"OpenGL not enabled"};
+		return lak::err_t<lak::u8string>{u8"OpenGL not enabled"_str};
 #endif
 	};
 
