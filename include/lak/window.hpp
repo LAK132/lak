@@ -43,6 +43,8 @@ int main()
 #include "lak/bank_ptr.hpp"
 #include "lak/image.hpp"
 #include "lak/memmanip.hpp"
+#include "lak/result.hpp"
+#include "lak/streamify.hpp"
 #include "lak/string.hpp"
 #include "lak/surface.hpp"
 #include "lak/vec.hpp"
@@ -58,7 +60,8 @@ namespace lak
 		None     = 0,
 		Software = 1,
 		OpenGL   = 2,
-		Vulkan   = 3
+		Vulkan   = 3,
+		Metal    = 4,
 	};
 
 	inline std::ostream &operator<<(std::ostream &strm, lak::graphics_mode mode)
@@ -73,6 +76,9 @@ namespace lak
 				break;
 			case lak::graphics_mode::Vulkan:
 				strm << "Vulkan";
+				break;
+			case lak::graphics_mode::Metal:
+				strm << "Metal";
 				break;
 			default:
 				strm << "None";
@@ -101,11 +107,17 @@ namespace lak
 	{
 	};
 
+	struct metal_settings
+	{
+	};
+
 	struct software_context;
 
 	struct opengl_context;
 
 	struct vulkan_context;
+
+	struct metal_context;
 
 	struct window_handle;
 
@@ -123,14 +135,25 @@ namespace lak
 
 	/* --- create/destroy window --- */
 
+#ifdef LAK_ENABLE_SOFTRENDER
 	lak::result<lak::window_handle *, lak::u8string> create_window(
 	  const lak::software_settings &s);
+#endif
 
+#ifdef LAK_ENABLE_OPENGL
 	lak::result<lak::window_handle *, lak::u8string> create_window(
 	  const lak::opengl_settings &s);
+#endif
 
+#ifdef LAK_ENABLE_VULKAN
 	lak::result<lak::window_handle *, lak::u8string> create_window(
 	  const lak::vulkan_settings &s);
+#endif
+
+#ifdef LAK_ENABLE_METAL
+	lak::result<lak::window_handle *, lak::u8string> create_window(
+	  const lak::metal_settings &s);
+#endif
 
 	bool destroy_window(lak::window_handle *w);
 
@@ -155,8 +178,10 @@ namespace lak
 
 	lak::graphics_mode window_graphics_mode(const lak::window_handle *w);
 
+#ifdef LAK_ENABLE_OPENGL
 	// :TODO: This probably belongs in the platform header.
 	bool set_opengl_swap_interval(const lak::opengl_context &c, int interval);
+#endif
 
 	bool swap_window(lak::window_handle *w);
 
@@ -176,14 +201,25 @@ namespace lak
 	public:
 		inline window(window &&w) : _handle(lak::move(w._handle)) {}
 
+#ifdef LAK_ENABLE_SOFTRENDER
 		static lak::result<window, lak::u8string> make(
 		  const lak::software_settings &s);
+#endif
 
+#ifdef LAK_ENABLE_OPENGL
 		static lak::result<window, lak::u8string> make(
 		  const lak::opengl_settings &s);
+#endif
 
+#ifdef LAK_ENABLE_VULKAN
 		static lak::result<window, lak::u8string> make(
 		  const lak::vulkan_settings &s);
+#endif
+
+#ifdef LAK_ENABLE_METAL
+		static lak::result<window, lak::u8string> make(
+		  const lak::metal_settings &s);
+#endif
 
 		~window();
 

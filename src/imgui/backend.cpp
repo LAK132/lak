@@ -6,9 +6,11 @@
 #include "lak/image.hpp"
 #include "lak/trace.hpp"
 
-#include "lak/opengl/shader.hpp"
-#include "lak/opengl/state.hpp"
-#include "lak/opengl/texture.hpp"
+#ifdef LAK_ENABLE_OPENGL
+#	include "lak/opengl/shader.hpp"
+#	include "lak/opengl/state.hpp"
+#	include "lak/opengl/texture.hpp"
+#endif
 
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include "lak/imgui/backend.hpp"
@@ -30,7 +32,10 @@
 #	error "No implementation specified"
 #endif
 
-#include <examples/imgui_impl_softraster.h>
+#ifdef LAK_ENABLE_SOFTRENDER
+#	include <examples/imgui_impl_softraster.h>
+#endif
+
 #include <imgui_internal.h>
 #include <misc/cpp/imgui_stdlib.h>
 
@@ -73,7 +78,8 @@ namespace ImGui
 {
 	typedef struct _ImplSRContext
 	{
-#if defined(LAK_USE_WINAPI)
+#ifdef LAK_ENABLE_SOFTRENDER
+#	if defined(LAK_USE_WINAPI)
 		//     // HBITMAP bitmap_handle = NULL;
 		// #  if defined(LAK_SOFTWARE_RENDER_32BIT)
 		//     using screen_format_t = lak::colour::abgr8888;
@@ -86,45 +92,47 @@ namespace ImGui
 		// #  endif
 
 		decltype(lak::software_context::platform_handle) *screen_surface = nullptr;
-#elif defined(LAK_USE_XLIB)
-#	error "NYI"
-#elif defined(LAK_USE_XCB)
-#	error "NYI"
-#elif defined(LAK_USE_SDL)
+#	elif defined(LAK_USE_XLIB)
+#		error "NYI"
+#	elif defined(LAK_USE_XCB)
+#		error "NYI"
+#	elif defined(LAK_USE_SDL)
 		SDL_Window *window;
 		SDL_Surface *screen_surface;
-#	if defined(LAK_SOFTWARE_RENDER_32BIT)
+#		if defined(LAK_SOFTWARE_RENDER_32BIT)
 		static const Uint32 screen_format = SDL_PIXELFORMAT_ABGR8888;
-#	elif defined(LAK_SOFTWARE_RENDER_24BIT)
+#		elif defined(LAK_SOFTWARE_RENDER_24BIT)
 		static const Uint32 screen_format = SDL_PIXELFORMAT_RGB24;
-#	elif defined(LAK_SOFTWARE_RENDER_16BIT)
+#		elif defined(LAK_SOFTWARE_RENDER_16BIT)
 		static const Uint32 screen_format = SDL_PIXELFORMAT_RGB565;
-#	elif defined(LAK_SOFTWARE_RENDER_8BIT)
+#		elif defined(LAK_SOFTWARE_RENDER_8BIT)
 		SDL_Palette *palette;
 		static const Uint32 screen_format = SDL_PIXELFORMAT_INDEX8;
+#		else
+#			error "No software render colour bit depth specified"
+#		endif
+#	else
+#		error "No implementation specified"
+#	endif
+
+		texture_alpha8_t atlas_texture;
+#	if defined(LAK_SOFTWARE_RENDER_32BIT)
+		texture_color32_t screen_texture;
+#	elif defined(LAK_SOFTWARE_RENDER_24BIT)
+		texture_color24_t screen_texture;
+#	elif defined(LAK_SOFTWARE_RENDER_16BIT)
+		texture_color16_t screen_texture;
+#	elif defined(LAK_SOFTWARE_RENDER_8BIT)
+		texture_value8_t screen_texture;
 #	else
 #		error "No software render colour bit depth specified"
 #	endif
-#else
-#	error "No implementation specified"
-#endif
-
-		texture_alpha8_t atlas_texture;
-#if defined(LAK_SOFTWARE_RENDER_32BIT)
-		texture_color32_t screen_texture;
-#elif defined(LAK_SOFTWARE_RENDER_24BIT)
-		texture_color24_t screen_texture;
-#elif defined(LAK_SOFTWARE_RENDER_16BIT)
-		texture_color16_t screen_texture;
-#elif defined(LAK_SOFTWARE_RENDER_8BIT)
-		texture_value8_t screen_texture;
-#else
-#	error "No software render colour bit depth specified"
 #endif
 	} *ImplSRContext;
 
 	typedef struct _ImplGLContext
 	{
+#ifdef LAK_ENABLE_OPENGL
 		GLint attrib_tex;
 		GLint attrib_view_proj;
 		GLint attrib_pos;
@@ -135,10 +143,13 @@ namespace ImGui
 		GLuint vertex_array;
 		lak::opengl::program shader;
 		lak::opengl::texture font;
+#endif
 	} *ImplGLContext;
 
 	typedef struct _ImplVkContext
 	{
+#ifdef LAK_ENABLE_VULKAN
+#endif
 	} *ImplVkContext;
 
 	typedef struct _ImplContext
@@ -166,15 +177,21 @@ ImGui::ImplContext ImGui::ImplCreateContext(lak::graphics_mode mode)
 	result->mode       = mode;
 	switch (mode)
 	{
+#ifdef LAK_ENABLE_SOFTRENDER
 		case lak::graphics_mode::Software:
 			result->sr_context = new _ImplSRContext();
 			break;
+#endif
+#ifdef LAK_ENABLE_OPENGL
 		case lak::graphics_mode::OpenGL:
 			result->gl_context = new _ImplGLContext();
 			break;
+#endif
+#ifdef LAK_ENABLE_VULKAN
 		case lak::graphics_mode::Vulkan:
 			result->vk_context = new _ImplVkContext();
 			break;
+#endif
 		default:
 			result->vd_context = nullptr;
 			break;
@@ -191,15 +208,21 @@ void ImGui::ImplDestroyContext(ImplContext context)
 		{
 			switch (context->mode)
 			{
+#ifdef LAK_ENABLE_SOFTRENDER
 				case lak::graphics_mode::Software:
 					delete context->sr_context;
 					break;
+#endif
+#ifdef LAK_ENABLE_OPENGL
 				case lak::graphics_mode::OpenGL:
 					delete context->gl_context;
 					break;
+#endif
+#ifdef LAK_ENABLE_VULKAN
 				case lak::graphics_mode::Vulkan:
 					delete context->vk_context;
 					break;
+#endif
 				default:
 					FATAL("Invalid graphics mode");
 					break;
@@ -209,6 +232,7 @@ void ImGui::ImplDestroyContext(ImplContext context)
 	}
 }
 
+#ifdef LAK_ENABLE_SOFTRENDER
 inline void ImplUpdateDisplaySize(ImGui::ImplSRContext context,
                                   const lak::window_handle *,
                                   lak::vec2l_t window_size)
@@ -221,13 +245,13 @@ inline void ImplUpdateDisplaySize(ImGui::ImplSRContext context,
 	{
 		context->screen_texture.init(window_size.x, window_size.y);
 
-#if defined(LAK_USE_WINAPI)
+#	if defined(LAK_USE_WINAPI)
 		// context->screen_surface.resize(lak::vec2s_t(window_size));
-#elif defined(LAK_USE_XLIB)
-#	error "NYI"
-#elif defined(LAK_USE_XCB)
-#	error "NYI"
-#elif defined(LAK_USE_SDL)
+#	elif defined(LAK_USE_XLIB)
+#		error "NYI"
+#	elif defined(LAK_USE_XCB)
+#		error "NYI"
+#	elif defined(LAK_USE_SDL)
 		if (context->screen_surface != nullptr)
 			SDL_FreeSurface(context->screen_surface);
 
@@ -240,14 +264,15 @@ inline void ImplUpdateDisplaySize(ImGui::ImplSRContext context,
 		                   context->screen_texture.size),
 		  context->screen_format);
 
-#	ifdef LAK_SOFTWARE_RENDER_8BIT
+#		ifdef LAK_SOFTWARE_RENDER_8BIT
 		SDL_SetSurfacePalette(context->screen_surface, context->palette);
+#		endif
+#	else
+#		error "No implementation specified"
 #	endif
-#else
-#	error "No implementation specified"
-#endif
 	}
 }
+#endif
 
 inline void ImplUpdateDisplaySize(ImGui::ImplContext context,
                                   const lak::window_handle *handle)
@@ -261,10 +286,13 @@ inline void ImplUpdateDisplaySize(ImGui::ImplContext context,
 
 	switch (context->mode)
 	{
+#ifdef LAK_ENABLE_SOFTRENDER
 		case lak::graphics_mode::Software:
 			ImplUpdateDisplaySize(context->sr_context, handle, window_size);
 			break;
+#endif
 
+#ifdef LAK_ENABLE_OPENGL
 		case lak::graphics_mode::OpenGL:
 		{
 			auto drawable_size = lak::window_drawable_size(handle);
@@ -274,11 +302,14 @@ inline void ImplUpdateDisplaySize(ImGui::ImplContext context,
 			  (window_size.y > 0) ? (drawable_size.y / (float)window_size.y) : 1.0f;
 		}
 		break;
+#endif
 
+#ifdef LAK_ENABLE_VULKAN
 		case lak::graphics_mode::Vulkan:
 		{
 		}
 		break;
+#endif
 
 		default:
 			FATAL("Invalid Context Mode");
@@ -359,22 +390,23 @@ void ImGui::ImplInit()
 	io.ClipboardUserData  = (void *)&ImplStaticClipboard;
 }
 
+#ifdef LAK_ENABLE_SOFTRENDER
 void ImplInitSRContext(ImGui::ImplSRContext context, const lak::window &window)
 {
 	ImGuiIO &io = ImGui::GetIO();
 
-#if defined(LAK_USE_WINAPI)
+#	if defined(LAK_USE_WINAPI)
 	context->screen_surface =
 	  &window.handle()->software_context().platform_handle;
-#elif defined(LAK_USE_XLIB)
-#	error "NYI"
-#elif defined(LAK_USE_XCB)
-#	error "NYI"
-#elif defined(LAK_USE_SDL)
-	context->window                = window.handle()->sdl_window;
+#	elif defined(LAK_USE_XLIB)
+#		error "NYI"
+#	elif defined(LAK_USE_XCB)
+#		error "NYI"
+#	elif defined(LAK_USE_SDL)
+	context->window = window.handle()->sdl_window;
 
-#	ifdef LAK_SOFTWARE_RENDER_8BIT
-	context->palette               = SDL_AllocPalette(256);
+#		ifdef LAK_SOFTWARE_RENDER_8BIT
+	context->palette = SDL_AllocPalette(256);
 	SDL_Colour palette[256];
 	for (size_t i = 0; i < 256; ++i)
 	{
@@ -384,11 +416,11 @@ void ImplInitSRContext(ImGui::ImplSRContext context, const lak::window &window)
 		palette[i].a = uint8_t(255);
 	}
 	SDL_SetPaletteColors(context->palette, palette, 0, 256);
-#	endif
+#		endif
 
-#else
-#	error "No implementation specified"
-#endif
+#	else
+#		error "No implementation specified"
+#	endif
 
 	uint8_t *pixels;
 	int width, height;
@@ -400,7 +432,9 @@ void ImplInitSRContext(ImGui::ImplSRContext context, const lak::window &window)
 
 	ImGui_ImplSoftraster_Init(&context->screen_texture);
 }
+#endif
 
+#ifdef LAK_ENABLE_OPENGL
 void ImplInitGLContext(ImGui::ImplGLContext context, const lak::window &)
 {
 	using namespace lak::opengl::literals;
@@ -458,8 +492,11 @@ void ImplInitGLContext(ImGui::ImplGLContext context, const lak::window &)
 
 	io.Fonts->TexID = (ImTextureID)(intptr_t)context->font.get();
 }
+#endif
 
+#ifdef LAK_ENABLE_VULKAN
 void ImplInitVkContext(ImGui::ImplVkContext, const lak::window &) {}
+#endif
 
 void ImGui::ImplInitContext(ImplContext context, const lak::window &window)
 {
@@ -511,15 +548,21 @@ void ImGui::ImplInitContext(ImplContext context, const lak::window &window)
 
 	switch (context->mode)
 	{
+#ifdef LAK_ENABLE_SOFTRENDER
 		case lak::graphics_mode::Software:
 			ImplInitSRContext(context->sr_context, window);
 			break;
+#endif
+#ifdef LAK_ENABLE_OPENGL
 		case lak::graphics_mode::OpenGL:
 			ImplInitGLContext(context->gl_context, window);
 			break;
+#endif
+#ifdef LAK_ENABLE_VULKAN
 		case lak::graphics_mode::Vulkan:
 			ImplInitVkContext(context->vk_context, window);
 			break;
+#endif
 		default:
 			ASSERTF(false, "Invalid Context Mode");
 			break;
@@ -545,34 +588,37 @@ void ImGui::ImplInitContext(ImplContext context, const lak::window &window)
 #endif
 }
 
+#ifdef LAK_ENABLE_SOFTRENDER
 void ImplShutdownSRContext(ImGui::ImplSRContext context)
 {
 	ImGui_ImplSoftraster_Shutdown();
 
-#if defined(LAK_USE_WINAPI)
+#	if defined(LAK_USE_WINAPI)
 	context->screen_surface = nullptr;
-#elif defined(LAK_USE_XLIB)
-#	error "NYI"
-#elif defined(LAK_USE_XCB)
-#	error "NYI"
-#elif defined(LAK_USE_SDL)
+#	elif defined(LAK_USE_XLIB)
+#		error "NYI"
+#	elif defined(LAK_USE_XCB)
+#		error "NYI"
+#	elif defined(LAK_USE_SDL)
 	context->window = nullptr;
 
 	SDL_FreeSurface(context->screen_surface);
 	context->screen_surface = nullptr;
 
-#	ifdef LAK_SOFTWARE_RENDER_8BIT
+#		ifdef LAK_SOFTWARE_RENDER_8BIT
 	SDL_FreePalette(context->palette);
 	context->palette = nullptr;
+#		endif
+#	else
+#		error "No implementation specified"
 #	endif
-#else
-#	error "No implementation specified"
-#endif
 
 	context->screen_texture.init(0, 0);
 	context->atlas_texture.init(0, 0);
 }
+#endif
 
+#ifdef LAK_ENABLE_OPENGL
 void ImplShutdownGLContext(ImGui::ImplGLContext context)
 {
 	if (context->array_buffer) glDeleteBuffers(1, &context->array_buffer);
@@ -586,8 +632,11 @@ void ImplShutdownGLContext(ImGui::ImplGLContext context)
 	context->font.clear();
 	ImGui::GetIO().Fonts->TexID = (ImTextureID)(intptr_t)0;
 }
+#endif
 
+#ifdef LAK_ENABLE_VULKAN
 void ImplShutdownVkContext(ImGui::ImplVkContext) {}
+#endif
 
 void ImGui::ImplShutdownContext(ImplContext context)
 {
@@ -609,15 +658,21 @@ void ImGui::ImplShutdownContext(ImplContext context)
 
 	switch (context->mode)
 	{
+#ifdef LAK_ENABLE_SOFTRENDER
 		case lak::graphics_mode::Software:
 			ImplShutdownSRContext(context->sr_context);
 			break;
+#endif
+#ifdef LAK_ENABLE_OPENGL
 		case lak::graphics_mode::OpenGL:
 			ImplShutdownGLContext(context->gl_context);
 			break;
+#endif
+#ifdef LAK_ENABLE_VULKAN
 		case lak::graphics_mode::Vulkan:
 			ImplShutdownVkContext(context->vk_context);
 			break;
+#endif
 		default:
 			ASSERTF(false, "Invalid Context Mode");
 			break;
@@ -870,6 +925,7 @@ void ImGui::ImplRender(ImplContext context, const bool call_base_render)
 	ImplRenderData(context, ImGui::GetDrawData());
 }
 
+#ifdef LAK_ENABLE_SOFTRENDER
 void ImplSRRender(ImGui::ImplContext context, ImDrawData *draw_data)
 {
 	ASSERT(context != nullptr);
@@ -878,18 +934,18 @@ void ImplSRRender(ImGui::ImplContext context, ImDrawData *draw_data)
 
 	ImGui_ImplSoftraster_RenderDrawData(draw_data);
 
-#if defined(LAK_USE_WINAPI)
-#	if defined(LAK_SOFTWARE_RENDER_32BIT)
+#	if defined(LAK_USE_WINAPI)
+#		if defined(LAK_SOFTWARE_RENDER_32BIT)
 	using texture_colour_t = color32_t; // lak::colour::rgba8888;
-#	elif defined(LAK_SOFTWARE_RENDER_24BIT)
+#		elif defined(LAK_SOFTWARE_RENDER_24BIT)
 	using texture_colour_t = color24_t; // lak::colour::rgb888;
-#	elif defined(LAK_SOFTWARE_RENDER_16BIT)
+#		elif defined(LAK_SOFTWARE_RENDER_16BIT)
 	using texture_colour_t = color16_t; // lak::colour::rgb565;
-#	elif defined(LAK_SOFTWARE_RENDER_8BIT)
-	using texture_colour_t         = alpha8_t; // lak::colour::v8;
-#	else
-#		error "No software render colour bit depth specified"
-#	endif
+#		elif defined(LAK_SOFTWARE_RENDER_8BIT)
+	using texture_colour_t = alpha8_t; // lak::colour::v8;
+#		else
+#			error "No software render colour bit depth specified"
+#		endif
 	auto screen_texture_pixels = lak::span<void>(
 	  sr_context->screen_texture.pixels,
 	  sr_context->screen_texture.w * sr_context->screen_texture.h *
@@ -901,11 +957,11 @@ void ImplSRRender(ImGui::ImplContext context, ImDrawData *draw_data)
 		    lak::span<texture_colour_t>(screen_texture_pixels),
 		    {sr_context->screen_texture.w, sr_context->screen_texture.h})));
 	}
-#elif defined(LAK_USE_XLIB)
-#	error "NYI"
-#elif defined(LAK_USE_XCB)
-#	error "NYI"
-#elif defined(LAK_USE_SDL)
+#	elif defined(LAK_USE_XLIB)
+#		error "NYI"
+#	elif defined(LAK_USE_XCB)
+#		error "NYI"
+#	elif defined(LAK_USE_SDL)
 	ASSERT(sr_context->window != nullptr);
 
 	SDL_Surface *window = SDL_GetWindowSurface(sr_context->window);
@@ -919,11 +975,13 @@ void ImplSRRender(ImGui::ImplContext context, ImDrawData *draw_data)
 		if (SDL_BlitSurface(sr_context->screen_surface, nullptr, window, nullptr))
 			ERROR(SDL_GetError());
 	}
-#else
-#	error "No implementation specified"
-#endif
+#	else
+#		error "No implementation specified"
+#	endif
 }
+#endif
 
+#ifdef LAK_ENABLE_OPENGL
 void ImplGLRender(ImGui::ImplContext context, ImDrawData *draw_data)
 {
 	ASSERT(draw_data != nullptr);
@@ -945,9 +1003,9 @@ void ImplGLRender(ImGui::ImplContext context, ImDrawData *draw_data)
 	// appear here.
 	DEFER(gl_context->vertex_array = 0);
 	GL_DEFER_CALL(glDeleteVertexArrays, 1, &gl_context->vertex_array);
-#ifdef GL_CLIP_ORIGIN
+#	ifdef GL_CLIP_ORIGIN
 	auto old_clip_origin = lak::opengl::get_enum(GL_CLIP_ORIGIN).UNWRAP();
-#endif
+#	endif
 
 	lak::opengl::call_checked(glGenVertexArrays, 1, &gl_context->vertex_array)
 	  .UNWRAP();
@@ -1120,7 +1178,7 @@ void ImplGLRender(ImGui::ImplContext context, ImDrawData *draw_data)
 				if (clip.x < viewport.z && clip.y < viewport.w && clip.z >= 0.0f &&
 				    clip.w >= 0.0f)
 				{
-#ifdef GL_CLIP_ORIGIN
+#	ifdef GL_CLIP_ORIGIN
 					if (old_clip_origin == GL_UPPER_LEFT)
 						// Support for GL 4.5's glClipControl(GL_UPPER_LEFT)
 						lak::opengl::call_checked(glScissor,
@@ -1130,7 +1188,7 @@ void ImplGLRender(ImGui::ImplContext context, ImDrawData *draw_data)
 						                          (GLsizei)clip.w)
 						  .UNWRAP();
 					else
-#endif
+#	endif
 						lak::opengl::call_checked(glScissor,
 						                          (GLint)clip.x,
 						                          (GLint)(viewport.w - clip.w),
@@ -1154,8 +1212,11 @@ void ImplGLRender(ImGui::ImplContext context, ImDrawData *draw_data)
 		}
 	}
 }
+#endif
 
+#ifdef LAK_ENABLE_VULKAN
 void ImplVkRender(ImGui::ImplContext, ImDrawData *) {}
+#endif
 
 void ImGui::ImplRenderData(ImplContext context, ImDrawData *draw_data)
 {
@@ -1163,15 +1224,21 @@ void ImGui::ImplRenderData(ImplContext context, ImDrawData *draw_data)
 	ASSERT(draw_data);
 	switch (context->mode)
 	{
+#ifdef LAK_ENABLE_SOFTRENDER
 		case lak::graphics_mode::Software:
 			ImplSRRender(context, draw_data);
 			break;
+#endif
+#ifdef LAK_ENABLE_OPENGL
 		case lak::graphics_mode::OpenGL:
 			ImplGLRender(context, draw_data);
 			break;
+#endif
+#ifdef LAK_ENABLE_VULKAN
 		case lak::graphics_mode::Vulkan:
 			ImplVkRender(context, draw_data);
 			break;
+#endif
 		default:
 			FATAL("Invalid context mode");
 			break;
@@ -1218,11 +1285,17 @@ ImTextureID ImGui::ImplGetFontTexture(ImplContext context)
 {
 	switch (context->mode)
 	{
+#ifdef LAK_ENABLE_SOFTRENDER
 		case lak::graphics_mode::Software:
 			return (ImTextureID)&context->sr_context->atlas_texture;
+#endif
+#ifdef LAK_ENABLE_OPENGL
 		case lak::graphics_mode::OpenGL:
 			return (ImTextureID)(uintptr_t)context->gl_context->font.get();
+#endif
+#ifdef LAK_ENABLE_VULKAN
 		case lak::graphics_mode::Vulkan:
+#endif
 		default:
 			FATAL("Invalid context mode");
 			break;

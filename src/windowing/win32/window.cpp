@@ -1,7 +1,9 @@
 // begin weird include ordering
-#include "lak/opengl/gl3w.hpp"
+#ifdef LAK_ENABLE_OPENGL
+#	include "lak/opengl/gl3w.hpp"
 
-#include <GL/GL.h>
+#	include <GL/GL.h>
+#endif
 
 #include "lak/windows.hpp"
 // end weird include ordering
@@ -39,6 +41,7 @@ lak::wstring win32_error_string(LPCWSTR lpszFunction);
 //   }
 // }
 
+#ifdef LAK_ENABLE_SOFTRENDER
 lak::result<lak::window_handle *, lak::u8string> lak::create_window(
   const lak::software_settings &)
 {
@@ -135,7 +138,9 @@ lak::result<lak::window_handle *, lak::u8string> lak::create_window(
 
 	return lak::ok_t{handle.release()};
 }
+#endif
 
+#ifdef LAK_ENABLE_OPENGL
 lak::result<lak::window_handle *, lak::u8string> lak::create_window(
   const lak::opengl_settings &settings)
 {
@@ -225,7 +230,9 @@ lak::result<lak::window_handle *, lak::u8string> lak::create_window(
 
 	return lak::ok_t{handle.release()};
 }
+#endif
 
+#ifdef LAK_ENABLE_VULKAN
 lak::result<lak::window_handle *, lak::u8string> lak::create_window(
   const lak::vulkan_settings &)
 {
@@ -277,6 +284,16 @@ lak::result<lak::window_handle *, lak::u8string> lak::create_window(
 
 	return lak::ok_t{handle.release()};
 }
+#endif
+
+#ifdef LAK_ENABLE_METAL
+lak::result<lak::window_handle *, lak::u8string> lak::create_window(
+  const lak::metal_settings &s)
+{
+	(void)s;
+	return lak::err_t<lak::u8string>{u8"NYI"_str};
+}
+#endif
 
 bool lak::destroy_window(lak::window_handle *handle)
 {
@@ -324,10 +341,12 @@ lak::graphics_mode lak::window_graphics_mode(const lak::window_handle *w)
 	return w->graphics_mode();
 }
 
+#ifdef LAK_ENABLE_OPENGL
 bool lak::set_opengl_swap_interval(const lak::opengl_context &, int interval)
 {
 	return has_swap_control && wglSwapIntervalEXT(interval);
 }
+#endif
 
 /* --- Window helper functions --- */
 

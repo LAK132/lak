@@ -37,21 +37,31 @@ int lak_test_basic_window_quit(lak::window &)
 	return EXIT_SUCCESS;
 }
 
+#if !(defined(LAK_ENABLE_OPENGL) || defined(LAK_ENABLE_VULKAN) ||             \
+      defined(LAK_ENABLE_METAL) || defined(LAK_ENABLE_SOFTRENDER))
+#	error At least one renderer must be enabled
+#endif
+
 #ifdef LAK_RUN_WINDOWING_TESTS
 BEGIN_TEST(basic_program)
 #else
 int basic_program_compile_test()
 #endif
 {
+#if defined(LAK_ENABLE_OPENGL) || defined(LAK_ENABLE_VULKAN) ||               \
+  defined(LAK_ENABLE_METAL)
 	DEBUG("attempting to launch hardware rendered window");
 	lak_test_basic_window_force_software = false;
 	if (int err = LAK_BASIC_PROGRAM_MAIN(0, nullptr); err != EXIT_SUCCESS)
 		return err;
+#endif
 
+#ifdef LAK_ENABLE_SOFTRENDER
 	DEBUG("attempting to launch software rendered window");
 	lak_test_basic_window_force_software = true;
 	if (int err = LAK_BASIC_PROGRAM_MAIN(0, nullptr); err != EXIT_SUCCESS)
 		return err;
+#endif
 
 	return EXIT_SUCCESS;
 }

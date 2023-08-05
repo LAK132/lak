@@ -1,4 +1,6 @@
-#include "lak/opengl/state.hpp"
+#ifdef LAK_ENABLE_OPENGL
+#	include "lak/opengl/state.hpp"
+#endif
 
 // #include "lak/windows.hpp"
 
@@ -53,6 +55,7 @@ ImGuiWindowFlags LAK_BASIC_PROGRAM(imgui_main_window_flags) =
   | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove;
 #endif
 
+#ifdef LAK_ENABLE_OPENGL
 void APIENTRY
 LAK_BASIC_PROGRAM(opengl_debug_message_callback)(GLenum source,
                                                  GLenum type,
@@ -148,6 +151,7 @@ LAK_BASIC_PROGRAM(opengl_debug_message_callback)(GLenum source,
 	}
 	DEBUG("| Message:\n", lak::string_view(message, length), "\n");
 }
+#endif
 
 int LAK_BASIC_PROGRAM_MAIN(int argc, char **argv)
 {
@@ -190,8 +194,9 @@ int LAK_BASIC_PROGRAM_MAIN(int argc, char **argv)
 	lak::platform_init();
 	DEFER(lak::platform_quit());
 
-	auto make_software = [&]()
+	auto make_software = [&]() -> lak::result<lak::window, lak::u8string>
 	{
+#ifdef LAK_ENABLE_SOFTRENDER
 		return lak::window::make(LAK_BASIC_PROGRAM(window_software_settings))
 		  .and_then(
 		    [&](auto &&window) -> lak::result<lak::window, lak::u8string>
@@ -201,42 +206,52 @@ int LAK_BASIC_PROGRAM_MAIN(int argc, char **argv)
 				      "Expected Software graphics, got ", window.graphics())};
 			    return lak::move_ok(window);
 		    });
+#else
+		return lak::err_t<lak::u8string>{u8"Softrender not enabled"};
+#endif
+	};
+
+	auto make_opengl = [&]() -> lak::result<lak::window, lak::u8string>
+	{
+#ifdef LAK_ENABLE_OPENGL
+		return lak::window::make(LAK_BASIC_PROGRAM(window_opengl_settings))
+		  .and_then(
+		    [&](auto &&window) -> lak::result<lak::window, lak::u8string>
+		    {
+			    if (window.graphics() != lak::graphics_mode::OpenGL)
+				    return lak::err_t<lak::u8string>{lak::streamify(
+				      "Expected OpenGL graphics, got ", window.graphics())};
+
+			    glViewport(0, 0, window.drawable_size().x, window.drawable_size().y);
+			    glClearColor(LAK_BASIC_PROGRAM(window_clear_colour).r,
+			                 LAK_BASIC_PROGRAM(window_clear_colour).g,
+			                 LAK_BASIC_PROGRAM(window_clear_colour).b,
+			                 LAK_BASIC_PROGRAM(window_clear_colour).a);
+			    glEnable(GL_DEPTH_TEST);
+
+#	ifndef NDEBUG
+			    glEnable(GL_DEBUG_OUTPUT);
+			    glDebugMessageCallback(
+			      &LAK_BASIC_PROGRAM(opengl_debug_message_callback), 0);
+#	endif
+
+			    return lak::move_ok(window);
+		    });
+#else
+		return lak::err_t<lak::u8string>{u8"OpenGL not enabled"};
+#endif
 	};
 
 	auto window =
 	  (LAK_BASIC_PROGRAM(window_force_software)
 	     ? make_software()
-	     : lak::window::make(LAK_BASIC_PROGRAM(window_opengl_settings))
-	         .and_then(
-	           [&](auto &&window) -> lak::result<lak::window, lak::u8string>
-	           {
-		           if (window.graphics() != lak::graphics_mode::OpenGL)
-			           return lak::err_t<lak::u8string>{lak::streamify(
-			             "Expected OpenGL graphics, got ", window.graphics())};
-
-		           glViewport(
-		             0, 0, window.drawable_size().x, window.drawable_size().y);
-		           glClearColor(LAK_BASIC_PROGRAM(window_clear_colour).r,
-		                        LAK_BASIC_PROGRAM(window_clear_colour).g,
-		                        LAK_BASIC_PROGRAM(window_clear_colour).b,
-		                        LAK_BASIC_PROGRAM(window_clear_colour).a);
-		           glEnable(GL_DEPTH_TEST);
-
-#ifndef NDEBUG
-		           glEnable(GL_DEBUG_OUTPUT);
-		           glDebugMessageCallback(
-		             &LAK_BASIC_PROGRAM(opengl_debug_message_callback), 0);
-#endif
-
-		           return lak::move_ok(window);
-	           })
-	         .or_else(
-	           [&](const lak::u8string &err)
-	           {
-		           WARNING("Failed to create an OpenGL window: ", err);
-		           WARNING("Attempting to create a Software window instead");
-		           return make_software();
-	           }))
+	     : make_opengl().or_else(
+	         [&](const lak::u8string &err)
+	         {
+		         WARNING("Failed to create an OpenGL window: ", err);
+		         WARNING("Attempting to create a Software window instead");
+		         return make_software();
+	         }))
 	    .UNWRAP();
 
 	window.set_title(L"" APP_NAME);
@@ -293,11 +308,13 @@ int LAK_BASIC_PROGRAM_MAIN(int argc, char **argv)
 			LAK_BASIC_PROGRAM(window_handle_event)(window, event);
 		}
 
+#ifdef LAK_ENABLE_OPENGL
 		if (window.graphics() == lak::graphics_mode::OpenGL)
 		{
 			glViewport(0, 0, window.drawable_size().x, window.drawable_size().y);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		}
+#endif
 
 #ifdef LAK_BASIC_PROGRAM_IMGUI_WINDOW_IMPL
 		{
@@ -337,11 +354,13 @@ int LAK_BASIC_PROGRAM_MAIN(int argc, char **argv)
 		last_counter  = counter;
 	}
 
-#ifndef NDEBUG
+#ifdef LAK_ENABLE_OPENGL
+#	ifndef NDEBUG
 	if (window.graphics() == lak::graphics_mode::OpenGL)
 	{
 		glDisable(GL_DEBUG_OUTPUT);
 	}
+#	endif
 #endif
 
 	const int result = LAK_BASIC_PROGRAM(window_quit)(window);

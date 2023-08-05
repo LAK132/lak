@@ -83,6 +83,22 @@ elif get_option('lak_backend') == 'win32'
 	]
 endif
 
+if get_option('lak_enable_softrender')
+	c_cpp_args += '-DLAK_ENABLE_SOFTRENDER'
+endif
+
+if get_option('lak_enable_opengl')
+	c_cpp_args += '-DLAK_ENABLE_OPENGL'
+endif
+
+if get_option('lak_enable_vulkan')
+	c_cpp_args += '-DLAK_ENABLE_VULKAN'
+endif
+
+if get_option('lak_enable_metal')
+	c_cpp_args += '-DLAK_ENABLE_METAL'
+endif
+
 if get_option('lak_run_windowing_tests')
 	c_cpp_args += [
 		'-DLAK_RUN_WINDOWING_TESTS',
@@ -111,8 +127,25 @@ if get_option('lak_enable_tests')
 endif
 
 if get_option('lak_enable_windowing')
-	subdir('src/opengl')
-	dependencies += lakopengl_dep
+	if get_option('lak_enable_softrender')
+		laksoftrender_dep = []
+		dependencies += laksoftrender_dep
+	endif
+
+	if get_option('lak_enable_opengl')
+		subdir('src/opengl')
+		dependencies += lakopengl_dep
+	endif
+
+	if get_option('lak_enable_vulkan')
+		lakvulkan_dep = []
+		dependencies += lakvulkan_dep
+	endif
+
+	if get_option('lak_enable_metal')
+		lakmetal_dep = []
+		dependencies += lakmetal_dep
+	endif
 
 	subdir('src/windowing')
 	dependencies += lakwindowing_dep

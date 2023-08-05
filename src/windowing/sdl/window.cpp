@@ -1,11 +1,15 @@
+#include "lak/window.hpp"
+
 #include "lak/opengl/gl3w.hpp"
 #include "lak/opengl/state.hpp"
 
 #include "lak/defer.hpp"
 #include "lak/memmanip.hpp"
+#include "lak/os.hpp"
 
 #include "impl.hpp"
 
+#ifdef LAK_ENABLE_SOFTRENDER
 lak::result<lak::window_handle *, lak::u8string> lak::create_window(
   const lak::software_settings &)
 {
@@ -35,7 +39,9 @@ lak::result<lak::window_handle *, lak::u8string> lak::create_window(
 
 	return lak::ok_t{handle.release()};
 }
+#endif
 
+#ifdef LAK_ENABLE_OPENGL
 lak::result<lak::window_handle *, lak::u8string> lak::create_window(
   const lak::opengl_settings &settings)
 {
@@ -61,12 +67,12 @@ lak::result<lak::window_handle *, lak::u8string> lak::create_window(
 
 	auto &context = handle->gc.emplace<lak::opengl_context>();
 
-#define SET_ATTRIB(A, B)                                                      \
-	if (SDL_GL_SetAttribute(A, B))                                              \
-	{                                                                           \
-		return lak::err_t<lak::u8string>{                                         \
-		  lak::streamify("Failed to set " #A " to " #B " (", B, ")")};            \
-	}
+#	define SET_ATTRIB(A, B)                                                    \
+		if (SDL_GL_SetAttribute(A, B))                                            \
+		{                                                                         \
+			return lak::err_t<lak::u8string>{                                       \
+			  lak::streamify("Failed to set " #A " to " #B " (", B, ")")};          \
+		}
 	SET_ATTRIB(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG)
 	SET_ATTRIB(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 	SET_ATTRIB(SDL_GL_DOUBLEBUFFER, settings.double_buffered);
@@ -77,7 +83,7 @@ lak::result<lak::window_handle *, lak::u8string> lak::create_window(
 	SET_ATTRIB(SDL_GL_STENCIL_SIZE, settings.stencil_size);
 	SET_ATTRIB(SDL_GL_CONTEXT_MAJOR_VERSION, settings.major);
 	SET_ATTRIB(SDL_GL_CONTEXT_MINOR_VERSION, settings.minor);
-#undef SET_ATTRIB
+#	undef SET_ATTRIB
 
 	if (context.sdl_glcontext = SDL_GL_CreateContext(handle->sdl_window);
 	    !context.sdl_glcontext)
@@ -107,7 +113,9 @@ lak::result<lak::window_handle *, lak::u8string> lak::create_window(
 
 	return lak::ok_t{handle.release()};
 }
+#endif
 
+#ifdef LAK_ENABLE_VULKAN
 lak::result<lak::window_handle *, lak::u8string> lak::create_window(
   const lak::vulkan_settings &)
 {
@@ -131,6 +139,15 @@ lak::result<lak::window_handle *, lak::u8string> lak::create_window(
 
 	return lak::ok_t{handle.release()};
 }
+#endif
+
+#ifdef LAK_ENABLE_METAL
+lak::result<lak::window_handle *, lak::u8string> lak::create_window(
+  const lak::metal_settings &s)
+{
+	ASSERT_NYI();
+}
+#endif
 
 bool lak::destroy_window(lak::window_handle *handle)
 {
@@ -143,19 +160,38 @@ bool lak::destroy_window(lak::window_handle *handle)
 		}
 		break;
 
+#ifdef LAK_ENABLE_SOFTRENDER
 		case lak::graphics_mode::Software:
 		{
 		}
 		break;
+#endif
 
+#ifdef LAK_ENABLE_OPENGL
 		case lak::graphics_mode::OpenGL:
 		{
 			SDL_GL_DeleteContext(handle->opengl_context().sdl_glcontext);
 		}
 		break;
+#endif
 
+#ifdef LAK_ENABLE_VULKAN
 		case lak::graphics_mode::Vulkan:
 		{
+		}
+		break;
+#endif
+
+#ifdef LAK_ENABLE_METAL
+		case lak::graphics_mode::Metal:
+		{
+		}
+		break;
+#endif
+
+		default:
+		{
+			ASSERT_UNREACHABLE();
 		}
 		break;
 	}
@@ -175,10 +211,12 @@ lak::graphics_mode lak::window_graphics_mode(const lak::window_handle *w)
 	return w->graphics_mode();
 }
 
+#ifdef LAK_ENABLE_OPENGL
 bool lak::set_opengl_swap_interval(const lak::opengl_context &, int interval)
 {
 	return SDL_GL_SetSwapInterval(interval) == 0;
 }
+#endif
 
 /* --- Window helper functions --- */
 

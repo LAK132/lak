@@ -4,6 +4,10 @@
 #include "lak/platform.hpp"
 #include "lak/window.hpp"
 
+#ifndef LAK_ENABLE_SOFTRENDER
+#	error Test requires softrender to be enabled
+#endif
+
 #ifdef LAK_RUN_WINDOWING_TESTS
 BEGIN_TEST(window)
 #else
