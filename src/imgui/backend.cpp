@@ -49,6 +49,7 @@
 #include <cstdlib>
 #include <cstring>
 
+#ifdef LAK_ENABLE_OPENGL
 auto _call_checked =
   []<typename RET, typename... ARGS, typename... ARGS2>(
     lak::trace trace, RET(APIENTRYP func)(ARGS...), ARGS2... args)
@@ -57,8 +58,9 @@ auto _call_checked =
 	  .TRACE_UNWRAP(trace);
 };
 
-#define GL_DEFER_CALL(FUNC, ...)                                              \
-	DEFER_CALL(_call_checked, lak::trace{}, FUNC, __VA_ARGS__)
+#	define GL_DEFER_CALL(FUNC, ...)                                            \
+		DEFER_CALL(_call_checked, lak::trace{}, FUNC, __VA_ARGS__)
+#endif
 
 #if !defined(LAK_SOFTWARE_RENDER_32BIT) &&                                    \
   !defined(LAK_SOFTWARE_RENDER_24BIT) &&                                      \
