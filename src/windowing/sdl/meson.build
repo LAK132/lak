@@ -1,6 +1,7 @@
 _lakwindowing_dependencies = [
 	lakcore_dep,
 	subproject('SDL2').get_variable('sdl2_dep'),
+	dependency('dl', required: false),
 ]
 
 if get_option('lak_enable_softrender')

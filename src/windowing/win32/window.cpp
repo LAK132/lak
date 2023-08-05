@@ -308,11 +308,14 @@ bool lak::destroy_window(lak::window_handle *handle)
 
 	switch (handle->graphics_mode())
 	{
+#ifdef LAK_ENABLE_SOFTRENDER
 		case lak::graphics_mode::Software:
 		{
 		}
 		break;
+#endif
 
+#ifdef LAK_ENABLE_OPENGL
 		case lak::graphics_mode::OpenGL:
 		{
 			auto &context = handle->opengl_context();
@@ -322,6 +325,13 @@ bool lak::destroy_window(lak::window_handle *handle)
 				// we aren't crossing threads.
 				::wglDeleteContext(context.platform_handle);
 			}
+		}
+		break;
+#endif
+
+		default:
+		{
+			ASSERT_UNREACHABLE();
 		}
 		break;
 	}
@@ -406,6 +416,7 @@ bool lak::swap_window(lak::window_handle *handle)
 {
 	switch (handle->graphics_mode())
 	{
+#ifdef LAK_ENABLE_SOFTRENDER
 		case lak::graphics_mode::Software:
 		{
 			return RedrawWindow(
@@ -416,11 +427,14 @@ bool lak::swap_window(lak::window_handle *handle)
 			    RDW_INVALIDATE /* invalidate the region */ |
 			    RDW_UPDATENOW /* handle WM_PAINT before RedrawWindow returns */);
 		}
+#endif
 
+#ifdef LAK_ENABLE_OPENGL
 		case lak::graphics_mode::OpenGL:
 		{
 			return ::SwapBuffers(handle->_device_context);
 		}
+#endif
 
 		default:
 			return false;

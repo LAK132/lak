@@ -256,6 +256,7 @@ lak::vec2l_t lak::window_drawable_size(const lak::window_handle *handle)
 	int w = 0, h = 0;
 	switch (handle->graphics_mode())
 	{
+#ifdef LAK_ENABLE_SOFTRENDER
 		case lak::graphics_mode::Software:
 		{
 			auto *surface = SDL_GetWindowSurface(handle->sdl_window);
@@ -264,12 +265,17 @@ lak::vec2l_t lak::window_drawable_size(const lak::window_handle *handle)
 			h = surface->h;
 		}
 		break;
+#endif
+#ifdef LAK_ENABLE_OPENGL
 		case lak::graphics_mode::OpenGL:
 			SDL_GL_GetDrawableSize(handle->sdl_window, &w, &h);
 			break;
+#endif
+#ifdef LAK_ENABLE_VULKAN
 		case lak::graphics_mode::Vulkan:
 			// SDL_Vulkan_GetDrawableSize(handle->sdl_window, &w, &h);
 			break;
+#endif
 		default:
 			FATAL("Invalid graphics mode (", handle->graphics_mode(), ")");
 	}
@@ -290,17 +296,21 @@ bool lak::swap_window(lak::window_handle *handle)
 {
 	switch (handle->graphics_mode())
 	{
+#ifdef LAK_ENABLE_SOFTRENDER
 		case lak::graphics_mode::Software:
 		{
 			return SDL_UpdateWindowSurface(handle->software_context().sdl_window) ==
 			       0;
 		}
+#endif
 
+#ifdef LAK_ENABLE_OPENGL
 		case lak::graphics_mode::OpenGL:
 		{
 			SDL_GL_SwapWindow(handle->opengl_context().sdl_window);
 			return true;
 		}
+#endif
 
 		default:
 			return false;
