@@ -107,8 +107,6 @@ template<typename CHAR>
 lak::strong_ordering lak::lexical_compare(lak::string_view<CHAR> a,
                                           lak::string_view<CHAR> b)
 {
-	auto x = char(0) <=> char(1);
-
 	if (a.size() > b.size())
 		return lak::strong_ordering::greater;
 	else if (a.size() < b.size())
