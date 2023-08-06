@@ -12,6 +12,8 @@ namespace lak
 	template<typename T, size_t SIZE = lak::dynamic_extent>
 	struct array
 	{
+		static_assert(SIZE > 0);
+
 	private:
 		T _data[SIZE] = {};
 
