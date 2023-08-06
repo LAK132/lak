@@ -2,9 +2,13 @@
 #define LAK_IMGUI_WIDGETS_HPP
 
 #include "lak/macro_utils.hpp"
+#include "lak/optional.hpp"
 #include "lak/utility.hpp"
+#include "lak/window.hpp"
 
 #include <imgui.h>
+
+#include <ImFileDialog.h>
 
 #include <thread>
 
@@ -87,6 +91,10 @@ namespace lak
 
 #define LAK_TREE_NODE(...)                                                    \
 	if (lak::tree_node UNIQUIFY(TREE_NODE_)(__VA_ARGS__); UNIQUIFY(TREE_NODE_))
+
+	extern lak::optional<ifd::FileDialog> file_dialog;
+
+	void ConfigureFileDialog(lak::graphics_mode graphics);
 }
 
 #include "widgets.inl"

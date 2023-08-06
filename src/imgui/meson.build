@@ -3,6 +3,7 @@ lakimgui_dependencies = declare_dependency(
 		lakcore_dep,
 		lakwindowing_dep,
 		imgui_dep,
+		subproject('imgui').get_variable('im_file_dialog_dep'),
 		subproject('glm').get_variable('glm_dep'),
 	],
 )

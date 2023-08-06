@@ -1,7 +1,10 @@
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include "lak/imgui/widgets.hpp"
 
+#include "lak/debug.hpp"
+
 #include <imgui_internal.h>
+#include <texture.h>
 
 /* --- VertSplitter --- */
 
@@ -147,4 +150,94 @@ bool lak::TreeNode(const char *fmt, ...)
 
 	va_end(args);
 	return is_open;
+}
+
+/* --- Open* --- */
+
+lak::optional<ifd::FileDialog> lak::file_dialog;
+
+void lak::ConfigureFileDialog(lak::graphics_mode graphics)
+{
+	if (!lak::file_dialog) lak::file_dialog.emplace(ifd::FileDialog{});
+
+#ifdef LAK_ENABLE_SOFTRENDER
+	if (graphics == lak::graphics_mode::Software)
+	{
+		lak::file_dialog->CreateTexture =
+		  [](uint8_t *data, int w, int h, char fmt) -> void *
+		{
+			texture_color32_t *result = new texture_color32_t{};
+			result->init(w, h);
+			if (fmt == 0)
+			{
+				// BGRA8888
+				color32_t *pixels = (color32_t *)result->pixels;
+				for (size_t i = size_t(w * h); i-- > 0; ++pixels)
+				{
+					pixels->b = *(data++);
+					pixels->g = *(data++);
+					pixels->r = *(data++);
+					pixels->a = *(data++);
+				}
+			}
+			else
+			{
+				// RGBA8888
+				color32_t *pixels = (color32_t *)result->pixels;
+				for (size_t i = size_t(w * h); i-- > 0; ++pixels)
+				{
+					pixels->r = *(data++);
+					pixels->g = *(data++);
+					pixels->b = *(data++);
+					pixels->a = *(data++);
+				}
+			}
+			return (void *)result;
+		};
+
+		lak::file_dialog->DeleteTexture = [](void *tex)
+		{ delete (texture_color32_t *)tex; };
+	}
+	else
+#endif
+#ifdef LAK_ENABLE_OPENGL
+	  if (graphics == lak::graphics_mode::OpenGL)
+	{
+		lak::file_dialog->CreateTexture =
+		  [](uint8_t *data, int w, int h, char fmt) -> void *
+		{
+			GLuint tex;
+
+			glGenTextures(1, &tex);
+			glBindTexture(GL_TEXTURE_2D, tex);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+			glTexImage2D(GL_TEXTURE_2D,
+			             0,
+			             GL_RGBA,
+			             w,
+			             h,
+			             0,
+			             (fmt == 0) ? GL_BGRA : GL_RGBA,
+			             GL_UNSIGNED_BYTE,
+			             data);
+			glGenerateMipmap(GL_TEXTURE_2D);
+			glBindTexture(GL_TEXTURE_2D, 0);
+
+			return (void *)tex;
+		};
+
+		lak::file_dialog->DeleteTexture = [](void *tex)
+		{
+			GLuint texID = (GLuint)((uintptr_t)tex);
+			glDeleteTextures(1, &texID);
+		};
+	}
+	else
+#endif
+	{
+		ASSERT_UNREACHABLE();
+	}
 }
