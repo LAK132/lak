@@ -194,9 +194,9 @@ int LAK_BASIC_PROGRAM_MAIN(int argc, char **argv)
 	lak::platform_init();
 	DEFER(lak::platform_quit());
 
+#ifdef LAK_ENABLE_SOFTRENDER
 	auto make_software = [&]() -> lak::result<lak::window, lak::u8string>
 	{
-#ifdef LAK_ENABLE_SOFTRENDER
 		return lak::window::make(LAK_BASIC_PROGRAM(window_software_settings))
 		  .and_then(
 		    [&](auto &&window) -> lak::result<lak::window, lak::u8string>
@@ -206,14 +206,12 @@ int LAK_BASIC_PROGRAM_MAIN(int argc, char **argv)
 				      "Expected Software graphics, got ", window.graphics())};
 			    return lak::move_ok(window);
 		    });
-#else
-		return lak::err_t<lak::u8string>{u8"Softrender not enabled"_str};
-#endif
 	};
+#endif
 
+#ifdef LAK_ENABLE_OPENGL
 	auto make_opengl = [&]() -> lak::result<lak::window, lak::u8string>
 	{
-#ifdef LAK_ENABLE_OPENGL
 		return lak::window::make(LAK_BASIC_PROGRAM(window_opengl_settings))
 		  .and_then(
 		    [&](auto &&window) -> lak::result<lak::window, lak::u8string>
@@ -237,11 +235,18 @@ int LAK_BASIC_PROGRAM_MAIN(int argc, char **argv)
 
 			    return lak::move_ok(window);
 		    });
-#else
-		return lak::err_t<lak::u8string>{u8"OpenGL not enabled"_str};
-#endif
 	};
+#endif
 
+#if !defined(LAK_ENABLE_OPENGL)
+	auto window = make_software().UNWRAP();
+#elif !defined(LAK_ENABLE_SOFTRENDER)
+	if (LAK_BASIC_PROGRAM(window_force_software))
+		WARNING(
+		  "Force software rendering setting was set but "
+		  "software rendering was not enabled");
+	auto window = make_opengl().UNWRAP();
+#else
 	auto window =
 	  (LAK_BASIC_PROGRAM(window_force_software)
 	     ? make_software()
@@ -253,6 +258,7 @@ int LAK_BASIC_PROGRAM_MAIN(int argc, char **argv)
 		         return make_software();
 	         }))
 	    .UNWRAP();
+#endif
 
 	window.set_title(L"" APP_NAME);
 	window.set_size(LAK_BASIC_PROGRAM(window_start_size));
