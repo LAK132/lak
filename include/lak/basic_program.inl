@@ -280,6 +280,8 @@ int LAK_BASIC_PROGRAM_MAIN(int argc, char **argv)
 	ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
 	ImGui::StyleColorsDark();
 	ImGui::GetStyle().WindowRounding = 0;
+
+	lak::ConfigureFileDialog(window.graphics());
 #endif
 
 	LAK_BASIC_PROGRAM(window_init)(window);
@@ -347,6 +349,7 @@ int LAK_BASIC_PROGRAM_MAIN(int argc, char **argv)
 			}
 
 			ImGui::ImplRender(LAK_BASIC_PROGRAM(imgui_context));
+			lak::FlushFileDialogTextures();
 		}
 #else
 		LAK_BASIC_PROGRAM(window_loop)(window, counter_delta);
