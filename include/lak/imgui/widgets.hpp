@@ -95,6 +95,8 @@ namespace lak
 	extern lak::optional<ifd::FileDialog> file_dialog;
 
 	void ConfigureFileDialog(lak::graphics_mode graphics);
+
+	void FlushFileDialogTextures();
 }
 
 #include "widgets.inl"
