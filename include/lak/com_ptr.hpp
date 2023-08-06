@@ -46,10 +46,7 @@ namespace lak
 			return *this;
 		}
 
-		~unique_com_ptr()
-		{
-			if (_handle) lak::unique_com_ptr_traits<T>::dtor(_handle);
-		}
+		~unique_com_ptr() { reset(); }
 
 		template<typename... ARGS>
 		static auto create(ARGS &&...args)
@@ -57,6 +54,15 @@ namespace lak
 			return lak::unwrap_if_infallible(
 			  lak::unique_com_ptr_traits<T>::ctor(lak::forward<ARGS>(args)...)
 			    .map(&creator));
+		}
+
+		void reset()
+		{
+			if (_handle)
+			{
+				lak::unique_com_ptr_traits<T>::dtor(_handle);
+				_handle = nullptr;
+			}
 		}
 
 		operator handle_type() const { return _handle; }
@@ -132,10 +138,7 @@ namespace lak
 			return *this;
 		}
 
-		~shared_com_ptr()
-		{
-			if (_handle) lak::shared_com_ptr_traits<T>::unref(_handle);
-		}
+		~shared_com_ptr() { reset(); }
 
 		template<typename... ARGS>
 		static auto create(ARGS &&...args)
@@ -143,6 +146,15 @@ namespace lak
 			return lak::unwrap_if_infallible(
 			  lak::shared_com_ptr_traits<T>::ctor(lak::forward<ARGS>(args)...)
 			    .map(&creator));
+		}
+
+		void reset()
+		{
+			if (_handle)
+			{
+				lak::shared_com_ptr_traits<T>::unref(_handle);
+				_handle = nullptr;
+			}
 		}
 
 		operator handle_type() const { return _handle; }
