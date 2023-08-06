@@ -1,6 +1,8 @@
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include "lak/imgui/widgets.hpp"
 
+#include "lak/opengl/gl3w.hpp"
+
 #include "lak/debug.hpp"
 
 #include <imgui_internal.h>
