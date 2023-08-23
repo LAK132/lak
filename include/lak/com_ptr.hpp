@@ -133,8 +133,7 @@ namespace lak
 
 		shared_com_ptr &operator=(const shared_com_ptr &other)
 		{
-			reset();
-			_handle = lak::shared_com_ptr_traits<T>::ref(other._handle);
+			reset(lak::shared_com_ptr_traits<T>::ref(other._handle));
 			return *this;
 		}
 
@@ -148,14 +147,7 @@ namespace lak
 			    .map(&creator));
 		}
 
-		void reset()
-		{
-			if (_handle)
-			{
-				lak::shared_com_ptr_traits<T>::unref(_handle);
-				_handle = nullptr;
-			}
-		}
+		void reset() { reset(nullptr); }
 
 		operator handle_type() const { return _handle; }
 		exposed_type operator->() const { return _handle; }
@@ -167,6 +159,12 @@ namespace lak
 		static shared_com_ptr creator(handle_type handle)
 		{
 			return shared_com_ptr(handle);
+		}
+
+		void reset(handle_type handle)
+		{
+			if (_handle) lak::shared_com_ptr_traits<T>::unref(_handle);
+			_handle = handle;
 		}
 
 		handle_type _handle = nullptr;
