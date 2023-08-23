@@ -133,7 +133,7 @@ namespace lak
 
 		shared_com_ptr &operator=(const shared_com_ptr &other)
 		{
-			lak::shared_com_ptr_traits<T>::unref(_handle);
+			reset();
 			_handle = lak::shared_com_ptr_traits<T>::ref(other._handle);
 			return *this;
 		}
