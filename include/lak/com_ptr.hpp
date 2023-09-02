@@ -56,14 +56,19 @@ namespace lak
 			    .map(&creator));
 		}
 
-		void reset()
+		template<typename... ARGS>
+		auto emplace(ARGS &&...args)
 		{
-			if (_handle)
-			{
-				lak::unique_com_ptr_traits<T>::dtor(_handle);
-				_handle = nullptr;
-			}
+			return lak::unique_com_ptr_traits<T>::ctor(lak::forward<ARGS>(args)...)
+			  .map(
+			    [&](handle_type handle)
+			    {
+				    this->reset(handle);
+				    return lak::monostate{};
+			    });
 		}
+
+		void reset() { reset(nullptr); }
 
 		operator handle_type() const { return _handle; }
 		exposed_type operator->() const { return _handle; }
@@ -75,6 +80,12 @@ namespace lak
 		static unique_com_ptr creator(handle_type handle)
 		{
 			return unique_com_ptr(handle);
+		}
+
+		void reset(handle_type handle)
+		{
+			if (_handle) lak::unique_com_ptr_traits<T>::dtor(_handle);
+			_handle = handle;
 		}
 
 		handle_type _handle = nullptr;
@@ -145,6 +156,18 @@ namespace lak
 			return lak::unwrap_if_infallible(
 			  lak::shared_com_ptr_traits<T>::ctor(lak::forward<ARGS>(args)...)
 			    .map(&creator));
+		}
+
+		template<typename... ARGS>
+		auto emplace(ARGS &&...args)
+		{
+			return lak::shared_com_ptr_traits<T>::ctor(lak::forward<ARGS>(args)...)
+			  .map(
+			    [&](handle_type handle)
+			    {
+				    this->reset(handle);
+				    return lak::monostate{};
+			    });
 		}
 
 		void reset() { reset(nullptr); }
