@@ -6,6 +6,137 @@
 #include "lak/result.hpp"
 #include "lak/span.hpp"
 
+/* --- uninit_array --- */
+
+template<typename T>
+size_t lak::uninit_array<T>::page_threshold()
+{
+	const static size_t _page_threshold = (lak::page_size() / 4U) / sizeof(T);
+	return _page_threshold;
+}
+
+template<typename T>
+lak::uninit_array<T>::uninit_array(uninit_array &&other)
+: _data(lak::exchange(other._data, lak::span<T>{})),
+  _committed(lak::exchange(other._committed, 0U)),
+  _size(lak::exchange(other._size, 0U))
+{
+}
+
+template<typename T>
+lak::uninit_array<T> &lak::uninit_array<T>::operator=(uninit_array &&other)
+{
+	lak::swap(_data, other._data);
+	lak::swap(_committed, other._committed);
+	lak::swap(_size, other._size);
+	return *this;
+}
+
+template<typename T>
+lak::uninit_array<T>::~uninit_array()
+{
+	if (is_paged())
+	{
+		lak::page_free(
+		  lak::span<void>(static_cast<void *>(_data.data()),
+		                  lak::round_to_page_multiple(_data.size() * sizeof(T))))
+		  .expect("page free failed");
+	}
+	else
+	{
+		lak::global_free(lak::span<byte_t>(_data));
+	}
+	_data      = {};
+	_committed = 0U;
+	_size      = 0U;
+}
+
+template<typename T>
+void lak::uninit_array<T>::commit_impl(size_t new_capacity)
+{
+	if (!is_paged() || new_capacity <= _committed) return;
+
+	const size_t committed_bytes{
+	  lak::round_to_page_multiple(_committed * sizeof(T))};
+
+	const size_t new_bytes =
+	  lak::round_to_page_multiple(new_capacity * sizeof(T));
+
+	lak::page_commit(
+	  lak::span<void>(
+	    reinterpret_cast<void *>(reinterpret_cast<uintptr_t>(_data.data()) +
+	                             committed_bytes),
+	    new_bytes - committed_bytes))
+	  .expect("commit failed");
+
+	_committed = new_bytes / sizeof(T);
+}
+
+template<typename T>
+lak::optional<lak::uninit_array<T>> lak::uninit_array<T>::reserve(
+  size_t new_capacity)
+{
+	if (new_capacity <= capacity()) return lak::nullopt;
+
+	new_capacity = std::max(new_capacity, capacity() * 2U);
+
+	const auto old_committed{committed()};
+	const auto old_size{_size};
+
+	lak::optional<uninit_array> result{lak::exchange(*this, uninit_array{})};
+
+	if (is_paged(new_capacity))
+	{
+		// use paged allocations
+
+		const size_t reserve_bytes{
+		  lak::round_to_page_multiple(new_capacity * sizeof(T))};
+
+		_data =
+		  lak::span<T>(lak::page_reserve(reserve_bytes).expect("reserve failed"));
+
+		commit_impl(old_committed);
+	}
+	else
+	{
+		// use non-paged allocations
+
+		_data = lak::span<T>(
+		  lak::global_alloc(new_capacity * sizeof(T)).expect("alloc failed"));
+	}
+
+	_size = old_size;
+
+	return result;
+}
+
+template<typename T>
+lak::optional<lak::uninit_array<T>> lak::uninit_array<T>::commit(
+  size_t new_capacity)
+{
+	auto result{reserve(new_capacity)};
+
+	commit_impl(new_capacity);
+
+	return result;
+}
+
+template<typename T>
+lak::optional<lak::uninit_array<T>> lak::uninit_array<T>::resize(
+  size_t new_size)
+{
+	auto result{commit(new_size)};
+	_size = new_size;
+
+	return result;
+}
+
+template<typename T>
+lak::optional<lak::uninit_array<T>> lak::uninit_array<T>::push_back()
+{
+	return resize(size() + 1U);
+}
+
 /* --- fixed size --- */
 
 template<typename T, size_t SIZE>

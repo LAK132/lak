@@ -15,6 +15,32 @@ lak::array<T> one_page_array(const T &default_value = {})
 	return result;
 }
 
+BEGIN_TEST(uninit_array)
+{
+	lak::uninit_array<int> array;
+	{
+		auto result{array.push_back()};
+		ASSERT(!!result);
+		ASSERT(result->empty());
+		ASSERT_GREATER_OR_EQUAL(array.capacity(), 0x1);
+		ASSERT_EQUAL(array.size(), 0x1);
+	}
+	{
+		auto result{array.reserve(0x100)};
+		ASSERT(!!result);
+		ASSERT_EQUAL(result->size(), 1U);
+		ASSERT_GREATER_OR_EQUAL(array.capacity(), 0x100);
+	}
+	{
+		auto result{array.resize(0x10)};
+		ASSERT(!result);
+		ASSERT_GREATER_OR_EQUAL(array.capacity(), 0x100);
+		ASSERT_EQUAL(array.size(), 0x10);
+	}
+	return 0;
+}
+END_TEST()
+
 BEGIN_TEST(array)
 {
 	lak::array<int> array;

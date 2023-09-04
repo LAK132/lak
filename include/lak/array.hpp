@@ -9,6 +9,92 @@
 
 namespace lak
 {
+	template<typename T>
+	struct uninit_array
+	{
+	private:
+		// reserved memory
+		lak::span<T> _data = {};
+
+		// if page allocating, the number of Ts committed
+		size_t _committed = 0U;
+
+		// element count
+		size_t _size = 0U;
+
+		static size_t page_threshold();
+
+		bool is_paged(size_t size) const { return size >= page_threshold(); }
+		bool is_paged() const { return is_paged(_data.size()); }
+
+		// assumes memory has already been reserved, just commits up to the new
+		// capacity
+		void commit_impl(size_t new_capacity);
+
+	public:
+		using value_type      = T;
+		using size_type       = size_t;
+		using difference_type = ptrdiff_t;
+		using reference       = T &;
+		using const_reference = const T &;
+		using pointer         = T *;
+		using const_pointer   = const T *;
+		using iterator        = pointer;
+		using const_iterator  = const_pointer;
+
+		uninit_array()                     = default;
+		uninit_array(const uninit_array &) = delete;
+		uninit_array(uninit_array &&other);
+		uninit_array &operator=(const uninit_array &) = delete;
+		uninit_array &operator=(uninit_array &&other);
+
+		uninit_array(size_t initial_size) { resize(initial_size); }
+
+		~uninit_array();
+
+		size_t size() const { return _size; }
+		constexpr size_t max_size() const { return SIZE_MAX; }
+		size_t capacity() const { return _data.size(); }
+		size_t committed() const { return is_paged() ? _committed : _data.size(); }
+
+		// returns the old allocation if reallocation is required
+		lak::optional<uninit_array> reserve(size_t new_capacity);
+		lak::optional<uninit_array> commit(size_t new_capacity);
+		lak::optional<uninit_array> resize(size_t new_size);
+
+		lak::optional<uninit_array> push_back();
+		void pop_back() { --_size; }
+
+		void clear() { _size = 0U; }
+		uninit_array force_clear() { return lak::exchange(*this, uninit_array{}); }
+
+		[[nodiscard]] bool empty() const { return size() == 0U; }
+
+		pointer data() { return _data.data(); }
+		const_pointer data() const { return _data.data(); }
+
+		iterator begin() { return data(); }
+		iterator end() { return data() + size(); }
+
+		const_iterator begin() const { return data(); }
+		const_iterator end() const { return data() + size(); }
+
+		const_iterator cbegin() const { return begin(); }
+		const_iterator cend() const { return end(); }
+
+		reference at(size_t index) { return _data[index]; }
+		const_reference at(size_t index) const { return _data[index]; }
+
+		reference operator[](size_t index) { return _data[index]; }
+		const_reference operator[](size_t index) const { return _data[index]; }
+
+		reference front() { return _data[0]; }
+		const_reference front() const { return _data[0]; }
+
+		reference back() { return _data[size() - 1U]; }
+		const_reference back() const { return _data[size() - 1U]; }
+	};
+
 	template<typename T, size_t SIZE = lak::dynamic_extent>
 	struct array
 	{
