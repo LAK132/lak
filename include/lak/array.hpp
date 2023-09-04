@@ -114,14 +114,19 @@ namespace lak
 		using iterator        = T *;
 		using const_iterator  = const T *;
 
-		constexpr array()                         = default;
-		constexpr array(const array &)            = default;
-		constexpr array &operator=(const array &) = default;
+		constexpr array() = default;
+		constexpr array(const array &)
+		requires std::copy_constructible<T>
+		= default;
+		constexpr array &operator=(const array &)
+		requires std::copy_constructible<T>
+		= default;
 
 		constexpr array(array &&other)            = default;
 		constexpr array &operator=(array &&other) = default;
 
-		array(std::initializer_list<T> list);
+		array(std::initializer_list<T> list)
+		requires std::copy_constructible<T>;
 
 		constexpr size_t size() const { return SIZE; }
 		constexpr size_t max_size() const { return SIZE; }
@@ -163,227 +168,121 @@ namespace lak
 	struct array<T, lak::dynamic_extent>
 	{
 	private:
-		lak::unique_pages _data = {};
-		size_t _size            = 0; // Ts
-		size_t _committed       = 0; // bytes
+		using data_type = lak::uninit_array<T>;
+		data_type _data;
 
-		// leaves the `count` elements before `before` uninitialised, does not move
-		// the base pointer. methods calling this should make sure there is enough
-		// memory committed for this, and to make sure to initialise the lower
-		// elements and update _size accordingly.
+		// resizes to `size()+count` and leaves a `count` sized gap of
+		// uninitialised elements before `before`
 		void right_shift(size_t count, size_t before = 0U);
 
-		void reserve_bytes(size_t new_capacity_bytes,
-		                   size_t right_shift_count = 0U);
-
-		void commit(size_t new_size, size_t right_shift_count = 0U);
+		void resize_impl(size_t new_size);
 
 	public:
-		using value_type      = T;
-		using size_type       = size_t;
-		using difference_type = ptrdiff_t;
-		using reference       = T &;
-		using const_reference = const T &;
-		using pointer         = T *;
-		using const_pointer   = const T *;
-		using iterator        = T *;
-		using const_iterator  = const T *;
+		using value_type      = typename data_type::value_type;
+		using size_type       = typename data_type::size_type;
+		using difference_type = typename data_type::difference_type;
+		using reference       = typename data_type::reference;
+		using const_reference = typename data_type::const_reference;
+		using pointer         = typename data_type::pointer;
+		using const_pointer   = typename data_type::const_pointer;
+		using iterator        = typename data_type::iterator;
+		using const_iterator  = typename data_type::const_iterator;
 
 		array() = default;
-		array(const array &);
-		array &operator=(const array &);
+		array(const array &)
+		requires std::copy_constructible<T>;
+		array &operator=(const array &)
+		requires std::copy_constructible<T>;
 
 		array(array &&other);
 		array &operator=(array &&other);
 
 		array(size_t initial_size);
 
-		array(std::initializer_list<T> list);
+		array(std::initializer_list<T> list)
+		requires std::copy_constructible<T>;
 
 		template<typename ITER>
-		array(ITER &&begin, ITER &&end);
+		array(ITER &&begin, ITER &&end)
+		requires std::copy_constructible<T>;
 
 		~array();
 
-		size_t size() const { return _size; }
-		constexpr size_t max_size() const { return SIZE_MAX; }
-		size_t capacity() const { return _committed / sizeof(T); }
-		size_t reserved() const { return _data.size_bytes() / sizeof(T); }
+		size_t size() const { return _data.size(); }
+		constexpr size_t max_size() const { return _data.max_size(); }
+		size_t capacity() const { return _data.capacity(); }
+		size_t committed() const { return _data.committed(); }
 
 		void resize(size_t new_size);
-		void resize(size_t new_size, const T &default_value);
+		void resize(size_t new_size, const T &default_value)
+		requires std::copy_constructible<T>;
 		void reserve(size_t new_capacity);
 
 		void clear();
 		void force_clear();
 
-		[[nodiscard]] bool empty() const { return _size == 0; }
+		[[nodiscard]] bool empty() const { return _data.empty(); }
 
-		T *data() { return static_cast<T *>(_data.data()); }
-		const T *data() const { return static_cast<const T *>(_data.data()); }
+		pointer data() { return _data.data(); }
+		const_pointer data() const { return _data.data(); }
 
-		T *begin() { return data(); }
-		T *end() { return data() + _size; }
+		iterator begin() { return _data.begin(); }
+		iterator end() { return _data.end(); }
 
-		const T *begin() const { return data(); }
-		const T *end() const { return data() + _size; }
+		const_iterator begin() const { return _data.begin(); }
+		const_iterator end() const { return _data.end(); }
 
-		const T *cbegin() const { return data(); }
-		const T *cend() const { return data() + _size; }
+		const_iterator cbegin() const { return _data.cbegin(); }
+		const_iterator cend() const { return _data.cend(); }
 
-		T &at(size_t index);
-		const T &at(size_t index) const;
+		reference at(size_t index) { return _data.at(index); }
+		const_reference at(size_t index) const { return _data.at(index); }
 
-		T &operator[](size_t index) { return data()[index]; }
-		const T &operator[](size_t index) const { return data()[index]; }
+		reference operator[](size_t index) { return _data[index]; }
+		const_reference operator[](size_t index) const { return _data[index]; }
 
-		T &front();
-		const T &front() const;
+		reference front() { return _data.front(); }
+		const_reference front() const { return _data.front(); }
 
-		T &back();
-		const T &back() const;
-
-		template<typename... ARGS>
-		T &emplace_front(ARGS &&...args);
-
-		T &push_front(const T &t);
-		T &push_front(T &&t);
+		reference back() { return _data.back(); }
+		const_reference back() const { return _data.back(); }
 
 		template<typename... ARGS>
-		T &emplace_back(ARGS &&...args);
+		reference emplace_front(ARGS &&...args);
 
-		T &push_back(const T &t);
-		T &push_back(T &&t);
+		reference push_front(const T &t)
+		requires std::copy_constructible<T>;
+		reference push_front(T &&t);
 
 		void pop_front();
+		T popped_front();
+
+		template<typename... ARGS>
+		reference emplace_back(ARGS &&...args);
+
+		reference push_back(const T &t)
+		requires std::copy_constructible<T>;
+		reference push_back(T &&t);
+
 		void pop_back();
+		T popped_back();
 
-		T *insert(const T *before, const T &value);
-		T *insert(const T *before, T &&value);
-		T *insert(const T *before, std::initializer_list<T>);
+		iterator insert(const_iterator before, const T &value)
+		requires std::copy_constructible<T>;
+		iterator insert(const_iterator before, T &&value);
+		iterator insert(const_iterator before, std::initializer_list<T>)
+		requires std::copy_constructible<T>;
 
-		T *erase(const T *first, const T *last);
+		iterator erase(const_iterator first, const_iterator last);
 
-		T *erase(const T *element) { return erase(element, element + 1); }
+		iterator erase(const_iterator element)
+		{
+			return erase(element, element + 1);
+		}
 	};
 
 	template<typename T>
-	using dynamic_array = lak::array<T, lak::dynamic_extent>;
-
-	template<typename T, lak::alloc::locality LOC = lak::alloc::locality::global>
-	struct small_array
-	{
-		static_assert(LOC == lak::alloc::locality::local ||
-		              LOC == lak::alloc::locality::global);
-
-	private:
-		lak::span<T> _data = {};
-		size_t _size       = 0; // Ts
-
-		// leaves the `count` elements before `before` uninitialised, does not move
-		// the base pointer. methods calling this should make sure there is enough
-		// memory committed for this, and to make sure to initialise the lower
-		// elements and update _size accordingly.
-		void right_shift(size_t count, size_t before = 0U);
-
-	public:
-		using value_type      = T;
-		using size_type       = size_t;
-		using difference_type = ptrdiff_t;
-		using reference       = T &;
-		using const_reference = const T &;
-		using pointer         = T *;
-		using const_pointer   = const T *;
-		using iterator        = T *;
-		using const_iterator  = const T *;
-
-		small_array() = default;
-		small_array(const small_array &);
-		small_array &operator=(const small_array &);
-
-		small_array(small_array &&other);
-		small_array &operator=(small_array &&other);
-
-		small_array(size_t initial_size);
-
-		small_array(std::initializer_list<T> list);
-
-		template<typename ITER>
-		small_array(ITER &&begin, ITER &&end);
-
-		~small_array();
-
-		size_t size() const { return _size; }
-		constexpr size_t max_size() const { return SIZE_MAX; }
-		size_t capacity() const { return _data.size(); }
-		size_t reserved() const { return _data.size(); }
-
-		void resize(size_t new_size);
-		void resize(size_t new_size, const T &default_value);
-		void reserve(size_t new_capacity);
-
-		void clear();
-		void force_clear();
-
-		[[nodiscard]] bool empty() const { return _size == 0; }
-
-		T *data() { return _data.data(); }
-		const T *data() const { return _data.data(); }
-
-		T *begin() { return data(); }
-		T *end() { return data() + _size; }
-
-		const T *begin() const { return data(); }
-		const T *end() const { return data() + _size; }
-
-		const T *cbegin() const { return data(); }
-		const T *cend() const { return data() + _size; }
-
-		T &at(size_t index);
-		const T &at(size_t index) const;
-
-		T &operator[](size_t index) { return data()[index]; }
-		const T &operator[](size_t index) const { return data()[index]; }
-
-		T &front();
-		const T &front() const;
-
-		T &back();
-		const T &back() const;
-
-		template<typename... ARGS>
-		T &emplace_front(ARGS &&...args);
-
-		T &push_front(const T &t);
-		T &push_front(T &&t);
-
-		void pop_front();
-
-		template<typename... ARGS>
-		T &emplace_back(ARGS &&...args);
-
-		T &push_back(const T &t);
-		T &push_back(T &&t);
-
-		void pop_back();
-
-		T *insert(const T *before, const T &value);
-		T *insert(const T *before, T &&value);
-		T *insert(const T *before, std::initializer_list<T> values);
-
-		T *erase(const T *first, const T *last);
-
-		T *erase(const T *element) { return erase(element, element + 1); }
-	};
-
-	template<typename T>
-	using global_small_array = lak::small_array<T, lak::alloc::locality::global>;
-
-	template<typename T>
-	using local_small_array = lak::small_array<T, lak::alloc::locality::local>;
-
-	template<typename T>
-	using vector = global_small_array<T>;
+	using vector = lak::array<T>;
 
 	template<typename T, size_t MAX_SIZE>
 	struct stack_array
@@ -403,22 +302,27 @@ namespace lak
 		using iterator        = T *;
 		using const_iterator  = const T *;
 
-		constexpr stack_array()                               = default;
-		constexpr stack_array(const stack_array &)            = default;
-		constexpr stack_array &operator=(const stack_array &) = default;
+		constexpr stack_array() = default;
+		constexpr stack_array(const stack_array &)
+		requires std::copy_constructible<T>
+		= default;
+		constexpr stack_array &operator=(const stack_array &)
+		requires std::copy_constructible<T>
+		= default;
 
 		constexpr stack_array(stack_array &&other)            = default;
 		constexpr stack_array &operator=(stack_array &&other) = default;
 
-		stack_array(std::initializer_list<T> list);
+		stack_array(std::initializer_list<T> list)
+		requires std::copy_constructible<T>;
 
 		template<typename ITER>
-		stack_array(ITER &&begin, ITER &&end);
+		stack_array(ITER &&begin, ITER &&end)
+		requires std::copy_constructible<T>;
 
 		constexpr size_t size() const { return _size; }
 		constexpr size_t max_size() const { return MAX_SIZE; }
 		constexpr size_t capacity() const { return MAX_SIZE; }
-		constexpr size_t reserved() const { return MAX_SIZE; }
 
 		[[nodiscard]] constexpr bool empty() const { return _size == 0; }
 
@@ -446,10 +350,12 @@ namespace lak
 		constexpr T &back();
 		constexpr const T &back() const;
 
-		T &push_back(const T &t);
+		T &push_back(const T &t)
+		requires std::copy_constructible<T>;
 		T &push_back(T &&t);
 
 		void pop_back();
+		T popped_back();
 	};
 }
 
@@ -458,14 +364,6 @@ bool operator==(const lak::array<T, S> &a, const lak::array<T, S> &b);
 
 template<typename T, size_t S>
 bool operator!=(const lak::array<T, S> &a, const lak::array<T, S> &b);
-
-template<typename T, lak::alloc::locality LOC>
-bool operator==(const lak::small_array<T, LOC> &a,
-                const lak::small_array<T, LOC> &b);
-
-template<typename T, lak::alloc::locality LOC>
-bool operator!=(const lak::small_array<T, LOC> &a,
-                const lak::small_array<T, LOC> &b);
 
 #endif
 
