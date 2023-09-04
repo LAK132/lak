@@ -679,7 +679,7 @@ void lak::pop_heap(ITER begin, ITER end, CMP compare)
 {
 	static_assert(std::random_access_iterator<ITER>);
 
-	if ((end - begin) <= 2U) return;
+	if ((end - begin) <= 1U) return;
 
 	--end;
 	lak::swap(*begin, *end);
