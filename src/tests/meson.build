@@ -18,6 +18,7 @@ laktestcore = static_library(
 		'macro_utils.cpp',
 		'memory.cpp',
 		'optional.cpp',
+		'priority_queue.cpp',
 		'ptr_intrin.cpp',
 		'result.cpp',
 		'span_manip.cpp',

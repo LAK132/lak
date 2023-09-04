@@ -3,6 +3,8 @@
 
 #include "type_traits.hpp"
 
+#include <concepts>
+
 namespace lak
 {
 	namespace concepts

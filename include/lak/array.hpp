@@ -270,7 +270,7 @@ namespace lak
 		iterator insert(const_iterator before, const T &value)
 		requires std::copy_constructible<T>;
 		iterator insert(const_iterator before, T &&value);
-		iterator insert(const_iterator before, std::initializer_list<T>)
+		iterator insert(const_iterator before, std::initializer_list<T> list)
 		requires std::copy_constructible<T>;
 
 		iterator erase(const_iterator first, const_iterator last);
