@@ -712,6 +712,54 @@ void lak::reverse_sort_heap(ITER begin, ITER end, CMP compare)
 	lak::reverse(begin, end);
 }
 
+/* --- breadth first search heap --- */
+
+template<typename ITER, typename F>
+ITER lak::breadth_first_search_heap(ITER begin, ITER end, F &&predicate)
+{
+	while (begin != end && !predicate(*begin))
+		;
+	return begin;
+}
+
+/* --- depth first search heap --- */
+
+template<typename ITER, typename F>
+ITER lak::depth_first_search_heap(ITER begin, ITER end, F &&predicate)
+{
+	if (begin == end) return begin;
+	size_t size = end - begin;
+
+	auto next_index = [size](size_t index) -> size_t
+	{
+		auto is_left    = [](size_t index) -> bool { return (index & 1U) == 1U; };
+		auto left_child = [](size_t index) -> size_t
+		{ return (index << 1U) + 1U; };
+		auto right_sibling = [](size_t index) -> size_t { return index + 1U; };
+		auto parent        = [](size_t index) -> size_t
+		{ return ((index + 1U) >> 1U) - 1U; };
+
+		if (index >= size - 1U) return size;
+
+		if (auto l = left_child(index); l < size) return l;
+
+		while (index != 0U)
+		{
+			while (!is_left(index)) index = parent(index);
+			if (auto r = right_sibling(index); r < size) return r;
+		}
+
+		return size;
+	};
+
+	for (size_t index = 0U; index != size; index = next_index(index))
+	{
+		if (predicate(*(begin + index))) return begin + index;
+	}
+
+	return end;
+}
+
 /* --- heapsort --- */
 
 template<typename ITER, typename CMP>

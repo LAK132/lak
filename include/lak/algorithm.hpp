@@ -176,6 +176,16 @@ namespace lak
 	template<typename ITER, typename CMP = lak::less<>>
 	void reverse_sort_heap(ITER begin, ITER end, CMP compare = {});
 
+	/* --- breadth first search heap --- */
+
+	template<typename ITER, typename F>
+	ITER breadth_first_search_heap(ITER begin, ITER end, F &&predicate);
+
+	/* --- depth first search heap --- */
+
+	template<typename ITER, typename F>
+	ITER depth_first_search_heap(ITER begin, ITER end, F &&predicate);
+
 	/* --- heapsort --- */
 
 	template<typename ITER, typename CMP = lak::less<>>
