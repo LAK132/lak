@@ -134,6 +134,15 @@ namespace lak
 			p->~T();
 	}
 
+	/* --- destructive_move_construct --- */
+
+	template<typename T>
+	constexpr void destructive_move_construct(T *src, T *dst)
+	{
+		new (dst) T(lak::move(*src));
+		if constexpr (!std::is_trivially_destructible_v<T>) src->~T();
+	}
+
 	/* --- as_ptr --- */
 
 	// Converts pointers and pointer-like types to pointers.
