@@ -7,12 +7,19 @@ BEGIN_TEST(bigint)
 	lak::bigint value;
 
 	value = 0;
+	DEBUG_EXPR(value);
+	ASSERT_EQUAL(value.bit_count(), 0);
+	ASSERT(!value.is_big());
 	ASSERT_EQUAL(value.to_uintmax().UNWRAP(), 0U);
 
 	value += UINTMAX_MAX;
+	DEBUG_EXPR(value);
+	ASSERT_EQUAL(value.bit_count(), sizeof(uintmax_t) * CHAR_BIT);
+	ASSERT(!value.is_big());
 	ASSERT_EQUAL(value.to_uintmax().UNWRAP(), UINTMAX_MAX);
 
 	value += UINTMAX_MAX;
+	DEBUG_EXPR(value);
 	value.to_uintmax().UNWRAP_ERR();
 
 	value -= UINTMAX_MAX;
@@ -48,12 +55,15 @@ BEGIN_TEST(bigint)
 
 	ASSERT_EQUAL(lak::bigint(10U) / 2U, 5U);
 
+	ASSERT_EQUAL((lak::bigint(0xFFFF'FFFF) * 0xFFFF'FFFF),
+	             0xFFFF'FFFE'0000'0001);
+
 	ASSERT_EQUAL(((lak::bigint(UINTMAX_MAX) * 2U) / 2U), UINTMAX_MAX);
+
+	ASSERT_EQUAL(((lak::bigint(UINTMAX_MAX) * 10U) / UINTMAX_MAX), 10U);
 
 	ASSERT_EQUAL(((lak::bigint(UINTMAX_MAX) * UINTMAX_MAX) / UINTMAX_MAX),
 	             UINTMAX_MAX);
-
-	ASSERT_EQUAL(((lak::bigint(UINTMAX_MAX) * 10U) / UINTMAX_MAX), 10U);
 
 	ASSERT_EQUAL(((lak::bigint(UINTMAX_MAX) * 2U) % UINTMAX_MAX), 0U);
 

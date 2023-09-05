@@ -198,17 +198,22 @@ void lak::bigint::mul(lak::span<const value_type> value)
 
 	lak::bigint result;
 	{
-		lak::bigint copy;
-		copy._data.reserve(mspan.size() + value.size());
+		lak::bigint buff;
+		buff._data.reserve(mspan.size() + value.size());
+
+		auto copy_offset = [&](size_t offset)
+		{
+			buff._data.resize(mspan.size() + offset);
+			auto [fill, copy] = lak::split(lak::span(buff._data), offset);
+			lak::fill(fill, 0U);
+			lak::copy(mspan.begin(), mspan.end(), copy.begin(), copy.end());
+		};
 
 		for (size_t i = 0U; i < value.size(); ++i)
 		{
-			copy._data.resize(mspan.size() + i);
-			lak::fill(lak::span(copy._data).first(i), 0U);
-			lak::copy(_data.begin(), _data.end(), copy._data.begin() + i);
-
-			copy.mul(value[i], i);
-			result += copy;
+			copy_offset(i);
+			buff.mul(value[i], 0);
+			result += buff;
 		}
 	}
 
