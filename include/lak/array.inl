@@ -322,9 +322,8 @@ requires std::copy_constructible<T>
 	if (const size_t old_size{size()}; new_size > old_size)
 	{
 		resize_impl(new_size);
-		if constexpr (!std::is_trivially_default_constructible_v<T>)
-			for (T *it : lak::pointer_range(begin() + old_size, end()))
-				new (it) T(default_value);
+		for (T *it : lak::pointer_range(begin() + old_size, end()))
+			new (it) T(default_value);
 	}
 	else if (new_size < old_size)
 	{
