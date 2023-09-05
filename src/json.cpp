@@ -523,6 +523,10 @@ lak::result<> lak::JSON::parse_object()
 {
 	auto parse_object_pair = [&]() -> lak::result<>
 	{
+		// should be enough to ensure we don't get reference invalidation with
+		// later push_backs
+		_data.reserve(_data.size() + 3U);
+
 		auto &this_object =
 		  *(_data.push_back(value_type::make<value_type::index_of<object>>())
 		      .get<value_type::index_of<object>>());
