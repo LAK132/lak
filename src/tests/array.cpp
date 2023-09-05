@@ -2,9 +2,15 @@
 
 #include "lak/concepts.hpp"
 #include "lak/test.hpp"
+#include "lak/utility.hpp"
 
 static_assert(lak::concepts::contiguous_range_of<lak::array<int>, int>);
 static_assert(lak::concepts::contiguous_range_of<lak::uninit_array<int>, int>);
+static_assert(lak::concepts::contiguous_range_of<lak::array<lak::incomplete>,
+                                                 lak::incomplete>);
+static_assert(
+  lak::concepts::contiguous_range_of<lak::uninit_array<lak::incomplete>,
+                                     lak::incomplete>);
 
 template<typename T>
 lak::array<T> one_page_array(const T &default_value = {})

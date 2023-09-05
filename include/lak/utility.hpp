@@ -13,6 +13,10 @@
 
 namespace lak
 {
+	/* --- incomplete --- */
+
+	struct incomplete;
+
 	/* --- monostate --- */
 
 	struct monostate
