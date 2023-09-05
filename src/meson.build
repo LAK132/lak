@@ -1,3 +1,10 @@
+lakcore_natvis = []
+lakcore_linkargs = []
+if cxx.get_id() == 'msvc'
+	lakcore_natvis = meson.project_source_root()/'.natvis'
+	lakcore_linkargs += '/NATVIS:@0@'.format(lakcore_natvis)
+endif
+
 lakcore = static_library(
 	'lakcore',
 	[
@@ -28,9 +35,12 @@ lakcore = static_library(
 	],
 	include_directories: include_directories('..', '../include'),
 	dependencies: dependency('threads'),
+	link_args: lakcore_linkargs,
+	link_depends: lakcore_natvis,
 )
 
 lakcore_dep = declare_dependency(
 	link_with: lakcore,
 	include_directories: include_directories('..', '../include'),
+	link_args: lakcore_linkargs,
 )

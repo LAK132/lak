@@ -1,0 +1,499 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+	<Type Name="lak::span&lt;*,-1&gt;">
+			<DisplayString>{{ size={_size} }}</DisplayString>
+			<Expand>
+					<Item Name="[size]" ExcludeView="simple">_size</Item>
+					<ArrayItems>
+							<Size>_size</Size>
+							<ValuePointer>_data</ValuePointer>
+					</ArrayItems>
+			</Expand>
+	</Type>
+	<Type Name="lak::uninit_array&lt;*&gt;">
+			<DisplayString>{{ size={_size} }}</DisplayString>
+			<Expand>
+					<Item Name="[size]" ExcludeView="simple">_size</Item>
+					<Item Name="[reserved]" ExcludeView="simple">_data._size</Item>
+					<Item Name="[committed]" ExcludeView="simple" Condition="_committed != 0">_committed</Item>
+					<ArrayItems>
+							<Size>_size</Size>
+							<ValuePointer>_data._data</ValuePointer>
+					</ArrayItems>
+			</Expand>
+	</Type>
+	<Type Name="lak::array&lt;*,-1&gt;">
+			<DisplayString>{_data}</DisplayString>
+			<Expand>
+				<ExpandedItem>_data</ExpandedItem>
+			</Expand>
+	</Type>
+	<Type Name="lak::array&lt;*,*&gt;" Priority="Low">
+			<DisplayString>{{ size={$T2} }}</DisplayString>
+			<Expand>
+					<Item Name="[size]" ExcludeView="simple">$T2</Item>
+					<ArrayItems>
+							<Size>$T2</Size>
+							<ValuePointer>_data</ValuePointer>
+					</ArrayItems>
+			</Expand>
+	</Type>
+	<Type Name="lak::pack_union&lt;*,*&gt;">
+			<DisplayString>{{ value={value}, next={next} }}</DisplayString>
+			<Expand>
+				<Item Name="[value]" ExcludeView="simple" Optional="true">value</Item>
+				<ExpandedItem>next</ExpandedItem>
+			</Expand>
+	</Type>
+	<Type Name="lak::pack_union&lt;*&gt;" Priority="Low">
+			<DisplayString>{{ value={value} }}</DisplayString>
+			<Expand>
+					<Item Name="[value]" ExcludeView="simple" Optional="true">value</Item>
+			</Expand>
+	</Type>
+	<Type Name="lak::index_set&lt;*,*&gt;">
+			<DisplayString>{{ value={_value} }}</DisplayString>
+			<Expand>
+				<Item Name="[value]" ExcludeView="simple">_value</Item>
+			</Expand>
+	</Type>
+	<Type Name="lak::optional&lt;*&gt;">
+			<DisplayString Condition="_has_value">{{ value={_value._value} }}</DisplayString>
+			<DisplayString Condition="!_has_value">{{ nullopt }}</DisplayString>
+			<Expand>
+				<ExpandedItem Condition="_has_value">_value._value</ExpandedItem>
+			</Expand>
+	</Type>
+	<Type Name="lak::optional&lt;*&gt;">
+			<DisplayString Condition="_value != 0">{{ value={*_value} }}</DisplayString>
+			<DisplayString Condition="_value == 0">{{ nullopt }}</DisplayString>
+			<Expand>
+				<ExpandedItem Condition="_value != 0">*_value</ExpandedItem>
+			</Expand>
+	</Type>
+	<Type Name="lak::optional&lt;void&gt;">
+			<DisplayString Condition="_has_value">{{ value }}</DisplayString>
+			<DisplayString Condition="!_has_value">{{ nullopt }}</DisplayString>
+	</Type>
+	<Type Name="lak::result&lt;*,*&gt;">
+			<DisplayString Condition="_value._index._value == 0">{{ ok={_value._value.value} }}</DisplayString>
+			<DisplayString Condition="_value._index._value == 1">{{ err={_value._value.next.value} }}</DisplayString>
+			<Expand>
+				<Item Name="[ok]" ExcludeView="simple" Condition="_value._index._value == 0">_value._value.value</Item>
+				<Item Name="[err]" ExcludeView="simple" Condition="_value._index._value == 1">_value._value.next.value</Item>
+			</Expand>
+	</Type>
+	<Type Name="lak::string_view&lt;char&gt;">
+			<DisplayString>{_value._data,s}</DisplayString>
+			<StringView>_value._data,s</StringView>
+			<Expand>
+					<Item Name="[size]" ExcludeView="simple">_value._size</Item>
+					<ArrayItems>
+							<Size>_value._size</Size>
+							<ValuePointer>_value._data</ValuePointer>
+					</ArrayItems>
+			</Expand>
+	</Type>
+	<Type Name="lak::string_view&lt;wchar_t&gt;">
+			<DisplayString>{_value._data,su}</DisplayString>
+			<StringView>_value._data,su</StringView>
+			<Expand>
+					<Item Name="[size]" ExcludeView="simple">_value._size</Item>
+					<ArrayItems>
+							<Size>_value._size</Size>
+							<ValuePointer>_value._data</ValuePointer>
+					</ArrayItems>
+			</Expand>
+	</Type>
+	<Type Name="lak::string_view&lt;char8_t&gt;">
+			<DisplayString>{_value._data,s8}</DisplayString>
+			<StringView>_value._data,s8</StringView>
+			<Expand>
+					<Item Name="[size]" ExcludeView="simple">_value._size</Item>
+					<ArrayItems>
+							<Size>_value._size</Size>
+							<ValuePointer>_value._data</ValuePointer>
+					</ArrayItems>
+			</Expand>
+	</Type>
+	<Type Name="lak::string_view&lt;char16_t&gt;">
+			<DisplayString>{_value._data,su}</DisplayString>
+			<StringView>_value._data,su</StringView>
+			<Expand>
+					<Item Name="[size]" ExcludeView="simple">_value._size</Item>
+					<ArrayItems>
+							<Size>_value._size</Size>
+							<ValuePointer>_value._data</ValuePointer>
+					</ArrayItems>
+			</Expand>
+	</Type>
+	<Type Name="lak::string_view&lt;char32_t&gt;">
+			<DisplayString>{_value._data,s32}</DisplayString>
+			<StringView>_value._data,s32</StringView>
+			<Expand>
+					<Item Name="[size]" ExcludeView="simple">_value._size</Item>
+					<ArrayItems>
+							<Size>_value._size</Size>
+							<ValuePointer>_value._data</ValuePointer>
+					</ArrayItems>
+			</Expand>
+	</Type>
+	<Type Name="lak::variant&lt;lak::variant&lt;*&gt;,*&gt;">
+			<DisplayString>{_value.next}</DisplayString>
+			<Expand>
+					<ExpandedItem>_value.next</ExpandedItem>
+			</Expand>
+	</Type>
+	<Type Name="lak::variant&lt;*&gt;">
+			<DisplayString Condition="_index._value == 0">{{ value={_value.value} }}</DisplayString>
+			<Expand>
+					<Item Name="[index]" ExcludeView="simple">_index</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 0">_value.value</Item>
+			</Expand>
+	</Type>
+	<Type Name="lak::variant&lt;*,*&gt;">
+			<DisplayString Condition="_index._value == 0">{{ value={_value.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 1">{{ value={_value.next.value} }}</DisplayString>
+			<Expand>
+					<Item Name="[index]" ExcludeView="simple">_index</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 0">_value.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 1">_value.next.value</Item>
+			</Expand>
+	</Type>
+	<Type Name="lak::variant&lt;*,*,*&gt;">
+			<DisplayString Condition="_index._value == 0">{{ value={_value.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 1">{{ value={_value.next.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 2">{{ value={_value.next.next.value} }}</DisplayString>
+			<Expand>
+					<Item Name="[index]" ExcludeView="simple">_index</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 0">_value.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 1">_value.next.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 2">_value.next.next.value</Item>
+			</Expand>
+	</Type>
+	<Type Name="lak::variant&lt;*,*,*,*&gt;">
+			<DisplayString Condition="_index._value == 0">{{ value={_value.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 1">{{ value={_value.next.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 2">{{ value={_value.next.next.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 3">{{ value={_value.next.next.next.value} }}</DisplayString>
+			<Expand>
+					<Item Name="[index]" ExcludeView="simple">_index</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 0">_value.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 1">_value.next.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 2">_value.next.next.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 3">_value.next.next.next.value</Item>
+			</Expand>
+	</Type>
+	<Type Name="lak::variant&lt;*,*,*,*,*&gt;">
+			<DisplayString Condition="_index._value == 0">{{ value={_value.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 1">{{ value={_value.next.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 2">{{ value={_value.next.next.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 3">{{ value={_value.next.next.next.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 4">{{ value={_value.next.next.next.next.value} }}</DisplayString>
+			<Expand>
+					<Item Name="[index]" ExcludeView="simple">_index</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 0">_value.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 1">_value.next.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 2">_value.next.next.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 3">_value.next.next.next.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 4">_value.next.next.next.next.value</Item>
+			</Expand>
+	</Type>
+	<Type Name="lak::variant&lt;*,*,*,*,*,*&gt;">
+			<DisplayString Condition="_index._value == 0">{{ value={_value.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 1">{{ value={_value.next.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 2">{{ value={_value.next.next.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 3">{{ value={_value.next.next.next.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 4">{{ value={_value.next.next.next.next.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 5">{{ value={_value.next.next.next.next.next.value} }}</DisplayString>
+			<Expand>
+					<Item Name="[index]" ExcludeView="simple">_index</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 0">_value.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 1">_value.next.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 2">_value.next.next.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 3">_value.next.next.next.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 4">_value.next.next.next.next.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 5">_value.next.next.next.next.next.value</Item>
+			</Expand>
+	</Type>
+	<Type Name="lak::variant&lt;*,*,*,*,*,*,*&gt;">
+			<DisplayString Condition="_index._value == 0">{{ value={_value.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 1">{{ value={_value.next.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 2">{{ value={_value.next.next.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 3">{{ value={_value.next.next.next.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 4">{{ value={_value.next.next.next.next.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 5">{{ value={_value.next.next.next.next.next.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 6">{{ value={_value.next.next.next.next.next.next.value} }}</DisplayString>
+			<Expand>
+					<Item Name="[index]" ExcludeView="simple">_index</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 0">_value.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 1">_value.next.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 2">_value.next.next.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 3">_value.next.next.next.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 4">_value.next.next.next.next.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 5">_value.next.next.next.next.next.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 6">_value.next.next.next.next.next.next.value</Item>
+			</Expand>
+	</Type>
+	<Type Name="lak::variant&lt;*,*,*,*,*,*,*,*&gt;">
+			<DisplayString Condition="_index._value == 0">{{ value={_value.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 1">{{ value={_value.next.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 2">{{ value={_value.next.next.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 3">{{ value={_value.next.next.next.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 4">{{ value={_value.next.next.next.next.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 5">{{ value={_value.next.next.next.next.next.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 6">{{ value={_value.next.next.next.next.next.next.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 7">{{ value={_value.next.next.next.next.next.next.next.value} }}</DisplayString>
+			<Expand>
+					<Item Name="[index]" ExcludeView="simple">_index</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 0">_value.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 1">_value.next.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 2">_value.next.next.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 3">_value.next.next.next.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 4">_value.next.next.next.next.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 5">_value.next.next.next.next.next.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 6">_value.next.next.next.next.next.next.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 7">_value.next.next.next.next.next.next.next.value</Item>
+			</Expand>
+	</Type>
+	<Type Name="lak::variant&lt;*,*,*,*,*,*,*,*,*&gt;">
+			<DisplayString Condition="_index._value == 0">{{ value={_value.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 1">{{ value={_value.next.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 2">{{ value={_value.next.next.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 3">{{ value={_value.next.next.next.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 4">{{ value={_value.next.next.next.next.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 5">{{ value={_value.next.next.next.next.next.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 6">{{ value={_value.next.next.next.next.next.next.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 7">{{ value={_value.next.next.next.next.next.next.next.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 8">{{ value={_value.next.next.next.next.next.next.next.next.value} }}</DisplayString>
+			<Expand>
+					<Item Name="[index]" ExcludeView="simple">_index</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 0">_value.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 1">_value.next.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 2">_value.next.next.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 3">_value.next.next.next.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 4">_value.next.next.next.next.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 5">_value.next.next.next.next.next.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 6">_value.next.next.next.next.next.next.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 7">_value.next.next.next.next.next.next.next.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 8">_value.next.next.next.next.next.next.next.next.value</Item>
+			</Expand>
+	</Type>
+	<Type Name="lak::variant&lt;*,*,*,*,*,*,*,*,*,*&gt;">
+			<DisplayString Condition="_index._value == 0">{{ value={_value.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 1">{{ value={_value.next.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 2">{{ value={_value.next.next.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 3">{{ value={_value.next.next.next.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 4">{{ value={_value.next.next.next.next.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 5">{{ value={_value.next.next.next.next.next.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 6">{{ value={_value.next.next.next.next.next.next.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 7">{{ value={_value.next.next.next.next.next.next.next.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 8">{{ value={_value.next.next.next.next.next.next.next.next.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 9">{{ value={_value.next.next.next.next.next.next.next.next.next.value} }}</DisplayString>
+			<Expand>
+					<Item Name="[index]" ExcludeView="simple">_index</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 0">_value.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 1">_value.next.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 2">_value.next.next.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 3">_value.next.next.next.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 4">_value.next.next.next.next.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 5">_value.next.next.next.next.next.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 6">_value.next.next.next.next.next.next.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 7">_value.next.next.next.next.next.next.next.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 8">_value.next.next.next.next.next.next.next.next.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 9">_value.next.next.next.next.next.next.next.next.next.value</Item>
+			</Expand>
+	</Type>
+	<Type Name="lak::variant&lt;*,*,*,*,*,*,*,*,*,*,*&gt;">
+			<DisplayString Condition="_index._value == 0">{{ value={_value.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 1">{{ value={_value.next.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 2">{{ value={_value.next.next.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 3">{{ value={_value.next.next.next.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 4">{{ value={_value.next.next.next.next.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 5">{{ value={_value.next.next.next.next.next.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 6">{{ value={_value.next.next.next.next.next.next.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 7">{{ value={_value.next.next.next.next.next.next.next.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 8">{{ value={_value.next.next.next.next.next.next.next.next.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 9">{{ value={_value.next.next.next.next.next.next.next.next.next.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 10">{{ value={_value.next.next.next.next.next.next.next.next.next.next.value} }}</DisplayString>
+			<Expand>
+					<Item Name="[index]" ExcludeView="simple">_index</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 0">_value.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 1">_value.next.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 2">_value.next.next.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 3">_value.next.next.next.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 4">_value.next.next.next.next.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 5">_value.next.next.next.next.next.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 6">_value.next.next.next.next.next.next.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 7">_value.next.next.next.next.next.next.next.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 8">_value.next.next.next.next.next.next.next.next.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 9">_value.next.next.next.next.next.next.next.next.next.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 10">_value.next.next.next.next.next.next.next.next.next.next.value</Item>
+			</Expand>
+	</Type>
+	<Type Name="lak::variant&lt;*,*,*,*,*,*,*,*,*,*,*,*&gt;">
+			<DisplayString Condition="_index._value == 0">{{ value={_value.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 1">{{ value={_value.next.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 2">{{ value={_value.next.next.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 3">{{ value={_value.next.next.next.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 4">{{ value={_value.next.next.next.next.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 5">{{ value={_value.next.next.next.next.next.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 6">{{ value={_value.next.next.next.next.next.next.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 7">{{ value={_value.next.next.next.next.next.next.next.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 8">{{ value={_value.next.next.next.next.next.next.next.next.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 9">{{ value={_value.next.next.next.next.next.next.next.next.next.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 10">{{ value={_value.next.next.next.next.next.next.next.next.next.next.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 11">{{ value={_value.next.next.next.next.next.next.next.next.next.next.next.value} }}</DisplayString>
+			<Expand>
+					<Item Name="[index]" ExcludeView="simple">_index</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 0">_value.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 1">_value.next.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 2">_value.next.next.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 3">_value.next.next.next.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 4">_value.next.next.next.next.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 5">_value.next.next.next.next.next.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 6">_value.next.next.next.next.next.next.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 7">_value.next.next.next.next.next.next.next.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 8">_value.next.next.next.next.next.next.next.next.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 9">_value.next.next.next.next.next.next.next.next.next.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 10">_value.next.next.next.next.next.next.next.next.next.next.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 11">_value.next.next.next.next.next.next.next.next.next.next.next.value</Item>
+			</Expand>
+	</Type>
+	<Type Name="lak::variant&lt;*,*,*,*,*,*,*,*,*,*,*,*,*&gt;">
+			<DisplayString Condition="_index._value == 0">{{ value={_value.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 1">{{ value={_value.next.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 2">{{ value={_value.next.next.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 3">{{ value={_value.next.next.next.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 4">{{ value={_value.next.next.next.next.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 5">{{ value={_value.next.next.next.next.next.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 6">{{ value={_value.next.next.next.next.next.next.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 7">{{ value={_value.next.next.next.next.next.next.next.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 8">{{ value={_value.next.next.next.next.next.next.next.next.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 9">{{ value={_value.next.next.next.next.next.next.next.next.next.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 10">{{ value={_value.next.next.next.next.next.next.next.next.next.next.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 11">{{ value={_value.next.next.next.next.next.next.next.next.next.next.next.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 12">{{ value={_value.next.next.next.next.next.next.next.next.next.next.next.next.value} }}</DisplayString>
+			<Expand>
+					<Item Name="[index]" ExcludeView="simple">_index</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 0">_value.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 1">_value.next.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 2">_value.next.next.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 3">_value.next.next.next.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 4">_value.next.next.next.next.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 5">_value.next.next.next.next.next.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 6">_value.next.next.next.next.next.next.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 7">_value.next.next.next.next.next.next.next.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 8">_value.next.next.next.next.next.next.next.next.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 9">_value.next.next.next.next.next.next.next.next.next.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 10">_value.next.next.next.next.next.next.next.next.next.next.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 11">_value.next.next.next.next.next.next.next.next.next.next.next.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 12">_value.next.next.next.next.next.next.next.next.next.next.next.next.value</Item>
+			</Expand>
+	</Type>
+	<Type Name="lak::variant&lt;*,*,*,*,*,*,*,*,*,*,*,*,*,*&gt;">
+			<DisplayString Condition="_index._value == 0">{{ value={_value.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 1">{{ value={_value.next.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 2">{{ value={_value.next.next.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 3">{{ value={_value.next.next.next.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 4">{{ value={_value.next.next.next.next.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 5">{{ value={_value.next.next.next.next.next.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 6">{{ value={_value.next.next.next.next.next.next.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 7">{{ value={_value.next.next.next.next.next.next.next.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 8">{{ value={_value.next.next.next.next.next.next.next.next.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 9">{{ value={_value.next.next.next.next.next.next.next.next.next.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 10">{{ value={_value.next.next.next.next.next.next.next.next.next.next.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 11">{{ value={_value.next.next.next.next.next.next.next.next.next.next.next.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 12">{{ value={_value.next.next.next.next.next.next.next.next.next.next.next.next.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 13">{{ value={_value.next.next.next.next.next.next.next.next.next.next.next.next.next.value} }}</DisplayString>
+			<Expand>
+					<Item Name="[index]" ExcludeView="simple">_index</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 0">_value.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 1">_value.next.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 2">_value.next.next.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 3">_value.next.next.next.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 4">_value.next.next.next.next.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 5">_value.next.next.next.next.next.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 6">_value.next.next.next.next.next.next.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 7">_value.next.next.next.next.next.next.next.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 8">_value.next.next.next.next.next.next.next.next.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 9">_value.next.next.next.next.next.next.next.next.next.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 10">_value.next.next.next.next.next.next.next.next.next.next.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 11">_value.next.next.next.next.next.next.next.next.next.next.next.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 12">_value.next.next.next.next.next.next.next.next.next.next.next.next.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 13">_value.next.next.next.next.next.next.next.next.next.next.next.next.next.value</Item>
+			</Expand>
+	</Type>
+	<Type Name="lak::variant&lt;*,*,*,*,*,*,*,*,*,*,*,*,*,*,*&gt;">
+			<DisplayString Condition="_index._value == 0">{{ value={_value.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 1">{{ value={_value.next.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 2">{{ value={_value.next.next.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 3">{{ value={_value.next.next.next.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 4">{{ value={_value.next.next.next.next.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 5">{{ value={_value.next.next.next.next.next.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 6">{{ value={_value.next.next.next.next.next.next.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 7">{{ value={_value.next.next.next.next.next.next.next.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 8">{{ value={_value.next.next.next.next.next.next.next.next.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 9">{{ value={_value.next.next.next.next.next.next.next.next.next.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 10">{{ value={_value.next.next.next.next.next.next.next.next.next.next.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 11">{{ value={_value.next.next.next.next.next.next.next.next.next.next.next.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 12">{{ value={_value.next.next.next.next.next.next.next.next.next.next.next.next.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 13">{{ value={_value.next.next.next.next.next.next.next.next.next.next.next.next.next.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 14">{{ value={_value.next.next.next.next.next.next.next.next.next.next.next.next.next.next.value} }}</DisplayString>
+			<Expand>
+					<Item Name="[index]" ExcludeView="simple">_index</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 0">_value.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 1">_value.next.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 2">_value.next.next.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 3">_value.next.next.next.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 4">_value.next.next.next.next.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 5">_value.next.next.next.next.next.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 6">_value.next.next.next.next.next.next.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 7">_value.next.next.next.next.next.next.next.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 8">_value.next.next.next.next.next.next.next.next.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 9">_value.next.next.next.next.next.next.next.next.next.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 10">_value.next.next.next.next.next.next.next.next.next.next.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 11">_value.next.next.next.next.next.next.next.next.next.next.next.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 12">_value.next.next.next.next.next.next.next.next.next.next.next.next.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 13">_value.next.next.next.next.next.next.next.next.next.next.next.next.next.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 14">_value.next.next.next.next.next.next.next.next.next.next.next.next.next.next.value</Item>
+			</Expand>
+	</Type>
+	<Type Name="lak::variant&lt;*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*&gt;">
+			<DisplayString Condition="_index._value == 0">{{ value={_value.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 1">{{ value={_value.next.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 2">{{ value={_value.next.next.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 3">{{ value={_value.next.next.next.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 4">{{ value={_value.next.next.next.next.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 5">{{ value={_value.next.next.next.next.next.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 6">{{ value={_value.next.next.next.next.next.next.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 7">{{ value={_value.next.next.next.next.next.next.next.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 8">{{ value={_value.next.next.next.next.next.next.next.next.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 9">{{ value={_value.next.next.next.next.next.next.next.next.next.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 10">{{ value={_value.next.next.next.next.next.next.next.next.next.next.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 11">{{ value={_value.next.next.next.next.next.next.next.next.next.next.next.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 12">{{ value={_value.next.next.next.next.next.next.next.next.next.next.next.next.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 13">{{ value={_value.next.next.next.next.next.next.next.next.next.next.next.next.next.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 14">{{ value={_value.next.next.next.next.next.next.next.next.next.next.next.next.next.next.value} }}</DisplayString>
+			<DisplayString Condition="_index._value == 15">{{ value={_value.next.next.next.next.next.next.next.next.next.next.next.next.next.next.next.value} }}</DisplayString>
+			<Expand>
+					<Item Name="[index]" ExcludeView="simple">_index</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 0">_value.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 1">_value.next.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 2">_value.next.next.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 3">_value.next.next.next.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 4">_value.next.next.next.next.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 5">_value.next.next.next.next.next.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 6">_value.next.next.next.next.next.next.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 7">_value.next.next.next.next.next.next.next.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 8">_value.next.next.next.next.next.next.next.next.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 9">_value.next.next.next.next.next.next.next.next.next.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 10">_value.next.next.next.next.next.next.next.next.next.next.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 11">_value.next.next.next.next.next.next.next.next.next.next.next.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 12">_value.next.next.next.next.next.next.next.next.next.next.next.next.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 13">_value.next.next.next.next.next.next.next.next.next.next.next.next.next.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 14">_value.next.next.next.next.next.next.next.next.next.next.next.next.next.next.value</Item>
+					<Item Name="[value]" ExcludeView="simple" Condition="_index._value == 15">_value.next.next.next.next.next.next.next.next.next.next.next.next.next.next.next.value</Item>
+			</Expand>
+	</Type>
+</AutoVisualizer>
