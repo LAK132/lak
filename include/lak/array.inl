@@ -33,7 +33,7 @@ lak::uninit_array<T> &lak::uninit_array<T>::operator=(uninit_array &&other)
 }
 
 template<typename T>
-lak::uninit_array<T>::~uninit_array()
+lak::uninit_array<T>::uninit_array::~uninit_array()
 {
 	if (is_paged())
 	{
