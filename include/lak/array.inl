@@ -242,7 +242,10 @@ lak::array<T, lak::dynamic_extent>::array(
   const array<T, lak::dynamic_extent> &other)
 requires lak::concepts::copy_constructible<T>
 {
-	operator=(other);
+	static_assert(lak::concepts::copy_constructible<T>);
+	_data.resize(other.size());
+	for (size_t i : lak::size_range_count(other.size()))
+		new (data() + i) T(other[i]);
 }
 
 template<typename T>
