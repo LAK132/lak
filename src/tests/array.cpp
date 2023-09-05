@@ -38,6 +38,20 @@ BEGIN_TEST(uninit_array)
 		ASSERT_GREATER_OR_EQUAL(array.capacity(), 0x100);
 		ASSERT_EQUAL(array.size(), 0x10);
 	}
+	{
+		lak::uninit_array<int> moved{lak::move(array)};
+		ASSERT_EQUAL(array.capacity(), 0x0U);
+		ASSERT_EQUAL(array.committed(), 0x0U);
+		ASSERT_EQUAL(array.size(), 0x0U);
+		ASSERT_GREATER_OR_EQUAL(moved.capacity(), 0x100);
+		ASSERT_EQUAL(moved.size(), 0x10);
+		array = lak::move(moved);
+		ASSERT_EQUAL(moved.capacity(), 0x0U);
+		ASSERT_EQUAL(moved.committed(), 0x0U);
+		ASSERT_EQUAL(moved.size(), 0x0U);
+		ASSERT_GREATER_OR_EQUAL(array.capacity(), 0x100);
+		ASSERT_EQUAL(array.size(), 0x10);
+	}
 	return 0;
 }
 END_TEST()
@@ -87,6 +101,36 @@ BEGIN_TEST(array)
 
 	ASSERT_EQUAL(array2.size(), 0x30U);
 	ASSERT_EQUAL(array2[10], 40);
+
+	array.force_clear();
+	ASSERT_EQUAL(array.size(), 0x0U);
+	ASSERT_EQUAL(array.capacity(), 0x0U);
+
+	auto equals_index = [](lak::span<int> sp, size_t expected_size)
+	{
+		ASSERT_EQUAL(sp.size(), expected_size);
+		for (size_t i = 0; i < sp.size(); ++i) ASSERT_EQUAL(size_t(sp[i]), i);
+	};
+
+	array.push_back(0);
+	equals_index(array, 1);
+	array.push_back({1});
+	equals_index(array, 2);
+	array.push_back(2);
+	equals_index(array, 3);
+	int i = 3;
+	array.emplace_back(lak::move(i));
+	equals_index(array, 4);
+	array.push_back(4);
+	equals_index(array, 5);
+	i = 5;
+	array.push_back(lak::move(i));
+	equals_index(array, 6);
+	array.push_back(6);
+	equals_index(array, 7);
+	array.push_back(7);
+	equals_index(array, 8);
+	array.push_back(8);
 
 	return 0;
 }
