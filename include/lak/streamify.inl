@@ -1,3 +1,4 @@
+#include "lak/span.hpp"
 #include "lak/strcast.hpp"
 #include "lak/strconv.hpp"
 #include "lak/string_ostream.hpp"
@@ -16,6 +17,16 @@ lak::u8string lak::spaced_streamify(const lak::u8string &space,
                                     const ARGS &...args)
 {
 	return (lak::streamify(arg) + ... + (lak::streamify(space, args)));
+}
+
+template<typename T, size_t S>
+lak::u8string lak::spaced_streamify(const lak::u8string &space,
+                                    lak::span<T, S> args)
+{
+	if (args.empty()) return {};
+	lak::u8string result = lak::streamify(args[0]);
+	for (const auto &e : args.subspan(1)) result += lak::streamify(space, e);
+	return result;
 }
 
 namespace

@@ -3,6 +3,11 @@
 
 #include "lak/string.hpp"
 
+#ifndef LAK_SPAN_FORWARD_ONLY
+#	define LAK_SPAN_FORWARD_ONLY
+#endif
+#include "lak/span.hpp"
+
 namespace lak
 {
 	namespace concepts
@@ -22,6 +27,10 @@ namespace lak
 	lak::u8string spaced_streamify(const lak::u8string &space,
 	                               const ARG &arg,
 	                               const ARGS &...args);
+
+	template<typename T, size_t S>
+	lak::u8string spaced_streamify(const lak::u8string &space,
+	                               lak::span<T, S> args);
 
 	template<typename... ARGS>
 	lak::u8string streamify(const ARGS &...args);
