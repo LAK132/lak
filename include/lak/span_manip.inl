@@ -131,17 +131,18 @@ lak::shift_result<T> lak::shift_left(lak::span<T> data, size_t distance)
 		return result;
 	}
 
-	for (size_t i = distance; i < data.size(); ++i)
-	{
-		data[i - distance] = lak::move(data[i]);
-	}
-
 	const size_t moved_count = data.size() - distance;
 
-	lak::tie(result.moved_from, data) = lak::split(data, moved_count);
+	for (size_t i : lak::size_range_count(moved_count))
+		data[i] = lak::move(data[i + distance]);
 
-	lak::tie(result.unmodified, result.moved_from) = lak::split(
-	  data, (moved_count > data.size()) ? 0 : (data.size() - moved_count));
+	lak::tie(result.moved_to, data) = lak::split(data, moved_count);
+
+	const size_t unmoved_count =
+	  (moved_count > data.size()) ? 0 : (data.size() - moved_count);
+
+	lak::tie(result.unmodified, result.moved_from) =
+	  lak::split(data, unmoved_count);
 
 	return result;
 }
@@ -159,18 +160,18 @@ lak::shift_result<T> lak::shift_right(lak::span<T> data, size_t distance)
 		return result;
 	}
 
-	for (size_t i = data.size(); i < distance; --i)
-	{
-		data[i] = lak::move(data[i - distance]);
-	}
-
 	const size_t moved_count = data.size() - distance;
 
-	lak::tie(data, result.moved_from) =
+	for (size_t i = data.size(); i-- > distance;) // distance = min index
+		data[i] = lak::move(data[i - distance]);
+
+	lak::tie(data, result.moved_to) =
 	  lak::split(data, data.size() - moved_count);
 
+	const size_t unmoved_count = (moved_count > data.size()) ? 0 : moved_count;
+
 	lak::tie(result.moved_from, result.unmodified) =
-	  lak::split(data, (moved_count > data.size()) ? 0 : moved_count);
+	  lak::split(data, unmoved_count);
 
 	return result;
 }
