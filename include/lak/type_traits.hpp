@@ -1609,6 +1609,32 @@ namespace lak
 
 	static_assert(lak::is_default_constructible_v<int>);
 
+	/* --- is_copy_constructible --- */
+
+	template<typename T>
+	struct is_copy_constructible : lak::is_constructible<T, const T &>
+	{
+	};
+
+	template<typename T>
+	inline constexpr bool is_copy_constructible_v =
+	  lak::is_copy_constructible<T>::value;
+
+	static_assert(lak::is_copy_constructible_v<int>);
+
+	/* --- is_move_constructible --- */
+
+	template<typename T>
+	struct is_move_constructible : lak::is_constructible<T, T &&>
+	{
+	};
+
+	template<typename T>
+	inline constexpr bool is_move_constructible_v =
+	  lak::is_move_constructible<T>::value;
+
+	static_assert(lak::is_move_constructible_v<int>);
+
 	/* --- is_static_castable --- */
 
 	template<typename T, typename U>

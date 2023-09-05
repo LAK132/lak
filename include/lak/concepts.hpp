@@ -96,6 +96,11 @@ namespace lak
 		template<typename T>
 		concept default_constructible = lak::is_default_constructible_v<T>;
 
+		/* --- copy_constructible --- */
+
+		template<typename T>
+		concept copy_constructible = std::is_copy_constructible_v<T>;
+
 		/* --- static_castable --- */
 
 		template<typename FROM, typename TO>

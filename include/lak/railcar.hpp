@@ -2,7 +2,7 @@
 #define LAK_QUEUE_HPP
 
 #include "lak/array.hpp"
-#include "lak/unique_pages.hpp"
+#include "lak/concepts.hpp"
 
 namespace lak
 {
@@ -89,15 +89,19 @@ namespace lak
 
 		railcar() = default;
 
-		railcar(const railcar &);
-		railcar &operator=(const railcar &);
+		railcar(const railcar &)
+		requires lak::concepts::copy_constructible<T>;
+		railcar &operator=(const railcar &)
+		requires lak::concepts::copy_constructible<T>;
 
 		railcar(railcar &&other);
 		railcar &operator=(railcar &&other);
 
-		railcar(std::initializer_list<T> list);
+		railcar(std::initializer_list<T> list)
+		requires lak::concepts::copy_constructible<T>;
 
 		template<typename ITER>
+		requires lak::concepts::copy_constructible<T>
 		railcar(ITER &&begin, ITER &&end);
 
 		size_t size() const;
@@ -132,7 +136,8 @@ namespace lak
 		template<typename... ARGS>
 		T &emplace_back(ARGS &&...args);
 
-		T &push_back(const T &t);
+		T &push_back(const T &t)
+		requires lak::concepts::copy_constructible<T>;
 		T &push_back(T &&t);
 
 		void pop_back();

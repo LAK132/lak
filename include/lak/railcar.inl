@@ -181,12 +181,15 @@ void lak::railcar<T>::internal_alloc_end()
 }
 
 template<typename T>
-lak::railcar<T>::railcar(const railcar &other) : _data(other._data)
+lak::railcar<T>::railcar(const railcar &other)
+requires lak::concepts::copy_constructible<T>
+: _data(other._data)
 {
 }
 
 template<typename T>
 lak::railcar<T> &lak::railcar<T>::operator=(const railcar &other)
+requires lak::concepts::copy_constructible<T>
 {
 	_data = other._data;
 	return *this;
@@ -209,12 +212,14 @@ lak::railcar<T> &lak::railcar<T>::operator=(railcar &&other)
 
 template<typename T>
 lak::railcar<T>::railcar(std::initializer_list<T> list)
+requires lak::concepts::copy_constructible<T>
 : railcar(list.begin(), list.end())
 {
 }
 
 template<typename T>
 template<typename ITER>
+requires lak::concepts::copy_constructible<T>
 lak::railcar<T>::railcar(ITER &&begin, ITER &&end)
 {
 	for (; begin != end; ++begin) push_back(*begin);
@@ -345,6 +350,7 @@ T &lak::railcar<T>::emplace_back(ARGS &&...args)
 
 template<typename T>
 T &lak::railcar<T>::push_back(const T &t)
+requires lak::concepts::copy_constructible<T>
 {
 	internal_alloc_end();
 

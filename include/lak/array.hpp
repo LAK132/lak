@@ -116,17 +116,17 @@ namespace lak
 
 		constexpr array() = default;
 		constexpr array(const array &)
-		requires std::copy_constructible<T>
+		requires lak::concepts::copy_constructible<T>
 		= default;
 		constexpr array &operator=(const array &)
-		requires std::copy_constructible<T>
+		requires lak::concepts::copy_constructible<T>
 		= default;
 
 		constexpr array(array &&other)            = default;
 		constexpr array &operator=(array &&other) = default;
 
 		array(std::initializer_list<T> list)
-		requires std::copy_constructible<T>;
+		requires lak::concepts::copy_constructible<T>;
 
 		constexpr size_t size() const { return SIZE; }
 		constexpr size_t max_size() const { return SIZE; }
@@ -190,9 +190,10 @@ namespace lak
 
 		array() = default;
 		array(const array &)
-		requires std::copy_constructible<T>;
+		requires lak::concepts::copy_constructible<T>;
+
 		array &operator=(const array &)
-		requires std::copy_constructible<T>;
+		requires lak::concepts::copy_constructible<T>;
 
 		array(array &&other);
 		array &operator=(array &&other);
@@ -200,11 +201,11 @@ namespace lak
 		array(size_t initial_size);
 
 		array(std::initializer_list<T> list)
-		requires std::copy_constructible<T>;
+		requires lak::concepts::copy_constructible<T>;
 
 		template<typename ITER>
-		array(ITER &&begin, ITER &&end)
-		requires std::copy_constructible<T>;
+		requires lak::concepts::copy_constructible<T>
+		array(ITER &&begin, ITER &&end);
 
 		~array();
 
@@ -215,7 +216,7 @@ namespace lak
 
 		void resize(size_t new_size);
 		void resize(size_t new_size, const T &default_value)
-		requires std::copy_constructible<T>;
+		requires lak::concepts::copy_constructible<T>;
 		void reserve(size_t new_capacity);
 
 		void clear();
@@ -251,7 +252,7 @@ namespace lak
 		reference emplace_front(ARGS &&...args);
 
 		reference push_front(const T &t)
-		requires std::copy_constructible<T>;
+		requires lak::concepts::copy_constructible<T>;
 		reference push_front(T &&t);
 
 		void pop_front();
@@ -261,17 +262,17 @@ namespace lak
 		reference emplace_back(ARGS &&...args);
 
 		reference push_back(const T &t)
-		requires std::copy_constructible<T>;
+		requires lak::concepts::copy_constructible<T>;
 		reference push_back(T &&t);
 
 		void pop_back();
 		T popped_back();
 
 		iterator insert(const_iterator before, const T &value)
-		requires std::copy_constructible<T>;
+		requires lak::concepts::copy_constructible<T>;
 		iterator insert(const_iterator before, T &&value);
 		iterator insert(const_iterator before, std::initializer_list<T> list)
-		requires std::copy_constructible<T>;
+		requires lak::concepts::copy_constructible<T>;
 
 		iterator erase(const_iterator first, const_iterator last);
 
@@ -304,21 +305,21 @@ namespace lak
 
 		constexpr stack_array() = default;
 		constexpr stack_array(const stack_array &)
-		requires std::copy_constructible<T>
+		requires lak::concepts::copy_constructible<T>
 		= default;
 		constexpr stack_array &operator=(const stack_array &)
-		requires std::copy_constructible<T>
+		requires lak::concepts::copy_constructible<T>
 		= default;
 
 		constexpr stack_array(stack_array &&other)            = default;
 		constexpr stack_array &operator=(stack_array &&other) = default;
 
 		stack_array(std::initializer_list<T> list)
-		requires std::copy_constructible<T>;
+		requires lak::concepts::copy_constructible<T>;
 
 		template<typename ITER>
 		stack_array(ITER &&begin, ITER &&end)
-		requires std::copy_constructible<T>;
+		requires lak::concepts::copy_constructible<T>;
 
 		constexpr size_t size() const { return _size; }
 		constexpr size_t max_size() const { return MAX_SIZE; }
@@ -351,7 +352,7 @@ namespace lak
 		constexpr const T &back() const;
 
 		T &push_back(const T &t)
-		requires std::copy_constructible<T>;
+		requires lak::concepts::copy_constructible<T>;
 		T &push_back(T &&t);
 
 		void pop_back();
