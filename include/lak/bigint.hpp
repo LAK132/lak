@@ -351,11 +351,14 @@ namespace lak
 			strm << (val.is_negative() ? '-' : '+');
 			strm << std::hex << std::setfill('0');
 
-			for (size_t i = val._data.size(); i-- > 0U;)
-			{
-				strm << std::setw(sizeof(value_type) * 2U) << val._data[i];
-				if (i != 0U) strm << '\'';
-			}
+			if (val._data.empty())
+				strm << value_type(0);
+			else
+				for (size_t i = val._data.size(); i-- > 0U;)
+				{
+					strm << std::setw(sizeof(value_type) * 2U) << val._data[i];
+					if (i != 0U) strm << '\'';
+				}
 
 			return strm;
 		}
