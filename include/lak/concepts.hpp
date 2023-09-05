@@ -1,7 +1,7 @@
 #ifndef LAK_CONCEPTS_HPP
 #define LAK_CONCEPTS_HPP
 
-#include "type_traits.hpp"
+#include "lak/type_traits.hpp"
 
 #include <concepts>
 
@@ -99,7 +99,7 @@ namespace lak
 		/* --- copy_constructible --- */
 
 		template<typename T>
-		concept copy_constructible = std::is_copy_constructible_v<T>;
+		concept copy_constructible = lak::is_copy_constructible_v<T>;
 
 		/* --- static_castable --- */
 
