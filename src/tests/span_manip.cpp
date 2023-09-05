@@ -176,7 +176,7 @@ BEGIN_TEST(shift_right)
 		auto shift_test = [&](size_t offset)
 		{
 			cumulative_offset += offset;
-			auto res = lak::shift_right(lak::span<uint32_t>{arr}, offset);
+			lak::shift_right(lak::span<uint32_t>{arr}, offset);
 			for (size_t i = cumulative_offset; i < arr.size(); ++i)
 				ASSERT_EQUAL(src[i - cumulative_offset], arr[i]);
 		};
