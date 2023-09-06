@@ -183,15 +183,28 @@ void lak::railcar<T>::internal_alloc_end()
 template<typename T>
 lak::railcar<T>::railcar(const railcar &other)
 requires lak::concepts::copy_constructible<T>
+#if !(defined(LAK_COMPILER_CLANG) && defined(LAK_OS_APPLE))
 : _data(other._data)
+#endif
 {
+#if defined(LAK_COMPILER_CLANG) && defined(LAK_OS_APPLE)
+	if constexpr (!lak::concepts::copy_constructible<T>)
+		ASSERT_UNREACHABLE();
+	else
+		_data = other._data;
+#endif
 }
 
 template<typename T>
 lak::railcar<T> &lak::railcar<T>::operator=(const railcar &other)
 requires lak::concepts::copy_constructible<T>
 {
-	_data = other._data;
+#if defined(LAK_COMPILER_CLANG) && defined(LAK_OS_APPLE)
+	if constexpr (!lak::concepts::copy_constructible<T>)
+		ASSERT_UNREACHABLE();
+	else
+#endif
+		_data = other._data;
 	return *this;
 }
 
@@ -213,8 +226,16 @@ lak::railcar<T> &lak::railcar<T>::operator=(railcar &&other)
 template<typename T>
 lak::railcar<T>::railcar(std::initializer_list<T> list)
 requires lak::concepts::copy_constructible<T>
+#if !(defined(LAK_COMPILER_CLANG) && defined(LAK_OS_APPLE))
 : railcar(list.begin(), list.end())
+#endif
 {
+#if defined(LAK_COMPILER_CLANG) && defined(LAK_OS_APPLE)
+	if constexpr (!lak::concepts::copy_constructible<T>)
+		ASSERT_UNREACHABLE();
+	else
+		*this = railcar(list.begin(), list.end());
+#endif
 }
 
 template<typename T>
@@ -222,7 +243,12 @@ template<typename ITER>
 requires lak::concepts::copy_constructible<T>
 lak::railcar<T>::railcar(ITER &&begin, ITER &&end)
 {
-	for (; begin != end; ++begin) push_back(*begin);
+#if defined(LAK_COMPILER_CLANG) && defined(LAK_OS_APPLE)
+	if constexpr (!lak::concepts::copy_constructible<T>)
+		ASSERT_UNREACHABLE();
+	else
+#endif
+		for (; begin != end; ++begin) push_back(*begin);
 }
 
 template<typename T>
@@ -354,7 +380,12 @@ requires lak::concepts::copy_constructible<T>
 {
 	internal_alloc_end();
 
-	return _data.back().push_back(t);
+#if defined(LAK_COMPILER_CLANG) && defined(LAK_OS_APPLE)
+	if constexpr (!lak::concepts::copy_constructible<T>)
+		ASSERT_UNREACHABLE();
+	else
+#endif
+		return _data.back().push_back(t);
 }
 
 template<typename T>

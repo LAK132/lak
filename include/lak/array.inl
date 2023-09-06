@@ -144,7 +144,12 @@ lak::array<T, SIZE>::array(std::initializer_list<T> list)
 requires lak::concepts::copy_constructible<T>
 {
 	ASSERT_EQUAL(list.size(), SIZE);
-	lak::copy(list.begin(), list.end(), data(), data() + SIZE);
+#if defined(LAK_COMPILER_CLANG) && defined(LAK_OS_APPLE)
+	if constexpr (!lak::concepts::copy_constructible<T>)
+		ASSERT_UNREACHABLE();
+	else
+#endif
+		lak::copy(list.begin(), list.end(), data(), data() + SIZE);
 }
 
 template<typename T, size_t SIZE>
@@ -242,10 +247,14 @@ lak::array<T, lak::dynamic_extent>::array(
   const array<T, lak::dynamic_extent> &other)
 requires lak::concepts::copy_constructible<T>
 {
-	static_assert(lak::concepts::copy_constructible<T>);
 	_data.resize(other.size());
-	for (size_t i : lak::size_range_count(other.size()))
-		new (data() + i) T(other[i]);
+#if defined(LAK_COMPILER_CLANG) && defined(LAK_OS_APPLE)
+	if constexpr (!lak::concepts::copy_constructible<T>)
+		ASSERT_UNREACHABLE();
+	else
+#endif
+		for (size_t i : lak::size_range_count(other.size()))
+			new (data() + i) T(other[i]);
 }
 
 template<typename T>
@@ -255,8 +264,13 @@ requires lak::concepts::copy_constructible<T>
 {
 	clear();
 	_data.resize(other.size());
-	for (size_t i : lak::size_range_count(other.size()))
-		new (data() + i) T(other[i]);
+#if defined(LAK_COMPILER_CLANG) && defined(LAK_OS_APPLE)
+	if constexpr (!lak::concepts::copy_constructible<T>)
+		ASSERT_UNREACHABLE();
+	else
+#endif
+		for (size_t i : lak::size_range_count(other.size()))
+			new (data() + i) T(other[i]);
 	return *this;
 }
 
@@ -280,8 +294,13 @@ lak::array<T, lak::dynamic_extent>::array(std::initializer_list<T> list)
 requires lak::concepts::copy_constructible<T>
 {
 	_data.resize(list.size());
-	for (size_t i : lak::size_range_count(list.size()))
-		new (data() + i) T(list.begin()[i]);
+#if defined(LAK_COMPILER_CLANG) && defined(LAK_OS_APPLE)
+	if constexpr (!lak::concepts::copy_constructible<T>)
+		ASSERT_UNREACHABLE();
+	else
+#endif
+		for (size_t i : lak::size_range_count(list.size()))
+			new (data() + i) T(list.begin()[i]);
 }
 
 template<typename T>
@@ -290,7 +309,12 @@ requires lak::concepts::copy_constructible<T>
 lak::array<T, lak::dynamic_extent>::array(ITER &&begin, ITER &&end)
 {
 	_data.resize(end - begin);
-	for (size_t i = 0; begin != end; ++begin, ++i) new (data() + i) T(*begin);
+#if defined(LAK_COMPILER_CLANG) && defined(LAK_OS_APPLE)
+	if constexpr (!lak::concepts::copy_constructible<T>)
+		ASSERT_UNREACHABLE();
+	else
+#endif
+		for (size_t i = 0; begin != end; ++begin, ++i) new (data() + i) T(*begin);
 }
 
 template<typename T>
@@ -325,8 +349,13 @@ requires lak::concepts::copy_constructible<T>
 	if (const size_t old_size{size()}; new_size > old_size)
 	{
 		resize_impl(new_size);
-		for (T *it : lak::pointer_range(begin() + old_size, end()))
-			new (it) T(default_value);
+#if defined(LAK_COMPILER_CLANG) && defined(LAK_OS_APPLE)
+		if constexpr (!lak::concepts::copy_constructible<T>)
+			ASSERT_UNREACHABLE();
+		else
+#endif
+			for (T *it : lak::pointer_range(begin() + old_size, end()))
+				new (it) T(default_value);
 	}
 	else if (new_size < old_size)
 	{
@@ -377,7 +406,12 @@ lak::array<T, lak::dynamic_extent>::push_front(const T &t)
 requires lak::concepts::copy_constructible<T>
 {
 	right_shift(1U);
-	new (data()) T(t);
+#if defined(LAK_COMPILER_CLANG) && defined(LAK_OS_APPLE)
+	if constexpr (!lak::concepts::copy_constructible<T>)
+		ASSERT_UNREACHABLE();
+	else
+#endif
+		new (data()) T(t);
 	return front();
 }
 
@@ -426,7 +460,12 @@ lak::array<T, lak::dynamic_extent>::push_back(const T &t)
 requires lak::concepts::copy_constructible<T>
 {
 	resize_impl(size() + 1U);
-	new (data() + size() - 1U) T(t);
+#if defined(LAK_COMPILER_CLANG) && defined(LAK_OS_APPLE)
+	if constexpr (!lak::concepts::copy_constructible<T>)
+		ASSERT_UNREACHABLE();
+	else
+#endif
+		new (data() + size() - 1U) T(t);
 	return back();
 }
 
@@ -470,7 +509,12 @@ requires lak::concepts::copy_constructible<T>
 
 	right_shift(1U, index);
 
-	new (data() + index) T(value);
+#if defined(LAK_COMPILER_CLANG) && defined(LAK_OS_APPLE)
+	if constexpr (!lak::concepts::copy_constructible<T>)
+		ASSERT_UNREACHABLE();
+	else
+#endif
+		new (data() + index) T(value);
 
 	return data() + index;
 }
@@ -504,7 +548,13 @@ requires lak::concepts::copy_constructible<T>
 
 	right_shift(values.size(), index);
 
-	for (T *it = data() + index; const auto &value : values) new (it++) T(value);
+#if defined(LAK_COMPILER_CLANG) && defined(LAK_OS_APPLE)
+	if constexpr (!lak::concepts::copy_constructible<T>)
+		ASSERT_UNREACHABLE();
+	else
+#endif
+		for (T *it = data() + index; const auto &value : values)
+			new (it++) T(value);
 
 	return data() + index;
 }
@@ -554,8 +604,13 @@ template<typename T, size_t MAX_SIZE>
 lak::stack_array<T, MAX_SIZE>::stack_array(std::initializer_list<T> list)
 requires lak::concepts::copy_constructible<T>
 {
-	_size =
-	  lak::copy(list.begin(), list.end(), data(), data() + MAX_SIZE) - data();
+#if defined(LAK_COMPILER_CLANG) && defined(LAK_OS_APPLE)
+	if constexpr (!lak::concepts::copy_constructible<T>)
+		ASSERT_UNREACHABLE();
+	else
+#endif
+		_size =
+		  lak::copy(list.begin(), list.end(), data(), data() + MAX_SIZE) - data();
 }
 
 template<typename T, size_t MAX_SIZE>
@@ -563,7 +618,12 @@ template<typename ITER>
 lak::stack_array<T, MAX_SIZE>::stack_array(ITER &&begin, ITER &&end)
 requires lak::concepts::copy_constructible<T>
 {
-	_size = lak::copy(begin, end, data(), data() + MAX_SIZE) - data();
+#if defined(LAK_COMPILER_CLANG) && defined(LAK_OS_APPLE)
+	if constexpr (!lak::concepts::copy_constructible<T>)
+		ASSERT_UNREACHABLE();
+	else
+#endif
+		_size = lak::copy(begin, end, data(), data() + MAX_SIZE) - data();
 }
 
 template<typename T, size_t MAX_SIZE>
@@ -626,7 +686,12 @@ T &lak::stack_array<T, MAX_SIZE>::push_back(const T &t)
 requires lak::concepts::copy_constructible<T>
 {
 	ASSERT_LESS(_size, MAX_SIZE);
-	_data[_size] = t;
+#if defined(LAK_COMPILER_CLANG) && defined(LAK_OS_APPLE)
+	if constexpr (!lak::concepts::copy_constructible<T>)
+		ASSERT_UNREACHABLE();
+	else
+#endif
+		_data[_size] = t;
 	return _data[_size++];
 }
 
