@@ -183,6 +183,13 @@ namespace lak
 	               ITER_OUT output,
 	               CMP compare = {});
 
+	/* --- binary_tree_is_left_child --- */
+
+	constexpr inline bool binary_tree_is_left_child(size_t child);
+
+	template<std::random_access_iterator ITER>
+	bool binary_tree_is_left_child(ITER root, ITER child);
+
 	/* --- binary_tree_left_child --- */
 
 	constexpr inline size_t binary_tree_left_child(size_t parent);

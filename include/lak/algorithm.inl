@@ -616,6 +616,19 @@ ITER_OUT lak::merge(ITER_A begin_a,
 		return output;
 }
 
+/* --- binary_tree_is_left_child --- */
+
+constexpr inline bool lak::binary_tree_is_left_child(size_t child)
+{
+	return (child & 1U) != 0U;
+}
+
+template<std::random_access_iterator ITER>
+bool lak::binary_tree_is_left_child(ITER root, ITER child)
+{
+	return lak::binary_tree_is_left_child(child - root);
+}
+
 /* --- binary_tree_left_child --- */
 
 constexpr inline size_t lak::binary_tree_left_child(size_t parent)
@@ -815,7 +828,6 @@ ITER lak::depth_first_search_heap(ITER begin, ITER end, F &&predicate)
 
 	auto next_index = [size](size_t index) -> size_t
 	{
-		auto is_left = [](size_t index) -> bool { return (index & 1U) == 1U; };
 		auto right_sibling = [](size_t index) -> size_t { return index + 1U; };
 
 		if (index >= size - 1U) return size;
@@ -824,7 +836,8 @@ ITER lak::depth_first_search_heap(ITER begin, ITER end, F &&predicate)
 
 		while (index != 0U)
 		{
-			while (!is_left(index)) index = lak::binary_tree_parent(index);
+			while (!lak::binary_tree_is_left_child(index))
+				index = lak::binary_tree_parent(index);
 			if (auto r = right_sibling(index); r < size) return r;
 		}
 
