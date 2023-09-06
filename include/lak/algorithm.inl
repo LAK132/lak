@@ -608,16 +608,7 @@ ITER lak::binary_tree_parent(ITER root, ITER child)
 template<std::random_access_iterator ITER, typename CMP>
 void lak::make_heap(ITER begin, ITER end, CMP compare)
 {
-	static_assert(std::random_access_iterator<ITER>);
-
-	auto index_of = [&](const ITER &iter) -> size_t
-	{ return size_t(iter - begin); };
-
-	auto parent      = [](size_t index) -> size_t { return (index - 1U) >> 1U; };
-	auto parent_iter = [&](const ITER &iter) -> ITER
-	{ return begin + parent(index_of(iter)); };
-
-	for (ITER it = parent_iter(end - 1) + 1; it != begin;)
+	for (ITER it = lak::binary_tree_parent(begin, end - 1) + 1; it != begin;)
 		lak::sift_down_heap(begin, --it, end, compare);
 }
 
@@ -661,16 +652,14 @@ void lak::sift_down_heap(ITER begin, ITER to_sift, ITER end, CMP compare)
 		return last - (1U - (last & 1U));
 	};
 
-	auto left_child = [](size_t index) -> size_t { return (index << 1U) + 1U; };
-
 	// if there's an odd number of elements in the heap, then there's always a
 	// left and right child. if there's an even number of elements, then the last
 	// element is a left child (which has no right sibling).
 
 	for (size_t end_index   = left_end(),
-	            child_index = left_child(index_of(to_sift));
+	            child_index = lak::binary_tree_left_child(index_of(to_sift));
 	     child_index < end_index;
-	     child_index = left_child(index_of(to_sift)))
+	     child_index = lak::binary_tree_left_child(index_of(to_sift)))
 	{
 		ITER left         = begin + child_index;
 		ITER right        = left + 1;
@@ -685,7 +674,7 @@ void lak::sift_down_heap(ITER begin, ITER to_sift, ITER end, CMP compare)
 			return;
 	}
 
-	if (size_t left_index = left_child(index_of(to_sift));
+	if (size_t left_index = lak::binary_tree_left_child(index_of(to_sift));
 	    left_index < index_of(end))
 	{
 		ITER left = begin + left_index;
@@ -700,20 +689,13 @@ void lak::sift_up_heap(ITER begin, ITER to_sift, CMP compare)
 {
 	if (to_sift == begin) return;
 
-	auto index_of = [&](const ITER &iter) -> size_t
-	{ return size_t(iter - begin); };
-
-	auto parent      = [](size_t index) -> size_t { return (index - 1U) >> 1U; };
-	auto parent_iter = [&](const ITER &iter) -> ITER
-	{ return begin + parent(index_of(iter)); };
-
-	for (ITER sift_parent = parent_iter(to_sift);
+	for (ITER sift_parent = lak::binary_tree_parent(begin, to_sift);
 	     compare(*sift_parent, *to_sift);)
 	{
 		lak::swap(*sift_parent, *to_sift);
 		if (sift_parent == begin) break;
 		to_sift     = sift_parent;
-		sift_parent = parent_iter(to_sift);
+		sift_parent = lak::binary_tree_parent(begin, to_sift);
 	}
 }
 
@@ -781,20 +763,16 @@ ITER lak::depth_first_search_heap(ITER begin, ITER end, F &&predicate)
 
 	auto next_index = [size](size_t index) -> size_t
 	{
-		auto is_left    = [](size_t index) -> bool { return (index & 1U) == 1U; };
-		auto left_child = [](size_t index) -> size_t
-		{ return (index << 1U) + 1U; };
+		auto is_left = [](size_t index) -> bool { return (index & 1U) == 1U; };
 		auto right_sibling = [](size_t index) -> size_t { return index + 1U; };
-		auto parent        = [](size_t index) -> size_t
-		{ return ((index + 1U) >> 1U) - 1U; };
 
 		if (index >= size - 1U) return size;
 
-		if (auto l = left_child(index); l < size) return l;
+		if (auto l = lak::binary_tree_left_child(index); l < size) return l;
 
 		while (index != 0U)
 		{
-			while (!is_left(index)) index = parent(index);
+			while (!is_left(index)) index = lak::binary_tree_parent(index);
 			if (auto r = right_sibling(index); r < size) return r;
 		}
 
