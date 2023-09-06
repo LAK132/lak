@@ -155,6 +155,27 @@ namespace lak
 	template<std::forward_iterator ITER, typename CMP = lak::less<>>
 	ITER merge(ITER begin, ITER mid, ITER end, CMP compare = {});
 
+	/* --- binary_tree_left_child --- */
+
+	constexpr inline size_t binary_tree_left_child(size_t parent);
+
+	template<std::random_access_iterator ITER>
+	ITER binary_tree_left_child(ITER root, ITER parent);
+
+	/* --- binary_tree_right_child --- */
+
+	constexpr inline size_t binary_tree_right_child(size_t parent);
+
+	template<std::random_access_iterator ITER>
+	ITER binary_tree_right_child(ITER root, ITER parent);
+
+	/* --- binary_tree_parent --- */
+
+	constexpr inline size_t binary_tree_parent(size_t child);
+
+	template<std::random_access_iterator ITER>
+	ITER binary_tree_parent(ITER root, ITER child);
+
 	/* --- make_heap --- */
 
 	template<std::random_access_iterator ITER, typename CMP = lak::less<>>

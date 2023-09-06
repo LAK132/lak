@@ -564,6 +564,45 @@ ITER lak::merge(ITER begin, ITER mid, ITER end, CMP compare)
 	}
 }
 
+/* --- binary_tree_left_child --- */
+
+constexpr inline size_t lak::binary_tree_left_child(size_t parent)
+{
+	return (parent << 1U) + 1U;
+}
+
+template<std::random_access_iterator ITER>
+ITER lak::binary_tree_left_child(ITER root, ITER parent)
+{
+	return root + lak::binary_tree_left_child(parent - root);
+}
+
+/* --- binary_tree_right_child --- */
+
+constexpr inline size_t lak::binary_tree_right_child(size_t parent)
+{
+	return (parent << 1U) + 2U;
+}
+
+template<std::random_access_iterator ITER>
+ITER lak::binary_tree_right_child(ITER root, ITER parent)
+{
+	return root + lak::binary_tree_right_child(parent - root);
+}
+
+/* --- binary_tree_parent --- */
+
+constexpr inline size_t lak::binary_tree_parent(size_t child)
+{
+	return (child - 1U) >> 1U;
+}
+
+template<std::random_access_iterator ITER>
+ITER lak::binary_tree_parent(ITER root, ITER child)
+{
+	return root + lak::binary_tree_parent(child - root);
+}
+
 /* --- make_heap --- */
 
 template<std::random_access_iterator ITER, typename CMP>
