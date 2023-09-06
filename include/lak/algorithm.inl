@@ -529,6 +529,24 @@ ITER lak::mark_and_sweep_parition(
 	  [&](auto &elem) -> bool { return marked_set.contains(transform(elem)); });
 }
 
+/* --- dedup --- */
+
+template<std::forward_iterator ITER, typename CMP>
+ITER lak::dedup(ITER begin, ITER end, CMP compare)
+{
+	while (begin != end) end = lak::partition(++begin, end, compare);
+	return begin;
+}
+
+/* --- stable_dedup --- */
+
+template<std::random_access_iterator ITER, typename CMP>
+ITER lak::stable_dedup(ITER begin, ITER end, CMP compare)
+{
+	while (begin != end) end = lak::stable_partition(++begin, end, compare);
+	return begin;
+}
+
 /* --- merge --- */
 
 template<std::forward_iterator ITER, typename CMP>

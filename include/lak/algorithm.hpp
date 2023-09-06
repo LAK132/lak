@@ -147,6 +147,17 @@ namespace lak
 	ITER mark_and_sweep_parition(
 	  T *root, auto sweep, ITER begin, ITER end, auto transform);
 
+	/* --- dedup --- */
+
+	template<std::forward_iterator ITER, typename CMP = lak::not_equal_to<>>
+	ITER dedup(ITER begin, ITER end, CMP compare = {});
+
+	/* --- stable_dedup --- */
+
+	template<std::random_access_iterator ITER,
+	         typename CMP = lak::not_equal_to<>>
+	ITER stable_dedup(ITER begin, ITER end, CMP compare = {});
+
 	/* --- merge --- */
 
 	// Merge the non-descending (*(it+1) >= *it) sorted ranges [begin, mid) and
