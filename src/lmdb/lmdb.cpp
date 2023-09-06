@@ -216,7 +216,7 @@ lak::lmdb::result<> lak::lmdb::database<READ_ONLY>::del(
 	{
 		using dbf_t   = lak::lmdb::database_flags;
 		const dbf_t f = flags().UNWRAP();
-		ASSERT_EQUAL((f & dbf_t::dup_sort), dbf_t::dup_sort)
+		ASSERT_EQUAL((f & dbf_t::dup_sort), dbf_t::dup_sort);
 	}
 	MDB_val k{.mv_size = key.size(), .mv_data = const_cast<void *>(key.data())};
 	MDB_val v{.mv_size = value.size(),
