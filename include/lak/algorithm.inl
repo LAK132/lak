@@ -14,7 +14,9 @@
 
 /* --- move --- */
 
-template<typename IN_ITER, typename OUT_ITER>
+template<std::input_iterator IN_ITER,
+         std::output_iterator<
+           typename std::iterator_traits<IN_ITER>::value_type> OUT_ITER>
 OUT_ITER lak::move(IN_ITER begin, IN_ITER end, OUT_ITER output)
 {
 	for (; begin != end; ++begin, ++output) *output = lak::move(*begin);
@@ -23,14 +25,19 @@ OUT_ITER lak::move(IN_ITER begin, IN_ITER end, OUT_ITER output)
 
 /* --- copy --- */
 
-template<typename IN_ITER, typename OUT_ITER>
+template<std::input_iterator IN_ITER,
+         std::output_iterator<
+           typename std::iterator_traits<IN_ITER>::value_type> OUT_ITER>
 OUT_ITER lak::copy(IN_ITER begin, IN_ITER end, OUT_ITER output)
 {
 	for (; begin != end; ++begin, ++output) *output = *begin;
 	return output;
 }
 
-template<typename IN_ITER, typename OUT_ITER>
+template<std::input_iterator IN_ITER,
+         std::output_iterator<
+           typename std::iterator_traits<IN_ITER>::value_type> OUT_ITER>
+requires std::equality_comparable<OUT_ITER>
 OUT_ITER lak::copy(IN_ITER begin,
                    IN_ITER end,
                    OUT_ITER out_begin,
@@ -43,7 +50,7 @@ OUT_ITER lak::copy(IN_ITER begin,
 
 /* --- swap --- */
 
-template<typename ITER_A, typename ITER_B>
+template<std::forward_iterator ITER_A, std::forward_iterator ITER_B>
 lak::pair<ITER_A, ITER_B> lak::swap(ITER_A begin_a,
                                     ITER_A end_a,
                                     ITER_B begin_b,
@@ -56,7 +63,7 @@ lak::pair<ITER_A, ITER_B> lak::swap(ITER_A begin_a,
 
 /* --- count --- */
 
-template<typename ITER, typename T>
+template<std::forward_iterator ITER, typename T>
 size_t lak::count(ITER begin, ITER end, const T &value)
 {
 	size_t result = 0;
@@ -69,12 +76,10 @@ size_t lak::count(ITER begin, ITER end, const T &value)
 
 /* --- distance --- */
 
-template<typename ITER>
+template<std::input_iterator ITER>
 typename std::iterator_traits<ITER>::difference_type lak::distance(ITER begin,
                                                                    ITER end)
 {
-	static_assert(std::input_iterator<ITER>);
-
 	if constexpr (std::random_access_iterator<ITER>)
 	{
 		return end - begin;
@@ -89,12 +94,10 @@ typename std::iterator_traits<ITER>::difference_type lak::distance(ITER begin,
 
 /* --- advance --- */
 
-template<typename ITER>
+template<std::input_iterator ITER>
 void lak::advance(ITER &it,
                   typename std::iterator_traits<ITER>::difference_type offset)
 {
-	static_assert(std::input_iterator<ITER>);
-
 	if constexpr (std::random_access_iterator<ITER>)
 	{
 		it += offset;
@@ -115,7 +118,7 @@ void lak::advance(ITER &it,
 
 /* --- next --- */
 
-template<typename ITER>
+template<std::input_iterator ITER>
 ITER lak::next(ITER it,
                typename std::iterator_traits<ITER>::difference_type offset)
 {
@@ -125,7 +128,7 @@ ITER lak::next(ITER it,
 
 /* --- find --- */
 
-template<typename ITER, typename T>
+template<std::forward_iterator ITER, typename T>
 ITER lak::find(ITER begin, ITER end, const T &value)
 {
 	for (; begin != end && *begin != value; ++begin);
@@ -173,7 +176,7 @@ bool lak::none_of(ITER begin, ITER end, auto predicate)
 
 /* --- mismatch --- */
 
-template<typename ITER_A, typename ITER_B>
+template<std::forward_iterator ITER_A, std::forward_iterator ITER_B>
 lak::pair<ITER_A, ITER_B> lak::mismatch(ITER_A begin_a,
                                         ITER_A end_a,
                                         ITER_B begin_b,
@@ -186,7 +189,7 @@ lak::pair<ITER_A, ITER_B> lak::mismatch(ITER_A begin_a,
 
 /* --- is_permutation --- */
 
-template<typename ITER_A, typename ITER_B>
+template<std::forward_iterator ITER_A, std::forward_iterator ITER_B>
 bool lak::is_permutation(ITER_A begin_a,
                          ITER_A end_a,
                          ITER_B begin_b,
@@ -210,11 +213,9 @@ bool lak::is_permutation(ITER_A begin_a,
 
 /* --- rotate_left --- */
 
-template<typename ITER>
+template<std::forward_iterator ITER>
 void lak::rotate_left(ITER begin, ITER end, size_t distance)
 {
-	static_assert(std::forward_iterator<ITER>);
-
 	const size_t data_size = lak::distance(begin, end);
 	if (data_size == 0 || distance % data_size == 0) return;
 
@@ -232,11 +233,9 @@ void lak::rotate_left(ITER begin, ITER end, size_t distance)
 
 /* --- rotate_right --- */
 
-template<typename ITER>
+template<std::forward_iterator ITER>
 void lak::rotate_right(ITER begin, ITER end, size_t distance)
 {
-	static_assert(std::forward_iterator<ITER>);
-
 	const size_t data_size = lak::distance(begin, end);
 	if (data_size == 0 || distance % data_size == 0) return;
 
@@ -258,11 +257,9 @@ void lak::rotate_right(ITER begin, ITER end, size_t distance)
 
 /* --- reverse --- */
 
-template<typename ITER>
+template<std::bidirectional_iterator ITER>
 void lak::reverse(ITER begin, ITER end)
 {
-	static_assert(std::bidirectional_iterator<ITER>);
-
 	if (begin == end) return;
 	--end;
 
@@ -289,11 +286,9 @@ void lak::reverse(ITER begin, ITER end)
 
 /* --- partition --- */
 
-template<typename ITER>
+template<std::forward_iterator ITER>
 ITER lak::partition(ITER begin, ITER end, auto predicate)
 {
-	static_assert(std::forward_iterator<ITER>);
-
 	if (begin == end) return end;
 
 	if constexpr (std::random_access_iterator<ITER>)
@@ -381,11 +376,9 @@ ITER lak::partition(ITER begin, ITER end, auto predicate)
 
 /* --- stable_partition --- */
 
-template<typename ITER>
+template<std::random_access_iterator ITER>
 ITER lak::stable_partition(ITER begin, ITER end, auto predicate)
 {
-	static_assert(std::random_access_iterator<ITER>);
-
 	// TTTTTFFFFFFTTTTTTTFFFFTTTTFFFFFTTTFFFF
 	//      ^~~~~~^~~~~~~^ <- rotate
 	// TTTTTTTTTTTTFFFFFFFFFFTTTTFFFFFTTTFFFF
@@ -424,11 +417,9 @@ ITER lak::stable_partition(ITER begin, ITER end, auto predicate)
 
 /* --- binary_partition --- */
 
-template<typename ITER, typename CMP>
+template<std::forward_iterator ITER, typename CMP>
 ITER lak::binary_partition(ITER begin, ITER mid, ITER end, CMP compare)
 {
-	static_assert(std::forward_iterator<ITER>);
-
 	// XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 	// ^ <- begin       ^ <- mid             ^ <- end
 	//
@@ -508,7 +499,7 @@ ITER lak::binary_partition(ITER begin, ITER mid, ITER end, CMP compare)
 
 /* --- mark_and_sweep_parition --- */
 
-template<typename T, typename ITER, typename CMP>
+template<typename T, std::forward_iterator ITER, typename CMP>
 ITER lak::mark_and_sweep_parition(
   T *root, auto sweep, ITER begin, ITER end, auto transform)
 {
@@ -540,11 +531,9 @@ ITER lak::mark_and_sweep_parition(
 
 /* --- merge --- */
 
-template<typename ITER, typename CMP>
+template<std::forward_iterator ITER, typename CMP>
 ITER lak::merge(ITER begin, ITER mid, ITER end, CMP compare)
 {
-	static_assert(std::forward_iterator<ITER>);
-
 	while (begin != mid && mid != end)
 	{
 		begin = lak::lower_bound(begin, mid, *mid, compare);
@@ -577,7 +566,7 @@ ITER lak::merge(ITER begin, ITER mid, ITER end, CMP compare)
 
 /* --- make_heap --- */
 
-template<typename ITER, typename CMP>
+template<std::random_access_iterator ITER, typename CMP>
 void lak::make_heap(ITER begin, ITER end, CMP compare)
 {
 	static_assert(std::random_access_iterator<ITER>);
@@ -595,7 +584,7 @@ void lak::make_heap(ITER begin, ITER end, CMP compare)
 
 /* --- is_heap --- */
 
-template<typename ITER, typename CMP>
+template<std::random_access_iterator ITER, typename CMP>
 bool lak::is_heap(ITER begin, ITER end, CMP compare)
 {
 	return lak::is_heap_until(begin, end, compare) == end;
@@ -603,11 +592,9 @@ bool lak::is_heap(ITER begin, ITER end, CMP compare)
 
 /* --- is_heap_until --- */
 
-template<typename ITER, typename CMP>
+template<std::random_access_iterator ITER, typename CMP>
 ITER lak::is_heap_until(ITER begin, ITER end, CMP compare)
 {
-	static_assert(std::random_access_iterator<ITER>);
-
 	if ((end - begin) <= 1U) return end;
 
 	auto parent_iter = [&](size_t index) -> ITER
@@ -620,11 +607,9 @@ ITER lak::is_heap_until(ITER begin, ITER end, CMP compare)
 
 /* --- sift_down_heap --- */
 
-template<typename ITER, typename CMP>
+template<std::random_access_iterator ITER, typename CMP>
 void lak::sift_down_heap(ITER begin, ITER to_sift, ITER end, CMP compare)
 {
-	static_assert(std::random_access_iterator<ITER>);
-
 	auto index_of = [&](const ITER &iter) -> size_t
 	{ return size_t(iter - begin); };
 
@@ -671,11 +656,9 @@ void lak::sift_down_heap(ITER begin, ITER to_sift, ITER end, CMP compare)
 
 /* --- sift_up_heap --- */
 
-template<typename ITER, typename CMP>
+template<std::random_access_iterator ITER, typename CMP>
 void lak::sift_up_heap(ITER begin, ITER to_sift, CMP compare)
 {
-	static_assert(std::random_access_iterator<ITER>);
-
 	if (to_sift == begin) return;
 
 	auto index_of = [&](const ITER &iter) -> size_t
@@ -697,11 +680,9 @@ void lak::sift_up_heap(ITER begin, ITER to_sift, CMP compare)
 
 /* --- push_heap --- */
 
-template<typename ITER, typename CMP>
+template<std::random_access_iterator ITER, typename CMP>
 void lak::push_heap(ITER begin, ITER end, CMP compare)
 {
-	static_assert(std::random_access_iterator<ITER>);
-
 	if ((end - begin) <= 1U) return;
 
 	lak::sift_up_heap(begin, end - 1, compare);
@@ -709,11 +690,9 @@ void lak::push_heap(ITER begin, ITER end, CMP compare)
 
 /* --- pop_heap --- */
 
-template<typename ITER, typename CMP>
+template<std::random_access_iterator ITER, typename CMP>
 void lak::pop_heap(ITER begin, ITER end, CMP compare)
 {
-	static_assert(std::random_access_iterator<ITER>);
-
 	if ((end - begin) <= 1U) return;
 
 	--end;
@@ -723,11 +702,9 @@ void lak::pop_heap(ITER begin, ITER end, CMP compare)
 
 /* --- sort_heap --- */
 
-template<typename ITER, typename CMP>
+template<std::random_access_iterator ITER, typename CMP>
 void lak::sort_heap(ITER begin, ITER end, CMP compare)
 {
-	static_assert(std::random_access_iterator<ITER>);
-
 	if (begin != end) --end;
 	for (; begin != end; --end)
 	{
@@ -738,27 +715,26 @@ void lak::sort_heap(ITER begin, ITER end, CMP compare)
 
 /* --- reverse_sort_heap --- */
 
-template<typename ITER, typename CMP>
+template<std::random_access_iterator ITER, typename CMP>
 void lak::reverse_sort_heap(ITER begin, ITER end, CMP compare)
 {
-	static_assert(std::random_access_iterator<ITER>);
-
 	lak::sort_heap(begin, end, compare);
 	lak::reverse(begin, end);
 }
 
-/* --- breadth first search heap --- */
+/* --- breadth_first_search_heap --- */
 
-template<typename ITER, typename F>
+template<std::input_iterator ITER, typename F>
 ITER lak::breadth_first_search_heap(ITER begin, ITER end, F &&predicate)
 {
-	while (begin != end && !predicate(*begin));
+	for (; begin != end && !predicate(*begin); ++begin)
+		;
 	return begin;
 }
 
-/* --- depth first search heap --- */
+/* --- depth_first_search_heap --- */
 
-template<typename ITER, typename F>
+template<std::random_access_iterator ITER, typename F>
 ITER lak::depth_first_search_heap(ITER begin, ITER end, F &&predicate)
 {
 	if (begin == end) return begin;
@@ -796,11 +772,9 @@ ITER lak::depth_first_search_heap(ITER begin, ITER end, F &&predicate)
 
 /* --- heapsort --- */
 
-template<typename ITER, typename CMP>
+template<std::random_access_iterator ITER, typename CMP>
 void lak::heapsort(ITER begin, ITER end, CMP compare)
 {
-	static_assert(std::random_access_iterator<ITER>);
-
 	if ((end - begin) <= 1U) return;
 
 	lak::make_heap(begin, end, compare);
@@ -833,7 +807,7 @@ void lak::partial_order_sort(ITER begin, ITER end, CMP compare)
 
 /* --- minmax_element --- */
 
-template<typename ITER, typename CMP>
+template<std::forward_iterator ITER, typename CMP>
 lak::pair<ITER, ITER> lak::minmax_element(ITER begin, ITER end, CMP compare)
 {
 	if (begin == end) return {begin, begin};
@@ -851,7 +825,7 @@ lak::pair<ITER, ITER> lak::minmax_element(ITER begin, ITER end, CMP compare)
 
 /* --- max_element --- */
 
-template<typename ITER, typename CMP>
+template<std::forward_iterator ITER, typename CMP>
 ITER lak::max_element(ITER begin, ITER end, CMP compare)
 {
 	if (begin == end) return end;
@@ -866,7 +840,7 @@ ITER lak::max_element(ITER begin, ITER end, CMP compare)
 
 /* --- min_element --- */
 
-template<typename ITER, typename CMP>
+template<std::forward_iterator ITER, typename CMP>
 ITER lak::min_element(ITER begin, ITER end, CMP compare)
 {
 	if (begin == end) return end;
@@ -881,11 +855,9 @@ ITER lak::min_element(ITER begin, ITER end, CMP compare)
 
 /* --- lower_bound --- */
 
-template<typename ITER, typename U, typename CMP>
+template<std::forward_iterator ITER, typename U, typename CMP>
 ITER lak::lower_bound(ITER begin, ITER end, const U &value, CMP compare)
 {
-	static_assert(std::forward_iterator<ITER>);
-
 	auto diff{lak::distance(begin, end)};
 
 	for (ITER iter = begin; diff > 0;)
@@ -908,11 +880,9 @@ ITER lak::lower_bound(ITER begin, ITER end, const U &value, CMP compare)
 
 /* --- upper_bound --- */
 
-template<typename ITER, typename U, typename CMP>
+template<std::forward_iterator ITER, typename U, typename CMP>
 ITER lak::upper_bound(ITER begin, ITER end, const U &value, CMP compare)
 {
-	static_assert(std::forward_iterator<ITER>);
-
 	auto diff{lak::distance(begin, end)};
 
 	for (ITER iter = begin; diff > 0;)
