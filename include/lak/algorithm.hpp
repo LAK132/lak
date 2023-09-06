@@ -155,6 +155,23 @@ namespace lak
 	template<std::forward_iterator ITER, typename CMP = lak::less<>>
 	ITER merge(ITER begin, ITER mid, ITER end, CMP compare = {});
 
+	// Merge the non-descending (*(it+1) >= *it) sorted sterams [begin_a, end_a)
+	// and [begin_b, end_b) into a single sorted output range
+
+	template<std::forward_iterator ITER_A,
+	         std::forward_iterator ITER_B,
+	         typename ITER_OUT,
+	         typename CMP = lak::less<>>
+	requires(
+	  std::output_iterator<typename std::iterator_traits<ITER_A>::value_type> &&
+	  std::output_iterator<typename std::iterator_traits<ITER_B>::value_type>)
+	ITER_OUT merge(ITER_A begin_a,
+	               ITER_A end_a,
+	               ITER_B begin_b,
+	               ITER_B end_b,
+	               ITER_OUT output,
+	               CMP compare = {});
+
 	/* --- binary_tree_left_child --- */
 
 	constexpr inline size_t binary_tree_left_child(size_t parent);

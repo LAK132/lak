@@ -564,6 +564,40 @@ ITER lak::merge(ITER begin, ITER mid, ITER end, CMP compare)
 	}
 }
 
+template<std::forward_iterator ITER_A,
+         std::forward_iterator ITER_B,
+         typename ITER_OUT,
+         typename CMP>
+requires(
+  std::output_iterator<typename std::iterator_traits<ITER_A>::value_type> &&
+  std::output_iterator<typename std::iterator_traits<ITER_B>::value_type>)
+ITER_OUT lak::merge(ITER_A begin_a,
+                    ITER_A end_a,
+                    ITER_B begin_b,
+                    ITER_B end_b,
+                    ITER_OUT output,
+                    CMP compare)
+{
+	for (; begin_a != end_a && begin_b != end_b; ++output)
+		if (compare(*begin_a, *begin_b))
+		{
+			*output = *begin_a;
+			++begin_a;
+		}
+		else
+		{
+			*output = *begin_b;
+			++begin_b;
+		}
+
+	if (begin_a != end_a)
+		return lak::copy(begin_a, end_a, output);
+	else if (begin_b != end_b)
+		return lak::copy(begin_b, end_b, output);
+	else
+		return output;
+}
+
 /* --- binary_tree_left_child --- */
 
 constexpr inline size_t lak::binary_tree_left_child(size_t parent)
