@@ -32,15 +32,17 @@
 #undef PAUSE
 #undef PAUSEF
 #define PAUSE()                                                               \
+	do                                                                          \
 	{                                                                           \
 		std::cerr << "Press enter to continue...\n";                              \
 		getchar();                                                                \
-	}
+	} while (false)
 #define PAUSEF(str)                                                           \
+	do                                                                          \
 	{                                                                           \
 		std::cerr << str << "\nPress enter to continue...\n";                     \
 		getchar();                                                                \
-	}
+	} while (false)
 
 #undef DEBUG_STRINGIFY_EXPR
 #if defined(LAK_NO_DEBUG_COLOURS)
@@ -111,21 +113,24 @@
 #undef ABORTF
 #undef NOISY_ABORT
 #define ABORT()                                                               \
+	do                                                                          \
 	{                                                                           \
 		lak::debugger.abort();                                                    \
-	}
+	} while (false)
 #define ABORTF(...)                                                           \
+	do                                                                          \
 	{                                                                           \
 		lak::debugger.std_err(reinterpret_cast<const char8_t *>(""),              \
 		                      lak::streamify(__VA_ARGS__, "\n"));                 \
 		ABORT();                                                                  \
-	}
+	} while (false)
 #define NOISY_ABORT()                                                         \
+	do                                                                          \
 	{                                                                           \
 		DEBUG_BREAK();                                                            \
 		std::cerr << lak::as_astring(lak::debugger.stream.str()) << "\n";         \
 		ABORT();                                                                  \
-	}
+	} while (false)
 
 #undef DEBUG_WARNING_LINE_FILE
 #undef DEBUG_ERROR_LINE_FILE
@@ -178,21 +183,25 @@
 #undef ASSERTF_LESS
 #undef ASSERTF_LESS_OR_EQUAL
 #define ASSERT(...)                                                           \
+	do                                                                          \
 	{                                                                           \
 		if (!(__VA_ARGS__)) [[unlikely]]                                          \
 		{                                                                         \
 			FATAL("Assertion '" DEBUG_STRINGIFY_EXPR(__VA_ARGS__) "' failed");      \
 		}                                                                         \
-	}
+	} while (false)
 #define ASSERT_NYI()                                                          \
+	do                                                                          \
 	{                                                                           \
 		FATAL("Behaviour not yet implemented");                                   \
-	}
+	} while (false)
 #define ASSERT_UNREACHABLE()                                                  \
+	do                                                                          \
 	{                                                                           \
 		FATAL("Unreachable code reached");                                        \
-	}
+	} while (false)
 #define ASSERT_EQUAL(X, Y)                                                    \
+	do                                                                          \
 	{                                                                           \
 		const auto &UNIQUIFY(x) = (X);                                            \
 		const auto &UNIQUIFY(y) = (Y);                                            \
@@ -204,8 +213,9 @@
 			      UNIQUIFY(y),                                                      \
 			      "'");                                                             \
 		}                                                                         \
-	}
+	} while (false)
 #define ASSERT_ARRAY_EQUAL(X, Y)                                              \
+	do                                                                          \
 	{                                                                           \
 		const auto &UNIQUIFY(x)  = (X);                                           \
 		const auto &UNIQUIFY(y)  = (Y);                                           \
@@ -236,8 +246,9 @@
 				      "'");                                                           \
 			}                                                                       \
 		}                                                                         \
-	}
+	} while (false)
 #define ASSERT_NOT_EQUAL(X, Y)                                                \
+	do                                                                          \
 	{                                                                           \
 		const auto &UNIQUIFY(x) = (X);                                            \
 		const auto &UNIQUIFY(y) = (Y);                                            \
@@ -249,8 +260,9 @@
 			      UNIQUIFY(y),                                                      \
 			      "'");                                                             \
 		}                                                                         \
-	}
+	} while (false)
 #define ASSERT_ARRAY_NOT_EQUAL(X, Y)                                          \
+	do                                                                          \
 	{                                                                           \
 		const auto &UNIQUIFY(x)  = (X);                                           \
 		const auto &UNIQUIFY(y)  = (Y);                                           \
@@ -276,8 +288,9 @@
 				}                                                                     \
 			}                                                                       \
 		}                                                                         \
-	}
+	} while (false)
 #define ASSERT_GREATER(X, Y)                                                  \
+	do                                                                          \
 	{                                                                           \
 		const auto &UNIQUIFY(x) = (X);                                            \
 		const auto &UNIQUIFY(y) = (Y);                                            \
@@ -289,8 +302,9 @@
 			      UNIQUIFY(y),                                                      \
 			      "'");                                                             \
 		}                                                                         \
-	}
+	} while (false)
 #define ASSERT_GREATER_OR_EQUAL(X, Y)                                         \
+	do                                                                          \
 	{                                                                           \
 		const auto &UNIQUIFY(x) = (X);                                            \
 		const auto &UNIQUIFY(y) = (Y);                                            \
@@ -302,8 +316,9 @@
 			      UNIQUIFY(y),                                                      \
 			      "'");                                                             \
 		}                                                                         \
-	}
+	} while (false)
 #define ASSERT_LESS(X, Y)                                                     \
+	do                                                                          \
 	{                                                                           \
 		const auto &UNIQUIFY(x) = (X);                                            \
 		const auto &UNIQUIFY(y) = (Y);                                            \
@@ -315,8 +330,9 @@
 			      UNIQUIFY(y),                                                      \
 			      "'");                                                             \
 		}                                                                         \
-	}
+	} while (false)
 #define ASSERT_LESS_OR_EQUAL(X, Y)                                            \
+	do                                                                          \
 	{                                                                           \
 		const auto &UNIQUIFY(x) = (X);                                            \
 		const auto &UNIQUIFY(y) = (Y);                                            \
@@ -328,16 +344,18 @@
 			      UNIQUIFY(y),                                                      \
 			      "'");                                                             \
 		}                                                                         \
-	}
+	} while (false)
 #define ASSERTF(X, str)                                                       \
+	do                                                                          \
 	{                                                                           \
 		if (!(X)) [[unlikely]]                                                    \
 		{                                                                         \
 			FATAL("Assertion '" DEBUG_STRINGIFY_EXPR(X) "' failed: ",               \
 			      TO_U8STRING(str));                                                \
 		}                                                                         \
-	}
+	} while (false)
 #define ASSERTF_EQUAL(X, Y, str)                                              \
+	do                                                                          \
 	{                                                                           \
 		const auto &UNIQUIFY(x) = (X);                                            \
 		const auto &UNIQUIFY(y) = (Y);                                            \
@@ -350,8 +368,9 @@
 			      "': ",                                                            \
 			      TO_U8STRING(str));                                                \
 		}                                                                         \
-	}
+	} while (false)
 #define ASSERTF_NOT_EQUAL(X, Y, str)                                          \
+	do                                                                          \
 	{                                                                           \
 		const auto &UNIQUIFY(x) = (X);                                            \
 		const auto &UNIQUIFY(y) = (Y);                                            \
@@ -364,8 +383,9 @@
 			      "': ",                                                            \
 			      TO_U8STRING(str));                                                \
 		}                                                                         \
-	}
+	} while (false)
 #define ASSERTF_GREATER(X, Y, str)                                            \
+	do                                                                          \
 	{                                                                           \
 		const auto &UNIQUIFY(x) = (X);                                            \
 		const auto &UNIQUIFY(y) = (Y);                                            \
@@ -378,8 +398,9 @@
 			      "': ",                                                            \
 			      TO_U8STRING(str));                                                \
 		}                                                                         \
-	}
+	} while (false)
 #define ASSERTF_GREATER_OR_EQUAL(X, Y, str)                                   \
+	do                                                                          \
 	{                                                                           \
 		const auto &UNIQUIFY(x) = (X);                                            \
 		const auto &UNIQUIFY(y) = (Y);                                            \
@@ -392,8 +413,9 @@
 			      "': ",                                                            \
 			      TO_U8STRING(str));                                                \
 		}                                                                         \
-	}
+	} while (false)
 #define ASSERTF_LESS(X, Y, str)                                               \
+	do                                                                          \
 	{                                                                           \
 		const auto &UNIQUIFY(x) = (X);                                            \
 		const auto &UNIQUIFY(y) = (Y);                                            \
@@ -406,8 +428,9 @@
 			      "': ",                                                            \
 			      TO_U8STRING(str));                                                \
 		}                                                                         \
-	}
+	} while (false)
 #define ASSERTF_LESS_OR_EQUAL(X, Y, str)                                      \
+	do                                                                          \
 	{                                                                           \
 		const auto &UNIQUIFY(x) = (X);                                            \
 		const auto &UNIQUIFY(y) = (Y);                                            \
@@ -420,6 +443,6 @@
 			      "': ",                                                            \
 			      TO_U8STRING(str));                                                \
 		}                                                                         \
-	}
+	} while (false)
 
 #include "lak/debug.inl"
