@@ -124,14 +124,15 @@ lak::deflate_iterator::error_t lak::deflate_iterator::gen_huffman_table(
 lak::deflate_iterator::deflate_iterator(
   lak::span<const byte_t> compressed,
   lak::span<byte_t, 0x8000> output_buffer,
-  bool parse_header,
+  header_t header,
   bool anaconda)
 : _value(value_type::make_err(error_t::invalid_state)),
   _compressed(compressed),
   _output_buffer(output_buffer, false),
   _anaconda(anaconda)
 {
-	if (parse_header)
+	// :TODO: this whole section needs better error handling
+	if (header == header_t::zlib)
 	{
 		if_let_ok (uintmax_t read, _compressed.peek_bits(16))
 		{
@@ -147,6 +148,68 @@ lak::deflate_iterator::deflate_iterator(
 				}
 				_compressed.read_bits(16).discard();
 			}
+		}
+		else
+		{
+			_state = state_t::out_of_data;
+			return;
+		}
+	}
+	else if (header == header_t::gzip)
+	{
+		if_let_ok (uintmax_t magic, _compressed.read_bits(16))
+		{
+			if (magic != 0x8B1F)
+			{
+				_state = state_t::out_of_data;
+				return;
+			}
+		}
+		else
+		{
+			_state = state_t::out_of_data;
+			return;
+		}
+		if_let_ok (uintmax_t comp_method, _compressed.read_bits(8))
+		{
+			if (comp_method != 0x8)
+			{
+				_state = state_t::out_of_data;
+				return;
+			}
+		}
+		else
+		{
+			_state = state_t::out_of_data;
+			return;
+		}
+		if_let_ok ([[maybe_unused]] uintmax_t flags, _compressed.read_bits(8))
+		{
+		}
+		else
+		{
+			_state = state_t::out_of_data;
+			return;
+		}
+		if_let_ok ([[maybe_unused]] uintmax_t modification_time,
+		           _compressed.read_bits(32))
+		{
+		}
+		else
+		{
+			_state = state_t::out_of_data;
+			return;
+		}
+		if_let_ok ([[maybe_unused]] uintmax_t comp_flag, _compressed.read_bits(8))
+		{
+		}
+		else
+		{
+			_state = state_t::out_of_data;
+			return;
+		}
+		if_let_ok ([[maybe_unused]] uintmax_t os, _compressed.read_bits(8))
+		{
 		}
 		else
 		{

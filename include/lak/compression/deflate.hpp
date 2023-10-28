@@ -60,6 +60,13 @@ namespace lak
 			incomplete_tree,
 		};
 
+		enum class header_t : uint8_t
+		{
+			none,
+			zlib,
+			gzip,
+		};
+
 		static const char *error_name(error_t error);
 
 	private:
@@ -119,7 +126,7 @@ namespace lak
 	public:
 		deflate_iterator(lak::span<const byte_t> compressed,
 		                 lak::span<byte_t, 0x8000> output_buffer,
-		                 bool parse_header,
+		                 header_t header,
 		                 bool anaconda = false);
 
 		bool is_final_block() const;
