@@ -381,7 +381,7 @@ struct lak::to_bytes_traits<lak::nbt::tag_type, E>
 
 	static auto single_to_bytes(const lak::nbt::tag_type &val)
 	{
-		return lak::to_bytes<uint8_t, lak::endian::big>(static_cast<uint8_t>(val));
+		return lak::to_bytes<uint8_t, E>(static_cast<uint8_t>(val));
 	}
 };
 
@@ -416,7 +416,7 @@ struct lak::to_bytes_traits<lak::nbt::pod_tag<T>, E>
 
 	static auto single_to_bytes(const lak::nbt::pod_tag<T> &val)
 	{
-		return lak::to_bytes<T, lak::endian::big>(val.value);
+		return lak::to_bytes<T, E>(val.value);
 	}
 };
 
@@ -439,7 +439,7 @@ struct lak::to_bytes_traits<lak::nbt::array_tag<T>, E>
 		  .template write<E>(lak::nbt::TAG_Int{
 		    .value = static_cast<lak::nbt::TAG_Int::value_type>(src.value.size())})
 		  .unwrap();
-		strm.template write<lak::endian::big>(lak::span(src.value)).unwrap();
+		strm.template write<E>(lak::span(src.value)).unwrap();
 	}
 };
 
@@ -610,14 +610,15 @@ struct lak::from_bytes_traits<lak::nbt::named_tag, E>
 		for (auto &v : data.dst)
 		{
 			RES_TRY_ASSIGN(lak::nbt::tag_type type =,
-			               strm.template read<lak::nbt::tag_type>());
-			RES_TRY_ASSIGN(v.name =, strm.template read<lak::nbt::TAG_String>());
+			               strm.template read<lak::nbt::tag_type, E>());
+			RES_TRY_ASSIGN(v.name =, strm.template read<lak::nbt::TAG_String, E>());
 			switch (type)
 			{
 #define LAK_NBT_READER_VISIT(VAL, NAME, TAG, ...)                             \
 	case lak::nbt::tag_type::NAME:                                              \
 	{                                                                           \
-		RES_TRY_ASSIGN(v.payload.value =, strm.template read<lak::nbt::TAG>());   \
+		RES_TRY_ASSIGN(v.payload.value =,                                         \
+		               strm.template read<lak::nbt::TAG, E>());                   \
 	}                                                                           \
 	break;
 				LAK_FOREACH_NBT_TYPE(LAK_NBT_READER_VISIT)
@@ -641,8 +642,7 @@ struct lak::from_bytes_traits<lak::nbt::pod_tag<T>, E>
 	static void from_bytes(lak::from_bytes_data<value_type, E> data)
 	{
 		lak::binary_reader strm{data.src};
-		for (auto &v : data.dst)
-			v.value = strm.template read<T, lak::endian::big>().unwrap();
+		for (auto &v : data.dst) v.value = strm.template read<T, E>().unwrap();
 	}
 };
 
@@ -659,9 +659,8 @@ struct lak::from_bytes_traits<lak::nbt::array_tag<T>, E>
 		lak::binary_reader strm{data.src};
 		for (auto &v : data.dst)
 		{
-			RES_TRY_ASSIGN(auto size =, strm.template read<lak::nbt::TAG_Int>());
-			RES_TRY_ASSIGN(v.value =,
-			               strm.template read<T, lak::endian::big>(size.value));
+			RES_TRY_ASSIGN(auto size =, strm.template read<lak::nbt::TAG_Int, E>());
+			RES_TRY_ASSIGN(v.value =, strm.template read<T, E>(size.value));
 		}
 		return lak::ok_t{strm.remaining()};
 	}
@@ -690,11 +689,10 @@ struct lak::from_bytes_traits<lak::nbt::TAG_String, E>
 		lak::binary_reader strm{data.src};
 		for (auto &v : data.dst)
 		{
-			RES_TRY_ASSIGN(auto size =, strm.template read<lak::nbt::TAG_Short>());
-			RES_TRY_ASSIGN(
-			  v.value =,
-			  strm.template read_exact_c_str<char8_t, lak::endian::little>(
-			    size.value));
+			RES_TRY_ASSIGN(auto size =,
+			               strm.template read<lak::nbt::TAG_Short, E>());
+			RES_TRY_ASSIGN(v.value =,
+			               strm.template read_exact_c_str<char8_t, E>(size.value));
 		}
 		return lak::ok_t{strm.remaining()};
 	}
@@ -713,14 +711,15 @@ struct lak::from_bytes_traits<lak::nbt::TAG_List, E>
 		lak::binary_reader strm{data.src};
 		for (auto &v : data.dst)
 		{
-			RES_TRY_ASSIGN(auto type =, strm.template read<lak::nbt::tag_type>());
-			RES_TRY_ASSIGN(auto size =, strm.template read<lak::nbt::TAG_Int>());
+			RES_TRY_ASSIGN(auto type =, strm.template read<lak::nbt::tag_type, E>());
+			RES_TRY_ASSIGN(auto size =, strm.template read<lak::nbt::TAG_Int, E>());
 			switch (type)
 			{
 #define LAK_NBT_READER_VISIT(VAL, NAME, TAG, ...)                             \
 	case lak::nbt::tag_type::NAME:                                              \
 	{                                                                           \
-		RES_TRY_ASSIGN(v.value =, strm.template read<lak::nbt::TAG>(size.value)); \
+		RES_TRY_ASSIGN(v.value =,                                                 \
+		               strm.template read<lak::nbt::TAG, E>(size.value));         \
 	}                                                                           \
 	break;
 				LAK_FOREACH_NBT_TYPE(LAK_NBT_READER_VISIT)
@@ -748,18 +747,19 @@ struct lak::from_bytes_traits<lak::nbt::TAG_Compound, E>
 		{
 			for (;;)
 			{
-				if_let_ok (auto t, strm.template peek<lak::nbt::tag_type>())
+				if_let_ok (auto t, strm.template peek<lak::nbt::tag_type, E>())
 				{
 					if (t == lak::nbt::tag_type::End)
 					{
-						strm.template read<lak::nbt::tag_type>().unwrap();
+						strm.template read<lak::nbt::tag_type, E>().unwrap();
 						break;
 					}
 				}
 				else
 					return lak::err_t{};
 
-				RES_TRY_ASSIGN(auto tag =, strm.template read<lak::nbt::named_tag>());
+				RES_TRY_ASSIGN(auto tag =,
+				               strm.template read<lak::nbt::named_tag, E>());
 				v.value.push_back(lak::move(tag));
 			}
 		}

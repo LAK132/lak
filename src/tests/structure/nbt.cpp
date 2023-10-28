@@ -36,7 +36,39 @@ BEGIN_TEST(nbt)
 		DEBUG_EXPR(root);
 
 		lak::binary_array_writer strm;
-		strm.write(root);
+		strm.template write<lak::endian::big>(root);
+
+		ASSERT_ARRAY_EQUAL(expected, strm.data);
+	}
+
+	{
+		lak::array<byte_t> expected = {
+		  // tagType
+		  byte_t(lak::nbt::tag_type::Compound),
+
+		  // name.length
+		  byte_t(0x05),
+		  byte_t(0x00),
+
+		  // name.payload
+		  byte_t('h'),
+		  byte_t('e'),
+		  byte_t('l'),
+		  byte_t('l'),
+		  byte_t('o'),
+
+		  // payload
+		  byte_t(lak::nbt::tag_type::End),
+		};
+
+		auto root = lak::nbt::named_tag{
+		  .name    = {.value = u8"hello"_view},
+		  .payload = {.value = lak::nbt::TAG_Compound{}},
+		};
+		DEBUG_EXPR(root);
+
+		lak::binary_array_writer strm;
+		strm.template write<lak::endian::little>(root);
 
 		ASSERT_ARRAY_EQUAL(expected, strm.data);
 	}
@@ -102,7 +134,7 @@ BEGIN_TEST(nbt)
 		  });
 
 		lak::binary_array_writer strm;
-		strm.write(root);
+		strm.template write<lak::endian::big>(root);
 
 		const lak::array<byte_t> compressed = {
 		  byte_t(0x1F), byte_t(0x8B), byte_t(0x08), byte_t(0x00), byte_t(0x00),
@@ -225,7 +257,7 @@ BEGIN_TEST(nbt)
 
 		lak::binary_reader strm2{out};
 		[[maybe_unused]] auto tag =
-		  strm2.template read<lak::nbt::named_tag>().UNWRAP();
+		  strm2.template read<lak::nbt::named_tag, lak::endian::big>().UNWRAP();
 
 		ASSERT_ARRAY_EQUAL(strm.data, out);
 	}
