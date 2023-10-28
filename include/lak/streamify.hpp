@@ -17,10 +17,6 @@ namespace lak
 			{
 				std::declval<std::ostream &>() << thing
 			} -> lak::concepts::same_as<std::ostream &>;
-		} || requires(T thing) {
-			{
-				::operator<<(std::declval<std::ostream &>(), thing)
-			} -> lak::concepts::same_as<std::ostream &>;
 		};
 	}
 

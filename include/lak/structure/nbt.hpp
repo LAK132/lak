@@ -55,22 +55,7 @@ namespace lak
 		};
 
 		template<typename T>
-		struct pod_tag
-		{
-			using value_type = T;
-			value_type value;
-		};
-
-		template<typename T>
-		struct array_tag
-		{
-			using value_type = T;
-			lak::array<value_type> value;
-		};
-
-		struct TAG_End
-		{
-		};
+		struct pod_tag;
 
 		using TAG_Byte   = lak::nbt::pod_tag<int8_t>;
 		using TAG_Short  = lak::nbt::pod_tag<int16_t>;
@@ -79,19 +64,108 @@ namespace lak
 		using TAG_Float  = lak::nbt::pod_tag<f32_t>;
 		using TAG_Double = lak::nbt::pod_tag<f64_t>;
 
+		template<typename T>
+		struct pod_tag
+		{
+			using value_type = T;
+			value_type value;
+
+			inline friend std::ostream &operator<<(std::ostream &strm,
+			                                       const lak::nbt::pod_tag<T> &tag)
+			{
+				if constexpr (lak::is_same_v<T, lak::nbt::TAG_Byte::value_type>)
+					return strm << std::dec << intmax_t(tag.value) << "b";
+				else if constexpr (lak::is_same_v<T, lak::nbt::TAG_Short::value_type>)
+					return strm << std::dec << intmax_t(tag.value) << "s";
+				else if constexpr (lak::is_same_v<T, lak::nbt::TAG_Int::value_type>)
+					return strm << std::dec << intmax_t(tag.value);
+				else if constexpr (lak::is_same_v<T, lak::nbt::TAG_Long::value_type>)
+					return strm << std::dec << intmax_t(tag.value) << "l";
+				else if constexpr (lak::is_same_v<T, lak::nbt::TAG_Float::value_type>)
+					return strm << std::dec << tag.value << "f";
+				else if constexpr (lak::is_same_v<T, lak::nbt::TAG_Double::value_type>)
+					return strm << std::dec << tag.value << "d";
+			}
+		};
+
+		template<typename T>
+		struct array_tag;
+
 		using TAG_Byte_Array = lak::nbt::array_tag<TAG_Byte::value_type>;
 		using TAG_Int_Array  = lak::nbt::array_tag<TAG_Int::value_type>;
 		using TAG_Long_Array = lak::nbt::array_tag<TAG_Long::value_type>;
 
+		template<typename T>
+		struct array_tag
+		{
+			using value_type = T;
+			lak::array<value_type> value;
+
+			inline friend std::ostream &operator<<(std::ostream &strm,
+			                                       const lak::nbt::array_tag<T> &tag)
+			{
+				if constexpr (lak::is_same_v<T, lak::nbt::TAG_Byte::value_type>)
+					strm << "[B;";
+				else if constexpr (lak::is_same_v<T, lak::nbt::TAG_Int::value_type>)
+					strm << "[I;";
+				else if constexpr (lak::is_same_v<T, lak::nbt::TAG_Long::value_type>)
+					strm << "[L;";
+
+				return strm << lak::as_astring(lak::accumulate(
+				                 lak::span(tag.value),
+				                 u8""_str,
+				                 [](const lak::u8string &str, T val)
+				                 {
+					                 lak::nbt::pod_tag<T> v{.value = val};
+					                 return str.empty()
+					                          ? lak::streamify(v)
+					                          : lak::spaced_streamify(u8","_str, str, v);
+				                 }))
+				            << "]";
+			}
+		};
+
+		struct TAG_End
+		{
+			inline friend std::ostream &operator<<(std::ostream &strm,
+			                                       const lak::nbt::TAG_End &)
+			{
+				return strm;
+			}
+		};
+
 		struct TAG_String
 		{
 			lak::u8string value;
+
+			inline friend std::ostream &operator<<(std::ostream &strm,
+			                                       const lak::nbt::TAG_String &tag)
+			{
+				return strm << "\'" << lak::as_astring(tag.value) << "\'";
+			}
 		};
 
 		struct TAG_Compound
 		{
 			using value_type = lak::array<lak::nbt::named_tag>;
 			value_type value;
+
+			inline friend std::ostream &operator<<(std::ostream &strm,
+			                                       const lak::nbt::TAG_Compound &tag)
+			{
+				return strm << "{"
+				            << lak::as_astring(lak::accumulate(
+				                 lak::span(tag.value),
+				                 u8""_str,
+				                 [](const lak::u8string &str,
+				                    const lak::nbt::named_tag &val)
+				                 {
+					                 return str.empty() ? lak::streamify(val)
+					                                    : lak::spaced_streamify(
+					                                        u8","_str, str, val);
+				                 }))
+				            << "}";
+			}
 		};
 
 		using tag_types_pack =
@@ -130,6 +204,26 @@ namespace lak
 			{
 				return value.visit([](const auto &arr) { return arr.size(); });
 			}
+
+			inline friend std::ostream &operator<<(std::ostream &strm,
+			                                       const lak::nbt::TAG_List &tag)
+			{
+				return strm << "["
+				            << lak::as_astring(tag.value.visit(
+				                 []<typename T>(const lak::array<T> &arr)
+				                 {
+					                 return lak::accumulate(
+					                   lak::span(arr),
+					                   u8""_str,
+					                   [](const lak::u8string &str, const T &val)
+					                   {
+						                   return str.empty() ? lak::streamify(val)
+						                                      : lak::spaced_streamify(
+						                                          u8","_str, str, val);
+					                   });
+				                 }))
+				            << "]";
+			}
 		};
 
 		struct tag_payload
@@ -143,6 +237,13 @@ namespace lak
 			{
 				return static_cast<lak::nbt::tag_type>(value.index());
 			}
+
+			inline friend std::ostream &operator<<(
+			  std::ostream &strm, const lak::nbt::tag_payload &payload)
+			{
+				payload.value.visit([&]<typename T>(const T &val) { strm << val; });
+				return strm;
+			}
 		};
 
 		struct named_tag
@@ -150,6 +251,12 @@ namespace lak
 			lak::nbt::TAG_String name;
 			lak::nbt::tag_payload payload;
 			inline lak::nbt::tag_type type() const { return payload.type(); }
+
+			inline friend std::ostream &operator<<(std::ostream &strm,
+			                                       const lak::nbt::named_tag &tag)
+			{
+				return strm << lak::as_astring(tag.name.value) << ":" << tag.payload;
+			}
 		};
 
 		inline named_tag make_byte(lak::u8string name,
@@ -690,143 +797,5 @@ static_assert(
   lak::has_from_bytes_traits<lak::nbt::TAG_Int_Array, lak::endian::little>);
 static_assert(
   lak::has_from_bytes_traits<lak::nbt::TAG_Long_Array, lak::endian::little>);
-
-inline std::ostream &operator<<(std::ostream &strm,
-                                const lak::nbt::tag_payload &payload);
-
-inline std::ostream &operator<<(std::ostream &strm,
-                                const lak::nbt::named_tag &tag);
-
-inline std::ostream &operator<<(std::ostream &strm, const lak::nbt::TAG_End &)
-{
-	return strm;
-}
-
-template<typename T>
-static std::ostream &operator<<(std::ostream &strm,
-                                const lak::nbt::pod_tag<T> &tag)
-{
-	if constexpr (lak::is_same_v<T, lak::nbt::TAG_Byte::value_type>)
-		return strm << std::dec << intmax_t(tag.value) << "b";
-	else if constexpr (lak::is_same_v<T, lak::nbt::TAG_Short::value_type>)
-		return strm << std::dec << intmax_t(tag.value) << "s";
-	else if constexpr (lak::is_same_v<T, lak::nbt::TAG_Int::value_type>)
-		return strm << std::dec << intmax_t(tag.value);
-	else if constexpr (lak::is_same_v<T, lak::nbt::TAG_Long::value_type>)
-		return strm << std::dec << intmax_t(tag.value) << "l";
-	else if constexpr (lak::is_same_v<T, lak::nbt::TAG_Float::value_type>)
-		return strm << std::dec << tag.value << "f";
-	else if constexpr (lak::is_same_v<T, lak::nbt::TAG_Double::value_type>)
-		return strm << std::dec << tag.value << "d";
-}
-
-inline std::ostream &operator<<(std::ostream &strm,
-                                const lak::nbt::TAG_Byte_Array &tag)
-{
-	return strm << "[B;"
-	            << lak::as_astring(lak::accumulate(
-	                 lak::span(tag.value),
-	                 u8""_str,
-	                 [](const lak::u8string &str,
-	                    lak::nbt::TAG_Byte::value_type val)
-	                 {
-		                 lak::nbt::TAG_Byte v{.value = val};
-		                 return str.empty()
-		                          ? lak::streamify(v)
-		                          : lak::spaced_streamify(u8","_str, str, v);
-	                 }))
-	            << "]";
-}
-
-inline std::ostream &operator<<(std::ostream &strm,
-                                const lak::nbt::TAG_String &tag)
-{
-	return strm << "\'" << lak::as_astring(tag.value) << "\'";
-}
-
-inline std::ostream &operator<<(std::ostream &strm,
-                                const lak::nbt::TAG_List &tag)
-{
-	return strm << "["
-	            << lak::as_astring(tag.value.visit(
-	                 []<typename T>(const lak::array<T> &arr)
-	                 {
-		                 return lak::accumulate(
-		                   lak::span(arr),
-		                   u8""_str,
-		                   [](const lak::u8string &str, const T &val)
-		                   {
-			                   return str.empty()
-			                            ? lak::streamify(val)
-			                            : lak::spaced_streamify(u8","_str, str, val);
-		                   });
-	                 }))
-	            << "]";
-}
-
-inline std::ostream &operator<<(std::ostream &strm,
-                                const lak::nbt::TAG_Compound &tag)
-{
-	return strm << "{"
-	            << lak::as_astring(lak::accumulate(
-	                 lak::span(tag.value),
-	                 u8""_str,
-	                 [](const lak::u8string &str, const lak::nbt::named_tag &val)
-	                 {
-		                 return str.empty()
-		                          ? lak::streamify(val)
-		                          : lak::spaced_streamify(u8","_str, str, val);
-	                 }))
-	            << "}";
-}
-
-inline std::ostream &operator<<(std::ostream &strm,
-                                const lak::nbt::TAG_Int_Array &tag)
-{
-	return strm << "[I;"
-	            << lak::as_astring(lak::accumulate(
-	                 lak::span(tag.value),
-	                 u8""_str,
-	                 [](const lak::u8string &str,
-	                    lak::nbt::TAG_Int::value_type val)
-	                 {
-		                 lak::nbt::TAG_Int v{.value = val};
-		                 return str.empty()
-		                          ? lak::streamify(v)
-		                          : lak::spaced_streamify(u8","_str, str, v);
-	                 }))
-	            << "]";
-}
-
-inline std::ostream &operator<<(std::ostream &strm,
-                                const lak::nbt::TAG_Long_Array &tag)
-{
-	return strm << "[L;"
-	            << lak::as_astring(lak::accumulate(
-	                 lak::span(tag.value),
-	                 u8""_str,
-	                 [](const lak::u8string &str,
-	                    lak::nbt::TAG_Long::value_type val)
-	                 {
-		                 lak::nbt::TAG_Long v{.value = val};
-		                 return str.empty()
-		                          ? lak::streamify(v)
-		                          : lak::spaced_streamify(u8","_str, str, v);
-	                 }))
-	            << "]";
-}
-
-inline std::ostream &operator<<(std::ostream &strm,
-                                const lak::nbt::tag_payload &payload)
-{
-	payload.value.visit([&]<typename T>(const T &val) { strm << val; });
-	return strm;
-}
-
-inline std::ostream &operator<<(std::ostream &strm,
-                                const lak::nbt::named_tag &tag)
-{
-	return strm << lak::as_astring(tag.name.value) << ":" << tag.payload;
-}
 
 #endif

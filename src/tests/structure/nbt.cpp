@@ -45,11 +45,14 @@ BEGIN_TEST(nbt)
 		  byte_t(lak::nbt::tag_type::End),
 		};
 
-		lak::binary_array_writer strm;
-		strm.write(lak::nbt::named_tag{
+		auto root = lak::nbt::named_tag{
 		  .name    = {.value = u8"hello"_view},
 		  .payload = {.value = lak::nbt::TAG_Compound{}},
-		});
+		};
+		DEBUG_EXPR(root);
+
+		lak::binary_array_writer strm;
+		strm.write(root);
 
 		ASSERT_ARRAY_EQUAL(expected, strm.data);
 	}
