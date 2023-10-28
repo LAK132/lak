@@ -201,6 +201,14 @@ bool lak::same_span(lak::span<const T> a, lak::span<const T> b)
 	       a.size() == b.size();
 }
 
+template<typename T, typename U, typename BIN_OP>
+U lak::accumulate(lak::span<T> data, U init, BIN_OP func)
+{
+	U result = init;
+	for (T &v : data) result = func(result, v);
+	return result;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // Requires debug, strconv
 

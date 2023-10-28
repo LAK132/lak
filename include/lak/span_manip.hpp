@@ -101,6 +101,9 @@ namespace lak
 	// Check if the spans are pointing to the same underlying data.
 	template<typename T>
 	bool same_span(lak::span<const T> a, lak::span<const T> b);
+
+	template<typename T, typename U, typename BIN_OP>
+	U accumulate(lak::span<T> data, U init, BIN_OP func);
 }
 
 #endif
