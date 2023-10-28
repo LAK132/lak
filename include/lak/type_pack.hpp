@@ -245,6 +245,31 @@ namespace lak
 	static constexpr bool does_pack_contain_v =
 	  lak::does_pack_contain<PACK, T>::value;
 
+	/* --- is_pack_uniform --- */
+
+	template<typename PACK>
+	struct is_pack_uniform;
+	template<>
+	struct is_pack_uniform<lak::type_pack<>> : lak::true_type
+	{
+	};
+	template<typename T>
+	struct is_pack_uniform<lak::type_pack<T>> : lak::true_type
+	{
+	};
+	template<typename T, typename... U>
+	struct is_pack_uniform<lak::type_pack<T, U...>>
+	: lak::bool_type<((lak::is_same_v<T, U>)&&...)>
+	{
+	};
+	template<typename PACK>
+	static constexpr bool is_pack_uniform_v = lak::is_pack_uniform<PACK>::value;
+
+	static_assert(lak::is_pack_uniform_v<lak::type_pack<>>);
+	static_assert(lak::is_pack_uniform_v<lak::type_pack<void>>);
+	static_assert(lak::is_pack_uniform_v<lak::type_pack<void, void>>);
+	static_assert(lak::is_pack_uniform_v<lak::type_pack<int, int, int>>);
+
 	/* --- sizeof_pack_args --- */
 
 	template<typename PACK>
