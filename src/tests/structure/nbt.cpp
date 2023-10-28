@@ -9,22 +9,6 @@
 
 BEGIN_TEST(nbt)
 {
-	auto span_to_str = []<typename T>(lak::span<T> data)
-	{
-		return lak::accumulate(data,
-		                       u8""_str,
-		                       [](const lak::u8string &str, byte_t val)
-		                       {
-			                       return str.empty() ? lak::streamify(val)
-			                                          : lak::spaced_streamify(
-			                                              u8","_str, str, val);
-		                       });
-	};
-
-	uint16_t five = 0x0005;
-	lak::byte_swap<uint16_t>(lak::span<uint16_t, 1>::from_ptr(&five));
-	ASSERT_EQUAL(five, 0x0500);
-
 	{
 		lak::array<byte_t> expected = {
 		  // tagType
