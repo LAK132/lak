@@ -436,7 +436,7 @@ struct lak::to_bytes_traits<lak::nbt::array_tag<T>, E>
 	{
 		lak::binary_span_writer strm(dst);
 		strm
-		  .write<lak::endian::big>(lak::nbt::TAG_Int{
+		  .template write<E>(lak::nbt::TAG_Int{
 		    .value = static_cast<lak::nbt::TAG_Int::value_type>(src.value.size())})
 		  .unwrap();
 		strm.template write<lak::endian::big>(lak::span(src.value)).unwrap();
