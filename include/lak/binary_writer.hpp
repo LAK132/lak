@@ -128,28 +128,30 @@ namespace lak
 	{
 		using value_type = T;
 
+		template<lak::endian EE = E>
 		static void to_bytes(lak::to_bytes_data<value_type, E> data)
-		requires(lak::to_bytes_traits<value_type, E>::const_size)
+		requires(EE == E && lak::to_bytes_traits<value_type, EE>::const_size)
 		{
 			auto dst{data.dst};
 			for (const auto &val : data.src)
 			{
-				lak::array<byte_t, lak::to_bytes_size<value_type, E>()> bytes{
-				  lak::to_bytes_traits<value_type, E>::single_to_bytes(val)};
+				lak::array<byte_t, lak::to_bytes_size<value_type, EE>()> bytes{
+				  lak::to_bytes_traits<value_type, EE>::single_to_bytes(val)};
 				lak::memcpy(dst, bytes);
-				dst = dst.subspan(lak::to_bytes_size<value_type, E>());
+				dst = dst.subspan(lak::to_bytes_size<value_type, EE>());
 			}
 		}
 
+		template<lak::endian EE = E>
 		static void to_bytes(lak::to_bytes_data<value_type, E> data)
-		requires(!lak::to_bytes_traits<value_type, E>::const_size)
+		requires(EE == E && !lak::to_bytes_traits<value_type, EE>::const_size)
 		{
 			auto dst{data.dst};
 			for (const auto &val : data.src)
 			{
-				const size_t sz = lak::to_bytes_size<value_type, E>(val);
-				lak::to_bytes_traits<value_type, E>::single_to_bytes(dst.first(sz),
-				                                                     val);
+				const size_t sz = lak::to_bytes_size<value_type, EE>(val);
+				lak::to_bytes_traits<value_type, EE>::single_to_bytes(dst.first(sz),
+				                                                      val);
 				dst = dst.subspan(sz);
 			}
 		}
