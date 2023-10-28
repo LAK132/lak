@@ -181,8 +181,8 @@ namespace lak
 		constexpr array(const array &)            = default;
 		constexpr array &operator=(const array &) = default;
 
-		constexpr array(array &&other)            = default;
-		constexpr array &operator=(array &&other) = default;
+		constexpr array(array &&)            = default;
+		constexpr array &operator=(array &&) = default;
 
 		constexpr size_t size() const { return 0; }
 		constexpr size_t max_size() const { return 0; }
@@ -201,11 +201,11 @@ namespace lak
 		constexpr const T *cbegin() const { return nullptr; }
 		constexpr const T *cend() const { return nullptr; }
 
-		T &at(size_t index) { ASSERT_UNREACHABLE(); }
-		const T &at(size_t index) const { ASSERT_UNREACHABLE(); }
+		T &at(size_t) { ASSERT_UNREACHABLE(); }
+		const T &at(size_t) const { ASSERT_UNREACHABLE(); }
 
-		constexpr T &operator[](size_t index) { ASSERT_UNREACHABLE(); }
-		constexpr const T &operator[](size_t index) const { ASSERT_UNREACHABLE(); }
+		constexpr T &operator[](size_t) { ASSERT_UNREACHABLE(); }
+		constexpr const T &operator[](size_t) const { ASSERT_UNREACHABLE(); }
 
 		constexpr T &front() { ASSERT_UNREACHABLE(); }
 		constexpr const T &front() const { ASSERT_UNREACHABLE(); }
