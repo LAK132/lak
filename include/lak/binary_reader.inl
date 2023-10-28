@@ -119,7 +119,7 @@ lak::array_from_bytes(lak::span<const byte_t> bytes, size_t count)
 	lak::binary_reader strm{bytes};
 	lak::pair<lak::array<T>, lak::span<const byte_t>> result;
 	result.first.reserve(count);
-	for (const auto &i : lak::size_range_count(count))
+	for ([[maybe_unused]] const auto &i : lak::size_range_count(count))
 	{
 		RES_TRY_ASSIGN(auto v =, strm.template read<T, E>());
 		result.first.push_back(lak::move(v));

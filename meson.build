@@ -48,6 +48,7 @@ else
 		'-Wno-pragma-pack',
 		'-Wno-deprecated-declarations',
 		'-Wno-unused-private-field',
+		'-Wno-unused-variable',
 		'-Wfatal-errors',
 		'-Wno-psabi',
 		# '-mavx',
