@@ -187,12 +187,12 @@ namespace lak
 {
 	namespace nbt
 	{
-
 		struct TAG_List
 		{
+			// use vector instead of array because it only has one template parameter
 			using value_type = lak::create_from_pack_t<
 			  lak::variant,
-			  lak::pack_foreach_t<lak::array, lak::nbt::tag_types_pack>>;
+			  lak::pack_foreach_t<lak::vector, lak::nbt::tag_types_pack>>;
 			value_type value;
 
 			inline lak::nbt::tag_type type() const
