@@ -141,8 +141,7 @@ lak::optional<lak::uninit_array<T>> lak::uninit_array<T>::push_back()
 
 template<typename T, size_t SIZE>
 lak::array<T, SIZE>::array(std::initializer_list<T> list)
-requires(lak::array_force_copyable_v<T> ||
-         lak::concepts::copy_constructible<T>)
+requires lak::array_type_is_copyable<T>
 {
 	ASSERT_EQUAL(list.size(), SIZE);
 #if defined(LAK_COMPILER_CLANG) && defined(LAK_OS_APPLE)
@@ -246,8 +245,7 @@ lak::array<T, lak::dynamic_extent>::array(size_t initial_size) : array()
 template<typename T>
 lak::array<T, lak::dynamic_extent>::array(
   const array<T, lak::dynamic_extent> &other)
-requires(lak::array_force_copyable_v<T> ||
-         lak::concepts::copy_constructible<T>)
+requires lak::array_type_is_copyable<T>
 {
 	_data.resize(other.size());
 #if defined(LAK_COMPILER_CLANG) && defined(LAK_OS_APPLE)
@@ -262,8 +260,7 @@ requires(lak::array_force_copyable_v<T> ||
 template<typename T>
 lak::array<T, lak::dynamic_extent> &lak::array<T, lak::dynamic_extent>::
 operator=(const array<T, lak::dynamic_extent> &other)
-requires(lak::array_force_copyable_v<T> ||
-         lak::concepts::copy_constructible<T>)
+requires lak::array_type_is_copyable<T>
 {
 	clear();
 	_data.resize(other.size());
@@ -294,8 +291,7 @@ operator=(array<T, lak::dynamic_extent> &&other)
 
 template<typename T>
 lak::array<T, lak::dynamic_extent>::array(std::initializer_list<T> list)
-requires(lak::array_force_copyable_v<T> ||
-         lak::concepts::copy_constructible<T>)
+requires lak::array_type_is_copyable<T>
 {
 	_data.resize(list.size());
 #if defined(LAK_COMPILER_CLANG) && defined(LAK_OS_APPLE)
@@ -309,8 +305,7 @@ requires(lak::array_force_copyable_v<T> ||
 
 template<typename T>
 template<typename ITER>
-requires(lak::array_force_copyable_v<T> ||
-         lak::concepts::copy_constructible<T>)
+requires lak::array_type_is_copyable<T>
 lak::array<T, lak::dynamic_extent>::array(ITER &&begin, ITER &&end)
 {
 	_data.resize(end - begin);
@@ -349,8 +344,7 @@ void lak::array<T, lak::dynamic_extent>::resize(size_t new_size)
 template<typename T>
 void lak::array<T, lak::dynamic_extent>::resize(size_t new_size,
                                                 const T &default_value)
-requires(lak::array_force_copyable_v<T> ||
-         lak::concepts::copy_constructible<T>)
+requires lak::array_type_is_copyable<T>
 {
 	if (const size_t old_size{size()}; new_size > old_size)
 	{
@@ -409,8 +403,7 @@ lak::array<T, lak::dynamic_extent>::emplace_front(ARGS &&...args)
 template<typename T>
 typename lak::array<T, lak::dynamic_extent>::reference
 lak::array<T, lak::dynamic_extent>::push_front(const T &t)
-requires(lak::array_force_copyable_v<T> ||
-         lak::concepts::copy_constructible<T>)
+requires lak::array_type_is_copyable<T>
 {
 	right_shift(1U);
 #if defined(LAK_COMPILER_CLANG) && defined(LAK_OS_APPLE)
@@ -464,8 +457,7 @@ lak::array<T, lak::dynamic_extent>::emplace_back(ARGS &&...args)
 template<typename T>
 typename lak::array<T, lak::dynamic_extent>::reference
 lak::array<T, lak::dynamic_extent>::push_back(const T &t)
-requires(lak::array_force_copyable_v<T> ||
-         lak::concepts::copy_constructible<T>)
+requires lak::array_type_is_copyable<T>
 {
 	resize_impl(size() + 1U);
 #if defined(LAK_COMPILER_CLANG) && defined(LAK_OS_APPLE)
@@ -508,8 +500,7 @@ template<typename T>
 typename lak::array<T, lak::dynamic_extent>::iterator
 lak::array<T, lak::dynamic_extent>::insert(const_iterator before,
                                            const T &value)
-requires(lak::array_force_copyable_v<T> ||
-         lak::concepts::copy_constructible<T>)
+requires lak::array_type_is_copyable<T>
 {
 	ASSERT_GREATER_OR_EQUAL(before, cbegin());
 	ASSERT_LESS_OR_EQUAL(before, cend());
@@ -548,8 +539,7 @@ template<typename T>
 typename lak::array<T, lak::dynamic_extent>::iterator
 lak::array<T, lak::dynamic_extent>::insert(const_iterator before,
                                            std::initializer_list<T> values)
-requires(lak::array_force_copyable_v<T> ||
-         lak::concepts::copy_constructible<T>)
+requires lak::array_type_is_copyable<T>
 {
 	ASSERT_GREATER_OR_EQUAL(before, cbegin());
 	ASSERT_LESS_OR_EQUAL(before, cend());
@@ -612,8 +602,7 @@ bool operator!=(const lak::array<T, S> &a, const lak::array<T, S> &b)
 
 template<typename T, size_t MAX_SIZE>
 lak::stack_array<T, MAX_SIZE>::stack_array(std::initializer_list<T> list)
-requires(lak::array_force_copyable_v<T> ||
-         lak::concepts::copy_constructible<T>)
+requires lak::array_type_is_copyable<T>
 {
 #if defined(LAK_COMPILER_CLANG) && defined(LAK_OS_APPLE)
 	if constexpr (!lak::concepts::copy_constructible<T>)
@@ -627,8 +616,7 @@ requires(lak::array_force_copyable_v<T> ||
 template<typename T, size_t MAX_SIZE>
 template<typename ITER>
 lak::stack_array<T, MAX_SIZE>::stack_array(ITER &&begin, ITER &&end)
-requires(lak::array_force_copyable_v<T> ||
-         lak::concepts::copy_constructible<T>)
+requires lak::array_type_is_copyable<T>
 {
 #if defined(LAK_COMPILER_CLANG) && defined(LAK_OS_APPLE)
 	if constexpr (!lak::concepts::copy_constructible<T>)
@@ -695,8 +683,7 @@ constexpr const T &lak::stack_array<T, MAX_SIZE>::back() const
 
 template<typename T, size_t MAX_SIZE>
 T &lak::stack_array<T, MAX_SIZE>::push_back(const T &t)
-requires(lak::array_force_copyable_v<T> ||
-         lak::concepts::copy_constructible<T>)
+requires lak::array_type_is_copyable<T>
 {
 	ASSERT_LESS(_size, MAX_SIZE);
 #if defined(LAK_COMPILER_CLANG) && defined(LAK_OS_APPLE)
