@@ -106,8 +106,6 @@ namespace lak
 	template<typename T, size_t SIZE = lak::dynamic_extent>
 	struct array
 	{
-		static_assert(SIZE > 0);
-
 	private:
 		T _data[SIZE] = {};
 
@@ -167,6 +165,56 @@ namespace lak
 
 		constexpr T &back();
 		constexpr const T &back() const;
+	};
+
+	template<typename T>
+	struct array<T, 0U>
+	{
+		using value_type      = T;
+		using size_type       = size_t;
+		using difference_type = ptrdiff_t;
+		using reference       = T &;
+		using const_reference = const T &;
+		using pointer         = T *;
+		using const_pointer   = const T *;
+		using iterator        = T *;
+		using const_iterator  = const T *;
+
+		constexpr array()                         = default;
+		constexpr array(const array &)            = default;
+		constexpr array &operator=(const array &) = default;
+
+		constexpr array(array &&other)            = default;
+		constexpr array &operator=(array &&other) = default;
+
+		constexpr size_t size() const { return 0; }
+		constexpr size_t max_size() const { return 0; }
+		constexpr size_t capacity() const { return 0; }
+		[[nodiscard]] constexpr bool empty() const { return true; }
+
+		constexpr T *data() { return begin(); }
+		constexpr const T *data() const { return begin(); }
+
+		constexpr T *begin() { return nullptr; }
+		constexpr T *end() { return nullptr; }
+
+		constexpr const T *begin() const { return nullptr; }
+		constexpr const T *end() const { return nullptr; }
+
+		constexpr const T *cbegin() const { return nullptr; }
+		constexpr const T *cend() const { return nullptr; }
+
+		T &at(size_t index) { ASSERT_UNREACHABLE(); }
+		const T &at(size_t index) const { ASSERT_UNREACHABLE(); }
+
+		constexpr T &operator[](size_t index) { ASSERT_UNREACHABLE(); }
+		constexpr const T &operator[](size_t index) const { ASSERT_UNREACHABLE(); }
+
+		constexpr T &front() { ASSERT_UNREACHABLE(); }
+		constexpr const T &front() const { ASSERT_UNREACHABLE(); }
+
+		constexpr T &back() { ASSERT_UNREACHABLE(); }
+		constexpr const T &back() const { ASSERT_UNREACHABLE(); }
 	};
 
 	template<typename T, typename... U>
