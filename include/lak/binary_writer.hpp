@@ -327,7 +327,6 @@ namespace lak
 			const size_t new_size = data.size() + req_size;
 			data.resize(new_size);
 			ASSERT_EQUAL(data.size(), new_size);
-			auto bytes = lak::span(data).last(req_size);
 			lak::array_to_bytes<value_type, E>(lak::span(data).last(req_size),
 			                                   values)
 			  .unwrap();
