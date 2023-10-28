@@ -35,16 +35,19 @@ lak::uninit_array<T> &lak::uninit_array<T>::operator=(uninit_array &&other)
 template<typename T>
 lak::uninit_array<T>::uninit_array::~uninit_array()
 {
-	if (is_paged())
+	if (committed() != 0)
 	{
-		lak::page_free(
-		  lak::span<void>(static_cast<void *>(_data.data()),
-		                  lak::round_to_page_multiple(_data.size() * sizeof(T))))
-		  .expect("page free failed");
-	}
-	else
-	{
-		lak::global_free(lak::span<byte_t>(_data));
+		if (is_paged())
+		{
+			lak::page_free(
+			  lak::span<void>(static_cast<void *>(_data.data()),
+			                  lak::round_to_page_multiple(_data.size() * sizeof(T))))
+			  .expect("page free failed");
+		}
+		else
+		{
+			lak::global_free(lak::span<byte_t>(_data));
+		}
 	}
 	_data      = {};
 	_committed = 0U;
