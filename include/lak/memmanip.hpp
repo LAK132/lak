@@ -52,11 +52,24 @@ namespace lak
 		lak::fill<byte_t>(lak::as_bytes(dst), byte_t(0));
 	}
 
+	template<size_t CHUNK_SIZE>
+	void byte_swap(lak::span<byte_t> v)
+	{
+		if constexpr (CHUNK_SIZE > 1U)
+		{
+			while (v.size() >= CHUNK_SIZE)
+			{
+				lak::reverse<byte_t>(v.first(CHUNK_SIZE));
+				v = v.subspan(CHUNK_SIZE);
+			}
+		}
+	}
+
 	template<typename T>
 	void byte_swap(lak::span<T> v)
 	{
-		if constexpr (sizeof(T) != sizeof(byte_t))
-			for (T &e : v) lak::reverse(lak::as_bytes(&e));
+		if constexpr (sizeof(T) > 1U)
+			for (T &e : v) lak::reverse<byte_t>(lak::as_bytes(&e));
 	}
 
 	template<typename TO, typename FROM>

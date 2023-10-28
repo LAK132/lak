@@ -6,6 +6,7 @@
 /* --- from_bytes --- */
 
 template<typename T, lak::endian E>
+requires(lak::from_bytes_traits<T, E>::const_size)
 T lak::from_bytes(lak::span<const byte_t, lak::from_bytes_size_v<T, E>> bytes)
 {
 	T result;
@@ -15,16 +16,46 @@ T lak::from_bytes(lak::span<const byte_t, lak::from_bytes_size_v<T, E>> bytes)
 }
 
 template<typename T, lak::endian E>
+requires(lak::from_bytes_traits<T, E>::const_size)
 lak::result<T> lak::from_bytes(lak::span<const byte_t> bytes)
 {
-	return lak::first_as_const_sized<lak::from_bytes_size_v<T, E>>(bytes).map(
-	  static_cast<T (*)(lak::span<const byte_t, lak::from_bytes_size_v<T, E>>)>(
-	    &lak::from_bytes<T, E>));
+	T result;
+	return lak::from_bytes_data<T, E>::maybe_make(
+	         lak::span<T, 1>::from_ptr(&result), bytes)
+	  .and_then(
+	    [&](auto data) -> lak::result<T>
+	    {
+		    lak::from_bytes_traits<T, E>::from_bytes(data);
+		    return lak::move_ok<T>(result);
+	    });
+}
+
+template<typename T, lak::endian E>
+requires(!lak::from_bytes_traits<T, E>::const_size)
+lak::result<lak::pair<T, lak::span<const byte_t>>> lak::from_bytes(
+  lak::span<const byte_t> bytes)
+{
+	lak::pair<T, lak::span<const byte_t>> result;
+	return lak::from_bytes_data<T, E>::maybe_make(
+	         lak::span<T, 1>::from_ptr(&result.first), bytes)
+	  .and_then(
+	    [&](auto data) -> lak::result<lak::pair<T, lak::span<const byte_t>>>
+	    {
+		    if_let_ok (auto remaining,
+		               lak::from_bytes_traits<T, E>::from_bytes(data))
+		    {
+			    result.second = remaining;
+			    return lak::move_ok(result);
+		    }
+		    else
+			    return lak::err_t{};
+	    });
 }
 
 /* --- array_from_bytes --- */
 
 template<typename T, size_t S, lak::endian E>
+requires(lak::from_bytes_traits<T, E>::const_size)
 lak::array<T, S> lak::array_from_bytes(
   lak::span<const byte_t, lak::from_bytes_size_v<T, E> * S> bytes)
 {
@@ -35,6 +66,7 @@ lak::array<T, S> lak::array_from_bytes(
 }
 
 template<typename T, size_t S, lak::endian E>
+requires(lak::from_bytes_traits<T, E>::const_size)
 lak::result<lak::array<T, S>> lak::array_from_bytes(
   lak::span<const byte_t> bytes)
 {
@@ -45,6 +77,7 @@ lak::result<lak::array<T, S>> lak::array_from_bytes(
 }
 
 template<typename T, lak::endian E>
+requires(lak::from_bytes_traits<T, E>::const_size)
 lak::result<lak::array<T>> lak::array_from_bytes(lak::span<const byte_t> bytes,
                                                  size_t count)
 {
@@ -57,7 +90,7 @@ lak::result<lak::array<T>> lak::array_from_bytes(lak::span<const byte_t> bytes,
 
 	return lak::from_bytes_data<T, E>::maybe_make(lak::span(result), bytes)
 	  .map(
-	    [&](lak::from_bytes_data<T, E> data)
+	    [&](lak::from_bytes_data<T, E> data) -> lak::array<T>
 	    {
 		    lak::from_bytes_traits<T, E>::from_bytes(data);
 		    return lak::move(result);
@@ -65,6 +98,7 @@ lak::result<lak::array<T>> lak::array_from_bytes(lak::span<const byte_t> bytes,
 }
 
 template<typename T, lak::endian E>
+requires(lak::from_bytes_traits<T, E>::const_size)
 lak::result<> lak::array_from_bytes(lak::span<T> values,
                                     lak::span<const byte_t> bytes)
 {
@@ -77,7 +111,37 @@ lak::result<> lak::array_from_bytes(lak::span<T> values,
 	    });
 }
 
-/* --- --- */
+template<typename T, lak::endian E>
+requires(!lak::from_bytes_traits<T, E>::const_size)
+lak::result<lak::pair<lak::array<T>, lak::span<const byte_t>>>
+lak::array_from_bytes(lak::span<const byte_t> bytes, size_t count)
+{
+	lak::binary_reader strm{bytes};
+	lak::pair<lak::array<T>, lak::span<const byte_t>> result;
+	result.first.reserve(count);
+	for (const auto &i : lak::size_range_count(count))
+	{
+		RES_TRY_ASSIGN(auto v =, strm.template read<T, E>());
+		result.first.push_back(lak::move(v));
+	}
+	result.second = strm.remaining();
+	return lak::move_ok(result);
+}
+
+template<typename T, lak::endian E>
+requires(!lak::from_bytes_traits<T, E>::const_size)
+lak::result<lak::span<const byte_t>> lak::array_from_bytes(
+  lak::span<T> values, lak::span<const byte_t> bytes)
+{
+	lak::binary_reader strm{bytes};
+	for (T &v : values)
+	{
+		RES_TRY_ASSIGN(v =, strm.template read<T, E>());
+	}
+	return lak::ok_t{strm.remaining()};
+}
+
+/* --- _basic_memcpy_from_bytes --- */
 
 namespace lak
 {
@@ -95,8 +159,9 @@ namespace lak
 template<lak::endian E>
 struct lak::from_bytes_traits<byte_t, E>
 {
-	using value_type             = byte_t;
-	static constexpr size_t size = sizeof(value_type);
+	using value_type                 = byte_t;
+	static constexpr bool const_size = true;
+	static constexpr size_t size     = sizeof(value_type);
 
 	static void from_bytes(lak::from_bytes_data<value_type, E> data)
 	{
@@ -109,8 +174,9 @@ struct lak::from_bytes_traits<byte_t, E>
 template<lak::endian E>
 struct lak::from_bytes_traits<uint8_t, E>
 {
-	using value_type             = uint8_t;
-	static constexpr size_t size = sizeof(value_type);
+	using value_type                 = uint8_t;
+	static constexpr bool const_size = true;
+	static constexpr size_t size     = sizeof(value_type);
 
 	static void from_bytes(lak::from_bytes_data<value_type, E> data)
 	{
@@ -123,8 +189,9 @@ struct lak::from_bytes_traits<uint8_t, E>
 template<lak::endian E>
 struct lak::from_bytes_traits<int8_t, E>
 {
-	using value_type             = int8_t;
-	static constexpr size_t size = sizeof(value_type);
+	using value_type                 = int8_t;
+	static constexpr bool const_size = true;
+	static constexpr size_t size     = sizeof(value_type);
 
 	static void from_bytes(lak::from_bytes_data<value_type, E> data)
 	{
@@ -137,8 +204,9 @@ struct lak::from_bytes_traits<int8_t, E>
 template<lak::endian E>
 struct lak::from_bytes_traits<uint16_t, E>
 {
-	using value_type             = uint16_t;
-	static constexpr size_t size = sizeof(value_type);
+	using value_type                 = uint16_t;
+	static constexpr bool const_size = true;
+	static constexpr size_t size     = sizeof(value_type);
 
 	static void from_bytes(lak::from_bytes_data<value_type, E> data)
 	{
@@ -151,8 +219,9 @@ struct lak::from_bytes_traits<uint16_t, E>
 template<lak::endian E>
 struct lak::from_bytes_traits<int16_t, E>
 {
-	using value_type             = int16_t;
-	static constexpr size_t size = sizeof(value_type);
+	using value_type                 = int16_t;
+	static constexpr bool const_size = true;
+	static constexpr size_t size     = sizeof(value_type);
 
 	static void from_bytes(lak::from_bytes_data<value_type, E> data)
 	{
@@ -165,8 +234,9 @@ struct lak::from_bytes_traits<int16_t, E>
 template<lak::endian E>
 struct lak::from_bytes_traits<uint32_t, E>
 {
-	using value_type             = uint32_t;
-	static constexpr size_t size = sizeof(value_type);
+	using value_type                 = uint32_t;
+	static constexpr bool const_size = true;
+	static constexpr size_t size     = sizeof(value_type);
 
 	static void from_bytes(lak::from_bytes_data<value_type, E> data)
 	{
@@ -179,8 +249,9 @@ struct lak::from_bytes_traits<uint32_t, E>
 template<lak::endian E>
 struct lak::from_bytes_traits<int32_t, E>
 {
-	using value_type             = int32_t;
-	static constexpr size_t size = sizeof(value_type);
+	using value_type                 = int32_t;
+	static constexpr bool const_size = true;
+	static constexpr size_t size     = sizeof(value_type);
 
 	static void from_bytes(lak::from_bytes_data<value_type, E> data)
 	{
@@ -193,8 +264,9 @@ struct lak::from_bytes_traits<int32_t, E>
 template<lak::endian E>
 struct lak::from_bytes_traits<uint64_t, E>
 {
-	using value_type             = uint64_t;
-	static constexpr size_t size = sizeof(value_type);
+	using value_type                 = uint64_t;
+	static constexpr bool const_size = true;
+	static constexpr size_t size     = sizeof(value_type);
 
 	static void from_bytes(lak::from_bytes_data<value_type, E> data)
 	{
@@ -207,8 +279,9 @@ struct lak::from_bytes_traits<uint64_t, E>
 template<lak::endian E>
 struct lak::from_bytes_traits<int64_t, E>
 {
-	using value_type             = int64_t;
-	static constexpr size_t size = sizeof(value_type);
+	using value_type                 = int64_t;
+	static constexpr bool const_size = true;
+	static constexpr size_t size     = sizeof(value_type);
 
 	static void from_bytes(lak::from_bytes_data<value_type, E> data)
 	{
@@ -221,8 +294,9 @@ struct lak::from_bytes_traits<int64_t, E>
 template<lak::endian E>
 struct lak::from_bytes_traits<f32_t, E>
 {
-	using value_type             = f32_t;
-	static constexpr size_t size = sizeof(value_type);
+	using value_type                 = f32_t;
+	static constexpr bool const_size = true;
+	static constexpr size_t size     = sizeof(value_type);
 
 	static void from_bytes(lak::from_bytes_data<value_type, E> data)
 	{
@@ -235,8 +309,9 @@ struct lak::from_bytes_traits<f32_t, E>
 template<lak::endian E>
 struct lak::from_bytes_traits<f64_t, E>
 {
-	using value_type             = f64_t;
-	static constexpr size_t size = sizeof(value_type);
+	using value_type                 = f64_t;
+	static constexpr bool const_size = true;
+	static constexpr size_t size     = sizeof(value_type);
 
 	static void from_bytes(lak::from_bytes_data<value_type, E> data)
 	{
@@ -249,8 +324,9 @@ struct lak::from_bytes_traits<f64_t, E>
 template<lak::endian E>
 struct lak::from_bytes_traits<char, E>
 {
-	using value_type             = char;
-	static constexpr size_t size = sizeof(value_type);
+	using value_type                 = char;
+	static constexpr bool const_size = true;
+	static constexpr size_t size     = sizeof(value_type);
 
 	static void from_bytes(lak::from_bytes_data<value_type, E> data)
 	{
@@ -264,8 +340,9 @@ struct lak::from_bytes_traits<char, E>
 template<lak::endian E>
 struct lak::from_bytes_traits<char8_t, E>
 {
-	using value_type             = char8_t;
-	static constexpr size_t size = sizeof(value_type);
+	using value_type                 = char8_t;
+	static constexpr bool const_size = true;
+	static constexpr size_t size     = sizeof(value_type);
 
 	static void from_bytes(lak::from_bytes_data<value_type, E> data)
 	{
@@ -279,8 +356,9 @@ struct lak::from_bytes_traits<char8_t, E>
 template<lak::endian E>
 struct lak::from_bytes_traits<char16_t, E>
 {
-	using value_type             = char16_t;
-	static constexpr size_t size = sizeof(value_type);
+	using value_type                 = char16_t;
+	static constexpr bool const_size = true;
+	static constexpr size_t size     = sizeof(value_type);
 
 	static void from_bytes(lak::from_bytes_data<value_type, E> data)
 	{
@@ -293,8 +371,9 @@ struct lak::from_bytes_traits<char16_t, E>
 template<lak::endian E>
 struct lak::from_bytes_traits<char32_t, E>
 {
-	using value_type             = char32_t;
-	static constexpr size_t size = sizeof(value_type);
+	using value_type                 = char32_t;
+	static constexpr bool const_size = true;
+	static constexpr size_t size     = sizeof(value_type);
 
 	static void from_bytes(lak::from_bytes_data<value_type, E> data)
 	{
@@ -307,8 +386,9 @@ struct lak::from_bytes_traits<char32_t, E>
 template<lak::endian E>
 struct lak::from_bytes_traits<wchar_t, E>
 {
-	using value_type             = wchar_t;
-	static constexpr size_t size = sizeof(value_type);
+	using value_type                 = wchar_t;
+	static constexpr bool const_size = true;
+	static constexpr size_t size     = sizeof(value_type);
 
 	static void from_bytes(lak::from_bytes_data<value_type, E> data)
 	{

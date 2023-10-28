@@ -1081,8 +1081,11 @@ std::ostream &operator<<(std::ostream &strm, const lak::vec4<T> &rhs)
 template<typename T, lak::endian E>
 struct lak::from_bytes_traits<lak::vec2<T>, E>
 {
-	using value_type             = lak::vec2<T>;
-	static constexpr size_t size = lak::from_bytes_size_v<T, E> * 2;
+	static_assert(lak::from_bytes_traits<T, E>::const_size);
+
+	using value_type                 = lak::vec2<T>;
+	static constexpr bool const_size = true;
+	static constexpr size_t size     = lak::from_bytes_size_v<T, E> * 2;
 
 	static void from_bytes(lak::from_bytes_data<value_type, E> data)
 	{
@@ -1096,8 +1099,11 @@ struct lak::from_bytes_traits<lak::vec2<T>, E>
 template<typename T, lak::endian E>
 struct lak::from_bytes_traits<lak::vec3<T>, E>
 {
-	using value_type             = lak::vec3<T>;
-	static constexpr size_t size = lak::from_bytes_size_v<T, E> * 3;
+	static_assert(lak::from_bytes_traits<T, E>::const_size);
+
+	using value_type                 = lak::vec3<T>;
+	static constexpr bool const_size = true;
+	static constexpr size_t size     = lak::from_bytes_size_v<T, E> * 3;
 
 	static void from_bytes(lak::from_bytes_data<value_type, E> data)
 	{
@@ -1111,8 +1117,11 @@ struct lak::from_bytes_traits<lak::vec3<T>, E>
 template<typename T, lak::endian E>
 struct lak::from_bytes_traits<lak::vec4<T>, E>
 {
-	using value_type             = lak::vec4<T>;
-	static constexpr size_t size = lak::from_bytes_size_v<T, E> * 4;
+	static_assert(lak::from_bytes_traits<T, E>::const_size);
+
+	using value_type                 = lak::vec4<T>;
+	static constexpr bool const_size = true;
+	static constexpr size_t size     = lak::from_bytes_size_v<T, E> * 4;
 
 	static void from_bytes(lak::from_bytes_data<value_type, E> data)
 	{
