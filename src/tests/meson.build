@@ -29,6 +29,7 @@ laktestcore = static_library(
 		'type_pack.cpp',
 		'visit.cpp',
 		'wide_math.cpp',
+		'structure'/'nbt.cpp',
 	],
 	override_options: 'cpp_std=' + version,
 	dependencies: lakcore_dep,
