@@ -162,6 +162,18 @@ namespace lak
 	template<template<typename> typename T, typename PACK>
 	using pack_apply_t = typename lak::pack_apply<T, PACK>::type;
 
+	/* --- pack_foreach --- */
+
+	template<template<typename> typename T, typename PACK>
+	struct pack_foreach;
+	template<template<typename> typename T, typename... TYPES>
+	struct pack_foreach<T, lak::type_pack<TYPES...>>
+	{
+		using type = lak::type_pack<T<TYPES>...>;
+	};
+	template<template<typename> typename T, typename PACK>
+	using pack_foreach_t = typename lak::pack_foreach<T, PACK>::type;
+
 	/* --- pack_from_function --- */
 
 	template<typename FUNC>
