@@ -86,6 +86,14 @@ namespace lak
 		b = lak::move(temp);
 	}
 
+	template<typename T>
+	force_inline constexpr void swap(T *&a, T *&b)
+	{
+		T *temp = a;
+		a       = b;
+		b       = temp;
+	}
+
 	template<typename T, size_t SIZE>
 	force_inline constexpr void swap(T (&a)[SIZE], T (&b)[SIZE])
 	{
