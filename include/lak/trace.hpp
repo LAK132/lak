@@ -56,9 +56,8 @@ namespace lak
 		friend inline std::ostream &operator<<(std::ostream &strm,
 		                                       const lak::trace &tr)
 		{
-			strm << tr.location.file_name() << ":" << std::dec << tr.location.line()
-			     << ":" << tr.location.column() << " in "
-			     << tr.location.function_name();
+			strm << LAK_BRIGHT_BLACK "(" << lak::as_astring(tr.line_string())
+			     << ")" LAK_SGR_RESET ": " << tr.location.function_name();
 			if (!tr.message.empty()) strm << ":\n\t" << tr.message;
 			return strm;
 		}
