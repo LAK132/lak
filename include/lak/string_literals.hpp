@@ -1,8 +1,11 @@
 #ifndef LAK_STRING_LITERALS_HPP
 #define LAK_STRING_LITERALS_HPP
 
+#include "lak/const_string.hpp"
 #include "lak/span.hpp"
 #include "lak/string_view.hpp"
+
+#include <bit>
 
 /* --- operator"" _view --- */
 
@@ -66,6 +69,26 @@ inline consteval lak::span<const char32_t> operator"" _span(
   const char32_t *str, size_t size)
 {
 	return lak::span<const char32_t>{str, size};
+}
+
+/* --- opeator"" _magic --- "*/
+
+template<lak::u8const_string STR>
+requires(STR.size() == 1U || STR.size() == 2U || STR.size() == 4U ||
+         STR.size() == 8U)
+inline consteval auto operator"" _magic()
+{
+	using result_type = lak::conditional_t<
+	  STR.size() == 1U,
+	  uint8_t,
+	  lak::conditional_t<
+	    STR.size() == 2U,
+	    uint16_t,
+	    lak::conditional_t<STR.size() == 4U, uint32_t, uint64_t>>>;
+
+	static_assert(sizeof(STR) == sizeof(result_type));
+
+	return std::bit_cast<result_type>(STR);
 }
 
 #endif
