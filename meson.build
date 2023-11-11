@@ -148,6 +148,9 @@ if get_option('lak_enable_windowing')
 		dependencies += lakmetal_dep
 	endif
 
+	glm_dep = subproject('glm').get_variable('glm_dep')
+	dependencies += glm_dep
+
 	subdir('src/windowing')
 	dependencies += lakwindowing_dep
 
@@ -155,6 +158,9 @@ if get_option('lak_enable_windowing')
 		subdir('src/tests/windowing')
 		dependencies += laktestwindowing_dep
 	endif
+elif get_option('lak_enable_glm')
+	glm_dep = subproject('glm').get_variable('glm_dep')
+	dependencies += glm_dep
 endif
 
 if get_option('lak_enable_llvm')
@@ -185,11 +191,6 @@ if get_option('lak_enable_lua')
 		subdir('src/tests/lua')
 		dependencies += laktestlua_dep
 	endif
-endif
-
-if get_option('lak_enable_glm')
-	glm_dep = subproject('glm').get_variable('glm_dep')
-	dependencies += glm_dep
 endif
 
 if get_option('lak_enable_imgui')
