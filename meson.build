@@ -247,6 +247,11 @@ if get_option('lak_enable_stb')
 	endif
 endif
 
+if get_option('lak_enable_godot_cpp')
+	subdir('src/godot')
+	dependencies += lakgodot_dep
+endif
+
 if target_machine.system() == 'windows'
 	lakdlls_h = custom_target(
 		'configure-dlls',

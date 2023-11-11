@@ -175,3 +175,11 @@ option('lak_enable_stb_image_write',
 	value: false,
 	yield: true,
 )
+
+# godot-cpp options
+
+option('lak_enable_godot_cpp',
+	type: 'boolean',
+	value: false,
+	yield: true,
+)
