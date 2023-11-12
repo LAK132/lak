@@ -10,6 +10,7 @@
 #include <ios>
 #include <ostream>
 #include <sstream>
+#include <system_error>
 
 template<typename ARG, typename... ARGS>
 lak::u8string lak::spaced_streamify(const lak::u8string &space,
@@ -71,6 +72,10 @@ namespace
 				strm << lak::string_view<char_type>::from_c_str(arg);
 			else
 				strm << lak::string_view<char_type>(arg);
+		}
+		else if constexpr (lak::is_same_v<std::error_code, lak::remove_cvref_t<T>>)
+		{
+			strm << arg << " (" << arg.message() << ")";
 		}
 		else
 		{

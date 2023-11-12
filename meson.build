@@ -106,6 +106,10 @@ if get_option('lak_run_windowing_tests')
 	]
 endif
 
+if get_option('lak_use_native_file_dialog')
+	c_cpp_args += '-DLAK_USE_NATIVE_FILE_DIALOG'
+endif
+
 add_project_arguments(c_cpp_args + cpp_args, language: ['cpp'])
 add_project_arguments(c_cpp_args + c_args, language: ['c'])
 

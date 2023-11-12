@@ -54,7 +54,7 @@ lak::error_code_result<lak::fs::directory_iterator> lak::directory_iterator(
 {
 	std::error_code ec;
 	if (fs::directory_iterator di{path, ec}; ec)
-		return lak::err_t{lak::error_code_error{ec}};
+		return lak::err_t{ec};
 	else
 		return lak::ok_t{lak::move(di)};
 }
@@ -63,7 +63,7 @@ lak::error_code_result<bool> lak::path_exists(const lak::fs::path &path)
 {
 	std::error_code ec;
 	if (bool result = fs::exists(path, ec); ec)
-		return lak::err_t{lak::error_code_error{ec}};
+		return lak::err_t{ec};
 	else
 		return lak::ok_t{result};
 }
@@ -76,7 +76,7 @@ lak::error_code_result<> lak::copy_file(const fs::path &from,
 	if (bool result = fs::copy_file(from, to, ec); ec)
 	{
 		ASSERT(!result);
-		return lak::err_t{lak::error_code_error{ec}};
+		return lak::err_t{ec};
 	}
 	else
 		return lak::ok_t{};
@@ -86,7 +86,7 @@ lak::error_code_result<bool> lak::create_directory(const fs::path &path)
 {
 	std::error_code ec;
 	if (bool result = fs::create_directory(path, ec); ec)
-		return lak::err_t{lak::error_code_error{ec}};
+		return lak::err_t{ec};
 	else
 		return lak::ok_t{result};
 }
@@ -95,7 +95,7 @@ lak::error_code_result<bool> lak::create_directories(const fs::path &path)
 {
 	std::error_code ec;
 	if (bool result = fs::create_directories(path, ec); ec)
-		return lak::err_t{lak::error_code_error{ec}};
+		return lak::err_t{ec};
 	else
 		return lak::ok_t{result};
 }
@@ -105,7 +105,7 @@ lak::error_code_result<> lak::create_hard_link(const fs::path &file,
 {
 	std::error_code ec;
 	if (fs::create_hard_link(file, link, ec); ec)
-		return lak::err_t{lak::error_code_error{ec}};
+		return lak::err_t{ec};
 	else
 		return lak::ok_t{};
 }
@@ -115,7 +115,7 @@ lak::error_code_result<bool> lak::remove_path(const fs::path &path)
 	std::error_code ec;
 	bool result = fs::remove_all(path, ec) > 0U;
 	if (ec)
-		return lak::err_t{lak::error_code_error{ec}};
+		return lak::err_t{ec};
 	else
 		return lak::ok_t{result};
 }
@@ -284,7 +284,7 @@ lak::error_code_result<lak::deepest_folder_result> lak::deepest_folder(
 		ec.clear();
 		entry = lak::fs::directory_entry(folder, ec);
 	}
-	if (ec) return lak::err_t<lak::error_code_error>{ec};
+	if (ec) return lak::err_t{ec};
 	return lak::ok_t{lak::deepest_folder_result{lak::normalised(folder),
 	                                            lak::relative(path, folder)}};
 }

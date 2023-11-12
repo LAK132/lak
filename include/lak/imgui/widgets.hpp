@@ -1,14 +1,13 @@
 #ifndef LAK_IMGUI_WIDGETS_HPP
 #define LAK_IMGUI_WIDGETS_HPP
 
+#include "lak/error_code_result.hpp"
 #include "lak/macro_utils.hpp"
 #include "lak/optional.hpp"
 #include "lak/utility.hpp"
 #include "lak/window.hpp"
 
 #include <imgui.h>
-
-#include <ImFileDialog.h>
 
 #include <thread>
 
@@ -92,11 +91,23 @@ namespace lak
 #define LAK_TREE_NODE(...)                                                    \
 	if (lak::tree_node UNIQUIFY(TREE_NODE_)(__VA_ARGS__); UNIQUIFY(TREE_NODE_))
 
-	extern lak::optional<ifd::FileDialog> file_dialog;
+	enum struct file_open_error
+	{
+		INCOMPLETE,
+		INVALID,
+		CANCELED,
+		VALID
+	};
 
-	void ConfigureFileDialog(lak::graphics_mode graphics);
+	void init_file_modal(lak::graphics_mode graphics);
+	void flush_file_modal();
 
-	void FlushFileDialogTextures();
+	lak::error_code_result<lak::file_open_error> open_file_modal(
+	  std::filesystem::path &path, bool save, const lak::astring &filter = ".*");
+
+	lak::error_code_result<lak::file_open_error> open_folder_modal(
+	  std::filesystem::path &path);
+
 }
 
 #include "widgets.inl"

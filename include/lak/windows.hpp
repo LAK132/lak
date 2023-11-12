@@ -18,7 +18,10 @@
 #include <windows.h>
 
 #include <CommCtrl.h>
+#include <comdef.h>
 #include <commdlg.h>
+#include <shobjidl_core.h>
+#include <windef.h>
 #include <windowsx.h>
 #include <wingdi.h>
 #include <winnt.h>
