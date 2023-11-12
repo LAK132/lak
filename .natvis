@@ -10,6 +10,16 @@
 					</ArrayItems>
 			</Expand>
 	</Type>
+	<Type Name="lak::span&lt;*,*&gt;" Priority="Low">
+			<DisplayString>{{ size={$T2} }}</DisplayString>
+			<Expand>
+					<Item Name="[size]" ExcludeView="simple">$T2</Item>
+					<ArrayItems>
+							<Size>$T2</Size>
+							<ValuePointer>_data</ValuePointer>
+					</ArrayItems>
+			</Expand>
+	</Type>
 	<Type Name="lak::uninit_array&lt;*&gt;">
 			<DisplayString>{{ size={_size} }}</DisplayString>
 			<Expand>
@@ -36,6 +46,18 @@
 							<Size>$T2</Size>
 							<ValuePointer>_data</ValuePointer>
 					</ArrayItems>
+			</Expand>
+	</Type>
+	<Type Name="lak::binary_reader">
+			<DisplayString>{_data}</DisplayString>
+			<Expand>
+				<ExpandedItem>_data</ExpandedItem>
+				<ExpandedItem>_cursor</ExpandedItem>
+				<Item Name="[remaining]" ExcludeView="simple">_data._size - _cursor</Item>
+				<ArrayItems>
+						<Size>_data._size - _cursor</Size>
+						<ValuePointer>_data._data + _cursor</ValuePointer>
+				</ArrayItems>
 			</Expand>
 	</Type>
 	<Type Name="lak::pack_union&lt;*,*&gt;">
