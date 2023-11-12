@@ -27,6 +27,17 @@ namespace lak
 	bool close_to(double a, double b, uint32_t epsilon_count = 1);
 
 	bool close_to(float a, float b, uint32_t epsilon_count = 1);
+
+	template<typename INTEGER>
+	constexpr INTEGER integer_range_reverse(INTEGER t,
+	                                        INTEGER end,
+	                                        INTEGER begin = INTEGER(0))
+	{
+		return (end - (t + INTEGER(1))) + begin;
+	}
+
+	static_assert(lak::integer_range_reverse(0, 2) == 1);
+	static_assert(lak::integer_range_reverse(1, 2) == 0);
 }
 
 #endif
