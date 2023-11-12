@@ -18,6 +18,12 @@ namespace lak
 	size_t string_length(const char16_t *str);
 	size_t string_length(const char32_t *str);
 
+	/* --- null_string_span --- */
+
+	// span of the null terminated string include the null terminator
+	template<typename CHAR>
+	lak::span<CHAR> null_string_span(CHAR *str);
+
 	/* --- string_view --- */
 
 	template<typename CHAR>

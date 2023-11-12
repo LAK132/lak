@@ -1,6 +1,14 @@
 #include "lak/span.hpp"
 #include "lak/string_view.hpp"
 
+/* --- null_string_span --- */
+
+template<typename CHAR>
+lak::span<CHAR> lak::null_string_span(CHAR *str)
+{
+	return lak::span<CHAR>(str, lak::string_length(str) + 1U);
+}
+
 /* --- string_view --- */
 
 template<typename CHAR>
