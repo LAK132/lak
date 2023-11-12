@@ -1,7 +1,9 @@
 #include "lak/memmanip.hpp"
 #include "lak/compiler.hpp"
+#include "lak/functional.hpp"
 #include "lak/math.hpp"
 #include "lak/os.hpp"
+#include "lak/ptr_intrin.hpp"
 #include "lak/span.hpp"
 #include "lak/span_manip.hpp"
 
@@ -27,9 +29,9 @@ void lak::memcpy(byte_t *dst, const byte_t *src, size_t count)
 
 void lak::memmove(byte_t *dst, const byte_t *src, size_t count)
 {
-	if (dst < src)
+	if (lak::less<>{}(dst, src))
 		for (size_t i = 0; i < count; ++i) dst[i] = src[i];
-	else if (dst > src)
+	else if (lak::greater<>{}(dst, src))
 		while (count-- > 0) dst[count] = src[count];
 }
 
