@@ -18,15 +18,20 @@ jobs:
           - -Dlak_enable_tests=true
           - -Dlak_enable_tests=true -Dlak_enable_lua=true -Dlak_enable_stb=true -Dlak_enable_stb_image=true -Dlak_enable_stb_image_write=true
           - -Dlak_enable_tests=true -Dlak_enable_lmdb=true -Dlak_enable_libfive=true
-          - -Dlak_enable_tests=true -Dlak_enable_windowing=true -Dsdl2_from_source=true -Dlak_backend=sdl -Dlak_enable_glm=true -Dlak_enable_imgui=true
+          - -Dlak_enable_tests=true -Dlak_enable_windowing=true -Dlak_use_native_file_dialog=true -Dsdl2_from_source=true -Dlak_backend=sdl -Dlak_enable_glm=true -Dlak_enable_imgui=true
+          - -Dlak_enable_tests=true -Dlak_enable_windowing=true -Dlak_use_native_file_dialog=false -Dsdl2_from_source=true -Dlak_backend=sdl -Dlak_enable_glm=true -Dlak_enable_imgui=true
           - -Dlak_enable_tests=true -Dlak_enable_godot_cpp=true
         exclude:
           - os: ubuntu-20.04
             setup-options: -Dlak_enable_tests=true -Dlak_enable_lmdb=true -Dlak_enable_libfive=true
+          - os: ubuntu-20.04
+            setup-options: -Dlak_enable_tests=true -Dlak_enable_windowing=true -Dlak_use_native_file_dialog=true -Dsdl2_from_source=true -Dlak_backend=sdl -Dlak_enable_glm=true -Dlak_enable_imgui=true
           - os: macos-12
             arch: x86
           - os: macos-12
             setup-options: -Dlak_enable_tests=true -Dlak_enable_lmdb=true -Dlak_enable_libfive=true
+          - os: macos-12
+            setup-options: -Dlak_enable_tests=true -Dlak_enable_windowing=true -Dlak_use_native_file_dialog=true -Dsdl2_from_source=true -Dlak_backend=sdl -Dlak_enable_glm=true -Dlak_enable_imgui=true
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v3
