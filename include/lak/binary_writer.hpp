@@ -2,6 +2,7 @@
 #define LAK_BINARY_WRITER_HPP
 
 #include "lak/array.hpp"
+#include "lak/binary_traits.hpp"
 #include "lak/endian.hpp"
 #include "lak/result.hpp"
 #include "lak/span.hpp"
@@ -10,181 +11,6 @@
 
 namespace lak
 {
-	/* --- traits --- */
-
-	template<typename T, lak::endian E>
-	struct to_bytes_data;
-
-	template<typename T, lak::endian E>
-	struct to_bytes_traits
-	{
-		using value_type = lak::nonesuch;
-
-		static constexpr bool const_size = true;
-
-		static constexpr size_t size() { return 0; }
-
-		static void to_bytes(lak::to_bytes_data<value_type, E> data) = delete;
-	};
-
-	template<typename T, lak::endian E>
-	static constexpr bool has_to_bytes_traits =
-	  !lak::is_same_v<typename lak::to_bytes_traits<T, E>::value_type,
-	                  lak::nonesuch>;
-
-	template<typename T, lak::endian E = lak::endian::little>
-	requires(lak::to_bytes_traits<T, E>::const_size)
-	constexpr size_t to_bytes_size()
-	{
-		return lak::to_bytes_traits<T, E>::size();
-	}
-	template<typename T, lak::endian E = lak::endian::little>
-	requires(lak::to_bytes_traits<T, E>::const_size)
-	constexpr size_t to_bytes_size(const T &)
-	{
-		return lak::to_bytes_traits<T, E>::size();
-	}
-	template<typename T, lak::endian E = lak::endian::little>
-	requires(lak::to_bytes_traits<T, E>::const_size)
-	constexpr size_t to_bytes_size(lak::span<const T> v)
-	{
-		return lak::to_bytes_traits<T, E>::size() * v.size();
-	}
-	template<typename T, lak::endian E = lak::endian::little>
-	requires(!lak::to_bytes_traits<T, E>::const_size)
-	size_t to_bytes_size(const T &v)
-	{
-		return lak::to_bytes_traits<T, E>::size(v);
-	}
-	template<typename T, lak::endian E = lak::endian::little>
-	requires(!lak::to_bytes_traits<T, E>::const_size)
-	size_t to_bytes_size(lak::span<const T> v)
-	{
-		size_t size = 0;
-		for (const auto &e : v) size += lak::to_bytes_traits<T, E>::size(e);
-		return size;
-	}
-
-	template<typename T, lak::endian E>
-	requires(lak::to_bytes_traits<T, E>::const_size)
-	struct to_bytes_data<T, E>
-	{
-		const lak::span<byte_t> dst;
-		const lak::span<const T> src;
-
-		static inline lak::result<to_bytes_data> maybe_make(lak::span<byte_t> dst,
-		                                                    lak::span<const T> src)
-		{
-			if (dst.size() == src.size() * lak::to_bytes_size<T, E>())
-				return lak::ok_t{to_bytes_data(dst, src)};
-			else
-				return lak::err_t{};
-		}
-
-		template<size_t S>
-		static inline to_bytes_data make(
-		  lak::span<byte_t, S * lak::to_bytes_size<T, E>()> dst,
-		  lak::span<const T, S> src)
-		{
-			return to_bytes_data(dst, src);
-		}
-
-		to_bytes_data(const to_bytes_data &)            = default;
-		to_bytes_data &operator=(const to_bytes_data &) = default;
-
-	private:
-		to_bytes_data(lak::span<byte_t> d, lak::span<const T> s) : dst(d), src(s)
-		{
-		}
-	};
-
-	template<typename T, lak::endian E>
-	requires(!lak::to_bytes_traits<T, E>::const_size)
-	struct to_bytes_data<T, E>
-	{
-		const lak::span<byte_t> dst;
-		const lak::span<const T> src;
-
-		static inline lak::result<to_bytes_data> maybe_make(lak::span<byte_t> dst,
-		                                                    lak::span<const T> src)
-		{
-			if (dst.size() == lak::to_bytes_size<T, E>(src))
-				return lak::ok_t{to_bytes_data(dst, src)};
-			else
-				return lak::err_t{};
-		}
-
-		to_bytes_data(const to_bytes_data &)            = default;
-		to_bytes_data &operator=(const to_bytes_data &) = default;
-
-	private:
-		to_bytes_data(lak::span<byte_t> d, lak::span<const T> s) : dst(d), src(s)
-		{
-		}
-	};
-
-	template<typename T, lak::endian E>
-	struct to_bytes_traits_arr_impl
-	{
-		using value_type = T;
-
-		template<lak::endian EE = E>
-		static void to_bytes(lak::to_bytes_data<value_type, E> data)
-		requires(EE == E && lak::to_bytes_traits<value_type, EE>::const_size)
-		{
-			auto dst{data.dst};
-			for (const auto &val : data.src)
-			{
-				lak::array<byte_t, lak::to_bytes_size<value_type, EE>()> bytes{
-				  lak::to_bytes_traits<value_type, EE>::single_to_bytes(val)};
-				lak::memcpy(dst, bytes);
-				dst = dst.subspan(lak::to_bytes_size<value_type, EE>());
-			}
-		}
-
-		template<lak::endian EE = E>
-		static void to_bytes(lak::to_bytes_data<value_type, E> data)
-		requires(EE == E && !lak::to_bytes_traits<value_type, EE>::const_size)
-		{
-			auto dst{data.dst};
-			for (const auto &val : data.src)
-			{
-				const size_t sz = lak::to_bytes_size<value_type, EE>(val);
-				lak::to_bytes_traits<value_type, EE>::single_to_bytes(dst.first(sz),
-				                                                      val);
-				dst = dst.subspan(sz);
-			}
-		}
-	};
-
-	/* --- to_bytes --- */
-
-	template<typename T, lak::endian E = lak::endian::little>
-	requires(lak::to_bytes_traits<T, E>::const_size)
-	void to_bytes(lak::span<byte_t, lak::to_bytes_size<T, E>()> bytes,
-	              const T &value);
-
-	template<typename T, lak::endian E = lak::endian::little>
-	lak::result<> to_bytes(lak::span<byte_t> bytes, const T &value);
-
-	template<typename T, lak::endian E = lak::endian::little>
-	requires(lak::to_bytes_traits<T, E>::const_size)
-	lak::array<byte_t, lak::to_bytes_size<T, E>()> to_bytes(const T &value);
-
-	/* --- array_to_bytes --- */
-
-	template<typename T, size_t S, lak::endian E = lak::endian::little>
-	requires(lak::to_bytes_traits<T, E>::const_size)
-	lak::array<byte_t, S * lak::to_bytes_size<T, E>()> array_to_bytes(
-	  lak::span<const T, S> values);
-
-	template<typename T, lak::endian E = lak::endian::little>
-	lak::array<byte_t> array_to_bytes(lak::span<const T> values);
-
-	template<typename T, lak::endian E = lak::endian::little>
-	lak::result<> array_to_bytes(lak::span<byte_t> bytes,
-	                             lak::span<const T> values);
-
 	/* --- binary_span_writer --- */
 
 	struct binary_span_writer
@@ -360,7 +186,5 @@ namespace lak
 #undef BINARY_ARRAY_WRITER_MEMBERS
 	};
 }
-
-#include "lak/binary_writer.inl"
 
 #endif
