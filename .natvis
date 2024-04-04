@@ -73,6 +73,13 @@
 					<Item Name="[value]" ExcludeView="simple" Optional="true">value</Item>
 			</Expand>
 	</Type>
+	<Type Name="lak::bitset&lt;*&gt;">
+			<DisplayString>{{ size={$T1} }}</DisplayString>
+			<Expand>
+					<Item Name="[size]" ExcludeView="simple">$T1</Item>
+					<Item Name="[value]" ExcludeView="simple">_value</Item>
+			</Expand>
+	</Type>
 	<Type Name="lak::index_set&lt;*,*&gt;">
 			<DisplayString>{{ value={_value} }}</DisplayString>
 			<Expand>
