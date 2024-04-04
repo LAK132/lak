@@ -9,6 +9,7 @@ laktestcore = static_library(
 		'bit_reader.cpp',
 		'bitflag.cpp',
 		'bitset.cpp',
+		'blob_search.cpp',
 		'com_ptr.cpp',
 		'compare.cpp',
 		'const_string.cpp',
