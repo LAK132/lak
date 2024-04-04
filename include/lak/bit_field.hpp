@@ -1,5 +1,5 @@
-#ifndef LAK_BITSET_HPP
-#define LAK_BITSET_HPP
+#ifndef LAK_BIT_FIELD_HPP
+#define LAK_BIT_FIELD_HPP
 
 #include "lak/compiler.hpp"
 #include "lak/endian.hpp"
@@ -28,7 +28,7 @@ namespace lak
 	}
 
 	template<lak::endian ENDIAN, typename UINT, size_t... SIZE>
-	packed_struct bitset
+	packed_struct bit_field
 	{
 		static_assert((((sizeof(UINT) * 8) >= SIZE) && ...));
 		static constexpr size_t member_size[sizeof...(SIZE)] = {SIZE...};
@@ -38,19 +38,19 @@ namespace lak
 		// uint8_t _value[byte_count] = {};
 		lak::packed_array<uint8_t, byte_count> _value = {};
 
-		bitset() {}
+		bit_field() {}
 
 	private:
 		template<size_t... I>
-		constexpr bitset(lak::span<const UINT, sizeof...(SIZE)> init,
-		                 std::index_sequence<I...>)
+		constexpr bit_field(lak::span<const UINT, sizeof...(SIZE)> init,
+		                    std::index_sequence<I...>)
 		{
 			((set<I>(init[I])), ...);
 		}
 
 	public:
-		constexpr bitset(lak::span<const UINT, sizeof...(SIZE)> init)
-		: bitset(init, std::make_index_sequence<sizeof...(SIZE)>{})
+		constexpr bit_field(lak::span<const UINT, sizeof...(SIZE)> init)
+		: bit_field(init, std::make_index_sequence<sizeof...(SIZE)>{})
 		{
 		}
 
@@ -58,13 +58,13 @@ namespace lak
 #ifdef LAK_COMPILER_CPP20
 		constexpr
 #endif
-		  bitset(lak::span<const UINT> init)
-		: bitset(init.template first<sizeof...(SIZE)>())
+		  bit_field(lak::span<const UINT> init)
+		: bit_field(init.template first<sizeof...(SIZE)>())
 		{
 		}
 
-		constexpr bitset(lak::array<const UINT, sizeof...(SIZE)> init)
-		: bitset(lak::span<const UINT, sizeof...(SIZE)>(init))
+		constexpr bit_field(lak::array<const UINT, sizeof...(SIZE)> init)
+		: bit_field(lak::span<const UINT, sizeof...(SIZE)>(init))
 		{
 		}
 
@@ -72,8 +72,8 @@ namespace lak
 #	ifdef LAK_COMPILER_CPP20
 		constexpr
 #	endif
-		  bitset(std::initializer_list<UINT> init)
-		: bitset(lak::span<const UINT>(init.begin(), init.end()))
+		  bit_field(std::initializer_list<UINT> init)
+		: bit_field(lak::span<const UINT>(init.begin(), init.end()))
 		{
 		}
 #endif
@@ -228,7 +228,7 @@ namespace lak
 			}
 		}
 
-		force_inline bool operator==(const bitset &other) const
+		force_inline bool operator==(const bit_field &other) const
 		{
 			if constexpr (bit_count % 8 > 0)
 			{
@@ -246,7 +246,7 @@ namespace lak
 			}
 		}
 
-		force_inline bool operator!=(const bitset &other) const
+		force_inline bool operator!=(const bit_field &other) const
 		{
 			if constexpr (bit_count % 8 > 0)
 			{
@@ -266,16 +266,16 @@ namespace lak
 	};
 
 	template<typename UINT, size_t... SIZE>
-	using native_bitset = lak::bitset<lak::endian::native, UINT, SIZE...>;
+	using native_bit_field = lak::bit_field<lak::endian::native, UINT, SIZE...>;
 	template<typename UINT, size_t... SIZE>
-	using big_bitset = lak::bitset<lak::endian::big, UINT, SIZE...>;
+	using big_bit_field = lak::bit_field<lak::endian::big, UINT, SIZE...>;
 	template<typename UINT, size_t... SIZE>
-	using little_bitset = lak::bitset<lak::endian::little, UINT, SIZE...>;
+	using little_bit_field = lak::bit_field<lak::endian::little, UINT, SIZE...>;
 
-	static_assert(lak::native_bitset<uint8_t, 1, 2, 3, 2>::bit_count == 8);
-	static_assert(lak::native_bitset<uint16_t, 1, 2, 10, 3>::bit_count == 16);
-	static_assert(sizeof(lak::native_bitset<uint8_t, 1, 2, 3, 2>) == 1);
-	static_assert(sizeof(lak::native_bitset<uint16_t, 1, 2, 10, 3>) == 2);
+	static_assert(lak::native_bit_field<uint8_t, 1, 2, 3, 2>::bit_count == 8);
+	static_assert(lak::native_bit_field<uint16_t, 1, 2, 10, 3>::bit_count == 16);
+	static_assert(sizeof(lak::native_bit_field<uint8_t, 1, 2, 3, 2>) == 1);
+	static_assert(sizeof(lak::native_bit_field<uint16_t, 1, 2, 10, 3>) == 2);
 }
 
 #endif

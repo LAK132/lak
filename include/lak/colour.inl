@@ -1,4 +1,4 @@
-#include "lak/bitset.hpp"
+#include "lak/bit_field.hpp"
 #include "lak/stdint.hpp"
 
 #define LAK_TEMPLATE_IS_COLOUR(COLOUR, ...)                                   \
@@ -594,7 +594,7 @@ namespace lak
 
 		packed_struct rgb555
 		{
-			lak::native_bitset<uint8_t, 5, 5, 5> rgb;
+			lak::native_bit_field<uint8_t, 5, 5, 5> rgb;
 
 			LAK_COLOUR_DEFAULTS(rgb555, rgb == rhs.rgb)
 
@@ -650,7 +650,7 @@ namespace lak
 
 		packed_struct rgb565
 		{
-			lak::native_bitset<uint8_t, 5, 6, 5> rgb;
+			lak::native_bit_field<uint8_t, 5, 6, 5> rgb;
 
 			LAK_COLOUR_DEFAULTS(rgb565, rgb == rhs.rgb)
 
@@ -763,7 +763,7 @@ namespace lak
 
 		packed_struct bgr555
 		{
-			lak::native_bitset<uint8_t, 5, 5, 5> bgr;
+			lak::native_bit_field<uint8_t, 5, 5, 5> bgr;
 
 			LAK_COLOUR_DEFAULTS(bgr555, bgr == rhs.bgr)
 
@@ -819,7 +819,7 @@ namespace lak
 
 		packed_struct bgr565
 		{
-			lak::native_bitset<uint8_t, 5, 6, 5> bgr;
+			lak::native_bit_field<uint8_t, 5, 6, 5> bgr;
 
 			LAK_COLOUR_DEFAULTS(bgr565, bgr == rhs.bgr)
 
@@ -986,7 +986,7 @@ namespace lak
 
 		packed_struct rgba5551
 		{
-			lak::native_bitset<uint8_t, 5, 5, 5, 1> rgba;
+			lak::native_bit_field<uint8_t, 5, 5, 5, 1> rgba;
 
 			LAK_COLOUR_DEFAULTS(rgba5551, rgba == rhs.rgba)
 
@@ -1048,7 +1048,7 @@ namespace lak
 
 		packed_struct rgba5658
 		{
-			lak::native_bitset<uint8_t, 5, 6, 5> rgb;
+			lak::native_bit_field<uint8_t, 5, 6, 5> rgb;
 			uint8_t a;
 
 			LAK_COLOUR_DEFAULTS(rgba5658, rgb == rhs.rgb && a == rhs.a)
@@ -1179,7 +1179,7 @@ namespace lak
 
 		packed_struct abgr1555
 		{
-			lak::native_bitset<uint8_t, 1, 5, 5, 5> abgr;
+			lak::native_bit_field<uint8_t, 1, 5, 5, 5> abgr;
 
 			LAK_COLOUR_DEFAULTS(abgr1555, abgr == rhs.abgr)
 
@@ -1242,7 +1242,7 @@ namespace lak
 		packed_struct abgr8565
 		{
 			uint8_t a;
-			lak::native_bitset<uint8_t, 5, 5, 5> bgr;
+			lak::native_bit_field<uint8_t, 5, 5, 5> bgr;
 
 			LAK_COLOUR_DEFAULTS(abgr8565, a == rhs.a && bgr == rhs.bgr)
 
