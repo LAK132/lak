@@ -75,7 +75,8 @@ BEGIN_TEST(bigint)
 
 	ASSERT_EQUAL(lak::bigint(-5).to_double(), -5.0);
 
-	ASSERT_EQUAL((lak::bigint(2) * UINTMAX_MAX).to_double(), 2.0 * UINTMAX_MAX);
+	ASSERT_EQUAL((lak::bigint(2) * UINTMAX_MAX).to_double(),
+	             2.0 * static_cast<double>(UINTMAX_MAX));
 
 	ASSERT_EQUAL(-(lak::bigint(-2) * 2), lak::bigint(2) * 2);
 
@@ -83,7 +84,7 @@ BEGIN_TEST(bigint)
 	             lak::bigint(12) * UINTMAX_MAX);
 
 	ASSERT_EQUAL((lak::bigint(-12) * UINTMAX_MAX).to_double(),
-	             -12.0 * UINTMAX_MAX);
+	             -12.0 * static_cast<double>(UINTMAX_MAX));
 
 	ASSERT_EQUAL(lak::bigint(132).to_double(), 132.0);
 
