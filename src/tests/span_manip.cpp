@@ -230,3 +230,16 @@ BEGIN_TEST(shift_right)
 	return 0;
 }
 END_TEST()
+
+BEGIN_TEST(find_subspan)
+{
+	lak::array arr1{0, 1, 2, 3, 4};
+	lak::array arr2{3, 4};
+
+	auto subspan = lak::find_subspan<const int>(arr1, arr2);
+	ASSERT_EQUAL(subspan.size(), 2U);
+	ASSERT_EQUAL(subspan.begin(), arr1.begin() + 3U);
+
+	return 0;
+}
+END_TEST()

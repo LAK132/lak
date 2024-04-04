@@ -86,11 +86,14 @@ void lak::fill(lak::span<T> span, const T &value)
 template<typename T>
 lak::span<T> lak::find_subspan(lak::span<T> source, lak::span<T> subspan)
 {
-	while (source.size() > subspan.size())
+	if (source.empty() || subspan.empty()) return {};
+
+	while (source.size() >= subspan.size())
 	{
 		if (auto s = source.first(subspan.size()); subspan == s) return s;
 		source = source.subspan(1);
 	}
+
 	return {};
 }
 
