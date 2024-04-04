@@ -45,9 +45,11 @@ lak::optional<size_t> lak::blob_search<CHUNK_SIZE>::find(
 		{
 			if (!_value[i].get(find)) continue;
 
-			auto subspan = _source.subspan(
-			  std::min(std::max(i * CHUNK_SIZE, offset), _source.size()));
-			subspan = subspan.first(std::min(subspan.size(), CHUNK_SIZE));
+			auto subspan = _source.subspan(std::min(i * CHUNK_SIZE, _source.size()));
+			subspan      = subspan.first(std::min(subspan.size(), CHUNK_SIZE + 1U));
+			if (offset > (i * CHUNK_SIZE)) [[unlikely]]
+				subspan =
+				  subspan.subspan(std::min(offset - (i * CHUNK_SIZE), subspan.size()));
 			if (auto res = lak::find_subspan(subspan, bytes); !res.empty())
 				return lak::some_t{size_t(res.begin() - _source.begin())};
 		}
@@ -70,10 +72,12 @@ lak::optional<size_t> lak::blob_search<CHUNK_SIZE>::find(
 			if ((check_set & find_set) != find_set) continue;
 
 			// all the right pairs are here, do a more thorough search.
-			auto subspan = _source.subspan(
-			  std::min(std::max(i * CHUNK_SIZE, offset), _source.size()));
-			subspan =
-			  subspan.first(std::min(subspan.size(), max_chunks * CHUNK_SIZE));
+			auto subspan = _source.subspan(std::min(i * CHUNK_SIZE, _source.size()));
+			subspan      = subspan.first(
+        std::min(subspan.size(), (max_chunks * CHUNK_SIZE) + 1U));
+			if (offset > (i * CHUNK_SIZE)) [[unlikely]]
+				subspan =
+				  subspan.subspan(std::min(offset - (i * CHUNK_SIZE), subspan.size()));
 			if (auto res = lak::find_subspan(subspan, bytes); !res.empty())
 				return lak::some_t{size_t(res.begin() - _source.begin())};
 		}
