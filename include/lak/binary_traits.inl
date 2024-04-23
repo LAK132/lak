@@ -55,6 +55,46 @@ lak::result<lak::pair<T, lak::span<const byte_t>>> lak::from_bytes(
 	    });
 }
 
+namespace lak
+{
+	template<lak::endian E, typename... T, size_t... OFFSETS>
+	requires((sizeof...(T) > 1) &&
+	         (lak::from_bytes_traits<T, E>::const_size && ...))
+	void _from_bytes(
+	  lak::span<const byte_t, (lak::from_bytes_size_v<T, E> + ...)> bytes,
+	  lak::index_sequence<OFFSETS...>,
+	  T &...values)
+	{
+		((values =
+		    lak::from_bytes<T, E>(bytes.template subspan<OFFSETS, sizeof(T)>())),
+		 ...);
+	}
+}
+
+template<lak::endian E, typename... T>
+requires((sizeof...(T) > 1) &&
+         (lak::from_bytes_traits<T, E>::const_size && ...))
+void lak::from_bytes(
+  lak::span<const byte_t, (lak::from_bytes_size_v<T, E> + ...)> bytes,
+  T &...values)
+{
+	lak::_from_bytes<E>(
+	  bytes, lak::offset_sequence_for<size_t, sizeof(T)...>{}, values...);
+}
+
+template<lak::endian E, typename... T>
+requires((sizeof...(T) > 1) &&
+         (lak::from_bytes_traits<T, E>::const_size && ...))
+lak::result<> lak::from_bytes(lak::span<const byte_t> bytes, T &...values)
+{
+	if (bytes.size() != (lak::from_bytes_size_v<T, E> + ...))
+		return lak::err_t{};
+
+	lak::from_bytes(bytes.first<(lak::from_bytes_size_v<T, E> + ...)>(),
+	                values...);
+	return lak::ok_t{};
+}
+
 /* --- to_bytes --- */
 
 template<typename T, lak::endian E>
@@ -90,6 +130,39 @@ lak::array<byte_t, lak::to_bytes_size<T, E>()> lak::to_bytes(const T &value)
 	lak::to_bytes<T, E>(lak::span<byte_t, lak::to_bytes_size<T, E>()>(result),
 	                    value);
 	return result;
+}
+
+namespace lak
+{
+	template<lak::endian E, typename... T, size_t... OFFSETS>
+	requires((lak::to_bytes_traits<T, E>::const_size && ...))
+	void _to_bytes(lak::span<byte_t, (lak::to_bytes_size<T, E>() + ...)> bytes,
+	               lak::index_sequence<OFFSETS...>,
+	               const T &...values)
+	{
+		((lak::to_bytes<T, E>(bytes.template subspan<OFFSETS, sizeof(T)>(),
+		                      values)),
+		 ...);
+	}
+}
+
+template<lak::endian E, typename... T>
+requires((sizeof...(T) > 1) && (lak::to_bytes_traits<T, E>::const_size && ...))
+void lak::to_bytes(lak::span<byte_t, (lak::to_bytes_size<T, E>() + ...)> bytes,
+                   const T &...values)
+{
+	lak::_to_bytes<E>(
+	  bytes, lak::offset_sequence_for<size_t, sizeof(T)...>{}, values...);
+}
+
+template<lak::endian E, typename... T>
+requires((sizeof...(T) > 1) && (lak::to_bytes_traits<T, E>::const_size && ...))
+lak::array<byte_t, (lak::to_bytes_size<T, E>() + ...)> lak::to_bytes(
+  const T &...values)
+{
+	lak::array<byte_t, (lak::to_bytes_size<T, E>() + ...)> bytes;
+	lak::to_bytes(bytes, values...);
+	return bytes;
 }
 
 /* --- array_from_bytes --- */

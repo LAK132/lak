@@ -5,6 +5,8 @@
 #	include "lak/concepts.hpp"
 #	include "lak/stdint.hpp"
 #	include "lak/type_traits.hpp"
+#	include "lak/compiler.hpp"
+#	include "lak/os.hpp"
 
 #	include <array>
 #	include <vector>
@@ -56,7 +58,9 @@ namespace lak
 
 		template<size_t S = SIZE>
 		inline constexpr span(T (&data)[S]) noexcept
+#	if !(defined(LAK_COMPILER_CLANG) && defined(LAK_OS_APPLE))
 		requires(S == SIZE)
+#	endif
 		: _data(data)
 		{
 		}

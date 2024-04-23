@@ -79,6 +79,15 @@ namespace lak
 		from_bytes_data(const from_bytes_data &)            = default;
 		from_bytes_data &operator=(const from_bytes_data &) = default;
 
+		lak::span<const byte_t, bytes_per_element> bytes_for(const T *dst_ptr)
+		requires(lak::from_bytes_traits<T, E>::const_size)
+		{
+			const size_t index = dst_ptr - dst.begin();
+			ASSERT_LESS(index, dst.size());
+			return src.subspan(index * bytes_per_element)
+			  .template first<bytes_per_element>();
+		}
+
 	private:
 		from_bytes_data(lak::span<T> d, lak::span<const byte_t> s) : dst(d), src(s)
 		{
@@ -99,6 +108,18 @@ namespace lak
 	requires(!lak::from_bytes_traits<T, E>::const_size)
 	lak::result<lak::pair<T, lak::span<const byte_t>>> from_bytes(
 	  lak::span<const byte_t> bytes);
+
+	template<lak::endian E = lak::endian::little, typename... T>
+	requires((sizeof...(T) > 1) &&
+	         (lak::from_bytes_traits<T, E>::const_size && ...))
+	void from_bytes(
+	  lak::span<const byte_t, (lak::from_bytes_size_v<T, E> + ...)> bytes,
+	  T &...values);
+
+	template<lak::endian E = lak::endian::little, typename... T>
+	requires((sizeof...(T) > 1) &&
+	         (lak::from_bytes_traits<T, E>::const_size && ...))
+	lak::result<> from_bytes(lak::span<const byte_t> bytes, T &...values);
 
 	/* --- array_from_bytes --- */
 
@@ -194,10 +215,12 @@ namespace lak
 		const lak::span<byte_t> dst;
 		const lak::span<const T> src;
 
+		static constexpr size_t bytes_per_element = lak::to_bytes_size<T, E>();
+
 		static inline lak::result<to_bytes_data> maybe_make(lak::span<byte_t> dst,
 		                                                    lak::span<const T> src)
 		{
-			if (dst.size() == src.size() * lak::to_bytes_size<T, E>())
+			if (dst.size() == src.size() * bytes_per_element)
 				return lak::ok_t{to_bytes_data(dst, src)};
 			else
 				return lak::err_t{};
@@ -205,14 +228,21 @@ namespace lak
 
 		template<size_t S>
 		static inline to_bytes_data make(
-		  lak::span<byte_t, S * lak::to_bytes_size<T, E>()> dst,
-		  lak::span<const T, S> src)
+		  lak::span<byte_t, S * bytes_per_element> dst, lak::span<const T, S> src)
 		{
 			return to_bytes_data(dst, src);
 		}
 
 		to_bytes_data(const to_bytes_data &)            = default;
 		to_bytes_data &operator=(const to_bytes_data &) = default;
+
+		lak::span<byte_t, bytes_per_element> bytes_for(const T *src_ptr)
+		{
+			const size_t index = src_ptr - src.begin();
+			ASSERT_LESS(index, src.size());
+			return dst.subspan(index * bytes_per_element)
+			  .template first<bytes_per_element>();
+		}
 
 	private:
 		to_bytes_data(lak::span<byte_t> d, lak::span<const T> s) : dst(d), src(s)
@@ -292,6 +322,18 @@ namespace lak
 	template<typename T, lak::endian E = lak::endian::little>
 	requires(lak::to_bytes_traits<T, E>::const_size)
 	lak::array<byte_t, lak::to_bytes_size<T, E>()> to_bytes(const T &value);
+
+	template<lak::endian E = lak::endian::little, typename... T>
+	requires((sizeof...(T) > 1) &&
+	         (lak::to_bytes_traits<T, E>::const_size && ...))
+	void to_bytes(lak::span<byte_t, (lak::to_bytes_size<T, E>() + ...)> bytes,
+	              const T &...values);
+
+	template<lak::endian E = lak::endian::little, typename... T>
+	requires((sizeof...(T) > 1) &&
+	         (lak::to_bytes_traits<T, E>::const_size && ...))
+	lak::array<byte_t, (lak::to_bytes_size<T, E>() + ...)> to_bytes(
+	  const T &...values);
 
 	/* --- array_to_bytes --- */
 

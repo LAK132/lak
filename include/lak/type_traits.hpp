@@ -1494,6 +1494,41 @@ namespace lak
 	template<typename... T>
 	using index_sequence_for = lak::make_index_sequence<sizeof...(T)>;
 
+	template<typename T, T SIZE, typename INTEGER_SEQUENCE>
+	struct _prepend_offset;
+
+	template<typename T, T SIZE, T... SIZES>
+	struct _prepend_offset<T, SIZE, lak::integer_sequence<T, T(0), SIZES...>>
+	{
+		using type = lak::integer_sequence<T, T(0), SIZE, (SIZE + SIZES)...>;
+	};
+
+	template<typename T, T SIZE, typename INTEGER_SEQUENCE>
+	using prepend_offset =
+	  typename lak::_prepend_offset<T, SIZE, INTEGER_SEQUENCE>::type;
+
+	template<typename T, T... SIZES>
+	struct _offset_sequence_for;
+
+	template<typename T, T SIZE>
+	struct _offset_sequence_for<T, SIZE>
+	{
+		using type = lak::integer_sequence<T, T(0)>;
+	};
+
+	template<typename T, T SIZE, T... SIZES>
+	struct _offset_sequence_for<T, SIZE, SIZES...>
+	{
+		using type = lak::prepend_offset<
+		  T,
+		  SIZE,
+		  typename lak::_offset_sequence_for<T, SIZES...>::type>;
+	};
+
+	template<typename T, T... SIZE>
+	using offset_sequence_for =
+	  typename lak::_offset_sequence_for<T, SIZE...>::type;
+
 	/* --- void_t --- */
 
 	template<typename...>
