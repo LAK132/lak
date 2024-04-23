@@ -10,23 +10,59 @@
 
 namespace lak
 {
-	/* --- from_bytes_traits --- */
+	template<typename T, lak::endian E>
+	struct from_bytes_data;
 
 	template<typename T, lak::endian E>
-	struct from_bytes_traits
+	struct to_bytes_data;
+
+	/* --- bytes_traits --- */
+
+	template<typename T, lak::endian E>
+	struct bytes_traits
 	{
 		using value_type = lak::nonesuch;
 
 		static constexpr bool const_size = false;
 
-		static constexpr size_t size = lak::dynamic_extent;
+		static constexpr size_t size() { return lak::dynamic_extent; }
+		static constexpr size_t size(const value_type &) = delete;
 
-		// static void from_bytes(lak::from_bytes_data<value_type, E> data)
-		// requires(const_size);
+		static lak::result<lak::span<const byte_t>> from_bytes(
+		  lak::from_bytes_data<value_type, E> data)
+		requires(!const_size)
+		= delete;
 
-		// static lak::result<lak::span<const byte_t>>
-		// from_bytes(lak::from_bytes_data<value_type, E> data)
-		// requires(!const_size);
+		static void from_bytes(lak::from_bytes_data<value_type, E> data)
+		requires(const_size)
+		= delete;
+
+		static void to_bytes(lak::to_bytes_data<value_type, E> data) = delete;
+	};
+
+	/* --- from_bytes_traits --- */
+
+	template<typename T, lak::endian E>
+	struct from_bytes_traits
+	{
+		using value_type = typename lak::bytes_traits<T, E>::value_type;
+
+		static constexpr bool const_size = lak::bytes_traits<T, E>::const_size;
+
+		static constexpr size_t size = lak::bytes_traits<T, E>::size();
+
+		static void from_bytes(lak::from_bytes_data<value_type, E> data)
+		requires(const_size)
+		{
+			lak::bytes_traits<T, E>::from_bytes(data);
+		}
+
+		static lak::result<lak::span<const byte_t>> from_bytes(
+		  lak::from_bytes_data<value_type, E> data)
+		requires(!const_size)
+		{
+			return lak::bytes_traits<T, E>::from_bytes(data);
+		}
 	};
 
 	template<typename T, lak::endian E>
@@ -156,18 +192,30 @@ namespace lak
 	/* --- to_bytes_traits --- */
 
 	template<typename T, lak::endian E>
-	struct to_bytes_data;
-
-	template<typename T, lak::endian E>
 	struct to_bytes_traits
 	{
-		using value_type = lak::nonesuch;
+		using value_type = lak::bytes_traits<T, E>::value_type;
 
-		static constexpr bool const_size = true;
+		static constexpr bool const_size = lak::bytes_traits<T, E>::const_size;
 
-		static constexpr size_t size() { return 0; }
+		static constexpr size_t size() { return lak::bytes_traits<T, E>::size(); }
 
-		static void to_bytes(lak::to_bytes_data<value_type, E> data) = delete;
+		static constexpr size_t size(const value_type &)
+		requires(const_size)
+		{
+			return size();
+		}
+
+		static constexpr size_t size(const value_type &v)
+		requires(!const_size)
+		{
+			return lak::bytes_traits<T, E>::size(v);
+		}
+
+		static void to_bytes(lak::to_bytes_data<value_type, E> data)
+		{
+			lak::bytes_traits<T, E>::to_bytes(data);
+		}
 	};
 
 	template<typename T, lak::endian E>
