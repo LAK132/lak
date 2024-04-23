@@ -194,7 +194,7 @@ namespace lak
 	template<typename T, lak::endian E>
 	struct to_bytes_traits
 	{
-		using value_type = lak::bytes_traits<T, E>::value_type;
+		using value_type = typename lak::bytes_traits<T, E>::value_type;
 
 		static constexpr bool const_size = lak::bytes_traits<T, E>::const_size;
 
