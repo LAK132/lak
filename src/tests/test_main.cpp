@@ -9,7 +9,8 @@
 
 int LAK_TEST_MAIN(int argc, char **argv)
 {
-	std::cout << "lak_test\n" << std::flush;
+	for (int i = 0; i < argc; ++i) std::cout << argv[i] << " ";
+	std::cout << "\n" << std::flush;
 
 	lak::astring_view arg1{
 	  lak::astring_view::from_c_str(argc < 2 ? "" : argv[1])};
