@@ -67,7 +67,8 @@ jobs:
           echo "CC=$(brew --prefix llvm@15)/bin/clang" >> $GITHUB_ENV
           echo "CXX=$(brew --prefix llvm@15)/bin/clang++" >> $GITHUB_ENV
 
-      - run: meson setup build --buildtype debugoptimized ${{ matrix.setup-options }}
+        # _DISABLE_CONSTEXPR_MUTEX_CONSTRUCTOR is a hack fix for broken runners
+      - run: meson setup build -Dcpp_args="-D_DISABLE_CONSTEXPR_MUTEX_CONSTRUCTOR" --buildtype debugoptimized ${{ matrix.setup-options }}
       - run: meson compile -C build
       - run: build/lak_test --help
       - run: build/lak_test --testall

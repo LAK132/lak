@@ -12,7 +12,6 @@ if cxx.get_id() == 'msvc'
 		'-DUNICODE',
 		'-DWIN32_LEAN_AND_MEAN',
 		'-DNOMINMAX',
-		'-D_DISABLE_CONSTEXPR_MUTEX_CONSTRUCTOR',
 		'-wd4315',
 		'-wd4366',
 		'-Wv:18',
@@ -255,7 +254,12 @@ endif
 
 if get_option('lak_enable_godot_cpp')
 	subdir('src/godot')
-	dependencies += lakgodot_dep
+	# dependencies += lakgodot_dep
+
+	# if get_option('lak_enable_tests')
+	# 	subdir('src/tests/godot')
+	# 	dependencies += laktestgodot_dep
+	# endif
 endif
 
 if target_machine.system() == 'windows'
