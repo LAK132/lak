@@ -253,7 +253,6 @@ bool lak::set_window_cursor_pos(const lak::window_handle *handle,
 
 lak::vec2l_t lak::window_drawable_size(const lak::window_handle *handle)
 {
-	int w = 0, h = 0;
 	switch (handle->graphics_mode())
 	{
 #ifdef LAK_ENABLE_SOFTRENDER
@@ -261,25 +260,32 @@ lak::vec2l_t lak::window_drawable_size(const lak::window_handle *handle)
 		{
 			auto *surface = SDL_GetWindowSurface(handle->sdl_window);
 			ASSERT(surface);
-			w = surface->w;
-			h = surface->h;
+			return {long(surface->w), long(surface->h)};
 		}
 		break;
 #endif
 #ifdef LAK_ENABLE_OPENGL
 		case lak::graphics_mode::OpenGL:
+		{
+			int w, h;
 			SDL_GL_GetDrawableSize(handle->sdl_window, &w, &h);
-			break;
+			return {long(w), long(h)};
+		}
+		break;
 #endif
 #ifdef LAK_ENABLE_VULKAN
 		case lak::graphics_mode::Vulkan:
-			// SDL_Vulkan_GetDrawableSize(handle->sdl_window, &w, &h);
-			break;
+		{
+			int w, h;
+			SDL_Vulkan_GetDrawableSize(handle->sdl_window, &w, &h);
+			return {long(w), long(h)};
+		}
+		break;
 #endif
 		default:
 			FATAL("Invalid graphics mode (", handle->graphics_mode(), ")");
 	}
-	return {w, h};
+	return {0, 0};
 }
 
 bool lak::set_window_size(lak::window_handle *handle, lak::vec2l_t size)
