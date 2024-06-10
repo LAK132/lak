@@ -9,6 +9,8 @@
 
 int LAK_TEST_MAIN(int argc, char **argv)
 {
+	std::cout << "lak_test\n" << std::flush;
+
 	lak::astring_view arg1{
 	  lak::astring_view::from_c_str(argc < 2 ? "" : argv[1])};
 	if (argc < 2 || arg1 == "-h"_view || arg1 == "--help"_view)
@@ -16,7 +18,8 @@ int LAK_TEST_MAIN(int argc, char **argv)
 		std::cout << "options:\n"
 		             "--help: print this text\n"
 		             "--testall: run all registered tests\n"
-		             "--test[s] \"test1;test2\": run the specified tests\n";
+		             "--test[s] \"test1;test2\": run the specified tests\n"
+		          << std::flush;
 		return argc < 2 ? EXIT_FAILURE : EXIT_SUCCESS;
 	}
 	else if (arg1 == "--testall"_view)
