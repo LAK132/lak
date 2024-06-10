@@ -451,3 +451,20 @@ lak::error_code_result<lak::file_open_error> lak::open_folder_modal(
 	return lak::ok_t{lak::file_open_error::INCOMPLETE};
 #endif
 }
+
+lak::optional<std::filesystem::path> lak::path_getter::operator()()
+{
+	if (_path)
+	{
+		if (auto res = _file ? lak::open_file_modal(*_path, _save, _filter)
+		                     : lak::open_folder_modal(*_path);
+		    res.is_ok() && res.unsafe_unwrap() == lak::file_open_error::VALID)
+		{
+			return lak::exchange(_path, lak::nullopt);
+		}
+		else if (res.is_err())
+			ERROR(res.unsafe_unwrap_err());
+	}
+
+	return lak::nullopt;
+}

@@ -108,6 +108,37 @@ namespace lak
 	lak::error_code_result<lak::file_open_error> open_folder_modal(
 	  std::filesystem::path &path);
 
+	struct path_getter
+	{
+		lak::optional<std::filesystem::path> _path;
+		lak::astring _filter;
+		bool _save;
+		bool _file;
+
+		inline void open_file(std::filesystem::path path = {},
+		                      lak::astring filter        = ".*")
+		{
+			_path   = lak::move(path);
+			_filter = lak::move(filter);
+			_save   = false;
+			_file   = true;
+		}
+		inline void save_file(std::filesystem::path path = {},
+		                      lak::astring filter        = ".*")
+		{
+			_path   = lak::move(path);
+			_filter = lak::move(filter);
+			_save   = true;
+			_file   = true;
+		}
+		inline void folder(std::filesystem::path path = {})
+		{
+			_path = lak::move(path);
+			_file = false;
+		}
+
+		lak::optional<std::filesystem::path> operator()();
+	};
 }
 
 #include "widgets.inl"
