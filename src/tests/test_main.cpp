@@ -25,6 +25,7 @@ int LAK_TEST_MAIN(int argc, char **argv)
 	}
 	else if (arg1 == "--testall"_view)
 	{
+		DEBUG("Tests: ", lak::registered_tests().size());
 		return lak::run_tests();
 	}
 	else if (arg1 == "--tests"_view || arg1 == "--test"_view)
