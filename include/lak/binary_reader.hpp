@@ -1,14 +1,15 @@
-#ifndef LAK_BINARY_READER_HPP
-#define LAK_BINARY_READER_HPP
-
-#include "lak/array.hpp"
 #include "lak/binary_traits.hpp"
-#include "lak/endian.hpp"
-#include "lak/result.hpp"
-#include "lak/span.hpp"
-#include "lak/stdint.hpp"
 
-#include "lak/debug.hpp"
+#ifndef LAK_BINARY_READER_HPP
+#	define LAK_BINARY_READER_HPP
+
+#	include "lak/array.hpp"
+#	include "lak/endian.hpp"
+#	include "lak/result.hpp"
+#	include "lak/span.hpp"
+#	include "lak/stdint.hpp"
+
+#	include "lak/debug.hpp"
 
 namespace lak
 {
@@ -191,21 +192,63 @@ namespace lak
 			return result;
 		}
 
-#define BINARY_READER_MEMBERS(TYPE, NAME, ...)                                \
-	template<lak::endian E = lak::endian::little>                               \
-	inline lak::result<TYPE> peek_##NAME()                                      \
-	{                                                                           \
-		return peek<TYPE, E>();                                                   \
-	}                                                                           \
-	template<lak::endian E = lak::endian::little>                               \
-	inline lak::result<TYPE> read_##NAME()                                      \
-	{                                                                           \
-		return read<TYPE, E>();                                                   \
-	}
+#	define BINARY_READER_MEMBERS(TYPE, NAME, ...)                              \
+		template<lak::endian E = lak::endian::little>                             \
+		inline lak::result<TYPE> peek_##NAME()                                    \
+		{                                                                         \
+			return peek<TYPE, E>();                                                 \
+		}                                                                         \
+		inline lak::result<TYPE> peek_##NAME##le()                                \
+		{                                                                         \
+			return peek_##NAME<lak::endian::little>();                              \
+		}                                                                         \
+		inline lak::result<TYPE> peek_##NAME##be()                                \
+		{                                                                         \
+			return peek_##NAME<lak::endian::big>();                                 \
+		}                                                                         \
+		template<lak::endian E = lak::endian::little>                             \
+		inline lak::result<TYPE> read_##NAME()                                    \
+		{                                                                         \
+			return read<TYPE, E>();                                                 \
+		}                                                                         \
+		inline lak::result<TYPE> read_##NAME##le()                                \
+		{                                                                         \
+			return read_##NAME<lak::endian::little>();                              \
+		}                                                                         \
+		inline lak::result<TYPE> read_##NAME##be()                                \
+		{                                                                         \
+			return read_##NAME<lak::endian::big>();                                 \
+		}
 		LAK_FOREACH_INTEGER(BINARY_READER_MEMBERS)
 		LAK_FOREACH_FLOAT(BINARY_READER_MEMBERS)
-#undef BINARY_READER_MEMBERS
+#	undef BINARY_READER_MEMBERS
 	};
+
+	namespace concepts
+	{
+		template<typename T, lak::endian E>
+		concept from_bytes_readable = requires(T value) {
+			{
+				value.template read<E>(lak::declval<lak::binary_reader &>())
+			} -> lak::concepts::same_as<lak::result<>>;
+		};
+	}
 }
+
+template<lak::endian E, lak::concepts::from_bytes_readable<E> T>
+struct lak::from_bytes_traits<T, E>
+{
+	using value_type                 = T;
+	static constexpr bool const_size = false;
+	static constexpr size_t size     = lak::dynamic_extent;
+
+	static lak::result<lak::span<const byte_t>> from_bytes(
+	  lak::from_bytes_data<value_type, E> data)
+	{
+		auto strm{data.reader()};
+		for (auto &dst : data.dst) RES_TRY(dst.template read<E>(strm));
+		return lak::ok_t{strm.remaining()};
+	}
+};
 
 #endif

@@ -16,6 +16,9 @@ namespace lak
 	template<typename T, lak::endian E>
 	struct to_bytes_data;
 
+	struct binary_reader;
+	struct binary_span_writer;
+
 	/* --- bytes_traits --- */
 
 	template<typename T, lak::endian E>
@@ -115,13 +118,27 @@ namespace lak
 		from_bytes_data(const from_bytes_data &)            = default;
 		from_bytes_data &operator=(const from_bytes_data &) = default;
 
-		lak::span<const byte_t, bytes_per_element> bytes_for(const T *dst_ptr)
+		lak::span<const byte_t, bytes_per_element> bytes_for(
+		  const T *dst_ptr) const
 		requires(lak::from_bytes_traits<T, E>::const_size)
 		{
 			const size_t index = dst_ptr - dst.begin();
 			ASSERT_LESS(index, dst.size());
 			return src.subspan(index * bytes_per_element)
 			  .template first<bytes_per_element>();
+		}
+
+		template<typename U = T>
+		lak::binary_reader reader_for(const T *dst_ptr) const
+		requires(lak::from_bytes_traits<T, E>::const_size)
+		{
+			return lak::binary_reader{bytes_for(dst_ptr)};
+		}
+
+		template<typename U = T>
+		lak::binary_reader reader() const
+		{
+			return lak::binary_reader{src};
 		}
 
 	private:
@@ -178,6 +195,13 @@ namespace lak
 	requires(lak::from_bytes_traits<T, E>::const_size)
 	lak::result<> array_from_bytes(lak::span<T> values,
 	                               lak::span<const byte_t> bytes);
+
+	template<typename T, size_t S, lak::endian E = lak::endian::little>
+	requires((S != lak::dynamic_extent) &&
+	         lak::from_bytes_traits<T, E>::const_size)
+	void array_from_bytes(
+	  lak::span<T, S> values,
+	  lak::span<const byte_t, S * lak::from_bytes_traits<T, E>::size> bytes);
 
 	template<typename T, lak::endian E = lak::endian::little>
 	requires(!lak::from_bytes_traits<T, E>::const_size)
@@ -284,12 +308,24 @@ namespace lak
 		to_bytes_data(const to_bytes_data &)            = default;
 		to_bytes_data &operator=(const to_bytes_data &) = default;
 
-		lak::span<byte_t, bytes_per_element> bytes_for(const T *src_ptr)
+		lak::span<byte_t, bytes_per_element> bytes_for(const T *src_ptr) const
 		{
 			const size_t index = src_ptr - src.begin();
 			ASSERT_LESS(index, src.size());
 			return dst.subspan(index * bytes_per_element)
 			  .template first<bytes_per_element>();
+		}
+
+		template<typename U = T>
+		lak::binary_span_writer writer_for(const T *src_ptr) const
+		{
+			return lak::binary_span_writer{bytes_for(src_ptr)};
+		}
+
+		template<typename U = T>
+		lak::binary_span_writer writer() const
+		{
+			return lak::binary_span_writer{dst};
 		}
 
 	private:
@@ -316,6 +352,12 @@ namespace lak
 
 		to_bytes_data(const to_bytes_data &)            = default;
 		to_bytes_data &operator=(const to_bytes_data &) = default;
+
+		template<typename U = T>
+		lak::binary_span_writer writer() const
+		{
+			return lak::binary_span_writer{dst};
+		}
 
 	private:
 		to_bytes_data(lak::span<byte_t> d, lak::span<const T> s) : dst(d), src(s)
@@ -396,7 +438,74 @@ namespace lak
 	template<typename T, lak::endian E = lak::endian::little>
 	lak::result<> array_to_bytes(lak::span<byte_t> bytes,
 	                             lak::span<const T> values);
+
+	template<typename T, size_t S, lak::endian E = lak::endian::little>
+	requires((S != lak::dynamic_extent) &&
+	         lak::to_bytes_traits<T, E>::const_size)
+	void array_to_bytes(
+	  lak::span<byte_t, S * lak::to_bytes_traits<T, E>::size()> bytes,
+	  lak::span<const T, S> values);
+
+	/* --- bytes_traits_fixed_struct_impl --- */
+
+	template<typename T, lak::endian E, lak::endian E2, auto... MEMBERS>
+	requires((sizeof...(MEMBERS) > 1) &&
+	         ((lak::is_member_pointer_for_v<decltype(MEMBERS), T>)&&...) &&
+	         ((lak::to_bytes_traits<
+	            lak::remove_reference_t<decltype(lak::declval<T>().*MEMBERS)>,
+	            E>::const_size) &&
+	          ...) &&
+	         ((lak::from_bytes_traits<
+	            lak::remove_reference_t<decltype(lak::declval<T>().*MEMBERS)>,
+	            E>::const_size) &&
+	          ...))
+	struct bytes_traits_fixed_struct_impl
+	{
+		using value_type                 = T;
+		static constexpr bool const_size = true;
+		static constexpr size_t size()
+		{
+			constexpr size_t sz1 =
+			  ((lak::to_bytes_traits<
+			     lak::remove_reference_t<decltype(lak::declval<T>().*MEMBERS)>,
+			     E>::size()) +
+			   ...);
+			constexpr size_t sz2 =
+			  ((lak::from_bytes_traits<
+			     lak::remove_reference_t<decltype(lak::declval<T>().*MEMBERS)>,
+			     E>::size) +
+			   ...);
+			static_assert(sz1 == sz2);
+			return sz1;
+		}
+		static constexpr size_t size(const value_type &) { return size(); };
+		static void from_bytes(lak::from_bytes_data<value_type, E> data)
+		{
+			for (auto &dst : data.dst)
+				lak::from_bytes<E2>(data.bytes_for(&dst), dst.*MEMBERS...);
+		}
+		static void to_bytes(lak::to_bytes_data<value_type, E> data)
+		{
+			for (const auto &src : data.src)
+				lak::to_bytes<E2>(data.bytes_for(&src), src.*MEMBERS...);
+		}
+	};
+#define LAK_FIXED_STRUCT_BYTES_TRAITS(TYPE, ...)                              \
+	template<lak::endian E>                                                     \
+	struct lak::bytes_traits<TYPE, E>                                           \
+	: lak::bytes_traits_fixed_struct_impl<TYPE, E, E, __VA_ARGS__>              \
+	{                                                                           \
+	};
+#define LAK_FIXED_STRUCT_BYTES_TRAITS_EX(ENDIAN, TYPE, ...)                   \
+	template<lak::endian E>                                                     \
+	struct lak::bytes_traits<TYPE, E>                                           \
+	: lak::bytes_traits_fixed_struct_impl<TYPE, E, ENDIAN, __VA_ARGS__>         \
+	{                                                                           \
+	};
 }
+
+#include "lak/binary_reader.hpp"
+#include "lak/binary_writer.hpp"
 
 #include "binary_traits.inl"
 

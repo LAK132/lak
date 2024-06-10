@@ -224,6 +224,18 @@ lak::result<> lak::array_from_bytes(lak::span<T> values,
 	    });
 }
 
+template<typename T, size_t S, lak::endian E>
+requires((S != lak::dynamic_extent) &&
+         lak::from_bytes_traits<T, E>::const_size)
+void lak::array_from_bytes(
+  lak::span<T, S> values,
+  lak::span<const byte_t, S * lak::from_bytes_traits<T, E>::size> bytes)
+{
+	auto data{lak::from_bytes_data<T, E>::make(values, bytes)};
+	for (auto &item : values)
+		item = lak::from_bytes<T, E>(data.bytes_for(&item));
+}
+
 template<typename T, lak::endian E>
 requires(!lak::from_bytes_traits<T, E>::const_size)
 lak::result<lak::pair<lak::array<T>, lak::span<const byte_t>>>
@@ -304,6 +316,16 @@ lak::result<> lak::array_to_bytes(lak::span<byte_t> bytes,
 		    lak::to_bytes_traits<T, E>::to_bytes(data);
 		    return lak::monostate{};
 	    });
+}
+
+template<typename T, size_t S, lak::endian E>
+requires((S != lak::dynamic_extent) && lak::to_bytes_traits<T, E>::const_size)
+void lak::array_to_bytes(
+  lak::span<byte_t, S * lak::to_bytes_traits<T, E>::size()> bytes,
+  lak::span<const T, S> values)
+{
+	auto data{lak::to_bytes_data<T, E>::make(values, bytes)};
+	for (auto &item : values) lak::to_bytes<T, E>(data.bytes_for(&item), item);
 }
 
 namespace lak
@@ -777,5 +799,93 @@ struct lak::to_bytes_traits<wchar_t, E>
 	static void to_bytes(lak::to_bytes_data<value_type, E> data)
 	{
 		lak::_basic_memcpy_to_bytes(data);
+	}
+};
+
+/* --- lak::span --- */
+
+template<typename T, size_t S, lak::endian E>
+requires(S != lak::dynamic_extent && lak::from_bytes_traits<T, E>::const_size)
+struct lak::from_bytes_traits<lak::span<T, S>, E>
+{
+	using value_type                 = lak::span<T, S>;
+	static constexpr bool const_size = true;
+	static constexpr size_t size     = lak::from_bytes_traits<T, E>::size * S;
+
+	static void from_bytes(lak::from_bytes_data<value_type, E> data)
+	{
+		for (auto &item : data.dst)
+			lak::array_from_bytes<T, S, E>(item, data.bytes_for(&item));
+	}
+};
+
+template<typename T, size_t S, lak::endian E>
+requires(S != lak::dynamic_extent && lak::to_bytes_traits<T, E>::const_size)
+struct lak::to_bytes_traits<lak::span<T, S>, E>
+{
+	using value_type                 = lak::span<T, S>;
+	static constexpr bool const_size = true;
+	static constexpr size_t size()
+	{
+		return lak::to_bytes_traits<T, E>::size() * S;
+	}
+
+	static void to_bytes(lak::to_bytes_data<value_type, E> data)
+	{
+		for (auto &item : data.dst)
+			lak::array_to_bytes<T, S, E>(data.bytes_for(&item), item);
+	}
+};
+
+template<typename T, size_t S, lak::endian E>
+requires(S != lak::dynamic_extent && lak::to_bytes_traits<T, E>::const_size)
+struct lak::to_bytes_traits<lak::span<const T, S>, E>
+{
+	using value_type                 = lak::span<const T, S>;
+	static constexpr bool const_size = true;
+	static constexpr size_t size()
+	{
+		return lak::to_bytes_traits<T, E>::size() * S;
+	}
+
+	static void to_bytes(lak::to_bytes_data<value_type, E> data)
+	{
+		for (auto &item : data.dst)
+			lak::array_to_bytes<T, S, E>(data.bytes_for(&item), item);
+	}
+};
+
+/* --- lak::array --- */
+
+template<typename T, size_t S, lak::endian E>
+requires(S != lak::dynamic_extent && lak::from_bytes_traits<T, E>::const_size)
+struct lak::from_bytes_traits<lak::array<T, S>, E>
+{
+	using value_type                 = lak::array<T, S>;
+	static constexpr bool const_size = true;
+	static constexpr size_t size     = lak::from_bytes_traits<T, E>::size * S;
+
+	static void from_bytes(lak::from_bytes_data<value_type, E> data)
+	{
+		for (auto &item : data.dst)
+			lak::array_from_bytes<T, S, E>(item, data.bytes_for(&item));
+	}
+};
+
+template<typename T, size_t S, lak::endian E>
+requires(S != lak::dynamic_extent && lak::to_bytes_traits<T, E>::const_size)
+struct lak::to_bytes_traits<lak::array<T, S>, E>
+{
+	using value_type                 = lak::array<T, S>;
+	static constexpr bool const_size = true;
+	static constexpr size_t size()
+	{
+		return lak::to_bytes_traits<T, E>::size() * S;
+	}
+
+	static void to_bytes(lak::to_bytes_data<value_type, E> data)
+	{
+		for (auto &item : data.dst)
+			lak::array_to_bytes<T, S, E>(data.bytes_for(&item), item);
 	}
 };

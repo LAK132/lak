@@ -1218,6 +1218,33 @@ namespace lak
 	static_assert(!lak::is_member_pointer_v<char[]>);
 	static_assert(!lak::is_member_pointer_v<const volatile char[]>);
 
+	/* --- is_member_pointer_for --- */
+
+	template<typename MEM, typename T>
+	struct is_member_pointer_for : lak::false_type
+	{
+	};
+
+	template<typename T, typename U>
+	struct is_member_pointer_for<U T::*, T> : lak::true_type
+	{
+	};
+
+	template<typename MEM, typename T>
+	inline constexpr bool is_member_pointer_for_v =
+	  lak::is_member_pointer_for<MEM, T>::value;
+
+	static_assert(!lak::is_member_pointer_for_v<char, char>);
+	static_assert(!lak::is_member_pointer_for_v<char, const volatile char>);
+	static_assert(!lak::is_member_pointer_for_v<char, char *>);
+	static_assert(!lak::is_member_pointer_for_v<char, const volatile char *>);
+	static_assert(!lak::is_member_pointer_for_v<char, char &>);
+	static_assert(!lak::is_member_pointer_for_v<char, const volatile char &>);
+	static_assert(!lak::is_member_pointer_for_v<char, char &&>);
+	static_assert(!lak::is_member_pointer_for_v<char, const volatile char &&>);
+	static_assert(!lak::is_member_pointer_for_v<char, char[]>);
+	static_assert(!lak::is_member_pointer_for_v<char, const volatile char[]>);
+
 	/* --- is_member_function_pointer --- */
 
 	template<typename T>

@@ -1,13 +1,14 @@
-#ifndef LAK_BINARY_WRITER_HPP
-#define LAK_BINARY_WRITER_HPP
-
-#include "lak/array.hpp"
 #include "lak/binary_traits.hpp"
-#include "lak/endian.hpp"
-#include "lak/result.hpp"
-#include "lak/span.hpp"
-#include "lak/stdint.hpp"
-#include "lak/type_traits.hpp"
+
+#ifndef LAK_BINARY_WRITER_HPP
+#	define LAK_BINARY_WRITER_HPP
+
+#	include "lak/array.hpp"
+#	include "lak/endian.hpp"
+#	include "lak/result.hpp"
+#	include "lak/span.hpp"
+#	include "lak/stdint.hpp"
+#	include "lak/type_traits.hpp"
 
 namespace lak
 {
@@ -103,15 +104,23 @@ namespace lak
 			return lak::ok_t{};
 		}
 
-#define BINARY_SPAN_WRITER_MEMBERS(TYPE, NAME, ...)                           \
-	template<lak::endian E = lak::endian::little>                               \
-	inline lak::result<> write_##NAME(const TYPE &value)                        \
-	{                                                                           \
-		return write<E, TYPE>(value);                                             \
-	}
+#	define BINARY_SPAN_WRITER_MEMBERS(TYPE, NAME, ...)                         \
+		template<lak::endian E = lak::endian::little>                             \
+		inline lak::result<> write_##NAME(const TYPE &value)                      \
+		{                                                                         \
+			return write<E, TYPE>(value);                                           \
+		}                                                                         \
+		inline lak::result<> write_##NAME##le(const TYPE &value)                  \
+		{                                                                         \
+			return write_##NAME<lak::endian::little>(value);                        \
+		}                                                                         \
+		inline lak::result<> write_##NAME##be(const TYPE &value)                  \
+		{                                                                         \
+			return write_##NAME<lak::endian::big>(value);                           \
+		}
 		LAK_FOREACH_INTEGER(BINARY_SPAN_WRITER_MEMBERS)
 		LAK_FOREACH_FLOAT(BINARY_SPAN_WRITER_MEMBERS)
-#undef BINARY_SPAN_WRITER_MEMBERS
+#	undef BINARY_SPAN_WRITER_MEMBERS
 	};
 
 	/* --- binary_array_writer --- */
@@ -175,16 +184,55 @@ namespace lak
 			lak::to_bytes<CHAR, E>(bytes.template last<char_size>(), CHAR(0));
 		}
 
-#define BINARY_ARRAY_WRITER_MEMBERS(TYPE, NAME, ...)                          \
-	template<lak::endian E = lak::endian::little>                               \
-	inline void write_##NAME(const TYPE &value)                                 \
-	{                                                                           \
-		write<E, TYPE>(value);                                                    \
-	}
+#	define BINARY_ARRAY_WRITER_MEMBERS(TYPE, NAME, ...)                        \
+		template<lak::endian E = lak::endian::little>                             \
+		inline void write_##NAME(const TYPE &value)                               \
+		{                                                                         \
+			write<E, TYPE>(value);                                                  \
+		}                                                                         \
+		inline void write_##NAME##le(const TYPE &value)                           \
+		{                                                                         \
+			write_##NAME<lak::endian::little>(value);                               \
+		}                                                                         \
+		inline void write_##NAME##be(const TYPE &value)                           \
+		{                                                                         \
+			write_##NAME<lak::endian::big>(value);                                  \
+		}
 		LAK_FOREACH_INTEGER(BINARY_ARRAY_WRITER_MEMBERS)
 		LAK_FOREACH_FLOAT(BINARY_ARRAY_WRITER_MEMBERS)
-#undef BINARY_ARRAY_WRITER_MEMBERS
+#	undef BINARY_ARRAY_WRITER_MEMBERS
 	};
+
+	namespace concepts
+	{
+		template<typename T, lak::endian E>
+		concept to_bytes_writeable = requires(const T value) {
+			{
+				value.template write<E>(lak::declval<lak::binary_span_writer &>())
+			} -> lak::concepts::same_as<lak::result<>>;
+			{
+				value.template write_size<E>()
+			} -> lak::concepts::same_as<size_t>;
+		};
+	}
 }
+
+template<lak::endian E, lak::concepts::to_bytes_writeable<E> T>
+struct lak::to_bytes_traits<T, E>
+{
+	using value_type                 = T;
+	static constexpr bool const_size = false;
+	static constexpr size_t size() { return lak::dynamic_extent; }
+	static constexpr size_t size(const value_type &v)
+	{
+		return v.template write_size<E>();
+	}
+
+	static void to_bytes(lak::to_bytes_data<value_type, E> data)
+	{
+		auto strm{data.writer()};
+		for (auto &src : data.src) src.template write<E>(strm).unwrap();
+	}
+};
 
 #endif
