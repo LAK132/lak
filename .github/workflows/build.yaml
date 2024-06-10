@@ -45,7 +45,6 @@ jobs:
         uses: ilammy/msvc-dev-cmd@v1
         with:
           arch: ${{ matrix.arch }}
-          toolset: 14.38.33130
           vsversion: 2022
       - if: startsWith(matrix.os, 'windows')
         run: |
