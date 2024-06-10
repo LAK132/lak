@@ -12,6 +12,7 @@ if cxx.get_id() == 'msvc'
 		'-DUNICODE',
 		'-DWIN32_LEAN_AND_MEAN',
 		'-DNOMINMAX',
+		'-D_DISABLE_CONSTEXPR_MUTEX_CONSTRUCTOR',
 		'-wd4315',
 		'-wd4366',
 		'-Wv:18',
