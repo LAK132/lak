@@ -12,6 +12,8 @@ int LAK_TEST_MAIN(int argc, char **argv)
 	for (int i = 0; i < argc; ++i) std::cout << argv[i] << " ";
 	std::cout << "\n" << std::flush;
 
+	FUNCTION_CHECKPOINT();
+
 	lak::astring_view arg1{
 	  lak::astring_view::from_c_str(argc < 2 ? "" : argv[1])};
 	if (argc < 2 || arg1 == "-h"_view || arg1 == "--help"_view)
@@ -25,17 +27,20 @@ int LAK_TEST_MAIN(int argc, char **argv)
 	}
 	else if (arg1 == "--testall"_view)
 	{
+		CHECKPOINT();
 		DEBUG("Tests: ", lak::registered_tests().size());
 		return lak::run_tests();
 	}
 	else if (arg1 == "--tests"_view || arg1 == "--test"_view)
 	{
+		CHECKPOINT();
 		if (argc < 3) FATAL("Missing tests");
 		return lak::run_tests(
 		  lak::as_u8string(lak::astring_view::from_c_str(argv[2])));
 	}
 	else
 	{
+		CHECKPOINT();
 		FATAL("unknown flag '", arg1, "', use --help for a list of valid flags.");
 	}
 }
