@@ -70,8 +70,12 @@ jobs:
 
       - run: meson setup build --buildtype debugoptimized ${{ matrix.setup-options }}
       - run: meson compile -C build
-      - run: build/lak_test --testall
-      - run: build/lak_test_bigint_standalone --testall
+      - run: lak_test --help
+        working-directory: ./build
+      - run: lak_test --testall
+        working-directory: ./build
+      - run: lak_test_bigint_standalone --testall
+        working-directory: ./build
   push-staging:
     needs: run-tests
     runs-on: windows-2022
