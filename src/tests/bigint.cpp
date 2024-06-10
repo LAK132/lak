@@ -8,7 +8,7 @@ BEGIN_TEST(bigint)
 
 	value = 0;
 	DEBUG_EXPR(value);
-	ASSERT_EQUAL(value.bit_count(), 0);
+	ASSERT_EQUAL(value.bit_count(), 0U);
 	ASSERT(!value.is_big());
 	ASSERT_EQUAL(value.to_uintmax().UNWRAP(), 0U);
 
