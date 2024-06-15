@@ -55,14 +55,14 @@ namespace lak
 	template<typename T>
 	constexpr lak::reference_wrapper<lak::add_wconst_t<T>> cref(T &t) noexcept
 	{
-		return lak::reference_wrapper{t};
+		return lak::reference_wrapper<lak::add_wconst_t<T>>{t};
 	}
 
 	template<typename T>
 	constexpr lak::reference_wrapper<lak::add_wconst_t<T>> cref(
 	  lak::reference_wrapper<T> t) noexcept
 	{
-		return lak::reference_wrapper{t};
+		return lak::reference_wrapper<lak::add_wconst_t<T>>{t};
 	}
 
 	/* --- in_place_index --- */
