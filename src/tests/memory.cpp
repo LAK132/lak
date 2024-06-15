@@ -52,7 +52,7 @@ BEGIN_TEST(memory)
 		ASSERT_EQUAL(ptr.use_count(), 1U);
 
 		lak::span<int> s = *ptr;
-		ASSERT_EQUAL(s.size(), 5);
+		ASSERT_EQUAL(s.size(), 5U);
 
 		const auto expected = {0, 1, 2, 3, 4};
 		ASSERT_ARRAY_EQUAL(s, lak::span<const int>{expected});
