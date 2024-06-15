@@ -2,80 +2,58 @@
 
 #include "lak/compiler.hpp"
 #include "lak/memmanip.hpp"
+#include "lak/result.hpp"
 #include "lak/span_manip.hpp"
+#include "lak/utility.hpp"
 
-#include "lak/debug.hpp"
+#include "lak/char.hpp"
+#include "lak/stdint.hpp"
 
 /* --- from_bytes --- */
 
 template<typename T, lak::endian E>
 requires(lak::from_bytes_traits<T, E>::const_size)
-T lak::from_bytes(lak::span<const byte_t, lak::from_bytes_size_v<T, E>> bytes)
+T lak::from_bytes(
+  lak::span<const byte_t, lak::from_bytes_traits<T, E>::size> bytes)
 {
 	T result;
-	lak::from_bytes_traits<T, E>::from_bytes(lak::from_bytes_data<T, E>::make(
-	  lak::span<T, 1>::from_ptr(&result), bytes));
+	lak::from_bytes_traits<T, E>::from_bytes(bytes, result);
 	return result;
 }
 
 template<typename T, lak::endian E>
-requires(lak::from_bytes_traits<T, E>::const_size)
-lak::result<T> lak::from_bytes(lak::span<const byte_t> bytes)
-{
-	T result;
-	return lak::from_bytes_data<T, E>::maybe_make(
-	         lak::span<T, 1>::from_ptr(&result), bytes)
-	  .and_then(
-	    [&](auto data) -> lak::result<T>
-	    {
-		    lak::from_bytes_traits<T, E>::from_bytes(data);
-		    return lak::move_ok<T>(result);
-	    });
-}
-
-template<typename T, lak::endian E>
-requires(!lak::from_bytes_traits<T, E>::const_size)
 lak::result<lak::pair<T, lak::span<const byte_t>>> lak::from_bytes(
   lak::span<const byte_t> bytes)
 {
 	lak::pair<T, lak::span<const byte_t>> result;
-	return lak::from_bytes_data<T, E>::maybe_make(
-	         lak::span<T, 1>::from_ptr(&result.first), bytes)
-	  .and_then(
-	    [&](auto data) -> lak::result<lak::pair<T, lak::span<const byte_t>>>
-	    {
-		    if_let_ok (auto remaining,
-		               lak::from_bytes_traits<T, E>::from_bytes(data))
-		    {
-			    result.second = remaining;
-			    return lak::move_ok(result);
-		    }
-		    else
-			    return lak::err_t{};
-	    });
+	RES_TRY_ASSIGN(
+	  result.second =,
+	  lak::from_bytes_traits<T, E>::from_bytes(bytes, result.first));
+	return lak::move_ok(result);
 }
 
 namespace lak
 {
 	template<lak::endian E, typename... T, size_t... OFFSETS>
-	requires((sizeof...(T) > 1) &&
+	requires((sizeof...(T) > 0) &&
 	         (lak::from_bytes_traits<T, E>::const_size && ...))
 	void _from_bytes(
-	  lak::span<const byte_t, (lak::from_bytes_size_v<T, E> + ...)> bytes,
+	  lak::span<const byte_t, (lak::from_bytes_traits<T, E>::size + ...)> bytes,
 	  lak::index_sequence<OFFSETS...>,
 	  T &...values)
 	{
-		((values =
-		    lak::from_bytes<T, E>(bytes.template subspan<OFFSETS, sizeof(T)>())),
+		((lak::from_bytes_traits<T, E>::from_bytes(
+		   bytes.template subspan<OFFSETS, lak::from_bytes_traits<T, E>::size>(),
+		   values)),
 		 ...);
 	}
 }
 
 template<lak::endian E, typename... T>
-requires((sizeof...(T) > 1) &&
+requires((sizeof...(T) > 0) &&
          (lak::from_bytes_traits<T, E>::const_size && ...))
 void lak::from_bytes(
-  lak::span<const byte_t, (lak::from_bytes_size_v<T, E> + ...)> bytes,
+  lak::span<const byte_t, (lak::from_bytes_traits<T, E>::size + ...)> bytes,
   T &...values)
 {
 	lak::_from_bytes<E>(
@@ -83,86 +61,32 @@ void lak::from_bytes(
 }
 
 template<lak::endian E, typename... T>
-requires((sizeof...(T) > 1) &&
+requires((sizeof...(T) > 0) &&
          (lak::from_bytes_traits<T, E>::const_size && ...))
-lak::result<> lak::from_bytes(lak::span<const byte_t> bytes, T &...values)
+lak::result<lak::span<const byte_t>> lak::from_bytes(
+  lak::span<const byte_t> bytes, T &...values)
 {
-	if (bytes.size() != (lak::from_bytes_size_v<T, E> + ...))
-		return lak::err_t{};
-
-	lak::from_bytes(bytes.first<(lak::from_bytes_size_v<T, E> + ...)>(),
-	                values...);
-	return lak::ok_t{};
+	constexpr size_t size = (lak::from_bytes_traits<T, E>::size + ...);
+	if (bytes.size() < size) return lak::err_t{};
+	lak::from_bytes(bytes.template first<size>(), values...);
+	return lak::ok_t{bytes.subspan(size)};
 }
 
-/* --- to_bytes --- */
-
-template<typename T, lak::endian E>
-requires(lak::to_bytes_traits<T, E>::const_size)
-void lak::to_bytes(lak::span<byte_t, lak::to_bytes_size<T, E>()> bytes,
-                   const T &value)
+template<lak::endian E, typename... T>
+requires((sizeof...(T) > 0) &&
+         !(lak::from_bytes_traits<T, E>::const_size && ...))
+lak::result<lak::span<const byte_t>> lak::from_bytes(
+  lak::span<const byte_t> bytes, T &...values)
 {
-	static_assert(!lak::is_const_v<T>);
-	lak::to_bytes_traits<T, E>::to_bytes(lak::to_bytes_data<T, E>::make(
-	  bytes, lak::span<const T, 1>::from_ptr(&value)));
-}
-
-template<typename T, lak::endian E>
-lak::result<> lak::to_bytes(lak::span<byte_t> bytes, const T &value)
-{
-	static_assert(!lak::is_const_v<T>);
-	return lak::to_bytes_data<T, E>::maybe_make(
-	         bytes, lak::span<const T, 1>::from_ptr(&value))
-	  .map(
-	    [](auto data)
-	    {
-		    lak::to_bytes_traits<T, E>::to_bytes(data);
-		    return lak::monostate{};
-	    });
-}
-
-template<typename T, lak::endian E>
-requires(lak::to_bytes_traits<T, E>::const_size)
-lak::array<byte_t, lak::to_bytes_size<T, E>()> lak::to_bytes(const T &value)
-{
-	static_assert(!lak::is_const_v<T>);
-	lak::array<byte_t, lak::to_bytes_size<T, E>()> result;
-	lak::to_bytes<T, E>(lak::span<byte_t, lak::to_bytes_size<T, E>()>(result),
-	                    value);
-	return result;
-}
-
-namespace lak
-{
-	template<lak::endian E, typename... T, size_t... OFFSETS>
-	requires((lak::to_bytes_traits<T, E>::const_size && ...))
-	void _to_bytes(lak::span<byte_t, (lak::to_bytes_size<T, E>() + ...)> bytes,
-	               lak::index_sequence<OFFSETS...>,
-	               const T &...values)
+	if (bytes.empty()) return lak::err_t{};
+	auto do_from_bytes = [&]<typename J>(J &v) -> lak::result<>
 	{
-		((lak::to_bytes<T, E>(bytes.template subspan<OFFSETS, sizeof(T)>(),
-		                      values)),
-		 ...);
-	}
-}
-
-template<lak::endian E, typename... T>
-requires((sizeof...(T) > 1) && (lak::to_bytes_traits<T, E>::const_size && ...))
-void lak::to_bytes(lak::span<byte_t, (lak::to_bytes_size<T, E>() + ...)> bytes,
-                   const T &...values)
-{
-	lak::_to_bytes<E>(
-	  bytes, lak::offset_sequence_for<size_t, sizeof(T)...>{}, values...);
-}
-
-template<lak::endian E, typename... T>
-requires((sizeof...(T) > 1) && (lak::to_bytes_traits<T, E>::const_size && ...))
-lak::array<byte_t, (lak::to_bytes_size<T, E>() + ...)> lak::to_bytes(
-  const T &...values)
-{
-	lak::array<byte_t, (lak::to_bytes_size<T, E>() + ...)> bytes;
-	lak::to_bytes(bytes, values...);
-	return bytes;
+		RES_TRY_ASSIGN(bytes =,
+		               lak::from_bytes_traits<J, E>::from_bytes(bytes, v));
+		return lak::ok_t{};
+	};
+	if (((do_from_bytes(values).is_ok()) && ...)) return lak::ok_t{bytes};
+	return lak::err_t{};
 }
 
 /* --- array_from_bytes --- */
@@ -170,11 +94,14 @@ lak::array<byte_t, (lak::to_bytes_size<T, E>() + ...)> lak::to_bytes(
 template<typename T, size_t S, lak::endian E>
 requires(lak::from_bytes_traits<T, E>::const_size)
 lak::array<T, S> lak::array_from_bytes(
-  lak::span<const byte_t, lak::from_bytes_size_v<T, E> * S> bytes)
+  lak::span<const byte_t, lak::from_bytes_traits<T, E>::size * S> bytes)
 {
 	lak::array<T, S> result;
-	lak::from_bytes_traits<T, E>::from_bytes(
-	  lak::from_bytes_data<T, E>::make(lak::span<T, S>(result), bytes));
+	for (size_t i = 0U; T & res : result)
+		lak::from_bytes<T, E>(
+		  bytes.subspan((i++) * lak::from_bytes_traits<T, E>::size)
+		    .template first<lak::from_bytes_traits<T, E>::size>(),
+		  res);
 	return result;
 }
 
@@ -183,9 +110,10 @@ requires(lak::from_bytes_traits<T, E>::const_size)
 lak::result<lak::array<T, S>> lak::array_from_bytes(
   lak::span<const byte_t> bytes)
 {
-	return lak::first_as_const_sized<lak::from_bytes_size_v<T, E> * S>(bytes)
+	return lak::first_as_const_sized<lak::from_bytes_traits<T, E>::size * S>(
+	         bytes)
 	  .map(static_cast<lak::array<T, S> (*)(
-	         lak::span<const byte_t, lak::from_bytes_size_v<T, E> * S>)>(
+	         lak::span<const byte_t, lak::from_bytes_traits<T, E>::size * S>)>(
 	    &lak::array_from_bytes<T, S, E>));
 }
 
@@ -194,46 +122,51 @@ requires(lak::from_bytes_traits<T, E>::const_size)
 lak::result<lak::array<T>> lak::array_from_bytes(lak::span<const byte_t> bytes,
                                                  size_t count)
 {
-	const size_t req_size = lak::from_bytes_size_v<T, E> * count;
+	constexpr size_t single_size = lak::from_bytes_traits<T, E>::size;
+	const size_t req_size        = single_size * count;
+
 	if (bytes.size() < req_size) return lak::err_t{};
-	bytes = bytes.first(req_size);
 
 	lak::array<T> result;
-	result.resize(count);
+	result.reserve(count);
 
-	return lak::from_bytes_data<T, E>::maybe_make(lak::span(result), bytes)
-	  .map(
-	    [&](lak::from_bytes_data<T, E> data) -> lak::array<T>
-	    {
-		    lak::from_bytes_traits<T, E>::from_bytes(data);
-		    return lak::move(result);
-	    });
+	for (size_t i = 0U; i < count; ++i)
+	{
+		lak::from_bytes<E>(bytes.template first<single_size>(),
+		                   result.emplace_back());
+		bytes = bytes.subspan(single_size);
+	}
+
+	return lak::move_ok(result);
 }
 
-template<typename T, lak::endian E>
+template<lak::endian E, typename T>
 requires(lak::from_bytes_traits<T, E>::const_size)
-lak::result<> lak::array_from_bytes(lak::span<T> values,
-                                    lak::span<const byte_t> bytes)
+lak::result<lak::span<const byte_t>> lak::array_from_bytes(
+  lak::span<const byte_t> bytes, lak::span<T> values)
 {
-	return lak::from_bytes_data<T, E>::maybe_make(values, bytes)
-	  .map(
-	    [](auto data)
-	    {
-		    lak::from_bytes_traits<T, E>::from_bytes(data);
-		    return lak::monostate{};
-	    });
+	constexpr size_t size = lak::from_bytes_traits<T, E>::size;
+
+	if (values.size() > bytes.size() * size) return lak::err_t{};
+
+	for (size_t i = 0U; T & val : values)
+		lak::from_bytes_traits<T, E>::from_bytes(
+		  bytes.subspan((i++) * size).template first<size>(), val);
+
+	return lak::ok_t{bytes.subspan(values.size() * size)};
 }
 
-template<typename T, size_t S, lak::endian E>
+template<lak::endian E, typename T, size_t S>
 requires((S != lak::dynamic_extent) &&
          lak::from_bytes_traits<T, E>::const_size)
 void lak::array_from_bytes(
-  lak::span<T, S> values,
-  lak::span<const byte_t, S * lak::from_bytes_traits<T, E>::size> bytes)
+  lak::span<const byte_t, S * lak::from_bytes_traits<T, E>::size> bytes,
+  lak::span<T, S> values)
 {
-	auto data{lak::from_bytes_data<T, E>::make(values, bytes)};
-	for (auto &item : values)
-		item = lak::from_bytes<T, E>(data.bytes_for(&item));
+	constexpr size_t size = lak::from_bytes_traits<T, E>::size;
+	for (size_t i = 0U; T & val : values)
+		lak::from_bytes<E>(bytes.subspan((i++) * size).template first<size>(),
+		                   val);
 }
 
 template<typename T, lak::endian E>
@@ -241,39 +174,108 @@ requires(!lak::from_bytes_traits<T, E>::const_size)
 lak::result<lak::pair<lak::array<T>, lak::span<const byte_t>>>
 lak::array_from_bytes(lak::span<const byte_t> bytes, size_t count)
 {
-	struct back_assigner
-	{
-		lak::array<T> &_array;
-		T &operator=(const T &value)
-		requires lak::array_type_is_copyable<T>
-		{
-			return _array.push_back(value);
-		}
-		T &operator=(T &&value) { return _array.push_back(lak::move(value)); }
-	};
-
 	lak::pair<lak::array<T>, lak::span<const byte_t>> result;
 	result.first.reserve(count);
-	back_assigner backer{result.first};
-	auto tied{lak::tie(backer, bytes)};
 
-	for ([[maybe_unused]] const auto &i : lak::size_range_count(count))
+	for (size_t i = 0U; i < count; ++i)
 	{
-		RES_TRY_ASSIGN(tied =, lak::from_bytes<T, E>(bytes));
+		RES_TRY_ASSIGN(bytes =,
+		               lak::from_bytes_traits<T, E>::from_bytes(
+		                 bytes, result.first.emplace_back()));
 	}
 
 	return lak::move_ok(result);
 }
 
-template<typename T, lak::endian E>
+template<lak::endian E, typename T>
 requires(!lak::from_bytes_traits<T, E>::const_size)
 lak::result<lak::span<const byte_t>> lak::array_from_bytes(
-  lak::span<T> values, lak::span<const byte_t> bytes)
+  lak::span<const byte_t> bytes, lak::span<T> values)
 {
 	for (T &v : values)
 	{
-		RES_TRY_ASSIGN(lak::tie(v, bytes) =, lak::from_bytes<T, E>(bytes));
+		RES_TRY_ASSIGN(bytes =,
+		               lak::from_bytes_traits<T, E>::from_bytes(bytes, v));
 	}
+	return lak::ok_t{bytes};
+}
+
+/* --- to_bytes --- */
+
+template<lak::endian E, typename T>
+requires(lak::to_bytes_traits<T, E>::const_size)
+void lak::to_bytes(lak::span<byte_t, lak::to_bytes_traits<T, E>::size> bytes,
+                   const T &value)
+{
+	lak::to_bytes_traits<T, E>::to_bytes(bytes, value);
+}
+
+template<lak::endian E, typename T>
+lak::result<lak::span<byte_t>> lak::to_bytes(lak::span<byte_t> bytes,
+                                             const T &value)
+{
+	return lak::to_bytes_traits<T, E>::to_bytes(bytes, value);
+}
+
+template<lak::endian E, typename T>
+requires(lak::to_bytes_traits<T, E>::const_size)
+lak::array<byte_t, lak::to_bytes_traits<T, E>::size> lak::to_bytes(
+  const T &value)
+{
+	lak::array<byte_t, lak::to_bytes_traits<T, E>::size> result;
+	lak::to_bytes_traits<T, E> to_bytes(
+	  lak::span<byte_t, lak::to_bytes_traits<T, E>::size>(result), value);
+	return result;
+}
+
+namespace lak
+{
+	template<lak::endian E, typename... T, size_t... OFFSETS>
+	requires((lak::to_bytes_traits<T, E>::const_size && ...))
+	void _to_bytes(
+	  lak::span<byte_t, (lak::to_bytes_traits<T, E>::size + ...)> bytes,
+	  lak::index_sequence<OFFSETS...>,
+	  const T &...values)
+	{
+		((lak::to_bytes<T, E>(
+		   bytes.template subspan<OFFSETS, lak::to_bytes_traits<T, E>::size>(),
+		   values)),
+		 ...);
+	}
+}
+
+template<lak::endian E, typename... T>
+requires((sizeof...(T) > 0) && (lak::to_bytes_traits<T, E>::const_size && ...))
+void lak::to_bytes(
+  lak::span<byte_t, (lak::to_bytes_traits<T, E>::size + ...)> bytes,
+  const T &...values)
+{
+	lak::_to_bytes<E>(
+	  bytes, lak::offset_sequence_for<size_t, sizeof(T)...>{}, values...);
+}
+
+template<lak::endian E, typename... T>
+requires((sizeof...(T) > 0) && (lak::to_bytes_traits<T, E>::const_size && ...))
+lak::array<byte_t, (lak::to_bytes_traits<T, E>::size + ...)> lak::to_bytes(
+  const T &...values)
+{
+	lak::array<byte_t, (lak::to_bytes_traits<T, E>::size + ...)> bytes;
+	lak::to_bytes(bytes, values...);
+	return bytes;
+}
+
+template<lak::endian E, typename... T>
+requires((sizeof...(T) > 0) &&
+         !(lak::to_bytes_traits<T, E>::const_size && ...))
+lak::result<lak::span<byte_t>> lak::to_bytes(lak::span<byte_t> bytes,
+                                             const T &...values)
+{
+	auto do_to_bytes = [&]<typename J>(const J &v) -> lak::result<>
+	{
+		RES_TRY_ASSIGN(bytes =, lak::to_bytes<J, E>(bytes, v));
+		return lak::ok_t{};
+	};
+	RES_TRY(((do_to_bytes(values)).is_ok() && ...));
 	return lak::ok_t{bytes};
 }
 
@@ -281,526 +283,227 @@ lak::result<lak::span<const byte_t>> lak::array_from_bytes(
 
 template<typename T, size_t S, lak::endian E>
 requires(lak::to_bytes_traits<T, E>::const_size)
-lak::array<byte_t, S * lak::to_bytes_size<T, E>()> lak::array_to_bytes(
+lak::array<byte_t, S * lak::to_bytes_traits<T, E>::size> lak::array_to_bytes(
   lak::span<const T, S> values)
 {
-	static_assert(!lak::is_const_v<T>);
-	lak::array<byte_t, S * lak::to_bytes_size<T, E>()> result;
-	lak::to_bytes_traits<T, E>::to_bytes(lak::to_bytes_data<T, E>::make(
-	  lak::span<byte_t, S * lak::to_bytes_size<T, E>()>(result),
-	  lak::span<const T, S>(values)));
+	lak::array<byte_t, S * lak::to_bytes_traits<T, E>::size> result;
+	auto bytes{lak::span(result)};
+
+	for (size_t i = 0U; const T &val : values)
+		lak::to_bytes<T, E>(bytes.subspan((i++) * lak::to_bytes_traits<T, E>::size)
+		                      .template first<lak::to_bytes_traits<T, E>::size>(),
+		                    val);
+
 	return result;
 }
 
-template<typename T, lak::endian E>
-lak::array<byte_t> lak::array_to_bytes(lak::span<const T> values)
+// template<typename T, lak::endian E>
+// lak::array<byte_t> lak::array_to_bytes(lak::span<const T> values)
+// {
+// 	static_assert(!lak::is_const_v<T>);
+// 	lak::array<byte_t> result;
+// 	result.resize(lak::to_bytes_size<T, E>(values));
+// 	lak::to_bytes_traits<T, E>::to_bytes(
+// 	  lak::to_bytes_data<T, E>::maybe_make(lak::span<byte_t>(result), values)
+// 	    .unwrap());
+// 	return result;
+// }
+
+template<lak::endian E, typename T>
+lak::result<lak::span<byte_t>> lak::array_to_bytes(lak::span<byte_t> bytes,
+                                                   lak::span<const T> values)
 {
-	static_assert(!lak::is_const_v<T>);
-	lak::array<byte_t> result;
-	result.resize(lak::to_bytes_size<T, E>(values));
-	lak::to_bytes_traits<T, E>::to_bytes(
-	  lak::to_bytes_data<T, E>::maybe_make(lak::span<byte_t>(result), values)
-	    .unwrap());
-	return result;
+	for (const T &val : values)
+	{
+		RES_TRY_ASSIGN(bytes =, lak::to_bytes_traits<T, E>::to_bytes(bytes, val));
+	}
+	return lak::ok_t{bytes};
 }
 
-template<typename T, lak::endian E>
-lak::result<> lak::array_to_bytes(lak::span<byte_t> bytes,
-                                  lak::span<const T> values)
-{
-	static_assert(!lak::is_const_v<T>);
-	return lak::to_bytes_data<T, E>::maybe_make(bytes, values)
-	  .map(
-	    [](lak::to_bytes_data<T, E> data)
-	    {
-		    lak::to_bytes_traits<T, E>::to_bytes(data);
-		    return lak::monostate{};
-	    });
-}
-
-template<typename T, size_t S, lak::endian E>
+template<lak::endian E, typename T, size_t S>
 requires((S != lak::dynamic_extent) && lak::to_bytes_traits<T, E>::const_size)
 void lak::array_to_bytes(
-  lak::span<byte_t, S * lak::to_bytes_traits<T, E>::size()> bytes,
+  lak::span<byte_t, S * lak::to_bytes_traits<T, E>::size> bytes,
   lak::span<const T, S> values)
 {
-	auto data{lak::to_bytes_data<T, E>::make(values, bytes)};
-	for (auto &item : values) lak::to_bytes<T, E>(data.bytes_for(&item), item);
+	constexpr size_t size = lak::to_bytes_traits<T, E>::size;
+	for (size_t i = 0U; const T &val : values)
+		lak::to_bytes_traits<T, E>::to_bytes(
+		  bytes.subspan((i++) * size).template first<size>(), val);
 }
+
+/* --- bytes_traits_fixed_struct_impl --- */
+
+template<typename T, lak::endian E, lak::endian E2, auto... MEMBERS>
+requires(
+  (sizeof...(MEMBERS) > 0) &&
+  ((lak::is_member_pointer_for_v<decltype(MEMBERS), T>)&&...) &&
+  ((lak::to_bytes_traits<
+     lak::remove_reference_t<lak::remove_member_pointer_decl_t<MEMBERS>>,
+     E>::const_size) &&
+   ...))
+struct lak::to_bytes_traits_fixed_struct_impl<T, E, E2, MEMBERS...>
+{
+	using value_type                 = T;
+	static constexpr bool const_size = true;
+	static constexpr size_t size =
+	  ((lak::to_bytes_traits<
+	     lak::remove_reference_t<decltype(lak::declval<T>().*MEMBERS)>,
+	     E>::size) +
+	   ...);
+
+	static size_t dynamic_size(const T &) { return size; }
+
+	static void to_bytes(lak::span<byte_t, size> bytes, const T &value)
+	{
+		return lak::to_bytes<E2>(bytes, value.*MEMBERS...);
+	}
+
+	static lak::result<lak::span<byte_t>> to_bytes(lak::span<byte_t> bytes,
+	                                               const T &value)
+	{
+		return lak::to_bytes<E2>(bytes, value.*MEMBERS...);
+	}
+};
+
+template<typename T, lak::endian E, lak::endian E2, auto... MEMBERS>
+requires(
+  (sizeof...(MEMBERS) > 0) &&
+  ((lak::is_member_pointer_for_v<decltype(MEMBERS), T>)&&...) &&
+  ((lak::from_bytes_traits<
+     lak::remove_reference_t<lak::remove_member_pointer_decl_t<MEMBERS>>,
+     E>::const_size) &&
+   ...))
+struct lak::from_bytes_traits_fixed_struct_impl<T, E, E2, MEMBERS...>
+{
+	using value_type                 = T;
+	static constexpr bool const_size = true;
+	static constexpr size_t size =
+	  ((lak::from_bytes_traits<
+	     lak::remove_reference_t<decltype(lak::declval<T>().*MEMBERS)>,
+	     E>::size) +
+	   ...);
+
+	static void from_bytes(lak::span<const byte_t, size> bytes, T &value)
+	{
+		return lak::from_bytes<E2>(bytes, value.*MEMBERS...);
+	}
+
+	static lak::result<lak::span<const byte_t>> from_bytes(
+	  lak::span<const byte_t> bytes, T &value)
+	{
+		return lak::from_bytes<E2>(bytes, value.*MEMBERS...);
+	}
+};
+
+template<typename T, lak::endian E, lak::endian E2, auto... MEMBERS>
+requires(
+  (sizeof...(MEMBERS) > 0) &&
+  ((lak::is_member_pointer_for_v<decltype(MEMBERS), T>)&&...) &&
+  !((lak::to_bytes_traits<
+      lak::remove_reference_t<lak::remove_member_pointer_decl_t<MEMBERS>>,
+      E>::const_size) &&
+    ...))
+struct lak::to_bytes_traits_fixed_struct_impl<T, E, E2, MEMBERS...>
+{
+	using value_type                 = T;
+	static constexpr bool const_size = false;
+	static constexpr size_t size     = lak::dynamic_extent;
+
+	static size_t dynamic_size(const T &value)
+	{
+		return (
+		  (lak::to_bytes_traits<lak::remove_reference_t<
+		     lak::remove_member_pointer_decl_t<MEMBERS>>>::dynamic_size(value.*
+		                                                                MEMBERS)) +
+		  ...);
+	}
+
+	static lak::result<lak::span<byte_t>> to_bytes(lak::span<byte_t> bytes,
+	                                               const T &value)
+	{
+		return lak::to_bytes<E2>(bytes, value.*MEMBERS...);
+	}
+};
+
+template<typename T, lak::endian E, lak::endian E2, auto... MEMBERS>
+requires(
+  (sizeof...(MEMBERS) > 0) &&
+  ((lak::is_member_pointer_for_v<decltype(MEMBERS), T>)&&...) &&
+  !((lak::from_bytes_traits<
+      lak::remove_reference_t<lak::remove_member_pointer_decl_t<MEMBERS>>,
+      E>::const_size) &&
+    ...))
+struct lak::from_bytes_traits_fixed_struct_impl<T, E, E2, MEMBERS...>
+{
+	using value_type                 = T;
+	static constexpr bool const_size = false;
+	static constexpr size_t size     = lak::dynamic_extent;
+
+	static lak::result<lak::span<const byte_t>> from_bytes(
+	  lak::span<const byte_t> bytes, T &value)
+	{
+		return lak::from_bytes<E2>(bytes, value.*MEMBERS...);
+	}
+};
 
 namespace lak
 {
-	/* --- _basic_memcpy_from_bytes --- */
-
 	template<typename T, lak::endian E>
-	inline void _basic_memcpy_from_bytes(lak::from_bytes_data<T, E> data)
+	struct _memcpy_bytes_traits
 	{
+		using value_type                 = T;
+		static constexpr bool const_size = true;
+		static constexpr size_t size     = sizeof(T);
+		static_assert((size != lak::dynamic_extent) == const_size);
 		static_assert(E == lak::endian::native || ~E == lak::endian::native);
-		lak::memcpy(lak::span<byte_t>(data.dst), data.src);
-		if constexpr (E != lak::endian::native) lak::byte_swap(data.dst);
-	}
 
-	/* --- _basic_memcpy_to_bytes --- */
+		static size_t dynamic_size(const T &) { return size; }
 
-	template<typename T, lak::endian E>
-	inline void _basic_memcpy_to_bytes(lak::to_bytes_data<T, E> data)
-	{
-		static_assert(E == lak::endian::native || ~E == lak::endian::native);
-		lak::memcpy(data.dst, lak::span<const byte_t>(data.src));
-		if constexpr (E != lak::endian::native)
-			lak::byte_swap<sizeof(T)>(data.dst);
-	}
+		static void from_bytes(lak::span<const byte_t, size> bytes, T &value)
+		{
+			lak::memcpy(lak::as_bytes(&value), bytes);
+			if constexpr (E != lak::endian::native)
+				lak::byte_swap<size>(lak::as_bytes(&value));
+		}
+
+		static lak::result<lak::span<const byte_t>> from_bytes(
+		  lak::span<const byte_t> bytes, T &value)
+		{
+			if (bytes.size() < size) return lak::err_t{};
+			from_bytes(bytes.template first<size>(), value);
+			return lak::ok_t{bytes.subspan(size)};
+		}
+
+		static void to_bytes(lak::span<byte_t, size> bytes, const T &value)
+		{
+			lak::memcpy(bytes, lak::as_bytes(&value));
+			if constexpr (E != lak::endian::native)
+				lak::byte_swap<size>(lak::span<byte_t>(bytes));
+		}
+
+		static lak::result<lak::span<byte_t>> to_bytes(lak::span<byte_t> bytes,
+		                                               const T &value)
+		{
+			if (bytes.size() < size) return lak::err_t{};
+			to_bytes(bytes.template first<size>(), value);
+			return lak::ok_t{bytes.subspan(size)};
+		}
+	};
 }
 
-/* --- byte_t --- */
-
-template<lak::endian E>
-struct lak::from_bytes_traits<byte_t, E>
-{
-	using value_type                 = byte_t;
-	static constexpr bool const_size = true;
-	static constexpr size_t size     = sizeof(value_type);
-
-	static void from_bytes(lak::from_bytes_data<value_type, E> data)
-	{
-		lak::memcpy(data.dst, data.src);
-	}
-};
-
-template<lak::endian E>
-struct lak::to_bytes_traits<byte_t, E>
-{
-	using value_type                 = byte_t;
-	static constexpr bool const_size = true;
-	static constexpr size_t size() { return sizeof(value_type); }
-
-	static void to_bytes(lak::to_bytes_data<value_type, E> data)
-	{
-		lak::memcpy(data.dst, data.src);
-	}
-};
-
-/* --- uint8_t --- */
-
-template<lak::endian E>
-struct lak::from_bytes_traits<uint8_t, E>
-{
-	using value_type                 = uint8_t;
-	static constexpr bool const_size = true;
-	static constexpr size_t size     = sizeof(value_type);
-
-	static void from_bytes(lak::from_bytes_data<value_type, E> data)
-	{
-		lak::memcpy(lak::span<byte_t>(data.dst), data.src);
-	}
-};
-
-template<lak::endian E>
-struct lak::to_bytes_traits<uint8_t, E>
-{
-	using value_type                 = uint8_t;
-	static constexpr bool const_size = true;
-	static constexpr size_t size() { return sizeof(value_type); }
-
-	static void to_bytes(lak::to_bytes_data<value_type, E> data)
-	{
-		lak::memcpy(data.dst, lak::span<const byte_t>(data.src));
-	}
-};
-
-/* --- int8_t --- */
-
-template<lak::endian E>
-struct lak::from_bytes_traits<int8_t, E>
-{
-	using value_type                 = int8_t;
-	static constexpr bool const_size = true;
-	static constexpr size_t size     = sizeof(value_type);
-
-	static void from_bytes(lak::from_bytes_data<value_type, E> data)
-	{
-		lak::memcpy(lak::span<byte_t>(data.dst), data.src);
-	}
-};
-
-template<lak::endian E>
-struct lak::to_bytes_traits<int8_t, E>
-{
-	using value_type                 = int8_t;
-	static constexpr bool const_size = true;
-	static constexpr size_t size() { return sizeof(value_type); }
-
-	static void to_bytes(lak::to_bytes_data<value_type, E> data)
-	{
-		lak::memcpy(data.dst, lak::span<const byte_t>(data.src));
-	}
-};
-
-/* --- uint16_t --- */
-
-template<lak::endian E>
-struct lak::from_bytes_traits<uint16_t, E>
-{
-	using value_type                 = uint16_t;
-	static constexpr bool const_size = true;
-	static constexpr size_t size     = sizeof(value_type);
-
-	static void from_bytes(lak::from_bytes_data<value_type, E> data)
-	{
-		lak::_basic_memcpy_from_bytes(data);
-	}
-};
-
-template<lak::endian E>
-struct lak::to_bytes_traits<uint16_t, E>
-{
-	using value_type                 = uint16_t;
-	static constexpr bool const_size = true;
-	static constexpr size_t size() { return sizeof(value_type); }
-
-	static void to_bytes(lak::to_bytes_data<value_type, E> data)
-	{
-		lak::_basic_memcpy_to_bytes(data);
-	}
-};
-
-/* --- int16_t --- */
-
-template<lak::endian E>
-struct lak::from_bytes_traits<int16_t, E>
-{
-	using value_type                 = int16_t;
-	static constexpr bool const_size = true;
-	static constexpr size_t size     = sizeof(value_type);
-
-	static void from_bytes(lak::from_bytes_data<value_type, E> data)
-	{
-		lak::_basic_memcpy_from_bytes(data);
-	}
-};
-
-template<lak::endian E>
-struct lak::to_bytes_traits<int16_t, E>
-{
-	using value_type                 = int16_t;
-	static constexpr bool const_size = true;
-	static constexpr size_t size() { return sizeof(value_type); }
-
-	static void to_bytes(lak::to_bytes_data<value_type, E> data)
-	{
-		lak::_basic_memcpy_to_bytes(data);
-	}
-};
-
-/* --- uint32_t --- */
-
-template<lak::endian E>
-struct lak::from_bytes_traits<uint32_t, E>
-{
-	using value_type                 = uint32_t;
-	static constexpr bool const_size = true;
-	static constexpr size_t size     = sizeof(value_type);
-
-	static void from_bytes(lak::from_bytes_data<value_type, E> data)
-	{
-		lak::_basic_memcpy_from_bytes(data);
-	}
-};
-
-template<lak::endian E>
-struct lak::to_bytes_traits<uint32_t, E>
-{
-	using value_type                 = uint32_t;
-	static constexpr bool const_size = true;
-	static constexpr size_t size() { return sizeof(value_type); }
-
-	static void to_bytes(lak::to_bytes_data<value_type, E> data)
-	{
-		lak::_basic_memcpy_to_bytes(data);
-	}
-};
-
-/* --- int32_t --- */
-
-template<lak::endian E>
-struct lak::from_bytes_traits<int32_t, E>
-{
-	using value_type                 = int32_t;
-	static constexpr bool const_size = true;
-	static constexpr size_t size     = sizeof(value_type);
-
-	static void from_bytes(lak::from_bytes_data<value_type, E> data)
-	{
-		lak::_basic_memcpy_from_bytes(data);
-	}
-};
-
-template<lak::endian E>
-struct lak::to_bytes_traits<int32_t, E>
-{
-	using value_type                 = int32_t;
-	static constexpr bool const_size = true;
-	static constexpr size_t size() { return sizeof(value_type); }
-
-	static void to_bytes(lak::to_bytes_data<value_type, E> data)
-	{
-		lak::_basic_memcpy_to_bytes(data);
-	}
-};
-
-/* --- uint64_t --- */
-
-template<lak::endian E>
-struct lak::from_bytes_traits<uint64_t, E>
-{
-	using value_type                 = uint64_t;
-	static constexpr bool const_size = true;
-	static constexpr size_t size     = sizeof(value_type);
-
-	static void from_bytes(lak::from_bytes_data<value_type, E> data)
-	{
-		lak::_basic_memcpy_from_bytes(data);
-	}
-};
-
-template<lak::endian E>
-struct lak::to_bytes_traits<uint64_t, E>
-{
-	using value_type                 = uint64_t;
-	static constexpr bool const_size = true;
-	static constexpr size_t size() { return sizeof(value_type); }
-
-	static void to_bytes(lak::to_bytes_data<value_type, E> data)
-	{
-		lak::_basic_memcpy_to_bytes(data);
-	}
-};
-
-/* --- int64_t --- */
-
-template<lak::endian E>
-struct lak::from_bytes_traits<int64_t, E>
-{
-	using value_type                 = int64_t;
-	static constexpr bool const_size = true;
-	static constexpr size_t size     = sizeof(value_type);
-
-	static void from_bytes(lak::from_bytes_data<value_type, E> data)
-	{
-		lak::_basic_memcpy_from_bytes(data);
-	}
-};
-
-template<lak::endian E>
-struct lak::to_bytes_traits<int64_t, E>
-{
-	using value_type                 = int64_t;
-	static constexpr bool const_size = true;
-	static constexpr size_t size() { return sizeof(value_type); }
-
-	static void to_bytes(lak::to_bytes_data<value_type, E> data)
-	{
-		lak::_basic_memcpy_to_bytes(data);
-	}
-};
-
-/* --- f32_t --- */
-
-template<lak::endian E>
-struct lak::from_bytes_traits<f32_t, E>
-{
-	using value_type                 = f32_t;
-	static constexpr bool const_size = true;
-	static constexpr size_t size     = sizeof(value_type);
-
-	static void from_bytes(lak::from_bytes_data<value_type, E> data)
-	{
-		lak::_basic_memcpy_from_bytes(data);
-	}
-};
-
-template<lak::endian E>
-struct lak::to_bytes_traits<f32_t, E>
-{
-	using value_type                 = f32_t;
-	static constexpr bool const_size = true;
-	static constexpr size_t size() { return sizeof(value_type); }
-
-	static void to_bytes(lak::to_bytes_data<value_type, E> data)
-	{
-		lak::_basic_memcpy_to_bytes(data);
-	}
-};
-
-/* --- f64_t --- */
-
-template<lak::endian E>
-struct lak::from_bytes_traits<f64_t, E>
-{
-	using value_type                 = f64_t;
-	static constexpr bool const_size = true;
-	static constexpr size_t size     = sizeof(value_type);
-
-	static void from_bytes(lak::from_bytes_data<value_type, E> data)
-	{
-		lak::_basic_memcpy_from_bytes(data);
-	}
-};
-
-template<lak::endian E>
-struct lak::to_bytes_traits<f64_t, E>
-{
-	using value_type                 = f64_t;
-	static constexpr bool const_size = true;
-	static constexpr size_t size() { return sizeof(value_type); }
-
-	static void to_bytes(lak::to_bytes_data<value_type, E> data)
-	{
-		lak::_basic_memcpy_to_bytes(data);
-	}
-};
-
-/* --- char --- */
-
-template<lak::endian E>
-struct lak::from_bytes_traits<char, E>
-{
-	using value_type                 = char;
-	static constexpr bool const_size = true;
-	static constexpr size_t size     = sizeof(value_type);
-
-	static void from_bytes(lak::from_bytes_data<value_type, E> data)
-	{
-		lak::memcpy(lak::span<byte_t>(data.dst), data.src);
-	}
-};
-
-template<lak::endian E>
-struct lak::to_bytes_traits<char, E>
-{
-	using value_type                 = char;
-	static constexpr bool const_size = true;
-	static constexpr size_t size() { return sizeof(value_type); }
-
-	static void to_bytes(lak::to_bytes_data<value_type, E> data)
-	{
-		lak::memcpy(data.dst, lak::span<const byte_t>(data.src));
-	}
-};
-
-#ifdef LAK_COMPILER_CPP20
-/* --- char8_t --- */
-
-template<lak::endian E>
-struct lak::from_bytes_traits<char8_t, E>
-{
-	using value_type                 = char8_t;
-	static constexpr bool const_size = true;
-	static constexpr size_t size     = sizeof(value_type);
-
-	static void from_bytes(lak::from_bytes_data<value_type, E> data)
-	{
-		lak::memcpy(lak::span<byte_t>(data.dst), data.src);
-	}
-};
-
-template<lak::endian E>
-struct lak::to_bytes_traits<char8_t, E>
-{
-	using value_type                 = char8_t;
-	static constexpr bool const_size = true;
-	static constexpr size_t size() { return sizeof(value_type); }
-
-	static void to_bytes(lak::to_bytes_data<value_type, E> data)
-	{
-		lak::memcpy(data.dst, lak::span<const byte_t>(data.src));
-	}
-};
-#endif
-
-/* --- char16_t --- */
-
-template<lak::endian E>
-struct lak::from_bytes_traits<char16_t, E>
-{
-	using value_type                 = char16_t;
-	static constexpr bool const_size = true;
-	static constexpr size_t size     = sizeof(value_type);
-
-	static void from_bytes(lak::from_bytes_data<value_type, E> data)
-	{
-		lak::_basic_memcpy_from_bytes(data);
-	}
-};
-
-template<lak::endian E>
-struct lak::to_bytes_traits<char16_t, E>
-{
-	using value_type                 = char16_t;
-	static constexpr bool const_size = true;
-	static constexpr size_t size() { return sizeof(value_type); }
-
-	static void to_bytes(lak::to_bytes_data<value_type, E> data)
-	{
-		lak::_basic_memcpy_to_bytes(data);
-	}
-};
-
-/* --- char32_t --- */
-
-template<lak::endian E>
-struct lak::from_bytes_traits<char32_t, E>
-{
-	using value_type                 = char32_t;
-	static constexpr bool const_size = true;
-	static constexpr size_t size     = sizeof(value_type);
-
-	static void from_bytes(lak::from_bytes_data<value_type, E> data)
-	{
-		lak::_basic_memcpy_from_bytes(data);
-	}
-};
-
-template<lak::endian E>
-struct lak::to_bytes_traits<char32_t, E>
-{
-	using value_type                 = char32_t;
-	static constexpr bool const_size = true;
-	static constexpr size_t size() { return sizeof(value_type); }
-
-	static void to_bytes(lak::to_bytes_data<value_type, E> data)
-	{
-		lak::_basic_memcpy_to_bytes(data);
-	}
-};
-
-/* --- wchar_t --- */
-
-template<lak::endian E>
-struct lak::from_bytes_traits<wchar_t, E>
-{
-	using value_type                 = wchar_t;
-	static constexpr bool const_size = true;
-	static constexpr size_t size     = sizeof(value_type);
-
-	static void from_bytes(lak::from_bytes_data<value_type, E> data)
-	{
-		lak::_basic_memcpy_from_bytes(data);
-	}
-};
-
-template<lak::endian E>
-struct lak::to_bytes_traits<wchar_t, E>
-{
-	using value_type                 = wchar_t;
-	static constexpr bool const_size = true;
-	static constexpr size_t size() { return sizeof(value_type); }
-
-	static void to_bytes(lak::to_bytes_data<value_type, E> data)
-	{
-		lak::_basic_memcpy_to_bytes(data);
-	}
-};
+#define LAK_MEMCPY_BYTE_TRAITS_IMPL(TYPE, ...)                                \
+	template<lak::endian E>                                                     \
+	struct lak::bytes_traits<TYPE, E> : lak::_memcpy_bytes_traits<TYPE, E>      \
+	{                                                                           \
+	};
+
+LAK_MEMCPY_BYTE_TRAITS_IMPL(byte_t)
+LAK_FOREACH_INTEGER(LAK_MEMCPY_BYTE_TRAITS_IMPL)
+LAK_FOREACH_FLOAT(LAK_MEMCPY_BYTE_TRAITS_IMPL)
+LAK_FOREACH_CHAR(LAK_MEMCPY_BYTE_TRAITS_IMPL)
+
+#undef LAK_MEMCPY_BYTE_TRAITS_IMPL
 
 /* --- lak::span --- */
 
@@ -812,10 +515,16 @@ struct lak::from_bytes_traits<lak::span<T, S>, E>
 	static constexpr bool const_size = true;
 	static constexpr size_t size     = lak::from_bytes_traits<T, E>::size * S;
 
-	static void from_bytes(lak::from_bytes_data<value_type, E> data)
+	static void from_bytes(lak::span<const byte_t, size> bytes,
+	                       lak::span<T, S> &value)
 	{
-		for (auto &item : data.dst)
-			lak::array_from_bytes<T, S, E>(item, data.bytes_for(&item));
+		return lak::array_from_bytes<E, T, S>(bytes, value);
+	}
+
+	static lak::result<lak::span<const byte_t>> from_bytes(
+	  lak::span<const byte_t> bytes, lak::span<T, S> &value)
+	{
+		return lak::array_from_bytes<E, T>(bytes, value);
 	}
 };
 
@@ -825,33 +534,19 @@ struct lak::to_bytes_traits<lak::span<T, S>, E>
 {
 	using value_type                 = lak::span<T, S>;
 	static constexpr bool const_size = true;
-	static constexpr size_t size()
+	static constexpr size_t size =
+	  lak::to_bytes_traits<lak::remove_const_t<T>, E>::size * S;
+
+	static void to_bytes(lak::span<byte_t, size> bytes,
+	                     const lak::span<T, S> &value)
 	{
-		return lak::to_bytes_traits<T, E>::size() * S;
+		return lak::array_to_bytes<E, T, S>(bytes, value);
 	}
 
-	static void to_bytes(lak::to_bytes_data<value_type, E> data)
+	static lak::result<lak::span<byte_t>> to_bytes(lak::span<byte_t> bytes,
+	                                               const lak::span<T, S> &value)
 	{
-		for (auto &item : data.dst)
-			lak::array_to_bytes<T, S, E>(data.bytes_for(&item), item);
-	}
-};
-
-template<typename T, size_t S, lak::endian E>
-requires(S != lak::dynamic_extent && lak::to_bytes_traits<T, E>::const_size)
-struct lak::to_bytes_traits<lak::span<const T, S>, E>
-{
-	using value_type                 = lak::span<const T, S>;
-	static constexpr bool const_size = true;
-	static constexpr size_t size()
-	{
-		return lak::to_bytes_traits<T, E>::size() * S;
-	}
-
-	static void to_bytes(lak::to_bytes_data<value_type, E> data)
-	{
-		for (auto &item : data.dst)
-			lak::array_to_bytes<T, S, E>(data.bytes_for(&item), item);
+		return lak::array_to_bytes<E, T>(bytes, value);
 	}
 };
 
@@ -865,10 +560,16 @@ struct lak::from_bytes_traits<lak::array<T, S>, E>
 	static constexpr bool const_size = true;
 	static constexpr size_t size     = lak::from_bytes_traits<T, E>::size * S;
 
-	static void from_bytes(lak::from_bytes_data<value_type, E> data)
+	static void from_bytes(lak::span<const byte_t, size> bytes,
+	                       lak::array<T, S> &value)
 	{
-		for (auto &item : data.dst)
-			lak::array_from_bytes<T, S, E>(item, data.bytes_for(&item));
+		return lak::array_from_bytes<E, T, S>(bytes, lak::span<T, S>(value));
+	}
+
+	static lak::result<lak::span<const byte_t>> from_bytes(
+	  lak::span<const byte_t> bytes, lak::array<T, S> &value)
+	{
+		return lak::array_from_bytes<E, T>(bytes, lak::span<T>(value));
 	}
 };
 
@@ -878,14 +579,69 @@ struct lak::to_bytes_traits<lak::array<T, S>, E>
 {
 	using value_type                 = lak::array<T, S>;
 	static constexpr bool const_size = true;
-	static constexpr size_t size()
+	static constexpr size_t size =
+	  lak::to_bytes_traits<lak::remove_const_t<T>, E>::size * S;
+
+	static void to_bytes(lak::span<byte_t, size> bytes,
+	                     const lak::array<T, S> &value)
 	{
-		return lak::to_bytes_traits<T, E>::size() * S;
+		return lak::array_to_bytes<E, T, S>(bytes, lak::span<const T, S>(value));
 	}
 
-	static void to_bytes(lak::to_bytes_data<value_type, E> data)
+	static lak::result<lak::span<byte_t>> to_bytes(lak::span<byte_t> bytes,
+	                                               const lak::array<T, S> &value)
 	{
-		for (auto &item : data.dst)
-			lak::array_to_bytes<T, S, E>(data.bytes_for(&item), item);
+		return lak::array_to_bytes<E, T>(bytes, lak::span<const T>(value));
+	}
+};
+
+/* --- lak::reference_wrapper --- */
+
+template<typename T, lak::endian E>
+requires(!lak::is_const_v<T>)
+struct lak::from_bytes_traits<lak::reference_wrapper<T>, E>
+{
+	using value_type = lak::reference_wrapper<T>;
+
+	static constexpr bool const_size = lak::from_bytes_traits<T>::const_size;
+
+	static constexpr size_t size = lak::from_bytes_traits<T>::size;
+
+	static void from_bytes(lak::span<const byte_t, size> bytes,
+	                       lak::reference_wrapper<T> &value)
+	{
+		return lak::from_bytes_traits<T>::from_bytes(bytes, value.get());
+	}
+
+	static lak::result<lak::span<const byte_t>> from_bytes(
+	  lak::span<const byte_t> bytes, lak::reference_wrapper<T> &value)
+	{
+		return lak::from_bytes_traits<T>::from_bytes(bytes, value.get());
+	}
+};
+
+template<typename T, lak::endian E>
+struct lak::to_bytes_traits<lak::reference_wrapper<T>, E>
+{
+	using value_type = lak::reference_wrapper<T>;
+
+	static constexpr bool const_size =
+	  lak::to_bytes_traits<lak::remove_const_t<T>>::const_size;
+
+	static constexpr size_t size =
+	  lak::to_bytes_traits<lak::remove_const_t<T>>::size;
+
+	static void to_bytes(lak::span<byte_t, size> bytes,
+	                     const lak::reference_wrapper<T> &value)
+	{
+		return lak::to_bytes_traits<lak::remove_const_t<T>, E>::to_bytes(
+		  bytes, value.get());
+	}
+
+	static lak::result<lak::span<byte_t>> to_bytes(
+	  lak::span<byte_t> bytes, const lak::reference_wrapper<T> &value)
+	{
+		return lak::to_bytes_traits<lak::remove_const_t<T>, E>::to_bytes(
+		  bytes, value.get());
 	}
 };

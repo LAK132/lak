@@ -36,7 +36,7 @@ BEGIN_TEST(nbt)
 		DEBUG_EXPR(root);
 
 		lak::binary_array_writer strm;
-		strm.template write<lak::endian::big>(root);
+		strm.template write<lak::endian::big>(root).UNWRAP();
 
 		ASSERT_ARRAY_EQUAL(expected, strm.data);
 	}
@@ -68,7 +68,7 @@ BEGIN_TEST(nbt)
 		DEBUG_EXPR(root);
 
 		lak::binary_array_writer strm;
-		strm.template write<lak::endian::little>(root);
+		strm.template write<lak::endian::little>(root).UNWRAP();
 
 		ASSERT_ARRAY_EQUAL(expected, strm.data);
 	}
@@ -134,7 +134,7 @@ BEGIN_TEST(nbt)
 		  });
 
 		lak::binary_array_writer strm;
-		strm.template write<lak::endian::big>(root);
+		strm.template write<lak::endian::big>(root).UNWRAP();
 
 		const lak::array<byte_t> compressed = {
 		  byte_t(0x1F), byte_t(0x8B), byte_t(0x08), byte_t(0x00), byte_t(0x00),

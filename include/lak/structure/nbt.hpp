@@ -54,6 +54,12 @@ namespace lak
 #undef LAK_NBT_ENUM
 		};
 
+		template<lak::endian E>
+		struct lak::bytes_traits<lak::nbt::tag_type, E>
+		: lak::_memcpy_bytes_traits<lak::nbt::tag_type, E>
+		{
+		};
+
 		template<typename T>
 		struct pod_tag;
 
@@ -88,6 +94,10 @@ namespace lak
 			}
 		};
 
+		LAK_FIXED_TEMPLATE_STRUCT_BYTES_TRAITS(typename T,
+		                                       lak::nbt::pod_tag<T>,
+		                                       &lak::nbt::pod_tag<T>::value)
+
 		template<typename T>
 		struct array_tag;
 
@@ -100,6 +110,37 @@ namespace lak
 		{
 			using value_type = T;
 			lak::array<value_type> value;
+
+			template<lak::endian E>
+			lak::result<> read(lak::binary_reader &strm)
+			{
+				RES_TRY_ASSIGN(auto size =,
+				               strm.template read<lak::nbt::TAG_Int, E>());
+				RES_TRY_ASSIGN(value =, strm.template read<value_type, E>(size.value));
+				return lak::ok_t{};
+			}
+
+			template<lak::endian E>
+			size_t write_size() const
+			{
+				size_t result = lak::to_bytes_traits<lak::nbt::TAG_Int, E>::size;
+				if constexpr (lak::to_bytes_traits<T, E>::const_size)
+					result += (value.size() * lak::to_bytes_traits<T, E>::size);
+				else
+					for (const auto &v : value)
+						result += lak::to_bytes_traits<T, E>::dynamic_size(v);
+				return result;
+			}
+
+			template<lak::endian E>
+			lak::result<> write(lak::binary_span_writer &strm) const
+			{
+				RES_TRY(strm.template write<E>(lak::nbt::TAG_Int{
+				  .value = static_cast<lak::nbt::TAG_Int::value_type>(value.size()),
+				}));
+				RES_TRY(strm.template write<E>(lak::span(value)));
+				return lak::ok_t{};
+			}
 
 			inline friend std::ostream &operator<<(std::ostream &strm,
 			                                       const lak::nbt::array_tag<T> &tag)
@@ -127,6 +168,8 @@ namespace lak
 
 		struct TAG_End
 		{
+			lak::array<byte_t, 0> _value;
+
 			inline friend std::ostream &operator<<(std::ostream &strm,
 			                                       const lak::nbt::TAG_End &)
 			{
@@ -134,9 +177,42 @@ namespace lak
 			}
 		};
 
+		LAK_FIXED_STRUCT_BYTES_TRAITS(lak::nbt::TAG_End,
+		                              &lak::nbt::TAG_End::_value)
+
 		struct TAG_String
 		{
 			lak::u8string value;
+
+			template<lak::endian E>
+			lak::result<> read(lak::binary_reader &strm)
+			{
+				RES_TRY_ASSIGN(auto size =,
+				               strm.template read<lak::nbt::TAG_Short, E>());
+				RES_TRY_ASSIGN(value =,
+				               strm.template read_exact_c_str<char8_t, E>(size.value));
+				return lak::ok_t{};
+			}
+
+			template<lak::endian E>
+			size_t write_size() const
+			{
+				return lak::to_bytes_traits<lak::nbt::TAG_Short, E>::size +
+				       value.size();
+			}
+
+			template<lak::endian E>
+			lak::result<> write(lak::binary_span_writer &strm) const
+			{
+				RES_TRY(strm
+				          .template write<E>(lak::nbt::TAG_Short{
+				            .value = static_cast<lak::nbt::TAG_Short::value_type>(
+				              value.size()),
+				          })
+				          .IF_ERR(""));
+				RES_TRY(strm.template write<E>(lak::span(value)).IF_ERR(""));
+				return lak::ok_t{};
+			}
 
 			inline friend std::ostream &operator<<(std::ostream &strm,
 			                                       const lak::nbt::TAG_String &tag)
@@ -149,6 +225,46 @@ namespace lak
 		{
 			using value_type = lak::array<lak::nbt::named_tag>;
 			value_type value;
+
+			template<lak::endian E>
+			lak::result<> read(lak::binary_reader &strm)
+			{
+				for (;;)
+				{
+					if_let_ok (auto t, strm.template peek<lak::nbt::tag_type, E>())
+					{
+						if (t == lak::nbt::tag_type::End)
+						{
+							strm.template read<lak::nbt::tag_type, E>().unwrap();
+							break;
+						}
+					}
+					else
+						return lak::err_t{};
+
+					RES_TRY_ASSIGN(auto tag =,
+					               strm.template read<lak::nbt::named_tag, E>());
+					value.push_back(lak::move(tag));
+				}
+			}
+
+			template<lak::endian E>
+			size_t write_size() const
+			{
+				size_t result = lak::to_bytes_traits<lak::nbt::tag_type, E>::size;
+				for (const auto &v : value)
+					result +=
+					  lak::to_bytes_traits<lak::nbt::named_tag, E>::dynamic_size(v);
+				return result;
+			}
+
+			template<lak::endian E>
+			lak::result<> write(lak::binary_span_writer &strm) const
+			{
+				RES_TRY(strm.template write<E>(lak::span(value)).IF_ERR(""));
+				RES_TRY(strm.template write<E>(lak::nbt::tag_type::End).IF_ERR(""));
+				return lak::ok_t{};
+			}
 
 			inline friend std::ostream &operator<<(std::ostream &strm,
 			                                       const lak::nbt::TAG_Compound &tag)
@@ -205,6 +321,58 @@ namespace lak
 				return value.visit([](const auto &arr) { return arr.size(); });
 			}
 
+			template<lak::endian E>
+			lak::result<> read(lak::binary_reader &strm)
+			{
+				RES_TRY_ASSIGN(auto type =,
+				               strm.template read<lak::nbt::tag_type, E>());
+				RES_TRY_ASSIGN(auto size =,
+				               strm.template read<lak::nbt::TAG_Int, E>());
+				switch (type)
+				{
+#define LAK_NBT_READER_VISIT(VAL, NAME, TAG, ...)                             \
+	case lak::nbt::tag_type::NAME:                                              \
+	{                                                                           \
+		RES_TRY_ASSIGN(value =,                                                   \
+		               strm.template read<lak::nbt::TAG, E>(size.value));         \
+	}                                                                           \
+	break;
+					LAK_FOREACH_NBT_TYPE(LAK_NBT_READER_VISIT)
+#undef LAK_NBT_READER_VISIT
+					default:
+						return lak::err_t{};
+				}
+
+				return lak::ok_t{};
+			}
+
+			template<lak::endian E>
+			size_t write_size() const
+			{
+				size_t result = lak::to_bytes_traits<lak::nbt::tag_type, E>::size +
+				                lak::to_bytes_traits<lak::nbt::TAG_Int, E>::size;
+				value.visit(
+				  [&]<typename T>(const lak::array<T> &arr)
+				  {
+					  for (const auto &a : arr)
+						  result += lak::to_bytes_traits<T, E>::dynamic_size(a);
+				  });
+				return result;
+			}
+
+			template<lak::endian E>
+			lak::result<> write(lak::binary_span_writer &strm) const
+			{
+				RES_TRY(strm.template write<E>(type()));
+				RES_TRY(strm.template write<E>(lak::nbt::TAG_Int{
+				  .value = static_cast<lak::nbt::TAG_Int::value_type>(size()),
+				}));
+				RES_TRY(value.visit(
+				  [&]<typename T>(const lak::array<T> &arr) -> lak::result<>
+				  { return strm.template write<E>(lak::span(arr)); }));
+				return lak::ok_t{};
+			}
+
 			inline friend std::ostream &operator<<(std::ostream &strm,
 			                                       const lak::nbt::TAG_List &tag)
 			{
@@ -238,6 +406,21 @@ namespace lak
 				return static_cast<lak::nbt::tag_type>(value.index());
 			}
 
+			template<lak::endian E>
+			size_t write_size() const
+			{
+				return value.visit(
+				  []<typename T>(const T &val)
+				  { return lak::to_bytes_traits<T, E>::dynamic_size(val); });
+			}
+
+			template<lak::endian E>
+			lak::result<> write(lak::binary_span_writer &strm) const
+			{
+				return value.visit([&]<typename T>(const T &val)
+				                   { return strm.template write<E>(val); });
+			}
+
 			inline friend std::ostream &operator<<(
 			  std::ostream &strm, const lak::nbt::tag_payload &payload)
 			{
@@ -251,6 +434,45 @@ namespace lak
 			lak::nbt::TAG_String name;
 			lak::nbt::tag_payload payload;
 			inline lak::nbt::tag_type type() const { return payload.type(); }
+
+			template<lak::endian E>
+			lak::result<> read(lak::binary_reader &strm)
+			{
+				RES_TRY_ASSIGN(lak::nbt::tag_type type =,
+				               strm.template read<lak::nbt::tag_type, E>());
+				RES_TRY(name.template read<E>(strm));
+				switch (type)
+				{
+#define LAK_NBT_READER_VISIT(VAL, NAME, TAG, ...)                             \
+	case lak::nbt::tag_type::NAME:                                              \
+	{                                                                           \
+		RES_TRY_ASSIGN(payload.value =, strm.template read<lak::nbt::TAG, E>());  \
+	}                                                                           \
+	break;
+					LAK_FOREACH_NBT_TYPE(LAK_NBT_READER_VISIT)
+#undef LAK_NBT_READER_VISIT
+					default:
+						return lak::err_t{};
+				}
+				return lak::ok_t{};
+			}
+
+			template<lak::endian E>
+			size_t write_size() const
+			{
+				return lak::to_bytes_traits<lak::nbt::tag_type, E>::size +
+				       name.template write_size<E>() +
+				       payload.template write_size<E>();
+			}
+
+			template<lak::endian E>
+			lak::result<> write(lak::binary_span_writer &strm) const
+			{
+				RES_TRY(strm.template write<E>(type()).IF_ERR(""));
+				RES_TRY(name.template write<E>(strm).IF_ERR(""));
+				RES_TRY(payload.template write<E>(strm).IF_ERR(""));
+				return lak::ok_t{};
+			}
 
 			inline friend std::ostream &operator<<(std::ostream &strm,
 			                                       const lak::nbt::named_tag &tag)
@@ -372,430 +594,66 @@ namespace lak
 	}
 }
 
-template<lak::endian E>
-struct lak::to_bytes_traits<lak::nbt::tag_type, E>
-: lak::to_bytes_traits_arr_impl<lak::nbt::tag_type, E>
-{
-	static constexpr bool const_size = true;
-	static constexpr size_t size() { return 1; }
-
-	static auto single_to_bytes(const lak::nbt::tag_type &val)
-	{
-		return lak::to_bytes<uint8_t, E>(static_cast<uint8_t>(val));
-	}
-};
-
-template<lak::endian E>
-struct lak::to_bytes_traits<lak::nbt::named_tag, E>
-: lak::to_bytes_traits_arr_impl<lak::nbt::named_tag, E>
-{
-	static constexpr bool const_size = false;
-	static size_t size(const lak::nbt::named_tag &tag)
-	{
-		return lak::to_bytes_size<lak::nbt::tag_type, E>() +
-		       lak::to_bytes_size<lak::nbt::TAG_String, E>(tag.name) +
-		       lak::to_bytes_size<lak::nbt::tag_payload, E>(tag.payload);
-	}
-
-	static void single_to_bytes(lak::span<byte_t> dst,
-	                            const lak::nbt::named_tag &src)
-	{
-		lak::binary_span_writer strm(dst);
-		strm.template write<E>(src.type()).unwrap();
-		strm.template write<E>(src.name).unwrap();
-		strm.template write<E>(src.payload).unwrap();
-	}
-};
-
-template<typename T, lak::endian E>
-struct lak::to_bytes_traits<lak::nbt::pod_tag<T>, E>
-: lak::to_bytes_traits_arr_impl<lak::nbt::pod_tag<T>, E>
-{
-	static constexpr bool const_size = true;
-	static constexpr size_t size() { return sizeof(T); }
-
-	static auto single_to_bytes(const lak::nbt::pod_tag<T> &val)
-	{
-		return lak::to_bytes<T, E>(val.value);
-	}
-};
-
-template<typename T, lak::endian E>
-struct lak::to_bytes_traits<lak::nbt::array_tag<T>, E>
-: lak::to_bytes_traits_arr_impl<lak::nbt::array_tag<T>, E>
-{
-	static constexpr bool const_size = false;
-	static size_t size(const lak::nbt::array_tag<T> &arr)
-	{
-		return lak::to_bytes_traits<lak::nbt::TAG_Int, E>::size() +
-		       (arr.value.size() * sizeof(T));
-	}
-
-	static void single_to_bytes(lak::span<byte_t> dst,
-	                            const lak::nbt::array_tag<T> &src)
-	{
-		lak::binary_span_writer strm(dst);
-		strm
-		  .template write<E>(lak::nbt::TAG_Int{
-		    .value = static_cast<lak::nbt::TAG_Int::value_type>(src.value.size())})
-		  .unwrap();
-		strm.template write<E>(lak::span(src.value)).unwrap();
-	}
-};
-
-template<lak::endian E>
-struct lak::to_bytes_traits<lak::nbt::TAG_End, E>
-: lak::to_bytes_traits_arr_impl<lak::nbt::TAG_End, E>
-{
-	static constexpr bool const_size = true;
-	static constexpr size_t size() { return 0; }
-
-	static auto single_to_bytes(const lak::nbt::TAG_End &val)
-	{
-		return lak::array<byte_t, 0>{};
-	}
-};
-
-template<lak::endian E>
-struct lak::to_bytes_traits<lak::nbt::TAG_String, E>
-: lak::to_bytes_traits_arr_impl<lak::nbt::TAG_String, E>
-{
-	static constexpr bool const_size = false;
-	static size_t size(const lak::nbt::TAG_String &arr)
-	{
-		return lak::to_bytes_traits<lak::nbt::TAG_Short, E>::size() +
-		       arr.value.size();
-	}
-
-	static void single_to_bytes(lak::span<byte_t> dst,
-	                            const lak::nbt::TAG_String &src)
-	{
-		lak::binary_span_writer strm(dst);
-		strm
-		  .template write<E>(lak::nbt::TAG_Short{
-		    .value =
-		      static_cast<lak::nbt::TAG_Short::value_type>(src.value.size())})
-		  .unwrap();
-		strm.template write<E>(lak::span(src.value)).unwrap();
-	}
-};
-
-template<lak::endian E>
-struct lak::to_bytes_traits<lak::nbt::TAG_List, E>
-: lak::to_bytes_traits_arr_impl<lak::nbt::TAG_List, E>
-{
-	static constexpr bool const_size = false;
-	static size_t size(const lak::nbt::TAG_List &list)
-	{
-		return lak::to_bytes_size<lak::nbt::tag_type, E>() +
-		       lak::to_bytes_size<lak::nbt::TAG_Int, E>() +
-		       list.value.visit(
-		         []<typename T>(const lak::array<T> &arr)
-		         { return lak::to_bytes_size<T, E>(lak::span(arr)); });
-	}
-
-	static void single_to_bytes(lak::span<byte_t> dst,
-	                            const lak::nbt::TAG_List &src)
-	{
-		lak::binary_span_writer strm{dst};
-		strm.template write<E>(src.type()).unwrap();
-		strm
-		  .template write<E>(lak::nbt::TAG_Int{
-		    .value = static_cast<lak::nbt::TAG_Int::value_type>(src.size())})
-		  .unwrap();
-		src.value.visit([&]<typename T>(const lak::array<T> &arr)
-		                { strm.template write<E>(lak::span(arr)).unwrap(); });
-	}
-};
-
-template<lak::endian E>
-struct lak::to_bytes_traits<lak::nbt::TAG_Compound, E>
-: lak::to_bytes_traits_arr_impl<lak::nbt::TAG_Compound, E>
-{
-	static constexpr bool const_size = false;
-	static size_t size(const lak::nbt::TAG_Compound &compound)
-	{
-		return lak::to_bytes_size<lak::nbt::named_tag, E>(
-		         lak::span(compound.value)) +
-		       lak::to_bytes_size<lak::nbt::tag_type, E>();
-	}
-
-	static void single_to_bytes(lak::span<byte_t> dst,
-	                            const lak::nbt::TAG_Compound &src)
-	{
-		lak::binary_span_writer strm(dst);
-		strm.template write<E>(lak::span(src.value)).unwrap();
-		strm.template write<E>(lak::nbt::tag_type::End).unwrap();
-	}
-};
-
-template<lak::endian E>
-struct lak::to_bytes_traits<lak::nbt::tag_payload, E>
-: lak::to_bytes_traits_arr_impl<lak::nbt::tag_payload, E>
-{
-	static constexpr bool const_size = false;
-	static size_t size(const lak::nbt::tag_payload &payload)
-	{
-		return payload.value.visit([]<typename T>(const T &val)
-		                           { return lak::to_bytes_size<T, E>(val); });
-	}
-
-	static void single_to_bytes(lak::span<byte_t> dst,
-	                            const lak::nbt::tag_payload &src)
-	{
-		src.value.visit([&]<typename T>(const T &val)
-		                { return lak::to_bytes<T, E>(dst, val).unwrap(); });
-	}
-};
+static_assert(
+  lak::concepts::to_bytes_writeable<lak::nbt::tag_type, lak::endian::little>);
+static_assert(
+  lak::concepts::to_bytes_writeable<lak::nbt::named_tag, lak::endian::little>);
+static_assert(
+  lak::concepts::to_bytes_writeable<lak::nbt::TAG_End, lak::endian::little>);
+static_assert(
+  lak::concepts::to_bytes_writeable<lak::nbt::TAG_Byte, lak::endian::little>);
+static_assert(
+  lak::concepts::to_bytes_writeable<lak::nbt::TAG_Short, lak::endian::little>);
+static_assert(
+  lak::concepts::to_bytes_writeable<lak::nbt::TAG_Int, lak::endian::little>);
+static_assert(
+  lak::concepts::to_bytes_writeable<lak::nbt::TAG_Long, lak::endian::little>);
+static_assert(
+  lak::concepts::to_bytes_writeable<lak::nbt::TAG_Float, lak::endian::little>);
+static_assert(lak::concepts::to_bytes_writeable<lak::nbt::TAG_Double,
+                                                lak::endian::little>);
+static_assert(lak::concepts::to_bytes_writeable<lak::nbt::TAG_Byte_Array,
+                                                lak::endian::little>);
+static_assert(lak::concepts::to_bytes_writeable<lak::nbt::TAG_String,
+                                                lak::endian::little>);
+static_assert(
+  lak::concepts::to_bytes_writeable<lak::nbt::TAG_List, lak::endian::little>);
+static_assert(lak::concepts::to_bytes_writeable<lak::nbt::TAG_Compound,
+                                                lak::endian::little>);
+static_assert(lak::concepts::to_bytes_writeable<lak::nbt::TAG_Int_Array,
+                                                lak::endian::little>);
+static_assert(lak::concepts::to_bytes_writeable<lak::nbt::TAG_Long_Array,
+                                                lak::endian::little>);
 
 static_assert(
-  lak::has_to_bytes_traits<lak::nbt::tag_type, lak::endian::little>);
+  lak::concepts::from_bytes_readable<lak::nbt::tag_type, lak::endian::little>);
+static_assert(lak::concepts::from_bytes_readable<lak::nbt::named_tag,
+                                                 lak::endian::little>);
 static_assert(
-  lak::has_to_bytes_traits<lak::nbt::named_tag, lak::endian::little>);
+  lak::concepts::from_bytes_readable<lak::nbt::TAG_End, lak::endian::little>);
 static_assert(
-  lak::has_to_bytes_traits<lak::nbt::TAG_End, lak::endian::little>);
+  lak::concepts::from_bytes_readable<lak::nbt::TAG_Byte, lak::endian::little>);
+static_assert(lak::concepts::from_bytes_readable<lak::nbt::TAG_Short,
+                                                 lak::endian::little>);
 static_assert(
-  lak::has_to_bytes_traits<lak::nbt::TAG_Byte, lak::endian::little>);
+  lak::concepts::from_bytes_readable<lak::nbt::TAG_Int, lak::endian::little>);
 static_assert(
-  lak::has_to_bytes_traits<lak::nbt::TAG_Short, lak::endian::little>);
+  lak::concepts::from_bytes_readable<lak::nbt::TAG_Long, lak::endian::little>);
+static_assert(lak::concepts::from_bytes_readable<lak::nbt::TAG_Float,
+                                                 lak::endian::little>);
+static_assert(lak::concepts::from_bytes_readable<lak::nbt::TAG_Double,
+                                                 lak::endian::little>);
+static_assert(lak::concepts::from_bytes_readable<lak::nbt::TAG_Byte_Array,
+                                                 lak::endian::little>);
+static_assert(lak::concepts::from_bytes_readable<lak::nbt::TAG_String,
+                                                 lak::endian::little>);
 static_assert(
-  lak::has_to_bytes_traits<lak::nbt::TAG_Int, lak::endian::little>);
-static_assert(
-  lak::has_to_bytes_traits<lak::nbt::TAG_Long, lak::endian::little>);
-static_assert(
-  lak::has_to_bytes_traits<lak::nbt::TAG_Float, lak::endian::little>);
-static_assert(
-  lak::has_to_bytes_traits<lak::nbt::TAG_Double, lak::endian::little>);
-static_assert(
-  lak::has_to_bytes_traits<lak::nbt::TAG_Byte_Array, lak::endian::little>);
-static_assert(
-  lak::has_to_bytes_traits<lak::nbt::TAG_String, lak::endian::little>);
-static_assert(
-  lak::has_to_bytes_traits<lak::nbt::TAG_List, lak::endian::little>);
-static_assert(
-  lak::has_to_bytes_traits<lak::nbt::TAG_Compound, lak::endian::little>);
-static_assert(
-  lak::has_to_bytes_traits<lak::nbt::TAG_Int_Array, lak::endian::little>);
-static_assert(
-  lak::has_to_bytes_traits<lak::nbt::TAG_Long_Array, lak::endian::little>);
-static_assert(
-  lak::has_to_bytes_traits<lak::nbt::tag_payload, lak::endian::little>);
-
-template<lak::endian E>
-struct lak::from_bytes_traits<lak::nbt::tag_type, E>
-{
-	using value_type                 = lak::nbt::tag_type;
-	static constexpr bool const_size = true;
-	static constexpr size_t size     = 1U;
-
-	static void from_bytes(lak::from_bytes_data<value_type, E> data)
-	{
-		lak::binary_reader strm{data.src};
-		for (auto &v : data.dst)
-			v = static_cast<lak::nbt::tag_type>(strm.read_u8().unwrap());
-	}
-};
-
-template<lak::endian E>
-struct lak::from_bytes_traits<lak::nbt::named_tag, E>
-{
-	using value_type                 = lak::nbt::named_tag;
-	static constexpr bool const_size = false;
-	static constexpr size_t size     = lak::dynamic_extent;
-
-	static lak::result<lak::span<const byte_t>> from_bytes(
-	  lak::from_bytes_data<value_type, E> data)
-	{
-		lak::binary_reader strm{data.src};
-		for (auto &v : data.dst)
-		{
-			RES_TRY_ASSIGN(lak::nbt::tag_type type =,
-			               strm.template read<lak::nbt::tag_type, E>());
-			RES_TRY_ASSIGN(v.name =, strm.template read<lak::nbt::TAG_String, E>());
-			switch (type)
-			{
-#define LAK_NBT_READER_VISIT(VAL, NAME, TAG, ...)                             \
-	case lak::nbt::tag_type::NAME:                                              \
-	{                                                                           \
-		RES_TRY_ASSIGN(v.payload.value =,                                         \
-		               strm.template read<lak::nbt::TAG, E>());                   \
-	}                                                                           \
-	break;
-				LAK_FOREACH_NBT_TYPE(LAK_NBT_READER_VISIT)
-#undef LAK_NBT_READER_VISIT
-				default:
-					return lak::err_t{};
-			}
-		}
-
-		return lak::ok_t{strm.remaining()};
-	}
-};
-
-template<typename T, lak::endian E>
-struct lak::from_bytes_traits<lak::nbt::pod_tag<T>, E>
-{
-	using value_type                 = lak::nbt::pod_tag<T>;
-	static constexpr bool const_size = true;
-	static constexpr size_t size     = sizeof(T);
-
-	static void from_bytes(lak::from_bytes_data<value_type, E> data)
-	{
-		lak::binary_reader strm{data.src};
-		for (auto &v : data.dst) v.value = strm.template read<T, E>().unwrap();
-	}
-};
-
-template<typename T, lak::endian E>
-struct lak::from_bytes_traits<lak::nbt::array_tag<T>, E>
-{
-	using value_type                 = lak::nbt::array_tag<T>;
-	static constexpr bool const_size = false;
-	static constexpr size_t size     = lak::dynamic_extent;
-
-	static lak::result<lak::span<const byte_t>> from_bytes(
-	  lak::from_bytes_data<value_type, E> data)
-	{
-		lak::binary_reader strm{data.src};
-		for (auto &v : data.dst)
-		{
-			RES_TRY_ASSIGN(auto size =, strm.template read<lak::nbt::TAG_Int, E>());
-			RES_TRY_ASSIGN(v.value =, strm.template read<T, E>(size.value));
-		}
-		return lak::ok_t{strm.remaining()};
-	}
-};
-
-template<lak::endian E>
-struct lak::from_bytes_traits<lak::nbt::TAG_End, E>
-{
-	using value_type                 = lak::nbt::TAG_End;
-	static constexpr bool const_size = true;
-	static constexpr size_t size     = 0U;
-
-	static void from_bytes(lak::from_bytes_data<value_type, E> data) {}
-};
-
-template<lak::endian E>
-struct lak::from_bytes_traits<lak::nbt::TAG_String, E>
-{
-	using value_type                 = lak::nbt::TAG_String;
-	static constexpr bool const_size = false;
-	static constexpr size_t size     = lak::dynamic_extent;
-
-	static lak::result<lak::span<const byte_t>> from_bytes(
-	  lak::from_bytes_data<value_type, E> data)
-	{
-		lak::binary_reader strm{data.src};
-		for (auto &v : data.dst)
-		{
-			RES_TRY_ASSIGN(auto size =,
-			               strm.template read<lak::nbt::TAG_Short, E>());
-			RES_TRY_ASSIGN(v.value =,
-			               strm.template read_exact_c_str<char8_t, E>(size.value));
-		}
-		return lak::ok_t{strm.remaining()};
-	}
-};
-
-template<lak::endian E>
-struct lak::from_bytes_traits<lak::nbt::TAG_List, E>
-{
-	using value_type                 = lak::nbt::TAG_List;
-	static constexpr bool const_size = false;
-	static constexpr size_t size     = lak::dynamic_extent;
-
-	static lak::result<lak::span<const byte_t>> from_bytes(
-	  lak::from_bytes_data<value_type, E> data)
-	{
-		lak::binary_reader strm{data.src};
-		for (auto &v : data.dst)
-		{
-			RES_TRY_ASSIGN(auto type =, strm.template read<lak::nbt::tag_type, E>());
-			RES_TRY_ASSIGN(auto size =, strm.template read<lak::nbt::TAG_Int, E>());
-			switch (type)
-			{
-#define LAK_NBT_READER_VISIT(VAL, NAME, TAG, ...)                             \
-	case lak::nbt::tag_type::NAME:                                              \
-	{                                                                           \
-		RES_TRY_ASSIGN(v.value =,                                                 \
-		               strm.template read<lak::nbt::TAG, E>(size.value));         \
-	}                                                                           \
-	break;
-				LAK_FOREACH_NBT_TYPE(LAK_NBT_READER_VISIT)
-#undef LAK_NBT_READER_VISIT
-				default:
-					return lak::err_t{};
-			}
-		}
-		return lak::ok_t{strm.remaining()};
-	}
-};
-
-template<lak::endian E>
-struct lak::from_bytes_traits<lak::nbt::TAG_Compound, E>
-{
-	using value_type                 = lak::nbt::TAG_Compound;
-	static constexpr bool const_size = false;
-	static constexpr size_t size     = lak::dynamic_extent;
-
-	static lak::result<lak::span<const byte_t>> from_bytes(
-	  lak::from_bytes_data<value_type, E> data)
-	{
-		lak::binary_reader strm{data.src};
-		for (auto &v : data.dst)
-		{
-			for (;;)
-			{
-				if_let_ok (auto t, strm.template peek<lak::nbt::tag_type, E>())
-				{
-					if (t == lak::nbt::tag_type::End)
-					{
-						strm.template read<lak::nbt::tag_type, E>().unwrap();
-						break;
-					}
-				}
-				else
-					return lak::err_t{};
-
-				RES_TRY_ASSIGN(auto tag =,
-				               strm.template read<lak::nbt::named_tag, E>());
-				v.value.push_back(lak::move(tag));
-			}
-		}
-		return lak::ok_t{strm.remaining()};
-	}
-};
-
-static_assert(
-  lak::has_from_bytes_traits<lak::nbt::tag_type, lak::endian::little>);
-static_assert(
-  lak::has_from_bytes_traits<lak::nbt::named_tag, lak::endian::little>);
-static_assert(
-  lak::has_from_bytes_traits<lak::nbt::TAG_End, lak::endian::little>);
-static_assert(
-  lak::has_from_bytes_traits<lak::nbt::TAG_Byte, lak::endian::little>);
-static_assert(
-  lak::has_from_bytes_traits<lak::nbt::TAG_Short, lak::endian::little>);
-static_assert(
-  lak::has_from_bytes_traits<lak::nbt::TAG_Int, lak::endian::little>);
-static_assert(
-  lak::has_from_bytes_traits<lak::nbt::TAG_Long, lak::endian::little>);
-static_assert(
-  lak::has_from_bytes_traits<lak::nbt::TAG_Float, lak::endian::little>);
-static_assert(
-  lak::has_from_bytes_traits<lak::nbt::TAG_Double, lak::endian::little>);
-static_assert(
-  lak::has_from_bytes_traits<lak::nbt::TAG_Byte_Array, lak::endian::little>);
-static_assert(
-  lak::has_from_bytes_traits<lak::nbt::TAG_String, lak::endian::little>);
-static_assert(
-  lak::has_from_bytes_traits<lak::nbt::TAG_List, lak::endian::little>);
-static_assert(
-  lak::has_from_bytes_traits<lak::nbt::TAG_Compound, lak::endian::little>);
-static_assert(
-  lak::has_from_bytes_traits<lak::nbt::TAG_Int_Array, lak::endian::little>);
-static_assert(
-  lak::has_from_bytes_traits<lak::nbt::TAG_Long_Array, lak::endian::little>);
+  lak::concepts::from_bytes_readable<lak::nbt::TAG_List, lak::endian::little>);
+static_assert(lak::concepts::from_bytes_readable<lak::nbt::TAG_Compound,
+                                                 lak::endian::little>);
+static_assert(lak::concepts::from_bytes_readable<lak::nbt::TAG_Int_Array,
+                                                 lak::endian::little>);
+static_assert(lak::concepts::from_bytes_readable<lak::nbt::TAG_Long_Array,
+                                                 lak::endian::little>);
 
 #endif

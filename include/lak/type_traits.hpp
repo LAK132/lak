@@ -631,6 +631,31 @@ namespace lak
 	static_assert(lak::is_same_v<lak::remove_pointer_t<const volatile int &&>,
 	                             const volatile int &&>);
 
+	/* --- remove_member_pointer --- */
+
+	template<typename T>
+	struct remove_member_pointer : lak::type_identity<T>
+	{
+	};
+
+	template<typename T, typename U>
+	struct remove_member_pointer<U T::*> : lak::type_identity<U>
+	{
+	};
+
+	template<typename T>
+	using remove_member_pointer_t = typename lak::remove_member_pointer<T>::type;
+
+	template<auto PTR>
+	using remove_member_pointer_decl_t =
+	  lak::remove_member_pointer_t<decltype(PTR)>;
+
+	static_assert(lak::is_same_v<lak::remove_member_pointer_t<int>, int>);
+	static_assert(
+	  lak::is_same_v<
+	    lak::remove_member_pointer_t<int lak::remove_member_pointer<int>::*>,
+	    int>);
+
 	/* --- remove_cvptr --- */
 
 	template<typename T>

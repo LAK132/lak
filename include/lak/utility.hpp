@@ -40,6 +40,31 @@ namespace lak
 	template<typename T>
 	using reference_wrapper = std::reference_wrapper<T>;
 
+	template<typename T>
+	constexpr lak::reference_wrapper<T> ref(T &t) noexcept
+	{
+		return lak::reference_wrapper<T>{t};
+	}
+
+	template<typename T>
+	constexpr lak::reference_wrapper<T> ref(lak::reference_wrapper<T> t) noexcept
+	{
+		return lak::reference_wrapper<T>{t};
+	}
+
+	template<typename T>
+	constexpr lak::reference_wrapper<lak::add_wconst_t<T>> cref(T &t) noexcept
+	{
+		return lak::reference_wrapper{t};
+	}
+
+	template<typename T>
+	constexpr lak::reference_wrapper<lak::add_wconst_t<T>> cref(
+	  lak::reference_wrapper<T> t) noexcept
+	{
+		return lak::reference_wrapper{t};
+	}
+
 	/* --- in_place_index --- */
 
 	template<size_t I>
