@@ -381,10 +381,11 @@ struct lak::to_bytes_traits_fixed_struct_impl<T, E, E2, MEMBERS...>
 		if constexpr (const_size)
 			return size;
 		else
-			return ((lak::to_bytes_traits<lak::remove_reference_t<
-			           lak::remove_member_pointer_decl_t<MEMBERS>>>::
-			           dynamic_size(value.*MEMBERS)) +
-			        ...);
+			return (
+			  (lak::to_bytes_traits<
+			    lak::remove_reference_t<lak::remove_member_pointer_decl_t<MEMBERS>>,
+			    E2>::dynamic_size(value.*MEMBERS)) +
+			  ...);
 	}
 
 	static void to_bytes(lak::span<byte_t, size> bytes, const T &value)
