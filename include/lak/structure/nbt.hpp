@@ -221,13 +221,10 @@ namespace lak
 			template<lak::endian E>
 			lak::result<> write(lak::binary_span_writer &strm) const
 			{
-				RES_TRY(strm
-				          .template write<E>(lak::nbt::TAG_Short{
-				            .value = static_cast<lak::nbt::TAG_Short::value_type>(
-				              value.size()),
-				          })
-				          .IF_ERR(""));
-				RES_TRY(strm.template write<E>(lak::span(value)).IF_ERR(""));
+				RES_TRY(strm.template write<E>(lak::nbt::TAG_Short{
+				  .value = static_cast<lak::nbt::TAG_Short::value_type>(value.size()),
+				}));
+				RES_TRY(strm.template write<E>(lak::span(value)));
 				return lak::ok_t{};
 			}
 
@@ -266,20 +263,13 @@ namespace lak
 			}
 
 			template<lak::endian E>
-			size_t write_size() const
-			{
-				size_t result = lak::to_bytes_traits<lak::nbt::tag_type, E>::size;
-				for (const auto &v : value)
-					result +=
-					  lak::to_bytes_traits<lak::nbt::named_tag, E>::dynamic_size(v);
-				return result;
-			}
+			size_t write_size() const;
 
 			template<lak::endian E>
 			lak::result<> write(lak::binary_span_writer &strm) const
 			{
-				RES_TRY(strm.template write<E>(lak::span(value)).IF_ERR(""));
-				RES_TRY(strm.template write<E>(lak::nbt::tag_type::End).IF_ERR(""));
+				RES_TRY(strm.template write<E>(lak::span(value)));
+				RES_TRY(strm.template write<E>(lak::nbt::tag_type::End));
 				return lak::ok_t{};
 			}
 
@@ -485,9 +475,9 @@ namespace lak
 			template<lak::endian E>
 			lak::result<> write(lak::binary_span_writer &strm) const
 			{
-				RES_TRY(strm.template write<E>(type()).IF_ERR(""));
-				RES_TRY(name.template write<E>(strm).IF_ERR(""));
-				RES_TRY(payload.template write<E>(strm).IF_ERR(""));
+				RES_TRY(strm.template write<E>(type()));
+				RES_TRY(name.template write<E>(strm));
+				RES_TRY(payload.template write<E>(strm));
 				return lak::ok_t{};
 			}
 
@@ -497,6 +487,16 @@ namespace lak
 				return strm << lak::as_astring(tag.name.value) << ":" << tag.payload;
 			}
 		};
+
+		template<lak::endian E>
+		size_t TAG_Compound::write_size() const
+		{
+			size_t result = lak::to_bytes_traits<lak::nbt::tag_type, E>::size;
+			for (const auto &v : value)
+				result +=
+				  lak::to_bytes_traits<lak::nbt::named_tag, E>::dynamic_size(v);
+			return result;
+		}
 
 		inline named_tag make_byte(lak::u8string name,
 		                           lak::nbt::TAG_Byte::value_type value)
