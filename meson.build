@@ -49,6 +49,7 @@ else
 		'-Wno-deprecated-declarations',
 		'-Wno-unused-private-field',
 		'-Wno-unused-variable',
+		'-Wno-init-list-lifetime',
 		'-Wfatal-errors',
 		'-Wno-psabi',
 		# '-mavx',
