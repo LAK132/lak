@@ -346,9 +346,18 @@ namespace
 		   ...);
 
 		template<lak::endian E, typename T, auto... MEMBERS>
-		static constexpr size_t _members_total_size_v =
+		static constexpr size_t _members_total_to_bytes_size_v =
 		  local::_members_are_const_size_v<E, MEMBERS...>
 		    ? ((lak::to_bytes_traits<
+		         lak::remove_reference_t<decltype(lak::declval<T>().*MEMBERS)>,
+		         E>::size) +
+		       ...)
+		    : lak::dynamic_extent;
+
+		template<lak::endian E, typename T, auto... MEMBERS>
+		static constexpr size_t _members_total_from_bytes_size_v =
+		  local::_members_are_const_size_v<E, MEMBERS...>
+		    ? ((lak::from_bytes_traits<
 		         lak::remove_reference_t<decltype(lak::declval<T>().*MEMBERS)>,
 		         E>::size) +
 		       ...)
@@ -365,7 +374,7 @@ struct lak::to_bytes_traits_fixed_struct_impl<T, E, E2, MEMBERS...>
 	static constexpr bool const_size =
 	  local::_members_are_const_size_v<E2, MEMBERS...>;
 	static constexpr size_t size =
-	  local::_members_total_size_v<E2, T, MEMBERS...>;
+	  local::_members_total_to_bytes_size_v<E2, T, MEMBERS...>;
 
 	static size_t dynamic_size(const T &value)
 	{
@@ -400,7 +409,7 @@ struct lak::from_bytes_traits_fixed_struct_impl<T, E, E2, MEMBERS...>
 	static constexpr bool const_size =
 	  local::_members_are_const_size_v<E2, MEMBERS...>;
 	static constexpr size_t size =
-	  local::_members_total_size_v<E2, T, MEMBERS...>;
+	  local::_members_total_from_bytes_size_v<E2, T, MEMBERS...>;
 
 	static void from_bytes(lak::span<const byte_t, size> bytes, T &value)
 	requires(const_size)
