@@ -54,13 +54,16 @@ namespace lak
 #undef LAK_NBT_ENUM
 		};
 	}
+}
 
-	template<lak::endian E>
-	struct lak::bytes_traits<lak::nbt::tag_type, E>
-	: lak::_memcpy_bytes_traits<lak::nbt::tag_type, E>
-	{
-	};
+template<lak::endian E>
+struct lak::bytes_traits<lak::nbt::tag_type, E>
+: lak::_memcpy_bytes_traits<lak::nbt::tag_type, E>
+{
+};
 
+namespace lak
+{
 	namespace nbt
 	{
 		template<typename T>
@@ -97,11 +100,14 @@ namespace lak
 			}
 		};
 	}
+}
 
-	LAK_FIXED_TEMPLATE_STRUCT_BYTES_TRAITS(typename T,
-	                                       lak::nbt::pod_tag<T>,
-	                                       &lak::nbt::pod_tag<T>::value)
+LAK_FIXED_TEMPLATE_STRUCT_BYTES_TRAITS(typename T,
+                                       lak::nbt::pod_tag<T>,
+                                       &lak::nbt::pod_tag<T>::value)
 
+namespace lak
+{
 	namespace nbt
 	{
 		template<typename T>
@@ -183,9 +189,12 @@ namespace lak
 			}
 		};
 	}
+}
 
-	LAK_FIXED_STRUCT_BYTES_TRAITS(lak::nbt::TAG_End, &lak::nbt::TAG_End::_value)
+LAK_FIXED_STRUCT_BYTES_TRAITS(lak::nbt::TAG_End, &lak::nbt::TAG_End::_value)
 
+namespace lak
+{
 	namespace nbt
 	{
 		struct TAG_String
@@ -598,7 +607,6 @@ namespace lak
 			  .payload = {.value = TAG_Long_Array{.value = lak::move(value)}},
 			};
 		}
-
 	}
 }
 
