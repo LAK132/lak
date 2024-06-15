@@ -581,20 +581,20 @@ struct lak::from_bytes_traits<lak::reference_wrapper<T>, E>
 {
 	using value_type = lak::reference_wrapper<T>;
 
-	static constexpr bool const_size = lak::from_bytes_traits<T>::const_size;
+	static constexpr bool const_size = lak::from_bytes_traits<T, E>::const_size;
 
-	static constexpr size_t size = lak::from_bytes_traits<T>::size;
+	static constexpr size_t size = lak::from_bytes_traits<T, E>::size;
 
 	static void from_bytes(lak::span<const byte_t, size> bytes,
 	                       lak::reference_wrapper<T> &value)
 	{
-		return lak::from_bytes_traits<T>::from_bytes(bytes, value.get());
+		return lak::from_bytes_traits<T, E>::from_bytes(bytes, value.get());
 	}
 
 	static lak::result<lak::span<const byte_t>> from_bytes(
 	  lak::span<const byte_t> bytes, lak::reference_wrapper<T> &value)
 	{
-		return lak::from_bytes_traits<T>::from_bytes(bytes, value.get());
+		return lak::from_bytes_traits<T, E>::from_bytes(bytes, value.get());
 	}
 };
 
@@ -604,10 +604,10 @@ struct lak::to_bytes_traits<lak::reference_wrapper<T>, E>
 	using value_type = lak::reference_wrapper<T>;
 
 	static constexpr bool const_size =
-	  lak::to_bytes_traits<lak::remove_const_t<T>>::const_size;
+	  lak::to_bytes_traits<lak::remove_const_t<T>, E>::const_size;
 
 	static constexpr size_t size =
-	  lak::to_bytes_traits<lak::remove_const_t<T>>::size;
+	  lak::to_bytes_traits<lak::remove_const_t<T>, E>::size;
 
 	static void to_bytes(lak::span<byte_t, size> bytes,
 	                     const lak::reference_wrapper<T> &value)
