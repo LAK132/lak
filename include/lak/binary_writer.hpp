@@ -296,17 +296,17 @@ namespace lak
 
 #	define BINARY_ARRAY_WRITER_MEMBERS(TYPE, NAME, ...)                        \
 		template<lak::endian E = lak::endian::little>                             \
-		inline void write_##NAME(const TYPE &value)                               \
+		inline lak::result<> write_##NAME(const TYPE &value)                      \
 		{                                                                         \
-			write<E, TYPE>(value);                                                  \
+			return write<E, TYPE>(value);                                           \
 		}                                                                         \
-		inline void write_##NAME##le(const TYPE &value)                           \
+		inline lak::result<> write_##NAME##le(const TYPE &value)                  \
 		{                                                                         \
-			write_##NAME<lak::endian::little>(value);                               \
+			return write_##NAME<lak::endian::little>(value);                        \
 		}                                                                         \
-		inline void write_##NAME##be(const TYPE &value)                           \
+		inline lak::result<> write_##NAME##be(const TYPE &value)                  \
 		{                                                                         \
-			write_##NAME<lak::endian::big>(value);                                  \
+			return write_##NAME<lak::endian::big>(value);                           \
 		}
 		LAK_FOREACH_INTEGER(BINARY_ARRAY_WRITER_MEMBERS)
 		LAK_FOREACH_FLOAT(BINARY_ARRAY_WRITER_MEMBERS)
