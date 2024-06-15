@@ -29,34 +29,34 @@ BEGIN_TEST(uninit_array)
 		auto result{array.push_back()};
 		ASSERT(!!result);
 		ASSERT(result->empty());
-		ASSERT_GREATER_OR_EQUAL(array.capacity(), 0x1);
-		ASSERT_EQUAL(array.size(), 0x1);
+		ASSERT_GREATER_OR_EQUAL(array.capacity(), 0x1U);
+		ASSERT_EQUAL(array.size(), 0x1U);
 	}
 	{
 		auto result{array.reserve(0x100)};
 		ASSERT(!!result);
 		ASSERT_EQUAL(result->size(), 1U);
-		ASSERT_GREATER_OR_EQUAL(array.capacity(), 0x100);
+		ASSERT_GREATER_OR_EQUAL(array.capacity(), 0x100U);
 	}
 	{
 		auto result{array.resize(0x10)};
 		ASSERT(!result);
-		ASSERT_GREATER_OR_EQUAL(array.capacity(), 0x100);
-		ASSERT_EQUAL(array.size(), 0x10);
+		ASSERT_GREATER_OR_EQUAL(array.capacity(), 0x100U);
+		ASSERT_EQUAL(array.size(), 0x10U);
 	}
 	{
 		lak::uninit_array<int> moved{lak::move(array)};
 		ASSERT_EQUAL(array.capacity(), 0x0U);
 		ASSERT_EQUAL(array.committed(), 0x0U);
 		ASSERT_EQUAL(array.size(), 0x0U);
-		ASSERT_GREATER_OR_EQUAL(moved.capacity(), 0x100);
-		ASSERT_EQUAL(moved.size(), 0x10);
+		ASSERT_GREATER_OR_EQUAL(moved.capacity(), 0x100U);
+		ASSERT_EQUAL(moved.size(), 0x10U);
 		array = lak::move(moved);
 		ASSERT_EQUAL(moved.capacity(), 0x0U);
 		ASSERT_EQUAL(moved.committed(), 0x0U);
 		ASSERT_EQUAL(moved.size(), 0x0U);
-		ASSERT_GREATER_OR_EQUAL(array.capacity(), 0x100);
-		ASSERT_EQUAL(array.size(), 0x10);
+		ASSERT_GREATER_OR_EQUAL(array.capacity(), 0x100U);
+		ASSERT_EQUAL(array.size(), 0x10U);
 	}
 	return 0;
 }
