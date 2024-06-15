@@ -53,13 +53,16 @@ namespace lak
 			LAK_FOREACH_NBT_TYPE(LAK_NBT_ENUM)
 #undef LAK_NBT_ENUM
 		};
+	}
 
-		template<lak::endian E>
-		struct lak::bytes_traits<lak::nbt::tag_type, E>
-		: lak::_memcpy_bytes_traits<lak::nbt::tag_type, E>
-		{
-		};
+	template<lak::endian E>
+	struct lak::bytes_traits<lak::nbt::tag_type, E>
+	: lak::_memcpy_bytes_traits<lak::nbt::tag_type, E>
+	{
+	};
 
+	namespace nbt
+	{
 		template<typename T>
 		struct pod_tag;
 
@@ -93,11 +96,14 @@ namespace lak
 					return strm << std::dec << tag.value << "d";
 			}
 		};
+	}
 
-		LAK_FIXED_TEMPLATE_STRUCT_BYTES_TRAITS(typename T,
-		                                       lak::nbt::pod_tag<T>,
-		                                       &lak::nbt::pod_tag<T>::value)
+	LAK_FIXED_TEMPLATE_STRUCT_BYTES_TRAITS(typename T,
+	                                       lak::nbt::pod_tag<T>,
+	                                       &lak::nbt::pod_tag<T>::value)
 
+	namespace nbt
+	{
 		template<typename T>
 		struct array_tag;
 
@@ -176,10 +182,12 @@ namespace lak
 				return strm;
 			}
 		};
+	}
 
-		LAK_FIXED_STRUCT_BYTES_TRAITS(lak::nbt::TAG_End,
-		                              &lak::nbt::TAG_End::_value)
+	LAK_FIXED_STRUCT_BYTES_TRAITS(lak::nbt::TAG_End, &lak::nbt::TAG_End::_value)
 
+	namespace nbt
+	{
 		struct TAG_String
 		{
 			lak::u8string value;
