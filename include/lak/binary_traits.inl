@@ -334,89 +334,54 @@ void lak::array_to_bytes(
 
 /* --- bytes_traits_fixed_struct_impl --- */
 
+namespace
+{
+	namespace local
+	{
+		template<lak::endian E, auto... MEMBERS>
+		static constexpr bool _members_are_const_size_v =
+		  ((lak::to_bytes_traits<
+		     lak::remove_reference_t<lak::remove_member_pointer_decl_t<MEMBERS>>,
+		     E>::const_size) &&
+		   ...);
+
+		template<lak::endian E, typename T, auto... MEMBERS>
+		static constexpr size_t _members_total_size_v =
+		  local::_members_are_const_size_v<E, MEMBERS...>
+		    ? ((lak::to_bytes_traits<
+		         lak::remove_reference_t<decltype(lak::declval<T>().*MEMBERS)>,
+		         E>::size) +
+		       ...)
+		    : lak::dynamic_extent;
+	}
+}
+
 template<typename T, lak::endian E, lak::endian E2, auto... MEMBERS>
-requires(
-  (sizeof...(MEMBERS) > 0) &&
-  ((lak::is_member_pointer_for_v<decltype(MEMBERS), T>)&&...) &&
-  ((lak::to_bytes_traits<
-     lak::remove_reference_t<lak::remove_member_pointer_decl_t<MEMBERS>>,
-     E>::const_size) &&
-   ...))
+requires((sizeof...(MEMBERS) > 0) &&
+         ((lak::is_member_pointer_for_v<decltype(MEMBERS), T>)&&...))
 struct lak::to_bytes_traits_fixed_struct_impl<T, E, E2, MEMBERS...>
 {
-	using value_type                 = T;
-	static constexpr bool const_size = true;
+	using value_type = T;
+	static constexpr bool const_size =
+	  local::_members_are_const_size_v<E2, MEMBERS...>;
 	static constexpr size_t size =
-	  ((lak::to_bytes_traits<
-	     lak::remove_reference_t<decltype(lak::declval<T>().*MEMBERS)>,
-	     E>::size) +
-	   ...);
-
-	static size_t dynamic_size(const T &) { return size; }
-
-	static void to_bytes(lak::span<byte_t, size> bytes, const T &value)
-	{
-		return lak::to_bytes<E2>(bytes, value.*MEMBERS...);
-	}
-
-	static lak::result<lak::span<byte_t>> to_bytes(lak::span<byte_t> bytes,
-	                                               const T &value)
-	{
-		return lak::to_bytes<E2>(bytes, value.*MEMBERS...);
-	}
-};
-
-template<typename T, lak::endian E, lak::endian E2, auto... MEMBERS>
-requires(
-  (sizeof...(MEMBERS) > 0) &&
-  ((lak::is_member_pointer_for_v<decltype(MEMBERS), T>)&&...) &&
-  ((lak::from_bytes_traits<
-     lak::remove_reference_t<lak::remove_member_pointer_decl_t<MEMBERS>>,
-     E>::const_size) &&
-   ...))
-struct lak::from_bytes_traits_fixed_struct_impl<T, E, E2, MEMBERS...>
-{
-	using value_type                 = T;
-	static constexpr bool const_size = true;
-	static constexpr size_t size =
-	  ((lak::from_bytes_traits<
-	     lak::remove_reference_t<decltype(lak::declval<T>().*MEMBERS)>,
-	     E>::size) +
-	   ...);
-
-	static void from_bytes(lak::span<const byte_t, size> bytes, T &value)
-	{
-		return lak::from_bytes<E2>(bytes, value.*MEMBERS...);
-	}
-
-	static lak::result<lak::span<const byte_t>> from_bytes(
-	  lak::span<const byte_t> bytes, T &value)
-	{
-		return lak::from_bytes<E2>(bytes, value.*MEMBERS...);
-	}
-};
-
-template<typename T, lak::endian E, lak::endian E2, auto... MEMBERS>
-requires(
-  (sizeof...(MEMBERS) > 0) &&
-  ((lak::is_member_pointer_for_v<decltype(MEMBERS), T>)&&...) &&
-  !((lak::to_bytes_traits<
-      lak::remove_reference_t<lak::remove_member_pointer_decl_t<MEMBERS>>,
-      E>::const_size) &&
-    ...))
-struct lak::to_bytes_traits_fixed_struct_impl<T, E, E2, MEMBERS...>
-{
-	using value_type                 = T;
-	static constexpr bool const_size = false;
-	static constexpr size_t size     = lak::dynamic_extent;
+	  local::_members_total_size_v<E2, T, MEMBERS...>;
 
 	static size_t dynamic_size(const T &value)
 	{
-		return (
-		  (lak::to_bytes_traits<lak::remove_reference_t<
-		     lak::remove_member_pointer_decl_t<MEMBERS>>>::dynamic_size(value.*
-		                                                                MEMBERS)) +
-		  ...);
+		if constexpr (const_size)
+			return size;
+		else
+			return ((lak::to_bytes_traits<lak::remove_reference_t<
+			           lak::remove_member_pointer_decl_t<MEMBERS>>>::
+			           dynamic_size(value.*MEMBERS)) +
+			        ...);
+	}
+
+	static void to_bytes(lak::span<byte_t, size> bytes, const T &value)
+	requires(const_size)
+	{
+		return lak::to_bytes<E2>(bytes, value.*MEMBERS...);
 	}
 
 	static lak::result<lak::span<byte_t>> to_bytes(lak::span<byte_t> bytes,
@@ -427,18 +392,21 @@ struct lak::to_bytes_traits_fixed_struct_impl<T, E, E2, MEMBERS...>
 };
 
 template<typename T, lak::endian E, lak::endian E2, auto... MEMBERS>
-requires(
-  (sizeof...(MEMBERS) > 0) &&
-  ((lak::is_member_pointer_for_v<decltype(MEMBERS), T>)&&...) &&
-  !((lak::from_bytes_traits<
-      lak::remove_reference_t<lak::remove_member_pointer_decl_t<MEMBERS>>,
-      E>::const_size) &&
-    ...))
+requires((sizeof...(MEMBERS) > 0) &&
+         ((lak::is_member_pointer_for_v<decltype(MEMBERS), T>)&&...))
 struct lak::from_bytes_traits_fixed_struct_impl<T, E, E2, MEMBERS...>
 {
-	using value_type                 = T;
-	static constexpr bool const_size = false;
-	static constexpr size_t size     = lak::dynamic_extent;
+	using value_type = T;
+	static constexpr bool const_size =
+	  local::_members_are_const_size_v<E2, MEMBERS...>;
+	static constexpr size_t size =
+	  local::_members_total_size_v<E2, T, MEMBERS...>;
+
+	static void from_bytes(lak::span<const byte_t, size> bytes, T &value)
+	requires(const_size)
+	{
+		return lak::from_bytes<E2>(bytes, value.*MEMBERS...);
+	}
 
 	static lak::result<lak::span<const byte_t>> from_bytes(
 	  lak::span<const byte_t> bytes, T &value)
