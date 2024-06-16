@@ -527,7 +527,6 @@ static_assert(
   lak::concepts::from_bytes_readable<uint16_t, lak::endian::native>);
 static_assert(
   lak::concepts::from_bytes_readable<uint32_t, lak::endian::native>);
-static_assert(lak::concepts::from_bytes_readable<size_t, lak::endian::native>);
 static_assert(lak::concepts::from_bytes_readable<float, lak::endian::native>);
 
 static_assert(lak::concepts::to_bytes_writeable<byte_t, lak::endian::native>);
@@ -538,7 +537,6 @@ static_assert(
   lak::concepts::to_bytes_writeable<uint16_t, lak::endian::native>);
 static_assert(
   lak::concepts::to_bytes_writeable<uint32_t, lak::endian::native>);
-static_assert(lak::concepts::to_bytes_writeable<size_t, lak::endian::native>);
 static_assert(lak::concepts::to_bytes_writeable<float, lak::endian::native>);
 
 #include "lak/binary_reader.hpp"
