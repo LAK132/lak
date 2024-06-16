@@ -68,7 +68,7 @@ lak::result<lak::span<const byte_t>> lak::from_bytes(
 {
 	constexpr size_t size = (lak::from_bytes_traits<T, E>::size + ...);
 	if (bytes.size() < size) return lak::err_t{};
-	lak::from_bytes(bytes.template first<size>(), values...);
+	lak::from_bytes<E>(bytes.template first<size>(), values...);
 	return lak::ok_t{bytes.subspan(size)};
 }
 
