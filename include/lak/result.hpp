@@ -108,7 +108,7 @@ namespace lak
 
 	/* --- unwrap_infallible --- */
 
-	template<typename OK>
+	template<typename OK = lak::monostate>
 	using infallible_result = lak::result<OK, lak::bottom>;
 
 	template<typename T>
@@ -131,7 +131,7 @@ namespace lak
 
 	/* --- unwrap_insuccible --- */
 
-	template<typename ERR>
+	template<typename ERR = lak::monostate>
 	using insuccible_result = lak::result<lak::bottom, ERR>;
 
 	template<typename E>
@@ -204,10 +204,13 @@ namespace lak
 // if_let_err (auto err, result) { err; }
 // else { }
 #	define if_let_err(VALUE, ...)                                              \
-		if (auto &&UNIQUIFY(RESULT_){__VA_ARGS__}; UNIQUIFY(RESULT_).is_err())    \
-			do_with (VALUE{                                                         \
-			           lak::forward<decltype(UNIQUIFY(RESULT_))>(UNIQUIFY(RESULT_)) \
-			             .unsafe_unwrap_err()})
+		if constexpr (!lak::is_same_v<typename lak::remove_cvref_t<decltype((     \
+		                                __VA_ARGS__))>::err_type,                 \
+		                              lak::bottom>)                               \
+			if (auto &&UNIQUIFY(RESULT_){__VA_ARGS__}; UNIQUIFY(RESULT_).is_err())  \
+				do_with (VALUE{lak::forward<decltype(UNIQUIFY(RESULT_))>(             \
+				                 UNIQUIFY(RESULT_))                                   \
+				                 .unsafe_unwrap_err()})
 
 // match_result(result)
 // {
@@ -279,9 +282,14 @@ namespace lak
 			  {                                                                     \
 				  DEBUG(__VA_ARGS__);                                                 \
 			  }                                                                     \
-			  else                                                                  \
+			  else if constexpr (lak::concepts::streamable<                         \
+			                       lak::remove_cvref_t<decltype(err)>>)             \
 			  {                                                                     \
 				  DEBUG(__VA_ARGS__, ": ", val);                                      \
+			  }                                                                     \
+			  else                                                                  \
+			  {                                                                     \
+				  DEBUG(__VA_ARGS__, ": ", typeid(err).name());                       \
 			  }                                                                     \
 		  })
 #	define IF_ERR(...)                                                         \
@@ -293,9 +301,14 @@ namespace lak
 			  {                                                                     \
 				  ERROR(__VA_ARGS__);                                                 \
 			  }                                                                     \
-			  else                                                                  \
+			  else if constexpr (lak::concepts::streamable<                         \
+			                       lak::remove_cvref_t<decltype(err)>>)             \
 			  {                                                                     \
 				  ERROR(__VA_ARGS__, ": ", err);                                      \
+			  }                                                                     \
+			  else                                                                  \
+			  {                                                                     \
+				  ERROR(__VA_ARGS__, ": ", typeid(err).name());                       \
 			  }                                                                     \
 		  })
 #	define IF_ERR_WARN(...)                                                    \
@@ -307,22 +320,33 @@ namespace lak
 			  {                                                                     \
 				  WARNING(__VA_ARGS__);                                               \
 			  }                                                                     \
-			  else                                                                  \
+			  else if constexpr (lak::concepts::streamable<                         \
+			                       lak::remove_cvref_t<decltype(err)>>)             \
 			  {                                                                     \
 				  WARNING(__VA_ARGS__, ": ", err);                                    \
+			  }                                                                     \
+			  else                                                                  \
+			  {                                                                     \
+				  WARNING(__VA_ARGS__, ": ", typeid(err).name());                     \
 			  }                                                                     \
 		  })
 
 #	define RES_TRY_FLUENT(...)                                                 \
 		auto UNIQUIFY(RESULT_){__VA_ARGS__};                                      \
-		if (UNIQUIFY(RESULT_).is_err())                                           \
-			return lak::err_t{lak::move(UNIQUIFY(RESULT_)).unsafe_unwrap_err()};    \
+		if constexpr (!lak::is_same_v<typename lak::remove_cvref_t<               \
+		                                decltype(UNIQUIFY(RESULT_))>::err_type,   \
+		                              lak::bottom>)                               \
+			if (UNIQUIFY(RESULT_).is_err())                                         \
+				return lak::err_t{lak::move(UNIQUIFY(RESULT_)).unsafe_unwrap_err()};  \
 		lak::move(UNIQUIFY(RESULT_)).unsafe_unwrap()
 
 #	define RES_TRY_ASSIGN(ASSIGN, ...)                                         \
 		auto UNIQUIFY(RESULT_){__VA_ARGS__};                                      \
-		if (UNIQUIFY(RESULT_).is_err())                                           \
-			return lak::err_t{lak::move(UNIQUIFY(RESULT_)).unsafe_unwrap_err()};    \
+		if constexpr (!lak::is_same_v<typename lak::remove_cvref_t<               \
+		                                decltype(UNIQUIFY(RESULT_))>::err_type,   \
+		                              lak::bottom>)                               \
+			if (UNIQUIFY(RESULT_).is_err())                                         \
+				return lak::err_t{lak::move(UNIQUIFY(RESULT_)).unsafe_unwrap_err()};  \
 		ASSIGN lak::move(UNIQUIFY(RESULT_)).unsafe_unwrap()
 
 #	define RES_TRY(...)                                                        \
@@ -759,9 +783,13 @@ namespace lak
 				{
 					ABORTF(error_str);
 				}
-				else
+				else if constexpr (lak::concepts::streamable<ERR>)
 				{
 					ABORTF(error_str, ": ", get_err());
+				}
+				else
+				{
+					ABORTF(error_str, ": ", typeid(get_err()).name());
 				}
 			}
 			return get_ok();
@@ -776,9 +804,13 @@ namespace lak
 				{
 					ABORTF(error_str);
 				}
-				else
+				else if constexpr (lak::concepts::streamable<ERR>)
 				{
 					ABORTF(error_str, ": ", get_err());
+				}
+				else
+				{
+					ABORTF(error_str, ": ", typeid(get_err()).name());
 				}
 			}
 			return get_ok();
@@ -793,9 +825,13 @@ namespace lak
 				{
 					ABORTF(error_str);
 				}
-				else
+				else if constexpr (lak::concepts::streamable<ERR>)
 				{
 					ABORTF(error_str, ": ", get_err());
+				}
+				else
+				{
+					ABORTF(error_str, ": ", typeid(get_err()).name());
 				}
 			}
 			return forward_ok();

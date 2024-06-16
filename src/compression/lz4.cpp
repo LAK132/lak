@@ -8,8 +8,6 @@ const char *lak::lz4_error_name(lak::lz4_decode_error err)
 	{
 		case lak::lz4_decode_error::too_many_literals:
 			return "too many literals";
-		case lak::lz4_decode_error::out_of_data:
-			return "out of data";
 		case lak::lz4_decode_error::zero_offset:
 			return "zero offset";
 		case lak::lz4_decode_error::offset_too_large:
@@ -21,18 +19,18 @@ const char *lak::lz4_error_name(lak::lz4_decode_error err)
 	}
 }
 
-lak::result<lak::array<byte_t>, lak::lz4_decode_error> lak::decode_lz4_block(
-  lak::binary_reader &strm, size_t output_size, bool allow_partial_read)
+lak::result<lak::array<byte_t>,
+            lak::variant<lak::out_of_data_error, lak::lz4_decode_error>>
+lak::decode_lz4_block(lak::binary_reader &strm,
+                      size_t output_size,
+                      bool allow_partial_read)
 {
 	lak::array<byte_t> output(output_size);
 	lak::binary_span_writer writer{lak::span<byte_t>(lak::span(output))};
 
-	auto out_of_data = [](auto &&)
-	{ return lak::lz4_decode_error::out_of_data; };
-
 	for (;;)
 	{
-		RES_TRY_ASSIGN(const uint8_t token =, strm.read_u8().map_err(out_of_data));
+		RES_TRY_ASSIGN(const uint8_t token =, strm.read_u8());
 		size_t match_length = (token >> 0) & 0xF;
 		size_t length       = (token >> 4) & 0xF;
 
@@ -42,7 +40,7 @@ lak::result<lak::array<byte_t>, lak::lz4_decode_error> lak::decode_lz4_block(
 
 			for (;;)
 			{
-				RES_TRY_ASSIGN(uint8_t another =, strm.read_u8().map_err(out_of_data));
+				RES_TRY_ASSIGN(uint8_t another =, strm.read_u8());
 				if (length + another < length)
 					return lak::err_t{lak::lz4_decode_error::too_many_literals};
 				length += another;
@@ -60,20 +58,20 @@ lak::result<lak::array<byte_t>, lak::lz4_decode_error> lak::decode_lz4_block(
 				return lak::err_t{lak::lz4_decode_error::output_full};
 		}
 		if (strm.remaining().size() < length)
-			return lak::err_t{lak::lz4_decode_error::out_of_data};
+			return lak::err_t<lak::out_of_data_error>{};
 		writer.write(strm.remaining().first(length)).unwrap();
-		RES_TRY(strm.skip(length).map_err(out_of_data));
+		RES_TRY(strm.skip(length));
 
 		if (strm.empty()) break; // reached the end of the last block
 
-		RES_TRY_ASSIGN(const auto offset =, strm.read_u16().map_err(out_of_data));
+		RES_TRY_ASSIGN(const auto offset =, strm.read_u16());
 		if (offset == 0) return lak::err_t{lak::lz4_decode_error::zero_offset};
 
 		if (match_length == 15)
 		{
 			for (;;)
 			{
-				RES_TRY_ASSIGN(uint8_t another =, strm.read_u8().map_err(out_of_data));
+				RES_TRY_ASSIGN(uint8_t another =, strm.read_u8());
 				if (match_length + another < match_length)
 					return lak::err_t{lak::lz4_decode_error::match_too_long};
 				match_length += another;

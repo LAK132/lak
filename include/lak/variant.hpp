@@ -618,6 +618,86 @@ namespace lak
 
 	static_assert(lak::is_standard_layout_v<lak::variant<int>>);
 
+	template<typename V>
+	struct is_trivial_variant : lak::false_type
+	{
+	};
+	template<typename T>
+	struct is_trivial_variant<lak::variant<T>> : lak::true_type
+	{
+	};
+	template<typename V>
+	static constexpr bool is_trivial_variant_v =
+	  lak::is_trivial_variant<V>::value;
+
+	template<typename V>
+	struct variant_to_type_pack;
+	template<typename... T>
+	struct variant_to_type_pack<lak::variant<T...>>
+	: lak::type_identity<lak::type_pack<T...>>
+	{
+	};
+	template<typename V>
+	using variant_to_type_pack_t = typename lak::variant_to_type_pack<V>::type;
+
+	template<typename V>
+	struct all_variants_to_type_pack : lak::type_identity<V>
+	{
+	};
+	template<typename... T>
+	struct all_variants_to_type_pack<lak::variant<T...>>
+	: lak::type_identity<
+	    lak::type_pack<typename all_variants_to_type_pack<T>::type...>>
+	{
+	};
+	template<typename V>
+	using all_variants_to_type_pack_t =
+	  typename lak::all_variants_to_type_pack<V>::type;
+
+	template<typename V>
+	struct type_pack_to_variant;
+	template<typename... T>
+	struct type_pack_to_variant<lak::type_pack<T...>>
+	: lak::type_identity<lak::variant<T...>>
+	{
+	};
+	template<typename V>
+	using type_pack_to_variant_t = typename lak::type_pack_to_variant<V>::type;
+
+	template<typename V>
+	struct all_type_packs_to_variant : lak::type_identity<V>
+	{
+	};
+	template<typename... T>
+	struct all_type_packs_to_variant<lak::type_pack<T...>>
+	: lak::type_identity<
+	    lak::variant<typename all_type_packs_to_variant<T>::type...>>
+	{
+	};
+	template<typename V>
+	using all_type_packs_to_variant_t =
+	  typename lak::all_type_packs_to_variant<V>::type;
+
+	template<typename V>
+	using flatten_unique_variant_t =
+	  lak::type_pack_to_variant_t<lak::unique_pack_t<
+	    lak::flatten_pack_t<lak::all_variants_to_type_pack_t<V>>>>;
+
+	template<typename V>
+	struct try_remove_variant;
+	template<typename... T>
+	requires(sizeof...(T) > 1)
+	struct try_remove_variant<lak::variant<T...>>
+	: lak::type_identity<lak::variant<T...>>
+	{
+	};
+	template<typename T>
+	struct try_remove_variant<lak::variant<T>> : lak::type_identity<T>
+	{
+	};
+	template<typename V>
+	using try_remove_variant_t = typename lak::try_remove_variant<V>::type;
+
 	struct _variant_standard_layout_test_public
 	{
 	public:

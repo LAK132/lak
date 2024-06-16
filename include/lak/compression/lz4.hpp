@@ -13,7 +13,6 @@ namespace lak
 	{
 		too_many_literals,
 
-		out_of_data,
 		output_full,
 
 		zero_offset,
@@ -28,12 +27,15 @@ namespace lak
 	// partial read, it means the input stream is left in a potentially bad state
 	// for further block decoding.
 
-	lak::result<lak::array<byte_t>, lak::lz4_decode_error> decode_lz4_block(
-	  lak::binary_reader &strm,
-	  size_t output_size,
-	  bool allow_partial_read = false);
+	lak::result<lak::array<byte_t>,
+	            lak::variant<lak::out_of_data_error, lak::lz4_decode_error>>
+	decode_lz4_block(lak::binary_reader &strm,
+	                 size_t output_size,
+	                 bool allow_partial_read = false);
 
-	inline lak::result<lak::array<byte_t>, lak::lz4_decode_error>
+	inline lak::result<
+	  lak::array<byte_t>,
+	  lak::variant<lak::out_of_data_error, lak::lz4_decode_error>>
 	decode_lz4_block(lak::binary_reader &&strm,
 	                 size_t output_size,
 	                 bool allow_partial_read = false)

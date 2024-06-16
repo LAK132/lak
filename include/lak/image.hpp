@@ -87,12 +87,11 @@ namespace lak
 		}
 
 		template<lak::endian E = lak::endian::little>
-		static lak::result<image> from_bytes(lak::span<const byte_t> bytes,
-		                                     size_type size)
+		static auto from_bytes(lak::span<const byte_t> bytes, size_type size)
 		{
 			return lak::array_from_bytes<value_type, E>(bytes, size.x * size.y)
 			  .map(
-			    [&size](lak::array<value_type> &&data) -> image
+			    [&size](lak::array<value_type> data) -> image
 			    {
 				    image result;
 				    result._value = lak::move(data);

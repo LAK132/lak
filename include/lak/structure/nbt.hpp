@@ -15,6 +15,10 @@ namespace lak
 	{
 		struct named_tag;
 		struct TAG_List;
+
+		struct invalid_type_error
+		{
+		};
 	}
 }
 
@@ -56,11 +60,7 @@ namespace lak
 	}
 }
 
-template<lak::endian E>
-struct lak::bytes_traits<lak::nbt::tag_type, E>
-: lak::_memcpy_bytes_traits<lak::nbt::tag_type, E>
-{
-};
+LAK_MEMCPY_BYTE_TRAITS_IMPL(lak::nbt::tag_type)
 
 namespace lak
 {
@@ -124,7 +124,7 @@ namespace lak
 			lak::array<value_type> value;
 
 			template<lak::endian E>
-			lak::result<> read(lak::binary_reader &strm)
+			lak::error_code<lak::out_of_data_error> read(lak::binary_reader &strm)
 			{
 				RES_TRY_ASSIGN(auto size =,
 				               strm.template read<lak::nbt::TAG_Int, E>());
@@ -145,7 +145,8 @@ namespace lak
 			}
 
 			template<lak::endian E>
-			lak::result<> write(lak::binary_span_writer &strm) const
+			lak::error_code<lak::out_of_data_error> write(
+			  lak::binary_span_writer &strm) const
 			{
 				RES_TRY(strm.template write<E>(lak::nbt::TAG_Int{
 				  .value = static_cast<lak::nbt::TAG_Int::value_type>(value.size()),
@@ -202,7 +203,7 @@ namespace lak
 			lak::u8string value;
 
 			template<lak::endian E>
-			lak::result<> read(lak::binary_reader &strm)
+			lak::error_code<lak::out_of_data_error> read(lak::binary_reader &strm)
 			{
 				RES_TRY_ASSIGN(auto size =,
 				               strm.template read<lak::nbt::TAG_Short, E>());
@@ -219,7 +220,8 @@ namespace lak
 			}
 
 			template<lak::endian E>
-			lak::result<> write(lak::binary_span_writer &strm) const
+			lak::error_code<lak::out_of_data_error> write(
+			  lak::binary_span_writer &strm) const
 			{
 				RES_TRY(strm.template write<E>(lak::nbt::TAG_Short{
 				  .value = static_cast<lak::nbt::TAG_Short::value_type>(value.size()),
@@ -241,12 +243,14 @@ namespace lak
 			value_type value;
 
 			template<lak::endian E>
-			lak::result<> read(lak::binary_reader &strm)
+			lak::error_code<lak::out_of_data_error> read(lak::binary_reader &strm)
 			{
 				for (;;)
 				{
-					if_let_ok (auto t, strm.template peek<lak::nbt::tag_type, E>())
+					if (auto res = strm.template peek<lak::nbt::tag_type, E>();
+					    res.is_ok())
 					{
+						auto &t = res.unsafe_unwrap();
 						if (t == lak::nbt::tag_type::End)
 						{
 							strm.template read<lak::nbt::tag_type, E>().unwrap();
@@ -254,19 +258,21 @@ namespace lak
 						}
 					}
 					else
-						return lak::err_t{};
+						return lak::move_err(res.unsafe_unwrap_err());
 
 					RES_TRY_ASSIGN(auto tag =,
 					               strm.template read<lak::nbt::named_tag, E>());
 					value.push_back(lak::move(tag));
 				}
+				return lak::ok_t{};
 			}
 
 			template<lak::endian E>
 			size_t write_size() const;
 
 			template<lak::endian E>
-			lak::result<> write(lak::binary_span_writer &strm) const
+			lak::error_code<lak::out_of_data_error> write(
+			  lak::binary_span_writer &strm) const
 			{
 				RES_TRY(strm.template write<E>(lak::span(value)));
 				RES_TRY(strm.template write<E>(lak::nbt::tag_type::End));
@@ -329,7 +335,8 @@ namespace lak
 			}
 
 			template<lak::endian E>
-			lak::result<> read(lak::binary_reader &strm)
+			lak::error_codes<lak::out_of_data_error, lak::nbt::invalid_type_error>
+			read(lak::binary_reader &strm)
 			{
 				RES_TRY_ASSIGN(auto type =,
 				               strm.template read<lak::nbt::tag_type, E>());
@@ -347,7 +354,7 @@ namespace lak
 					LAK_FOREACH_NBT_TYPE(LAK_NBT_READER_VISIT)
 #undef LAK_NBT_READER_VISIT
 					default:
-						return lak::err_t{};
+						return lak::err_t<lak::nbt::invalid_type_error>{};
 				}
 
 				return lak::ok_t{};
@@ -368,15 +375,17 @@ namespace lak
 			}
 
 			template<lak::endian E>
-			lak::result<> write(lak::binary_span_writer &strm) const
+			lak::error_code<lak::out_of_data_error> write(
+			  lak::binary_span_writer &strm) const
 			{
 				RES_TRY(strm.template write<E>(type()));
 				RES_TRY(strm.template write<E>(lak::nbt::TAG_Int{
 				  .value = static_cast<lak::nbt::TAG_Int::value_type>(size()),
 				}));
-				RES_TRY(value.visit(
-				  [&]<typename T>(const lak::array<T> &arr) -> lak::result<>
-				  { return strm.template write<E>(lak::span(arr)); }));
+				RES_TRY(
+				  value.visit([&]<typename T>(const lak::array<T> &arr)
+				                -> lak::error_code<lak::out_of_data_error>
+				              { return strm.template write<E>(lak::span(arr)); }));
 				return lak::ok_t{};
 			}
 
@@ -422,7 +431,8 @@ namespace lak
 			}
 
 			template<lak::endian E>
-			lak::result<> write(lak::binary_span_writer &strm) const
+			lak::error_code<lak::out_of_data_error> write(
+			  lak::binary_span_writer &strm) const
 			{
 				return value.visit([&]<typename T>(const T &val)
 				                   { return strm.template write<E>(val); });
@@ -443,7 +453,8 @@ namespace lak
 			inline lak::nbt::tag_type type() const { return payload.type(); }
 
 			template<lak::endian E>
-			lak::result<> read(lak::binary_reader &strm)
+			lak::error_codes<lak::out_of_data_error, lak::nbt::invalid_type_error>
+			read(lak::binary_reader &strm)
 			{
 				RES_TRY_ASSIGN(lak::nbt::tag_type type =,
 				               strm.template read<lak::nbt::tag_type, E>());
@@ -473,7 +484,8 @@ namespace lak
 			}
 
 			template<lak::endian E>
-			lak::result<> write(lak::binary_span_writer &strm) const
+			lak::error_code<lak::out_of_data_error> write(
+			  lak::binary_span_writer &strm) const
 			{
 				RES_TRY(strm.template write<E>(type()));
 				RES_TRY(name.template write<E>(strm));
@@ -487,6 +499,20 @@ namespace lak
 				return strm << lak::as_astring(tag.name.value) << ":" << tag.payload;
 			}
 		};
+
+		static_assert(!lak::is_same_v<
+		              typename lak::to_bytes_traits<lak::nbt::named_tag,
+		                                            lak::endian::big>::error_type,
+		              lak::nonesuch>);
+		static_assert(
+		  !lak::is_same_v<
+		    typename lak::from_bytes_traits<lak::nbt::named_tag,
+		                                    lak::endian::big>::error_type,
+		    lak::nonesuch>);
+		static_assert(lak::concepts::to_bytes_writeable<lak::nbt::named_tag,
+		                                                lak::endian::native>);
+		static_assert(lak::concepts::from_bytes_readable<lak::nbt::named_tag,
+		                                                 lak::endian::native>);
 
 		template<lak::endian E>
 		size_t TAG_Compound::write_size() const

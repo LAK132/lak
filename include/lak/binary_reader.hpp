@@ -25,6 +25,11 @@ namespace lak
 		binary_reader(const binary_reader &)            = default;
 		binary_reader &operator=(const binary_reader &) = default;
 
+		template<typename T, lak::endian E, typename... ERR>
+		using error_type = lak::bytes_errors_t<
+		  ERR...,
+		  typename lak::from_bytes_traits<lak::remove_const_t<T>, E>::error_type>;
+
 		inline lak::span<const byte_t> remaining() const
 		{
 			return _data.subspan(_cursor);
@@ -32,61 +37,75 @@ namespace lak
 		inline bool empty() const { return _cursor >= _data.size(); }
 		inline size_t position() const { return _cursor; }
 		inline size_t size() const { return _data.size(); }
-		inline lak::result<> seek(size_t pos)
+		inline lak::error_code<lak::out_of_data_error> seek(size_t pos)
 		{
-			if (pos > _data.size()) return lak::err_t{};
+			if (pos > _data.size()) return lak::err_t<lak::out_of_data_error>{};
 			_cursor = pos;
 			return lak::ok_t{};
 		}
-		inline lak::result<> skip(size_t count)
+		inline lak::error_code<lak::out_of_data_error> skip(size_t count)
 		{
-			if (_cursor + count > _data.size()) return lak::err_t{};
+			if (_cursor + count > _data.size())
+				return lak::err_t<lak::out_of_data_error>{};
 			_cursor += count;
 			return lak::ok_t{};
 		}
-		inline lak::result<> unread(size_t count)
+		inline lak::error_code<lak::out_of_data_error> unread(size_t count)
 		{
-			if (count > _cursor) return lak::err_t{};
+			if (count > _cursor) return lak::err_t<lak::out_of_data_error>{};
 			_cursor -= count;
 			return lak::ok_t{};
 		}
 
-		lak::result<lak::span<const byte_t>> peek_bytes(size_t count) const
+		lak::result<lak::span<const byte_t>, lak::out_of_data_error> peek_bytes(
+		  size_t count) const
 		{
-			if (_cursor + count > _data.size()) return lak::err_t{};
+			if (_cursor + count > _data.size())
+				return lak::err_t<lak::out_of_data_error>{};
 			return lak::ok_t{_data.subspan(_cursor, count)};
 		}
 
-		lak::result<lak::span<const byte_t>> read_bytes(size_t count)
+		lak::result<lak::span<const byte_t>, lak::out_of_data_error> read_bytes(
+		  size_t count)
 		{
-			if (_cursor + count > _data.size()) return lak::err_t{};
+			if (_cursor + count > _data.size())
+				return lak::err_t<lak::out_of_data_error>{};
 			lak::span<const byte_t> result = _data.subspan(_cursor, count);
 			_cursor += count;
 			return lak::ok_t{result};
 		}
 
+		lak::span<const byte_t> read_remaining_bytes()
+		{
+			lak::span<const byte_t> result = _data.subspan(_cursor);
+			_cursor                        = _data.size();
+			return result;
+		}
+
 		template<typename T, lak::endian E = lak::endian::little>
-		lak::result<T> peek()
+		requires(lak::concepts::from_bytes_readable<T, E>)
+		lak::result<T, error_type<T, E>> peek()
 		{
 			return lak::from_bytes<T, E>(remaining())
 			  .map([](lak::pair<T, lak::span<const byte_t>> &&v) -> T
 			       { return lak::move(v.first); });
 		}
 
-		template<typename T>
-		lak::result<T> peek_le()
+		template<lak::concepts::from_bytes_readable<lak::endian::little> T>
+		auto peek_le()
 		{
 			return peek<T, lak::endian::little>();
 		}
 
-		template<typename T>
-		lak::result<T> peek_be()
+		template<lak::concepts::from_bytes_readable<lak::endian::big> T>
+		auto peek_be()
 		{
 			return peek<T, lak::endian::big>();
 		}
 
 		template<typename T, lak::endian E = lak::endian::little>
-		lak::result<T> read()
+		requires(lak::concepts::from_bytes_readable<T, E>)
+		lak::result<T, error_type<T, E>> read()
 		{
 			return lak::from_bytes<T, E>(remaining())
 			  .map(
@@ -97,85 +116,101 @@ namespace lak
 			    });
 		}
 
-		template<typename T>
-		lak::result<T> read_le()
+		template<lak::concepts::from_bytes_readable<lak::endian::little> T>
+		auto read_le()
 		{
 			return read<T, lak::endian::little>();
 		}
 
-		template<typename T>
-		lak::result<T> read_be()
+		template<lak::concepts::from_bytes_readable<lak::endian::big> T>
+		auto read_be()
 		{
 			return read<T, lak::endian::big>();
 		}
 
 		template<typename T, lak::endian E = lak::endian::little>
-		lak::result<lak::array<T>> peek(size_t count)
+		requires(lak::concepts::from_bytes_readable<T, E>)
+		lak::result<lak::array<T>, error_type<T, E, lak::out_of_data_error>> peek(
+		  size_t count)
+		requires(lak::from_bytes_traits<T, E>::const_size)
 		{
-			if constexpr (lak::from_bytes_traits<T, E>::const_size)
-			{
-				if (auto rem = remaining();
-				    rem.size() < (lak::from_bytes_traits<T, E>::size * count))
-					return lak::err_t{};
-				else
-					return lak::array_from_bytes<T, E>(
-					  rem.first(lak::from_bytes_traits<T, E>::size * count), count);
-			}
+			if (auto rem = remaining();
+			    rem.size() < (lak::from_bytes_traits<T, E>::size * count))
+				return lak::err_t<lak::out_of_data_error>{};
 			else
-				return lak::array_from_bytes<T, E>(remaining(), count)
-				  .map([](lak::pair<lak::array<T>, lak::span<const byte_t>> &&v)
-				       { return lak::move(v.first); });
+				return lak::array_from_bytes<T, E>(
+				  rem.first(lak::from_bytes_traits<T, E>::size * count), count);
 		}
 
-		template<typename T>
-		lak::result<T> peek_le(size_t count)
+		template<typename T, lak::endian E = lak::endian::little>
+		requires(lak::concepts::from_bytes_readable<T, E>)
+		lak::result<lak::array<T>, error_type<T, E>> peek(size_t count)
+		requires(!lak::from_bytes_traits<T, E>::const_size)
+		{
+			return lak::array_from_bytes<T, E>(remaining(), count)
+			  .map([](lak::pair<lak::array<T>, lak::span<const byte_t>> &&v)
+			       { return lak::move(v.first); });
+		}
+
+		template<lak::concepts::from_bytes_readable<lak::endian::little> T>
+		auto peek_le(size_t count)
 		{
 			return peek<T, lak::endian::little>(count);
 		}
 
-		template<typename T>
-		lak::result<T> peek_be(size_t count)
+		template<lak::concepts::from_bytes_readable<lak::endian::big> T>
+		auto peek_be(size_t count)
 		{
 			return peek<T, lak::endian::big>(count);
 		}
 
 		template<typename T, lak::endian E = lak::endian::little>
-		lak::result<lak::array<T>> read(size_t count)
+		requires(lak::concepts::from_bytes_readable<T, E>)
+		lak::result<lak::array<T>, error_type<T, E, lak::out_of_data_error>> read(
+		  size_t count)
+		requires(lak::from_bytes_traits<T, E>::const_size)
 		{
-			if constexpr (lak::from_bytes_traits<T, E>::const_size)
-				return peek<T, E>(count).if_ok(
-				  [&](auto &&)
-				  { this->_cursor += lak::from_bytes_traits<T, E>::size * count; });
-			else
-				return lak::array_from_bytes<T, E>(remaining(), count)
-				  .map(
-				    [&](lak::pair<lak::array<T>, lak::span<const byte_t>> &&v)
-				      -> lak::array<T>
-				    {
-					    ASSERT_LESS_OR_EQUAL(v.second.size(), this->_data.size());
-					    this->_cursor = this->_data.size() - v.second.size();
-					    return lak::move(v.first);
-				    });
+			return peek<T, E>(count).if_ok(
+			  [&](auto &&)
+			  { this->_cursor += lak::from_bytes_traits<T, E>::size * count; });
 		}
 
-		template<typename T>
-		lak::result<lak::array<T>> read_le(size_t count)
+		template<typename T, lak::endian E = lak::endian::little>
+		requires(lak::concepts::from_bytes_readable<T, E>)
+		lak::result<lak::array<T>, error_type<T, E>> read(size_t count)
+		requires(!lak::from_bytes_traits<T, E>::const_size)
+		{
+			return lak::array_from_bytes<T, E>(remaining(), count)
+			  .map(
+			    [&](lak::pair<lak::array<T>, lak::span<const byte_t>> &&v)
+			      -> lak::array<T>
+			    {
+				    ASSERT_LESS_OR_EQUAL(v.second.size(), this->_data.size());
+				    this->_cursor = this->_data.size() - v.second.size();
+				    return lak::move(v.first);
+			    });
+		}
+
+		template<lak::concepts::from_bytes_readable<lak::endian::little> T>
+		auto read_le(size_t count)
 		{
 			return read<T, lak::endian::little>(count);
 		}
 
-		template<typename T>
-		lak::result<lak::array<T>> read_be(size_t count)
+		template<lak::concepts::from_bytes_readable<lak::endian::big> T>
+		auto read_be(size_t count)
 		{
 			return read<T, lak::endian::big>(count);
 		}
 
 		// always read count bytes even if the c string isn't the full count bytes
 		template<typename CHAR, lak::endian E = lak::endian::little>
-		lak::result<lak::string<CHAR>> read_exact_c_str(size_t count)
+		requires(lak::concepts::from_bytes_readable<CHAR, E>)
+		lak::result<lak::string<CHAR>, error_type<CHAR, E, lak::out_of_data_error>>
+		read_exact_c_str(size_t count)
 		{
 			return read<CHAR, E>(count).map(
-			  [](lak::array<CHAR> &&array)
+			  [](lak::array<CHAR> &&array) -> lak::string<CHAR>
 			  {
 				  size_t len = 0;
 				  for (const auto &c : array)
@@ -187,30 +222,31 @@ namespace lak
 			  });
 		}
 
+		struct string_too_long_error
+		{
+		};
+
 		template<typename CHAR, lak::endian E = lak::endian::little>
-		lak::result<lak::string<CHAR>> read_c_str(size_t max_size = SIZE_MAX)
+		requires(lak::concepts::from_bytes_readable<CHAR, E>)
+		lak::result<
+		  lak::string<CHAR>,
+		  error_type<CHAR, E, lak::out_of_data_error, string_too_long_error>>
+		read_c_str(size_t max_size = SIZE_MAX)
 		{
 			lak::string<CHAR> result;
 			const size_t old_cursor = _cursor;
 			while (max_size-- > 0ULL)
 			{
-				if_let_ok (const CHAR c, read<CHAR, E>())
-				{
-					if (c == 0) return lak::move_ok(result);
-					result += c;
-				}
-				else
-				{
-					ERROR("read failed");
-					break;
-				}
+				RES_TRY_ASSIGN(const CHAR c =, read<CHAR, E>());
+				if (c == 0) return lak::move_ok(result);
+				result += c;
 			}
 			_cursor = old_cursor;
-			if (max_size == SIZE_MAX) ERROR("max size reached");
-			return lak::err_t{};
+			return lak::err_t<string_too_long_error>{};
 		}
 
 		template<typename CHAR, lak::endian E = lak::endian::little>
+		requires(lak::concepts::from_bytes_readable<CHAR, E>)
 		lak::string<CHAR> read_any_c_str(size_t max_size = SIZE_MAX)
 		{
 			lak::string<CHAR> result;
@@ -229,31 +265,19 @@ namespace lak
 
 #	define BINARY_READER_MEMBERS(TYPE, NAME, ...)                              \
 		template<lak::endian E = lak::endian::little>                             \
-		inline lak::result<TYPE> peek_##NAME()                                    \
+		inline auto peek_##NAME()                                                 \
 		{                                                                         \
 			return peek<TYPE, E>();                                                 \
 		}                                                                         \
-		inline lak::result<TYPE> peek_##NAME##le()                                \
-		{                                                                         \
-			return peek_##NAME<lak::endian::little>();                              \
-		}                                                                         \
-		inline lak::result<TYPE> peek_##NAME##be()                                \
-		{                                                                         \
-			return peek_##NAME<lak::endian::big>();                                 \
-		}                                                                         \
+		inline auto peek_##NAME##le() { return peek_le<TYPE>(); }                 \
+		inline auto peek_##NAME##be() { return peek_be<TYPE>(); }                 \
 		template<lak::endian E = lak::endian::little>                             \
-		inline lak::result<TYPE> read_##NAME()                                    \
+		inline auto read_##NAME()                                                 \
 		{                                                                         \
 			return read<TYPE, E>();                                                 \
 		}                                                                         \
-		inline lak::result<TYPE> read_##NAME##le()                                \
-		{                                                                         \
-			return read_##NAME<lak::endian::little>();                              \
-		}                                                                         \
-		inline lak::result<TYPE> read_##NAME##be()                                \
-		{                                                                         \
-			return read_##NAME<lak::endian::big>();                                 \
-		}
+		inline auto read_##NAME##le() { return read_le<TYPE>(); }                 \
+		inline auto read_##NAME##be() { return read_be<TYPE>(); }
 		LAK_FOREACH_INTEGER(BINARY_READER_MEMBERS)
 		LAK_FOREACH_FLOAT(BINARY_READER_MEMBERS)
 #	undef BINARY_READER_MEMBERS
@@ -264,15 +288,22 @@ template<typename T, lak::endian E>
 requires requires(T value) {
 	{
 		value.template read<E>(lak::declval<lak::binary_reader &>())
-	} -> lak::concepts::same_as<lak::result<>>;
+	} -> lak::concepts::of_template<lak::result>;
 }
 struct lak::from_bytes_traits<T, E>
 {
-	using value_type                 = T;
+	using value_type = T;
+	using error_type = typename decltype(lak::declval<T &>().template read<E>(
+	  lak::declval<lak::binary_reader &>()))::err_type;
 	static constexpr bool const_size = false;
 	static constexpr size_t size     = lak::dynamic_extent;
+	static_assert(
+	  lak::is_same_v<lak::monostate,
+	                 typename decltype(lak::declval<T &>().template read<E>(
+	                   lak::declval<lak::binary_reader &>()))::ok_type>);
+	static_assert(!lak::is_trivial_variant_v<error_type>);
 
-	static lak::result<lak::span<const byte_t>> from_bytes(
+	static lak::result<lak::span<const byte_t>, error_type> from_bytes(
 	  lak::span<const byte_t> bytes, T &value)
 	{
 		lak::binary_reader strm{bytes};

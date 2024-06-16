@@ -24,6 +24,11 @@ namespace lak
 		binary_span_writer(const binary_span_writer &)            = default;
 		binary_span_writer &operator=(const binary_span_writer &) = default;
 
+		template<typename T, lak::endian E, typename... ERR>
+		using error_type = lak::bytes_errors_t<
+		  ERR...,
+		  typename lak::to_bytes_traits<lak::remove_const_t<T>, E>::error_type>;
+
 		inline lak::span<byte_t> remaining() const
 		{
 			return _data.subspan(_cursor);
@@ -51,10 +56,10 @@ namespace lak
 			return lak::ok_t{};
 		}
 
-		template<lak::endian E = lak::endian::little, typename T = void>
+		template<lak::endian E = lak::endian::little, typename T>
 		requires(!lak::is_span_v<lak::remove_cvref_t<T>> &&
 		         lak::concepts::to_bytes_writeable<lak::remove_cvref_t<T>, E>)
-		lak::result<> write(const T &value)
+		lak::error_code<error_type<T, E>> write(const T &value)
 		{
 			RES_TRY_ASSIGN(auto unused =, lak::to_bytes<E>(remaining(), value));
 			const size_t req_size = remaining().size() - unused.size();
@@ -66,7 +71,7 @@ namespace lak
 		requires(!lak::is_span_v<lak::remove_cvref_t<T>> &&
 		         lak::concepts::to_bytes_writeable<lak::remove_cvref_t<T>,
 		                                           lak::endian::little>)
-		lak::result<> write_le(const T &value)
+		auto write_le(const T &value)
 		{
 			return write<lak::endian::little, T>(value);
 		}
@@ -75,14 +80,14 @@ namespace lak
 		requires(!lak::is_span_v<lak::remove_cvref_t<T>> &&
 		         lak::concepts::to_bytes_writeable<lak::remove_cvref_t<T>,
 		                                           lak::endian::big>)
-		lak::result<> write_be(const T &value)
+		auto write_be(const T &value)
 		{
 			return write<lak::endian::big, T>(value);
 		}
 
 		template<lak::endian E = lak::endian::little, typename T = void>
 		requires(lak::concepts::to_bytes_writeable<lak::remove_const_t<T>, E>)
-		lak::result<> write(lak::span<T> values)
+		lak::error_code<error_type<T, E>> write(lak::span<T> values)
 		{
 			RES_TRY_ASSIGN(auto unused =,
 			               lak::array_to_bytes<E>(remaining(), values));
@@ -95,7 +100,7 @@ namespace lak
 		requires(!lak::is_span_v<lak::remove_cvref_t<T>> &&
 		         lak::concepts::to_bytes_writeable<lak::remove_cvref_t<T>,
 		                                           lak::endian::little>)
-		lak::result<> write_le(lak::span<T> values)
+		auto write_le(lak::span<T> values)
 		{
 			return write<lak::endian::little, T>(values);
 		}
@@ -104,21 +109,22 @@ namespace lak
 		requires(!lak::is_span_v<lak::remove_cvref_t<T>> &&
 		         lak::concepts::to_bytes_writeable<lak::remove_cvref_t<T>,
 		                                           lak::endian::big>)
-		lak::result<> write_be(lak::span<T> values)
+		auto write_be(lak::span<T> values)
 		{
 			return write<lak::endian::big, T>(values);
 		}
 
 		template<lak::endian E = lak::endian::little, typename CHAR = void>
 		requires(lak::to_bytes_traits<CHAR, E>::const_size)
-		lak::result<> write_c_str(lak::string_view<CHAR> string)
+		lak::error_code<error_type<CHAR, E, lak::out_of_data_error>> write_c_str(
+		  lak::string_view<CHAR> string)
 		{
 			constexpr size_t char_size = lak::to_bytes_traits<CHAR, E>::size;
 			const size_t req_size      = char_size * (string.size() + 1U);
 
 			auto bytes{remaining()};
 
-			if (req_size > bytes.size()) return lak::err_t{};
+			if (req_size > bytes.size()) return lak::err_t<lak::out_of_data_error>{};
 
 			bytes = bytes.last(req_size);
 			lak::array_to_bytes<CHAR, E>(bytes.first(char_size * string.size()),
@@ -132,30 +138,30 @@ namespace lak
 		}
 
 		template<typename CHAR>
-		lak::result<> write_c_str_le(lak::string_view<CHAR> string)
+		auto write_c_str_le(lak::string_view<CHAR> string)
 		{
 			return write_c_str<lak::endian::little, CHAR>(string);
 		}
 
 		template<typename CHAR>
-		lak::result<> write_c_str_be(lak::string_view<CHAR> string)
+		auto write_c_str_be(lak::string_view<CHAR> string)
 		{
 			return write_c_str<lak::endian::big, CHAR>(string);
 		}
 
 #	define BINARY_SPAN_WRITER_MEMBERS(TYPE, NAME, ...)                         \
 		template<lak::endian E = lak::endian::little>                             \
-		inline lak::result<> write_##NAME(const TYPE &value)                      \
+		inline auto write_##NAME(const TYPE &value)                               \
 		{                                                                         \
 			return write<E, TYPE>(value);                                           \
 		}                                                                         \
-		inline lak::result<> write_##NAME##le(const TYPE &value)                  \
+		inline auto write_##NAME##le(const TYPE &value)                           \
 		{                                                                         \
-			return write_##NAME<lak::endian::little>(value);                        \
+			return write_le<TYPE>(value);                                           \
 		}                                                                         \
-		inline lak::result<> write_##NAME##be(const TYPE &value)                  \
+		inline auto write_##NAME##be(const TYPE &value)                           \
 		{                                                                         \
-			return write_##NAME<lak::endian::big>(value);                           \
+			return write_be<TYPE>(value);                                           \
 		}
 		LAK_FOREACH_INTEGER(BINARY_SPAN_WRITER_MEMBERS)
 		LAK_FOREACH_FLOAT(BINARY_SPAN_WRITER_MEMBERS)
@@ -167,6 +173,11 @@ namespace lak
 	struct binary_array_writer
 	{
 		lak::array<byte_t> data = {};
+
+		template<typename T, lak::endian E, typename... ERR>
+		using error_type = lak::bytes_errors_t<
+		  ERR...,
+		  typename lak::to_bytes_traits<lak::remove_const_t<T>, E>::error_type>;
 
 		inline void reserve(size_t size) { data.reserve(size); }
 		inline lak::array<byte_t> &&release() { return lak::move(data); }
@@ -181,7 +192,7 @@ namespace lak
 		template<lak::endian E = lak::endian::little, typename T = void>
 		requires(!lak::is_span_v<lak::remove_cvref_t<T>> &&
 		         lak::concepts::to_bytes_writeable<lak::remove_cvref_t<T>, E>)
-		lak::result<> write(const T &value)
+		lak::error_code<error_type<T, E>> write(const T &value)
 		{
 			using value_type = lak::remove_cvref_t<T>;
 
@@ -190,13 +201,9 @@ namespace lak
 			const size_t new_size = data.size() + req_size;
 			data.resize(new_size);
 			ASSERT_EQUAL(data.size(), new_size);
-			if (lak::to_bytes_traits<value_type, E>::to_bytes(
-			      lak::span(data).last(req_size), value)
-			      .is_err())
-			{
-				data.resize(data.size() - req_size);
-				return lak::err_t{};
-			}
+			RES_TRY(lak::to_bytes_traits<value_type, E>::to_bytes(
+			          lak::span(data).last(req_size), value)
+			          .if_err([&](auto) { data.resize(data.size() - req_size); }));
 			return lak::ok_t{};
 		}
 
@@ -204,7 +211,7 @@ namespace lak
 		requires(!lak::is_span_v<lak::remove_cvref_t<T>> &&
 		         lak::concepts::to_bytes_writeable<lak::remove_cvref_t<T>,
 		                                           lak::endian::little>)
-		lak::result<> write_le(const T &value)
+		auto write_le(const T &value)
 		{
 			return write<lak::endian::little, T>(value);
 		}
@@ -213,14 +220,15 @@ namespace lak
 		requires(!lak::is_span_v<lak::remove_cvref_t<T>> &&
 		         lak::concepts::to_bytes_writeable<lak::remove_cvref_t<T>,
 		                                           lak::endian::big>)
-		lak::result<> write_be(const T &value)
+		auto write_be(const T &value)
 		{
 			return write<lak::endian::big, T>(value);
 		}
 
 		template<lak::endian E = lak::endian::little, typename T = void>
 		requires(lak::concepts::to_bytes_writeable<lak::remove_const_t<T>, E>)
-		lak::result<> write(lak::span<T> values)
+		lak::error_code<error_type<T, E, lak::out_of_data_error>> write(
+		  lak::span<T> values)
 		{
 			using value_type = lak::remove_const_t<T>;
 
@@ -230,13 +238,8 @@ namespace lak
 				  lak::to_bytes_traits<value_type, E>::size * values.size();
 				const size_t new_size = data.size() + req_size;
 				data.resize(new_size);
-				ASSERT_EQUAL(data.size(), new_size);
-				if (lak::array_to_bytes<E>(lak::span(data).last(req_size), values)
-				      .is_err())
-				{
-					data.resize(data.size() - req_size);
-					return lak::err_t{};
-				}
+				RES_TRY(lak::array_to_bytes<E>(lak::span(data).last(req_size), values)
+				          .if_err([&](auto) { data.resize(data.size() - req_size); }));
 			}
 			else
 			{
@@ -252,7 +255,7 @@ namespace lak
 		requires(!lak::is_span_v<lak::remove_cvref_t<T>> &&
 		         lak::concepts::to_bytes_writeable<lak::remove_cvref_t<T>,
 		                                           lak::endian::little>)
-		lak::result<> write_le(lak::span<T> values)
+		auto write_le(lak::span<T> values)
 		{
 			return write<lak::endian::little, T>(values);
 		}
@@ -261,7 +264,7 @@ namespace lak
 		requires(!lak::is_span_v<lak::remove_cvref_t<T>> &&
 		         lak::concepts::to_bytes_writeable<lak::remove_cvref_t<T>,
 		                                           lak::endian::big>)
-		lak::result<> write_be(lak::span<T> values)
+		auto write_be(lak::span<T> values)
 		{
 			return write<lak::endian::big, T>(values);
 		}
@@ -283,30 +286,30 @@ namespace lak
 		}
 
 		template<typename CHAR>
-		lak::result<> write_c_str_le(lak::string_view<CHAR> string)
+		auto write_c_str_le(lak::string_view<CHAR> string)
 		{
 			return write_c_str<lak::endian::little, CHAR>(string);
 		}
 
 		template<typename CHAR>
-		lak::result<> write_c_str_be(lak::string_view<CHAR> string)
+		auto write_c_str_be(lak::string_view<CHAR> string)
 		{
 			return write_c_str<lak::endian::big, CHAR>(string);
 		}
 
 #	define BINARY_ARRAY_WRITER_MEMBERS(TYPE, NAME, ...)                        \
 		template<lak::endian E = lak::endian::little>                             \
-		inline lak::result<> write_##NAME(const TYPE &value)                      \
+		inline auto write_##NAME(const TYPE &value)                               \
 		{                                                                         \
 			return write<E, TYPE>(value);                                           \
 		}                                                                         \
-		inline lak::result<> write_##NAME##le(const TYPE &value)                  \
+		inline auto write_##NAME##le(const TYPE &value)                           \
 		{                                                                         \
-			return write_##NAME<lak::endian::little>(value);                        \
+			return write_le<TYPE>(value);                                           \
 		}                                                                         \
-		inline lak::result<> write_##NAME##be(const TYPE &value)                  \
+		inline auto write_##NAME##be(const TYPE &value)                           \
 		{                                                                         \
-			return write_##NAME<lak::endian::big>(value);                           \
+			return write_be<TYPE>(value);                                           \
 		}
 		LAK_FOREACH_INTEGER(BINARY_ARRAY_WRITER_MEMBERS)
 		LAK_FOREACH_FLOAT(BINARY_ARRAY_WRITER_MEMBERS)
@@ -321,21 +324,29 @@ requires requires(const T value) {
 	} -> lak::concepts::same_as<size_t>;
 	{
 		value.template write<E>(lak::declval<lak::binary_span_writer &>())
-	} -> lak::concepts::same_as<lak::result<>>;
+	} -> lak::concepts::of_template<lak::result>;
 }
 struct lak::to_bytes_traits<T, E>
 {
-	using value_type                 = T;
+	using value_type = T;
+	using error_type =
+	  typename decltype(lak::declval<const T &>().template write<E>(
+	    lak::declval<lak::binary_span_writer &>()))::err_type;
 	static constexpr bool const_size = false;
 	static constexpr size_t size     = lak::dynamic_extent;
+	static_assert(lak::is_same_v<
+	              lak::monostate,
+	              typename decltype(lak::declval<const T &>().template write<E>(
+	                lak::declval<lak::binary_span_writer &>()))::ok_type>);
+	static_assert(!lak::is_trivial_variant_v<error_type>);
 
 	static size_t dynamic_size(const T &value)
 	{
 		return value.template write_size<E>();
 	}
 
-	static lak::result<lak::span<byte_t>> to_bytes(lak::span<byte_t> bytes,
-	                                               const T &value)
+	static lak::result<lak::span<byte_t>, error_type> to_bytes(
+	  lak::span<byte_t> bytes, const T &value)
 	{
 		lak::binary_span_writer strm{bytes};
 		RES_TRY(value.template write<E>(strm));

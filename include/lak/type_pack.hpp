@@ -93,13 +93,43 @@ namespace lak
 
 	template<typename PACK>
 	struct flatten_pack;
-	template<typename... PACKS>
-	struct flatten_pack<lak::type_pack<PACKS...>>
+	template<typename... T>
+	requires(((!lak::is_of_template_v<T, lak::type_pack>)&&...))
+	struct flatten_pack<lak::type_pack<T...>>
+	: lak::type_identity<lak::type_pack<T...>>
 	{
-		using type = lak::concat_packs_t<PACKS...>;
+	};
+	template<typename... T>
+	struct flatten_pack<lak::type_pack<lak::type_pack<T...>>>
+	: lak::flatten_pack<lak::type_pack<T...>>
+	{
+	};
+	template<typename... T, typename... U, typename... V>
+	struct flatten_pack<
+	  lak::type_pack<lak::type_pack<T...>, lak::type_pack<U...>, V...>>
+	: lak::flatten_pack<lak::type_pack<lak::type_pack<T..., U...>, V...>>
+	{
+	};
+	template<typename... T, typename U, typename... V>
+	requires(!lak::is_of_template_v<U, lak::type_pack>)
+	struct flatten_pack<lak::type_pack<lak::type_pack<T...>, U, V...>>
+	: lak::flatten_pack<lak::type_pack<lak::type_pack<T..., U>, V...>>
+	{
+	};
+	template<typename T, typename... U>
+	requires(!lak::is_of_template_v<T, lak::type_pack> && (sizeof...(U) >= 1) &&
+	         (lak::is_of_template_v<U, lak::type_pack> || ...))
+	struct flatten_pack<lak::type_pack<T, U...>>
+	: lak::flatten_pack<lak::type_pack<lak::type_pack<T>, U...>>
+	{
 	};
 	template<typename PACK>
 	using flatten_pack_t = typename lak::flatten_pack<PACK>::type;
+
+	static_assert(
+	  lak::is_same_v<
+	    lak::flatten_pack_t<lak::type_pack<char, lak::type_pack<char, int>>>,
+	    lak::type_pack<char, char, int>>);
 
 	/* --- remove_from_pack --- */
 
