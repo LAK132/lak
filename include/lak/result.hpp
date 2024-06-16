@@ -204,13 +204,14 @@ namespace lak
 // if_let_err (auto err, result) { err; }
 // else { }
 #	define if_let_err(VALUE, ...)                                              \
-		if constexpr (!lak::is_same_v<typename lak::remove_cvref_t<decltype((     \
-		                                __VA_ARGS__))>::err_type,                 \
-		                              lak::bottom>)                               \
-			if (auto &&UNIQUIFY(RESULT_){__VA_ARGS__}; UNIQUIFY(RESULT_).is_err())  \
-				do_with (VALUE{lak::forward<decltype(UNIQUIFY(RESULT_))>(             \
-				                 UNIQUIFY(RESULT_))                                   \
-				                 .unsafe_unwrap_err()})
+		do_with (auto &&UNIQUIFY(RESULT_){__VA_ARGS__})                           \
+			if constexpr (!lak::is_same_v<typename lak::remove_cvref_t<             \
+			                                decltype(UNIQUIFY(RESULT_))>::err_type, \
+			                              lak::bottom>)                             \
+				if (UNIQUIFY(RESULT_).is_err())                                       \
+					do_with (VALUE{lak::forward<decltype(UNIQUIFY(RESULT_))>(           \
+					                 UNIQUIFY(RESULT_))                                 \
+					                 .unsafe_unwrap_err()})
 
 // match_result(result)
 // {
