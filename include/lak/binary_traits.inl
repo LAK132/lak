@@ -365,16 +365,16 @@ namespace
 	}
 }
 
-template<typename T, lak::endian E, lak::endian E2, auto... MEMBERS>
+template<typename T, lak::endian E, auto... MEMBERS>
 requires((sizeof...(MEMBERS) > 0) &&
          ((lak::is_member_pointer_for_v<decltype(MEMBERS), T>)&&...))
-struct lak::to_bytes_traits_fixed_struct_impl<T, E, E2, MEMBERS...>
+struct lak::to_bytes_traits_fixed_struct_impl<T, E, MEMBERS...>
 {
 	using value_type = T;
 	static constexpr bool const_size =
-	  local::_members_are_const_size_v<E2, MEMBERS...>;
+	  local::_members_are_const_size_v<E, MEMBERS...>;
 	static constexpr size_t size =
-	  local::_members_total_to_bytes_size_v<E2, T, MEMBERS...>;
+	  local::_members_total_to_bytes_size_v<E, T, MEMBERS...>;
 
 	static size_t dynamic_size(const T &value)
 	{
@@ -384,44 +384,44 @@ struct lak::to_bytes_traits_fixed_struct_impl<T, E, E2, MEMBERS...>
 			return (
 			  (lak::to_bytes_traits<
 			    lak::remove_reference_t<lak::remove_member_pointer_decl_t<MEMBERS>>,
-			    E2>::dynamic_size(value.*MEMBERS)) +
+			    E>::dynamic_size(value.*MEMBERS)) +
 			  ...);
 	}
 
 	static void to_bytes(lak::span<byte_t, size> bytes, const T &value)
 	requires(const_size)
 	{
-		return lak::to_bytes<E2>(bytes, value.*MEMBERS...);
+		return lak::to_bytes<E>(bytes, value.*MEMBERS...);
 	}
 
 	static lak::result<lak::span<byte_t>> to_bytes(lak::span<byte_t> bytes,
 	                                               const T &value)
 	{
-		return lak::to_bytes<E2>(bytes, value.*MEMBERS...);
+		return lak::to_bytes<E>(bytes, value.*MEMBERS...);
 	}
 };
 
-template<typename T, lak::endian E, lak::endian E2, auto... MEMBERS>
+template<typename T, lak::endian E, auto... MEMBERS>
 requires((sizeof...(MEMBERS) > 0) &&
          ((lak::is_member_pointer_for_v<decltype(MEMBERS), T>)&&...))
-struct lak::from_bytes_traits_fixed_struct_impl<T, E, E2, MEMBERS...>
+struct lak::from_bytes_traits_fixed_struct_impl<T, E, MEMBERS...>
 {
 	using value_type = T;
 	static constexpr bool const_size =
-	  local::_members_are_const_size_v<E2, MEMBERS...>;
+	  local::_members_are_const_size_v<E, MEMBERS...>;
 	static constexpr size_t size =
-	  local::_members_total_from_bytes_size_v<E2, T, MEMBERS...>;
+	  local::_members_total_from_bytes_size_v<E, T, MEMBERS...>;
 
 	static void from_bytes(lak::span<const byte_t, size> bytes, T &value)
 	requires(const_size)
 	{
-		return lak::from_bytes<E2>(bytes, value.*MEMBERS...);
+		return lak::from_bytes<E>(bytes, value.*MEMBERS...);
 	}
 
 	static lak::result<lak::span<const byte_t>> from_bytes(
 	  lak::span<const byte_t> bytes, T &value)
 	{
-		return lak::from_bytes<E2>(bytes, value.*MEMBERS...);
+		return lak::from_bytes<E>(bytes, value.*MEMBERS...);
 	}
 };
 

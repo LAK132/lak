@@ -243,54 +243,54 @@ namespace lak
 
 	/* --- bytes_traits_fixed_struct_impl --- */
 
-	template<typename T, lak::endian E, lak::endian E2, auto... MEMBERS>
+	template<typename T, lak::endian E, auto... MEMBERS>
 	struct to_bytes_traits_fixed_struct_impl;
-	template<typename T, lak::endian E, lak::endian E2, auto... MEMBERS>
+	template<typename T, lak::endian E, auto... MEMBERS>
 	struct from_bytes_traits_fixed_struct_impl;
 
 #define LAK_FIXED_STRUCT_BYTES_TRAITS(TYPE, ...)                              \
 	template<lak::endian E>                                                     \
 	struct lak::to_bytes_traits<TYPE, E>                                        \
-	: lak::to_bytes_traits_fixed_struct_impl<TYPE, E, E, __VA_ARGS__>           \
+	: lak::to_bytes_traits_fixed_struct_impl<TYPE, E, __VA_ARGS__>              \
 	{                                                                           \
 	};                                                                          \
 	template<lak::endian E>                                                     \
 	struct lak::from_bytes_traits<TYPE, E>                                      \
-	: lak::from_bytes_traits_fixed_struct_impl<TYPE, E, E, __VA_ARGS__>         \
+	: lak::from_bytes_traits_fixed_struct_impl<TYPE, E, __VA_ARGS__>            \
 	{                                                                           \
 	};
 #define LAK_FIXED_STRUCT_BYTES_TRAITS_EX(ENDIAN, TYPE, ...)                   \
 	template<lak::endian E>                                                     \
 	struct lak::to_bytes_traits<TYPE, E>                                        \
-	: lak::to_bytes_traits_fixed_struct_impl<TYPE, E, ENDIAN, __VA_ARGS__>      \
+	: lak::to_bytes_traits_fixed_struct_impl<TYPE, ENDIAN, __VA_ARGS__>         \
 	{                                                                           \
 	};                                                                          \
 	template<lak::endian E>                                                     \
 	struct lak::from_bytes_traits<TYPE, E>                                      \
-	: lak::from_bytes_traits_fixed_struct_impl<TYPE, E, ENDIAN, __VA_ARGS__>    \
+	: lak::from_bytes_traits_fixed_struct_impl<TYPE, ENDIAN, __VA_ARGS__>       \
 	{                                                                           \
 	};
 
 #define LAK_FIXED_TEMPLATE_STRUCT_BYTES_TRAITS(TEMPL, TYPE, ...)              \
 	template<TEMPL, lak::endian E>                                              \
 	struct lak::to_bytes_traits<TYPE, E>                                        \
-	: lak::to_bytes_traits_fixed_struct_impl<TYPE, E, E, __VA_ARGS__>           \
+	: lak::to_bytes_traits_fixed_struct_impl<TYPE, E, __VA_ARGS__>              \
 	{                                                                           \
 	};                                                                          \
 	template<TEMPL, lak::endian E>                                              \
 	struct lak::from_bytes_traits<TYPE, E>                                      \
-	: lak::from_bytes_traits_fixed_struct_impl<TYPE, E, E, __VA_ARGS__>         \
+	: lak::from_bytes_traits_fixed_struct_impl<TYPE, E, __VA_ARGS__>            \
 	{                                                                           \
 	};
 #define LAK_FIXED_TEMPLATE_STRUCT_BYTES_TRAITS_EX(TEMPL, ENDIAN, TYPE, ...)   \
 	template<TEMPL, lak::endian E>                                              \
 	struct lak::to_bytes_traits<TYPE, E>                                        \
-	: lak::to_bytes_traits_fixed_struct_impl<TYPE, E, ENDIAN, __VA_ARGS__>      \
+	: lak::to_bytes_traits_fixed_struct_impl<TYPE, ENDIAN, __VA_ARGS__>         \
 	{                                                                           \
 	};                                                                          \
 	template<TEMPL, lak::endian E>                                              \
 	struct lak::from_bytes_traits<TYPE, E>                                      \
-	: lak::from_bytes_traits_fixed_struct_impl<TYPE, E, ENDIAN, __VA_ARGS__>    \
+	: lak::from_bytes_traits_fixed_struct_impl<TYPE, ENDIAN, __VA_ARGS__>       \
 	{                                                                           \
 	};
 
