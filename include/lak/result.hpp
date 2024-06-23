@@ -2,6 +2,7 @@
 #	define LAK_RESULT_HPP
 
 #	include "lak/utility.hpp"
+#	include "lak/type_traits.hpp"
 
 #	define LAK_VARIANT_FORWARD_ONLY
 #	include "lak/variant.hpp"
@@ -1361,17 +1362,20 @@ namespace lak
 	auto combine_ok(FUNCS &&...funcs)
 	{
 		static_assert(
-		  lak::are_all_same_v<typename decltype(funcs())::err_type...>);
+		  lak::are_all_same_v<
+		    typename lak::remove_cvref_t<decltype(funcs())>::err_type...>);
 
-		using err_type =
-		  lak::nth_type_t<0U, typename decltype(funcs())::err_type...>;
+		using result_err_type = lak::nth_type_t<
+		  0U,
+		  typename lak::remove_cvref_t<decltype(funcs())>::err_type...>;
 
-		using results_type =
-		  lak::tuple<lak::uninitialised<typename decltype(funcs())::ok_type>...>;
+		using results_type = lak::tuple<lak::uninitialised<
+		  typename lak::remove_cvref_t<decltype(funcs())>::ok_type>...>;
 
-		using ok_type = lak::tuple<typename decltype(funcs())::ok_type...>;
+		using result_ok_type =
+		  lak::tuple<typename lak::remove_cvref_t<decltype(funcs())>::ok_type...>;
 
-		using result_type = lak::result<ok_type, err_type>;
+		using result_type = lak::result<result_ok_type, result_err_type>;
 
 		results_type result;
 
@@ -1387,8 +1391,9 @@ namespace lak
 
 		DEFER(_foreach(succeeded, [](auto &value) { value.destroy(); }));
 
-		auto do_func = [&]<size_t I>(lak::size_type<I>,
-		                             auto &&func) -> lak::error_code<err_type>
+		auto do_func =
+		  [&]<size_t I>(lak::size_type<I>,
+		                auto &&func) -> lak::error_code<result_err_type>
 		{
 			return func().map(
 			  [&]<typename T>(T &&value) -> lak::monostate
@@ -1399,7 +1404,7 @@ namespace lak
 			  });
 		};
 
-		if_let_err (err_type err,
+		if_let_err (result_err_type err,
 		            [&]<size_t... I>(lak::index_sequence<I...>) {
 			            return ((do_func(lak::size_type<I>{},
 			                             lak::forward<FUNCS>(funcs))) &
@@ -1409,8 +1414,9 @@ namespace lak
 
 		return [&]<size_t... I>(lak::index_sequence<I...>) -> result_type
 		{
-			return lak::ok_t{ok_type(lak::forward<lak::tuple_element_t<I, ok_type>>(
-			  result.template get<I>().value())...)};
+			return lak::ok_t{
+			  result_ok_type(lak::forward<lak::tuple_element_t<I, result_ok_type>>(
+			    result.template get<I>().value())...)};
 		}(lak::index_sequence_for<FUNCS...>{});
 	}
 
