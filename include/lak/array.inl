@@ -336,6 +336,7 @@ lak::array<T, lak::dynamic_extent>::array::~array()
 
 template<typename T>
 void lak::array<T, lak::dynamic_extent>::resize(size_t new_size)
+requires lak::concepts::default_constructible<T>
 {
 	if (const size_t old_size{size()}; new_size > old_size)
 	{
@@ -581,9 +582,10 @@ lak::array<T, lak::dynamic_extent>::erase(const_iterator first,
 
 	if (length == 0) return begin() + index;
 
-	lak::shift_left(lak::split(lak::span(_data), first).second, length);
+	lak::destructive_shift_left(lak::split(lak::span(_data), first).second,
+	                            length);
 
-	resize(size() - length);
+	if (_data.resize(_data.size() - length)) ASSERT_UNREACHABLE();
 
 	return begin() + index;
 }

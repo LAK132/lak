@@ -271,7 +271,8 @@ namespace lak
 		size_t capacity() const { return _data.capacity(); }
 		size_t committed() const { return _data.committed(); }
 
-		void resize(size_t new_size);
+		void resize(size_t new_size)
+		requires lak::concepts::default_constructible<T>;
 		void resize(size_t new_size, const T &default_value)
 		requires lak::array_type_is_copyable<T>;
 		void reserve(size_t new_capacity);
