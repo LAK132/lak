@@ -5,10 +5,26 @@
 
 #include "lak/basic_program.inl"
 
-lak::optional<int> lak_test_basic_window_preinit(int, char **)
+bool running = true;
+lak::optional<int> lak_test_basic_program_init(int, char **)
 {
 	FUNCTION_CHECKPOINT();
+	running = true;
+	lak_test_basic_create_window().UNWRAP();
 	return lak::nullopt;
+}
+
+bool lak_test_basic_program_loop(uint64_t counter_delta)
+{
+	LAK_UNUSED(counter_delta);
+	FUNCTION_CHECKPOINT();
+	return running;
+}
+
+int lak_test_basic_program_quit()
+{
+	FUNCTION_CHECKPOINT();
+	return EXIT_SUCCESS;
 }
 
 void lak_test_basic_window_init(lak::window &window)
@@ -21,21 +37,18 @@ void lak_test_basic_window_init(lak::window &window)
 		ASSERT(window.graphics() == lak::graphics_mode::Software);
 }
 
-void lak_test_basic_window_handle_event(lak::window &, lak::event &)
+void lak_test_basic_window_handle_event(lak::window *, lak::event &)
 {
-	//
+	FUNCTION_CHECKPOINT();
 }
 
 void lak_test_basic_window_loop(lak::window &, uint64_t)
 {
-	//
+	FUNCTION_CHECKPOINT();
+	running = false;
 }
 
-int lak_test_basic_window_quit(lak::window &)
-{
-	FUNCTION_CHECKPOINT();
-	return EXIT_SUCCESS;
-}
+void lak_test_basic_window_quit(lak::window &) { FUNCTION_CHECKPOINT(); }
 
 #if !(defined(LAK_ENABLE_OPENGL) || defined(LAK_ENABLE_VULKAN) ||             \
       defined(LAK_ENABLE_METAL) || defined(LAK_ENABLE_SOFTRENDER))
