@@ -248,11 +248,13 @@ void lak::array<T, lak::dynamic_extent>::shrink_impl(size_t new_size)
 }
 
 template<typename T>
-lak::array<T, lak::dynamic_extent>::array(size_t initial_size)
-requires lak::concepts::default_constructible<T>
+template<typename U>
+requires lak::array_type_is_copyable<U>
+lak::array<T, lak::dynamic_extent>::array(size_t initial_size,
+                                          const U &default_value)
 : array()
 {
-	resize(initial_size);
+	resize(initial_size, default_value);
 }
 
 template<typename T>

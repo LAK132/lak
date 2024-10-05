@@ -255,8 +255,9 @@ namespace lak
 		array(array &&other);
 		array &operator=(array &&other);
 
-		array(size_t initial_size)
-		requires lak::concepts::default_constructible<T>;
+		template<typename U = T>
+		requires lak::array_type_is_copyable<U>
+		array(size_t initial_size, const U &default_value = {});
 
 		array(std::initializer_list<T> list)
 		requires lak::array_type_is_copyable<T>;
