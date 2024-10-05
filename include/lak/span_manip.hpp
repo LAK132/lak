@@ -89,6 +89,11 @@ namespace lak
 	template<typename T>
 	lak::shift_result<T> shift_left(lak::span<T> data, size_t distance = 1);
 
+	// objects in the .second span are left in a destroyed state
+	template<typename T>
+	lak::pair<lak::span<T>, lak::span<T>> destructive_shift_left(
+	  lak::span<T> data, size_t distance = 1);
+
 	template<typename T>
 	lak::shift_result<T> shift_right(lak::span<T> data, size_t distance = 1);
 

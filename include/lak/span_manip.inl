@@ -151,6 +151,34 @@ lak::shift_result<T> lak::shift_left(lak::span<T> data, size_t distance)
 }
 
 template<typename T>
+lak::pair<lak::span<T>, lak::span<T>> lak::destructive_shift_left(
+  lak::span<T> data, size_t distance)
+{
+	lak::pair<lak::span<T>, lak::span<T>> result;
+
+	if (distance >= data.size())
+	{
+		for (T *it : lak::pointer_range(data.begin(), data.end()))
+			lak::destroy_at(it);
+		result.first  = data.first(0);
+		result.second = data;
+		return result;
+	}
+
+	const size_t moved_count = data.size() - distance;
+
+	for (T *it : lak::pointer_range(data.begin(), data.begin() + distance))
+		lak::destroy_at(it);
+
+	for (T *it : lak::pointer_range(data.begin(), data.begin() + moved_count))
+		lak::destructive_move_construct(it + distance, it);
+
+	result.first  = data.first(moved_count);
+	result.second = data.last(distance);
+	return result;
+}
+
+template<typename T>
 lak::shift_result<T> lak::shift_right(lak::span<T> data, size_t distance)
 {
 	lak::shift_result<T> result;
