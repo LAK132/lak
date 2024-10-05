@@ -15,6 +15,11 @@ namespace lak
 
 	struct out_of_data_error
 	{
+		inline friend std::ostream &operator<<(std::ostream &strm,
+		                                       const out_of_data_error &)
+		{
+			return strm << "out of data";
+		}
 	};
 
 	/* --- bytes_traits --- */
