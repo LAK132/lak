@@ -232,11 +232,19 @@ void lak::array<T, lak::dynamic_extent>::right_shift(size_t count,
 }
 
 template<typename T>
-void lak::array<T, lak::dynamic_extent>::resize_impl(size_t new_size)
+void lak::array<T, lak::dynamic_extent>::grow_impl(size_t new_size)
 {
 	if (auto old{_data.resize(new_size)}; old)
 		for (size_t i : lak::size_range_count(old->size()))
 			lak::destructive_move_construct(old->data() + i, _data.data() + i);
+}
+
+template<typename T>
+void lak::array<T, lak::dynamic_extent>::shrink_impl(size_t new_size)
+{
+	if constexpr (!std::is_trivially_destructible_v<T>)
+		for (T *it : lak::pointer_range(begin() + new_size, end())) it->~T();
+	if (_data.resize(new_size)) ASSERT_UNREACHABLE();
 }
 
 template<typename T>
@@ -331,16 +339,13 @@ void lak::array<T, lak::dynamic_extent>::resize(size_t new_size)
 {
 	if (const size_t old_size{size()}; new_size > old_size)
 	{
-		resize_impl(new_size);
+		grow_impl(new_size);
 		if constexpr (!std::is_trivially_default_constructible_v<T>)
 			for (T *it : lak::pointer_range(begin() + old_size, end())) new (it) T();
 	}
 	else if (new_size < old_size)
 	{
-		if constexpr (!std::is_trivially_destructible_v<T>)
-			for (T *it : lak::pointer_range(begin() + new_size, end())) it->~T();
-
-		if (_data.resize(new_size)) ASSERT_UNREACHABLE();
+		shrink_impl(new_size);
 	}
 }
 
@@ -351,7 +356,7 @@ requires lak::array_type_is_copyable<T>
 {
 	if (const size_t old_size{size()}; new_size > old_size)
 	{
-		resize_impl(new_size);
+		grow_impl(new_size);
 #if defined(LAK_COMPILER_CLANG) && defined(LAK_OS_APPLE)
 		if constexpr (!lak::concepts::copy_constructible<T>)
 			ASSERT_UNREACHABLE();
@@ -362,10 +367,7 @@ requires lak::array_type_is_copyable<T>
 	}
 	else if (new_size < old_size)
 	{
-		if constexpr (!std::is_trivially_destructible_v<T>)
-			for (T *it : lak::pointer_range(begin() + new_size, end())) it->~T();
-
-		if (_data.resize(new_size)) ASSERT_UNREACHABLE();
+		shrink_impl(new_size);
 	}
 }
 
@@ -452,7 +454,7 @@ template<typename... ARGS>
 typename lak::array<T, lak::dynamic_extent>::reference
 lak::array<T, lak::dynamic_extent>::emplace_back(ARGS &&...args)
 {
-	resize_impl(size() + 1U);
+	grow_impl(size() + 1U);
 	new (data() + size() - 1U) T(lak::forward<ARGS>(args)...);
 	return back();
 }
@@ -462,7 +464,7 @@ typename lak::array<T, lak::dynamic_extent>::reference
 lak::array<T, lak::dynamic_extent>::push_back(const T &t)
 requires lak::array_type_is_copyable<T>
 {
-	resize_impl(size() + 1U);
+	grow_impl(size() + 1U);
 #if defined(LAK_COMPILER_CLANG) && defined(LAK_OS_APPLE)
 	if constexpr (!lak::concepts::copy_constructible<T>)
 		ASSERT_UNREACHABLE();
@@ -476,7 +478,7 @@ template<typename T>
 typename lak::array<T, lak::dynamic_extent>::reference
 lak::array<T, lak::dynamic_extent>::push_back(T &&t)
 {
-	resize_impl(size() + 1U);
+	grow_impl(size() + 1U);
 	new (data() + size() - 1U) T(lak::move(t));
 	return back();
 }

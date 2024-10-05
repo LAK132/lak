@@ -231,7 +231,8 @@ namespace lak
 		// uninitialised elements before `before`
 		void right_shift(size_t count, size_t before = 0U);
 
-		void resize_impl(size_t new_size);
+		void grow_impl(size_t new_size);
+		void shrink_impl(size_t new_size);
 
 	public:
 		using value_type      = typename data_type::value_type;
