@@ -7,6 +7,9 @@
 
 #include "lak/unicode.hpp"
 
+#define LAK_VISIT_FORWARD_ONLY
+#include "lak/visit.hpp"
+
 #include <ios>
 #include <ostream>
 #include <sstream>
@@ -72,6 +75,11 @@ namespace
 				strm << lak::string_view<char_type>::from_c_str(arg);
 			else
 				strm << lak::string_view<char_type>(arg);
+		}
+		else if constexpr (lak::is_variant_v<T>)
+		{
+			lak::visit(
+			  [&strm](const auto &arg) { ::streamable_streamer(strm, arg); }, arg);
 		}
 		else if constexpr (lak::is_same_v<std::error_code, lak::remove_cvref_t<T>>)
 		{
