@@ -114,6 +114,13 @@ void lak::bank<T>::flush()
 }
 
 template<typename T>
+bool lak::bank<T>::empty()
+{
+	std::lock_guard lock(_mutex);
+	return _container.empty();
+}
+
+template<typename T>
 T *lak::bank<T>::create(const T &t)
 {
 	std::lock_guard lock(_mutex);

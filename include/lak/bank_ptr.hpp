@@ -41,6 +41,8 @@ namespace lak
 	public:
 		static void flush();
 
+		static bool empty();
+
 		[[nodiscard]] static T *create(const T &t);
 
 		[[nodiscard]] static T *create(T &&t);
