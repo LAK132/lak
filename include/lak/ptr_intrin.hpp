@@ -160,6 +160,12 @@ namespace lak
 			                             : lak::strong_ordering::equal);
 		}
 	}
+
+	template<typename T>
+	constexpr force_inline T *ptr_round_down(const void *ptr, T *begin)
+	{
+		return begin + (__lakc_ptr_diff(ptr, begin).diff / sizeof(T));
+	}
 }
 
 #endif

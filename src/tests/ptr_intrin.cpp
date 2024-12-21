@@ -1,5 +1,6 @@
 #include "lak/test.hpp"
 
+#include "lak/array.hpp"
 #include "lak/ptr_intrin.hpp"
 
 BEGIN_TEST(ptr_intrin)
@@ -56,6 +57,11 @@ BEGIN_TEST(ptr_intrin)
 	ASSERT(!__lakc_ptr_in_range(str, str + 1, 4));
 	ASSERT(!__lakc_ptr_in_range(str + 5, str, 4));
 	ASSERT(__lakc_ptr_in_range(str + 2, str, 4));
+
+	auto str2 = lak::fixed_array('1', '2', '3', '4');
+
+	ASSERT(lak::ptr_compare(&str2, lak::ptr_round_down(&str2[2], &str2)) ==
+	       lak::strong_ordering::equal);
 
 	return 0;
 }
