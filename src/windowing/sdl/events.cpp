@@ -84,12 +84,11 @@ void translate_event(const SDL_Event &sdl_event,
 		case SDL_WINDOWEVENT:
 			switch (sdl_event.window.event)
 			{
-					/* --- window_closed --- */
+					/* --- close_window --- */
 
-				// Window *has* been destroyed.
 				case SDL_WINDOWEVENT_CLOSE:
 				{
-					*event = lak::event(lak::event_type::window_closed,
+					*event = lak::event(lak::event_type::close_window,
 					                    window,
 					                    lak::move(platform_event),
 					                    lak::window_event{});
