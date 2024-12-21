@@ -1,7 +1,12 @@
 #include "lak/visit.hpp"
 
+#include "lak/compiler.hpp"
 #include "lak/concepts.hpp"
+#include "lak/index_set.hpp"
 #include "lak/optional.hpp"
+#include "lak/overloaded.hpp"
+#include "lak/stdint.hpp"
+#include "lak/type_traits.hpp"
 
 namespace lak
 {

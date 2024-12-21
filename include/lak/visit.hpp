@@ -1,10 +1,7 @@
 #ifndef LAK_VISIT_HPP
 #	define LAK_VISIT_HPP
 
-#	include "lak/compiler.hpp"
-#	include "lak/stdint.hpp"
-#	include "lak/type_traits.hpp"
-#	include "lak/overloaded.hpp"
+#	define LAK_INDEX_SET_FORWARD_ONLY
 #	include "lak/index_set.hpp"
 
 namespace lak

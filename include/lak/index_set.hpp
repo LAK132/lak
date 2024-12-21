@@ -1,10 +1,10 @@
 #ifndef LAK_INDEX_SET_HPP
-#define LAK_INDEX_SET_HPP
+#	define LAK_INDEX_SET_HPP
 
-#define LAK_RESULT_FORWARD_ONLY
-#include "lak/result.hpp"
+#	define LAK_RESULT_FORWARD_ONLY
+#	include "lak/result.hpp"
 
-#include "lak/type_traits.hpp"
+#	include "lak/type_traits.hpp"
 
 namespace lak
 {
@@ -55,6 +55,15 @@ namespace lak
 	                                    lak::size_type<INDEX> index);
 }
 
-#include "index_set.inl"
+#endif
 
+#ifdef LAK_INDEX_SET_FORWARD_ONLY
+#	undef LAK_INDEX_SET_FORWARD_ONLY
+#else
+#	ifndef LAK_INDEX_SET_HPP_IMPL
+#		define LAK_INDEX_SET_HPP_IMPL
+
+#		include "index_set.inl"
+
+#	endif
 #endif
