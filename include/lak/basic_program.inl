@@ -11,7 +11,12 @@
 #include "lak/os.hpp"
 #include "lak/window.hpp"
 
-#ifdef LAK_BASIC_PROGRAM_IMGUI_WINDOW_IMPL
+#if defined(LAK_BASIC_PROGRAM_IMGUI_WINDOW_IMPL) &&                           \
+  !defined(LAK_BASIC_PROGRAM_IMGUI_IMPL)
+#	define LAK_BASIC_PROGRAM_IMGUI_IMPL
+#endif
+
+#ifdef LAK_BASIC_PROGRAM_IMGUI_IMPL
 #	include "lak/imgui/backend.hpp"
 #	include "lak/imgui/widgets.hpp"
 #endif
@@ -55,7 +60,7 @@ lak::software_settings LAK_BASIC_PROGRAM(window_software_settings);
 struct LAK_BASIC_PROGRAM(window_instance)
 {
 	lak::window window;
-#ifdef LAK_BASIC_PROGRAM_IMGUI_WINDOW_IMPL
+#ifdef LAK_BASIC_PROGRAM_IMGUI_IMPL
 	ImGui::ImplContext imgui_context = nullptr;
 #endif
 };
@@ -159,7 +164,7 @@ lak::result<lak::window &, lak::u8string> LAK_BASIC_PROGRAM(create_window)()
 		                       });
 		      ASSERT(!!result);
 
-#ifdef LAK_BASIC_PROGRAM_IMGUI_WINDOW_IMPL
+#ifdef LAK_BASIC_PROGRAM_IMGUI_IMPL
 		      auto current_context = ImGui::GetCurrentContext();
 		      DEFER(ImGui::SetCurrentContext(current_context));
 
@@ -199,7 +204,7 @@ void LAK_BASIC_PROGRAM(destroy_window)(lak::window &window)
 	{
 		inst->window.set_active();
 		LAK_BASIC_PROGRAM(window_quit)(inst->window);
-#ifdef LAK_BASIC_PROGRAM_IMGUI_WINDOW_IMPL
+#ifdef LAK_BASIC_PROGRAM_IMGUI_IMPL
 		{
 			auto ctx = ImGui::GetCurrentContext();
 			DEFER(ImGui::SetCurrentContext(ctx));
@@ -223,8 +228,10 @@ void LAK_BASIC_PROGRAM(destroy_window)(lak::window &window)
 	ERROR("Invalid window");
 }
 
-#ifdef LAK_BASIC_PROGRAM_IMGUI_WINDOW_IMPL
+#ifdef LAK_BASIC_PROGRAM_IMGUI_IMPL
 ImGui::ImplContext LAK_BASIC_PROGRAM(imgui_context) = nullptr;
+#endif
+#ifdef LAK_BASIC_PROGRAM_IMGUI_WINDOW_IMPL
 ImGuiWindowFlags LAK_BASIC_PROGRAM(imgui_main_window_flags) =
   ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoScrollbar
   | ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoSavedSettings
@@ -383,7 +390,7 @@ int LAK_BASIC_PROGRAM_MAIN(int argc, char **argv)
 				auto *inst = LAK_BASIC_PROGRAM(find_window_instance)(event.handle);
 				// ASSERT(!!inst);
 				if (!inst) continue;
-#ifdef LAK_BASIC_PROGRAM_IMGUI_WINDOW_IMPL
+#ifdef LAK_BASIC_PROGRAM_IMGUI_IMPL
 				ImGui::ImplSetCurrentContext(inst->imgui_context);
 				ImGui::ImplProcessEvent(inst->imgui_context, event);
 #endif
@@ -406,17 +413,25 @@ int LAK_BASIC_PROGRAM_MAIN(int argc, char **argv)
 			    {
 				    glViewport(
 				      0, 0, window.drawable_size().x, window.drawable_size().y);
-				    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+				    glScissor(
+				      0, 0, window.drawable_size().x, window.drawable_size().y);
+				    glClearColor(LAK_BASIC_PROGRAM(window_clear_colour).r,
+				                 LAK_BASIC_PROGRAM(window_clear_colour).g,
+				                 LAK_BASIC_PROGRAM(window_clear_colour).b,
+				                 LAK_BASIC_PROGRAM(window_clear_colour).a);
+				    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT |
+				            GL_STENCIL_BUFFER_BIT);
 			    }
 #endif
 
-#ifdef LAK_BASIC_PROGRAM_IMGUI_WINDOW_IMPL
+#ifdef LAK_BASIC_PROGRAM_IMGUI_IMPL
 			    {
 				    const float frame_time =
 				      (float)counter_delta / lak::performance_frequency();
 				    ImGui::ImplSetCurrentContext(inst.imgui_context);
 				    ImGui::ImplNewFrame(inst.imgui_context, window, frame_time);
 
+#	ifdef LAK_BASIC_PROGRAM_IMGUI_WINDOW_IMPL
 				    bool mainOpen = true;
 
 				    ImGuiStyle &style = ImGui::GetStyle();
@@ -432,8 +447,11 @@ int LAK_BASIC_PROGRAM_MAIN(int argc, char **argv)
 				    {
 					    style.WindowPadding = old_window_padding;
 					    LAK_BASIC_PROGRAM(window_loop)(window, counter_delta);
-					    ImGui::End();
 				    }
+				    ImGui::End();
+#	else
+				    LAK_BASIC_PROGRAM(window_loop)(window, counter_delta);
+#	endif
 
 				    ImGui::ImplRender(inst.imgui_context);
 				    lak::flush_file_modal();
@@ -456,7 +474,7 @@ int LAK_BASIC_PROGRAM_MAIN(int argc, char **argv)
 	    [&](auto &inst)
 	    {
 		    LAK_BASIC_PROGRAM(destroy_window)(inst.window);
-#ifdef LAK_BASIC_PROGRAM_IMGUI_WINDOW_IMPL
+#ifdef LAK_BASIC_PROGRAM_IMGUI_IMPL
 		    ImGui::ImplSetCurrentContext(inst.imgui_context);
 		    ImGui::ImplShutdownContext(inst.imgui_context);
 #endif
