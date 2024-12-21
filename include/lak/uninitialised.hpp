@@ -46,6 +46,15 @@ namespace lak
 	};
 
 	static_assert(lak::is_default_constructible_v<lak::uninitialised<int>>);
+
+	template<typename T>
+	constexpr void destructive_move_construct(lak::uninitialised<T> *,
+	                                          lak::uninitialised<T> *)
+	{
+		// :TODO: make array handle uninitialised better so this hack isn't
+		// necessary.
+		ABORTF("Attempted to move an unmovable uninitialised<T>");
+	}
 }
 
 #endif
