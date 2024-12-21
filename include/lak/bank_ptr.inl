@@ -1,3 +1,4 @@
+#include "lak/ptr_intrin.hpp"
 #include "lak/utility.hpp"
 
 #ifdef LAK_NO_STD
@@ -9,18 +10,26 @@
 /* --- lak::bank<T> --- */
 
 template<typename T>
+void lak::bank<T>::internal_sort()
+{
+	std::sort(_deleted.begin(), _deleted.end(), std::less<size_t>{});
+	ASSERT(std::adjacent_find(_deleted.begin(), _deleted.end()) ==
+	       _deleted.end());
+}
+
+template<typename T>
 void lak::bank<T>::internal_flush()
 {
 	if (_deleted.empty()) return;
-	std::sort(_deleted.begin(), _deleted.end(), std::greater<size_t>{});
+	internal_sort();
 	size_t destroyed = 0;
 	while (destroyed < _deleted.size() &&
-	       _deleted[destroyed] == _container.size() - 1)
+	       _deleted[_deleted.size() - (destroyed + 1U)] == _container.size() - 1)
 	{
 		_container.pop_back();
 		++destroyed;
 	}
-	_deleted.erase(_deleted.begin(), _deleted.begin() + destroyed);
+	_deleted.erase(_deleted.end() - destroyed, _deleted.end());
 }
 
 template<typename T>
@@ -31,7 +40,8 @@ size_t lak::bank<T>::internal_find_index(T *ptr)
 	auto it = std::lower_bound(_container.begin(),
 	                           _container.end(),
 	                           ptr,
-	                           [](const T &a, const T *b) { return &a < b; });
+	                           [](const lak::uninitialised<T> &a, const T *b)
+	                           { return __lakc_ptr_lt(&a, b); });
 	ASSERT(it != _container.end());
 	return std::distance(_container.begin(), it);
 }
@@ -44,8 +54,8 @@ size_t lak::bank<T>::internal_create(ARGS &&...args)
 	{
 		auto index = _deleted.back();
 		_deleted.pop_back();
-		_container[index].~T();
-		new (&_container[index]) T(lak::forward<ARGS>(args)...);
+		_container[index].destroy();
+		_container[index].create(lak::forward<ARGS>(args)...);
 		return index;
 	}
 	else
@@ -59,28 +69,39 @@ template<typename T>
 void lak::bank<T>::internal_destroy(size_t index)
 {
 	ASSERT_GREATER(_container.size(), index);
-	_deleted.push_back(index);
-	internal_flush();
+	_container[index].destroy();
+	if (index == (_container.size() - 1))
+		_container.pop_back();
+	else
+	{
+		_deleted.push_back(index);
+		internal_flush();
+	}
 }
 
 template<typename T>
 template<typename FUNCTOR>
 size_t lak::bank<T>::internal_find_if(FUNCTOR &&func)
 {
-	for (size_t del_index = 0, i = 0; i < _container.size(); ++i)
+	internal_sort();
+
+	size_t i = 0U;
+	for (size_t del_index = 0;
+	     del_index < _deleted.size() && i < _container.size();
+	     ++i)
 	{
-		if (del_index < _deleted.size())
+		ASSERT_LESS_OR_EQUAL(i, _deleted[del_index]);
+		if (i == _deleted[del_index])
 		{
-			ASSERT_GREATER_OR_EQUAL(_deleted[del_index], i);
-			if (i == _deleted[del_index])
-			{
-				++del_index;
-				continue;
-			}
+			++del_index;
+			continue;
 		}
 
-		if (func(_container[i])) return i;
+		if (func(_container[i].value())) return i;
 	}
+
+	for (; i < _container.size(); ++i)
+		if (func(_container[i].value())) return i;
 
 	return std::numeric_limits<size_t>::max();
 }
@@ -97,8 +118,9 @@ T *lak::bank<T>::create(const T &t)
 {
 	std::lock_guard lock(_mutex);
 	auto result = internal_create(t);
-	return result != std::numeric_limits<size_t>::max() ? &_container[result]
-	                                                    : nullptr;
+	return result != std::numeric_limits<size_t>::max()
+	         ? &_container[result].value()
+	         : nullptr;
 }
 
 template<typename T>
@@ -106,8 +128,9 @@ T *lak::bank<T>::create(T &&t)
 {
 	std::lock_guard lock(_mutex);
 	auto result = internal_create(lak::move(t));
-	return result != std::numeric_limits<size_t>::max() ? &_container[result]
-	                                                    : nullptr;
+	return result != std::numeric_limits<size_t>::max()
+	         ? &_container[result].value()
+	         : nullptr;
 }
 
 template<typename T>
@@ -116,8 +139,9 @@ T *lak::bank<T>::create(ARGS &&...args)
 {
 	std::lock_guard lock(_mutex);
 	auto result = internal_create(lak::forward<ARGS>(args)...);
-	return result != std::numeric_limits<size_t>::max() ? &_container[result]
-	                                                    : nullptr;
+	return result != std::numeric_limits<size_t>::max()
+	         ? &_container[result].value()
+	         : nullptr;
 }
 
 template<typename T>
@@ -127,7 +151,8 @@ void lak::bank<T>::destroy(T *t)
 	auto it = std::lower_bound(_container.begin(),
 	                           _container.end(),
 	                           t,
-	                           [](const T &a, const T *b) { return &a < b; });
+	                           [](const lak::uninitialised<T> &a, const T *b)
+	                           { return __lakc_ptr_lt(&a, b); });
 	ASSERT(it != _container.end());
 	internal_destroy(std::distance(_container.begin(), it));
 }
@@ -136,17 +161,29 @@ template<typename T>
 template<typename FUNCTOR>
 void lak::bank<T>::for_each(FUNCTOR &&func)
 {
-	std::lock_guard lock(_mutex);
+	std::unique_lock lock(_mutex);
+	internal_sort();
 	for (size_t del_index = 0, i = 0; i < _container.size(); ++i)
 	{
-		ASSERT_GREATER_OR_EQUAL(_deleted[del_index], i);
-		if (i < _deleted[del_index])
-		{
-			func(_container[i]);
-		}
+		// we want _deleted[del_index] to either refer to the current index or the
+		// next deleted index. if _deleted[del_index] is less than the current
+		// index, increment until it is greater or equal. if _deleted[del_index-1]
+		// is greater or equal to the current index, then we need to roll back
+		// del_index until it isn't.
+		if (del_index > _deleted.size()) del_index = _deleted.size();
+		while (del_index != 0U && (del_index - 1U) < _deleted.size() &&
+		       _deleted[del_index - 1U] >= i)
+			--del_index;
+		while (del_index < _deleted.size() && _deleted[del_index] < i) ++del_index;
+
+		if (del_index < _deleted.size() && _deleted[del_index] == i)
+			++del_index;
 		else
 		{
-			++del_index;
+			auto &it = _container[i];
+			lock.unlock();
+			func(it.value());
+			lock.lock();
 		}
 	}
 }
@@ -157,8 +194,9 @@ T *lak::bank<T>::find_if(FUNCTOR &&func)
 {
 	std::lock_guard lock(_mutex);
 	auto result = internal_find_if(lak::forward<FUNCTOR>(func));
-	return result != std::numeric_limits<size_t>::max() ? &_container[result]
-	                                                    : nullptr;
+	return result != std::numeric_limits<size_t>::max()
+	         ? &_container[result].value()
+	         : nullptr;
 }
 
 /* --- lak::unique_bank_ptr<T> --- */
@@ -190,8 +228,12 @@ lak::unique_bank_ptr<T> lak::unique_bank_ptr<T>::from_raw_bank_ptr(T *ptr)
 {
 	if (!ptr) return {};
 	std::lock_guard lock(bank<T>::_mutex);
-	ASSERT_GREATER_OR_EQUAL(ptr, &bank<T>::_container.front());
-	ASSERT_GREATER_OR_EQUAL(&bank<T>::_container.back(), ptr);
+	ASSERT(std::lower_bound(bank<T>::_container.begin(),
+	                        bank<T>::_container.end(),
+	                        ptr,
+	                        [](const lak::uninitialised<T> &a, const T *b)
+	                        { return __lakc_ptr_lt(&a, b); }) !=
+	       bank<T>::_container.end());
 	return {bank<T>::internal_find_index(ptr)};
 }
 
@@ -236,14 +278,7 @@ void lak::unique_bank_ptr<T>::reset()
 {
 	if (!*this) return;
 	std::lock_guard lock(bank<T>::_mutex);
-	if (_index == bank<T>::_container.size() - 1)
-	{
-		bank<T>::_container.pop_back();
-	}
-	else
-	{
-		bank<T>::internal_destroy(_index);
-	}
+	bank<T>::internal_destroy(_index);
 	_index = std::numeric_limits<size_t>::max();
 	_value = nullptr;
 }
