@@ -390,14 +390,14 @@ namespace lak
 		constexpr T *data() { return begin(); }
 		constexpr const T *data() const { return begin(); }
 
-		constexpr T *begin() { return &_data[0]; }
-		constexpr T *end() { return &_data[_size]; }
+		constexpr T *begin() { return _data + 0U; }
+		constexpr T *end() { return _data + _size; }
 
-		constexpr const T *begin() const { return &_data[0]; }
-		constexpr const T *end() const { return &_data[_size]; }
+		constexpr const T *begin() const { return _data + 0U; }
+		constexpr const T *end() const { return _data + _size; }
 
-		constexpr const T *cbegin() const { return &_data[0]; }
-		constexpr const T *cend() const { return &_data[_size]; }
+		constexpr const T *cbegin() const { return _data + 0U; }
+		constexpr const T *cend() const { return _data + _size; }
 
 		T &at(size_t index);
 		const T &at(size_t index) const;
