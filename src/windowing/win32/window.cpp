@@ -412,6 +412,32 @@ bool lak::set_window_cursor_pos(const lak::window_handle *handle,
 	       ::SetCursorPos(relative.x, relative.y);
 }
 
+bool lak::set_active_window(const lak::window_handle *handle)
+{
+	switch (handle->graphics_mode())
+	{
+#ifdef LAK_ENABLE_SOFTRENDER
+		case lak::graphics_mode::Software:
+			return true;
+#endif
+
+#ifdef LAK_ENABLE_OPENGL
+		case lak::graphics_mode::OpenGL:
+		{
+			if (!::wglMakeCurrent(handle->_device_context,
+			                      handle->opengl_context().platform_handle))
+			{
+				// lak::streamify("Failed to make OpenGL context current: "_view,
+				//                win32_error_string(L"wglMakeCurrent"));
+				return false;
+			}
+		}
+#endif
+	}
+
+	return false;
+}
+
 bool lak::swap_window(lak::window_handle *handle)
 {
 	switch (handle->graphics_mode())

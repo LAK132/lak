@@ -183,6 +183,8 @@ namespace lak
 	bool set_opengl_swap_interval(const lak::opengl_context &c, int interval);
 #endif
 
+	bool set_active_window(const lak::window_handle *w);
+
 	bool swap_window(lak::window_handle *w);
 
 	// Yield this thread until the target framerate is achieved.
@@ -256,6 +258,12 @@ namespace lak
 		inline const window &set_cursor_pos(lak::vec2l_t pos) const
 		{
 			ASSERT(lak::set_window_cursor_pos(handle(), pos));
+			return *this;
+		}
+
+		inline const window &set_active() const
+		{
+			ASSERT(lak::set_active_window(handle()));
 			return *this;
 		}
 

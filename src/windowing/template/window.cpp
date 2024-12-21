@@ -101,6 +101,12 @@ bool lak::set_opengl_swap_interval(const lak::opengl_context &c, int interval)
 }
 #endif
 
+bool lak::set_active_window(const lak::window_handle *w)
+{
+	(void)w;
+	return false;
+}
+
 bool lak::swap_window(lak::window_handle *w)
 {
 	(void)w;

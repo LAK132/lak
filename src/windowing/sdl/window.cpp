@@ -298,6 +298,25 @@ bool lak::set_window_size(lak::window_handle *handle, lak::vec2l_t size)
 	return true;
 }
 
+bool lak::set_active_window(const lak::window_handle *handle)
+{
+	switch (handle->graphics_mode())
+	{
+#ifdef LAK_ENABLE_SOFTRENDER
+		case lak::graphics_mode::Software:
+			return true;
+#endif
+
+#ifdef LAK_ENABLE_OPENGL
+		case lak::graphics_mode::OpenGL:
+			return SDL_GL_MakeCurrent(handle->opengl_context().sdl_window,
+			                          handle->opengl_context().sdl_glcontext) == 0;
+#endif
+	}
+
+	return false;
+}
+
 bool lak::swap_window(lak::window_handle *handle)
 {
 	switch (handle->graphics_mode())
