@@ -29,32 +29,6 @@ constexpr inline bool lak::equal_to<T, P...>::operator()(const T &lhs,
 	return (*this)(lhs, rhs, lak::make_index_sequence<sizeof...(P)>{});
 }
 
-#ifdef LAK_CAN_USE_CONCEPT_AUTO
-template<typename T, lak::concepts::member_pointer auto... P>
-#else
-template<typename T, auto... P>
-#endif
-template<typename U>
-requires(sizeof...(P) == 1)
-constexpr inline bool lak::equal_to<T, P...>::operator()(const T &lhs,
-                                                         const U &rhs) const
-{
-	return lak::equal_to<U>{}(lhs.*(lak::nth_value_v<0, P...>), rhs);
-}
-
-#ifdef LAK_CAN_USE_CONCEPT_AUTO
-template<typename T, lak::concepts::member_pointer auto... P>
-#else
-template<typename T, auto... P>
-#endif
-template<typename U>
-requires(sizeof...(P) == 1)
-constexpr inline bool lak::equal_to<T, P...>::operator()(const U &lhs,
-                                                         const T &rhs) const
-{
-	return lak::equal_to<U>{}(lhs, rhs.*(lak::nth_value_v<0, P...>));
-}
-
 /* --- equal_to<void> --- */
 
 template<typename T>
@@ -115,32 +89,6 @@ constexpr inline bool lak::not_equal_to<T, P...>::operator()(
   const T &lhs, const T &rhs) const
 {
 	return (*this)(lhs, rhs, lak::make_index_sequence<sizeof...(P)>{});
-}
-
-#ifdef LAK_CAN_USE_CONCEPT_AUTO
-template<typename T, lak::concepts::member_pointer auto... P>
-#else
-template<typename T, auto... P>
-#endif
-template<typename U>
-requires(sizeof...(P) == 1)
-constexpr inline bool lak::not_equal_to<T, P...>::operator()(
-  const T &lhs, const U &rhs) const
-{
-	return lak::not_equal_to<U>{}(lhs.*(lak::nth_value_v<0, P...>), rhs);
-}
-
-#ifdef LAK_CAN_USE_CONCEPT_AUTO
-template<typename T, lak::concepts::member_pointer auto... P>
-#else
-template<typename T, auto... P>
-#endif
-template<typename U>
-requires(sizeof...(P) == 1)
-constexpr inline bool lak::not_equal_to<T, P...>::operator()(
-  const U &lhs, const T &rhs) const
-{
-	return lak::not_equal_to<U>{}(lhs, rhs.*(lak::nth_value_v<0, P...>));
 }
 
 /* --- not_equal_to<void> --- */
@@ -211,32 +159,6 @@ constexpr inline bool lak::less<T, P...>::operator()(const T &lhs,
 	return (*this)(lhs, rhs, lak::make_index_sequence<sizeof...(P)>{});
 }
 
-#ifdef LAK_CAN_USE_CONCEPT_AUTO
-template<typename T, lak::concepts::member_pointer auto... P>
-#else
-template<typename T, auto... P>
-#endif
-template<typename U>
-requires(sizeof...(P) == 1)
-constexpr inline bool lak::less<T, P...>::operator()(const T &lhs,
-                                                     const U &rhs) const
-{
-	return lak::less<U>{}(lhs.*(lak::nth_value_v<0, P...>), rhs);
-}
-
-#ifdef LAK_CAN_USE_CONCEPT_AUTO
-template<typename T, lak::concepts::member_pointer auto... P>
-#else
-template<typename T, auto... P>
-#endif
-template<typename U>
-requires(sizeof...(P) == 1)
-constexpr inline bool lak::less<T, P...>::operator()(const U &lhs,
-                                                     const T &rhs) const
-{
-	return lak::less<U>{}(lhs, rhs.*(lak::nth_value_v<0, P...>));
-}
-
 /* --- less<void> --- */
 
 template<typename T>
@@ -302,32 +224,6 @@ constexpr inline bool lak::greater<T, P...>::operator()(const T &lhs,
                                                         const T &rhs) const
 {
 	return (*this)(lhs, rhs, lak::make_index_sequence<sizeof...(P)>{});
-}
-
-#ifdef LAK_CAN_USE_CONCEPT_AUTO
-template<typename T, lak::concepts::member_pointer auto... P>
-#else
-template<typename T, auto... P>
-#endif
-template<typename U>
-requires(sizeof...(P) == 1)
-constexpr inline bool lak::greater<T, P...>::operator()(const T &lhs,
-                                                        const U &rhs) const
-{
-	return lak::greater<U>{}(lhs.*(lak::nth_value_v<0, P...>), rhs);
-}
-
-#ifdef LAK_CAN_USE_CONCEPT_AUTO
-template<typename T, lak::concepts::member_pointer auto... P>
-#else
-template<typename T, auto... P>
-#endif
-template<typename U>
-requires(sizeof...(P) == 1)
-constexpr inline bool lak::greater<T, P...>::operator()(const U &lhs,
-                                                        const T &rhs) const
-{
-	return lak::greater<U>{}(lhs, rhs.*(lak::nth_value_v<0, P...>));
 }
 
 /* --- greater<void> --- */
@@ -397,32 +293,6 @@ constexpr inline bool lak::less_equal<T, P...>::operator()(const T &lhs,
 	return (*this)(lhs, rhs, lak::make_index_sequence<sizeof...(P)>{});
 }
 
-#ifdef LAK_CAN_USE_CONCEPT_AUTO
-template<typename T, lak::concepts::member_pointer auto... P>
-#else
-template<typename T, auto... P>
-#endif
-template<typename U>
-requires(sizeof...(P) == 1)
-constexpr inline bool lak::less_equal<T, P...>::operator()(const T &lhs,
-                                                           const U &rhs) const
-{
-	return lak::less_equal<U>{}(lhs.*(lak::nth_value_v<0, P...>), rhs);
-}
-
-#ifdef LAK_CAN_USE_CONCEPT_AUTO
-template<typename T, lak::concepts::member_pointer auto... P>
-#else
-template<typename T, auto... P>
-#endif
-template<typename U>
-requires(sizeof...(P) == 1)
-constexpr inline bool lak::less_equal<T, P...>::operator()(const U &lhs,
-                                                           const T &rhs) const
-{
-	return lak::less_equal<U>{}(lhs, rhs.*(lak::nth_value_v<0, P...>));
-}
-
 /* --- less_equal<void> --- */
 
 template<typename T>
@@ -489,32 +359,6 @@ constexpr inline bool lak::greater_equal<T, P...>::operator()(
   const T &lhs, const T &rhs) const
 {
 	return (*this)(lhs, rhs, lak::make_index_sequence<sizeof...(P)>{});
-}
-
-#ifdef LAK_CAN_USE_CONCEPT_AUTO
-template<typename T, lak::concepts::member_pointer auto... P>
-#else
-template<typename T, auto... P>
-#endif
-template<typename U>
-requires(sizeof...(P) == 1)
-constexpr inline bool lak::greater_equal<T, P...>::operator()(
-  const T &lhs, const U &rhs) const
-{
-	return lak::greater_equal<U>{}(lhs.*(lak::nth_value_v<0, P...>), rhs);
-}
-
-#ifdef LAK_CAN_USE_CONCEPT_AUTO
-template<typename T, lak::concepts::member_pointer auto... P>
-#else
-template<typename T, auto... P>
-#endif
-template<typename U>
-requires(sizeof...(P) == 1)
-constexpr inline bool lak::greater_equal<T, P...>::operator()(
-  const U &lhs, const T &rhs) const
-{
-	return lak::greater_equal<U>{}(lhs, rhs.*(lak::nth_value_v<0, P...>));
 }
 
 /* --- greater_equal<void> --- */

@@ -110,11 +110,17 @@ namespace lak
 
 		template<typename U>
 		requires(sizeof...(P) == 1)
-		constexpr inline bool operator()(const T &lhs, const U &rhs) const;
+		constexpr inline bool operator()(const T &lhs, const U &rhs) const
+		{
+			return lak::equal_to<U>{}(lhs.*(lak::nth_value_v<0, P...>), rhs);
+		}
 
 		template<typename U>
 		requires(sizeof...(P) == 1)
-		constexpr inline bool operator()(const U &lhs, const T &rhs) const;
+		constexpr inline bool operator()(const U &lhs, const T &rhs) const
+		{
+			return lak::equal_to<U>{}(lhs, rhs.*(lak::nth_value_v<0, P...>));
+		}
 	};
 
 	template<>
@@ -163,11 +169,17 @@ namespace lak
 
 		template<typename U>
 		requires(sizeof...(P) == 1)
-		constexpr inline bool operator()(const T &lhs, const U &rhs) const;
+		constexpr inline bool operator()(const T &lhs, const U &rhs) const
+		{
+			return lak::not_equal_to<U>{}(lhs.*(lak::nth_value_v<0, P...>), rhs);
+		}
 
 		template<typename U>
 		requires(sizeof...(P) == 1)
-		constexpr inline bool operator()(const U &lhs, const T &rhs) const;
+		constexpr inline bool operator()(const U &lhs, const T &rhs) const
+		{
+			return lak::not_equal_to<U>{}(lhs, rhs.*(lak::nth_value_v<0, P...>));
+		}
 	};
 
 	template<>
@@ -215,11 +227,17 @@ namespace lak
 
 		template<typename U>
 		requires(sizeof...(P) == 1)
-		constexpr inline bool operator()(const T &lhs, const U &rhs) const;
+		constexpr inline bool operator()(const T &lhs, const U &rhs) const
+		{
+			return lak::less<U>{}(lhs.*(lak::nth_value_v<0, P...>), rhs);
+		}
 
 		template<typename U>
 		requires(sizeof...(P) == 1)
-		constexpr inline bool operator()(const U &lhs, const T &rhs) const;
+		constexpr inline bool operator()(const U &lhs, const T &rhs) const
+		{
+			return lak::less<U>{}(lhs, rhs.*(lak::nth_value_v<0, P...>));
+		}
 	};
 
 	template<>
@@ -267,11 +285,17 @@ namespace lak
 
 		template<typename U>
 		requires(sizeof...(P) == 1)
-		constexpr inline bool operator()(const T &lhs, const U &rhs) const;
+		constexpr inline bool operator()(const T &lhs, const U &rhs) const
+		{
+			return lak::greater<U>{}(lhs.*(lak::nth_value_v<0, P...>), rhs);
+		}
 
 		template<typename U>
 		requires(sizeof...(P) == 1)
-		constexpr inline bool operator()(const U &lhs, const T &rhs) const;
+		constexpr inline bool operator()(const U &lhs, const T &rhs) const
+		{
+			return lak::greater<U>{}(lhs, rhs.*(lak::nth_value_v<0, P...>));
+		}
 	};
 
 	template<>
@@ -319,11 +343,17 @@ namespace lak
 
 		template<typename U>
 		requires(sizeof...(P) == 1)
-		constexpr inline bool operator()(const T &lhs, const U &rhs) const;
+		constexpr inline bool operator()(const T &lhs, const U &rhs) const
+		{
+			return lak::less_equal<U>{}(lhs.*(lak::nth_value_v<0, P...>), rhs);
+		}
 
 		template<typename U>
 		requires(sizeof...(P) == 1)
-		constexpr inline bool operator()(const U &lhs, const T &rhs) const;
+		constexpr inline bool operator()(const U &lhs, const T &rhs) const
+		{
+			return lak::less_equal<U>{}(lhs, rhs.*(lak::nth_value_v<0, P...>));
+		}
 	};
 
 	template<>
@@ -371,11 +401,17 @@ namespace lak
 
 		template<typename U>
 		requires(sizeof...(P) == 1)
-		constexpr inline bool operator()(const T &lhs, const U &rhs) const;
+		constexpr inline bool operator()(const T &lhs, const U &rhs) const
+		{
+			return lak::greater_equal<U>{}(lhs.*(lak::nth_value_v<0, P...>), rhs);
+		}
 
 		template<typename U>
 		requires(sizeof...(P) == 1)
-		constexpr inline bool operator()(const U &lhs, const T &rhs) const;
+		constexpr inline bool operator()(const U &lhs, const T &rhs) const
+		{
+			return lak::greater_equal<U>{}(lhs, rhs.*(lak::nth_value_v<0, P...>));
+		}
 	};
 
 	template<>

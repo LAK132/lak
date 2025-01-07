@@ -50,6 +50,7 @@ else
 		'-Wno-unused-private-field',
 		'-Wno-unused-variable',
 		'-Wno-init-list-lifetime',
+		'-Wno-invalid-partial-specialization',
 		'-Wfatal-errors',
 		'-Wno-psabi',
 		# '-mavx',
