@@ -95,7 +95,11 @@ namespace lak
 
 	struct opengl_settings
 	{
+#ifdef LAK_OS_APPLE
+		bool double_buffered = true;
+#else
 		bool double_buffered = false;
+#endif
 		uint8_t depth_size   = 24;
 		uint8_t colour_size  = 8;
 		uint8_t stencil_size = 8;

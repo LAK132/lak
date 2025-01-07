@@ -122,9 +122,11 @@ lak::result<lak::window &, lak::u8string> LAK_BASIC_PROGRAM(create_window)()
 			    glEnable(GL_DEPTH_TEST);
 
 #	ifndef NDEBUG
+#		ifndef LAK_OS_APPLE
 			    glEnable(GL_DEBUG_OUTPUT);
 			    glDebugMessageCallback(
 			      &LAK_BASIC_PROGRAM(opengl_debug_message_callback), 0);
+#		endif
 #	endif
 
 			    return lak::move_ok(window);

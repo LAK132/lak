@@ -1006,7 +1006,9 @@ void ImplGLRender(ImGui::ImplContext context, ImDrawData *draw_data)
 	DEFER(gl_context->vertex_array = 0);
 	GL_DEFER_CALL(glDeleteVertexArrays, 1, &gl_context->vertex_array);
 #	ifdef GL_CLIP_ORIGIN
+#		ifndef LAK_OS_APPLE
 	auto old_clip_origin = lak::opengl::get_enum(GL_CLIP_ORIGIN).UNWRAP();
+#		endif
 #	endif
 
 	lak::opengl::call_checked(glGenVertexArrays, 1, &gl_context->vertex_array)
@@ -1181,6 +1183,7 @@ void ImplGLRender(ImGui::ImplContext context, ImDrawData *draw_data)
 				    clip.w >= 0.0f)
 				{
 #	ifdef GL_CLIP_ORIGIN
+#		ifndef LAK_OS_APPLE
 					if (old_clip_origin == GL_UPPER_LEFT)
 						// Support for GL 4.5's glClipControl(GL_UPPER_LEFT)
 						lak::opengl::call_checked(glScissor,
@@ -1190,6 +1193,7 @@ void ImplGLRender(ImGui::ImplContext context, ImDrawData *draw_data)
 						                          (GLsizei)clip.w)
 						  .UNWRAP();
 					else
+#		endif
 #	endif
 						lak::opengl::call_checked(glScissor,
 						                          (GLint)clip.x,
