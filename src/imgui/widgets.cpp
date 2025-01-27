@@ -358,11 +358,6 @@ lak::error_code_result<lak::file_open_error> open_file_dialog(
 
 	if (!parsed_filter.first.empty())
 	{
-		DEBUG_EXPR(parsed_filter.first.size());
-		for (const auto [name, ext] : parsed_filter.first)
-		{
-			DEBUG_EXPR(name, ext);
-		}
 		RES_TRY_COM(fd->SetFileTypes(static_cast<UINT>(parsed_filter.first.size()),
 		                             parsed_filter.first.data()));
 	}
