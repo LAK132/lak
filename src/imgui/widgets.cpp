@@ -370,7 +370,7 @@ lak::error_code_result<lak::file_open_error> open_file_dialog(
 	if (HRESULT hr = fd->Show(nullptr); FAILED(hr))
 	{
 		if (hr == HRESULT_FROM_WIN32(ERROR_CANCELLED))
-			return lak::ok_t{lak::file_open_error::CANCELED};
+			return lak::ok_t{lak::file_open_error::CANCELLED};
 		else
 			return lak::err_t{lak::winapi::make_com_error(hr)};
 	}
@@ -418,7 +418,7 @@ lak::error_code_result<lak::file_open_error> lak::open_file_modal(
 		if (has_result) path = _file_dialog->GetResult();
 		_file_dialog->Close();
 		return lak::ok_t{has_result ? lak::file_open_error::VALID
-		                            : lak::file_open_error::CANCELED};
+		                            : lak::file_open_error::CANCELLED};
 	}
 
 	return lak::ok_t{lak::file_open_error::INCOMPLETE};
@@ -445,7 +445,7 @@ lak::error_code_result<lak::file_open_error> lak::open_folder_modal(
 		if (has_result) path = _file_dialog->GetResult();
 		_file_dialog->Close();
 		return lak::ok_t{has_result ? lak::file_open_error::VALID
-		                            : lak::file_open_error::CANCELED};
+		                            : lak::file_open_error::CANCELLED};
 	}
 
 	return lak::ok_t{lak::file_open_error::INCOMPLETE};

@@ -95,7 +95,7 @@ namespace lak
 	{
 		INCOMPLETE,
 		INVALID,
-		CANCELED,
+		CANCELLED,
 		VALID
 	};
 
