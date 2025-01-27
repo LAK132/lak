@@ -362,7 +362,7 @@ lak::error_code_result<lak::file_open_error> open_file_dialog(
 		                             parsed_filter.first.data()));
 	}
 
-	if (HRESULT hr = fd->Show(nullptr); FAILED(hr))
+	if (HRESULT hr = fd->Show(nullptr); hr != S_OK)
 	{
 		if (hr == HRESULT_FROM_WIN32(ERROR_CANCELLED))
 			return lak::ok_t{lak::file_open_error::CANCELLED};
@@ -453,11 +453,15 @@ lak::optional<std::filesystem::path> lak::path_getter::operator()()
 	{
 		if (auto res = _file ? lak::open_file_modal(*_path, _save, _filter)
 		                     : lak::open_folder_modal(*_path);
-		    res.is_ok() && res.unsafe_unwrap() == lak::file_open_error::VALID)
+		    res.is_ok())
 		{
-			return lak::exchange(_path, lak::nullopt);
+			if (auto file_res = res.unsafe_unwrap();
+			    file_res == lak::file_open_error::VALID)
+				return lak::exchange(_path, lak::nullopt);
+			else if (file_res == lak::file_open_error::CANCELLED)
+				_path.reset();
 		}
-		else if (res.is_err())
+		else
 			ERROR(res.unsafe_unwrap_err());
 	}
 
