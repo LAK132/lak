@@ -269,7 +269,7 @@ lak::error_code_result<lak::file_open_error> open_file_dialog(
 		IShellItem *psi;
 		RES_TRY_COM(::SHCreateItemFromParsingName(
 		  p.c_str(), nullptr, IID_IShellItem, reinterpret_cast<void **>(&psi)));
-		RES_TRY_COM(fd->SetDefaultFolder(psi));
+		RES_TRY_COM(fd->SetFolder(psi));
 		RES_TRY_COM(fd->SetFileName(res.file.wstring().c_str()));
 	}
 
