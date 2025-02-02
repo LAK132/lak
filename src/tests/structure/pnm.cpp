@@ -20,7 +20,7 @@ BEGIN_TEST(pnm)
 
 		lak::binary_reader strm{lak::span<const byte_t>(source)};
 
-		auto pnm = strm.read<lak::pnm::pnm>().UNWRAP();
+		auto pnm = strm.template read<lak::pnm::pnm>().UNWRAP();
 
 		DEBUG_EXPR(pnm.width);
 

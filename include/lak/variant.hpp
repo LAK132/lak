@@ -307,7 +307,7 @@ namespace lak
 			  [this]<typename V>(const V &value)
 			  {
 				  _index = lak::size_type<variant::index_of<V>>{};
-				  _value.emplace<variant::index_of<V>>(value);
+				  _value.template emplace<variant::index_of<V>>(value);
 			  });
 		}
 
@@ -319,7 +319,8 @@ namespace lak
 			  [this]<typename V>(V &value)
 			  {
 				  _index = lak::size_type<variant::index_of<V>>{};
-				  _value.emplace<variant::index_of<V>>(lak::forward<V>(value));
+				  _value.template emplace<variant::index_of<V>>(
+				    lak::forward<V>(value));
 			  });
 		}
 
