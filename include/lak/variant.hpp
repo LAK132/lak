@@ -208,7 +208,7 @@ namespace lak
 	template<typename... T>
 	struct variant
 	{
-		static_assert(((!lak::is_rvalue_reference_v<T>)&&...));
+		static_assert(((!lak::is_rvalue_reference_v<T>) && ...));
 
 		using indices = lak::index_sequence_for<T...>;
 
@@ -297,6 +297,48 @@ namespace lak
 
 		variant &operator=(variant &&other);
 
+		// construct variant from a subset variant
+
+		template<lak::concepts::one_of<T...>... U>
+		requires(!lak::is_same_v<variant<T...>, variant<U...>>)
+		variant(const variant<U...> &other) : _value(lak::uninitialised_union_flag)
+		{
+			other.visit(
+			  [this]<typename V>(const V &value)
+			  {
+				  _index = lak::size_type<variant::index_of<V>>{};
+				  _value.emplace<variant::index_of<V>>(value);
+			  });
+		}
+
+		template<lak::concepts::one_of<T...>... U>
+		requires(!lak::is_same_v<variant<T...>, variant<U...>>)
+		variant(variant<U...> &&other) : _value(lak::uninitialised_union_flag)
+		{
+			other.visit(
+			  [this]<typename V>(V &value)
+			  {
+				  _index = lak::size_type<variant::index_of<V>>{};
+				  _value.emplace<variant::index_of<V>>(lak::forward<V>(value));
+			  });
+		}
+
+		template<lak::concepts::one_of<T...>... U>
+		requires(!lak::is_same_v<variant<T...>, variant<U...>>)
+		variant &operator=(const variant<U...> &other)
+		{
+			other.visit([this]<typename V>(const V &value)
+			            { emplace<variant::index_of<V>>(value); });
+		}
+
+		template<lak::concepts::one_of<T...>... U>
+		requires(!lak::is_same_v<variant<T...>, variant<U...>>)
+		variant &operator=(variant<U...> &&other)
+		{
+			other.visit([this]<typename V>(V &value)
+			            { emplace<variant::index_of<V>>(lak::forward<V>(value)); });
+		}
+
 		template<size_t I, typename... ARGS>
 		auto &emplace(ARGS &&...args);
 
@@ -364,7 +406,7 @@ namespace lak
 	requires((lak::is_standard_layout_v<lak::variant<T..., U...>>))
 	struct variant<variant<T...>, U...>
 	{
-		static_assert(((!lak::is_rvalue_reference_v<U>)&&...));
+		static_assert(((!lak::is_rvalue_reference_v<U>) && ...));
 
 		using indices = lak::index_sequence_for<variant<T...>, U...>;
 
