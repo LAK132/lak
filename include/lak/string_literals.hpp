@@ -48,7 +48,7 @@ inline consteval lak::span<const char> operator"" _span(const char *str,
 	return lak::span<const char>{str, size};
 }
 
-inline consteval lak::span<const wchar_t> operator"" _span(const wchar_t *str,
+inline consteval lak::span<const wchar_t> operator"" _span(const wchar_t * str,
                                                            size_t size)
 {
 	return lak::span<const wchar_t>{str, size};
@@ -89,7 +89,7 @@ inline consteval auto operator"" _magic_ne()
 
 	static_assert(sizeof(STR) == sizeof(result_type));
 
-	return std::bit_cast<result_type>(STR);
+	return std::bit_cast<result_type>(STR._value);
 }
 
 #if defined(LAK_LITTLE_ENDIAN)
