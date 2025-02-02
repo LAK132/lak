@@ -82,8 +82,7 @@ typename std::iterator_traits<ITER>::difference_type lak::distance(ITER begin,
 	else
 	{
 		typename std::iterator_traits<ITER>::difference_type result = 0;
-		for (; begin != end; ++begin, ++result)
-			;
+		for (; begin != end; ++begin, ++result);
 		return result;
 	}
 }
@@ -129,8 +128,16 @@ ITER lak::next(ITER it,
 template<typename ITER, typename T>
 ITER lak::find(ITER begin, ITER end, const T &value)
 {
-	for (; begin != end && *begin != value; ++begin)
-		;
+	for (; begin != end && *begin != value; ++begin);
+	return begin;
+}
+
+/* --- find_if --- */
+
+template<typename ITER>
+ITER lak::find_if(ITER begin, ITER end, auto predicate)
+{
+	for (; begin != end && !predicate(*begin); ++begin);
 	return begin;
 }
 
@@ -143,8 +150,7 @@ lak::pair<ITER_A, ITER_B> lak::mismatch(ITER_A begin_a,
                                         ITER_B end_b)
 {
 	for (; begin_a != end_a && begin_b != end_b && *begin_a == *begin_b;
-	     ++begin_a, ++begin_b)
-		;
+	     ++begin_a, ++begin_b);
 	return {begin_a, begin_b};
 }
 
@@ -578,8 +584,7 @@ ITER lak::is_heap_until(ITER begin, ITER end, CMP compare)
 	{ return begin + ((index - 1U) >> 1U); };
 
 	ITER it = begin + 1U;
-	for (size_t i = 1U; it != end && !compare(*parent_iter(i), *it); ++it, ++i)
-		;
+	for (size_t i = 1U; it != end && !compare(*parent_iter(i), *it); ++it, ++i);
 	return it;
 }
 
@@ -717,8 +722,7 @@ void lak::reverse_sort_heap(ITER begin, ITER end, CMP compare)
 template<typename ITER, typename F>
 ITER lak::breadth_first_search_heap(ITER begin, ITER end, F &&predicate)
 {
-	while (begin != end && !predicate(*begin))
-		;
+	while (begin != end && !predicate(*begin));
 	return begin;
 }
 

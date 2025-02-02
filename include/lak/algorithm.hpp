@@ -63,6 +63,11 @@ namespace lak
 	template<typename ITER, typename T>
 	ITER find(ITER begin, ITER end, const T &value);
 
+	/* --- find_if --- */
+
+	template<typename ITER>
+	ITER find_if(ITER begin, ITER end, auto predicate);
+
 	/* --- mismatch --- */
 
 	template<typename ITER_A, typename ITER_B>
