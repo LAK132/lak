@@ -3,12 +3,25 @@
 
 #include "lak/stdint.hpp"
 
+#include <cmath>
+
 namespace lak
 {
+	// slack(13, 5) = 2
 	template<typename INTEGER>
 	constexpr INTEGER slack(INTEGER a, INTEGER b)
 	{
 		return (b - (a % b)) % b;
+	}
+
+	// fslack(11.0, 5.0) = 4.0
+	// fslack(14.0, 5.0) = 1.0
+	// fslack(-11.0, 5.0) = 1.0
+	// fslack(-14.0, 5.0) = 4.0
+	template<typename FLOAT>
+	FLOAT fslack(FLOAT a, FLOAT b)
+	{
+		return std::fmod(b - std::fmod(a, b), b);
 	}
 
 	template<typename INTEGER>
