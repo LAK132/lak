@@ -22,6 +22,15 @@ namespace lak
 		}
 	};
 
+	struct value_out_of_range_error
+	{
+		inline friend std::ostream &operator<<(std::ostream &strm,
+		                                       const value_out_of_range_error &)
+		{
+			return strm << "value out of range";
+		}
+	};
+
 	/* --- bytes_traits --- */
 
 	template<typename T, lak::endian E>
