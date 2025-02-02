@@ -203,8 +203,6 @@ BEGIN_TEST(dsl)
 
 		nbsp.parse(u8"a"_view).UNWRAP_ERR();
 
-		DEBUG_EXPR(nbsp.to_string());
-
 		ASSERT_EQUAL((*nbsp).parse(u8" asd\n"_view).UNWRAP().value, u8" "_view);
 		ASSERT_EQUAL((*nbsp).parse(u8" \n"_view).UNWRAP().value, u8" "_view);
 	}
