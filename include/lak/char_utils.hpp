@@ -21,6 +21,10 @@ namespace lak
 	// '0'-'9' -> 0x0-0x9, 'A'-'F'/'a'-'f' -> 0xA-0xF
 	inline lak::result<uint8_t> from_hex_alphanumeric(char8_t c);
 
+	/* --- is_ascii_printable --- */
+
+	inline constexpr bool is_ascii_printable(char32_t c);
+
 	/* --- control_codes --- */
 
 	inline constexpr lak::span<const char32_t> control_codes();

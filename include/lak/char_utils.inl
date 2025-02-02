@@ -186,6 +186,13 @@ inline lak::result<uint8_t> lak::from_hex_alphanumeric(char8_t c)
 		return lak::err_t{};
 }
 
+/* --- plain_text --- */
+
+inline constexpr bool lak::is_ascii_printable(char32_t c)
+{
+	return c >= 0x20 && c <= 0x7E;
+}
+
 /* --- control_codes --- */
 
 inline constexpr lak::span<const char32_t> lak::control_codes()
