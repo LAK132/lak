@@ -10,6 +10,7 @@ lakcore = static_library(
 	[
 		'compression'/'deflate.cpp',
 		'compression'/'lz4.cpp',
+		'structure'/'pnm.cpp',
 		'architecture.cpp',
 		'bigint.cpp',
 		'alloc.cpp',
