@@ -30,16 +30,26 @@ namespace lak
 	struct PREFIX##const_string                                                 \
 	{                                                                           \
 		CHAR _value[N];                                                           \
+		PREFIX##const_string() = delete;                                          \
+		inline constexpr PREFIX##const_string(const PREFIX##const_string &other)  \
+		{                                                                         \
+			for (size_t i = 0; i < N; ++i) _value[i] = other._value[i];             \
+		}                                                                         \
+		inline constexpr PREFIX##const_string &operator=(                         \
+		  const PREFIX##const_string &other)                                      \
+		{                                                                         \
+			for (size_t i = 0; i < N; ++i) _value[i] = other._value[i];             \
+		}                                                                         \
 		inline constexpr PREFIX##const_string(const CHAR (&str)[N + 1])           \
 		{                                                                         \
 			for (size_t i = 0; i < N; ++i) _value[i] = str[i];                      \
 		}                                                                         \
-		inline constexpr PREFIX##const_string from_ptr(const CHAR *str)           \
+		inline consteval static PREFIX##const_string from_ptr(const CHAR *str)    \
 		{                                                                         \
 			ASSERT_EQUAL(PREFIX##const_strlen(str), N);                             \
-			PREFIX##const_string result;                                            \
-			for (size_t i = 0; i < N; ++i) result._value[i] = str[i];               \
-			return result;                                                          \
+			CHAR _arr[N + 1];                                                       \
+			for (size_t i = 0; i < N; ++i) _arr[i] = str[i];                        \
+			return PREFIX##const_string{_arr};                                      \
 		}                                                                         \
 		inline constexpr CHAR &operator[](size_t index) { return _value[index]; } \
 		inline constexpr const CHAR &operator[](size_t index) const               \
