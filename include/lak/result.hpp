@@ -20,17 +20,13 @@ namespace lak
 
 	// the OK type of the result without reference removed
 	template<typename RESULT>
-	struct result_ok_type : public lak::type_identity<void>
-	{
-	};
+	struct result_ok_type;
 	template<typename RESULT>
 	using result_ok_type_t = typename lak::result_ok_type<RESULT>::type;
 
 	// the ERR type of the result without references removed;
 	template<typename RESULT>
-	struct result_err_type : public lak::type_identity<void>
-	{
-	};
+	struct result_err_type;
 	template<typename RESULT>
 	using result_err_type_t = typename lak::result_err_type<RESULT>::type;
 
@@ -206,9 +202,10 @@ namespace lak
 // else { }
 #	define if_let_err(VALUE, ...)                                              \
 		do_with (auto &&UNIQUIFY(RESULT_){__VA_ARGS__})                           \
-			if constexpr (!lak::is_same_v<typename lak::remove_cvref_t<             \
-			                                decltype(UNIQUIFY(RESULT_))>::err_type, \
-			                              lak::bottom>)                             \
+			if constexpr (!lak::is_same_v<                                          \
+			                lak::result_err_type_t<                                 \
+			                  lak::remove_cvref_t<decltype(UNIQUIFY(RESULT_))>>,    \
+			                lak::bottom>)                                           \
 				if (UNIQUIFY(RESULT_).is_err())                                       \
 					do_with (VALUE{lak::forward<decltype(UNIQUIFY(RESULT_))>(           \
 					                 UNIQUIFY(RESULT_))                                 \
@@ -335,8 +332,8 @@ namespace lak
 
 #	define RES_TRY_FLUENT(...)                                                 \
 		auto UNIQUIFY(RESULT_){__VA_ARGS__};                                      \
-		if constexpr (!lak::is_same_v<typename lak::remove_cvref_t<               \
-		                                decltype(UNIQUIFY(RESULT_))>::err_type,   \
+		if constexpr (!lak::is_same_v<lak::result_err_type_t<lak::remove_cvref_t< \
+		                                decltype(UNIQUIFY(RESULT_))>>,            \
 		                              lak::bottom>)                               \
 			if (UNIQUIFY(RESULT_).is_err())                                         \
 				return lak::err_t{lak::move(UNIQUIFY(RESULT_)).unsafe_unwrap_err()};  \
@@ -344,8 +341,8 @@ namespace lak
 
 #	define RES_TRY_ASSIGN(ASSIGN, ...)                                         \
 		auto UNIQUIFY(RESULT_){__VA_ARGS__};                                      \
-		if constexpr (!lak::is_same_v<typename lak::remove_cvref_t<               \
-		                                decltype(UNIQUIFY(RESULT_))>::err_type,   \
+		if constexpr (!lak::is_same_v<lak::result_err_type_t<lak::remove_cvref_t< \
+		                                decltype(UNIQUIFY(RESULT_))>>,            \
 		                              lak::bottom>)                               \
 			if (UNIQUIFY(RESULT_).is_err())                                         \
 				return lak::err_t{lak::move(UNIQUIFY(RESULT_)).unsafe_unwrap_err()};  \
@@ -1363,11 +1360,11 @@ namespace lak
 	{
 		static_assert(
 		  lak::are_all_same_v<
-		    typename lak::remove_cvref_t<decltype(funcs())>::err_type...>);
+		    lak::result_err_type_t<lak::remove_cvref_t<decltype(funcs())>>...>);
 
 		using result_err_type = lak::nth_type_t<
 		  0U,
-		  typename lak::remove_cvref_t<decltype(funcs())>::err_type...>;
+		  lak::result_err_type_t<lak::remove_cvref_t<decltype(funcs())>>...>;
 
 		using results_type = lak::tuple<lak::uninitialised<
 		  typename lak::remove_cvref_t<decltype(funcs())>::ok_type>...>;
@@ -1405,7 +1402,8 @@ namespace lak
 		};
 
 		if_let_err (result_err_type err,
-		            [&]<size_t... I>(lak::index_sequence<I...>) {
+		            [&]<size_t... I>(lak::index_sequence<I...>)
+		            {
 			            return ((do_func(lak::size_type<I>{},
 			                             lak::forward<FUNCS>(funcs))) &
 			                    ...);

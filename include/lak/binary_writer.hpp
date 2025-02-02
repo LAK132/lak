@@ -319,19 +319,17 @@ namespace lak
 
 template<typename T, lak::endian E>
 requires requires(const T value) {
-	{
-		value.template write_size<E>()
-	} -> lak::concepts::same_as<size_t>;
+	{ value.template write_size<E>() } -> lak::concepts::same_as<size_t>;
 	{
 		value.template write<E>(lak::declval<lak::binary_span_writer &>())
 	} -> lak::concepts::of_template<lak::result>;
 }
 struct lak::to_bytes_traits<T, E>
 {
-	using value_type = T;
-	using error_type =
-	  typename decltype(lak::declval<const T &>().template write<E>(
-	    lak::declval<lak::binary_span_writer &>()))::err_type;
+	using _result_type = decltype(lak::declval<const T &>().template write<E>(
+	  lak::declval<lak::binary_span_writer &>()));
+	using value_type   = T;
+	using error_type   = lak::result_err_type_t<_result_type>;
 	static constexpr bool const_size = false;
 	static constexpr size_t size     = lak::dynamic_extent;
 	static_assert(lak::is_same_v<

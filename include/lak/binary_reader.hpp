@@ -292,9 +292,11 @@ requires requires(T value) {
 }
 struct lak::from_bytes_traits<T, E>
 {
-	using value_type = T;
-	using error_type = typename decltype(lak::declval<T &>().template read<E>(
-	  lak::declval<lak::binary_reader &>()))::err_type;
+	using _result_type = decltype(lak::declval<T &>().template read<E>(
+	  lak::declval<lak::binary_reader &>()));
+	static_assert(lak::is_result_v<_result_type>);
+	using value_type                 = T;
+	using error_type                 = lak::result_err_type_t<_result_type>;
 	static constexpr bool const_size = false;
 	static constexpr size_t size     = lak::dynamic_extent;
 	static_assert(
