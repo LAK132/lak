@@ -18,6 +18,7 @@ lakcore = static_library(
 		'json.cpp',
 		'math.cpp',
 		'memmanip.cpp',
+		'numeric.cpp',
 		'process.cpp',
 		'profile.cpp',
 		'strconv.cpp',
