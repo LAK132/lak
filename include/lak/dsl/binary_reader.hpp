@@ -151,9 +151,9 @@ namespace lak
 				                                                lak::u8string_view>>
 				          &result) -> _impl_number_parse_result<double>
 				    {
-					    return lak::string_to_double(result.value.get<0>(),
-					                                 result.value.get<1>(),
-					                                 result.value.get<2>(),
+					    return lak::string_to_double(result.value.template get<0>(),
+					                                 result.value.template get<1>(),
+					                                 result.value.template get<2>(),
 					                                 uintmax_t(base),
 					                                 base)
 					      .and_then(

@@ -123,25 +123,26 @@ lak::pnm::pnm::read(::lak::binary_reader &strm)
 		RES_TRY_ASSIGN(auto header =, parser.read(header_parser));
 
 		RES_TRY_ASSIGN(width =,
-		               header.get<0>().and_then(
+		               header.template get<0>().and_then(
 		                 [&](uintmax_t value)
 		                 { return value_check(value, uint32_t(UINT32_MAX)); }));
 
 		RES_TRY_ASSIGN(height =,
-		               header.get<1>().and_then(
+		               header.template get<1>().and_then(
 		                 [&](uintmax_t value)
 		                 { return value_check(value, uint32_t(UINT32_MAX)); }));
 
-		RES_TRY_ASSIGN(
-		  uint8_t depth =,
-		  header.get<2>().and_then([&](uintmax_t value)
-		                           { return value_check(value, uint8_t(4U)); }));
+		RES_TRY_ASSIGN(uint8_t depth =,
+		               header.template get<2>().and_then(
+		                 [&](uintmax_t value)
+		                 { return value_check(value, uint8_t(4U)); }));
 
 		RES_TRY_ASSIGN(uint16_t max_value =,
-		               header.get<3>().and_then(
+		               header.template get<3>().and_then(
 		                 [&](uintmax_t value)
 		                 { return value_check(value, uint16_t(UINT16_MAX)); }));
-		if (header.get<4>().has_value()) tupltype = *header.get<4>();
+		if (header.template get<4>().has_value())
+			tupltype = *header.template get<4>();
 
 		switch (depth)
 		{
