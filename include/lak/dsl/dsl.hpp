@@ -2,11 +2,13 @@
 #define LAK_DSL_DSL_HPP
 
 #include "lak/array.hpp"
+#include "lak/char_utils.hpp"
 #include "lak/compare.hpp"
 #include "lak/concepts.hpp"
 #include "lak/const_string.hpp"
 #include "lak/result.hpp"
 #include "lak/unicode.hpp"
+#include "lak/utility.hpp"
 
 #include <ostream>
 
@@ -30,6 +32,7 @@ namespace lak
 		/* --- parse_result --- */
 
 		template<typename T>
+		requires(!lak::is_void_v<T>)
 		struct parse_result
 		{
 			using value_type = T;
@@ -41,6 +44,7 @@ namespace lak
 		/* --- result --- */
 
 		template<typename T>
+		requires(!lak::is_void_v<T>)
 		using result =
 		  lak::result<lak::dsl::parse_result<T>, lak::dsl::parse_error>;
 
@@ -62,13 +66,27 @@ namespace lak
 		template<typename T>
 		concept pure_match_parser = lak::dsl::parser<T> && T::is_pure_match;
 
+		/* --- bottom --- */
+
+		struct bottom_t
+		{
+			static constexpr bool is_pure_match = true;
+			using value_type                    = lak::u8string_view;
+			lak::dsl::result<value_type> parse(lak::u8string_view) const
+			{
+				return lak::err_t{lak::dsl::parse_error{}};
+			}
+		};
+
+		inline constexpr lak::dsl::bottom_t bottom;
+
 		/* --- sequence --- */
 
 		template<lak::dsl::parser auto... parsers>
 		struct sequence_t
 		{
 			static constexpr bool is_pure_match =
-			  ((lak::dsl::pure_match_parser<decltype(parsers)>)&&...);
+			  ((lak::dsl::pure_match_parser<decltype(parsers)>) && ...);
 
 			using value_type = lak::conditional_t<
 			  is_pure_match,
@@ -136,8 +154,8 @@ namespace lak
 				 ...);
 
 				if_let_ok (auto &res, result)
-					result.value = result.consumed =
-					  str.first(str.size() - result.remaining.size());
+					res.value = res.consumed =
+					  str.first(str.size() - res.remaining.size());
 
 				return result;
 			}
@@ -211,6 +229,86 @@ namespace lak
 		                                lak::dsl::sequence_t<R...>)
 		{
 			return lak::dsl::sequence<L..., R...>;
+		}
+
+		/* --- optional --- */
+
+		template<lak::dsl::parser auto par>
+		struct optional_t
+		{
+			static constexpr bool is_pure_match = decltype(par)::is_pure_match;
+
+			using _par_value_type = typename decltype(par)::value_type;
+
+			using value_type = lak::conditional_t<is_pure_match,
+			                                      lak::u8string_view,
+			                                      lak::optional<_par_value_type>>;
+
+			lak::dsl::result<value_type> parse(lak::u8string_view str) const
+			requires(!is_pure_match)
+			{
+				return lak::ok_t{
+				  par.parse(str)
+				    .map(
+				      [](auto &res) -> lak::dsl::parse_result<value_type>
+				      {
+					      return {
+					        .consumed  = res.consumed,
+					        .remaining = res.remaining,
+					        .value     = value_type(lak::move(res.value)),
+					      };
+				      })
+				    .unwrap_or(lak::dsl::parse_result<value_type>{
+				      .consumed  = str.first(0),
+				      .remaining = str,
+				      .value     = {},
+				    })};
+			};
+
+			lak::dsl::result<value_type> parse(lak::u8string_view str) const
+			requires(is_pure_match)
+			{
+				return lak::ok_t{
+				  par.parse(str).unwrap_or(lak::dsl::parse_result<value_type>{
+				    .consumed  = str.first(0),
+				    .remaining = str,
+				    .value     = {},
+				  })};
+			}
+		};
+
+		template<lak::dsl::parser auto par>
+		inline constexpr lak::dsl::optional_t<par> optional;
+
+		static_assert(
+		  lak::dsl::parser<lak::dsl::optional_t<lak::dsl::sequence<>>>);
+
+		/* --- is_optional --- */
+
+		template<typename T>
+		struct is_optional : lak::false_type
+		{
+		};
+		template<lak::dsl::parser auto parser>
+		struct is_optional<lak::dsl::optional_t<parser>> : lak::true_type
+		{
+		};
+		template<typename T>
+		inline constexpr bool is_optional_v = lak::dsl::is_optional<T>::value;
+
+		/* --- operator~ --- */
+
+		template<lak::dsl::parser R>
+		requires(!lak::dsl::is_optional_v<R>)
+		inline constexpr auto operator~(R)
+		{
+			return lak::dsl::optional<R{}>;
+		}
+
+		template<lak::dsl::parser auto R>
+		inline constexpr auto operator~(lak::dsl::optional_t<R>)
+		{
+			return lak::dsl::optional<R>;
 		}
 
 		/* --- repeat --- */
@@ -347,27 +445,25 @@ namespace lak
 		struct disjunction_t
 		{
 			static constexpr bool is_pure_match =
-			  ((lak::dsl::pure_match_parser<decltype(parsers)>)&&...);
+			  ((lak::dsl::pure_match_parser<decltype(parsers)>) && ...);
+			static constexpr bool _is_same_value_types =
+			  lak::are_all_same_v<typename decltype(parsers)::value_type...>;
 			using value_type = lak::conditional_t<
 			  is_pure_match,
 			  lak::u8string_view,
-			  lak::create_from_pack_t<
-			    lak::variant,
-			    lak::make_unique_pack_t<typename decltype(parsers)::value_type...>>>;
+			  lak::conditional_t<
+			    _is_same_value_types,
+			    lak::nth_type_t<0U, typename decltype(parsers)::value_type...>,
+			    lak::create_from_pack_t<
+			      lak::variant,
+			      lak::make_unique_pack_t<
+			        typename decltype(parsers)::value_type...>>>>;
 
 			lak::dsl::result<value_type> parse(lak::u8string_view str) const
 			requires(!is_pure_match)
 			{
-				// :TODO: an uninitialised tuple type could be an interesting
-				// optimisation here, so that we aren't default constructing
-				// everything.
-
 				lak::dsl::result<value_type> result =
-				  lak::dsl::result<value_type>::make_ok({
-				    .consumed  = {},
-				    .remaining = str,
-				    .value     = {},
-				  });
+				  lak::dsl::result<value_type>::make_err({});
 
 				(((result = parsers.parse(str).map(
 				     [&]<typename T>(lak::dsl::parse_result<T> &&res)
@@ -376,7 +472,7 @@ namespace lak
 					     return {
 					       .consumed  = res.consumed,
 					       .remaining = res.remaining,
-					       .value     = lak::forward<T>(res.value),
+					       .value     = value_type(lak::forward<T>(res.value)),
 					     };
 				     }))
 				    .is_ok()) ||
@@ -389,11 +485,7 @@ namespace lak
 			requires(is_pure_match)
 			{
 				lak::dsl::result<value_type> result =
-				  lak::dsl::result<value_type>::make_ok({
-				    .consumed  = {},
-				    .remaining = str,
-				    .value     = {},
-				  });
+				  lak::dsl::result<value_type>::make_err({});
 
 				(((result = parsers.parse(str)).is_ok()) || ...);
 
@@ -469,6 +561,89 @@ namespace lak
 			return lak::dsl::disjunction<L..., R...>;
 		}
 
+		/* --- conjunction --- */
+
+		// first parser determines the maximum parse range, all other parsers must
+		// then successfully parse on the same range.
+		template<lak::dsl::pure_match_parser auto parser,
+		         lak::dsl::pure_match_parser auto... parsers>
+		struct conjunction_t
+		{
+			static constexpr bool is_pure_match = true;
+
+			using value_type = lak::u8string_view;
+
+			lak::dsl::result<value_type> parse(lak::u8string_view str) const
+			{
+				lak::dsl::result<value_type> result1 = parser.parse(str);
+				lak::dsl::result<value_type> result2 =
+				  lak::dsl::result<value_type>::make_err({});
+
+				(result1.is_ok() && ... &&
+				 ((result2 = parsers.parse(result1.unsafe_unwrap().consumed)
+				               .and_then(
+				                 [&](const auto &value) -> lak::dsl::result<value_type>
+				                 {
+					                 if (value.consumed.size() ==
+					                     result1.unsafe_unwrap().consumed.size())
+						                 return lak::ok_t{value};
+					                 else
+						                 return lak::err_t<lak::dsl::parse_error>{};
+				                 }))
+				    .is_ok()));
+
+				using ::operator&;
+				return result2 & result1;
+			}
+		};
+
+		template<lak::dsl::pure_match_parser auto... parsers>
+		inline constexpr lak::dsl::conjunction_t<parsers...> conjunction;
+
+		/* --- is_conjunction --- */
+
+		template<typename T>
+		struct is_conjunction : lak::false_type
+		{
+		};
+		template<lak::dsl::parser auto... parsers>
+		struct is_conjunction<lak::dsl::conjunction_t<parsers...>> : lak::true_type
+		{
+		};
+		template<typename T>
+		inline constexpr bool is_conjunction_v =
+		  lak::dsl::is_conjunction<T>::value;
+
+		/* --- operator& --- */
+
+		template<lak::dsl::parser L, lak::dsl::parser R>
+		requires(!lak::dsl::is_conjunction_v<L> && !lak::dsl::is_conjunction_v<R>)
+		inline constexpr auto operator&(L, R)
+		{
+			return lak::dsl::conjunction<L{}, R{}>;
+		}
+
+		template<lak::dsl::parser auto... L, lak::dsl::parser R>
+		requires(!lak::dsl::is_conjunction_v<R>)
+		inline constexpr auto operator&(lak::dsl::conjunction_t<L...>, R)
+		{
+			return lak::dsl::conjunction<L..., R{}>;
+		}
+
+		template<lak::dsl::parser L, lak::dsl::parser auto... R>
+		requires(!lak::dsl::is_conjunction_v<L>)
+		inline constexpr auto operator&(L, lak::dsl::conjunction_t<R...>)
+		{
+			return lak::dsl::conjunction<L{}, R...>;
+		}
+
+		template<lak::dsl::parser auto... L, lak::dsl::parser auto... R>
+		inline constexpr auto operator&(lak::dsl::conjunction_t<L...>,
+		                                lak::dsl::conjunction_t<R...>)
+		{
+			return lak::dsl::conjunction<L..., R...>;
+		}
+
 		/* --- capture --- */
 
 		template<lak::dsl::parser auto par>
@@ -516,8 +691,9 @@ namespace lak
 		{
 			static_assert(N <= sizeof...(parsers));
 
-			static constexpr bool is_pure_match = false;
-			using value_type                    = typename lak::
+			static constexpr bool is_pure_match =
+			  lak::nth_type_t<N, decltype(par), decltype(parsers)...>::is_pure_match;
+			using value_type = typename lak::
 			  nth_type_t<N, decltype(par), decltype(parsers)...>::value_type;
 
 			static force_inline lak::dsl::result<value_type> impl_parse(
@@ -536,6 +712,7 @@ namespace lak
 			requires(N == 0U)
 			{
 				auto result = par.parse(str);
+				if (result.is_err()) return result;
 				((parsers.parse(result.unsafe_unwrap().remaining)
 				    .if_err([&](const lak::dsl::parse_error &err)
 				            { result = lak::err_t{err}; })
@@ -589,18 +766,22 @@ namespace lak
 		template<lak::u8const_string const_str>
 		struct str_literal_t
 		{
+			// keep a copy of the string because apparently it's possible for const
+			// strings lose their value at runtime?
+			static constexpr auto _comp_str = const_str;
+
 			static constexpr bool is_pure_match = true;
 			using value_type                    = lak::u8string_view;
 
 			lak::dsl::result<lak::u8string_view> parse(lak::u8string_view str) const
 			{
 				if (lak::compare(
-				      lak::u8string_view(const_str.begin(), const_str.end()), str) ==
-				    const_str.size())
+				      lak::u8string_view(_comp_str.begin(), _comp_str.end()), str) ==
+				    _comp_str.size())
 					return lak::ok_t{lak::dsl::parse_result<value_type>{
-					  .consumed  = str.first(const_str.size()),
-					  .remaining = str.substr(const_str.size()),
-					  .value     = str.first(const_str.size()),
+					  .consumed  = str.first(_comp_str.size()),
+					  .remaining = str.substr(_comp_str.size()),
+					  .value     = str.first(_comp_str.size()),
 					}};
 				else
 					return lak::err_t{lak::dsl::parse_error{}};
@@ -630,6 +811,69 @@ namespace lak
 		template<typename T>
 		inline constexpr bool is_str_literal_v =
 		  lak::dsl::is_str_literal<T>::value;
+
+		/* --- negative_str_literal --- */
+
+		template<lak::u8const_string const_str>
+		struct negative_str_literal_t
+		{
+			// keep a copy of the string because apparently it's possible for const
+			// strings lose their value at runtime?
+			static constexpr auto _comp_str = const_str;
+
+			static constexpr bool is_pure_match = true;
+			using value_type                    = lak::u8string_view;
+
+			lak::dsl::result<lak::u8string_view> parse(lak::u8string_view str) const
+			{
+				if (auto comp = lak::compare(
+				      lak::u8string_view(_comp_str.begin(), _comp_str.end()), str);
+				    comp != _comp_str.size())
+					return lak::ok_t{lak::dsl::parse_result<value_type>{
+					  .consumed  = str.first(comp),
+					  .remaining = str.substr(comp),
+					  .value     = str.first(comp),
+					}};
+				else
+					return lak::err_t{lak::dsl::parse_error{}};
+			}
+		};
+
+		template<lak::u8const_string const_str>
+		inline constexpr lak::dsl::negative_str_literal_t<const_str>
+		  negative_str_literal;
+
+		static_assert(lak::dsl::parser<lak::dsl::negative_str_literal_t<u8"a">>);
+
+		/* --- is_negative_str_literal --- */
+
+		template<typename T>
+		struct is_negative_str_literal : lak::false_type
+		{
+		};
+		template<auto rule>
+		struct is_negative_str_literal<lak::dsl::negative_str_literal_t<rule>>
+		: lak::true_type
+		{
+		};
+		template<typename T>
+		inline constexpr bool is_negative_str_literal_v =
+		  lak::dsl::is_negative_str_literal<T>::value;
+
+		/* --- operator! --- */
+
+		template<lak::u8const_string const_str>
+		inline constexpr auto operator!(lak::dsl::str_literal_t<const_str>)
+		{
+			return lak::dsl::negative_str_literal<const_str>;
+		}
+
+		template<lak::u8const_string const_str>
+		inline constexpr auto operator!(
+		  lak::dsl::negative_str_literal_t<const_str>)
+		{
+			return lak::dsl::str_literal<const_str>;
+		}
 
 		/* --- char_literal --- */
 
@@ -681,6 +925,63 @@ namespace lak
 		template<typename T>
 		inline constexpr bool is_char_literal_v =
 		  lak::dsl::is_char_literal<T>::value;
+
+		/* --- negative_char_literal --- */
+
+		template<char32_t chr>
+		struct negative_char_literal_t
+		{
+			static constexpr bool is_pure_match = true;
+			using value_type                    = lak::u8string_view;
+
+			lak::dsl::result<lak::u8string_view> parse(lak::u8string_view str) const
+			{
+				const uint8_t clen = lak::character_length(str);
+				if (clen < 1 || clen > 4) return lak::err_t{lak::dsl::parse_error{}};
+				const char32_t c = lak::codepoint(str);
+				if (c == chr) return lak::err_t{lak::dsl::parse_error{}};
+				return lak::ok_t{lak::dsl::parse_result<value_type>{
+				  .consumed  = str.first(clen),
+				  .remaining = str.substr(clen),
+				  .value     = str.first(clen),
+				}};
+			}
+		};
+
+		template<char32_t chr>
+		inline constexpr lak::dsl::negative_char_literal_t<chr>
+		  negative_char_literal;
+
+		static_assert(lak::dsl::parser<lak::dsl::negative_char_literal_t<U'a'>>);
+
+		/* --- is_negative_char_literal --- */
+
+		template<typename T>
+		struct is_negative_char_literal : lak::false_type
+		{
+		};
+		template<auto rule>
+		struct is_negative_char_literal<lak::dsl::negative_char_literal_t<rule>>
+		: lak::true_type
+		{
+		};
+		template<typename T>
+		inline constexpr bool is_negative_char_literal_v =
+		  lak::dsl::is_negative_char_literal<T>::value;
+
+		/* --- operator! --- */
+
+		template<char32_t chr>
+		inline constexpr auto operator!(lak::dsl::char_literal_t<chr>)
+		{
+			return lak::dsl::negative_char_literal<chr>;
+		}
+
+		template<char32_t chr>
+		inline constexpr auto operator!(lak::dsl::negative_char_literal_t<chr>)
+		{
+			return lak::dsl::char_literal<chr>;
+		}
 
 		/* --- char_range --- */
 
@@ -761,26 +1062,215 @@ namespace lak
 
 		static_assert(
 		  lak::dsl::parser<lak::dsl::replace_t<lak::dsl::char_literal<U'a'>, 0>>);
+
+		/* --- is_replace --- */
+
+		// :TODO: ubuntu g++11
+		// error: class template argument deduction failed:
+		// struct is_replace<lak::dsl::replace_t<rule, value>> : lak::true_type
+		//                                             ^~~~~
+
+		// template<typename T>
+		// struct is_replace : lak::false_type
+		// {
+		// };
+		// template<auto rule, auto value>
+		// struct is_replace<lak::dsl::replace_t<rule, value>> : lak::true_type
+		// {
+		// };
+		// template<typename T>
+		// inline constexpr bool is_replace_v = lak::dsl::is_replace<T>::value;
+
+		/* --- transform --- */
+
+		template<lak::dsl::parser auto par, auto func>
+		struct transform_t
+		{
+			static constexpr bool is_pure_match = false;
+			using _par_value_type               = typename decltype(par)::value_type;
+			using value_type =
+			  lak::invoke_result_t<decltype(func), const _par_value_type &>;
+			static_assert(!lak::is_void_v<value_type>);
+
+			lak::dsl::result<value_type> parse(lak::u8string_view str) const
+			{
+				return par.parse(str).map(
+				  []<typename T>(const lak::dsl::parse_result<T> &res)
+				  {
+					  return lak::dsl::parse_result<value_type>{
+					    .consumed  = res.consumed,
+					    .remaining = res.remaining,
+					    .value     = func(res.value),
+					  };
+				  });
+			}
+		};
+
+		template<lak::dsl::parser auto par, auto func>
+		inline constexpr lak::dsl::transform_t<par, func> transform;
+
+		/* --- is_transform --- */
+
+		template<typename T>
+		struct is_transform : lak::false_type
+		{
+		};
+		template<auto rule, auto func>
+		struct is_transform<lak::dsl::transform_t<rule, func>> : lak::true_type
+		{
+		};
+		template<typename T>
+		inline constexpr bool is_transform_v = lak::dsl::is_transform<T>::value;
+
+		/* --- unordered --- */
+
+		template<lak::dsl::parser auto... parsers>
+		struct unordered_t
+		{
+			static constexpr bool is_pure_match =
+			  ((lak::dsl::pure_match_parser<decltype(parsers)>) && ...);
+
+			using value_type = lak::conditional_t<
+			  is_pure_match,
+			  lak::u8string_view,
+			  lak::tuple<typename decltype(parsers)::value_type...>>;
+
+			lak::dsl::result<value_type> parse(lak::u8string_view str) const
+			{
+				return parse(str, lak::index_sequence_for<decltype(parsers)...>{});
+			}
+
+			template<size_t... I>
+			requires(!is_pure_match)
+			lak::dsl::result<value_type> parse(lak::u8string_view str,
+			                                   lak::index_sequence<I...>) const
+			{
+				// :TODO: this needs to keep track of whether or not optionals
+				// *actually* parsed correctly, and only bail out when making no
+				// progress *and* no optionals are parsing.
+				lak::dsl::parse_result<lak::u8string_view> result{
+				  .consumed  = {},
+				  .remaining = str,
+				  .value     = {},
+				};
+
+				lak::tuple<lak::optional<typename decltype(parsers)::value_type>...>
+				  values;
+
+				while (((values.get<I>().has_value()
+				           ? false
+				           : (parsers.parse(result.remaining)
+				                .if_ok(
+				                  [&]<typename T>(lak::dsl::parse_result<T> &&res)
+				                  {
+					                  result.remaining = res.remaining;
+					                  values.get<I>()  = lak::forward<T>(res.value);
+				                  })
+				                .is_ok())) ||
+				        ...));
+
+				if (!((values.get<I>().has_value()) && ...))
+					return lak::err_t{lak::dsl::parse_error{}};
+
+				result.consumed = str.first(str.size() - result.remaining.size());
+
+				return lak::ok_t{lak::dsl::parse_result<value_type>{
+				  .consumed  = result.consumed,
+				  .remaining = result.remaining,
+				  .value =
+				    value_type(lak::forward<lak::tuple_element_t<I, value_type>>(
+				      *values.get<I>())...),
+				}};
+			}
+
+			template<size_t... I>
+			requires(is_pure_match)
+			lak::dsl::result<value_type> parse(lak::u8string_view str,
+			                                   lak::index_sequence<I...>) const
+			{
+				lak::array<bool, sizeof...(I)> succeeded;
+
+				lak::dsl::parse_result<value_type> result{
+				  .consumed  = {},
+				  .remaining = str,
+				  .value     = {},
+				};
+
+				while (
+				  ((succeeded[I]
+				      ? false
+				      : (succeeded[I] =
+				           parsers.parse(result.remaining)
+				             .if_ok([&]<typename T>(lak::dsl::parse_result<T> &&res)
+				                    { result.remaining = res.remaining; })
+				             .is_ok())) ||
+				   ...));
+
+				if (!((succeeded[I]) && ...))
+					return lak::err_t{lak::dsl::parse_error{}};
+
+				result.value = result.consumed =
+				  str.first(str.size() - result.remaining.size());
+
+				return lak::move_ok(result);
+			}
+		};
+
+		template<>
+		struct unordered_t<>
+		{
+			static constexpr bool is_pure_match = false;
+			using value_type                    = lak::tuple<>;
+
+			lak::dsl::result<value_type> parse(lak::u8string_view str) const
+			{
+				return lak::ok_t{lak::dsl::parse_result<value_type>{
+				  .consumed  = {},
+				  .remaining = str,
+				  .value     = {},
+				}};
+			}
+		};
+
+		template<lak::dsl::parser auto... parsers>
+		inline constexpr lak::dsl::unordered_t<parsers...> unordered;
+
+		static_assert(lak::dsl::parser<lak::dsl::unordered_t<>>);
+		static_assert(
+		  lak::dsl::parser<lak::dsl::unordered_t<lak::dsl::unordered<>>>);
+
+		/* --- is_unordered --- */
+
+		template<typename T>
+		struct is_unordered : lak::false_type
+		{
+		};
+		template<lak::dsl::parser auto... parsers>
+		struct is_unordered<lak::dsl::unordered_t<parsers...>> : lak::true_type
+		{
+		};
+		template<typename T>
+		inline constexpr bool is_unordered_v = lak::dsl::is_unordered<T>::value;
+
+		static_assert(lak::dsl::is_unordered_v<lak::dsl::unordered_t<>>);
+		static_assert(
+		  lak::dsl::is_unordered_v<lak::dsl::unordered_t<lak::dsl::unordered<>>>);
+
 	}
+}
 
-	/* --- is_replace --- */
+template<lak::u32const_string_literal const_str>
+requires(const_str.size == 1U)
+inline consteval auto operator""_dsl_char()
+{
+	return lak::dsl::char_literal<const_str.data[0]>;
+}
 
-	// :TODO: ubuntu g++11
-	// error: class template argument deduction failed:
-	// struct is_replace<lak::dsl::replace_t<rule, value>> : lak::true_type
-	//                                             ^~~~~
-
-	// template<typename T>
-	// struct is_replace : lak::false_type
-	// {
-	// };
-	// template<auto rule, auto value>
-	// struct is_replace<lak::dsl::replace_t<rule, value>> : lak::true_type
-	// {
-	// };
-	// template<typename T>
-	// inline constexpr bool is_replace_v = lak::dsl::is_replace<T>::value;
-
+template<lak::u8const_string_literal const_str>
+inline consteval auto operator""_dsl_str()
+{
+	return lak::dsl::str_literal<lak::u8const_string<const_str.size>::from_ptr(
+	  const_str.data)>;
 }
 
 #endif

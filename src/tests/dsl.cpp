@@ -3,6 +3,8 @@
 #include "lak/dsl/dsl.hpp"
 #include "lak/dsl/utility.hpp"
 
+#include "lak/string_literals.hpp"
+
 BEGIN_TEST(dsl)
 {
 	lak::dsl::sequence_t<lak::dsl::disjunction<>,
@@ -33,6 +35,19 @@ BEGIN_TEST(dsl)
 	                    lak::dsl::sequence<lak::dsl::str_literal<u8"d">>,
 	                    lak::dsl::sequence<lak::dsl::str_literal<u8"e">,
 	                                       lak::dsl::str_literal<u8"f">>>>>>);
+
+	static_assert(lak::dsl::pure_match_parser<lak::dsl::conjunction_t<
+	                lak::dsl::sequence<lak::dsl::str_literal<u8"a">>,
+	                lak::dsl::sequence<
+	                  lak::dsl::str_literal<u8"b">,
+	                  lak::dsl::str_literal<u8"c">,
+	                  lak::dsl::conjunction<
+	                    lak::dsl::sequence<lak::dsl::str_literal<u8"d">>,
+	                    lak::dsl::sequence<lak::dsl::str_literal<u8"e">,
+	                                       lak::dsl::str_literal<u8"f">>>>>>);
+
+	static_assert(lak::dsl::pure_match_parser<decltype(U"a"_dsl_char)>);
+	static_assert(lak::dsl::pure_match_parser<decltype(u8"asdf"_dsl_str)>);
 
 	{
 		DEBUG("a+b");
@@ -85,8 +100,8 @@ BEGIN_TEST(dsl)
 		    .UNWRAP();
 
 		ASSERT_EQUAL(result.value.size(), 2U);
-		ASSERT_EQUAL(*result.value[0].template get<0>(), u8'a');
-		ASSERT_EQUAL(*result.value[1].template get<0>(), u8'b');
+		ASSERT_EQUAL(result.value[0], u8'a');
+		ASSERT_EQUAL(result.value[1], u8'b');
 	}
 
 	{
@@ -98,10 +113,19 @@ BEGIN_TEST(dsl)
 		                .UNWRAP();
 
 		ASSERT_EQUAL(result.value.size(), 4U);
-		ASSERT_EQUAL(*result.value[0].template get<0>(), u8'a');
-		ASSERT_EQUAL(*result.value[1].template get<0>(), u8'b');
-		ASSERT_EQUAL(*result.value[2].template get<0>(), u8'a');
-		ASSERT_EQUAL(*result.value[3].template get<0>(), u8'b');
+		ASSERT_EQUAL(result.value[0], u8'a');
+		ASSERT_EQUAL(result.value[1], u8'b');
+		ASSERT_EQUAL(result.value[2], u8'a');
+		ASSERT_EQUAL(result.value[3], u8'b');
+	}
+
+	{
+		DEBUG("*(!a&!b)");
+
+		auto result =
+		  (*((!U"a"_dsl_char) & (!U"b"_dsl_char))).parse(u8"cccab").UNWRAP();
+
+		ASSERT_EQUAL(result.value, u8"ccc"_view);
 	}
 
 	{
@@ -119,6 +143,25 @@ BEGIN_TEST(dsl)
 	}
 
 	{
+		DEBUG("{cba}");
+
+		ASSERT_EQUAL(
+		  lak::u8string((lak::dsl::unordered<lak::dsl::str_literal<u8"c">,
+		                                     lak::dsl::str_literal<u8"b">,
+		                                     lak::dsl::str_literal<u8"a">>)
+		                  .parse(u8"abc")
+		                  .UNWRAP()
+		                  .value),
+		  u8"abc"_str);
+
+		ASSERT((lak::dsl::unordered<lak::dsl::str_literal<u8"c">,
+		                            lak::dsl::str_literal<u8"b">,
+		                            lak::dsl::str_literal<u8"a">>)
+		         .parse(u8"accb")
+		         .is_err());
+	}
+
+	{
 		DEBUG("frue|talse");
 
 		enum struct foolean
@@ -132,7 +175,7 @@ BEGIN_TEST(dsl)
 		                .parse(u8"talse")
 		                .UNWRAP();
 
-		ASSERT(*result.value.template get<0>() == foolean::talse);
+		ASSERT(result.value == foolean::talse);
 	}
 
 	{
@@ -146,6 +189,24 @@ BEGIN_TEST(dsl)
 		    "\u2006\u2007\u2008\u2009\u200A"
 		    "\u2028\u2029\u202F\u205F\u3000")
 		  .UNWRAP();
+
+		(+lak::dsl::whitespace)
+		  .parse(
+		    u8"a\u0009\u000A\u000B\u000C\u000D"
+		    "\u0020\u0085\u00A0\u1680\u2000"
+		    "\u2001\u2002\u2003\u2004\u2005"
+		    "\u2006\u2007\u2008\u2009\u200A"
+		    "\u2028\u2029\u202F\u205F\u3000")
+		  .UNWRAP_ERR();
+
+		auto nbsp = (!U"\n"_dsl_char) & lak::dsl::whitespace;
+
+		nbsp.parse(u8"a"_view).UNWRAP_ERR();
+
+		DEBUG_EXPR(nbsp.to_string());
+
+		ASSERT_EQUAL((*nbsp).parse(u8" asd\n"_view).UNWRAP().value, u8" "_view);
+		ASSERT_EQUAL((*nbsp).parse(u8" \n"_view).UNWRAP().value, u8" "_view);
 	}
 
 	{
@@ -166,6 +227,26 @@ BEGIN_TEST(dsl)
 		str = u8"0123456789abcdefABCDEF0123456789abcdefABCDEF";
 		ASSERT_EQUAL(lak::u8string(lak::dsl::hex_number.parse(str).UNWRAP().value),
 		             str);
+
+		str = u8"+0.1e-2";
+		auto [int_part, frac_part, exp_part] = lak::dsl::dec_float<
+			lak::dsl::char_literal<U'.'>, lak::dsl::char_literal<U'e'>
+		>.parse(str).UNWRAP().value;
+		ASSERT_EQUAL(lak::u8string_view(int_part), u8"+0"_view);
+		ASSERT(!frac_part.empty());
+		ASSERT_EQUAL(lak::u8string_view(frac_part), u8"1"_view);
+		ASSERT(!exp_part.empty());
+		ASSERT_EQUAL(lak::u8string_view(exp_part), u8"-2"_view);
+
+		auto f = lak::dsl::parsed_dec_float<
+							lak::dsl::char_literal<U'.'>, lak::dsl::char_literal<U'e'>>
+							.parse(u8"+0.0e+0").UNWRAP().value.UNWRAP();
+		ASSERT_EQUAL(f, 0.0);
+
+		f = lak::dsl::parsed_dec_float<
+					lak::dsl::char_literal<U'.'>, lak::dsl::char_literal<U'e'>>
+					.parse(u8"-1.0e+0").UNWRAP().value.UNWRAP();
+		ASSERT_EQUAL(f, -1.0);
 	}
 
 	return 0;
