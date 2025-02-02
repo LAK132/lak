@@ -1012,10 +1012,8 @@ namespace lak
 	/* --- deferred_conditional --- */
 
 	template<bool B,
-	         template<typename...>
-	         typename T,
-	         template<typename...>
-	         typename F,
+	         template<typename...> typename T,
+	         template<typename...> typename F,
 	         typename... ARGS>
 	struct deferred_conditional
 	{
@@ -1036,10 +1034,8 @@ namespace lak
 	};
 
 	template<bool B,
-	         template<typename...>
-	         typename T,
-	         template<typename...>
-	         typename F,
+	         template<typename...> typename T,
+	         template<typename...> typename F,
 	         typename... ARGS>
 	using deferred_conditional_t =
 	  typename deferred_conditional<B, T, F, ARGS...>::type;
@@ -1599,8 +1595,7 @@ namespace lak
 
 	template<typename DEFAULT,
 	         typename V,
-	         template<typename...>
-	         typename OP,
+	         template<typename...> typename OP,
 	         typename... ARGS>
 	struct _detected
 	{
@@ -1609,8 +1604,7 @@ namespace lak
 	};
 
 	template<typename DEFAULT,
-	         template<typename...>
-	         typename OP,
+	         template<typename...> typename OP,
 	         typename... ARGS>
 	struct _detected<DEFAULT, void_t<OP<ARGS...>>, OP, ARGS...>
 	{
@@ -1619,14 +1613,12 @@ namespace lak
 	};
 
 	template<typename DEFAULT,
-	         template<typename...>
-	         typename OP,
+	         template<typename...> typename OP,
 	         typename... ARGS>
 	using detected_or = lak::_detected<DEFAULT, void, OP, ARGS...>;
 
 	template<typename DEFAULT,
-	         template<typename...>
-	         typename OP,
+	         template<typename...> typename OP,
 	         typename... ARGS>
 	using detected_or_t = typename lak::detected_or<DEFAULT, OP, ARGS...>::type;
 
@@ -1646,15 +1638,13 @@ namespace lak
 	/* --- is_detected_exact --- */
 
 	template<typename EXPECTED,
-	         template<typename...>
-	         typename OP,
+	         template<typename...> typename OP,
 	         typename... ARGS>
 	using is_detected_exact =
 	  lak::is_same<EXPECTED, lak::detected_t<OP, ARGS...>>;
 
 	template<typename EXPECTED,
-	         template<typename...>
-	         typename OP,
+	         template<typename...> typename OP,
 	         typename... ARGS>
 	constexpr inline bool is_detected_exact_v =
 	  lak::is_detected_exact<EXPECTED, OP, ARGS...>::value;
@@ -1668,9 +1658,7 @@ namespace lak
 
 	template<typename T, typename... ARGS>
 	requires requires {
-		{
-			T{lak::declval<ARGS>()...}
-		};
+		{ T{lak::declval<ARGS>()...} };
 	}
 	struct is_constructible<T, ARGS...> : lak::true_type
 	{
@@ -1731,9 +1719,7 @@ namespace lak
 
 	template<typename T, typename U>
 	requires requires(T t) {
-		{
-			static_cast<U>(t)
-		};
+		{ static_cast<U>(t) };
 	}
 	struct is_static_castable<T, U> : lak::true_type
 	{
@@ -1754,9 +1740,7 @@ namespace lak
 
 	template<typename T, typename U>
 	requires requires(T t) {
-		{
-			reinterpret_cast<U>(t)
-		};
+		{ reinterpret_cast<U>(t) };
 	}
 	struct is_reinterpret_castable<T, U> : lak::true_type
 	{
@@ -1779,9 +1763,7 @@ namespace lak
 
 	template<typename T>
 	requires requires(T t) {
-		{
-			t.resize(0)
-		};
+		{ t.resize(0) };
 	}
 	struct is_resizable<T> : lak::true_type
 	{
@@ -1841,9 +1823,7 @@ namespace lak
 
 	template<typename F, typename... ARGS>
 	requires requires(F f) {
-		{
-			f(lak::declval<ARGS>()...)
-		};
+		{ f(lak::declval<ARGS>()...) };
 	}
 	struct is_invocable<F, ARGS...> : lak::true_type
 	{
