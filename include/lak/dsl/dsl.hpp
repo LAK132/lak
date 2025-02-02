@@ -1157,19 +1157,20 @@ namespace lak
 				lak::tuple<lak::optional<typename decltype(parsers)::value_type>...>
 				  values;
 
-				while (((values.get<I>().has_value()
+				while (((values.template get<I>().has_value()
 				           ? false
 				           : (parsers.parse(result.remaining)
 				                .if_ok(
 				                  [&]<typename T>(lak::dsl::parse_result<T> &&res)
 				                  {
 					                  result.remaining = res.remaining;
-					                  values.get<I>()  = lak::forward<T>(res.value);
+					                  values.template get<I>() =
+					                    lak::forward<T>(res.value);
 				                  })
 				                .is_ok())) ||
 				        ...));
 
-				if (!((values.get<I>().has_value()) && ...))
+				if (!((values.template get<I>().has_value()) && ...))
 					return lak::err_t{lak::dsl::parse_error{}};
 
 				result.consumed = str.first(str.size() - result.remaining.size());
@@ -1179,7 +1180,7 @@ namespace lak
 				  .remaining = result.remaining,
 				  .value =
 				    value_type(lak::forward<lak::tuple_element_t<I, value_type>>(
-				      *values.get<I>())...),
+				      *values.template get<I>())...),
 				}};
 			}
 
