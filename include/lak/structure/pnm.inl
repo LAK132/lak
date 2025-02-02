@@ -63,7 +63,8 @@ lak::pnm::pnm::read(::lak::binary_reader &strm)
 			BLACKANDWHITE_ALPHA,
 			GRAYSCALE_ALPHA,
 			RGB_ALPHA,
-		} tupltype = tupltype_t::INVALID;
+		};
+		[[maybe_unused]] tupltype_t tupltype = tupltype_t::INVALID;
 
 		auto tupltype_parser = lak::dsl::capture_nth<
 		  1U,
