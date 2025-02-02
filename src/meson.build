@@ -8,10 +8,10 @@ endif
 lakcore = static_library(
 	'lakcore',
 	[
+		'compression'/'deflate.cpp',
+		'compression'/'lz4.cpp',
 		'architecture.cpp',
 		'bigint.cpp',
-		'compression/deflate.cpp',
-		'compression/lz4.cpp',
 		'alloc.cpp',
 		'debug.cpp',
 		'file.cpp',
@@ -34,7 +34,7 @@ lakcore = static_library(
 		'cpp_std=' + version,
 		'warning_level=3',
 	],
-	include_directories: include_directories('..', '../include'),
+	include_directories: include_directories('..', '..'/'include'),
 	dependencies: dependency('threads'),
 	link_args: lakcore_linkargs,
 	link_depends: lakcore_natvis,
@@ -42,6 +42,6 @@ lakcore = static_library(
 
 lakcore_dep = declare_dependency(
 	link_with: lakcore,
-	include_directories: include_directories('..', '../include'),
+	include_directories: include_directories('..', '..'/'include'),
 	link_args: lakcore_linkargs,
 )

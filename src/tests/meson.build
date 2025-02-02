@@ -1,6 +1,7 @@
 laktestcore = static_library(
 	'laktestcore',
 	[
+		'structure'/'nbt.cpp',
 		'algorithm.cpp',
 		'alloc.cpp',
 		'array.cpp',
@@ -19,6 +20,7 @@ laktestcore = static_library(
 		'json.cpp',
 		'macro_utils.cpp',
 		'memory.cpp',
+		'numeric.cpp',
 		'optional.cpp',
 		'priority_queue.cpp',
 		'ptr_intrin.cpp',
@@ -31,7 +33,6 @@ laktestcore = static_library(
 		'type_pack.cpp',
 		'visit.cpp',
 		'wide_math.cpp',
-		'structure'/'nbt.cpp',
 	],
 	override_options: 'cpp_std=' + version,
 	dependencies: lakcore_dep,
