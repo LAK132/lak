@@ -45,7 +45,8 @@ lak::pnm::pnm::read(::lak::binary_reader &strm)
 	                   lak::dsl::replace_str_literal<u8"PF", pnm_type::PF> |
 	                   lak::dsl::replace_str_literal<u8"Pf", pnm_type::Pf>;
 
-	auto non_breaking_whitespace = (!U"\n"_dsl_char) & lak::dsl::whitespace;
+	auto non_breaking_whitespace =
+	  (!lak::dsl::char_literal<U'\n'>)&lak::dsl::whitespace;
 
 	RES_TRY_ASSIGN(type =, parser.read(type_parser));
 
@@ -66,7 +67,7 @@ lak::pnm::pnm::read(::lak::binary_reader &strm)
 
 		auto tupltype_parser = lak::dsl::capture_nth<
 		  1U,
-		  u8"TUPLTYPE"_dsl_str + (+non_breaking_whitespace),
+		  lak::dsl::str_literal<u8"TUPLTYPE"> + (+non_breaking_whitespace),
 		  (lak::dsl::replace_str_literal<u8"BLACKANDWHITE",
 		                                 tupltype_t::BLACKANDWHITE> |
 		   lak::dsl::replace_str_literal<u8"GRAYSCALE", tupltype_t::GRAYSCALE> |
@@ -79,39 +80,36 @@ lak::pnm::pnm::read(::lak::binary_reader &strm)
 		  lak::dsl::next_char<U'\n'> +
 		    (*(lak::dsl::pound_line_comment + lak::dsl::whitespace))>;
 
-		auto width_parser =
-		  lak::dsl::capture_nth<1U,
-		                        u8"WIDTH"_dsl_str + (+non_breaking_whitespace),
-		                        lak::dsl::parsed_dec_uint,
-		                        lak::dsl::next_char<U'\n'> +
-		                          (*(lak::dsl::pound_line_comment +
-		                             lak::dsl::whitespace))>;
+		auto width_parser = lak::dsl::capture_nth<
+		  1U,
+		  lak::dsl::str_literal<u8"WIDTH"> + (+non_breaking_whitespace),
+		  lak::dsl::parsed_dec_uint,
+		  lak::dsl::next_char<U'\n'> +
+		    (*(lak::dsl::pound_line_comment + lak::dsl::whitespace))>;
 
-		auto height_parser =
-		  lak::dsl::capture_nth<1U,
-		                        u8"HEIGHT"_dsl_str + (+non_breaking_whitespace),
-		                        lak::dsl::parsed_dec_uint,
-		                        lak::dsl::next_char<U'\n'> +
-		                          (*(lak::dsl::pound_line_comment +
-		                             lak::dsl::whitespace))>;
+		auto height_parser = lak::dsl::capture_nth<
+		  1U,
+		  lak::dsl::str_literal<u8"HEIGHT"> + (+non_breaking_whitespace),
+		  lak::dsl::parsed_dec_uint,
+		  lak::dsl::next_char<U'\n'> +
+		    (*(lak::dsl::pound_line_comment + lak::dsl::whitespace))>;
 
-		auto depth_parser =
-		  lak::dsl::capture_nth<1U,
-		                        u8"DEPTH"_dsl_str + (+non_breaking_whitespace),
-		                        lak::dsl::parsed_dec_uint,
-		                        lak::dsl::next_char<U'\n'> +
-		                          (*(lak::dsl::pound_line_comment +
-		                             lak::dsl::whitespace))>;
+		auto depth_parser = lak::dsl::capture_nth<
+		  1U,
+		  lak::dsl::str_literal<u8"DEPTH"> + (+non_breaking_whitespace),
+		  lak::dsl::parsed_dec_uint,
+		  lak::dsl::next_char<U'\n'> +
+		    (*(lak::dsl::pound_line_comment + lak::dsl::whitespace))>;
 
-		auto maxval_parser =
-		  lak::dsl::capture_nth<1U,
-		                        u8"MAXVAL"_dsl_str + (+non_breaking_whitespace),
-		                        lak::dsl::parsed_dec_uint,
-		                        lak::dsl::next_char<U'\n'> +
-		                          (*(lak::dsl::pound_line_comment +
-		                             lak::dsl::whitespace))>;
+		auto maxval_parser = lak::dsl::capture_nth<
+		  1U,
+		  lak::dsl::str_literal<u8"MAXVAL"> + (+non_breaking_whitespace),
+		  lak::dsl::parsed_dec_uint,
+		  lak::dsl::next_char<U'\n'> +
+		    (*(lak::dsl::pound_line_comment + lak::dsl::whitespace))>;
 
-		auto endhdr_parser = u8"ENDHDR"_dsl_str + lak::dsl::next_char<U'\n'>;
+		auto endhdr_parser =
+		  lak::dsl::str_literal<u8"ENDHDR"> + lak::dsl::next_char<U'\n'>;
 
 		auto header_parser = lak::dsl::capture_nth<
 		  0U,
@@ -226,10 +224,11 @@ lak::pnm::pnm::read(::lak::binary_reader &strm)
 			  parser.read((*(lak::dsl::whitespace + lak::dsl::pound_line_comment))));
 			RES_TRY_ASSIGN(
 			  float max_value =,
-			  parser.read_f32<
-			    lak::dsl::signed_dec_number,
-			    lak::dsl::capture_nth<1U, U"."_dsl_char, lak::dsl::dec_number>,
-			    lak::dsl::bottom>());
+			  parser.read_f32<lak::dsl::signed_dec_number,
+			                  lak::dsl::capture_nth<1U,
+			                                        lak::dsl::char_literal<U'.'>,
+			                                        lak::dsl::dec_number>,
+			                  lak::dsl::bottom>());
 
 			switch (type)
 			{

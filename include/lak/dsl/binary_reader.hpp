@@ -133,8 +133,8 @@ namespace lak
 			template<
 			  lak::dsl::pure_match_parser auto int_part =
 			    lak::dsl::signed_dec_number,
-			  lak::dsl::pure_match_parser auto frac_part =
-			    lak::dsl::capture_nth<1U, U"."_dsl_char, lak::dsl::dec_number>,
+			  lak::dsl::pure_match_parser auto frac_part = lak::dsl::
+			    capture_nth<1U, lak::dsl::char_literal<U'.'>, lak::dsl::dec_number>,
 			  lak::dsl::pure_match_parser auto exp_part =
 			    lak::dsl::capture_nth<1U,
 			                          lak::dsl::one_of_chars<U'e', U'E'>,
@@ -171,8 +171,8 @@ namespace lak
 			template<
 			  lak::dsl::pure_match_parser auto int_part =
 			    lak::dsl::signed_dec_number,
-			  lak::dsl::pure_match_parser auto frac_part =
-			    lak::dsl::capture_nth<1U, U"."_dsl_char, lak::dsl::dec_number>,
+			  lak::dsl::pure_match_parser auto frac_part = lak::dsl::
+			    capture_nth<1U, lak::dsl::char_literal<U'.'>, lak::dsl::dec_number>,
 			  lak::dsl::pure_match_parser auto exp_part =
 			    lak::dsl::capture_nth<1U,
 			                          lak::dsl::one_of_chars<U'e', U'E'>,
@@ -187,8 +187,8 @@ namespace lak
 			template<
 			  lak::dsl::pure_match_parser auto int_part =
 			    lak::dsl::signed_dec_number,
-			  lak::dsl::pure_match_parser auto frac_part =
-			    lak::dsl::capture_nth<1U, U"."_dsl_char, lak::dsl::dec_number>,
+			  lak::dsl::pure_match_parser auto frac_part = lak::dsl::
+			    capture_nth<1U, lak::dsl::char_literal<U'.'>, lak::dsl::dec_number>,
 			  lak::dsl::pure_match_parser auto exp_part =
 			    lak::dsl::capture_nth<1U,
 			                          lak::dsl::one_of_chars<U'e', U'E'>,
@@ -270,14 +270,14 @@ namespace lak
 #undef BINARY_READER_MEMBERS
 
 #define BINARY_READER_MEMBERS(TYPE, NAME, ...)                                \
-	template<lak::dsl::pure_match_parser auto int_part =                        \
-	           lak::dsl::signed_dec_number,                                     \
-	         lak::dsl::pure_match_parser auto frac_part =                       \
-	           lak::dsl::capture_nth<1U, U"."_dsl_char, lak::dsl::dec_number>,  \
-	         lak::dsl::pure_match_parser auto exp_part =                        \
-	           lak::dsl::capture_nth<1U,                                        \
-	                                 lak::dsl::one_of_chars<U'e', U'E'>,        \
-	                                 lak::dsl::signed_dec_number>>              \
+	template<                                                                   \
+	  lak::dsl::pure_match_parser auto int_part  = lak::dsl::signed_dec_number, \
+	  lak::dsl::pure_match_parser auto frac_part = lak::dsl::                   \
+	    capture_nth<1U, lak::dsl::char_literal<U'.'>, lak::dsl::dec_number>,    \
+	  lak::dsl::pure_match_parser auto exp_part =                               \
+	    lak::dsl::capture_nth<1U,                                               \
+	                          lak::dsl::one_of_chars<U'e', U'E'>,               \
+	                          lak::dsl::signed_dec_number>>                     \
 	inline _impl_number_parse_result<TYPE> _impl_peek_##NAME(                   \
 	  lak::numeric_base base = lak::numeric_base::dec)                          \
 	{                                                                           \
@@ -296,28 +296,28 @@ namespace lak
 					}};                                                                 \
 		  });                                                                     \
 	}                                                                           \
-	template<lak::dsl::pure_match_parser auto int_part =                        \
-	           lak::dsl::signed_dec_number,                                     \
-	         lak::dsl::pure_match_parser auto frac_part =                       \
-	           lak::dsl::capture_nth<1U, U"."_dsl_char, lak::dsl::dec_number>,  \
-	         lak::dsl::pure_match_parser auto exp_part =                        \
-	           lak::dsl::capture_nth<1U,                                        \
-	                                 lak::dsl::one_of_chars<U'e', U'E'>,        \
-	                                 lak::dsl::signed_dec_number>>              \
+	template<                                                                   \
+	  lak::dsl::pure_match_parser auto int_part  = lak::dsl::signed_dec_number, \
+	  lak::dsl::pure_match_parser auto frac_part = lak::dsl::                   \
+	    capture_nth<1U, lak::dsl::char_literal<U'.'>, lak::dsl::dec_number>,    \
+	  lak::dsl::pure_match_parser auto exp_part =                               \
+	    lak::dsl::capture_nth<1U,                                               \
+	                          lak::dsl::one_of_chars<U'e', U'E'>,               \
+	                          lak::dsl::signed_dec_number>>                     \
 	inline number_parse_result<TYPE> peek_##NAME(lak::numeric_base base =       \
 	                                               lak::numeric_base::dec)      \
 	{                                                                           \
 		return _impl_peek_##NAME<int_part, frac_part, exp_part>(base)             \
 		  .LAK_BINARY_READER_READ_MAP_STIP;                                       \
 	}                                                                           \
-	template<lak::dsl::pure_match_parser auto int_part =                        \
-	           lak::dsl::signed_dec_number,                                     \
-	         lak::dsl::pure_match_parser auto frac_part =                       \
-	           lak::dsl::capture_nth<1U, U"."_dsl_char, lak::dsl::dec_number>,  \
-	         lak::dsl::pure_match_parser auto exp_part =                        \
-	           lak::dsl::capture_nth<1U,                                        \
-	                                 lak::dsl::one_of_chars<U'e', U'E'>,        \
-	                                 lak::dsl::signed_dec_number>>              \
+	template<                                                                   \
+	  lak::dsl::pure_match_parser auto int_part  = lak::dsl::signed_dec_number, \
+	  lak::dsl::pure_match_parser auto frac_part = lak::dsl::                   \
+	    capture_nth<1U, lak::dsl::char_literal<U'.'>, lak::dsl::dec_number>,    \
+	  lak::dsl::pure_match_parser auto exp_part =                               \
+	    lak::dsl::capture_nth<1U,                                               \
+	                          lak::dsl::one_of_chars<U'e', U'E'>,               \
+	                          lak::dsl::signed_dec_number>>                     \
 	inline number_parse_result<TYPE> read_##NAME(lak::numeric_base base =       \
 	                                               lak::numeric_base::dec)      \
 	{                                                                           \

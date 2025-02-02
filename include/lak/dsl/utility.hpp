@@ -87,13 +87,16 @@ namespace lak
 		  lak::dsl::until_next_str<const_str> + lak::dsl::str_literal<const_str>;
 
 		inline constexpr auto slash_line_comment =
-		  u8"//"_dsl_str + lak::dsl::next_char<U'\n'>;
+		  // u8"//"_dsl_str + lak::dsl::next_char<U'\n'>;
+		  lak::dsl::str_literal<u8"//"> + lak::dsl::next_char<U'\n'>;
 
 		inline constexpr auto block_comment =
-		  u8"/*"_dsl_str + lak::dsl::next_str<u8"*/">;
+		  // u8"/*"_dsl_str + lak::dsl::next_str<u8"*/">;
+		  lak::dsl::str_literal<u8"/*"> + lak::dsl::next_str<u8"*/">;
 
 		inline constexpr auto pound_line_comment =
-		  U"#"_dsl_char + lak::dsl::next_char<U'\n'>;
+		  // U"#"_dsl_char + lak::dsl::next_char<U'\n'>;
+		  lak::dsl::char_literal<U'#'> + lak::dsl::next_char<U'\n'>;
 
 	}
 }

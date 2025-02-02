@@ -46,8 +46,8 @@ BEGIN_TEST(dsl)
 	                    lak::dsl::sequence<lak::dsl::str_literal<u8"e">,
 	                                       lak::dsl::str_literal<u8"f">>>>>>);
 
-	static_assert(lak::dsl::pure_match_parser<decltype(U"a"_dsl_char)>);
-	static_assert(lak::dsl::pure_match_parser<decltype(u8"asdf"_dsl_str)>);
+	// static_assert(lak::dsl::pure_match_parser<decltype(U"a"_dsl_char)>);
+	// static_assert(lak::dsl::pure_match_parser<decltype(u8"asdf"_dsl_str)>);
 
 	{
 		DEBUG("a+b");
@@ -123,7 +123,10 @@ BEGIN_TEST(dsl)
 		DEBUG("*(!a&!b)");
 
 		auto result =
-		  (*((!U"a"_dsl_char) & (!U"b"_dsl_char))).parse(u8"cccab").UNWRAP();
+		  // (*((!U"a"_dsl_char) & (!U"b"_dsl_char))).parse(u8"cccab").UNWRAP();
+		  (*((!lak::dsl::char_literal<U'a'>)&(!lak::dsl::char_literal<U'b'>)))
+		    .parse(u8"cccab")
+		    .UNWRAP();
 
 		ASSERT_EQUAL(result.value, u8"ccc"_view);
 	}
@@ -199,7 +202,7 @@ BEGIN_TEST(dsl)
 		    "\u2028\u2029\u202F\u205F\u3000")
 		  .UNWRAP_ERR();
 
-		auto nbsp = (!U"\n"_dsl_char) & lak::dsl::whitespace;
+		auto nbsp = (!lak::dsl::char_literal<U'\n'>)&lak::dsl::whitespace;
 
 		nbsp.parse(u8"a"_view).UNWRAP_ERR();
 
