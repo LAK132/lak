@@ -7,15 +7,10 @@
 
 namespace lak
 {
-	enum struct bit_reader_error_t : uint8_t
-	{
-		// requested more than std::numeric_limits<uintmax_t>::digits bits.
-		too_many_bits,
-	};
-
 	template<typename T = lak::monostate>
-	using bit_reader_result =
-	  lak::result<T, lak::variant<lak::out_of_data_error, bit_reader_error_t>>;
+	using bit_reader_result = lak::result<
+	  T,
+	  lak::variant<lak::out_of_data_error, lak::value_out_of_range_error>>;
 
 	template<lak::endian ENDIAN = lak::endian::little>
 	struct bit_reader

@@ -71,7 +71,7 @@ inline lak::bit_reader_result<uintmax_t> lak::bit_reader<ENDIAN>::peek_bits(
 	static_assert(ENDIAN == lak::endian::little || ENDIAN == lak::endian::big);
 
 	if (bits > std::numeric_limits<uintmax_t>::digits)
-		return lak::err_t{lak::bit_reader_error_t::too_many_bits};
+		return lak::err_t{lak::value_out_of_range_error{}};
 
 	if (bits > _num_bits)
 	{
