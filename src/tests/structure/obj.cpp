@@ -7,6 +7,33 @@
 BEGIN_TEST(obj)
 {
 	{
+		DEBUG("face bounds checking")
+		auto source =
+		  "f 1/1 2/2/1 3//1\n"
+		  ""_span;
+
+		lak::binary_reader strm{lak::span<const byte_t>(source)};
+
+		ASSERT(strm.template read<lak::obj::obj>()
+		         .UNWRAP_ERR()
+		         .template holds<lak::value_out_of_range_error>());
+	}
+
+	{
+		DEBUG("line bounds checking")
+		auto source =
+		  "l 1 2\n"
+		  ""_span;
+
+		lak::binary_reader strm{lak::span<const byte_t>(source)};
+
+		ASSERT(strm.template read<lak::obj::obj>()
+		         .UNWRAP_ERR()
+		         .template holds<lak::value_out_of_range_error>());
+	}
+
+	{
+		DEBUG("big test")
 		auto source =
 		  "# comm\tent\n"
 		  "v -1.0 0.0 0.0\n"

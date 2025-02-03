@@ -161,5 +161,15 @@ lak::obj::obj::read(lak::binary_reader &strm)
 		RES_TRY(parser.read(empty_lines));
 	}
 
+	for (const auto &f : face_coords)
+		if (f.v >= vertex_coords.size() ||
+		    (f.vt != lak::dynamic_extent && f.vt >= texture_coords.size()) ||
+		    (f.vn != lak::dynamic_extent && f.vn >= vertex_normals.size()))
+			return lak::err_t{lak::value_out_of_range_error{}};
+
+	for (const auto &l : line_coords)
+		if (l.v >= vertex_coords.size())
+			return lak::err_t{lak::value_out_of_range_error{}};
+
 	return lak::ok_t{};
 }
