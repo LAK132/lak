@@ -127,9 +127,56 @@ lak::obj::obj::read(lak::binary_reader &strm)
 	                        { return lak::obj::line_coord{.v = v - 1U}; }>,
 	    2U>>;
 
+	auto mtllib_parser =
+	  lak::dsl::capture_nth<1U,
+	                        (*lak::dsl::ascii_nonnewline_whitespace) +
+	                          lak::dsl::str_literal<u8"mtllib"> +
+	                          (+lak::dsl::ascii_nonnewline_whitespace),
+	                        // .mtl file name
+	                        lak::dsl::bottom>;
+
+	auto usemtl_parser =
+	  lak::dsl::capture_nth<1U,
+	                        (*lak::dsl::ascii_nonnewline_whitespace) +
+	                          lak::dsl::str_literal<u8"usemtl"> +
+	                          (+lak::dsl::ascii_nonnewline_whitespace),
+	                        // material name
+	                        lak::dsl::bottom>;
+
+	auto object_parser =
+	  lak::dsl::capture_nth<1U,
+	                        (*lak::dsl::ascii_nonnewline_whitespace) +
+	                          lak::dsl::str_literal<u8"o"> +
+	                          (+lak::dsl::ascii_nonnewline_whitespace),
+	                        // object name
+	                        lak::dsl::bottom>;
+
+	auto group_parser =
+	  lak::dsl::capture_nth<1U,
+	                        (*lak::dsl::ascii_nonnewline_whitespace) +
+	                          lak::dsl::str_literal<u8"g"> +
+	                          (+lak::dsl::ascii_nonnewline_whitespace),
+	                        // group name
+	                        lak::dsl::bottom>;
+
+	enum smooth_shading
+	{
+		off,
+		on,
+	};
+
+	auto smooth_parser = lak::dsl::capture_nth<
+	  1U,
+	  (*lak::dsl::ascii_nonnewline_whitespace) + lak::dsl::str_literal<u8"s"> +
+	    (+lak::dsl::ascii_nonnewline_whitespace),
+	  (lak::dsl::replace_str_literal<u8"1", smooth_shading::on> |
+	   lak::dsl::replace_str_literal<u8"off", smooth_shading::off>)>;
+
 	auto data_parser = vertex_coord_parser | texture_coord_parser |
 	                   vertex_normal_parser /*| vertex_pspace_parser*/ |
-	                   polyface_parser | polyline_parser;
+	                   polyface_parser | polyline_parser | mtllib_parser |
+	                   usemtl_parser | object_parser | group_parser |
+	                   smooth_parser;
 
 	auto lines_parser = lak::dsl::capture_nth<1U, empty_lines, data_parser>;
 
@@ -138,6 +185,7 @@ lak::obj::obj::read(lak::binary_reader &strm)
 	{
 		RES_TRY_ASSIGN(auto parsed_line =, parser.read(data_parser));
 		parsed_line.visit(lak::overloaded{
+		  [&](lak::u8string_view) { ASSERT_NYI(); },
 		  [&](const lak::obj::vertex_coord &v) { vertex_coords.push_back(v); },
 		  [&](const lak::obj::texture_coord &vt) { texture_coords.push_back(vt); },
 		  [&](const lak::obj::vertex_normal &vn) { vertex_normals.push_back(vn); },
@@ -157,6 +205,7 @@ lak::obj::obj::read(lak::binary_reader &strm)
 			  line_coords.reserve(line_coords.size() + l.size());
 			  for (const auto &_l : l) line_coords.push_back(_l);
 		  },
+		  [&](const smooth_shading &) {},
 		});
 		RES_TRY(parser.read(empty_lines));
 	}
