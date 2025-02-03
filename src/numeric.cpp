@@ -214,12 +214,19 @@ lak::result<double, lak::string_to_numeric_error> lak::string_to_double(
 	               lak::string_to_intmax(integer_part, character_base));
 
 	// uintmax parser guarantees all characters are digits, no + or -
-	RES_TRY_ASSIGN(const uintmax_t integer_fraction =
-	                 fraction_part.empty() ? 0 :,
-	               lak::string_to_uintmax(fraction_part, character_base));
+	uintmax_t integer_fraction = 0;
+	if (!fraction_part.empty())
+	{
+		RES_TRY_ASSIGN(integer_fraction =,
+		               lak::string_to_uintmax(fraction_part, character_base));
+	}
 
-	RES_TRY_ASSIGN(const intmax_t integer_exponent = exponent_part.empty() ? 0 :,
-	               lak::string_to_intmax(exponent_part, character_base));
+	intmax_t integer_exponent = 0;
+	if (!exponent_part.empty())
+	{
+		RES_TRY_ASSIGN(integer_exponent =,
+		               lak::string_to_intmax(exponent_part, character_base));
+	}
 
 	const double float_exponent =
 	  std::pow(static_cast<double>(exponent_base_part),
