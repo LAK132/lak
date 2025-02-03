@@ -63,7 +63,7 @@ namespace lak
 			void visit(lak::span<const lak::obj::vertex_coord> vertex_coords,
 			           lak::span<const lak::obj::texture_coord> texture_coords,
 			           lak::span<const lak::obj::vertex_normal> vertex_normals,
-			           auto &&func)
+			           auto &&func) const
 			{
 				func(vertex_coords[v],
 				     vt != lak::dynamic_extent ? &texture_coords[vt] : nullptr,
@@ -80,7 +80,7 @@ namespace lak
 			           lak::span<const lak::obj::texture_coord> texture_coords,
 			           lak::span<const lak::obj::vertex_normal> vertex_normals,
 			           lak::span<const lak::obj::face_coord> indices,
-			           auto &&func)
+			           auto &&func) const
 			{
 				for (const auto &i : indices.subspan(offset, count))
 					i.visit(vertex_coords, texture_coords, vertex_normals, func);
@@ -92,7 +92,7 @@ namespace lak
 			size_t v;
 
 			void visit(lak::span<const lak::obj::vertex_coord> vertex_coords,
-			           auto &&func)
+			           auto &&func) const
 			{
 				func(vertex_coords[v]);
 			}
@@ -105,7 +105,7 @@ namespace lak
 
 			void visit(lak::span<const lak::obj::vertex_coord> vertex_coords,
 			           lak::span<const lak::obj::line_coord> indices,
-			           auto &&func)
+			           auto &&func) const
 			{
 				for (const auto &i : indices.subspan(offset, count))
 					i.visit(vertex_coords, func);
