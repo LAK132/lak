@@ -2,6 +2,7 @@ laktestcore = static_library(
 	'laktestcore',
 	[
 		'structure'/'nbt.cpp',
+		'structure'/'obj.cpp',
 		'structure'/'pnm.cpp',
 		'algorithm.cpp',
 		'alloc.cpp',
