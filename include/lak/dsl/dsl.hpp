@@ -20,7 +20,13 @@ namespace lak
 
 		struct parse_error
 		{
-			inline lak::u8string to_string() const { return {}; }
+			lak::u8string message;
+
+			inline lak::u8string to_string() const
+			{
+				return u8"parse error" +
+				       (message.empty() ? u8""_str : u8": " + message);
+			}
 
 			inline friend std::ostream &operator<<(std::ostream &strm,
 			                                       const lak::dsl::parse_error &err)
@@ -74,7 +80,7 @@ namespace lak
 			using value_type                    = lak::u8string_view;
 			lak::dsl::result<value_type> parse(lak::u8string_view) const
 			{
-				return lak::err_t{lak::dsl::parse_error{}};
+				return lak::err_t{lak::dsl::parse_error{.message = u8"bottom"}};
 			}
 		};
 
@@ -334,6 +340,7 @@ namespace lak
 				    .value     = {},
 				  };
 
+				lak::u8string err_msg;
 				size_t count = 0;
 				while (count < max &&
 				       par.parse(result.remaining)
@@ -343,10 +350,14 @@ namespace lak
 					           result.remaining = res.remaining;
 					           result.value.push_back(lak::forward<T>(res.value));
 				           })
+				         .if_err([&](const lak::dsl::parse_error &err)
+				                 { err_msg = err.message; })
 				         .is_ok())
 					++count;
 
-				if (count < min) return lak::err_t{lak::dsl::parse_error{}};
+				if (count < min)
+					return lak::err_t{
+					  lak::dsl::parse_error{.message = lak::move(err_msg)}};
 
 				result.consumed = str.first(str.size() - result.remaining.size());
 
@@ -363,15 +374,20 @@ namespace lak
 				    .value     = {},
 				  };
 
+				lak::u8string err_msg;
 				size_t count = 0;
 				while (count < max &&
 				       par.parse(result.remaining)
 				         .if_ok([&]<typename T>(lak::dsl::parse_result<T> &&res)
 				                { result.remaining = res.remaining; })
+				         .if_err([&](const lak::dsl::parse_error &err)
+				                 { err_msg = err.message; })
 				         .is_ok())
 					++count;
 
-				if (count < min) return lak::err_t{lak::dsl::parse_error{}};
+				if (count < min)
+					return lak::err_t{
+					  lak::dsl::parse_error{.message = lak::move(err_msg)}};
 
 				result.value = result.consumed =
 				  str.first(str.size() - result.remaining.size());
@@ -465,6 +481,7 @@ namespace lak
 				lak::dsl::result<value_type> result =
 				  lak::dsl::result<value_type>::make_err({});
 
+				lak::u8string err_msg;
 				(((result = parsers.parse(str).map(
 				     [&]<typename T>(lak::dsl::parse_result<T> &&res)
 				       -> lak::dsl::parse_result<value_type>
@@ -475,8 +492,18 @@ namespace lak
 					       .value     = value_type(lak::forward<T>(res.value)),
 					     };
 				     }))
+				    .if_err(
+				      [&](const lak::dsl::parse_error &err)
+				      {
+					      if (err_msg.empty())
+						      err_msg = err.message;
+					      else
+						      err_msg += u8" or " + err.message;
+				      })
 				    .is_ok()) ||
 				 ...);
+
+				if_let_err (auto &err, result) err.message = lak::move(err_msg);
 
 				return result;
 			}
@@ -487,7 +514,20 @@ namespace lak
 				lak::dsl::result<value_type> result =
 				  lak::dsl::result<value_type>::make_err({});
 
-				(((result = parsers.parse(str)).is_ok()) || ...);
+				lak::u8string err_msg;
+				(((result = parsers.parse(str))
+				    .if_err(
+				      [&](const lak::dsl::parse_error &err)
+				      {
+					      if (err_msg.empty())
+						      err_msg = err.message;
+					      else
+						      err_msg += u8" or " + err.message;
+				      })
+				    .is_ok()) ||
+				 ...);
+
+				if_let_err (auto &err, result) err.message = lak::move(err_msg);
 
 				return result;
 			}
@@ -784,7 +824,13 @@ namespace lak
 					  .value     = str.first(_comp_str.size()),
 					}};
 				else
-					return lak::err_t{lak::dsl::parse_error{}};
+					return lak::err_t{lak::dsl::parse_error{
+					  .message =
+					    lak::streamify("expected '",
+					                   lak::u8string(_comp_str),
+					                   "' got '",
+					                   str.first(std::min(str.size(), _comp_str.size())),
+					                   "'")}};
 			}
 		};
 
@@ -835,7 +881,13 @@ namespace lak
 					  .value     = str.first(comp),
 					}};
 				else
-					return lak::err_t{lak::dsl::parse_error{}};
+					return lak::err_t{lak::dsl::parse_error{
+					  .message =
+					    lak::streamify("expected !'",
+					                   lak::u8string(_comp_str),
+					                   "' got '",
+					                   str.first(std::min(str.size(), _comp_str.size())),
+					                   "'")}};
 			}
 		};
 
@@ -886,9 +938,13 @@ namespace lak
 			lak::dsl::result<lak::u8string_view> parse(lak::u8string_view str) const
 			{
 				const uint8_t clen = lak::character_length(str);
-				if (clen < 1 || clen > 4) return lak::err_t{lak::dsl::parse_error{}};
+				if (clen < 1 || clen > 4)
+					return lak::err_t{lak::dsl::parse_error{
+					  .message = u8"invalid unicode character length"}};
 				const char32_t c = lak::codepoint(str);
-				if (c != chr) return lak::err_t{lak::dsl::parse_error{}};
+				if (c != chr)
+					return lak::err_t{lak::dsl::parse_error{
+					  .message = lak::streamify("expected '", chr, "' got '", c, "'")}};
 				return lak::ok_t{lak::dsl::parse_result<value_type>{
 				  .consumed  = str.first(clen),
 				  .remaining = str.substr(clen),
@@ -937,9 +993,13 @@ namespace lak
 			lak::dsl::result<lak::u8string_view> parse(lak::u8string_view str) const
 			{
 				const uint8_t clen = lak::character_length(str);
-				if (clen < 1 || clen > 4) return lak::err_t{lak::dsl::parse_error{}};
+				if (clen < 1 || clen > 4)
+					return lak::err_t{lak::dsl::parse_error{
+					  .message = u8"invalid unicode character length"}};
 				const char32_t c = lak::codepoint(str);
-				if (c == chr) return lak::err_t{lak::dsl::parse_error{}};
+				if (c == chr)
+					return lak::err_t{lak::dsl::parse_error{
+					  .message = lak::streamify("expected !'", chr, "' got '", c, "'")}};
 				return lak::ok_t{lak::dsl::parse_result<value_type>{
 				  .consumed  = str.first(clen),
 				  .remaining = str.substr(clen),
@@ -994,9 +1054,14 @@ namespace lak
 			lak::dsl::result<lak::u8string_view> parse(lak::u8string_view str) const
 			{
 				const uint8_t clen = lak::character_length(str);
-				if (clen < 1 || clen > 4) return lak::err_t{lak::dsl::parse_error{}};
+				if (clen < 1 || clen > 4)
+					return lak::err_t{lak::dsl::parse_error{
+					  .message = u8"invalid unicode character length"}};
 				const char32_t c = lak::codepoint(str);
-				if (c < begin || c > end) return lak::err_t{lak::dsl::parse_error{}};
+				if (c < begin || c > end)
+					return lak::err_t{lak::dsl::parse_error{
+					  .message = lak::streamify(
+					    "expected '", begin, "'<=c<='", end, "' got '", c, "'")}};
 				return lak::ok_t{lak::dsl::parse_result<value_type>{
 				  .consumed  = str.first(clen),
 				  .remaining = str.substr(clen),
@@ -1157,6 +1222,7 @@ namespace lak
 				lak::tuple<lak::optional<typename decltype(parsers)::value_type>...>
 				  values;
 
+				lak::u8string err_msg;
 				while (((values.template get<I>().has_value()
 				           ? false
 				           : (parsers.parse(result.remaining)
@@ -1167,11 +1233,21 @@ namespace lak
 					                  values.template get<I>() =
 					                    lak::forward<T>(res.value);
 				                  })
+				                .if_err(
+				                  [&](const lak::dsl::parse_error &err)
+				                  {
+					                  if (err_msg.empty())
+						                  err_msg = err.message;
+					                  else
+						                  err_msg += u8" or " + err.message;
+				                  })
 				                .is_ok())) ||
-				        ...));
+				        ...))
+					err_msg.clear();
 
 				if (!((values.template get<I>().has_value()) && ...))
-					return lak::err_t{lak::dsl::parse_error{}};
+					return lak::err_t{
+					  lak::dsl::parse_error{.message = lak::move(err_msg)}};
 
 				result.consumed = str.first(str.size() - result.remaining.size());
 
@@ -1197,6 +1273,7 @@ namespace lak
 				  .value     = {},
 				};
 
+				lak::u8string err_msg;
 				while (
 				  ((succeeded[I]
 				      ? false
@@ -1204,11 +1281,21 @@ namespace lak
 				           parsers.parse(result.remaining)
 				             .if_ok([&]<typename T>(lak::dsl::parse_result<T> &&res)
 				                    { result.remaining = res.remaining; })
+				             .if_err(
+				               [&](const lak::dsl::parse_error &err)
+				               {
+					               if (err_msg.empty())
+						               err_msg = err.message;
+					               else
+						               err_msg += u8" or " + err.message;
+				               })
 				             .is_ok())) ||
-				   ...));
+				   ...))
+					err_msg.clear();
 
 				if (!((succeeded[I]) && ...))
-					return lak::err_t{lak::dsl::parse_error{}};
+					return lak::err_t{
+					  lak::dsl::parse_error{.message = lak::move(err_msg)}};
 
 				result.value = result.consumed =
 				  str.first(str.size() - result.remaining.size());

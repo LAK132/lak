@@ -778,18 +778,26 @@ namespace lak
 		{
 			if (is_err())
 			{
-				if constexpr (lak::is_same_v<ERR, lak::monostate>)
+				auto print_err_func = [&]<typename SUBERR>(const SUBERR &err)
 				{
-					ABORTF(error_str);
-				}
-				else if constexpr (lak::concepts::streamable<ERR>)
-				{
-					ABORTF(error_str, ": ", get_err());
-				}
+					if constexpr (lak::is_same_v<SUBERR, lak::monostate>)
+					{
+						ABORTF(error_str);
+					}
+					else if constexpr (lak::concepts::streamable<SUBERR>)
+					{
+						ABORTF(error_str, ": ", err);
+					}
+					else
+					{
+						ABORTF(error_str, ": ", typeid(err).name());
+					}
+				};
+
+				if constexpr (lak::is_variant_v<ERR>)
+					get_err().visit(print_err_func);
 				else
-				{
-					ABORTF(error_str, ": ", typeid(get_err()).name());
-				}
+					print_err_func(get_err());
 			}
 			return get_ok();
 		}
@@ -799,18 +807,26 @@ namespace lak
 		{
 			if (is_err())
 			{
-				if constexpr (lak::is_same_v<ERR, lak::monostate>)
+				auto print_err_func = [&]<typename SUBERR>(const SUBERR &err)
 				{
-					ABORTF(error_str);
-				}
-				else if constexpr (lak::concepts::streamable<ERR>)
-				{
-					ABORTF(error_str, ": ", get_err());
-				}
+					if constexpr (lak::is_same_v<SUBERR, lak::monostate>)
+					{
+						ABORTF(error_str);
+					}
+					else if constexpr (lak::concepts::streamable<SUBERR>)
+					{
+						ABORTF(error_str, ": ", err);
+					}
+					else
+					{
+						ABORTF(error_str, ": ", typeid(err).name());
+					}
+				};
+
+				if constexpr (lak::is_variant_v<ERR>)
+					get_err().visit(print_err_func);
 				else
-				{
-					ABORTF(error_str, ": ", typeid(get_err()).name());
-				}
+					print_err_func(get_err());
 			}
 			return get_ok();
 		}
@@ -820,18 +836,26 @@ namespace lak
 		{
 			if (is_err())
 			{
-				if constexpr (lak::is_same_v<ERR, lak::monostate>)
+				auto print_err_func = [&]<typename SUBERR>(const SUBERR &err)
 				{
-					ABORTF(error_str);
-				}
-				else if constexpr (lak::concepts::streamable<ERR>)
-				{
-					ABORTF(error_str, ": ", get_err());
-				}
+					if constexpr (lak::is_same_v<SUBERR, lak::monostate>)
+					{
+						ABORTF(error_str);
+					}
+					else if constexpr (lak::concepts::streamable<SUBERR>)
+					{
+						ABORTF(error_str, ": ", err);
+					}
+					else
+					{
+						ABORTF(error_str, ": ", typeid(err).name());
+					}
+				};
+
+				if constexpr (lak::is_variant_v<ERR>)
+					get_err().visit(print_err_func);
 				else
-				{
-					ABORTF(error_str, ": ", typeid(get_err()).name());
-				}
+					print_err_func(get_err());
 			}
 			return forward_ok();
 		}
