@@ -253,22 +253,23 @@ namespace lak
 			lak::dsl::result<value_type> parse(lak::u8string_view str) const
 			requires(!is_pure_match)
 			{
-				return lak::ok_t{
-				  par.parse(str)
-				    .map(
-				      [](auto &res) -> lak::dsl::parse_result<value_type>
-				      {
-					      return {
-					        .consumed  = res.consumed,
-					        .remaining = res.remaining,
-					        .value     = value_type(lak::move(res.value)),
-					      };
-				      })
-				    .unwrap_or(lak::dsl::parse_result<value_type>{
-				      .consumed  = str.first(0),
-				      .remaining = str,
-				      .value     = {},
-				    })};
+				return lak::ok_t{par.parse(str)
+				                   .map(
+				                     [](lak::dsl::parse_result<_par_value_type> &&res)
+				                       -> lak::dsl::parse_result<value_type>
+				                     {
+					                     return {
+					                       .consumed  = res.consumed,
+					                       .remaining = res.remaining,
+					                       .value     = value_type(
+                                   lak::forward<_par_value_type>(res.value)),
+					                     };
+				                     })
+				                   .unwrap_or(lak::dsl::parse_result<value_type>{
+				                     .consumed  = str.first(0),
+				                     .remaining = str,
+				                     .value     = {},
+				                   })};
 			};
 
 			lak::dsl::result<value_type> parse(lak::u8string_view str) const
@@ -753,13 +754,13 @@ namespace lak
 			{
 				auto result = par.parse(str);
 				if (result.is_err()) return result;
-				((parsers.parse(result.unsafe_unwrap().remaining)
-				    .if_err([&](const lak::dsl::parse_error &err)
-				            { result = lak::err_t{err}; })
-				    .if_ok([&]<typename T>(lak::dsl::parse_result<T> &&res)
-				           { result.unsafe_unwrap().remaining = res.remaining; })
-				    .is_ok()) &&
-				 ...);
+				(void)((parsers.parse(result.unsafe_unwrap().remaining)
+				          .if_err([&](const lak::dsl::parse_error &err)
+				                  { result = lak::err_t{err}; })
+				          .if_ok([&]<typename T>(lak::dsl::parse_result<T> &&res)
+				                 { result.unsafe_unwrap().remaining = res.remaining; })
+				          .is_ok()) &&
+				       ...);
 				return result;
 			}
 
@@ -1148,16 +1149,57 @@ namespace lak
 
 		/* --- transform --- */
 
+		template<typename RESULT>
+		struct _transform_t
+		{
+			static constexpr bool _can_flatten = false;
+			using value_type                   = RESULT;
+		};
+
+		template<typename RESULT>
+		requires(
+		  lak::is_result_v<RESULT> &&
+		  lak::is_same_v<lak::result_err_type_t<RESULT>, lak::dsl::parse_error>)
+		struct _transform_t<RESULT>
+		{
+			static constexpr bool _can_flatten = true;
+			using value_type                   = lak::result_ok_type_t<RESULT>;
+		};
+
 		template<lak::dsl::parser auto par, auto func>
 		struct transform_t
 		{
 			static constexpr bool is_pure_match = false;
 			using _par_value_type               = typename decltype(par)::value_type;
-			using value_type =
+			using _func_result =
 			  lak::invoke_result_t<decltype(func), const _par_value_type &>;
+			static constexpr bool _can_flatten =
+			  _transform_t<_func_result>::_can_flatten;
+			using value_type = typename _transform_t<_func_result>::value_type;
 			static_assert(!lak::is_void_v<value_type>);
 
 			lak::dsl::result<value_type> parse(lak::u8string_view str) const
+			requires(_can_flatten)
+			{
+				return par.parse(str).and_then(
+				  [](lak::dsl::parse_result<_par_value_type> res)
+				    -> lak::dsl::result<value_type>
+				  {
+					  return func(lak::forward<_par_value_type>(res.value))
+					    .map(
+					      [&]<typename U>(U &&v)
+					      {
+						      return lak::dsl::parse_result<value_type>{
+						        .consumed  = res.consumed,
+						        .remaining = res.remaining,
+						        .value     = lak::forward<U>(v),
+						      };
+					      });
+				  });
+			}
+
+			lak::dsl::result<value_type> parse(lak::u8string_view str) const
+			requires(!_can_flatten)
 			{
 				return par.parse(str).map(
 				  []<typename T>(const lak::dsl::parse_result<T> &res)

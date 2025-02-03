@@ -239,14 +239,14 @@ BEGIN_TEST(dsl)
 		ASSERT(!exp_part.empty());
 		ASSERT_EQUAL(lak::u8string_view(exp_part), u8"-2"_view);
 
-		auto f = lak::dsl::parsed_dec_float<
+		auto f = lak::dsl::parsed_dec_float<double,
 							lak::dsl::char_literal<U'.'>, lak::dsl::char_literal<U'e'>>
-							.parse(u8"+0.0e+0").UNWRAP().value.UNWRAP();
+							.parse(u8"+0.0e+0").UNWRAP().value;
 		ASSERT_EQUAL(f, 0.0);
 
-		f = lak::dsl::parsed_dec_float<
+		f = lak::dsl::parsed_dec_float<double,
 					lak::dsl::char_literal<U'.'>, lak::dsl::char_literal<U'e'>>
-					.parse(u8"-1.0e+0").UNWRAP().value.UNWRAP();
+					.parse(u8"-1.0e+0").UNWRAP().value;
 		ASSERT_EQUAL(f, -1.0);
 	}
 

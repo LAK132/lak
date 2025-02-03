@@ -84,28 +84,28 @@ lak::pnm::pnm::read(::lak::binary_reader &strm)
 		auto width_parser = lak::dsl::capture_nth<
 		  1U,
 		  lak::dsl::str_literal<u8"WIDTH"> + (+non_breaking_whitespace),
-		  lak::dsl::parsed_dec_uint,
+		  lak::dsl::parsed_dec_uint<uint32_t>,
 		  lak::dsl::next_char<U'\n'> +
 		    (*(lak::dsl::pound_line_comment + lak::dsl::whitespace))>;
 
 		auto height_parser = lak::dsl::capture_nth<
 		  1U,
 		  lak::dsl::str_literal<u8"HEIGHT"> + (+non_breaking_whitespace),
-		  lak::dsl::parsed_dec_uint,
+		  lak::dsl::parsed_dec_uint<uint32_t>,
 		  lak::dsl::next_char<U'\n'> +
 		    (*(lak::dsl::pound_line_comment + lak::dsl::whitespace))>;
 
 		auto depth_parser = lak::dsl::capture_nth<
 		  1U,
 		  lak::dsl::str_literal<u8"DEPTH"> + (+non_breaking_whitespace),
-		  lak::dsl::parsed_dec_uint,
+		  lak::dsl::parsed_dec_uint<uint8_t>,
 		  lak::dsl::next_char<U'\n'> +
 		    (*(lak::dsl::pound_line_comment + lak::dsl::whitespace))>;
 
 		auto maxval_parser = lak::dsl::capture_nth<
 		  1U,
 		  lak::dsl::str_literal<u8"MAXVAL"> + (+non_breaking_whitespace),
-		  lak::dsl::parsed_dec_uint,
+		  lak::dsl::parsed_dec_uint<uint16_t>,
 		  lak::dsl::next_char<U'\n'> +
 		    (*(lak::dsl::pound_line_comment + lak::dsl::whitespace))>;
 
@@ -123,25 +123,15 @@ lak::pnm::pnm::read(::lak::binary_reader &strm)
 
 		RES_TRY_ASSIGN(auto header =, parser.read(header_parser));
 
-		RES_TRY_ASSIGN(width =,
-		               header.template get<0>().and_then(
-		                 [&](uintmax_t value)
-		                 { return value_check(value, uint32_t(UINT32_MAX)); }));
+		width = header.template get<0>();
 
-		RES_TRY_ASSIGN(height =,
-		               header.template get<1>().and_then(
-		                 [&](uintmax_t value)
-		                 { return value_check(value, uint32_t(UINT32_MAX)); }));
+		height = header.template get<1>();
 
-		RES_TRY_ASSIGN(uint8_t depth =,
-		               header.template get<2>().and_then(
-		                 [&](uintmax_t value)
-		                 { return value_check(value, uint8_t(4U)); }));
+		uint8_t depth = header.template get<2>();
+		if (depth > 4U) return lak::err_t{lak::value_out_of_range_error{}};
 
-		RES_TRY_ASSIGN(uint16_t max_value =,
-		               header.template get<3>().and_then(
-		                 [&](uintmax_t value)
-		                 { return value_check(value, uint16_t(UINT16_MAX)); }));
+		uint16_t max_value = header.template get<3>();
+
 		if (header.template get<4>().has_value())
 			tupltype = *header.template get<4>();
 

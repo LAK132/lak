@@ -6,7 +6,7 @@ namespace lak
 {
 	namespace char_utils_impl
 	{
-		constexpr char8_t alphanum[] = {
+		constexpr char8_t alphanum[10 + 1] = {
 		  u8'0',
 		  u8'1',
 		  u8'2',
@@ -17,15 +17,16 @@ namespace lak
 		  u8'7',
 		  u8'8',
 		  u8'9',
+		  u8'\0',
 		};
 
-		constexpr char8_t hex_alphanum[] = {
-		  u8'0', u8'1', u8'2', u8'3', u8'4', u8'5', u8'6', u8'7',
-		  u8'8', u8'9', u8'A', u8'B', u8'C', u8'D', u8'E', u8'F',
-		  u8'a', u8'b', u8'c', u8'd', u8'e', u8'f',
+		constexpr char8_t hex_alphanum[22 + 1] = {
+		  u8'0', u8'1', u8'2', u8'3', u8'4', u8'5', u8'6',  u8'7',
+		  u8'8', u8'9', u8'A', u8'B', u8'C', u8'D', u8'E',  u8'F',
+		  u8'a', u8'b', u8'c', u8'd', u8'e', u8'f', u8'\0',
 		};
 
-		constexpr char32_t control_codes[0x41] = {
+		constexpr char32_t control_codes[0x41 + 1] = {
 		  U'\u0000', // null
 		  U'\u0001', // start of heading
 		  U'\u0002', // start of text
@@ -91,6 +92,7 @@ namespace lak
 		  U'\u009D', // operator system command
 		  U'\u009E', // privary message
 		  U'\u009F', // application program command
+		  U'\0',
 		};
 
 		constexpr char8_t ascii_spaces[] = {
@@ -100,6 +102,7 @@ namespace lak
 		  u8'\x0C', // form feed
 		  u8'\x0D', // carriage return
 		  u8'\x20', // space
+		  u8'\0',
 		};
 
 		constexpr char32_t ascii_spaces32[] = {
@@ -109,9 +112,10 @@ namespace lak
 		  U'\x0C', // form feed
 		  U'\x0D', // carriage return
 		  U'\x20', // space
+		  U'\0',
 		};
 
-		constexpr char32_t spaces[25] = {
+		constexpr char32_t spaces[25 + 1] = {
 		  U'\u0009', // tab
 		  U'\u000A', // line feed
 		  U'\u000B', // line tab
@@ -137,6 +141,7 @@ namespace lak
 		  U'\u202F', // narrow no-break space
 		  U'\u205F', // medium mathematical space
 		  U'\u3000', // ideographic space
+		  U'\0',
 		};
 	}
 }
@@ -145,7 +150,10 @@ namespace lak
 
 inline constexpr lak::span<const char8_t> lak::alphanumerics()
 {
-	return lak::span(lak::char_utils_impl::alphanum);
+	return lak::span(lak::char_utils_impl::alphanum)
+	  .first((sizeof(lak::char_utils_impl::alphanum) /
+	          sizeof(lak::char_utils_impl::alphanum[0])) -
+	         1U);
 }
 
 inline constexpr bool lak::is_alphanumeric(char8_t c)
@@ -165,7 +173,10 @@ inline lak::result<uint8_t> lak::from_alphanumeric(char8_t c)
 
 inline constexpr lak::span<const char8_t> lak::hex_alphanumerics()
 {
-	return lak::span(lak::char_utils_impl::hex_alphanum);
+	return lak::span(lak::char_utils_impl::hex_alphanum)
+	  .first((sizeof(lak::char_utils_impl::hex_alphanum) /
+	          sizeof(lak::char_utils_impl::hex_alphanum[0])) -
+	         1U);
 }
 
 inline constexpr bool lak::is_hex_alphanumeric(char8_t c)
@@ -197,7 +208,10 @@ inline constexpr bool lak::is_ascii_printable(char32_t c)
 
 inline constexpr lak::span<const char32_t> lak::control_codes()
 {
-	return lak::span(lak::char_utils_impl::control_codes);
+	return lak::span(lak::char_utils_impl::control_codes)
+	  .first((sizeof(lak::char_utils_impl::control_codes) /
+	          sizeof(lak::char_utils_impl::control_codes[0])) -
+	         1U);
 }
 
 inline constexpr bool lak::is_control_code(char32_t c)
@@ -209,7 +223,10 @@ inline constexpr bool lak::is_control_code(char32_t c)
 
 inline constexpr lak::span<const char32_t> lak::whitespaces()
 {
-	return lak::span(lak::char_utils_impl::spaces);
+	return lak::span(lak::char_utils_impl::spaces)
+	  .first((sizeof(lak::char_utils_impl::spaces) /
+	          sizeof(lak::char_utils_impl::spaces[0])) -
+	         1U);
 }
 
 inline constexpr bool lak::is_whitespace(char32_t c)
@@ -221,7 +238,10 @@ inline constexpr bool lak::is_whitespace(char32_t c)
 
 inline constexpr lak::span<const char8_t> lak::ascii_whitespaces()
 {
-	return lak::span(lak::char_utils_impl::ascii_spaces);
+	return lak::span(lak::char_utils_impl::ascii_spaces)
+	  .first((sizeof(lak::char_utils_impl::ascii_spaces) /
+	          sizeof(lak::char_utils_impl::ascii_spaces[0])) -
+	         1U);
 }
 
 inline constexpr bool lak::is_ascii_whitespace(char8_t c)

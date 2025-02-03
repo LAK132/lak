@@ -54,13 +54,7 @@ namespace lak
 			LAK_FOREACH_PNM_TYPE(LAK_PNM_ENUM)
 #undef LAK_PNM_ENUM
 		};
-	}
-}
 
-namespace lak
-{
-	namespace pnm
-	{
 		struct pnm
 		{
 			uint32_t width;

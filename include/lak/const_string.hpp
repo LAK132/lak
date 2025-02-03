@@ -42,6 +42,7 @@ namespace lak
 		}                                                                         \
 		inline constexpr PREFIX##const_string(const CHAR (&str)[N + 1])           \
 		{                                                                         \
+			ASSERT_EQUAL(str[N], CHAR(0));                                          \
 			for (size_t i = 0; i < N; ++i) _value[i] = str[i];                      \
 		}                                                                         \
 		inline consteval static PREFIX##const_string from_ptr(const CHAR *str)    \
