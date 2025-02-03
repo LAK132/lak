@@ -383,3 +383,23 @@ lak::uintmax2_t lak::mul_uintmax2(uintmax_t A, uintmax_t B)
 	         static_cast<uintmax_t>(mid.low << half_shift),
 	};
 }
+
+std::ostream &lak::operator<<(std::ostream &strm,
+                              lak::string_to_numeric_error err)
+{
+	switch (err)
+	{
+		case lak::string_to_numeric_error::invalid_string:
+			strm << "invalid string";
+			break;
+		case lak::string_to_numeric_error::invalid_base:
+			strm << "invalid base";
+			break;
+		case lak::string_to_numeric_error::out_of_bounds:
+			strm << "out of bounds";
+			break;
+	}
+	return strm;
+}
+
+static_assert(lak::concepts::streamable<lak::string_to_numeric_error>);

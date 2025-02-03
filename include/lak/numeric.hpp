@@ -118,6 +118,9 @@ namespace lak
 	                             uintmax_t B,
 	                             uintmax_t C); // A - (B + (~C + 1))
 	lak::uintmax2_t mul_uintmax2(uintmax_t A, uintmax_t B);
+
+	std::ostream &operator<<(std::ostream &strm,
+	                         lak::string_to_numeric_error err);
 }
 
 #endif
