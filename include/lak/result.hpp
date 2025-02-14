@@ -501,7 +501,7 @@ namespace lak
 		/* --- replace --- */
 
 		template<typename T>
-		lak::result<T, ERR> replace(T &&value) const &
+		lak::result<T, ERR> replace(T value) const &
 		{
 			if (is_ok())
 				return lak::ok_t{lak::forward<T>(value)};
@@ -510,7 +510,7 @@ namespace lak
 		}
 
 		template<typename T>
-		lak::result<T, ERR> replace(T &&value) &&
+		lak::result<T, ERR> replace(T value) &&
 		{
 			if (is_ok())
 				return lak::ok_t{lak::forward<T>(value)};
@@ -521,7 +521,7 @@ namespace lak
 		/* --- replace_err --- */
 
 		template<typename T>
-		lak::result<OK, T> replace_err(T &&value) const &
+		lak::result<OK, T> replace_err(T value) const &
 		{
 			if (is_err())
 				return lak::err_t{lak::forward<T>(value)};
@@ -530,7 +530,7 @@ namespace lak
 		}
 
 		template<typename T>
-		lak::result<OK, T> replace_err(T &&value) &&
+		lak::result<OK, T> replace_err(T value) &&
 		{
 			if (is_err())
 				return lak::err_t{lak::forward<T>(value)};
