@@ -12,6 +12,10 @@ namespace lak
 {
 	namespace
 	{
+#ifdef LAK_COMPILER_MSVC
+#	pragma warning(push)
+#	pragma warning(disable : 4702)
+#endif
 		template<typename FUNC, size_t I, size_t... J>
 		requires(lak::is_void_v<lak::invoke_result_t<FUNC, lak::size_type<I>>>)
 		force_inline void _visit_switch(lak::index_set<I, J...> index, FUNC &&func)
@@ -29,6 +33,9 @@ namespace lak
 
 			(caller(lak::size_type<I>{}) || ... || caller(lak::size_type<J>{}));
 		}
+#ifdef LAK_COMPILER_MSVC
+#	pragma warning(pop)
+#endif
 
 		template<typename FUNC, size_t I, size_t... J>
 		requires(!lak::is_void_v<lak::invoke_result_t<FUNC, lak::size_type<I>>>)
