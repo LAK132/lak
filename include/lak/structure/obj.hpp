@@ -85,6 +85,28 @@ namespace lak
 				for (const auto &i : indices.subspan(offset, count))
 					i.visit(vertex_coords, texture_coords, vertex_normals, func);
 			}
+
+			void visit_fan(lak::span<const lak::obj::vertex_coord> vertex_coords,
+			               lak::span<const lak::obj::texture_coord> texture_coords,
+			               lak::span<const lak::obj::vertex_normal> vertex_normals,
+			               lak::span<const lak::obj::face_coord> indices,
+			               auto &&func) const
+			{
+				if (count <= 3U)
+					visit(vertex_coords, texture_coords, vertex_normals, indices, func);
+				else
+				{
+					for (size_t i = 1U; i + 1U < count; ++i)
+					{
+						indices[offset].visit(
+						  vertex_coords, texture_coords, vertex_normals, func);
+						indices[offset + i].visit(
+						  vertex_coords, texture_coords, vertex_normals, func);
+						indices[offset + i + 1U].visit(
+						  vertex_coords, texture_coords, vertex_normals, func);
+					}
+				}
+			}
 		};
 
 		struct line_coord
