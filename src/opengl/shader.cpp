@@ -191,13 +191,21 @@ lak::opengl::result<lak::opengl::program &> lak::opengl::program::clear()
 
 lak::opengl::result<lak::opengl::program &> lak::opengl::program::use()
 {
+	return static_cast<const lak::opengl::program &>(*this)
+	  .use()
+	  .replace<lak::opengl::program &>(*this);
+}
+
+lak::opengl::result<const lak::opengl::program &> lak::opengl::program::use()
+  const
+{
 	if (_program == 0)
 		return lak::err_t{lak::opengl::error_code_error{GL_NO_ERROR}};
 
 	lak::opengl::get_error().discard();
 
 	return lak::opengl::call_checked(glUseProgram, _program)
-	  .replace<lak::opengl::program &>(*this);
+	  .replace<const lak::opengl::program &>(*this);
 }
 
 lak::opengl::result<lak::optional<lak::astring>>
@@ -386,7 +394,7 @@ GLuint lak::opengl::program::assert_attrib_location(const GLchar *name) const
 {
 	auto loc =
 	  lak::opengl::call_checked(glGetAttribLocation, _program, name).UNWRAP();
-	ASSERT(loc != -1);
+	if (loc == -1) FATAL("no attribute named \"", name, "\"");
 	return (GLuint)loc;
 }
 
@@ -394,7 +402,7 @@ GLuint lak::opengl::program::assert_uniform_location(const GLchar *name) const
 {
 	auto loc =
 	  lak::opengl::call_checked(glGetUniformLocation, _program, name).UNWRAP();
-	ASSERT(loc != -1);
+	if (loc == -1) FATAL("no uniform named \"", name, "\"");
 	return (GLuint)loc;
 }
 
@@ -404,6 +412,7 @@ const lak::opengl::program &lak::opengl::program::set_uniform(
   GLsizei count,
   GLboolean transpose) const
 {
+	use().UNWRAP();
 	ASSERT(lak::opengl::get_uint(GL_CURRENT_PROGRAM).UNWRAP() == _program);
 	const auto info = uniform(unif);
 	switch (info.type)

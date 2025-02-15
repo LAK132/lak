@@ -104,6 +104,7 @@ namespace lak
 			lak::opengl::result<program &> link();
 			lak::opengl::result<program &> clear();
 			lak::opengl::result<program &> use();
+			lak::opengl::result<const program &> use() const;
 
 			inline operator bool() const { return _program != 0; }
 			inline operator GLuint() const { return _program; }

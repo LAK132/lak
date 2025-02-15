@@ -55,7 +55,7 @@ const lak::opengl::buffer &lak::opengl::buffer::bind() const
 	return *this;
 }
 
-lak::opengl::buffer &lak::opengl::buffer::set_data(span<const void> data,
+lak::opengl::buffer &lak::opengl::buffer::set_data(lak::span<const void> data,
                                                    GLenum usage)
 {
 	ASSERT(usage == GL_STREAM_DRAW || usage == GL_STREAM_READ ||
@@ -86,7 +86,7 @@ void lak::opengl::vertex_attribute::apply(GLuint shader_position) const
 	                          type,
 	                          normalised,
 	                          stride,
-	                          offset)
+	                          reinterpret_cast<void *>(offset))
 	  .UNWRAP();
 }
 
@@ -96,7 +96,8 @@ lak::opengl::vertex_buffer::vertex_buffer(vertex_buffer &&other)
 : _vertex_buffer(lak::move(other._vertex_buffer)),
   _index_buffer(lak::move(other._index_buffer)),
   _attributes(lak::move(other._attributes)),
-  _vertex_count(lak::exchange(other._vertex_count, 0U))
+  _vertex_count(lak::exchange(other._vertex_count, 0U)),
+  _draw_mode(lak::exchange(other._draw_mode, GL_TRIANGLES))
 {
 }
 
@@ -107,73 +108,23 @@ lak::opengl::vertex_buffer &lak::opengl::vertex_buffer::operator=(
 	lak::swap(_index_buffer, other._index_buffer);
 	lak::swap(_attributes, other._attributes);
 	lak::swap(_vertex_count, other._vertex_count);
+	lak::swap(_draw_mode, other._draw_mode);
 	return *this;
 }
 
-lak::opengl::vertex_buffer lak::opengl::vertex_buffer::create(
-  span<const void> vertex_data,
-  GLenum draw_mode,
-  size_t vertex_count,
-  span<const vertex_attribute> vertex_attributes,
-  GLenum usage)
+lak::opengl::vertex_buffer lak::opengl::vertex_buffer::create()
 {
 	vertex_buffer buf;
-
 	buf._vertex_buffer = buffer::create(GL_ARRAY_BUFFER);
-
-	buf._vertex_buffer.set_data(vertex_data, usage);
-
-	buf._attributes   = lak::vector<vertex_attribute>(vertex_attributes.begin(),
-                                                  vertex_attributes.end());
-	buf._vertex_count = vertex_count;
-	buf._draw_mode    = draw_mode;
-
 	return buf;
 }
 
-lak::opengl::vertex_buffer lak::opengl::vertex_buffer::create(
-  span<const void> vertex_data,
-  GLenum draw_mode,
-  span<const GLuint> index_data,
-  span<const vertex_attribute> vertex_attributes,
-  GLenum usage)
+lak::opengl::vertex_buffer lak::opengl::vertex_buffer::create_indexed()
 {
 	vertex_buffer buf;
-
 	buf._vertex_buffer = buffer::create(GL_ARRAY_BUFFER);
 	buf._index_buffer  = buffer::create(GL_ELEMENT_ARRAY_BUFFER);
-
-	buf._vertex_buffer.set_data(vertex_data, usage);
-	buf._index_buffer.set_data(index_data, usage);
-
-	buf._attributes   = lak::vector<vertex_attribute>(vertex_attributes.begin(),
-                                                  vertex_attributes.end());
-	buf._vertex_count = index_data.size();
-	buf._draw_mode    = draw_mode;
-
 	return buf;
-}
-
-lak::opengl::shared_vertex_buffer lak::opengl::vertex_buffer::create_shared(
-  span<const void> vertex_data,
-  GLenum draw_mode,
-  size_t vertex_count,
-  span<const vertex_attribute> vertex_attributes,
-  GLenum usage)
-{
-	return lak::shared_ptr<vertex_buffer>::make(
-	  create(vertex_data, draw_mode, vertex_count, vertex_attributes, usage));
-}
-
-lak::opengl::shared_vertex_buffer lak::opengl::vertex_buffer::create_shared(
-  span<const void> vertex_data,
-  GLenum draw_mode,
-  span<const GLuint> index_data,
-  span<const vertex_attribute> vertex_attributes,
-  GLenum usage)
-{
-	return lak::shared_ptr<vertex_buffer>::make(
-	  create(vertex_data, draw_mode, index_data, vertex_attributes, usage));
 }
 
 lak::opengl::vertex_buffer &lak::opengl::vertex_buffer::bind()
@@ -183,8 +134,49 @@ lak::opengl::vertex_buffer &lak::opengl::vertex_buffer::bind()
 	return *this;
 }
 
-lak::opengl::vertex_buffer &lak::opengl::vertex_buffer::apply_attributes(
-  span<const GLuint> attribute_positions)
+const lak::opengl::vertex_buffer &lak::opengl::vertex_buffer::bind() const
+{
+	_vertex_buffer.bind();
+	if (_index_buffer) _index_buffer.bind();
+	return *this;
+}
+
+lak::opengl::vertex_buffer &lak::opengl::vertex_buffer::set_data(
+  lak::span<const void> vertex_data,
+  size_t vertex_count,
+  GLenum draw_mode,
+  GLenum usage)
+{
+	ASSERT(!_index_buffer);
+	_vertex_buffer.set_data(vertex_data, usage);
+	_vertex_count = vertex_count;
+	_draw_mode    = draw_mode;
+	return *this;
+}
+
+lak::opengl::vertex_buffer &lak::opengl::vertex_buffer::set_data(
+  lak::span<const void> vertex_data,
+  lak::span<const GLuint> index_data,
+  GLenum draw_mode,
+  GLenum usage)
+{
+	ASSERT(!!_index_buffer);
+	_vertex_buffer.set_data(vertex_data, usage);
+	_index_buffer.set_data(index_data, usage);
+	_vertex_count = index_data.size();
+	_draw_mode    = draw_mode;
+	return *this;
+}
+
+lak::opengl::vertex_buffer &lak::opengl::vertex_buffer::set_vertex_attributes(
+  lak::vector<lak::opengl::vertex_attribute> vertex_attributes)
+{
+	_attributes = lak::move(vertex_attributes);
+	return *this;
+}
+
+lak::opengl::vertex_buffer &lak::opengl::vertex_buffer::
+  apply_shader_attributes(lak::span<const GLuint> attribute_positions)
 {
 	ASSERT(_attributes.size() == attribute_positions.size());
 	for (size_t i = 0; i < _attributes.size(); ++i)
@@ -222,10 +214,10 @@ void lak::opengl::vertex_buffer::draw_part(const GLuint *offset,
 	  _draw_mode, count, GL_UNSIGNED_INT, offset, instances);
 }
 
-const lak::vector<lak::opengl::vertex_attribute> &
-lak::opengl::vertex_buffer::attributes() const
+lak::span<const lak::opengl::vertex_attribute>
+lak::opengl::vertex_buffer::vertex_attributes() const
 {
-	return _attributes;
+	return lak::span(_attributes);
 }
 
 /* --- vertex_array --- */
@@ -295,20 +287,20 @@ lak::opengl::static_object_part &lak::opengl::static_object_part::operator=(
 lak::opengl::static_object_part lak::opengl::static_object_part::create(
   shared_vertex_buffer vertices,
   shared_program shader_program,
-  span<const GLuint> attribute_positions,
-  span<const lak::shared_ptr<texture>> textures)
+  lak::span<const GLuint> attribute_positions,
+  lak::array<lak::pair<lak::shared_ptr<lak::opengl::texture>, GLuint>>
+    textures)
 {
 	static_object_part mesh;
 
 	mesh._vertex_array  = lak::opengl::vertex_array::create();
 	mesh._vertex_buffer = vertices;
 	mesh._shader        = shader_program;
-	mesh._textures =
-	  lak::vector<lak::shared_ptr<texture>>(textures.begin(), textures.end());
+	mesh._textures      = lak::move(textures);
 
 	mesh._vertex_array.bind();
 	mesh._vertex_buffer->bind();
-	mesh._vertex_buffer->apply_attributes(attribute_positions);
+	mesh._vertex_buffer->apply_shader_attributes(attribute_positions);
 
 	return mesh;
 }
@@ -324,13 +316,14 @@ void lak::opengl::static_object_part::draw(GLuint instances) const
 
 	_vertex_array.bind();
 
-	size_t texture_index = 0;
-	for (const auto &texture : _textures)
+	for (size_t texture_index = 0; const auto &[texture, sampler] : _textures)
 	{
+		lak::opengl::call_checked(glUniform1i, sampler, texture_index).UNWRAP();
 		lak::opengl::call_checked(glActiveTexture,
-		                          GLenum(GL_TEXTURE0 + (texture_index++)))
+		                          GLenum(GL_TEXTURE0 + texture_index))
 		  .UNWRAP();
 		texture->bind();
+		++texture_index;
 	}
 
 	_vertex_buffer->draw(instances);
@@ -344,13 +337,14 @@ void lak::opengl::static_object_part::draw_part(const GLuint *offset,
 
 	_vertex_array.bind();
 
-	size_t texture_index = 0;
-	for (const auto &texture : _textures)
+	for (size_t texture_index = 0; const auto &[texture, sampler] : _textures)
 	{
+		lak::opengl::call_checked(glUniform1i, sampler, texture_index).UNWRAP();
 		lak::opengl::call_checked(glActiveTexture,
-		                          GLenum(GL_TEXTURE0 + (texture_index++)))
+		                          GLenum(GL_TEXTURE0 + texture_index))
 		  .UNWRAP();
 		texture->bind();
+		++texture_index;
 	}
 
 	_vertex_buffer->draw_part(offset, count, instances);

@@ -80,15 +80,23 @@ namespace lak
 
 		struct vertex_attribute
 		{
-			GLuint size; // 1, 2, 3 or 4.
-			GLenum type; // GL_BYTE, GL_UNSIGNED_BYTE, GL_SHORT, GL_UNSIGNED_SHORT,
-			             // GL_INT, GL_UNSIGNED_INT, GL_HALF_FLOAT, GL_FLOAT,
-			             // GL_DOUBLE, GL_FIXED, GL_INT_2_10_10_10_REV,
-			             // GL_UNSIGNED_INT_2_10_10_10_REV or
-			             // GL_UNSIGNED_INT_10F_11F_11F_REV.
+			// 1, 2, 3 or 4.
+			GLuint size;
+
+			// GL_BYTE, GL_UNSIGNED_BYTE, GL_SHORT, GL_UNSIGNED_SHORT, GL_INT,
+			// GL_UNSIGNED_INT, GL_HALF_FLOAT, GL_FLOAT, GL_DOUBLE, GL_FIXED,
+			// GL_INT_2_10_10_10_REV, GL_UNSIGNED_INT_2_10_10_10_REV or
+			// GL_UNSIGNED_INT_10F_11F_11F_REV.
+			GLenum type;
+
 			GLboolean normalised;
+
+			// vertex stride (of all attributes if interlaced)
 			GLsizei stride;
-			void *offset;
+
+			// offset in a vertex to this attribute
+			GLsizei offset;
+
 			GLuint divisor;
 
 			// apply vertex attribute to the bound Vertex Array Object.
@@ -103,9 +111,9 @@ namespace lak
 		struct vertex_buffer
 		{
 		private:
-			buffer _vertex_buffer;
-			buffer _index_buffer;
-			lak::vector<vertex_attribute> _attributes;
+			lak::opengl::buffer _vertex_buffer;
+			lak::opengl::buffer _index_buffer;
+			lak::array<lak::opengl::vertex_attribute> _attributes;
 			// number of elements in _index_buffer if it exists, otherwise the number
 			// of elements in _vertex_buffer.
 			size_t _vertex_count = 0;
@@ -120,36 +128,25 @@ namespace lak
 			vertex_buffer &operator=(const vertex_buffer &other) = delete;
 
 			// create will unbind the current Vertex Array Object.
-			static vertex_buffer create(
-			  lak::span<const void> vertex_data,
-			  GLenum draw_mode,
-			  size_t vertex_count,
-			  lak::span<const vertex_attribute> vertex_attributes,
-			  GLenum usage);
-			static vertex_buffer create(
-			  lak::span<const void> vertex_data,
-			  GLenum draw_mode,
-			  lak::span<const GLuint> index_data,
-			  lak::span<const vertex_attribute> vertex_attributes,
-			  GLenum usage);
-
-			static shared_vertex_buffer create_shared(
-			  lak::span<const void> vertex_data,
-			  GLenum draw_mode,
-			  size_t vertex_count,
-			  lak::span<const vertex_attribute> vertex_attributes,
-			  GLenum usage);
-			static shared_vertex_buffer create_shared(
-			  lak::span<const void> vertex_data,
-			  GLenum draw_mode,
-			  lak::span<const GLuint> index_data,
-			  lak::span<const vertex_attribute> vertex_attributes,
-			  GLenum usage);
+			static vertex_buffer create();
+			static vertex_buffer create_indexed();
 
 			vertex_buffer &bind();
 			const vertex_buffer &bind() const;
+
+			vertex_buffer &set_data(lak::span<const void> vertex_data,
+			                        size_t vertex_count,
+			                        GLenum draw_mode,
+			                        GLenum usage = GL_STATIC_DRAW);
+			vertex_buffer &set_data(lak::span<const void> vertex_data,
+			                        lak::span<const GLuint> index_data,
+			                        GLenum draw_mode,
+			                        GLenum usage = GL_STATIC_DRAW);
+			vertex_buffer &set_vertex_attributes(
+			  lak::array<lak::opengl::vertex_attribute> vertex_attributes);
+
 			// apply vertex attributes to the bound Vertex Array Object.
-			vertex_buffer &apply_attributes(
+			vertex_buffer &apply_shader_attributes(
 			  lak::span<const GLuint> attribute_positions);
 
 			void draw(GLuint instances = 1) const;
@@ -157,7 +154,7 @@ namespace lak
 			               GLsizei count,
 			               GLuint instances = 1) const;
 
-			const lak::vector<vertex_attribute> &attributes() const;
+			lak::span<const lak::opengl::vertex_attribute> vertex_attributes() const;
 
 			inline operator bool() const { return _vertex_buffer; }
 		};
@@ -192,7 +189,7 @@ namespace lak
 		private:
 			shared_vertex_buffer _vertex_buffer;
 			shared_program _shader;
-			lak::vector<lak::shared_ptr<texture>> _textures;
+			lak::array<lak::pair<lak::shared_ptr<texture>, GLuint>> _textures;
 			vertex_array _vertex_array;
 
 		public:
@@ -204,7 +201,7 @@ namespace lak
 			  shared_vertex_buffer vertices,
 			  shared_program shader_program,
 			  lak::span<const GLuint> attribute_positions,
-			  lak::span<const lak::shared_ptr<texture>> textures);
+			  lak::array<lak::pair<lak::shared_ptr<texture>, GLuint>> textures);
 
 			static_object_part &clear();
 

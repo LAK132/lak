@@ -1,8 +1,10 @@
 #include "lak/opengl/texture.hpp"
 
+#include "lak/opengl/state.hpp"
+
 lak::opengl::texture::texture(GLenum target) : _target(target), _size({0, 0})
 {
-	glGenTextures(1, &_texture);
+	lak::opengl::call_checked(glGenTextures, 1, &_texture).UNWRAP();
 }
 
 lak::opengl::texture::texture(texture &&other)
@@ -27,7 +29,7 @@ lak::opengl::texture &lak::opengl::texture::init(GLenum target)
 {
 	if (_texture != 0) clear();
 	_target = target;
-	glGenTextures(1, &_texture);
+	lak::opengl::call_checked(glGenTextures, 1, &_texture).UNWRAP();
 	_size = {0, 0};
 	return *this;
 }
@@ -36,7 +38,7 @@ lak::opengl::texture &lak::opengl::texture::clear()
 {
 	if (_texture != 0)
 	{
-		glDeleteTextures(1, &_texture);
+		lak::opengl::call_checked(glDeleteTextures, 1, &_texture).UNWRAP();
 		_texture = 0;
 	}
 	_target = GL_TEXTURE_2D;
@@ -46,63 +48,64 @@ lak::opengl::texture &lak::opengl::texture::clear()
 
 lak::opengl::texture &lak::opengl::texture::bind()
 {
-	glBindTexture(_target, _texture);
+	lak::opengl::call_checked(glBindTexture, _target, _texture).UNWRAP();
 	return *this;
 }
 
 const lak::opengl::texture &lak::opengl::texture::bind() const
 {
-	glBindTexture(_target, _texture);
+	lak::opengl::call_checked(glBindTexture, _target, _texture).UNWRAP();
 	return *this;
 }
 
 lak::opengl::texture &lak::opengl::texture::apply(GLenum pname, GLint value)
 {
-	glTexParameteri(_target, pname, value);
+	lak::opengl::call_checked(glTexParameteri, _target, pname, value).UNWRAP();
 	return *this;
 }
 
 lak::opengl::texture &lak::opengl::texture::apply(GLenum pname, GLint *value)
 {
-	glTexParameteriv(_target, pname, value);
+	lak::opengl::call_checked(glTexParameteriv, _target, pname, value).UNWRAP();
 	return *this;
 }
 
 lak::opengl::texture &lak::opengl::texture::applyi(GLenum pname, GLint *value)
 {
-	glTexParameterIiv(_target, pname, value);
+	lak::opengl::call_checked(glTexParameterIiv, _target, pname, value).UNWRAP();
 	return *this;
 }
 
 lak::opengl::texture &lak::opengl::texture::applyi(GLenum pname, GLuint *value)
 {
-	glTexParameterIuiv(_target, pname, value);
+	lak::opengl::call_checked(glTexParameterIuiv, _target, pname, value)
+	  .UNWRAP();
 	return *this;
 }
 
 lak::opengl::texture &lak::opengl::texture::apply(GLenum pname, GLfloat value)
 {
-	glTexParameterf(_target, pname, value);
+	lak::opengl::call_checked(glTexParameterf, _target, pname, value).UNWRAP();
 	return *this;
 }
 
 lak::opengl::texture &lak::opengl::texture::apply(GLenum pname, GLfloat *value)
 {
-	glTexParameterfv(_target, pname, value);
+	lak::opengl::call_checked(glTexParameterfv, _target, pname, value).UNWRAP();
 	return *this;
 }
 
 lak::opengl::texture &lak::opengl::texture::store_mode(GLenum pname,
                                                        GLint value)
 {
-	glPixelStorei(pname, value);
+	lak::opengl::call_checked(glPixelStorei, pname, value).UNWRAP();
 	return *this;
 }
 
 lak::opengl::texture &lak::opengl::texture::store_mode(GLenum pname,
                                                        GLfloat value)
 {
-	glPixelStoref(pname, value);
+	lak::opengl::call_checked(glPixelStoref, pname, value).UNWRAP();
 	return *this;
 }
 
@@ -115,14 +118,16 @@ lak::opengl::texture &lak::opengl::texture::build(GLint level,
                                                   const GLvoid *pixels)
 {
 	_size = size;
-	glTexImage2D(_target,
-	             level,
-	             format,
-	             size.x,
-	             size.y,
-	             border,
-	             pixel_format,
-	             color_type,
-	             pixels);
+	lak::opengl::call_checked(glTexImage2D,
+	                          _target,
+	                          level,
+	                          format,
+	                          size.x,
+	                          size.y,
+	                          border,
+	                          pixel_format,
+	                          color_type,
+	                          pixels)
+	  .UNWRAP();
 	return *this;
 }
