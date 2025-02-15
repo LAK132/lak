@@ -262,7 +262,8 @@ lak::vector<lak::opengl::shader_attribute> lak::opengl::program::attributes()
 		                          &attributes[i].type,
 		                          name.data())
 		  .UNWRAP();
-		attributes[i].position =
+		attributes[i].index = i;
+		attributes[i].location =
 		  lak::opengl::call_checked(glGetAttribLocation, _program, name.data())
 		    .UNWRAP();
 		attributes[i].name = name.data();
@@ -296,7 +297,8 @@ lak::vector<lak::opengl::shader_uniform> lak::opengl::program::uniforms() const
 		                          &uniforms[i].type,
 		                          name.data())
 		  .UNWRAP();
-		uniforms[i].position =
+		uniforms[i].index = i;
+		uniforms[i].location =
 		  lak::opengl::call_checked(glGetUniformLocation, _program, name.data())
 		    .UNWRAP();
 		uniforms[i].name = name.data();
@@ -306,7 +308,7 @@ lak::vector<lak::opengl::shader_uniform> lak::opengl::program::uniforms() const
 }
 
 lak::opengl::shader_attribute lak::opengl::program::attribute(
-  GLuint attr) const
+  GLuint attr_index) const
 {
 	shader_attribute result;
 
@@ -319,14 +321,15 @@ lak::opengl::shader_attribute lak::opengl::program::attribute(
 	lak::fill(lak::span(name), char(0));
 	lak::opengl::call_checked(glGetActiveAttrib,
 	                          _program,
-	                          attr,
+	                          attr_index,
 	                          (GLsizei)name.size(),
 	                          (GLsizei *)nullptr,
 	                          &result.size,
 	                          &result.type,
 	                          name.data())
 	  .UNWRAP();
-	result.position =
+	result.index = attr_index;
+	result.location =
 	  lak::opengl::call_checked(glGetAttribLocation, _program, name.data())
 	    .UNWRAP();
 	result.name = name.data();
@@ -334,7 +337,8 @@ lak::opengl::shader_attribute lak::opengl::program::attribute(
 	return result;
 }
 
-lak::opengl::shader_uniform lak::opengl::program::uniform(GLuint unif) const
+lak::opengl::shader_uniform lak::opengl::program::uniform(
+  GLuint unif_index) const
 {
 	shader_uniform result;
 
@@ -347,14 +351,15 @@ lak::opengl::shader_uniform lak::opengl::program::uniform(GLuint unif) const
 	lak::fill(lak::span(name), char(0));
 	lak::opengl::call_checked(glGetActiveUniform,
 	                          _program,
-	                          unif,
+	                          unif_index,
 	                          (GLsizei)name.size(),
 	                          (GLsizei *)nullptr,
 	                          &result.size,
 	                          &result.type,
 	                          name.data())
 	  .UNWRAP();
-	result.position =
+	result.index = unif_index;
+	result.location =
 	  lak::opengl::call_checked(glGetUniformLocation, _program, name.data())
 	    .UNWRAP();
 	result.name = name.data();
@@ -362,237 +367,323 @@ lak::opengl::shader_uniform lak::opengl::program::uniform(GLuint unif) const
 	return result;
 }
 
-lak::optional<GLuint> lak::opengl::program::attrib_location(
+lak::optional<GLuint> lak::opengl::program::attrib_index(
+  const GLchar *name) const
+{
+	auto loc = attrib_location(name);
+	return loc ? lak::optional<GLuint>((GLuint)*loc) : lak::nullopt;
+}
+
+lak::optional<GLuint> lak::opengl::program::uniform_index(
+  const GLchar *name) const
+{
+	GLuint loc;
+	lak::opengl::call_checked(
+	  glGetUniformIndices, _program, GLsizei(1), &name, &loc)
+	  .UNWRAP();
+	return loc == GL_INVALID_INDEX ? lak::nullopt : lak::optional<GLuint>{loc};
+}
+
+lak::optional<GLint> lak::opengl::program::attrib_location(
   const GLchar *name) const
 {
 	auto loc =
 	  lak::opengl::call_checked(glGetAttribLocation, _program, name).UNWRAP();
-	return loc == -1 ? lak::nullopt : lak::optional<GLuint>{(GLuint)loc};
+	return loc == -1 ? lak::nullopt : lak::optional<GLint>{loc};
 }
 
-lak::optional<GLuint> lak::opengl::program::uniform_location(
+lak::optional<GLint> lak::opengl::program::uniform_location(
   const GLchar *name) const
 {
 	auto loc =
 	  lak::opengl::call_checked(glGetUniformLocation, _program, name).UNWRAP();
-	return loc == -1 ? lak::nullopt : lak::optional<GLuint>{(GLuint)loc};
+	return loc == -1 ? lak::nullopt : lak::optional<GLint>{loc};
 }
 
 lak::opengl::shader_attribute lak::opengl::program::assert_attribute(
   const GLchar *name) const
 {
-	return attribute(assert_attrib_location(name));
+	return attribute(assert_attrib_index(name));
 }
 
 lak::opengl::shader_uniform lak::opengl::program::assert_uniform(
   const GLchar *name) const
 {
-	return uniform(assert_uniform_location(name));
+	return uniform(assert_uniform_index(name));
 }
 
-GLuint lak::opengl::program::assert_attrib_location(const GLchar *name) const
+GLuint lak::opengl::program::assert_attrib_index(const GLchar *name) const
+{
+	return (GLuint)assert_attrib_location(name);
+}
+
+GLuint lak::opengl::program::assert_uniform_index(const GLchar *name) const
+{
+	GLuint loc;
+	lak::opengl::call_checked(
+	  glGetUniformIndices, _program, GLsizei(1), &name, &loc)
+	  .UNWRAP();
+	if (loc == GL_INVALID_INDEX) FATAL("no uniform named \"", name, "\"");
+	return loc;
+}
+
+GLint lak::opengl::program::assert_attrib_location(const GLchar *name) const
 {
 	auto loc =
 	  lak::opengl::call_checked(glGetAttribLocation, _program, name).UNWRAP();
 	if (loc == -1) FATAL("no attribute named \"", name, "\"");
-	return (GLuint)loc;
+	return loc;
 }
 
-GLuint lak::opengl::program::assert_uniform_location(const GLchar *name) const
+GLint lak::opengl::program::assert_uniform_location(const GLchar *name) const
 {
 	auto loc =
 	  lak::opengl::call_checked(glGetUniformLocation, _program, name).UNWRAP();
 	if (loc == -1) FATAL("no uniform named \"", name, "\"");
-	return (GLuint)loc;
+	return loc;
 }
 
 const lak::opengl::program &lak::opengl::program::set_uniform(
-  GLuint unif,
+  GLuint unif_index,
   lak::span<const void> data,
   GLsizei count,
   GLboolean transpose) const
 {
 	use().UNWRAP();
 	ASSERT(lak::opengl::get_uint(GL_CURRENT_PROGRAM).UNWRAP() == _program);
-	const auto info = uniform(unif);
+	const auto info = uniform(unif_index);
 	switch (info.type)
 	{
 		case GL_FLOAT:
 			ASSERT(static_cast<GLsizei>(1 * data.size() / sizeof(GLfloat)) >= count);
 			lak::opengl::call_checked(
-			  glUniform1fv, unif, count, (GLfloat *)data.data())
+			  glUniform1fv, unif_index, count, (GLfloat *)data.data())
 			  .UNWRAP();
 			break;
 		case GL_FLOAT_VEC2:
 			ASSERT(static_cast<GLsizei>(2 * data.size() / sizeof(GLfloat)) >= count);
 			lak::opengl::call_checked(
-			  glUniform2fv, unif, count, (GLfloat *)data.data())
+			  glUniform2fv, unif_index, count, (GLfloat *)data.data())
 			  .UNWRAP();
 			break;
 		case GL_FLOAT_VEC3:
 			ASSERT(static_cast<GLsizei>(3 * data.size() / sizeof(GLfloat)) >= count);
 			lak::opengl::call_checked(
-			  glUniform3fv, unif, count, (GLfloat *)data.data())
+			  glUniform3fv, unif_index, count, (GLfloat *)data.data())
 			  .UNWRAP();
 			break;
 		case GL_FLOAT_VEC4:
 			ASSERT(static_cast<GLsizei>(4 * data.size() / sizeof(GLfloat)) >= count);
 			lak::opengl::call_checked(
-			  glUniform4fv, unif, count, (GLfloat *)data.data())
+			  glUniform4fv, unif_index, count, (GLfloat *)data.data())
 			  .UNWRAP();
 			break;
 		case GL_FLOAT_MAT2:
 			ASSERT(static_cast<GLsizei>(2 * 2 * data.size() / sizeof(GLfloat)) >=
 			       count);
-			lak::opengl::call_checked(
-			  glUniformMatrix2fv, unif, count, transpose, (GLfloat *)data.data())
+			lak::opengl::call_checked(glUniformMatrix2fv,
+			                          unif_index,
+			                          count,
+			                          transpose,
+			                          (GLfloat *)data.data())
 			  .UNWRAP();
 			break;
 		case GL_FLOAT_MAT2x3:
 			ASSERT(static_cast<GLsizei>(2 * 3 * data.size() / sizeof(GLfloat)) >=
 			       count);
-			lak::opengl::call_checked(
-			  glUniformMatrix2x3fv, unif, count, transpose, (GLfloat *)data.data())
+			lak::opengl::call_checked(glUniformMatrix2x3fv,
+			                          unif_index,
+			                          count,
+			                          transpose,
+			                          (GLfloat *)data.data())
 			  .UNWRAP();
 			break;
 		case GL_FLOAT_MAT2x4:
 			ASSERT(static_cast<GLsizei>(2 * 4 * data.size() / sizeof(GLfloat)) >=
 			       count);
-			lak::opengl::call_checked(
-			  glUniformMatrix2x4fv, unif, count, transpose, (GLfloat *)data.data())
+			lak::opengl::call_checked(glUniformMatrix2x4fv,
+			                          unif_index,
+			                          count,
+			                          transpose,
+			                          (GLfloat *)data.data())
 			  .UNWRAP();
 			break;
 		case GL_FLOAT_MAT3:
 			ASSERT(static_cast<GLsizei>(3 * 3 * data.size() / sizeof(GLfloat)) >=
 			       count);
-			lak::opengl::call_checked(
-			  glUniformMatrix3fv, unif, count, transpose, (GLfloat *)data.data())
+			lak::opengl::call_checked(glUniformMatrix3fv,
+			                          unif_index,
+			                          count,
+			                          transpose,
+			                          (GLfloat *)data.data())
 			  .UNWRAP();
 			break;
 		case GL_FLOAT_MAT3x2:
 			ASSERT(static_cast<GLsizei>(3 * 2 * data.size() / sizeof(GLfloat)) >=
 			       count);
-			lak::opengl::call_checked(
-			  glUniformMatrix3x2fv, unif, count, transpose, (GLfloat *)data.data())
+			lak::opengl::call_checked(glUniformMatrix3x2fv,
+			                          unif_index,
+			                          count,
+			                          transpose,
+			                          (GLfloat *)data.data())
 			  .UNWRAP();
 			break;
 		case GL_FLOAT_MAT3x4:
 			ASSERT(static_cast<GLsizei>(3 * 4 * data.size() / sizeof(GLfloat)) >=
 			       count);
-			lak::opengl::call_checked(
-			  glUniformMatrix3x4fv, unif, count, transpose, (GLfloat *)data.data())
+			lak::opengl::call_checked(glUniformMatrix3x4fv,
+			                          unif_index,
+			                          count,
+			                          transpose,
+			                          (GLfloat *)data.data())
 			  .UNWRAP();
 			break;
 		case GL_FLOAT_MAT4:
 			ASSERT(static_cast<GLsizei>(4 * 4 * data.size() / sizeof(GLfloat)) >=
 			       count);
-			lak::opengl::call_checked(
-			  glUniformMatrix4fv, unif, count, transpose, (GLfloat *)data.data())
+			lak::opengl::call_checked(glUniformMatrix4fv,
+			                          unif_index,
+			                          count,
+			                          transpose,
+			                          (GLfloat *)data.data())
 			  .UNWRAP();
 			break;
 		case GL_FLOAT_MAT4x2:
 			ASSERT(static_cast<GLsizei>(4 * 2 * data.size() / sizeof(GLfloat)) >=
 			       count);
-			lak::opengl::call_checked(
-			  glUniformMatrix4x2fv, unif, count, transpose, (GLfloat *)data.data())
+			lak::opengl::call_checked(glUniformMatrix4x2fv,
+			                          unif_index,
+			                          count,
+			                          transpose,
+			                          (GLfloat *)data.data())
 			  .UNWRAP();
 			break;
 		case GL_FLOAT_MAT4x3:
 			ASSERT(static_cast<GLsizei>(4 * 3 * data.size() / sizeof(GLfloat)) >=
 			       count);
-			lak::opengl::call_checked(
-			  glUniformMatrix4x3fv, unif, count, transpose, (GLfloat *)data.data())
+			lak::opengl::call_checked(glUniformMatrix4x3fv,
+			                          unif_index,
+			                          count,
+			                          transpose,
+			                          (GLfloat *)data.data())
 			  .UNWRAP();
 			break;
 		case GL_DOUBLE:
 			ASSERT(static_cast<GLsizei>(1 * data.size() / sizeof(GLdouble)) >=
 			       count);
 			lak::opengl::call_checked(
-			  glUniform1dv, unif, count, (GLdouble *)data.data())
+			  glUniform1dv, unif_index, count, (GLdouble *)data.data())
 			  .UNWRAP();
 			break;
 		case GL_DOUBLE_VEC2:
 			ASSERT(static_cast<GLsizei>(2 * data.size() / sizeof(GLdouble)) >=
 			       count);
 			lak::opengl::call_checked(
-			  glUniform2dv, unif, count, (GLdouble *)data.data())
+			  glUniform2dv, unif_index, count, (GLdouble *)data.data())
 			  .UNWRAP();
 			break;
 		case GL_DOUBLE_VEC3:
 			ASSERT(static_cast<GLsizei>(3 * data.size() / sizeof(GLdouble)) >=
 			       count);
 			lak::opengl::call_checked(
-			  glUniform3dv, unif, count, (GLdouble *)data.data())
+			  glUniform3dv, unif_index, count, (GLdouble *)data.data())
 			  .UNWRAP();
 			break;
 		case GL_DOUBLE_VEC4:
 			ASSERT(static_cast<GLsizei>(4 * data.size() / sizeof(GLdouble)) >=
 			       count);
 			lak::opengl::call_checked(
-			  glUniform4dv, unif, count, (GLdouble *)data.data())
+			  glUniform4dv, unif_index, count, (GLdouble *)data.data())
 			  .UNWRAP();
 			break;
 		case GL_DOUBLE_MAT2:
 			ASSERT(static_cast<GLsizei>(2 * 2 * data.size() / sizeof(GLdouble)) >=
 			       count);
-			lak::opengl::call_checked(
-			  glUniformMatrix2dv, unif, count, transpose, (GLdouble *)data.data())
+			lak::opengl::call_checked(glUniformMatrix2dv,
+			                          unif_index,
+			                          count,
+			                          transpose,
+			                          (GLdouble *)data.data())
 			  .UNWRAP();
 			break;
 		case GL_DOUBLE_MAT2x3:
 			ASSERT(static_cast<GLsizei>(2 * 3 * data.size() / sizeof(GLdouble)) >=
 			       count);
-			lak::opengl::call_checked(
-			  glUniformMatrix2x3dv, unif, count, transpose, (GLdouble *)data.data())
+			lak::opengl::call_checked(glUniformMatrix2x3dv,
+			                          unif_index,
+			                          count,
+			                          transpose,
+			                          (GLdouble *)data.data())
 			  .UNWRAP();
 			break;
 		case GL_DOUBLE_MAT2x4:
 			ASSERT(static_cast<GLsizei>(2 * 4 * data.size() / sizeof(GLdouble)) >=
 			       count);
-			lak::opengl::call_checked(
-			  glUniformMatrix2x4dv, unif, count, transpose, (GLdouble *)data.data())
+			lak::opengl::call_checked(glUniformMatrix2x4dv,
+			                          unif_index,
+			                          count,
+			                          transpose,
+			                          (GLdouble *)data.data())
 			  .UNWRAP();
 			break;
 		case GL_DOUBLE_MAT3:
 			ASSERT(static_cast<GLsizei>(3 * 3 * data.size() / sizeof(GLdouble)) >=
 			       count);
-			lak::opengl::call_checked(
-			  glUniformMatrix3dv, unif, count, transpose, (GLdouble *)data.data())
+			lak::opengl::call_checked(glUniformMatrix3dv,
+			                          unif_index,
+			                          count,
+			                          transpose,
+			                          (GLdouble *)data.data())
 			  .UNWRAP();
 			break;
 		case GL_DOUBLE_MAT3x2:
 			ASSERT(static_cast<GLsizei>(3 * 2 * data.size() / sizeof(GLdouble)) >=
 			       count);
-			lak::opengl::call_checked(
-			  glUniformMatrix3x2dv, unif, count, transpose, (GLdouble *)data.data())
+			lak::opengl::call_checked(glUniformMatrix3x2dv,
+			                          unif_index,
+			                          count,
+			                          transpose,
+			                          (GLdouble *)data.data())
 			  .UNWRAP();
 			break;
 		case GL_DOUBLE_MAT3x4:
 			ASSERT(static_cast<GLsizei>(3 * 4 * data.size() / sizeof(GLdouble)) >=
 			       count);
-			lak::opengl::call_checked(
-			  glUniformMatrix3x4dv, unif, count, transpose, (GLdouble *)data.data())
+			lak::opengl::call_checked(glUniformMatrix3x4dv,
+			                          unif_index,
+			                          count,
+			                          transpose,
+			                          (GLdouble *)data.data())
 			  .UNWRAP();
 			break;
 		case GL_DOUBLE_MAT4:
 			ASSERT(static_cast<GLsizei>(4 * 4 * data.size() / sizeof(GLdouble)) >=
 			       count);
-			lak::opengl::call_checked(
-			  glUniformMatrix4dv, unif, count, transpose, (GLdouble *)data.data())
+			lak::opengl::call_checked(glUniformMatrix4dv,
+			                          unif_index,
+			                          count,
+			                          transpose,
+			                          (GLdouble *)data.data())
 			  .UNWRAP();
 			break;
 		case GL_DOUBLE_MAT4x2:
 			ASSERT(static_cast<GLsizei>(4 * 2 * data.size() / sizeof(GLdouble)) >=
 			       count);
-			lak::opengl::call_checked(
-			  glUniformMatrix4x2dv, unif, count, transpose, (GLdouble *)data.data())
+			lak::opengl::call_checked(glUniformMatrix4x2dv,
+			                          unif_index,
+			                          count,
+			                          transpose,
+			                          (GLdouble *)data.data())
 			  .UNWRAP();
 			break;
 		case GL_DOUBLE_MAT4x3:
 			ASSERT(static_cast<GLsizei>(4 * 3 * data.size() / sizeof(GLdouble)) >=
 			       count);
-			lak::opengl::call_checked(
-			  glUniformMatrix4x3dv, unif, count, transpose, (GLdouble *)data.data())
+			lak::opengl::call_checked(glUniformMatrix4x3dv,
+			                          unif_index,
+			                          count,
+			                          transpose,
+			                          (GLdouble *)data.data())
 			  .UNWRAP();
 			break;
 		case GL_INT:
@@ -614,49 +705,49 @@ const lak::opengl::program &lak::opengl::program::set_uniform(
 		case GL_SAMPLER_2D_RECT_SHADOW:
 			ASSERT(static_cast<GLsizei>(1 * data.size() / sizeof(GLint)) >= count);
 			lak::opengl::call_checked(
-			  glUniform1iv, unif, count, (GLint *)data.data())
+			  glUniform1iv, unif_index, count, (GLint *)data.data())
 			  .UNWRAP();
 			break;
 		case GL_INT_VEC2:
 			ASSERT(static_cast<GLsizei>(2 * data.size() / sizeof(GLint)) >= count);
 			lak::opengl::call_checked(
-			  glUniform2iv, unif, count, (GLint *)data.data())
+			  glUniform2iv, unif_index, count, (GLint *)data.data())
 			  .UNWRAP();
 			break;
 		case GL_INT_VEC3:
 			ASSERT(static_cast<GLsizei>(3 * data.size() / sizeof(GLint)) >= count);
 			lak::opengl::call_checked(
-			  glUniform3iv, unif, count, (GLint *)data.data())
+			  glUniform3iv, unif_index, count, (GLint *)data.data())
 			  .UNWRAP();
 			break;
 		case GL_INT_VEC4:
 			ASSERT(static_cast<GLsizei>(4 * data.size() / sizeof(GLint)) >= count);
 			lak::opengl::call_checked(
-			  glUniform4iv, unif, count, (GLint *)data.data())
+			  glUniform4iv, unif_index, count, (GLint *)data.data())
 			  .UNWRAP();
 			break;
 		case GL_UNSIGNED_INT:
 			ASSERT(static_cast<GLsizei>(1 * data.size() / sizeof(GLuint)) >= count);
 			lak::opengl::call_checked(
-			  glUniform1uiv, unif, count, (GLuint *)data.data())
+			  glUniform1uiv, unif_index, count, (GLuint *)data.data())
 			  .UNWRAP();
 			break;
 		case GL_UNSIGNED_INT_VEC2:
 			ASSERT(static_cast<GLsizei>(2 * data.size() / sizeof(GLuint)) >= count);
 			lak::opengl::call_checked(
-			  glUniform2uiv, unif, count, (GLuint *)data.data())
+			  glUniform2uiv, unif_index, count, (GLuint *)data.data())
 			  .UNWRAP();
 			break;
 		case GL_UNSIGNED_INT_VEC3:
 			ASSERT(static_cast<GLsizei>(3 * data.size() / sizeof(GLuint)) >= count);
 			lak::opengl::call_checked(
-			  glUniform3uiv, unif, count, (GLuint *)data.data())
+			  glUniform3uiv, unif_index, count, (GLuint *)data.data())
 			  .UNWRAP();
 			break;
 		case GL_UNSIGNED_INT_VEC4:
 			ASSERT(static_cast<GLsizei>(4 * data.size() / sizeof(GLuint)) >= count);
 			lak::opengl::call_checked(
-			  glUniform4uiv, unif, count, (GLuint *)data.data())
+			  glUniform4uiv, unif_index, count, (GLuint *)data.data())
 			  .UNWRAP();
 			break;
 		default:
@@ -671,5 +762,5 @@ const lak::opengl::program &lak::opengl::program::assert_set_uniform(
   GLsizei count,
   GLboolean transpose) const
 {
-	return set_uniform(assert_uniform_location(unif), data, count, transpose);
+	return set_uniform(assert_uniform_index(unif), data, count, transpose);
 }

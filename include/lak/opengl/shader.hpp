@@ -58,7 +58,8 @@ namespace lak
 		struct shader_attribute
 		{
 			lak::astring name;
-			GLuint position;
+			GLuint index;
+			GLint location;
 			GLint size;
 			// GL_FLOAT, GL_FLOAT_VEC2, GL_FLOAT_VEC3, GL_FLOAT_VEC4,
 			// GL_FLOAT_MAT2, GL_FLOAT_MAT3 or GL_FLOAT_MAT4.
@@ -68,7 +69,8 @@ namespace lak
 		struct shader_uniform
 		{
 			lak::astring name;
-			GLuint position;
+			GLuint index;
+			GLint location;
 			GLint size;
 			// There are a lot more types that this can be compared to
 			// shader_attribute, see
@@ -115,20 +117,26 @@ namespace lak
 			lak::vector<shader_attribute> attributes() const;
 			lak::vector<shader_uniform> uniforms() const;
 
-			shader_attribute attribute(GLuint attr) const;
-			shader_uniform uniform(GLuint unif) const;
+			shader_attribute attribute(GLuint attr_index) const;
+			shader_uniform uniform(GLuint unif_index) const;
 
-			lak::optional<GLuint> attrib_location(const GLchar *name) const;
-			lak::optional<GLuint> uniform_location(const GLchar *name) const;
+			lak::optional<GLuint> attrib_index(const GLchar *name) const;
+			lak::optional<GLuint> uniform_index(const GLchar *name) const;
+
+			lak::optional<GLint> attrib_location(const GLchar *name) const;
+			lak::optional<GLint> uniform_location(const GLchar *name) const;
 
 			shader_attribute assert_attribute(const GLchar *name) const;
 			shader_uniform assert_uniform(const GLchar *name) const;
 
-			GLuint assert_attrib_location(const GLchar *name) const;
-			GLuint assert_uniform_location(const GLchar *name) const;
+			GLuint assert_attrib_index(const GLchar *name) const;
+			GLuint assert_uniform_index(const GLchar *name) const;
+
+			GLint assert_attrib_location(const GLchar *name) const;
+			GLint assert_uniform_location(const GLchar *name) const;
 
 			const program &set_uniform(
-			  GLuint unif,
+			  GLuint unif_index,
 			  lak::span<const void> data,
 			  GLsizei count       = 1 /* only used for array type */,
 			  GLboolean transpose = GL_FALSE) const;
