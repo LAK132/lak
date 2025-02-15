@@ -86,6 +86,24 @@ namespace lak
 
 		inline constexpr lak::dsl::bottom_t bottom;
 
+		/* --- top --- */
+
+		struct top_t
+		{
+			static constexpr bool is_pure_match = true;
+			using value_type                    = lak::u8string_view;
+			lak::dsl::result<value_type> parse(lak::u8string_view str) const
+			{
+				return lak::ok_t{lak::dsl::parse_result<value_type>{
+				  .consumed  = str.first(0),
+				  .remaining = str,
+				  .value     = {},
+				}};
+			}
+		};
+
+		inline constexpr lak::dsl::top_t top;
+
 		/* --- sequence --- */
 
 		template<lak::dsl::parser auto... parsers>
