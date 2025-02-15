@@ -313,6 +313,12 @@ lak::pnm::pnm::read(::lak::binary_reader &strm)
 					ASSERT_UNREACHABLE();
 			}
 		}
+
+		if (!ascii_encoded)
+		{
+			RES_TRY(parser.read((*lak::dsl::ascii_nonnewline_whitespace) +
+			                    lak::dsl::char_literal<U'\n'>));
+		}
 	}
 
 	char c = 0;
