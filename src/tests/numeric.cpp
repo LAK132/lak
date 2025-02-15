@@ -9,6 +9,16 @@ BEGIN_TEST(string_to_number)
 		ASSERT_EQUAL(dub, -1.0);
 	}
 
+	{
+		auto dub = lak::dec_string_to_double(u8"0", u8"5", {}).UNWRAP();
+		ASSERT_EQUAL(dub, 0.5);
+	}
+
+	{
+		auto dub = lak::dec_string_to_double(u8"-0", u8"5", {}).UNWRAP();
+		ASSERT_EQUAL(dub, -0.5);
+	}
+
 	return 0;
 }
 END_TEST()

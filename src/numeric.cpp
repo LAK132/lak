@@ -210,10 +210,17 @@ lak::result<double, lak::string_to_numeric_error> lak::string_to_double(
   uintmax_t exponent_base_part,
   lak::numeric_base character_base)
 {
-	RES_TRY_ASSIGN(const intmax_t integer_integer =,
-	               lak::string_to_intmax(integer_part, character_base));
+	if (integer_part.empty())
+		return lak::err_t{lak::string_to_numeric_error::invalid_string};
+
+	const bool is_negative = integer_part[0] == u8'-';
+	if (is_negative || integer_part[0] == u8'+')
+		integer_part = integer_part.substr(1);
 
 	// uintmax parser guarantees all characters are digits, no + or -
+	RES_TRY_ASSIGN(const uintmax_t integer_integer =,
+	               lak::string_to_uintmax(integer_part, character_base));
+
 	uintmax_t integer_fraction = 0;
 	if (!fraction_part.empty())
 	{
@@ -233,13 +240,15 @@ lak::result<double, lak::string_to_numeric_error> lak::string_to_double(
 	           static_cast<double>(integer_exponent));
 
 	const double float_fraction_exponent =
-	  -std::pow(static_cast<double>(static_cast<uint8_t>(character_base)),
-	            static_cast<double>(fraction_part.size()));
+	  std::pow(static_cast<double>(static_cast<uint8_t>(character_base)),
+	           -static_cast<double>(fraction_part.size()));
 
-	return lak::ok_t<double>{
-	  (static_cast<double>(integer_integer) * float_exponent) +
-	  (static_cast<double>(integer_exponent) *
-	   (float_exponent + float_fraction_exponent))};
+	const double res =
+	  (static_cast<double>(integer_integer) +
+	   (static_cast<double>(integer_fraction) * float_fraction_exponent)) *
+	  float_exponent;
+
+	return lak::ok_t{is_negative ? -res : res};
 }
 
 lak::result<double, lak::string_to_numeric_error> lak::string_to_double(
