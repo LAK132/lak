@@ -60,6 +60,12 @@
 				</ArrayItems>
 			</Expand>
 	</Type>
+	<Type Name="lak::dsl::binary_reader">
+			<DisplayString>{strm._data}</DisplayString>
+			<Expand>
+				<ExpandedItem>strm</ExpandedItem>
+			</Expand>
+	</Type>
 	<Type Name="lak::pack_union&lt;*,*&gt;">
 			<DisplayString>{{ value={value}, next={next} }}</DisplayString>
 			<Expand>
