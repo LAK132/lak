@@ -297,7 +297,7 @@ lak::vector<lak::opengl::shader_uniform> lak::opengl::program::uniforms() const
 		                          name.data())
 		  .UNWRAP();
 		uniforms[i].position =
-		  lak::opengl::call_checked(glGetAttribLocation, _program, name.data())
+		  lak::opengl::call_checked(glGetUniformLocation, _program, name.data())
 		    .UNWRAP();
 		uniforms[i].name = name.data();
 	}
@@ -355,7 +355,7 @@ lak::opengl::shader_uniform lak::opengl::program::uniform(GLuint unif) const
 	                          name.data())
 	  .UNWRAP();
 	result.position =
-	  lak::opengl::call_checked(glGetAttribLocation, _program, name.data())
+	  lak::opengl::call_checked(glGetUniformLocation, _program, name.data())
 	    .UNWRAP();
 	result.name = name.data();
 
