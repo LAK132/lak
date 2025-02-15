@@ -7,6 +7,13 @@
 #include <fstream>
 #include <locale>
 
+#include <version>
+#ifdef __cpp_lib_stacktrace
+#	if __cpp_lib_stacktrace
+#		include <stacktrace>
+#	endif
+#endif
+
 void lak::terminate_handler() { ABORT(); }
 
 void lak::debugger_t::std_out(const lak::u8string &line_info,
@@ -199,6 +206,11 @@ void lak::debugger_t::abort()
 {
 	std::cerr << "Something went wrong!\n" << std::flush;
 #ifndef NDEBUG
+#	ifdef __cpp_lib_stacktrace
+#		if __cpp_lib_stacktrace
+	std::cerr << std::stacktrace::current() << "\n" << std::flush;
+#		endif
+#	endif
 	DEBUG_BREAK();
 #endif
 #ifndef LAK_NO_FILESYSTEM
