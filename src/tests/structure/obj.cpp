@@ -36,9 +36,9 @@ BEGIN_TEST(obj)
 		DEBUG("big test")
 		auto source =
 		  "# comm\tent\n"
-		  "v -1.0 0.0 0.0\n"
+		  "v -1.0 0.0 0.5\n"
 		  "v 0.0 +2.0 0.0\n"
-		  "v +1.0 0.0 0.0\n"
+		  "v +1.0 0.0 -0.5\n"
 		  "vt 0.0 0.0\n"
 		  "vt 1.0 1.0\n"
 		  "vn 0.0 0.0 1.0\n"
@@ -57,7 +57,7 @@ BEGIN_TEST(obj)
 
 		ASSERT_EQUAL(obj.vertex_coords[0].x, -1.0);
 		ASSERT_EQUAL(obj.vertex_coords[0].y, 0.0);
-		ASSERT_EQUAL(obj.vertex_coords[0].z, 0.0);
+		ASSERT_EQUAL(obj.vertex_coords[0].z, 0.5);
 		ASSERT_EQUAL(obj.vertex_coords[0].w, 1.0);
 
 		ASSERT_EQUAL(obj.vertex_coords[1].x, 0.0);
@@ -67,7 +67,7 @@ BEGIN_TEST(obj)
 
 		ASSERT_EQUAL(obj.vertex_coords[2].x, 1.0);
 		ASSERT_EQUAL(obj.vertex_coords[2].y, 0.0);
-		ASSERT_EQUAL(obj.vertex_coords[2].z, 0.0);
+		ASSERT_EQUAL(obj.vertex_coords[2].z, -0.5);
 		ASSERT_EQUAL(obj.vertex_coords[2].w, 1.0);
 
 		ASSERT_EQUAL(obj.texture_coords[0].u, 0.0);
