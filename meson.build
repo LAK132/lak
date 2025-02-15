@@ -51,6 +51,7 @@ else
 		'-Wno-unused-variable',
 		'-Wno-init-list-lifetime',
 		'-Wno-invalid-partial-specialization',
+    '-Wno-missing-field-initializers',
 		'-Wfatal-errors',
 		'-Wno-psabi',
 		# '-mavx',
