@@ -10,7 +10,7 @@
 
 BEGIN_TEST(result)
 {
-	lak::result<int, int> res = lak::ok_t{10};
+	lak::result<int, int> res = lak::ok_t<int>{10};
 
 	do
 	{
@@ -40,7 +40,7 @@ BEGIN_TEST(result)
 		ASSERT_UNREACHABLE();
 	} while (false);
 
-	res = lak::err_t{-10};
+	res = lak::err_t<int>{-10};
 
 	do
 	{
