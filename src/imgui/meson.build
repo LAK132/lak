@@ -14,7 +14,7 @@ lakimgui = static_library(
 		'backend.cpp',
 		'widgets.cpp',
 	],
-	override_options: 'cpp_std=' + version,
+	override_options: override_options,
 	dependencies: lakimgui_dependencies,
 )
 

@@ -13,7 +13,7 @@ lakopengl = static_library(
 		'shader.cpp',
 		'texture.cpp',
 	],
-	override_options: 'cpp_std=' + version,
+	override_options: override_options,
 	link_with: [
 		gl3w,
 	],

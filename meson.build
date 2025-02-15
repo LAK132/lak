@@ -66,6 +66,49 @@ else
 	macro_test_args = c_cpp_args + cpp_args + ['-std=' + version]
 endif
 
+if get_option('debug')
+	override_options = [
+		'cpp_std=' + version,
+		'werror=false',
+	]
+	override_options_w0 = [
+		'cpp_std=' + version,
+		'warning_level=0',
+		'werror=false',
+	]
+	override_options_w1 = [
+		'cpp_std=' + version,
+		'warning_level=1',
+		'werror=false',
+	]
+	override_options_w2 = [
+		'cpp_std=' + version,
+		'warning_level=2',
+		'werror=false',
+	]
+	override_options_w3 = [
+		'cpp_std=' + version,
+		'warning_level=3',
+		'werror=false',
+	]
+	override_options_werror = [
+		'cpp_std=' + version,
+		'warning_level=3',
+		'werror=true',
+	]
+else
+	override_options = [
+		'cpp_std=' + version,
+		'warning_level=0',
+		'werror=false',
+	]
+	override_options_w0 = override_options
+	override_options_w1 = override_options
+	override_options_w2 = override_options
+	override_options_w3 = override_options
+	override_options_werror = override_options
+endif
+
 c_cpp_args += [
 	'-D_CRT_SECURE_NO_WARNINGS',
 ]
@@ -296,7 +339,7 @@ if get_option('lak_enable_tests')
 		[
 			'src/tests/test_main.cpp',
 		],
-		override_options: 'cpp_std=' + version,
+		override_options: override_options,
 		include_directories: include_directories('include'),
 		dependencies: lak_dep,
 	)
@@ -306,7 +349,7 @@ if get_option('lak_enable_tests')
 		[
 			'src/tests/bigint_standalone.cpp',
 		],
-		override_options: 'cpp_std=' + version,
+		override_options: override_options,
 		include_directories: include_directories('include'),
 	)
 endif

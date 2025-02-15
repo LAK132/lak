@@ -31,10 +31,7 @@ lakcore = static_library(
 		'unicode.cpp',
 		'unique_pages.cpp',
 	],
-	override_options: [
-		'cpp_std=' + version,
-		'warning_level=3',
-	],
+	override_options: override_options_w3,
 	include_directories: include_directories('..', '..'/'include'),
 	dependencies: dependency('threads'),
 	link_args: lakcore_linkargs,

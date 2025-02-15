@@ -3,11 +3,7 @@ laktestllvm = static_library(
 	[
 		'llvm.cpp',
 	],
-	override_options: [
-		'cpp_std=' + version,
-		'warning_level=0',
-		'werror=false',
-	],
+	override_options: override_options_w0,
 	dependencies: [
 		lakcore_dep,
 		lakllvm_dep,

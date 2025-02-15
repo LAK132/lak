@@ -3,11 +3,7 @@ laktestlua = static_library(
 	[
 		'lua.cpp',
 	],
-	override_options: [
-		'cpp_std=' + version,
-		'warning_level=2',
-		'werror=false',
-	],
+	override_options: override_options_w2,
 	dependencies: [
 		lakcore_dep,
 		laklua_dep,

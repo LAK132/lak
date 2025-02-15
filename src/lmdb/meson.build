@@ -5,7 +5,7 @@ laklmdb = static_library(
 	[
 		'lmdb.cpp',
 	],
-	override_options: 'cpp_std=' + version,
+	override_options: override_options,
 	dependencies: [
 		lakcore_dep,
 		lmdb_dep,
