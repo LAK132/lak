@@ -113,8 +113,8 @@
 			</Expand>
 	</Type>
 	<Type Name="lak::string_view&lt;char&gt;">
-			<DisplayString>{_value._data,s}</DisplayString>
-			<StringView>_value._data,s</StringView>
+			<DisplayString>{_value._data,[_value._size]s}</DisplayString>
+			<StringView>_value._data,[_value._size]s</StringView>
 			<Expand>
 					<Item Name="[size]" ExcludeView="simple">_value._size</Item>
 					<ArrayItems>
@@ -124,8 +124,8 @@
 			</Expand>
 	</Type>
 	<Type Name="lak::string_view&lt;wchar_t&gt;">
-			<DisplayString>{_value._data,su}</DisplayString>
-			<StringView>_value._data,su</StringView>
+			<DisplayString>{_value._data,[_value._size]su}</DisplayString>
+			<StringView>_value._data,[_value._size]su</StringView>
 			<Expand>
 					<Item Name="[size]" ExcludeView="simple">_value._size</Item>
 					<ArrayItems>
@@ -135,8 +135,8 @@
 			</Expand>
 	</Type>
 	<Type Name="lak::string_view&lt;char8_t&gt;">
-			<DisplayString>{_value._data,s8}</DisplayString>
-			<StringView>_value._data,s8</StringView>
+			<DisplayString>{_value._data,[_value._size]s8}</DisplayString>
+			<StringView>_value._data,[_value._size]s8</StringView>
 			<Expand>
 					<Item Name="[size]" ExcludeView="simple">_value._size</Item>
 					<ArrayItems>
@@ -146,8 +146,8 @@
 			</Expand>
 	</Type>
 	<Type Name="lak::string_view&lt;char16_t&gt;">
-			<DisplayString>{_value._data,su}</DisplayString>
-			<StringView>_value._data,su</StringView>
+			<DisplayString>{_value._data,[_value._size]su}</DisplayString>
+			<StringView>_value._data,[_value._size]su</StringView>
 			<Expand>
 					<Item Name="[size]" ExcludeView="simple">_value._size</Item>
 					<ArrayItems>
@@ -157,8 +157,8 @@
 			</Expand>
 	</Type>
 	<Type Name="lak::string_view&lt;char32_t&gt;">
-			<DisplayString>{_value._data,s32}</DisplayString>
-			<StringView>_value._data,s32</StringView>
+			<DisplayString>{_value._data,[_value._size]s32}</DisplayString>
+			<StringView>_value._data,[_value._size]s32</StringView>
 			<Expand>
 					<Item Name="[size]" ExcludeView="simple">_value._size</Item>
 					<ArrayItems>
