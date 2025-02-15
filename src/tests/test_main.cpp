@@ -20,10 +20,16 @@ int LAK_TEST_MAIN(int argc, char **argv)
 	{
 		std::cout << "options:\n"
 		             "--help: print this text\n"
+		             "--list: list registered tests\n"
 		             "--testall: run all registered tests\n"
 		             "--test[s] \"test1;test2\": run the specified tests\n"
 		          << std::flush;
 		return argc < 2 ? EXIT_FAILURE : EXIT_SUCCESS;
+	}
+	else if (arg1 == "--list"_view)
+	{
+		for (const auto &[name, func] : lak::registered_tests())
+			std::cout << reinterpret_cast<const char *>(name.c_str()) << "\n";
 	}
 	else if (arg1 == "--testall"_view)
 	{
