@@ -877,6 +877,93 @@ namespace lak
 			return lak::dsl::negative_lookahead<par{}>;
 		}
 
+		/* --- conditional --- */
+
+		template<lak::dsl::pure_match_parser auto condition,
+		         lak::dsl::parser auto true_parser,
+		         lak::dsl::parser auto false_parser>
+		struct conditional_t
+		{
+			static constexpr bool is_pure_match =
+			  decltype(true_parser)::is_pure_match &&
+			  decltype(false_parser)::is_pure_match;
+
+			using value_type = lak::conditional_t<
+			  is_pure_match,
+			  lak::u8string_view,
+			  lak::variant<typename decltype(true_parser)::value_type,
+			               typename decltype(false_parser)::value_type>>;
+
+			lak::dsl::result<value_type> parse(lak::u8string_view str) const
+			requires(is_pure_match)
+			{
+				if_let_ok (auto ok, condition.parse(str))
+					return true_parser.parse(ok.remaining);
+				else
+					return false_parser.parse(str);
+			}
+
+			lak::dsl::result<value_type> parse(lak::u8string_view str) const
+			requires(!is_pure_match)
+			{
+				if_let_ok (auto ok, condition.parse(str))
+					return true_parser.parse(ok.remaining)
+					  .map(
+					    []<typename T>(lak::dsl::parse_result<T> &&res)
+					      -> lak::dsl::parse_result<value_type>
+					    {
+						    return {
+						      .consumed  = res.consumed,
+						      .remaining = res.remaining,
+						      .value     = lak::var_t<0U>(lak::forward<T>(res.value)),
+						    };
+					    });
+				else
+					return false_parser.parse(str).map(
+					  []<typename T>(lak::dsl::parse_result<T> &&res)
+					    -> lak::dsl::parse_result<value_type>
+					  {
+						  return {
+						    .consumed  = res.consumed,
+						    .remaining = res.remaining,
+						    .value     = lak::var_t<1U>(lak::forward<T>(res.value)),
+						  };
+					  });
+			}
+		};
+
+		template<lak::dsl::pure_match_parser auto condition,
+		         lak::dsl::parser auto true_parser,
+		         lak::dsl::parser auto false_parser>
+		lak::dsl::conditional_t<condition, true_parser, false_parser> conditional;
+
+		static_assert(lak::dsl::parser<lak::dsl::conditional_t<lak::dsl::top,
+		                                                       lak::dsl::top,
+		                                                       lak::dsl::bottom>>);
+
+		/* --- is_conditional --- */
+
+		template<typename T>
+		struct is_conditional : lak::false_type
+		{
+		};
+		template<lak::dsl::pure_match_parser auto condition,
+		         lak::dsl::parser auto true_parser,
+		         lak::dsl::parser auto false_parser>
+		struct is_conditional<
+		  lak::dsl::conditional_t<condition, true_parser, false_parser>>
+		: lak::true_type
+		{
+		};
+		template<typename T>
+		inline constexpr bool is_conditional_v =
+		  lak::dsl::is_conditional<T>::value;
+
+		static_assert(
+		  lak::dsl::is_conditional_v<lak::dsl::conditional_t<lak::dsl::top,
+		                                                     lak::dsl::top,
+		                                                     lak::dsl::bottom>>);
+
 		/* --- str_literal --- */
 
 		template<lak::u8const_string const_str>
