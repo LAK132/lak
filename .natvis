@@ -51,8 +51,8 @@
 	<Type Name="lak::binary_reader">
 			<DisplayString>{_data}</DisplayString>
 			<Expand>
-				<ExpandedItem>_data</ExpandedItem>
-				<ExpandedItem>_cursor</ExpandedItem>
+				<Item Name="[source]" ExcludeView="simple">_data</Item>
+				<Item Name="[cursor]" ExcludeView="simple">_cursor</Item>
 				<Item Name="[remaining]" ExcludeView="simple">_data._size - _cursor</Item>
 				<ArrayItems>
 						<Size>_data._size - _cursor</Size>
