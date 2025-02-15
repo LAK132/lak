@@ -135,11 +135,12 @@ namespace lak
 		         lak::dsl::pure_match_parser auto exp_separator>
 		inline constexpr auto dec_float =
 		  lak::dsl::capture<lak::dsl::signed_dec_number> +
-		  lak::dsl::capture<
-		    ~lak::dsl::capture_nth<1U, frac_separator, lak::dsl::dec_number>> +
-		  lak::dsl::capture<~lak::dsl::capture_nth<1U,
-		                                           exp_separator,
-		                                           lak::dsl::signed_dec_number>>;
+		  lak::dsl::capture<lak::dsl::conditional<frac_separator,
+		                                          lak::dsl::dec_number,
+		                                          lak::dsl::top>> +
+		  lak::dsl::capture<lak::dsl::conditional<exp_separator,
+		                                          lak::dsl::signed_dec_number,
+		                                          lak::dsl::top>>;
 
 		template<typename FLOAT,
 		         lak::dsl::pure_match_parser auto frac_separator,
