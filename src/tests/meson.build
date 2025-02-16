@@ -27,6 +27,7 @@ laktestcore = static_library(
 		'priority_queue.cpp',
 		'ptr_intrin.cpp',
 		'result.cpp',
+		'runtime_type.cpp',
 		'span_manip.cpp',
 		'string_literals.cpp',
 		'test.cpp',

@@ -22,6 +22,7 @@ lakcore = static_library(
 		'numeric.cpp',
 		'process.cpp',
 		'profile.cpp',
+		'runtime_type.cpp',
 		'strconv.cpp',
 		'string_view.cpp',
 		'tasks.cpp',
