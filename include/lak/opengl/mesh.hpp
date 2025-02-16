@@ -100,7 +100,7 @@ namespace lak
 			GLuint divisor;
 
 			// apply vertex attribute to the bound Vertex Array Object.
-			void apply(GLuint shader_position) const;
+			void apply(GLint shader_location) const;
 		};
 
 		// vertex_buffer is a Buffer that can only be bound to GL_ARRAY_BUFFER of a
@@ -147,7 +147,7 @@ namespace lak
 
 			// apply vertex attributes to the bound Vertex Array Object.
 			vertex_buffer &apply_shader_attributes(
-			  lak::span<const GLuint> attribute_positions);
+			  lak::span<const GLint> attribute_location);
 
 			void draw(GLuint instances = 1) const;
 			void draw_part(const GLuint *offset,
@@ -200,7 +200,7 @@ namespace lak
 			static static_object_part create(
 			  shared_vertex_buffer vertices,
 			  shared_program shader_program,
-			  lak::span<const GLuint> attribute_positions,
+			  lak::span<const GLint> attribute_locations,
 			  lak::array<lak::pair<lak::shared_ptr<texture>, GLuint>> textures);
 
 			static_object_part &clear();

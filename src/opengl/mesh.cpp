@@ -73,15 +73,15 @@ lak::opengl::buffer &lak::opengl::buffer::set_data(lak::span<const void> data,
 
 /* --- vertex_attribute --- */
 
-void lak::opengl::vertex_attribute::apply(GLuint shader_position) const
+void lak::opengl::vertex_attribute::apply(GLint shader_location) const
 {
-	lak::opengl::call_checked(glEnableVertexAttribArray, shader_position)
+	lak::opengl::call_checked(glEnableVertexAttribArray, shader_location)
 	  .UNWRAP();
 	// :TODO: Check if we're above OpenGL 3.3 for divisors.
-	lak::opengl::call_checked(glVertexAttribDivisor, shader_position, divisor)
+	lak::opengl::call_checked(glVertexAttribDivisor, shader_location, divisor)
 	  .UNWRAP();
 	lak::opengl::call_checked(glVertexAttribPointer,
-	                          shader_position,
+	                          shader_location,
 	                          size,
 	                          type,
 	                          normalised,
@@ -176,11 +176,11 @@ lak::opengl::vertex_buffer &lak::opengl::vertex_buffer::set_vertex_attributes(
 }
 
 lak::opengl::vertex_buffer &lak::opengl::vertex_buffer::
-  apply_shader_attributes(lak::span<const GLuint> attribute_positions)
+  apply_shader_attributes(lak::span<const GLint> attribute_locations)
 {
-	ASSERT(_attributes.size() == attribute_positions.size());
+	ASSERT(_attributes.size() == attribute_locations.size());
 	for (size_t i = 0; i < _attributes.size(); ++i)
-		_attributes[i].apply(attribute_positions[i]);
+		_attributes[i].apply(attribute_locations[i]);
 	return *this;
 }
 
@@ -287,7 +287,7 @@ lak::opengl::static_object_part &lak::opengl::static_object_part::operator=(
 lak::opengl::static_object_part lak::opengl::static_object_part::create(
   shared_vertex_buffer vertices,
   shared_program shader_program,
-  lak::span<const GLuint> attribute_positions,
+  lak::span<const GLint> attribute_locations,
   lak::array<lak::pair<lak::shared_ptr<lak::opengl::texture>, GLuint>>
     textures)
 {
@@ -300,7 +300,7 @@ lak::opengl::static_object_part lak::opengl::static_object_part::create(
 
 	mesh._vertex_array.bind();
 	mesh._vertex_buffer->bind();
-	mesh._vertex_buffer->apply_shader_attributes(attribute_positions);
+	mesh._vertex_buffer->apply_shader_attributes(attribute_locations);
 
 	return mesh;
 }
