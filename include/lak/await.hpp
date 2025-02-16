@@ -50,17 +50,17 @@ namespace lak
           {
             try
             {
-              result = lak::ok_t{functor(arg...)};
+              result = lak::ok_t<T>{functor(arg...)};
             }
             catch (const std::exception &e)
             {
               ERROR("Uncaught Exception: ", e.what());
-              result = lak::err_t{await_error::failed};
+              result = lak::err_t<await_error>{await_error::failed};
             }
             catch (...)
             {
               ERROR("Uncaught Exception");
-              result = lak::err_t{await_error::failed};
+              result = lak::err_t<await_error>{await_error::failed};
             }
             finished = true;
           },
