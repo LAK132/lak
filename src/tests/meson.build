@@ -1,6 +1,8 @@
 laktestcore = static_library(
 	'laktestcore',
 	[
+		'dsl'/'dsl.cpp',
+		'dsl'/'sexpr.cpp',
 		'structure'/'nbt.cpp',
 		'structure'/'obj.cpp',
 		'structure'/'pnm.cpp',
@@ -16,7 +18,6 @@ laktestcore = static_library(
 		'com_ptr.cpp',
 		'compare.cpp',
 		'const_string.cpp',
-		'dsl.cpp',
 		'functional.cpp',
 		'integer_range.cpp',
 		'json.cpp',
