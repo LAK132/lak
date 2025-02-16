@@ -41,7 +41,7 @@ Attribution would be nice but is not required.
 Requires msys64
 
 ```
-> ./setup.bat msvc -Dlak_enable_libgphoto2=true -Dlak_msys_prefix=C:/msys64
+> ./setup.bat msvc -Dlak_enable_libgphoto2=true -Dlibgphoto2_msys_prefix=C:/msys64
 > ./compile.bat install-msys-libgphoto2-dependencies
 > ./compile.bat
 ```
@@ -51,7 +51,7 @@ Requires msys64
 Requires libgphoto2 dependencies to be preinstalled.
 
 ```
-> ./setup.sh gcc -Dlak_enable_libgphoto2=true -Dlak_msys_prefix=C:/msys64
+> ./setup.sh gcc -Dlak_enable_libgphoto2=true
 > ./compile.sh
 ```
 
@@ -60,6 +60,6 @@ Requires libgphoto2 dependencies to be preinstalled.
 To use LLVM on Windows, MSVC must be installed with the MFC and ATL components
 
 ```
-> ./setup.bat msvc -Dlak_enable_llvm=true -Dlak_msys_prefix=C:/msys64
+> ./setup.bat msvc -Dlak_enable_llvm=true
 > ./compile.bat
 ```
