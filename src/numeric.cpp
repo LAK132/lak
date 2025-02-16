@@ -11,7 +11,7 @@ lak::u8string_view uintmax_max_dec_str()
 		lak::u8string str;
 		str.reserve((UINTMAX_MAX / 9) + 1);
 		uintmax_t max = UINTMAX_MAX;
-		for (size_t i = 0; max != 0; ++i)
+		for (; max != 0;)
 		{
 			str.push_back(static_cast<char8_t>((max % 10) + u8'0'));
 			max /= 10;
