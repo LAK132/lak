@@ -820,6 +820,53 @@ namespace lak
 		  lak::dsl::is_capture_nth_v<
 		    lak::dsl::capture_nth_t<0U, lak::dsl::capture<lak::dsl::sequence<>>>>);
 
+		/* --- as_pure --- */
+
+		template<lak::dsl::parser auto par>
+		struct as_pure_t
+		{
+			static constexpr bool is_pure_match = true;
+			using value_type                    = lak::u8string_view;
+
+			lak::dsl::result<value_type> parse(lak::u8string_view str) const
+			{
+				return par.parse(str).map(
+				  []<typename T>(lak::dsl::parse_result<T> &&res)
+				    -> lak::dsl::parse_result<value_type>
+				  {
+					  return {
+					    .consumed  = res.consumed,
+					    .remaining = res.remaining,
+					    .value     = res.consumed,
+					  };
+				  });
+			}
+		};
+
+		template<lak::dsl::parser auto par>
+		inline constexpr lak::dsl::as_pure_t<par> as_pure;
+
+		static_assert(
+		  !lak::dsl::pure_match_parser<lak::dsl::capture_t<lak::dsl::bottom>>);
+		static_assert(lak::dsl::pure_match_parser<
+		              lak::dsl::as_pure_t<dsl::capture<lak::dsl::bottom>>>);
+
+		/* --- is_as_pure --- */
+
+		template<typename T>
+		struct is_as_pure : lak::false_type
+		{
+		};
+		template<lak::dsl::parser auto par>
+		struct is_as_pure<lak::dsl::as_pure_t<par>> : lak::true_type
+		{
+		};
+		template<typename T>
+		inline constexpr bool is_as_pure_v = lak::dsl::is_as_pure<T>::value;
+
+		static_assert(
+		  lak::dsl::is_as_pure_v<lak::dsl::as_pure_t<lak::dsl::bottom>>);
+
 		/* --- negative_lookahead --- */
 
 		template<lak::dsl::pure_match_parser auto par>
