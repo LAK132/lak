@@ -2,6 +2,7 @@ laktestcore = static_library(
 	'laktestcore',
 	[
 		'dsl'/'dsl.cpp',
+		'dsl'/'json.cpp',
 		'dsl'/'sexpr.cpp',
 		'structure'/'nbt.cpp',
 		'structure'/'obj.cpp',
