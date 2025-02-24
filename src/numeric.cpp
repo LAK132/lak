@@ -142,11 +142,11 @@ lak::result<uintmax_t, lak::string_to_numeric_error> lak::string_to_uintmax(
 			{
 				result <<= 4U;
 				if (c >= u8'0' && c <= u8'9')
-					result |= static_cast<uint8_t>(c - u8'0');
+					result |= static_cast<uint8_t>((c - u8'0') + 0x0U);
 				else if (c >= u8'a' && c <= u8'f')
-					result |= static_cast<uint8_t>(c - u8'a');
+					result |= static_cast<uint8_t>((c - u8'a') + 0xAU);
 				else if (c >= u8'A' && c <= u8'F')
-					result |= static_cast<uint8_t>(c - u8'A');
+					result |= static_cast<uint8_t>((c - u8'A') + 0xAU);
 				else
 					return lak::err_t{lak::string_to_numeric_error::invalid_string};
 			}
