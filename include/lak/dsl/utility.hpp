@@ -20,6 +20,12 @@ namespace lak
 		inline constexpr auto nonnewline_whitespace =
 		  (!lak::dsl::newline) & lak::dsl::whitespace;
 
+		inline constexpr auto ascii_alpha =
+		  lak::dsl::char_range<U'a', U'z'> | lak::dsl::char_range<U'A', U'Z'>;
+		inline constexpr auto ascii_numeric = lak::dsl::char_range<U'0', U'9'>;
+		inline constexpr auto ascii_alphanumeric =
+		  lak::dsl::ascii_alpha | lak::dsl::ascii_numeric;
+
 		inline constexpr auto number_sign = lak::dsl::one_of_chars<U'+', U'-'>;
 
 		inline constexpr auto bin_digit  = lak::dsl::char_range<U'0', U'1'>;
