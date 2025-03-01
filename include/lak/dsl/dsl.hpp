@@ -917,6 +917,55 @@ namespace lak
 			return lak::dsl::negative_lookahead<par{}>;
 		}
 
+		/* --- until --- */
+
+		template<lak::dsl::pure_match_parser auto parser>
+		struct until_t
+		{
+			static constexpr auto is_pure_match = true;
+
+			using value_type = lak::u8string_view;
+
+			lak::dsl::result<value_type> parse(lak::u8string_view str) const
+			{
+				for (lak::u8string_view rem = str; !rem.empty(); rem = rem.substr(1U))
+				{
+					if (parser.parse(rem).is_ok())
+					{
+						str = str.first(str.size() - rem.size());
+						return lak::ok_t<lak::dsl::parse_result<value_type>>{{
+						  .consumed  = str,
+						  .remaining = rem,
+						  .value     = str,
+						}};
+					}
+				}
+
+				return lak::err_t<lak::dsl::parse_error>{{.message = u8"out of data"}};
+			}
+		};
+
+		template<lak::dsl::pure_match_parser auto parser>
+		inline const lak::dsl::until_t<parser> until;
+
+		static_assert(
+		  lak::dsl::pure_match_parser<lak::dsl::until_t<lak::dsl::bottom>>);
+
+		/* --- is_until --- */
+
+		template<typename T>
+		struct is_until : lak::false_type
+		{
+		};
+		template<lak::dsl::pure_match_parser auto par>
+		struct is_until<lak::dsl::until_t<par>> : lak::true_type
+		{
+		};
+		template<typename T>
+		inline constexpr bool is_until_v = lak::dsl::is_until<T>::value;
+
+		static_assert(lak::dsl::is_until_v<lak::dsl::until_t<lak::dsl::bottom>>);
+
 		/* --- conditional --- */
 
 		template<lak::dsl::pure_match_parser auto condition,
