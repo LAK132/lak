@@ -33,9 +33,6 @@ namespace lak
 
 			(caller(lak::size_type<I>{}) || ... || caller(lak::size_type<J>{}));
 		}
-#ifdef LAK_COMPILER_MSVC
-#	pragma warning(pop)
-#endif
 
 		template<typename FUNC, size_t I, size_t... J>
 		requires(!lak::is_void_v<lak::invoke_result_t<FUNC, lak::size_type<I>>>)
@@ -56,6 +53,9 @@ namespace lak
 			return *(caller(lak::size_type<I>{}) | ... |
 			         caller(lak::size_type<J>{}));
 		}
+#ifdef LAK_COMPILER_MSVC
+#	pragma warning(pop)
+#endif
 
 		template<typename FUNC, typename VAR>
 		force_inline auto _visit(FUNC &&func, VAR &&variant)
