@@ -238,7 +238,8 @@ namespace lak
 				  lak::to_bytes_traits<value_type, E>::size * values.size();
 				const size_t new_size = data.size() + req_size;
 				data.resize(new_size);
-				RES_TRY(lak::array_to_bytes<E>(lak::span(data).last(req_size), values)
+				RES_TRY(lak::array_to_bytes<E, lak::remove_const_t<T>>(
+				          lak::span(data).last(req_size), values)
 				          .if_err([&](auto) { data.resize(data.size() - req_size); }));
 			}
 			else
