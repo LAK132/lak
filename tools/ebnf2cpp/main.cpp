@@ -162,7 +162,8 @@ int main(int argc, char **argv)
 
 				case grouping:
 				{
-					lak::dsl::ebnf_rule_value v = val;
+					lak::dsl::ebnf_rule_value v =
+					  grammar.rule_values[grammar.groupings[val.index].index];
 					stack.pop_back();
 					stack.push_back({v, 0U});
 				}
