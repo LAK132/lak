@@ -343,7 +343,7 @@ constexpr lak::ebpf::instruction lak::ebpf::instruction::make(
 	  jump, opcode_alu_jump_source::K, code, dst, 0U, offset, immediate);
 }
 
-constexpr lak::ebpf::instruction lak::ebpf::instruction::make_jump(
+constexpr lak::ebpf::instruction lak::ebpf::instruction::make_jump16(
   uint16_t offset)
 {
 	return make(opcode_class_jump::JMP,
@@ -355,7 +355,7 @@ constexpr lak::ebpf::instruction lak::ebpf::instruction::make_jump(
 	            0U);
 }
 
-constexpr lak::ebpf::instruction lak::ebpf::instruction::make_jump(
+constexpr lak::ebpf::instruction lak::ebpf::instruction::make_jump32(
   uint32_t immediate)
 {
 	return make(opcode_class_jump::JMP32,

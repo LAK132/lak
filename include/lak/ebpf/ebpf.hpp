@@ -268,8 +268,8 @@ namespace lak
 			                                  register_t dst,
 			                                  uint32_t immediate,
 			                                  uint16_t offset);
-			static constexpr instruction make_jump(uint16_t offset);
-			static constexpr instruction make_jump(uint32_t immediate);
+			static constexpr instruction make_jump16(uint16_t offset);
+			static constexpr instruction make_jump32(uint32_t immediate);
 			static constexpr instruction make_call(uint8_t src, uint32_t immediate);
 			static constexpr instruction make_agnostic_helper_call(
 			  uint32_t immediate);

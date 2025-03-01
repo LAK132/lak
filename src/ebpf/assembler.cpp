@@ -385,7 +385,7 @@ lak::ebpf::instruction_parser_t::parse(lak::u8string_view str) const
 	                        offset_parser>,
 	            [](uint16_t offset) -> value_type
 	            {
-		            return {lak::ebpf::instruction::make_jump(offset),
+		            return {lak::ebpf::instruction::make_jump16(offset),
 		                    lak::nullopt};
 	            }> |
 	  transform<
@@ -393,13 +393,13 @@ lak::ebpf::instruction_parser_t::parse(lak::u8string_view str) const
 	                immediate_parser>,
 	    [](uint32_t immediate) -> value_type
 	    {
-		    return {lak::ebpf::instruction::make_jump(immediate), lak::nullopt};
+		    return {lak::ebpf::instruction::make_jump32(immediate), lak::nullopt};
 	    }> |
 	  transform<capture_2nd<str_literal<u8"jmp"> + ws + str_literal<u8"ja"> + ws,
 	                        label_token_parser>,
 	            [](lak::u8string_view label) -> value_type
 	            {
-		            return {lak::ebpf::instruction::make_jump(UINT16_MAX),
+		            return {lak::ebpf::instruction::make_jump16(UINT16_MAX),
 		                    lak::var_t<1>(label)};
 	            }> |
 	  transform<
@@ -407,7 +407,7 @@ lak::ebpf::instruction_parser_t::parse(lak::u8string_view str) const
 	                label_token_parser>,
 	    [](lak::u8string_view label) -> value_type
 	    {
-		    return {lak::ebpf::instruction::make_jump(UINT32_MAX),
+		    return {lak::ebpf::instruction::make_jump32(UINT32_MAX),
 		            lak::var_t<1>(label)};
 	    }> |
 	  transform<
