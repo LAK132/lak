@@ -941,11 +941,18 @@ namespace lak
 			  decltype(true_parser)::is_pure_match &&
 			  decltype(false_parser)::is_pure_match;
 
+			static constexpr bool _same_type =
+			  lak::is_same_v<typename decltype(true_parser)::value_type,
+			                 typename decltype(false_parser)::value_type>;
+
 			using value_type = lak::conditional_t<
 			  is_pure_match,
 			  lak::u8string_view,
-			  lak::variant<typename decltype(true_parser)::value_type,
-			               typename decltype(false_parser)::value_type>>;
+			  lak::conditional_t<
+			    _same_type,
+			    typename decltype(true_parser)::value_type,
+			    lak::variant<typename decltype(true_parser)::value_type,
+			                 typename decltype(false_parser)::value_type>>>;
 
 			lak::dsl::result<value_type> parse(lak::u8string_view str) const
 			requires(is_pure_match)
@@ -957,7 +964,7 @@ namespace lak
 			}
 
 			lak::dsl::result<value_type> parse(lak::u8string_view str) const
-			requires(!is_pure_match)
+			requires(!is_pure_match && !_same_type)
 			{
 				if_let_ok (auto ok, condition.parse(str))
 					return true_parser.parse(ok.remaining)
@@ -980,6 +987,34 @@ namespace lak
 						    .consumed  = res.consumed,
 						    .remaining = res.remaining,
 						    .value     = lak::var_t<1U>(lak::forward<T>(res.value)),
+						  };
+					  });
+			}
+
+			lak::dsl::result<value_type> parse(lak::u8string_view str) const
+			requires(!is_pure_match && _same_type)
+			{
+				if_let_ok (auto ok, condition.parse(str))
+					return true_parser.parse(ok.remaining)
+					  .map(
+					    []<typename T>(lak::dsl::parse_result<T> &&res)
+					      -> lak::dsl::parse_result<value_type>
+					    {
+						    return {
+						      .consumed  = res.consumed,
+						      .remaining = res.remaining,
+						      .value     = lak::forward<T>(res.value),
+						    };
+					    });
+				else
+					return false_parser.parse(str).map(
+					  []<typename T>(lak::dsl::parse_result<T> &&res)
+					    -> lak::dsl::parse_result<value_type>
+					  {
+						  return {
+						    .consumed  = res.consumed,
+						    .remaining = res.remaining,
+						    .value     = lak::forward<T>(res.value),
 						  };
 					  });
 			}
