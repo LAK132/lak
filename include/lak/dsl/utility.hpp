@@ -178,7 +178,7 @@ namespace lak
 
 		template<char32_t chr>
 		inline constexpr auto until_next_char =
-		  *lak::dsl::negative_char_literal<chr>;
+		  lak::dsl::until<lak::dsl::char_literal<chr>>;
 
 		template<char32_t chr>
 		inline constexpr auto next_char =
@@ -186,23 +186,30 @@ namespace lak
 
 		template<lak::u8const_string const_str>
 		inline constexpr auto until_next_str =
-		  *lak::dsl::negative_str_literal<const_str>;
+		  lak::dsl::until<lak::dsl::str_literal<const_str>>;
 
 		template<lak::u8const_string const_str>
 		inline constexpr auto next_str =
 		  lak::dsl::until_next_str<const_str> + lak::dsl::str_literal<const_str>;
 
+		template<lak::u8const_string begin, lak::u8const_string end>
+		inline constexpr auto simple_bounded_str =
+		  lak::dsl::str_literal<begin> + lak::dsl::next_str<end>;
+
+		template<lak::u8const_string begin, lak::u8const_string end>
+		inline constexpr auto capture_simple_bounded_str =
+		  lak::dsl::capture_2nd<lak::dsl::str_literal<begin>,
+		                        lak::dsl::until_next_str<end>,
+		                        lak::dsl::str_literal<end>>;
+
 		inline constexpr auto slash_line_comment =
-		  // u8"//"_dsl_str + lak::dsl::next_char<U'\n'>;
-		  lak::dsl::str_literal<u8"//"> + lak::dsl::next_char<U'\n'>;
+		  lak::dsl::simple_bounded_str<u8"//", u8"\n">;
 
 		inline constexpr auto block_comment =
-		  // u8"/*"_dsl_str + lak::dsl::next_str<u8"*/">;
-		  lak::dsl::str_literal<u8"/*"> + lak::dsl::next_str<u8"*/">;
+		  lak::dsl::simple_bounded_str<u8"/*", u8"*/">;
 
 		inline constexpr auto pound_line_comment =
-		  // U"#"_dsl_char + lak::dsl::next_char<U'\n'>;
-		  lak::dsl::char_literal<U'#'> + lak::dsl::next_char<U'\n'>;
+		  lak::dsl::simple_bounded_str<u8"#", u8"\n">;
 
 	}
 }
