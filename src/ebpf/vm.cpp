@@ -82,6 +82,7 @@ lak::result<uint64_t, size_t> lak::ebpf::vm::run_program(
 				break;
 			case register_t::R10:
 				val = r10;
+				break;
 			default:
 				FATAL("invalid register");
 				break;
