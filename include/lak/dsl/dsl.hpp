@@ -796,6 +796,12 @@ namespace lak
 		template<size_t N, lak::dsl::parser auto... parsers>
 		inline constexpr lak::dsl::capture_nth_t<N, parsers...> capture_nth;
 
+		template<lak::dsl::parser auto... parsers>
+		inline constexpr lak::dsl::capture_nth_t<0U, parsers...> capture_1st;
+
+		template<lak::dsl::parser auto... parsers>
+		inline constexpr lak::dsl::capture_nth_t<1U, parsers...> capture_2nd;
+
 		static_assert(
 		  lak::dsl::parser<lak::dsl::capture_nth_t<0U, lak::dsl::sequence<>>>);
 
