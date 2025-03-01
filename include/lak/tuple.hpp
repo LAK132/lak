@@ -52,12 +52,12 @@ namespace lak
 		T first;
 		U second;
 
-		pair() = default;
-		pair(const pair &p);
-		pair(pair &&p);
+		constexpr pair() = default;
+		constexpr pair(const pair &p);
+		constexpr pair(pair &&p);
 
 		template<typename V, typename W>
-		pair(V &&f, W &&s);
+		constexpr pair(V &&f, W &&s);
 
 		pair &operator=(const pair &p);
 		pair &operator=(pair &&p);
@@ -92,12 +92,12 @@ namespace lak
 		template<typename V>
 		static constexpr size_t index_of = lak::index_of_element_v<V, T, U...>;
 
-		tuple() = default;
-		tuple(const tuple &p);
-		tuple(tuple &&p);
+		constexpr tuple() = default;
+		constexpr tuple(const tuple &p);
+		constexpr tuple(tuple &&p);
 
 		template<typename V, typename... W>
-		explicit tuple(V &&v, W &&...n);
+		constexpr explicit tuple(V &&v, W &&...n);
 
 		tuple &operator=(const tuple &p);
 		tuple &operator=(tuple &&p);

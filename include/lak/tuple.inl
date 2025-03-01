@@ -3,19 +3,20 @@
 /* --- pair --- */
 
 template<typename T, typename U>
-lak::pair<T, U>::pair(const pair &p) : first(p.first), second(p.second)
+constexpr lak::pair<T, U>::pair(const pair &p)
+: first(p.first), second(p.second)
 {
 }
 
 template<typename T, typename U>
-lak::pair<T, U>::pair(pair &&p)
+constexpr lak::pair<T, U>::pair(pair &&p)
 : first(lak::move(p.first)), second(lak::move(p.second))
 {
 }
 
 template<typename T, typename U>
 template<typename V, typename W>
-lak::pair<T, U>::pair(V &&f, W &&s)
+constexpr lak::pair<T, U>::pair(V &&f, W &&s)
 : first(lak::forward<V>(f)), second(lak::forward<W>(s))
 {
 }
@@ -81,19 +82,20 @@ auto &lak::pair<T, U>::get() const
 /* --- tuple --- */
 
 template<typename T, typename... U>
-lak::tuple<T, U...>::tuple(const tuple &p) : value(p.value), next(p.next)
+constexpr lak::tuple<T, U...>::tuple(const tuple &p)
+: value(p.value), next(p.next)
 {
 }
 
 template<typename T, typename... U>
-lak::tuple<T, U...>::tuple(tuple &&p)
+constexpr lak::tuple<T, U...>::tuple(tuple &&p)
 : value(lak::move(p.value)), next(lak::move(p.next))
 {
 }
 
 template<typename T, typename... U>
 template<typename V, typename... W>
-lak::tuple<T, U...>::tuple(V &&v, W &&...n)
+constexpr lak::tuple<T, U...>::tuple(V &&v, W &&...n)
 : value(lak::forward<V>(v)), next(lak::forward<W>(n)...)
 {
 }
