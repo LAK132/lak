@@ -215,7 +215,7 @@ namespace lak
 
 							++working_tree.back().size;
 
-							pop_kvpair(false);
+							RES_TRY(pop_kvpair(false));
 
 							working_tree.push_back({
 							  .type  = working_data::value_type::kvpair,
@@ -243,7 +243,7 @@ namespace lak
 								++working_tree.back().size;
 						}
 
-						pop_kvpair(true);
+						RES_TRY(pop_kvpair(true));
 
 						if (working_tree.back().type != working_data::value_type::object)
 							return lak::err_t{
