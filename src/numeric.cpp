@@ -9,7 +9,8 @@ lak::u8string_view uintmax_max_dec_str()
 	static lak::u8string str = []() -> lak::u8string
 	{
 		lak::u8string str;
-		str.reserve((UINTMAX_MAX / 9) + 1);
+		// :TODO: this math doesn't seem right
+		// str.reserve((UINTMAX_MAX / 9) + 1);
 		uintmax_t max = UINTMAX_MAX;
 		for (; max != 0;)
 		{
