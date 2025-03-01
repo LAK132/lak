@@ -94,7 +94,7 @@ namespace lak
 	template<typename PACK>
 	struct flatten_pack;
 	template<typename... T>
-	requires(((!lak::is_of_template_v<T, lak::type_pack>)&&...))
+	requires(((!lak::is_of_template_v<T, lak::type_pack>) && ...))
 	struct flatten_pack<lak::type_pack<T...>>
 	: lak::type_identity<lak::type_pack<T...>>
 	{
@@ -275,6 +275,23 @@ namespace lak
 	static constexpr bool does_pack_contain_v =
 	  lak::does_pack_contain<PACK, T>::value;
 
+	/* --- is_unique_pack --- */
+
+	template<typename PACK>
+	struct is_unique_pack;
+	template<>
+	struct is_unique_pack<lak::type_pack<>> : public lak::true_type
+	{
+	};
+	template<typename T, typename... U>
+	struct is_unique_pack<lak::type_pack<T, U...>>
+	: public lak::bool_type<!lak::does_pack_contain_v<lak::type_pack<U...>, T> &&
+	                        lak::is_unique_pack<lak::type_pack<U...>>::value>
+	{
+	};
+	template<typename PACK>
+	static constexpr bool is_unique_pack_v = lak::is_unique_pack<PACK>::value;
+
 	/* --- is_pack_uniform --- */
 
 	template<typename PACK>
@@ -289,7 +306,7 @@ namespace lak
 	};
 	template<typename T, typename... U>
 	struct is_pack_uniform<lak::type_pack<T, U...>>
-	: lak::bool_type<((lak::is_same_v<T, U>)&&...)>
+	: lak::bool_type<((lak::is_same_v<T, U>) && ...)>
 	{
 	};
 	template<typename PACK>
