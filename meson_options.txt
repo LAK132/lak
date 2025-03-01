@@ -6,6 +6,14 @@ option('lak_enable_tests',
 	yield: true,
 )
 
+#ebnf2cpp
+
+option('lak_enable_ebnf2cpp',
+	type: 'boolean',
+	value: false,
+	yield: true,
+)
+
 # windowing options
 
 option('lak_enable_windowing',

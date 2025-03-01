@@ -1,10 +1,11 @@
+laktest_sources = []
+laktest_dependencies = [lakcore_dep]
+
+subdir('dsl')
+
 laktestcore = static_library(
 	'laktestcore',
-	[
-		'dsl'/'dsl.cpp',
-		'dsl'/'ebnf.cpp',
-		'dsl'/'json.cpp',
-		'dsl'/'sexpr.cpp',
+	laktest_sources + [
 		'ebpf'/'assembler.cpp',
 		'ebpf'/'vm.cpp',
 		'structure'/'nbt.cpp',
@@ -43,7 +44,7 @@ laktestcore = static_library(
 		'wide_math.cpp',
 	],
 	override_options: override_options,
-	dependencies: lakcore_dep,
+	dependencies: laktest_dependencies,
 )
 
 laktestcore_dep = declare_dependency(

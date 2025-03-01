@@ -172,8 +172,12 @@ dlls = []
 subdir('src')
 dependencies += lakcore_dep
 
+if get_option('lak_enable_ebnf2cpp')
+	subdir('tools'/'ebnf2cpp')
+endif
+
 if get_option('lak_enable_tests')
-	subdir('src/tests')
+	subdir('src'/'tests')
 	dependencies += laktestcore_dep
 endif
 
@@ -184,7 +188,7 @@ if get_option('lak_enable_windowing')
 	endif
 
 	if get_option('lak_enable_opengl')
-		subdir('src/opengl')
+		subdir('src'/'opengl')
 		dependencies += lakopengl_dep
 	endif
 
@@ -201,11 +205,11 @@ if get_option('lak_enable_windowing')
 	glm_dep = subproject('glm').get_variable('glm_dep')
 	dependencies += glm_dep
 
-	subdir('src/windowing')
+	subdir('src'/'windowing')
 	dependencies += lakwindowing_dep
 
 	if get_option('lak_enable_tests')
-		subdir('src/tests/windowing')
+		subdir('src'/'tests'/'windowing')
 		dependencies += laktestwindowing_dep
 	endif
 elif get_option('lak_enable_glm')
@@ -214,31 +218,31 @@ elif get_option('lak_enable_glm')
 endif
 
 if get_option('lak_enable_llvm')
-	subdir('src/llvm')
+	subdir('src'/'llvm')
 	dependencies += lakllvm_dep
 
 	if get_option('lak_enable_tests')
-		subdir('src/tests/llvm')
+		subdir('src'/'tests'/'llvm')
 		dependencies += laktestllvm_dep
 	endif
 endif
 
 if get_option('lak_enable_lmdb')
-	subdir('src/lmdb')
+	subdir('src'/'lmdb')
 	dependencies += laklmdb_dep
 
 	if get_option('lak_enable_tests')
-		subdir('src/tests/lmdb')
+		subdir('src'/'tests'/'lmdb')
 		dependencies += laktestlmdb_dep
 	endif
 endif
 
 if get_option('lak_enable_lua')
-	subdir('src/lua')
+	subdir('src'/'lua')
 	dependencies += laklua_dep
 
 	if get_option('lak_enable_tests')
-		subdir('src/tests/lua')
+		subdir('src'/'tests'/'lua')
 		dependencies += laktestlua_dep
 	endif
 endif
@@ -248,22 +252,22 @@ if get_option('lak_enable_imgui')
 	dependencies += imgui_dep
 
 	if get_option('lak_enable_windowing')
-		subdir('src/imgui')
+		subdir('src'/'imgui')
 		dependencies += lakimgui_dep
 
 		if get_option('lak_enable_tests')
-			subdir('src/tests/imgui')
+			subdir('src'/'tests'/'imgui')
 			dependencies += laktestimgui_dep
 		endif
 	endif
 endif
 
 if get_option('lak_enable_libfive')
-	subdir('src/libfive')
+	subdir('src'/'libfive')
 	dependencies += laklibfive_dep
 
 	if get_option('lak_enable_tests')
-		subdir('src/tests/libfive')
+		subdir('src'/'tests'/'libfive')
 		dependencies += laktestlibfive_dep
 	endif
 endif
@@ -274,7 +278,7 @@ if get_option('lak_enable_libgphoto2')
 	dependencies += libgphoto2_dep
 
 	if get_option('lak_enable_tests')
-		subdir('src/tests/libgphoto2')
+		subdir('src'/'tests'/'libgphoto2')
 		dependencies += laktestlibgphoto2_dep
 	endif
 
@@ -299,11 +303,11 @@ if get_option('lak_enable_stb')
 endif
 
 if get_option('lak_enable_godot_cpp')
-	subdir('src/godot')
+	subdir('src'/'godot')
 	# dependencies += lakgodot_dep
 
 	# if get_option('lak_enable_tests')
-	# 	subdir('src/tests/godot')
+	# 	subdir('src'/'tests'/'godot')
 	# 	dependencies += laktestgodot_dep
 	# endif
 endif
@@ -337,7 +341,7 @@ if get_option('lak_enable_tests')
 	lak_test_prog = executable(
 		'lak_test',
 		[
-			'src/tests/test_main.cpp',
+			'src'/'tests'/'test_main.cpp',
 		],
 		override_options: override_options,
 		include_directories: include_directories('include'),
@@ -347,7 +351,7 @@ if get_option('lak_enable_tests')
 	lak_test_bigint_standalone_prog = executable(
 		'lak_test_bigint_standalone',
 		[
-			'src/tests/bigint_standalone.cpp',
+			'src'/'tests'/'bigint_standalone.cpp',
 		],
 		override_options: override_options,
 		include_directories: include_directories('include'),
