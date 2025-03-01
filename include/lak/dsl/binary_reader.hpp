@@ -25,7 +25,7 @@ namespace lak
 	map(                                                                        \
 	  [&]<typename T>(lak::dsl::parse_result<T> &&result) -> T                  \
 	  {                                                                         \
-			strm.skip(result.consumed.size()).UNWRAP();                             \
+			strm.skip(strm.remaining().size() - result.remaining.size()).UNWRAP();  \
 			return lak::move(result.value);                                         \
 	  })
 
