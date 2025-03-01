@@ -10,6 +10,8 @@
 #define LAK_SPAN_FORWARD_ONLY
 #include "lak/span.hpp"
 
+#include "lak/stdint.hpp"
+
 #include <cstring>
 
 namespace lak
@@ -20,13 +22,13 @@ namespace lak
 	// see lak::binary_reader and lak::binary_writer for type safe manipulation
 	// of types as bytes
 	template<typename T>
-	lak::span<lak::copy_const_t<T, byte_t>, sizeof(T)> as_bytes(T *v);
+	constexpr lak::span<lak::copy_const_t<T, byte_t>, sizeof(T)> as_bytes(T *v);
 
-	void memcpy(byte_t *dst, const byte_t *src, size_t count);
+	constexpr void memcpy(byte_t *dst, const byte_t *src, size_t count);
 
 	void memmove(byte_t *dst, const byte_t *src, size_t count);
 
-	void memcpy(lak::span<byte_t> dst, lak::span<const byte_t> src);
+	constexpr void memcpy(lak::span<byte_t> dst, lak::span<const byte_t> src);
 
 	void memmove(lak::span<byte_t> dst, lak::span<const byte_t> src);
 
@@ -46,7 +48,7 @@ namespace lak
 	void byte_swap(lak::span<T> v);
 
 	template<typename TO, typename FROM>
-	TO bit_cast(const FROM &from);
+	constexpr TO bit_cast(const FROM &from);
 
 	void *aligned_alloc(size_t alignment, size_t size);
 

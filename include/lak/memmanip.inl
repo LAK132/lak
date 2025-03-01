@@ -3,10 +3,22 @@
 #include <bit>
 
 template<typename T>
-lak::span<lak::copy_const_t<T, byte_t>, sizeof(T)> lak::as_bytes(T *v)
+constexpr lak::span<lak::copy_const_t<T, byte_t>, sizeof(T)> lak::as_bytes(
+  T *v)
 {
 	return lak::span<lak::copy_const_t<T, byte_t>, sizeof(T)>::from_ptr(
 	  reinterpret_cast<lak::copy_const_t<T, byte_t> *>(v));
+}
+
+constexpr void lak::memcpy(byte_t *dst, const byte_t *src, size_t count)
+{
+	for (size_t i = 0; i < count; ++i) dst[i] = src[i];
+}
+
+constexpr void lak::memcpy(lak::span<byte_t> dst, lak::span<const byte_t> src)
+{
+	lak::memcpy(
+	  dst.data(), src.data(), dst.size() < src.size() ? dst.size() : src.size());
 }
 
 template<typename T>
@@ -48,7 +60,7 @@ void lak::byte_swap(lak::span<T> v)
 }
 
 template<typename TO, typename FROM>
-TO lak::bit_cast(const FROM &from)
+constexpr TO lak::bit_cast(const FROM &from)
 {
 	TO result;
 	lak::memcpy(lak::as_bytes(&result), lak::as_bytes(&from));

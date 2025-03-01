@@ -22,23 +22,12 @@ uintptr_t lak::align_ptr(uintptr_t ptr, size_t align)
 	return ptr + (offset == 0 ? 0 : align - offset);
 }
 
-void lak::memcpy(byte_t *dst, const byte_t *src, size_t count)
-{
-	for (size_t i = 0; i < count; ++i) dst[i] = src[i];
-}
-
 void lak::memmove(byte_t *dst, const byte_t *src, size_t count)
 {
 	if (lak::less<>{}(dst, src))
 		for (size_t i = 0; i < count; ++i) dst[i] = src[i];
 	else if (lak::greater<>{}(dst, src))
 		while (count-- > 0) dst[count] = src[count];
-}
-
-void lak::memcpy(lak::span<byte_t> dst, lak::span<const byte_t> src)
-{
-	lak::memcpy(
-	  dst.data(), src.data(), dst.size() < src.size() ? dst.size() : src.size());
 }
 
 void lak::memmove(lak::span<byte_t> dst, lak::span<const byte_t> src)
