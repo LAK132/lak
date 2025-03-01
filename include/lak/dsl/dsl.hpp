@@ -759,37 +759,24 @@ namespace lak
 			  lak::u8string_view str)
 			requires(N > 0U)
 			{
-				auto result = par.parse(str);
-				if_let_ok (const auto &res, result)
-					return capture_nth_t<N - 1U, parsers...>::impl_parse(res.remaining);
-				else
-					return lak::err_t{result.unsafe_unwrap_err()};
+				RES_TRY_ASSIGN(auto res =, par.parse(str));
+				return capture_nth_t<N - 1U, parsers...>::impl_parse(res.remaining);
 			}
 
 			static force_inline lak::dsl::result<value_type> impl_parse(
 			  lak::u8string_view str)
 			requires(N == 0U)
 			{
-				auto result = par.parse(str);
-				if (result.is_err()) return result;
-				(void)((parsers.parse(result.unsafe_unwrap().remaining)
-				          .if_err([&](const lak::dsl::parse_error &err)
-				                  { result = lak::err_t{err}; })
-				          .if_ok([&]<typename T>(lak::dsl::parse_result<T> &&res)
-				                 { result.unsafe_unwrap().remaining = res.remaining; })
-				          .is_ok()) &&
-				       ...);
-				return result;
+				RES_TRY_ASSIGN(auto res =, par.parse(str));
+				RES_TRY_ASSIGN(auto rem_res =,
+				               lak::dsl::sequence<parsers...>.parse(res.remaining));
+				res.remaining = rem_res.remaining;
+				return lak::ok_t<lak::dsl::parse_result<value_type>>{res};
 			}
 
 			lak::dsl::result<value_type> parse(lak::u8string_view str) const
 			{
-				auto result = impl_parse(str);
-
-				if_let_ok (auto &res, result)
-					res.consumed = str.first(str.size() - res.remaining.size());
-
-				return result;
+				return impl_parse(str);
 			}
 		};
 
