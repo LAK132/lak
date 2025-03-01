@@ -2,9 +2,9 @@
 #define LAK_DSL_SEXPR_HPP
 
 #include "lak/array.hpp"
-#include "lak/binary_reader.hpp"
 #include "lak/dsl/dsl.hpp"
 #include "lak/result.hpp"
+#include "lak/string_view.hpp"
 
 namespace lak
 {
@@ -92,8 +92,8 @@ namespace lak
 				  [&](const lak::dsl::parse_result<lak::u8string_view> &res)
 				{ rem = res.remaining; };
 
-				auto lparen = lak::dsl::char_literal<U'('>;
-				auto rparen = lak::dsl::char_literal<U')'>;
+				constexpr auto lparen = lak::dsl::char_literal<U'('>;
+				constexpr auto rparen = lak::dsl::char_literal<U')'>;
 
 				struct working_data
 				{
