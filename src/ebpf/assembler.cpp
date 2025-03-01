@@ -109,332 +109,396 @@ constexpr auto jump_code_parser =
   lak::dsl::replace_str_literal<u8"exit", lak::ebpf::opcode_jump::EXIT> |
   jump32_code_parser;
 
+constexpr auto ws = +lak::dsl::ascii_nonnewline_whitespace;
+
+/* --- ld --- */
+
+constexpr auto ld_imm_prefix =
+  lak::dsl::capture_2nd<lak::dsl::str_literal<u8"ld"> + ws +
+                          lak::dsl::str_literal<u8"dw"> + ws +
+                          lak::dsl::str_literal<u8"imm"> + ws,
+                        register_parser,
+                        ws>;
+
+constexpr auto ld_mfd_parser = lak::dsl::transform<
+  ld_imm_prefix +
+    lak::dsl::capture_2nd<lak::dsl::str_literal<u8"mfd">, immediate_parser>,
+  [](const lak::tuple<lak::ebpf::register_t, uint32_t> &result)
+    -> lak::ebpf::instruction_parser_t::value_type
+  {
+	  const auto &[dst, imm] = result;
+	  return {lak::ebpf::instruction::make_load(dst, 1U, imm), lak::nullopt};
+  }>;
+
+constexpr auto ld_mva_mfd_parser = lak::dsl::transform<
+  ld_imm_prefix +
+    lak::dsl::capture_2nd<lak::dsl::str_literal<u8"mva"> + ws +
+                            lak::dsl::str_literal<u8"mfd"> + ws,
+                          immediate_parser> +
+    lak::dsl::capture_2nd<ws, immediate_parser>,
+  [](const lak::tuple<lak::ebpf::register_t, uint32_t, uint32_t> &result)
+    -> lak::ebpf::instruction_parser_t::value_type
+  {
+	  const auto &[dst, imm1, imm2] = result;
+	  auto inst = lak::ebpf::instruction::make_load(dst, 2U, imm1, imm2);
+	  return {inst.first, lak::var_t<0>(inst.second)};
+  }>;
+
+constexpr auto ld_var_parser = lak::dsl::transform<
+  ld_imm_prefix +
+    lak::dsl::capture_2nd<lak::dsl::str_literal<u8"var">, immediate_parser>,
+  [](const lak::tuple<lak::ebpf::register_t, uint32_t> &result)
+    -> lak::ebpf::instruction_parser_t::value_type
+  {
+	  const auto &[dst, imm] = result;
+	  return {lak::ebpf::instruction::make_load(dst, 3U, imm), lak::nullopt};
+  }>;
+
+constexpr auto ld_code_parser = lak::dsl::transform<
+  ld_imm_prefix +
+    lak::dsl::capture_2nd<lak::dsl::str_literal<u8"code">, immediate_parser>,
+  [](const lak::tuple<lak::ebpf::register_t, uint32_t> &result)
+    -> lak::ebpf::instruction_parser_t::value_type
+  {
+	  const auto &[dst, imm] = result;
+	  return {lak::ebpf::instruction::make_load(dst, 4U, imm), lak::nullopt};
+  }>;
+
+constexpr auto ld_mid_parser = lak::dsl::transform<
+  ld_imm_prefix +
+    lak::dsl::capture_2nd<lak::dsl::str_literal<u8"mid">, immediate_parser>,
+  [](const lak::tuple<lak::ebpf::register_t, uint32_t> &result)
+    -> lak::ebpf::instruction_parser_t::value_type
+  {
+	  const auto &[dst, imm] = result;
+	  return {lak::ebpf::instruction::make_load(dst, 5U, imm), lak::nullopt};
+  }>;
+
+constexpr auto ld_mva_mid_parser = lak::dsl::transform<
+  ld_imm_prefix +
+    lak::dsl::capture_2nd<lak::dsl::str_literal<u8"mva"> + ws +
+                            lak::dsl::str_literal<u8"mid"> + ws,
+                          immediate_parser> +
+    lak::dsl::capture_2nd<ws, immediate_parser>,
+  [](const lak::tuple<lak::ebpf::register_t, uint32_t, uint32_t> &result)
+    -> lak::ebpf::instruction_parser_t::value_type
+  {
+	  const auto &[dst, imm1, imm2] = result;
+	  auto inst = lak::ebpf::instruction::make_load(dst, 6U, imm1, imm2);
+	  return {inst.first, lak::var_t<0>(inst.second)};
+  }>;
+
+constexpr auto ld_imm64_parser = lak::dsl::transform<
+  ld_imm_prefix + immediate64_parser,
+  [](const lak::tuple<lak::ebpf::register_t, uint64_t> &result)
+    -> lak::ebpf::instruction_parser_t::value_type
+  {
+	  const auto &[dst, imm] = result;
+	  auto inst              = lak::ebpf::instruction::make_load(dst, imm);
+	  return {inst.first, lak::var_t<0>(inst.second)};
+  }>;
+
+constexpr auto ld_parser = ld_mfd_parser | ld_mva_mfd_parser | ld_var_parser |
+                           ld_code_parser | ld_mid_parser | ld_mva_mid_parser |
+                           ld_imm64_parser;
+
+/* --- ldx --- */
+
+constexpr auto ldx_parser = lak::dsl::transform<
+  lak::dsl::capture_2nd<lak::dsl::str_literal<u8"ldx"> + ws,
+                        load_store_size_parser> +
+    lak::dsl::capture_2nd<ws + lak::dsl::str_literal<u8"mem"> + ws,
+                          register_parser> +
+    lak::dsl::capture_2nd<ws, register_parser> +
+    lak::dsl::capture_2nd<ws, offset_parser>,
+  [](const lak::tuple<lak::ebpf::opcode_load_store_size,
+                      lak::ebpf::register_t,
+                      lak::ebpf::register_t,
+                      uint16_t> &result)
+    -> lak::ebpf::instruction_parser_t::value_type
+  {
+	  const auto &[size, dst, src, offset] = result;
+	  return {lak::ebpf::instruction::make_load(size, dst, src, offset),
+	          lak::nullopt};
+  }>;
+
+/* --- st --- */
+
+constexpr auto st_parser = lak::dsl::transform<
+  lak::dsl::capture_2nd<lak::dsl::str_literal<u8"st"> + ws,
+                        load_store_size_parser> +
+    lak::dsl::capture_2nd<ws + lak::dsl::str_literal<u8"mem"> + ws,
+                          register_parser> +
+    lak::dsl::capture_2nd<ws, offset_parser> +
+    lak::dsl::capture_2nd<ws, immediate_parser>,
+  [](const lak::tuple<lak::ebpf::opcode_load_store_size,
+                      lak::ebpf::register_t,
+                      uint16_t,
+                      uint32_t> &result)
+    -> lak::ebpf::instruction_parser_t::value_type
+  {
+	  const auto &[size, dst, offset, imm] = result;
+	  return {lak::ebpf::instruction::make_store(size, dst, offset, imm),
+	          lak::nullopt};
+  }>;
+
+/* --- stx --- */
+
+// :TODO: atomics
+constexpr auto stx_parser = lak::dsl::transform<
+  lak::dsl::capture_2nd<lak::dsl::str_literal<u8"stx"> + ws,
+                        load_store_size_parser> +
+    lak::dsl::capture_2nd<ws + lak::dsl::str_literal<u8"mem"> + ws,
+                          register_parser> +
+    lak::dsl::capture_2nd<ws, offset_parser> +
+    lak::dsl::capture_2nd<ws, register_parser>,
+  [](const lak::tuple<lak::ebpf::opcode_load_store_size,
+                      lak::ebpf::register_t,
+                      uint16_t,
+                      lak::ebpf::register_t> &result)
+    -> lak::ebpf::instruction_parser_t::value_type
+  {
+	  const auto &[size, dst, offset, src] = result;
+	  return {lak::ebpf::instruction::make_store(size, dst, offset, src),
+	          lak::nullopt};
+  }>;
+
+/* --- alu --- */
+
+constexpr auto alu_k_parser = lak::dsl::transform<
+  (lak::dsl::replace_str_literal<u8"alu64",
+                                 lak::ebpf::opcode_class_alu::ALU64> |
+   lak::dsl::replace_str_literal<u8"alu",
+                                 lak::ebpf::opcode_class_alu::ALU>)+lak::dsl::
+      capture_2nd<ws + lak::dsl::char_literal<U'k'> + ws, alu_code_parser> +
+    lak::dsl::capture_2nd<ws, register_parser> +
+    lak::dsl::capture_2nd<ws, immediate_parser>,
+  [](const lak::tuple<lak::ebpf::opcode_class_alu,
+                      lak::ebpf::opcode_alu,
+                      lak::ebpf::register_t,
+                      uint32_t> &result)
+    -> lak::ebpf::instruction_parser_t::value_type
+  {
+	  const auto &[op, code, dst, imm] = result;
+	  return {lak::ebpf::instruction::make(op, code, dst, imm), lak::nullopt};
+  }>;
+
+constexpr auto alu_x_parser = lak::dsl::transform<
+  (lak::dsl::replace_str_literal<u8"alu64",
+                                 lak::ebpf::opcode_class_alu::ALU64> |
+   lak::dsl::replace_str_literal<u8"alu",
+                                 lak::ebpf::opcode_class_alu::ALU>)+lak::dsl::
+      capture_2nd<ws + lak::dsl::char_literal<U'x'> + ws, alu_code_parser> +
+    lak::dsl::capture_2nd<ws, register_parser> +
+    lak::dsl::capture_2nd<ws, register_parser>,
+  [](const lak::tuple<lak::ebpf::opcode_class_alu,
+                      lak::ebpf::opcode_alu,
+                      lak::ebpf::register_t,
+                      lak::ebpf::register_t> &result)
+    -> lak::ebpf::instruction_parser_t::value_type
+  {
+	  const auto &[op, code, dst, src] = result;
+	  return {lak::ebpf::instruction::make(op, code, dst, src), lak::nullopt};
+  }>;
+
+constexpr auto alu_endian_parser = lak::dsl::transform<
+  (lak::dsl::replace_str_literal<u8"alu64",
+                                 lak::ebpf::opcode_class_alu::ALU64> |
+   lak::dsl::replace_str_literal<u8"alu",
+                                 lak::ebpf::opcode_class_alu::ALU>)+lak::dsl::
+      capture_2nd<
+        ws,
+        lak::dsl::replace_str_literal<u8"to_le",
+                                      lak::ebpf::opcode_alu_jump_source::K> |
+          lak::dsl::replace_str_literal<
+            u8"to_be",
+            lak::ebpf::opcode_alu_jump_source::X>> +
+    lak::dsl::capture_2nd<ws + lak::dsl::str_literal<u8"end">,
+                          register_parser> +
+    lak::dsl::capture_2nd<
+      ws,
+      lak::dsl::replace_str_literal<u8"16", uint32_t(16)> |
+        lak::dsl::replace_str_literal<u8"32", uint32_t(32)> |
+        lak::dsl::replace_str_literal<u8"64", uint32_t(64)>>,
+  [](const lak::tuple<lak::ebpf::opcode_class_alu,
+                      lak::ebpf::opcode_alu_jump_source,
+                      lak::ebpf::register_t,
+                      uint32_t> &result)
+    -> lak::ebpf::instruction_parser_t::value_type
+  {
+	  const auto &[op, source, dst, imm] = result;
+	  return {lak::ebpf::instruction::make(op,
+	                                       source,
+	                                       lak::ebpf::opcode_alu::END,
+	                                       dst,
+	                                       lak::ebpf::register_t::R0,
+	                                       imm),
+	          lak::nullopt};
+  }>;
+
+constexpr auto alu_parser = alu_k_parser | alu_x_parser | alu_endian_parser;
+
+/* --- jmp --- */
+
+constexpr auto jmp_k_parser = lak::dsl::transform<
+  (lak::dsl::replace_str_literal<u8"jmp32",
+                                 lak::ebpf::opcode_class_jump::JMP32> |
+   lak::dsl::replace_str_literal<u8"jmp",
+                                 lak::ebpf::opcode_class_jump::JMP>)+lak::dsl::
+      capture_2nd<ws + lak::dsl::str_literal<u8"k"> + ws, jump32_code_parser> +
+    lak::dsl::capture_2nd<ws, register_parser> +
+    lak::dsl::capture_2nd<ws, immediate_parser> +
+    lak::dsl::capture_2nd<ws, offset_parser>,
+  [](const lak::tuple<lak::ebpf::opcode_class_jump,
+                      lak::ebpf::opcode_jump,
+                      lak::ebpf::register_t,
+                      uint32_t,
+                      uint16_t> &result)
+    -> lak::ebpf::instruction_parser_t::value_type
+  {
+	  const auto &[op, jmp, dst, imm, offset] = result;
+	  return {lak::ebpf::instruction::make(op, jmp, dst, imm, offset),
+	          lak::nullopt};
+  }>;
+
+constexpr auto jmp_x_parser = lak::dsl::transform<
+  (lak::dsl::replace_str_literal<u8"jmp32",
+                                 lak::ebpf::opcode_class_jump::JMP32> |
+   lak::dsl::replace_str_literal<u8"jmp",
+                                 lak::ebpf::opcode_class_jump::JMP>)+lak::dsl::
+      capture_2nd<ws + lak::dsl::str_literal<u8"x"> + ws, jump32_code_parser> +
+    lak::dsl::capture_2nd<ws, register_parser> +
+    lak::dsl::capture_2nd<ws, register_parser> +
+    lak::dsl::capture_2nd<ws, offset_parser>,
+  [](const lak::tuple<lak::ebpf::opcode_class_jump,
+                      lak::ebpf::opcode_jump,
+                      lak::ebpf::register_t,
+                      lak::ebpf::register_t,
+                      uint16_t> &result)
+    -> lak::ebpf::instruction_parser_t::value_type
+  {
+	  const auto &[op, jmp, dst, src, offset] = result;
+	  return {lak::ebpf::instruction::make(op, jmp, dst, src, offset),
+	          lak::nullopt};
+  }>;
+
+constexpr auto jmp_k_label_parser = lak::dsl::transform<
+  (lak::dsl::replace_str_literal<u8"jmp32",
+                                 lak::ebpf::opcode_class_jump::JMP32> |
+   lak::dsl::replace_str_literal<u8"jmp",
+                                 lak::ebpf::opcode_class_jump::JMP>)+lak::dsl::
+      capture_2nd<ws + lak::dsl::str_literal<u8"k"> + ws, jump32_code_parser> +
+    lak::dsl::capture_2nd<ws, register_parser> +
+    lak::dsl::capture_2nd<ws, immediate_parser> +
+    lak::dsl::capture_2nd<ws, lak::ebpf::label_token_parser>,
+  [](const lak::tuple<lak::ebpf::opcode_class_jump,
+                      lak::ebpf::opcode_jump,
+                      lak::ebpf::register_t,
+                      uint32_t,
+                      lak::u8string_view> &result)
+    -> lak::ebpf::instruction_parser_t::value_type
+  {
+	  const auto &[op, jmp, dst, imm, label] = result;
+	  return {lak::ebpf::instruction::make(op, jmp, dst, imm, UINT16_MAX),
+	          lak::var_t<1>(label)};
+  }>;
+
+constexpr auto jmp_x_label_parser = lak::dsl::transform<
+  (lak::dsl::replace_str_literal<u8"jmp32",
+                                 lak::ebpf::opcode_class_jump::JMP32> |
+   lak::dsl::replace_str_literal<u8"jmp",
+                                 lak::ebpf::opcode_class_jump::JMP>)+lak::dsl::
+      capture_2nd<ws + lak::dsl::str_literal<u8"x"> + ws, jump32_code_parser> +
+    lak::dsl::capture_2nd<ws, register_parser> +
+    lak::dsl::capture_2nd<ws, register_parser> +
+    lak::dsl::capture_2nd<ws, lak::ebpf::label_token_parser>,
+  [](const lak::tuple<lak::ebpf::opcode_class_jump,
+                      lak::ebpf::opcode_jump,
+                      lak::ebpf::register_t,
+                      lak::ebpf::register_t,
+                      lak::u8string_view> &result)
+    -> lak::ebpf::instruction_parser_t::value_type
+  {
+	  const auto &[op, jmp, dst, src, label] = result;
+	  return {lak::ebpf::instruction::make(op, jmp, dst, src, UINT16_MAX),
+	          lak::var_t<1>(label)};
+  }>;
+
+constexpr auto jmp16_ja_parser = lak::dsl::transform<
+  lak::dsl::capture_2nd<lak::dsl::str_literal<u8"jmp"> + ws +
+                          lak::dsl::str_literal<u8"ja"> + ws,
+                        offset_parser>,
+  [](uint16_t offset) -> lak::ebpf::instruction_parser_t::value_type
+  { return {lak::ebpf::instruction::make_jump16(offset), lak::nullopt}; }>;
+
+constexpr auto jmp32_ja_parser = lak::dsl::transform<
+  lak::dsl::capture_2nd<lak::dsl::str_literal<u8"jmp32"> + ws +
+                          lak::dsl::str_literal<u8"ja"> + ws,
+                        immediate_parser>,
+  [](uint32_t immediate) -> lak::ebpf::instruction_parser_t::value_type
+  { return {lak::ebpf::instruction::make_jump32(immediate), lak::nullopt}; }>;
+
+constexpr auto jmp16_ja_label_parser = lak::dsl::transform<
+  lak::dsl::capture_2nd<lak::dsl::str_literal<u8"jmp"> + ws +
+                          lak::dsl::str_literal<u8"ja"> + ws,
+                        lak::ebpf::label_token_parser>,
+  [](lak::u8string_view label) -> lak::ebpf::instruction_parser_t::value_type
+  {
+	  return {lak::ebpf::instruction::make_jump16(UINT16_MAX),
+	          lak::var_t<1>(label)};
+  }>;
+
+constexpr auto jmp32_ja_label_parser = lak::dsl::transform<
+  lak::dsl::capture_2nd<lak::dsl::str_literal<u8"jmp32"> + ws +
+                          lak::dsl::str_literal<u8"ja"> + ws,
+                        lak::ebpf::label_token_parser>,
+  [](lak::u8string_view label) -> lak::ebpf::instruction_parser_t::value_type
+  {
+	  return {lak::ebpf::instruction::make_jump32(UINT32_MAX),
+	          lak::var_t<1>(label)};
+  }>;
+
+constexpr auto jmp_call_parser = lak::dsl::transform<
+  lak::dsl::capture_2nd<lak::dsl::str_literal<u8"jmp"> + ws +
+                          lak::dsl::str_literal<u8"call"> + ws,
+                        (lak::dsl::replace_char_literal<U'0', uint8_t(0)> |
+                         lak::dsl::replace_char_literal<U'1', uint8_t(1)> |
+                         lak::dsl::replace_char_literal<U'2', uint8_t(2)>)> +
+    lak::dsl::capture_2nd<ws, immediate_parser>,
+  [](const lak::tuple<uint8_t, uint32_t> &result)
+    -> lak::ebpf::instruction_parser_t::value_type
+  {
+	  const auto &[src, imm] = result;
+	  return {lak::ebpf::instruction::make_call(src, imm), lak::nullopt};
+  }>;
+
+constexpr auto jmp_call_label_parser = lak::dsl::transform<
+  lak::dsl::capture_2nd<lak::dsl::str_literal<u8"jmp"> + ws +
+                          lak::dsl::str_literal<u8"call"> + ws,
+                        lak::dsl::replace_char_literal<U'1', uint8_t(1)>> +
+    lak::dsl::capture_2nd<ws, lak::ebpf::label_token_parser>,
+  [](const lak::tuple<uint8_t, lak::u8string_view> &result)
+    -> lak::ebpf::instruction_parser_t::value_type
+  {
+	  const auto &[src, label] = result;
+	  return {lak::ebpf::instruction::make_call(src, UINT32_MAX),
+	          lak::var_t<1>(label)};
+  }>;
+
+constexpr auto jmp_exit_parser = lak::dsl::transform<
+  lak::dsl::str_literal<u8"jmp"> + ws + lak::dsl::str_literal<u8"exit">,
+  [](lak::u8string_view) -> lak::ebpf::instruction_parser_t::value_type
+  { return {lak::ebpf::instruction::make_exit(), lak::nullopt}; }>;
+
+constexpr auto jmp_parser = jmp_k_parser | jmp_x_parser | jmp_k_label_parser |
+                            jmp_x_label_parser | jmp16_ja_parser |
+                            jmp32_ja_parser | jmp16_ja_label_parser |
+                            jmp32_ja_label_parser | jmp_call_parser |
+                            jmp_call_label_parser | jmp_exit_parser;
+
 lak::dsl::result<lak::ebpf::instruction_parser_t::value_type>
 lak::ebpf::instruction_parser_t::parse(lak::u8string_view str) const
 {
-	using namespace lak::dsl;
-
-	value_type result;
-	// ld dw imm r0 0x12345678
-
-	constexpr auto ws = +ascii_nonnewline_whitespace;
-
-	constexpr auto ld_imm_prefix =
-	  capture_nth<1U,
-	              str_literal<u8"ld"> + ws + str_literal<u8"dw"> + ws +
-	                str_literal<u8"imm"> + ws,
-	              register_parser,
-	              ws>;
-
-	constexpr auto ld_parser =
-	  transform<ld_imm_prefix +
-	              capture_2nd<str_literal<u8"mfd">, immediate_parser>,
-	            [](const lak::tuple<lak::ebpf::register_t, uint32_t> &result)
-	              -> value_type
-	            {
-		            const auto &[dst, imm] = result;
-		            return {lak::ebpf::instruction::make_load(dst, 1U, imm),
-		                    lak::nullopt};
-	            }> |
-	  transform<
-	    ld_imm_prefix +
-	      capture_2nd<str_literal<u8"mva"> + ws + str_literal<u8"mfd"> + ws,
-	                  immediate_parser> +
-	      capture_2nd<ws, immediate_parser>,
-	    [](const lak::tuple<lak::ebpf::register_t, uint32_t, uint32_t> &result)
-	      -> value_type
-	    {
-		    const auto &[dst, imm1, imm2] = result;
-		    auto inst = lak::ebpf::instruction::make_load(dst, 2U, imm1, imm2);
-		    return {inst.first, lak::var_t<0>(inst.second)};
-	    }> |
-	  transform<ld_imm_prefix +
-	              capture_2nd<str_literal<u8"var">, immediate_parser>,
-	            [](const lak::tuple<lak::ebpf::register_t, uint32_t> &result)
-	              -> value_type
-	            {
-		            const auto &[dst, imm] = result;
-		            return {lak::ebpf::instruction::make_load(dst, 3U, imm),
-		                    lak::nullopt};
-	            }> |
-	  transform<ld_imm_prefix +
-	              capture_2nd<str_literal<u8"code">, immediate_parser>,
-	            [](const lak::tuple<lak::ebpf::register_t, uint32_t> &result)
-	              -> value_type
-	            {
-		            const auto &[dst, imm] = result;
-		            return {lak::ebpf::instruction::make_load(dst, 4U, imm),
-		                    lak::nullopt};
-	            }> |
-	  transform<ld_imm_prefix +
-	              capture_2nd<str_literal<u8"mid">, immediate_parser>,
-	            [](const lak::tuple<lak::ebpf::register_t, uint32_t> &result)
-	              -> value_type
-	            {
-		            const auto &[dst, imm] = result;
-		            return {lak::ebpf::instruction::make_load(dst, 5U, imm),
-		                    lak::nullopt};
-	            }> |
-	  transform<
-	    ld_imm_prefix +
-	      capture_2nd<str_literal<u8"mva"> + ws + str_literal<u8"mid"> + ws,
-	                  immediate_parser> +
-	      capture_2nd<ws, immediate_parser>,
-	    [](const lak::tuple<lak::ebpf::register_t, uint32_t, uint32_t> &result)
-	      -> value_type
-	    {
-		    const auto &[dst, imm1, imm2] = result;
-		    auto inst = lak::ebpf::instruction::make_load(dst, 6U, imm1, imm2);
-		    return {inst.first, lak::var_t<0>(inst.second)};
-	    }> |
-	  transform<ld_imm_prefix + immediate64_parser,
-	            [](const lak::tuple<lak::ebpf::register_t, uint64_t> &result)
-	              -> value_type
-	            {
-		            const auto &[dst, imm] = result;
-		            auto inst = lak::ebpf::instruction::make_load(dst, imm);
-		            return {inst.first, lak::var_t<0>(inst.second)};
-	            }>;
-
-	constexpr auto ldx_parser = transform<
-	  capture_2nd<str_literal<u8"ldx"> + ws, load_store_size_parser> +
-	    capture_2nd<ws + str_literal<u8"mem"> + ws, register_parser> +
-	    capture_2nd<ws, register_parser> + capture_2nd<ws, offset_parser>,
-	  [](const lak::tuple<lak::ebpf::opcode_load_store_size,
-	                      lak::ebpf::register_t,
-	                      lak::ebpf::register_t,
-	                      uint16_t> &result) -> value_type
-	  {
-		  const auto &[size, dst, src, offset] = result;
-		  return {lak::ebpf::instruction::make_load(size, dst, src, offset),
-		          lak::nullopt};
-	  }>;
-
-	constexpr auto st_parser = transform<
-	  capture_2nd<str_literal<u8"st"> + ws, load_store_size_parser> +
-	    capture_2nd<ws + str_literal<u8"mem"> + ws, register_parser> +
-	    capture_2nd<ws, offset_parser> + capture_2nd<ws, immediate_parser>,
-	  [](const lak::tuple<lak::ebpf::opcode_load_store_size,
-	                      lak::ebpf::register_t,
-	                      uint16_t,
-	                      uint32_t> &result) -> value_type
-	  {
-		  const auto &[size, dst, offset, imm] = result;
-		  return {lak::ebpf::instruction::make_store(size, dst, offset, imm),
-		          lak::nullopt};
-	  }>;
-
-	// :TODO: atomics
-	constexpr auto stx_parser = transform<
-	  capture_2nd<str_literal<u8"stx"> + ws, load_store_size_parser> +
-	    capture_2nd<ws + str_literal<u8"mem"> + ws, register_parser> +
-	    capture_2nd<ws, offset_parser> + capture_2nd<ws, register_parser>,
-	  [](const lak::tuple<lak::ebpf::opcode_load_store_size,
-	                      lak::ebpf::register_t,
-	                      uint16_t,
-	                      lak::ebpf::register_t> &result) -> value_type
-	  {
-		  const auto &[size, dst, offset, src] = result;
-		  return {lak::ebpf::instruction::make_store(size, dst, offset, src),
-		          lak::nullopt};
-	  }>;
-
-	constexpr auto alu_parser =
-	  transform<
-	    (lak::dsl::replace_str_literal<u8"alu64",
-	                                   lak::ebpf::opcode_class_alu::ALU64> |
-	     lak::dsl::replace_str_literal<
-	       u8"alu",
-	       lak::ebpf::opcode_class_alu::
-	         ALU>)+capture_2nd<ws + lak::dsl::char_literal<U'k'> + ws,
-	                           alu_code_parser> +
-	      capture_2nd<ws, register_parser> + capture_2nd<ws, immediate_parser>,
-	    [](const lak::tuple<lak::ebpf::opcode_class_alu,
-	                        lak::ebpf::opcode_alu,
-	                        lak::ebpf::register_t,
-	                        uint32_t> &result) -> value_type
-	    {
-		    const auto &[op, code, dst, imm] = result;
-		    return {lak::ebpf::instruction::make(op, code, dst, imm),
-		            lak::nullopt};
-	    }> |
-	  transform<
-	    (lak::dsl::replace_str_literal<u8"alu64",
-	                                   lak::ebpf::opcode_class_alu::ALU64> |
-	     lak::dsl::replace_str_literal<
-	       u8"alu",
-	       lak::ebpf::opcode_class_alu::
-	         ALU>)+capture_2nd<ws + lak::dsl::char_literal<U'x'> + ws,
-	                           alu_code_parser> +
-	      capture_2nd<ws, register_parser> + capture_2nd<ws, register_parser>,
-	    [](const lak::tuple<lak::ebpf::opcode_class_alu,
-	                        lak::ebpf::opcode_alu,
-	                        lak::ebpf::register_t,
-	                        lak::ebpf::register_t> &result) -> value_type
-	    {
-		    const auto &[op, code, dst, src] = result;
-		    return {lak::ebpf::instruction::make(op, code, dst, src),
-		            lak::nullopt};
-	    }> |
-	  transform<
-	    (replace_str_literal<u8"alu64", lak::ebpf::opcode_class_alu::ALU64> |
-	     replace_str_literal<
-	       u8"alu",
-	       lak::ebpf::opcode_class_alu::
-	         ALU>)+capture_2nd<ws,
-	                           replace_str_literal<
-	                             u8"to_le",
-	                             lak::ebpf::opcode_alu_jump_source::K> |
-	                             replace_str_literal<
-	                               u8"to_be",
-	                               lak::ebpf::opcode_alu_jump_source::X>> +
-	      capture_2nd<ws + str_literal<u8"end">, register_parser> +
-	      capture_2nd<ws,
-	                  replace_str_literal<u8"16", uint32_t(16)> |
-	                    replace_str_literal<u8"32", uint32_t(32)> |
-	                    replace_str_literal<u8"64", uint32_t(64)>>,
-	    [](const lak::tuple<lak::ebpf::opcode_class_alu,
-	                        lak::ebpf::opcode_alu_jump_source,
-	                        lak::ebpf::register_t,
-	                        uint32_t> &result) -> value_type
-	    {
-		    const auto &[op, source, dst, imm] = result;
-		    return {lak::ebpf::instruction::make(op,
-		                                         source,
-		                                         lak::ebpf::opcode_alu::END,
-		                                         dst,
-		                                         lak::ebpf::register_t::R0,
-		                                         imm),
-		            lak::nullopt};
-	    }>;
-
-	constexpr auto jmp_parser =
-	  transform<
-	    (replace_str_literal<u8"jmp32", lak::ebpf::opcode_class_jump::JMP32> |
-	     replace_str_literal<u8"jmp",
-	                         lak::ebpf::opcode_class_jump::
-	                           JMP>)+capture_2nd<ws + str_literal<u8"k"> + ws,
-	                                             jump32_code_parser> +
-	      capture_2nd<ws, register_parser> + capture_2nd<ws, immediate_parser> +
-	      capture_2nd<ws, offset_parser>,
-	    [](const lak::tuple<lak::ebpf::opcode_class_jump,
-	                        lak::ebpf::opcode_jump,
-	                        lak::ebpf::register_t,
-	                        uint32_t,
-	                        uint16_t> &result) -> value_type
-	    {
-		    const auto &[op, jmp, dst, imm, offset] = result;
-		    return {lak::ebpf::instruction::make(op, jmp, dst, imm, offset),
-		            lak::nullopt};
-	    }> |
-	  transform<
-	    (replace_str_literal<u8"jmp32", lak::ebpf::opcode_class_jump::JMP32> |
-	     replace_str_literal<u8"jmp",
-	                         lak::ebpf::opcode_class_jump::
-	                           JMP>)+capture_2nd<ws + str_literal<u8"x"> + ws,
-	                                             jump32_code_parser> +
-	      capture_2nd<ws, register_parser> + capture_2nd<ws, register_parser> +
-	      capture_2nd<ws, offset_parser>,
-	    [](const lak::tuple<lak::ebpf::opcode_class_jump,
-	                        lak::ebpf::opcode_jump,
-	                        lak::ebpf::register_t,
-	                        lak::ebpf::register_t,
-	                        uint16_t> &result) -> value_type
-	    {
-		    const auto &[op, jmp, dst, src, offset] = result;
-		    return {lak::ebpf::instruction::make(op, jmp, dst, src, offset),
-		            lak::nullopt};
-	    }> |
-	  transform<
-	    (replace_str_literal<u8"jmp32", lak::ebpf::opcode_class_jump::JMP32> |
-	     replace_str_literal<u8"jmp",
-	                         lak::ebpf::opcode_class_jump::
-	                           JMP>)+capture_2nd<ws + str_literal<u8"k"> + ws,
-	                                             jump32_code_parser> +
-	      capture_2nd<ws, register_parser> + capture_2nd<ws, immediate_parser> +
-	      capture_2nd<ws, label_token_parser>,
-	    [](const lak::tuple<lak::ebpf::opcode_class_jump,
-	                        lak::ebpf::opcode_jump,
-	                        lak::ebpf::register_t,
-	                        uint32_t,
-	                        lak::u8string_view> &result) -> value_type
-	    {
-		    const auto &[op, jmp, dst, imm, label] = result;
-		    return {lak::ebpf::instruction::make(op, jmp, dst, imm, UINT16_MAX),
-		            lak::var_t<1>(label)};
-	    }> |
-	  transform<
-	    (replace_str_literal<u8"jmp32", lak::ebpf::opcode_class_jump::JMP32> |
-	     replace_str_literal<u8"jmp",
-	                         lak::ebpf::opcode_class_jump::
-	                           JMP>)+capture_2nd<ws + str_literal<u8"x"> + ws,
-	                                             jump32_code_parser> +
-	      capture_2nd<ws, register_parser> + capture_2nd<ws, register_parser> +
-	      capture_2nd<ws, label_token_parser>,
-	    [](const lak::tuple<lak::ebpf::opcode_class_jump,
-	                        lak::ebpf::opcode_jump,
-	                        lak::ebpf::register_t,
-	                        lak::ebpf::register_t,
-	                        lak::u8string_view> &result) -> value_type
-	    {
-		    const auto &[op, jmp, dst, src, label] = result;
-		    return {lak::ebpf::instruction::make(op, jmp, dst, src, UINT16_MAX),
-		            lak::var_t<1>(label)};
-	    }> |
-	  transform<capture_2nd<str_literal<u8"jmp"> + ws + str_literal<u8"ja"> + ws,
-	                        offset_parser>,
-	            [](uint16_t offset) -> value_type
-	            {
-		            return {lak::ebpf::instruction::make_jump16(offset),
-		                    lak::nullopt};
-	            }> |
-	  transform<
-	    capture_2nd<str_literal<u8"jmp32"> + ws + str_literal<u8"ja"> + ws,
-	                immediate_parser>,
-	    [](uint32_t immediate) -> value_type
-	    {
-		    return {lak::ebpf::instruction::make_jump32(immediate), lak::nullopt};
-	    }> |
-	  transform<capture_2nd<str_literal<u8"jmp"> + ws + str_literal<u8"ja"> + ws,
-	                        label_token_parser>,
-	            [](lak::u8string_view label) -> value_type
-	            {
-		            return {lak::ebpf::instruction::make_jump16(UINT16_MAX),
-		                    lak::var_t<1>(label)};
-	            }> |
-	  transform<
-	    capture_2nd<str_literal<u8"jmp32"> + ws + str_literal<u8"ja"> + ws,
-	                label_token_parser>,
-	    [](lak::u8string_view label) -> value_type
-	    {
-		    return {lak::ebpf::instruction::make_jump32(UINT32_MAX),
-		            lak::var_t<1>(label)};
-	    }> |
-	  transform<
-	    capture_2nd<str_literal<u8"jmp"> + ws + str_literal<u8"call"> + ws,
-	                (replace_char_literal<U'0', uint8_t(0)> |
-	                 replace_char_literal<U'1', uint8_t(1)> |
-	                 replace_char_literal<U'2', uint8_t(2)>)> +
-	      capture_2nd<ws, immediate_parser>,
-	    [](const lak::tuple<uint8_t, uint32_t> &result) -> value_type
-	    {
-		    const auto &[src, imm] = result;
-		    return {lak::ebpf::instruction::make_call(src, imm), lak::nullopt};
-	    }> |
-	  transform<
-	    capture_2nd<str_literal<u8"jmp"> + ws + str_literal<u8"call"> + ws,
-	                replace_char_literal<U'1', uint8_t(1)>> +
-	      capture_2nd<ws, label_token_parser>,
-	    [](const lak::tuple<uint8_t, lak::u8string_view> &result) -> value_type
-	    {
-		    const auto &[src, label] = result;
-		    return {lak::ebpf::instruction::make_call(src, UINT32_MAX),
-		            lak::var_t<1>(label)};
-	    }> |
-	  transform<str_literal<u8"jmp"> + ws + str_literal<u8"exit">,
-	            [](lak::u8string_view) -> value_type
-	            { return {lak::ebpf::instruction::make_exit(), lak::nullopt}; }>;
-
 	return (ldx_parser | ld_parser | stx_parser | st_parser | alu_parser |
 	        jmp_parser)
 	  .parse(str);
