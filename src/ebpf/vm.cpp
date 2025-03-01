@@ -1,6 +1,8 @@
 #include "lak/ebpf/vm.hpp"
 
 #include "lak/endian.hpp"
+#include "lak/memmanip.hpp"
+#include "lak/span_manip.hpp"
 
 lak::result<uint64_t, size_t> lak::ebpf::vm::run_program(
   lak::span<lak::ebpf::instruction_t> program,
