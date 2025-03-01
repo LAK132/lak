@@ -4,6 +4,8 @@ laktestcore = static_library(
 		'dsl'/'dsl.cpp',
 		'dsl'/'json.cpp',
 		'dsl'/'sexpr.cpp',
+		'ebpf'/'assembler.cpp',
+		'ebpf'/'vm.cpp',
 		'structure'/'nbt.cpp',
 		'structure'/'obj.cpp',
 		'structure'/'pnm.cpp',
