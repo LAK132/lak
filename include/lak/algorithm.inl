@@ -141,6 +141,36 @@ ITER lak::find_if(ITER begin, ITER end, auto predicate)
 	return begin;
 }
 
+/* --- any_of --- */
+
+template<typename ITER>
+bool lak::any_of(ITER begin, ITER end, auto predicate)
+{
+	for (; begin != end; ++begin)
+		if (predicate(*begin)) return true;
+	return false;
+}
+
+/* --- all_of --- */
+
+template<typename ITER>
+bool lak::all_of(ITER begin, ITER end, auto predicate)
+{
+	for (; begin != end; ++begin)
+		if (!predicate(*begin)) return false;
+	return true;
+}
+
+/* --- none_of --- */
+
+template<typename ITER>
+bool lak::none_of(ITER begin, ITER end, auto predicate)
+{
+	for (; begin != end; ++begin)
+		if (predicate(*begin)) return false;
+	return true;
+}
+
 /* --- mismatch --- */
 
 template<typename ITER_A, typename ITER_B>

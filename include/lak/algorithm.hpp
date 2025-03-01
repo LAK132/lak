@@ -68,6 +68,21 @@ namespace lak
 	template<typename ITER>
 	ITER find_if(ITER begin, ITER end, auto predicate);
 
+	/* --- any_of --- */
+
+	template<typename ITER>
+	bool any_of(ITER begin, ITER end, auto predicate);
+
+	/* --- all_of --- */
+
+	template<typename ITER>
+	bool all_of(ITER begin, ITER end, auto predicate);
+
+	/* --- none_of --- */
+
+	template<typename ITER>
+	bool none_of(ITER begin, ITER end, auto predicate);
+
 	/* --- mismatch --- */
 
 	template<typename ITER_A, typename ITER_B>
