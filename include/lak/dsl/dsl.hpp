@@ -104,6 +104,45 @@ namespace lak
 
 		inline constexpr lak::dsl::top_t top;
 
+		/* --- eof --- */
+
+		struct eof_t
+		{
+			static constexpr bool is_pure_match = true;
+			using value_type                    = lak::u8string_view;
+			lak::dsl::result<value_type> parse(lak::u8string_view str) const
+			{
+				if (str.empty())
+					return lak::ok_t{lak::dsl::parse_result<value_type>{
+					  .consumed  = str.first(0),
+					  .remaining = str,
+					  .value     = str.first(0),
+					}};
+				else
+					return lak::err_t{
+					  lak::dsl::parse_error{.message = u8"expected end of file"}};
+			}
+		};
+
+		inline constexpr lak::dsl::eof_t eof;
+
+		static_assert(lak::dsl::parser<lak::dsl::eof_t>);
+
+		/* --- is_eof --- */
+
+		template<typename T>
+		struct is_eof : lak::false_type
+		{
+		};
+		template<>
+		struct is_eof<lak::dsl::eof_t> : lak::true_type
+		{
+		};
+		template<typename T>
+		inline constexpr bool is_eof_v = lak::dsl::is_eof<T>::value;
+
+		static_assert(lak::dsl::is_eof_v<lak::dsl::eof_t>);
+
 		/* --- sequence --- */
 
 		template<lak::dsl::parser auto... parsers>
