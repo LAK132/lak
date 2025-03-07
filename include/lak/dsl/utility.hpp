@@ -166,29 +166,29 @@ namespace lak
 		  }>;
 
 		template<char32_t chr>
-		inline constexpr auto until_next_char =
+		inline constexpr auto until_char =
 		  lak::dsl::until<lak::dsl::char_literal<chr>>;
 
 		template<char32_t chr>
-		inline constexpr auto next_char =
-		  lak::dsl::until_next_char<chr> + lak::dsl::char_literal<chr>;
+		inline constexpr auto until_inc_char =
+		  lak::dsl::until_inc<lak::dsl::char_literal<chr>>;
 
 		template<lak::u8const_string const_str>
-		inline constexpr auto until_next_str =
+		inline constexpr auto until_str =
 		  lak::dsl::until<lak::dsl::str_literal<const_str>>;
 
 		template<lak::u8const_string const_str>
-		inline constexpr auto next_str =
-		  lak::dsl::until_next_str<const_str> + lak::dsl::str_literal<const_str>;
+		inline constexpr auto until_inc_str =
+		  lak::dsl::until_str<const_str> + lak::dsl::str_literal<const_str>;
 
 		template<lak::u8const_string begin, lak::u8const_string end>
 		inline constexpr auto simple_bounded_str =
-		  lak::dsl::str_literal<begin> + lak::dsl::next_str<end>;
+		  lak::dsl::str_literal<begin> + lak::dsl::until_inc_str<end>;
 
 		template<lak::u8const_string begin, lak::u8const_string end>
 		inline constexpr auto capture_simple_bounded_str =
 		  lak::dsl::capture_2nd<lak::dsl::str_literal<begin>,
-		                        lak::dsl::until_next_str<end>,
+		                        lak::dsl::until_str<end>,
 		                        lak::dsl::str_literal<end>>;
 
 		inline constexpr auto slash_line_comment =

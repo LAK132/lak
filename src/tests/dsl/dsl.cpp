@@ -221,20 +221,20 @@ BEGIN_TEST(dsl)
 		ASSERT_EQUAL(parser1.parse(str).UNWRAP().value, u8"'asd'"_view);
 
 		constexpr auto parser2 = lak::dsl::str_literal<u8"'"> +
-		                         lak::dsl::until_next_str<u8"'"> +
+		                         lak::dsl::until_inc_str<u8"'"> +
 		                         lak::dsl::str_literal<u8"'">;
 		ASSERT_EQUAL(parser2.parse(str).UNWRAP().value, u8"'asd'"_view);
 
 		constexpr auto parser3 =
 		  lak::dsl::capture_nth<1U,
 		                        lak::dsl::str_literal<u8"'">,
-		                        lak::dsl::until_next_str<u8"'">,
+		                        lak::dsl::until_inc_str<u8"'">,
 		                        lak::dsl::str_literal<u8"'">>;
 		ASSERT_EQUAL(parser3.parse(str).UNWRAP().value, u8"asd"_view);
 
 		constexpr auto parser4 =
 		  lak::dsl::capture_2nd<lak::dsl::str_literal<u8"'">,
-		                        lak::dsl::until_next_str<u8"'">,
+		                        lak::dsl::until_inc_str<u8"'">,
 		                        lak::dsl::str_literal<u8"'">>;
 		ASSERT_EQUAL(parser4.parse(str).UNWRAP().value, u8"asd"_view);
 
