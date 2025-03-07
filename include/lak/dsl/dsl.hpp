@@ -985,7 +985,10 @@ namespace lak
 		};
 
 		template<lak::dsl::pure_match_parser auto parser>
-		inline const lak::dsl::until_t<parser> until;
+		inline constexpr lak::dsl::until_t<parser> until;
+
+		template<lak::dsl::pure_match_parser auto parser>
+		inline constexpr auto until_inc = lak::dsl::until<parser> + parser;
 
 		static_assert(
 		  lak::dsl::pure_match_parser<lak::dsl::until_t<lak::dsl::bottom>>);
