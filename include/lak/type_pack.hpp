@@ -178,6 +178,12 @@ namespace lak
 	template<template<typename> typename FILTER, typename PACK>
 	using filter_pack_t = typename lak::filter_pack<FILTER, PACK>::type;
 
+	static_assert(
+	  lak::is_same_v<
+	    lak::type_pack<void, void>,
+	    lak::filter_pack_t<lak::is_void,
+	                       lak::type_pack<int, void, int, void, double>>>);
+
 	/* --- indices_of_filter_pack --- */
 
 	template<template<typename> typename FILTER, size_t INDEX, typename PACK>
@@ -220,6 +226,12 @@ namespace lak
 	template<template<typename> typename FILTER, typename PACK>
 	using indices_of_filter_pack_t = typename lak::_indices_of_filter_pack_t<
 	  typename lak::indices_of_filter_pack<FILTER, 0U, PACK>::type>::type;
+
+	static_assert(
+	  lak::is_same_v<lak::index_sequence<1U, 3U>,
+	                 lak::indices_of_filter_pack_t<
+	                   lak::is_void,
+	                   lak::type_pack<int, void, int, void, double>>>);
 
 	/* --- unique_pack --- */
 

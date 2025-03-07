@@ -1255,6 +1255,14 @@ namespace lak
 		    lak::dsl::capture_sequence_t<lak::dsl::capture<lak::dsl::bottom>>>);
 
 		static_assert(
+		  lak::is_same_v<lak::index_sequence<1U>,
+		                 lak::indices_of_filter_pack_t<
+		                   lak::dsl::is_capture,
+		                   lak::type_pack<lak::dsl::bottom_t,
+		                                  lak::dsl::capture_t<lak::dsl::bottom>,
+		                                  lak::dsl::bottom_t>>>);
+
+		static_assert(
 		  lak::is_same_v<
 		    int,
 		    typename decltype(lak::dsl::capture_sequence<
