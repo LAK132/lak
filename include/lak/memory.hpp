@@ -15,13 +15,16 @@ namespace lak
 	struct unique_ptr
 	{
 	private:
-		T *_value = nullptr;
+		void (*_deleter)(T *) = nullptr;
+		T *_value             = nullptr;
 
 	public:
 		template<typename... ARGS>
 		static unique_ptr make(ARGS &&...args);
 
 		unique_ptr() = default;
+		unique_ptr(T *value);
+		unique_ptr(T *value, void (*deleter)(T *));
 		unique_ptr(unique_ptr &&other);
 		unique_ptr &operator=(unique_ptr &&other);
 		~unique_ptr();
@@ -35,6 +38,35 @@ namespace lak
 		inline T *operator->() const { return _value; }
 
 		inline T *get() const { return _value; }
+	};
+
+	template<typename T>
+	struct unique_ptr<T[]>
+	{
+	private:
+		void (*_deleter)(lak::span<T>) = nullptr;
+		lak::span<T> _value            = {};
+
+	public:
+		template<typename... ARGS>
+		static unique_ptr make(size_t count, ARGS &&...args);
+
+		unique_ptr() = default;
+		unique_ptr(lak::span<T> value);
+		unique_ptr(lak::span<T> value, void (*deleter)(lak::span<T>));
+		unique_ptr(unique_ptr &&other);
+		unique_ptr &operator=(unique_ptr &&other);
+		~unique_ptr();
+
+		void reset();
+
+		inline operator bool() const { return _value != nullptr; }
+
+		inline const lak::span<T> &operator*() const { return _value; }
+
+		inline const lak::span<T> *operator->() const { return &_value; }
+
+		inline const lak::span<T> *get() const { return &_value; }
 	};
 
 	template<typename T>
@@ -281,11 +313,11 @@ namespace lak
 
 		inline operator bool() const { return _data != nullptr; }
 
-		inline lak::span<T> &operator*() const { return _data->value; }
+		inline const lak::span<T> &operator*() const { return _data->value; }
 
-		inline lak::span<T> *operator->() const { return &_data->value; }
+		inline const lak::span<T> *operator->() const { return &_data->value; }
 
-		inline lak::span<T> *get() const
+		inline const lak::span<T> *get() const
 		{
 			return _data ? &_data->value : nullptr;
 		}
