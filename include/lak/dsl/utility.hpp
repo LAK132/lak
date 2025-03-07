@@ -56,12 +56,15 @@ namespace lak
 		template<typename UINT>
 		inline constexpr auto parsed_bin_uint = lak::dsl::
 		  parsed_uint<lak::dsl::bin_number, lak::numeric_base::bin, UINT>;
+		inline constexpr auto c_bin_prefix =
+		  lak::dsl::str_literal<u8"0b"> | lak::dsl::str_literal<u8"0B">;
 
 		inline constexpr auto oct_digit  = lak::dsl::char_range<U'0', U'7'>;
 		inline constexpr auto oct_number = +lak::dsl::oct_digit;
 		template<typename UINT>
 		inline constexpr auto parsed_oct_uint = lak::dsl::
 		  parsed_uint<lak::dsl::oct_number, lak::numeric_base::oct, UINT>;
+		inline constexpr auto c_oct_prefix = lak::dsl::char_literal<U'0'>;
 
 		inline constexpr auto dec_digit  = lak::dsl::char_range<U'0', U'9'>;
 		inline constexpr auto dec_number = +lak::dsl::dec_digit;
@@ -101,6 +104,21 @@ namespace lak
 		template<typename UINT>
 		inline constexpr auto parsed_hex_uint = lak::dsl::
 		  parsed_uint<lak::dsl::hex_number, lak::numeric_base::hex, UINT>;
+		inline constexpr auto c_hex_prefix =
+		  lak::dsl::str_literal<u8"0x"> | lak::dsl::str_literal<u8"0X">;
+
+		inline constexpr auto simple_c_number =
+		  (lak::dsl::c_hex_prefix + lak::dsl::hex_number) |
+		  (lak::dsl::c_bin_prefix + lak::dsl::bin_number) |
+		  (lak::dsl::c_oct_prefix + lak::dsl::oct_number + -lak::dsl::dec_digit) |
+		  lak::dsl::dec_number;
+		template<typename UINT>
+		inline constexpr auto parsed_simple_c_uint =
+		  (lak::dsl::c_hex_prefix + lak::dsl::parsed_hex_uint<UINT>) |
+		  (lak::dsl::c_bin_prefix + lak::dsl::parsed_bin_uint<UINT>) |
+		  (lak::dsl::c_oct_prefix + lak::dsl::parsed_oct_uint<UINT> +
+		   -lak::dsl::dec_digit) |
+		  lak::dsl::parsed_dec_uint<UINT>;
 
 		template<lak::dsl::pure_match_parser auto frac_separator,
 		         lak::dsl::pure_match_parser auto exp_separator>
