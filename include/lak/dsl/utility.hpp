@@ -191,14 +191,20 @@ namespace lak
 		                        lak::dsl::until_str<end>,
 		                        lak::dsl::str_literal<end>>;
 
+		inline constexpr auto line_end =
+		  lak::dsl::char_literal<U'\n'> | lak::dsl::eof;
+
+		inline constexpr auto until_inc_line_end =
+		  lak::dsl::until_inc<lak::dsl::line_end>;
+
 		inline constexpr auto slash_line_comment =
-		  lak::dsl::simple_bounded_str<u8"//", u8"\n">;
+		  lak::dsl::str_literal<u8"//"> + lak::dsl::until_inc_line_end;
 
 		inline constexpr auto block_comment =
 		  lak::dsl::simple_bounded_str<u8"/*", u8"*/">;
 
 		inline constexpr auto pound_line_comment =
-		  lak::dsl::simple_bounded_str<u8"#", u8"\n">;
+		  lak::dsl::char_literal<U'#'> + lak::dsl::until_inc_line_end;
 
 	}
 }
