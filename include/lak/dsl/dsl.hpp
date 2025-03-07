@@ -967,16 +967,29 @@ namespace lak
 
 			lak::dsl::result<value_type> parse(lak::u8string_view str) const
 			{
-				for (lak::u8string_view rem = str; !rem.empty(); rem = rem.substr(1U))
+				if constexpr (lak::dsl::is_eof_v<decltype(parser)>)
 				{
-					if (parser.parse(rem).is_ok())
-					{
-						str = str.first(str.size() - rem.size());
+					if (!str.empty())
 						return lak::ok_t<lak::dsl::parse_result<value_type>>{{
 						  .consumed  = str,
-						  .remaining = rem,
+						  .remaining = str.last(0),
 						  .value     = str,
 						}};
+				}
+				else
+				{
+					for (lak::u8string_view rem = str; !rem.empty();
+					     rem                    = rem.substr(1U))
+					{
+						if (parser.parse(rem).is_ok())
+						{
+							str = str.first(str.size() - rem.size());
+							return lak::ok_t<lak::dsl::parse_result<value_type>>{{
+							  .consumed  = str,
+							  .remaining = rem,
+							  .value     = str,
+							}};
+						}
 					}
 				}
 
