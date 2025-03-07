@@ -54,7 +54,7 @@ constexpr lak::ebpf::instruction lak::ebpf::instruction::make(
 	uint64_t inst        = static_cast<uint64_t>(packed);
 	uint8_t opcode_class = static_cast<uint8_t>(inst) & 0b111U;
 	if (opcode_class <= 0x03U)
-		return {
+		return lak::ebpf::instruction{
 		  .opcode_class = opcode_class,
 		  .ld_st =
 		    {
@@ -67,7 +67,7 @@ constexpr lak::ebpf::instruction lak::ebpf::instruction::make(
 		  .immediate = static_cast<uint32_t>(inst >> 32U),
 		};
 	else
-		return {
+		return lak::ebpf::instruction{
 		  .opcode_class = opcode_class,
 		  .alu_jmp =
 		    {
@@ -264,7 +264,7 @@ constexpr lak::ebpf::instruction lak::ebpf::instruction::make(
   register_t src,
   uint32_t immediate)
 {
-	return {
+	return lak::ebpf::instruction{
 	  .opcode_class = static_cast<uint8_t>(alu),
 	  .alu_jmp =
 	    {
@@ -302,7 +302,7 @@ constexpr lak::ebpf::instruction lak::ebpf::instruction::make(
   uint16_t offset,
   uint32_t immediate)
 {
-	return {
+	return lak::ebpf::instruction{
 	  .opcode_class = static_cast<uint8_t>(jump),
 	  .alu_jmp =
 	    {
