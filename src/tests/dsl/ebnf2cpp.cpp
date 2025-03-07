@@ -23,6 +23,14 @@ BEGIN_TEST(ebnf2cpp)
 	}
 
 	{
+		static_assert(
+		  lak::is_same_v<
+		    decltype(lak::dsl::capture_sequence<
+		             lak::dsl::repeat_exact<lak::dsl::str_literal<u8"a">, 2U>,
+		             lak::dsl::capture<
+		               lak::dsl::repeat_exact<lak::dsl::str_literal<u8"b">, 2U>>,
+		             lak::dsl::repeat_exact<lak::dsl::str_literal<u8"a">, 2U>>),
+		    decltype(ebnf_test::aabbaa)>);
 		auto str = u8"aabbaa"_view;
 		ASSERT_EQUAL(ebnf_test::aabbaa.parse(str).UNWRAP().value, u8"bb"_view);
 	}
@@ -50,6 +58,9 @@ BEGIN_TEST(ebnf2cpp)
 		ASSERT_EQUAL(ebnf_test::up_to_5_a.parse(str).UNWRAP().value,
 		             u8"aaaaa"_view);
 	}
+
+	static_assert(
+	  lak::is_same_v<int, typename decltype(ebnf_test::transform)::value_type>);
 
 	return 0;
 }

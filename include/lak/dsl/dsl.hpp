@@ -86,6 +86,22 @@ namespace lak
 
 		inline constexpr lak::dsl::bottom_t bottom;
 
+		/* --- dummy_impure --- */
+
+		template<typename T>
+		struct dummy_impure_t
+		{
+			static constexpr bool is_pure_match = false;
+			using value_type                    = T;
+			lak::dsl::result<value_type> parse(lak::u8string_view) const
+			{
+				return lak::err_t{lak::dsl::parse_error{.message = u8"dummy"}};
+			}
+		};
+
+		template<typename T>
+		inline constexpr lak::dsl::dummy_impure_t<T> dummy_impure;
+
 		/* --- top --- */
 
 		struct top_t
@@ -1237,6 +1253,25 @@ namespace lak
 		static_assert(
 		  lak::dsl::parser<
 		    lak::dsl::capture_sequence_t<lak::dsl::capture<lak::dsl::bottom>>>);
+
+		static_assert(
+		  lak::is_same_v<
+		    int,
+		    typename decltype(lak::dsl::capture_sequence<
+		                      lak::dsl::bottom,
+		                      lak::dsl::capture<lak::dsl::dummy_impure<int>>,
+		                      lak::dsl::bottom>)::value_type>);
+
+		static_assert(
+		  lak::is_same_v<
+		    lak::tuple<int, double>,
+		    typename decltype(lak::dsl::capture_sequence<
+		                      lak::dsl::bottom,
+		                      lak::dsl::capture<lak::dsl::dummy_impure<int>>,
+		                      lak::dsl::bottom,
+		                      lak::dsl::top,
+		                      lak::dsl::capture<lak::dsl::dummy_impure<double>>,
+		                      lak::dsl::bottom>)::value_type>);
 
 		/* --- is_capture_sequence --- */
 
