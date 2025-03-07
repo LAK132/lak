@@ -152,6 +152,75 @@ namespace lak
 	template<typename T, typename PACK>
 	using remove_from_pack_t = typename lak::remove_from_pack<T, PACK>::type;
 
+	/* --- filter_pack --- */
+
+	template<template<typename> typename FILTER, typename PACK>
+	struct filter_pack;
+	template<template<typename> typename FILTER>
+	struct filter_pack<FILTER, lak::type_pack<>>
+	{
+		using type = lak::type_pack<>;
+	};
+	template<template<typename> typename FILTER, typename T, typename... U>
+	requires(FILTER<T>::value)
+	struct filter_pack<FILTER, lak::type_pack<T, U...>>
+	{
+		using type = lak::prepend_to_pack_t<
+		  T,
+		  typename lak::filter_pack<FILTER, lak::type_pack<U...>>::type>;
+	};
+	template<template<typename> typename FILTER, typename T, typename... U>
+	requires(!FILTER<T>::value)
+	struct filter_pack<FILTER, lak::type_pack<T, U...>>
+	{
+		using type = typename lak::filter_pack<FILTER, lak::type_pack<U...>>::type;
+	};
+	template<template<typename> typename FILTER, typename PACK>
+	using filter_pack_t = typename lak::filter_pack<FILTER, PACK>::type;
+
+	/* --- indices_of_filter_pack --- */
+
+	template<template<typename> typename FILTER, size_t INDEX, typename PACK>
+	struct indices_of_filter_pack;
+	template<template<typename> typename FILTER, size_t INDEX>
+	struct indices_of_filter_pack<FILTER, INDEX, lak::type_pack<>>
+	{
+		using type = lak::type_pack<>;
+	};
+	template<template<typename> typename FILTER,
+	         size_t INDEX,
+	         typename T,
+	         typename... U>
+	requires(FILTER<T>::value)
+	struct indices_of_filter_pack<FILTER, INDEX, lak::type_pack<T, U...>>
+	{
+		using type = lak::prepend_to_pack_t<
+		  lak::size_type<INDEX>,
+		  typename lak::indices_of_filter_pack<FILTER,
+		                                       INDEX + 1U,
+		                                       lak::type_pack<U...>>::type>;
+	};
+	template<template<typename> typename FILTER,
+	         size_t INDEX,
+	         typename T,
+	         typename... U>
+	requires(!FILTER<T>::value)
+	struct indices_of_filter_pack<FILTER, INDEX, lak::type_pack<T, U...>>
+	{
+		using type = typename lak::
+		  indices_of_filter_pack<FILTER, INDEX + 1U, lak::type_pack<U...>>::type;
+	};
+	template<typename PACK>
+	struct _indices_of_filter_pack_t;
+	template<size_t... I>
+	struct _indices_of_filter_pack_t<lak::type_pack<lak::size_type<I>...>>
+	{
+		using type = lak::index_sequence<I...>;
+	};
+	template<template<typename> typename FILTER, typename PACK>
+	using indices_of_filter_pack_t = typename lak::_indices_of_filter_pack_t<
+	  typename lak::indices_of_filter_pack<FILTER, 0U, PACK>::type>::type;
+
 	/* --- unique_pack --- */
 
 	template<typename PACK>
