@@ -46,7 +46,14 @@ int main(int argc, char **argv)
 
 	for (const auto &rule : grammar.rules)
 	{
-		std::cout << "constexpr auto " << rule.name << " =\n";
+		std::cout << "constexpr auto " << rule.name << " =";
+
+		if (rule.transform)
+		{
+			std::cout << " lak::dsl::transform<";
+		}
+
+		std::cout << "\n";
 
 		lak::array<lak::pair<lak::dsl::ebnf_rule_value, size_t>> stack;
 
@@ -89,7 +96,21 @@ int main(int argc, char **argv)
 
 				case concatenation:
 					if (index == 0U)
-						std::cout << indent_str() << "lak::dsl::sequence<\n";
+					{
+						std::cout << indent_str();
+						bool contains_captures = false;
+						for (size_t i = 0U; !contains_captures &&
+						                    i < grammar.concatenations[val.index].size();
+						     ++i)
+							if (grammar
+							      .rule_values[grammar.concatenations[val.index].begin + i]
+							      .type == capture)
+								contains_captures = true;
+						if (contains_captures)
+							std::cout << "lak::dsl::capture_sequence<\n";
+						else
+							std::cout << "lak::dsl::sequence<\n";
+					}
 					if (index >= grammar.concatenations[val.index].size())
 					{
 						std::cout << ">";
@@ -169,6 +190,21 @@ int main(int argc, char **argv)
 				}
 				break;
 
+				case capture:
+					if (index == 0U)
+					{
+						std::cout << indent_str() << "lak::dsl::capture<\n";
+						++index;
+						stack.push_back(
+						  {grammar.rule_values[grammar.captures[val.index].index], 0U});
+					}
+					else
+					{
+						std::cout << ">";
+						stack.pop_back();
+					}
+					break;
+
 				case special:
 					std::cout << indent_str() << grammar.specials[val.index];
 					stack.pop_back();
@@ -200,6 +236,14 @@ int main(int argc, char **argv)
 				default:
 					ASSERT_UNREACHABLE();
 			}
+		}
+
+		if (rule.transform)
+		{
+			std::cout
+			  << ",\n"
+			  << grammar.transforms[grammar.rule_values[*rule.transform].index]
+			  << ">";
 		}
 
 		std::cout << ";\n\n";

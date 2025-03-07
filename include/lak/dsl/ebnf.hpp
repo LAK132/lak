@@ -43,6 +43,11 @@ namespace lak
 			size_t index;
 		};
 
+		struct ebnf_capture_sequence
+		{
+			size_t index;
+		};
+
 		struct ebnf_exception_sequence
 		{
 			size_t rule;
@@ -60,8 +65,10 @@ namespace lak
 				optional,
 				repetition,
 				grouping,
+				capture,
 				special,
 				exception,
+				transform,
 			} type;
 			size_t index;
 		};
@@ -70,6 +77,7 @@ namespace lak
 		{
 			lak::u8string_view name;
 			size_t definition;
+			lak::optional<size_t> transform;
 		};
 
 		struct ebnf_block
@@ -77,12 +85,14 @@ namespace lak
 			lak::array<lak::u8string_view> strings;
 			lak::array<lak::u8string_view> identifiers;
 			lak::array<lak::u8string_view> specials;
+			lak::array<lak::u8string_view> transforms;
 
 			lak::array<lak::dsl::ebnf_concatenation_sequence> concatenations;
 			lak::array<lak::dsl::ebnf_alternation_sequence> alternations;
 			lak::array<lak::dsl::ebnf_optional_sequence> optionals;
 			lak::array<lak::dsl::ebnf_repetition_sequence> repetitions;
 			lak::array<lak::dsl::ebnf_grouping_sequence> groupings;
+			lak::array<lak::dsl::ebnf_capture_sequence> captures;
 
 			lak::array<lak::dsl::ebnf_exception_sequence> exceptions;
 

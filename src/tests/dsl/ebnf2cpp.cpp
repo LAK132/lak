@@ -23,6 +23,11 @@ BEGIN_TEST(ebnf2cpp)
 	}
 
 	{
+		auto str = u8"aabbaa"_view;
+		ASSERT_EQUAL(ebnf_test::aabbaa.parse(str).UNWRAP().value, u8"bb"_view);
+	}
+
+	{
 		auto str = u8"        asdasd"_view;
 		ASSERT_EQUAL(ebnf_test::whitespace.parse(str).UNWRAP().value,
 		             u8"        "_view);

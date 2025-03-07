@@ -6,6 +6,9 @@ static constexpr auto ws =
 static constexpr auto special_seq_parser =
   lak::dsl::capture_simple_bounded_str<u8"?", u8"?">;
 
+static constexpr auto transform_seq_parser =
+  lak::dsl::capture_simple_bounded_str<u8"$", u8"$">;
+
 static constexpr auto terminal_string =
   lak::dsl::capture_simple_bounded_str<u8"\"", u8"\""> |
   lak::dsl::capture_simple_bounded_str<u8"'", u8"'">;
@@ -24,7 +27,8 @@ static constexpr auto repeat_n =
                         (*ws) + lak::dsl::char_literal<U'*'>>;
 
 static constexpr auto trailing_punct =
-  (*ws) + lak::dsl::one_of_chars<U',', U'|', U';', U')', U']', U'}'>;
+  (*ws) +
+  lak::dsl::one_of_chars<U',', U'|', U';', U')', U']', U'}', U'>', U'$'>;
 
 lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
   lak::u8string_view str) const
@@ -52,6 +56,8 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 		enum struct value_type
 		{
 			group,
+			capture,
+			transform,
 			repeat,
 			repeat_n,
 			option,
@@ -391,6 +397,54 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 			});
 			RES_TRY(pop_tree());
 		}
+		else if (lak::dsl::char_literal<U'<'>.EBNF_PARSE().is_ok())
+		{
+			working_tree.push_back({
+			  .type  = working_data::value_type::capture,
+			  .begin = 0U,
+			  .size  = 0U,
+			});
+		}
+		else if (lak::dsl::char_literal<U'>'>.EBNF_PARSE().is_ok())
+		{
+			while (true)
+			{
+				size_t s = working_tree.size();
+				if (working_tree.back().type == working_data::value_type::concat)
+				{
+					RES_TRY(pop_concat());
+				}
+				else if (working_tree.back().type == working_data::value_type::altern)
+				{
+					RES_TRY(pop_altern());
+				}
+				else if (working_tree.back().type == working_data::value_type::except)
+				{
+					RES_TRY(pop_except());
+				}
+				else
+					break;
+				ASSERT_GREATER(s, working_tree.size());
+			}
+
+			if (working_tree.back().type != working_data::value_type::capture)
+				return lak::err_t{lak::dsl::parse_error{
+				  .message = u8"unexpected end of capture group"}};
+
+			if (working_tree.back().size != 1U)
+				return lak::err_t{
+				  lak::dsl::parse_error{.message = u8"invalid capture group length"}};
+
+			const size_t index = pop_values(1U);
+			working_values.push_back({
+			  .type  = lak::dsl::ebnf_rule_value::value_type::capture,
+			  .index = result.captures.size(),
+			});
+			result.captures.push_back({
+			  .index = index,
+			});
+			RES_TRY(pop_tree());
+		}
 		else if (lak::dsl::char_literal<U'-'>.EBNF_PARSE().is_ok())
 		{
 			if (working_values.size() < 1U)
@@ -468,6 +522,48 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 			else
 				working_tree.back().begin = working_tree.back().size;
 		}
+		else if_let_ok (auto trans, transform_seq_parser.EBNF_PARSE())
+		{
+			while (true)
+			{
+				size_t s = working_tree.size();
+				if (working_tree.back().type == working_data::value_type::concat)
+				{
+					RES_TRY(pop_concat());
+				}
+				else if (working_tree.back().type == working_data::value_type::altern)
+				{
+					RES_TRY(pop_altern());
+				}
+				else if (working_tree.back().type == working_data::value_type::except)
+				{
+					RES_TRY(pop_except());
+				}
+				else if (working_tree.back().type ==
+				         working_data::value_type::repeat_n)
+				{
+					RES_TRY(pop_repeat_n());
+				}
+				else
+					break;
+				ASSERT_GREATER(s, working_tree.size());
+			}
+
+			if (working_tree.back().type != working_data::value_type::rule)
+				return lak::err_t{lak::dsl::parse_error{
+				  .message =
+				    u8"transform sequences are only valid at the end of a rule"}};
+			if (working_tree.back().size != 1U)
+				return lak::err_t{lak::dsl::parse_error{
+				  .message = u8"unexpected overlong transformed rule"}};
+
+			working_values.push_back({
+			  .type  = lak::dsl::ebnf_rule_value::value_type::transform,
+			  .index = result.transforms.size(),
+			});
+			result.transforms.push_back(trans.value);
+			++working_tree.back().size;
+		}
 		else if (lak::dsl::char_literal<U';'>.EBNF_PARSE().is_ok())
 		{
 			while (true)
@@ -498,12 +594,19 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 			if (working_tree.back().type != working_data::value_type::rule)
 				return lak::err_t{
 				  lak::dsl::parse_error{.message = u8"unexpected end of rule"}};
-			if (working_tree.back().size != 1U)
+			if (working_tree.back().size != 1U &&
+			    !(working_tree.back().size == 2U &&
+			      working_values.back().type ==
+			        ebnf_rule_value::value_type::transform))
 				return lak::err_t{
 				  lak::dsl::parse_error{.message = u8"unexpected overlong rule"}};
 
-			const size_t begin                                 = pop_values(1U);
+			const size_t begin = pop_values(working_tree.back().size);
 			result.rules[working_tree.back().begin].definition = begin;
+			if (working_tree.back().size == 2U)
+				result.rules[working_tree.back().begin].transform = begin + 1U;
+			else
+				result.rules[working_tree.back().begin].transform = lak::nullopt;
 			working_tree.pop_back();
 		}
 		else
