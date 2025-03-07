@@ -102,6 +102,11 @@ namespace lak
 		template<typename T>
 		inline constexpr lak::dsl::dummy_impure_t<T> dummy_impure;
 
+		static_assert(!decltype(lak::dsl::dummy_impure<int>)::is_pure_match);
+		static_assert(lak::is_same_v<
+		              int,
+		              typename decltype(lak::dsl::dummy_impure<int>)::value_type>);
+
 		/* --- top --- */
 
 		struct top_t
@@ -1212,6 +1217,27 @@ namespace lak
 		  lak::dsl::parser<lak::dsl::capture_nths_t<lak::index_sequence<0U, 1U>,
 		                                            lak::dsl::bottom,
 		                                            lak::dsl::bottom>>);
+
+		static_assert(
+		  lak::is_same_v<
+		    int,
+		    typename decltype(lak::dsl::capture_nths<
+		                      lak::index_sequence<1U>,
+		                      lak::dsl::bottom,
+		                      lak::dsl::capture<lak::dsl::dummy_impure<int>>,
+		                      lak::dsl::bottom>)::value_type>);
+
+		static_assert(
+		  lak::is_same_v<
+		    lak::tuple<int, double>,
+		    typename decltype(lak::dsl::capture_nths<
+		                      lak::index_sequence<1U, 4U>,
+		                      lak::dsl::bottom,
+		                      lak::dsl::capture<lak::dsl::dummy_impure<int>>,
+		                      lak::dsl::bottom,
+		                      lak::dsl::top,
+		                      lak::dsl::capture<lak::dsl::dummy_impure<double>>,
+		                      lak::dsl::bottom>)::value_type>);
 
 		/* --- is_capture_nths --- */
 
