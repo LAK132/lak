@@ -899,6 +899,363 @@ namespace lak
 		static_assert(
 		  lak::dsl::is_as_pure_v<lak::dsl::as_pure_t<lak::dsl::bottom>>);
 
+		/* --- nth_parser --- */
+
+		template<size_t N, lak::dsl::parser auto... parsers>
+		struct _nth_parser_t;
+
+		template<lak::dsl::parser auto par, lak::dsl::parser auto... parsers>
+		struct _nth_parser_t<0U, par, parsers...>
+		{
+			static constexpr auto parser = par;
+		};
+
+		template<size_t N,
+		         lak::dsl::parser auto par,
+		         lak::dsl::parser auto... parsers>
+		requires(N > 0U)
+		struct _nth_parser_t<N, par, parsers...>
+		: public _nth_parser_t<N - 1, parsers...>
+		{
+		};
+
+		template<size_t N, lak::dsl::parser auto... parsers>
+		inline constexpr auto nth_parser =
+		  lak::dsl::_nth_parser_t<N, parsers...>::parser;
+
+		template<size_t N, lak::dsl::parser auto... parsers>
+		using nth_parser_t = decltype(lak::dsl::nth_parser<N, parsers...>);
+
+		static_assert(lak::dsl::parser<lak::dsl::nth_parser_t<0U,
+		                                                      lak::dsl::bottom,
+		                                                      lak::dsl::bottom,
+		                                                      lak::dsl::bottom>>);
+
+		/* --- nth_parsers --- */
+
+		template<typename INDICES, lak::dsl::parser auto... parsers>
+		struct _nth_parsers_t;
+
+		template<size_t N, lak::dsl::parser auto... parsers>
+		struct _nth_parsers_t<lak::index_sequence<N>, parsers...>
+		{
+			static constexpr auto parser = lak::dsl::nth_parser<N, parsers...>;
+		};
+
+		template<size_t N0, size_t... N, lak::dsl::parser auto... parsers>
+		requires(sizeof...(N) > 0U)
+		struct _nth_parsers_t<lak::index_sequence<N0, N...>, parsers...>
+		{
+			static constexpr auto parser =
+			  lak::dsl::nth_parser<N0, parsers...> +
+			  lak::dsl::_nth_parsers_t<lak::index_sequence<N...>,
+			                           parsers...>::parser;
+		};
+
+		template<typename INDICES, lak::dsl::parser auto... parsers>
+		inline constexpr auto nth_parsers =
+		  lak::dsl::_nth_parsers_t<INDICES, parsers...>::parser;
+
+		template<typename INDICES, lak::dsl::parser auto... parsers>
+		using nth_parsers_t = decltype(lak::dsl::nth_parsers<INDICES, parsers...>);
+
+		static_assert(
+		  lak::dsl::parser<lak::dsl::nth_parsers_t<lak::index_sequence<0U>,
+		                                           lak::dsl::bottom,
+		                                           lak::dsl::bottom,
+		                                           lak::dsl::bottom>>);
+
+		static_assert(
+		  lak::dsl::parser<lak::dsl::nth_parsers_t<lak::index_sequence<0U, 1U>,
+		                                           lak::dsl::bottom,
+		                                           lak::dsl::bottom,
+		                                           lak::dsl::bottom>>);
+
+		/* --- capture_nths --- */
+
+		template<typename BEGIN,
+		         size_t N,
+		         typename END,
+		         lak::dsl::parser auto... parsers>
+		struct _capture_nths_impl_t;
+
+		template<size_t... PRE,
+		         size_t N,
+		         size_t... POST,
+		         lak::dsl::parser auto... parsers>
+		requires((sizeof...(PRE) > 0U) && (sizeof...(POST) > 0U))
+		struct _capture_nths_impl_t<lak::index_sequence<PRE...>,
+		                            N,
+		                            lak::index_sequence<POST...>,
+		                            parsers...>
+		: public lak::dsl::capture_nth_t<
+		    1U,
+		    lak::dsl::nth_parsers<lak::index_sequence<PRE...>, parsers...>,
+		    lak::dsl::nth_parser<N, parsers...>,
+		    lak::dsl::nth_parsers<lak::index_sequence<POST...>, parsers...>>
+		{
+		};
+
+		static_assert(
+		  lak::dsl::parser<lak::dsl::_capture_nths_impl_t<lak::index_sequence<0U>,
+		                                                  1U,
+		                                                  lak::index_sequence<2U>,
+		                                                  lak::dsl::bottom,
+		                                                  lak::dsl::bottom,
+		                                                  lak::dsl::bottom>>);
+
+		template<size_t N, size_t... POST, lak::dsl::parser auto... parsers>
+		requires(sizeof...(POST) > 0U)
+		struct _capture_nths_impl_t<lak::index_sequence<>,
+		                            N,
+		                            lak::index_sequence<POST...>,
+		                            parsers...>
+		: public lak::dsl::capture_nth_t<
+		    0U,
+		    lak::dsl::nth_parser<N, parsers...>,
+		    lak::dsl::nth_parsers<lak::index_sequence<POST...>, parsers...>>
+		{
+		};
+
+		static_assert(
+		  lak::dsl::parser<lak::dsl::_capture_nths_impl_t<lak::index_sequence<>,
+		                                                  0U,
+		                                                  lak::index_sequence<1U>,
+		                                                  lak::dsl::bottom,
+		                                                  lak::dsl::bottom>>);
+
+		template<size_t... PRE, size_t N, lak::dsl::parser auto... parsers>
+		requires(sizeof...(PRE) > 0U)
+		struct _capture_nths_impl_t<lak::index_sequence<PRE...>,
+		                            N,
+		                            lak::index_sequence<>,
+		                            parsers...>
+		: public lak::dsl::capture_nth_t<
+		    1U,
+		    lak::dsl::nth_parsers<lak::index_sequence<PRE...>, parsers...>,
+		    lak::dsl::nth_parser<N, parsers...>>
+		{
+		};
+
+		static_assert(
+		  lak::dsl::parser<lak::dsl::_capture_nths_impl_t<lak::index_sequence<0U>,
+		                                                  1U,
+		                                                  lak::index_sequence<>,
+		                                                  lak::dsl::bottom,
+		                                                  lak::dsl::bottom>>);
+
+		template<size_t N, lak::dsl::parser auto... parsers>
+		struct _capture_nths_impl_t<lak::index_sequence<>,
+		                            N,
+		                            lak::index_sequence<>,
+		                            parsers...>
+		: public lak::dsl::nth_parser_t<N, parsers...>
+		{
+		};
+
+		static_assert(
+		  lak::dsl::parser<lak::dsl::_capture_nths_impl_t<lak::index_sequence<>,
+		                                                  0U,
+		                                                  lak::index_sequence<>,
+		                                                  lak::dsl::bottom>>);
+
+		template<size_t BEGIN,
+		         size_t N,
+		         size_t END,
+		         lak::dsl::parser auto... parsers>
+		struct capture_nths_impl_t;
+
+		template<size_t BEGIN,
+		         size_t N,
+		         size_t END,
+		         lak::dsl::parser auto... parsers>
+		requires((BEGIN < N) && (END > N + 1U))
+		struct capture_nths_impl_t<BEGIN, N, END, parsers...>
+		: public lak::dsl::_capture_nths_impl_t<
+		    lak::make_index_sequence_range<BEGIN, N>,
+		    N,
+		    lak::make_index_sequence_range<N + 1U, END>,
+		    parsers...>
+		{
+		};
+
+		template<size_t BEGIN,
+		         size_t N,
+		         size_t END,
+		         lak::dsl::parser auto... parsers>
+		requires((BEGIN == N) && (END > N + 1U))
+		struct capture_nths_impl_t<BEGIN, N, END, parsers...>
+		: public lak::dsl::_capture_nths_impl_t<
+		    lak::index_sequence<>,
+		    N,
+		    lak::make_index_sequence_range<N + 1U, END>,
+		    parsers...>
+		{
+		};
+
+		template<size_t BEGIN,
+		         size_t N,
+		         size_t END,
+		         lak::dsl::parser auto... parsers>
+		requires((BEGIN < N) && (END == N + 1U))
+		struct capture_nths_impl_t<BEGIN, N, END, parsers...>
+		: public lak::dsl::_capture_nths_impl_t<
+		    lak::make_index_sequence_range<BEGIN, N>,
+		    N,
+		    lak::index_sequence<>,
+		    parsers...>
+		{
+		};
+
+		template<size_t BEGIN,
+		         size_t N,
+		         size_t END,
+		         lak::dsl::parser auto... parsers>
+		requires((BEGIN == N) && (END == N + 1U))
+		struct capture_nths_impl_t<BEGIN, N, END, parsers...>
+		: public lak::dsl::_capture_nths_impl_t<lak::index_sequence<>,
+		                                        N,
+		                                        lak::index_sequence<>,
+		                                        parsers...>
+		{
+		};
+
+		template<size_t BEGIN,
+		         typename INDEX_SET,
+		         lak::dsl::parser auto... parsers>
+		struct _capture_nths_t;
+
+		template<size_t BEGIN, size_t N, lak::dsl::parser auto... parsers>
+		struct _capture_nths_t<BEGIN, lak::index_sequence<N>, parsers...>
+		{
+			static constexpr auto parser = lak::dsl::
+			  capture_nths_impl_t<BEGIN, N, sizeof...(parsers), parsers...>{};
+		};
+
+		template<size_t BEGIN,
+		         size_t N0,
+		         size_t N1,
+		         size_t... N,
+		         lak::dsl::parser auto... parsers>
+		struct _capture_nths_t<BEGIN,
+		                       lak::index_sequence<N0, N1, N...>,
+		                       parsers...>
+		{
+			static_assert(lak::dsl::parser<
+			              lak::dsl::capture_nths_impl_t<BEGIN, N0, N1, parsers...>>);
+			static_assert(
+			  lak::dsl::parser<
+			    decltype(lak::dsl::_capture_nths_t<N1,
+			                                       lak::index_sequence<N1, N...>,
+			                                       parsers...>::parser)>);
+
+			static constexpr auto parser =
+			  lak::dsl::capture_nths_impl_t<BEGIN, N0, N1, parsers...>{} +
+			  lak::dsl::_capture_nths_t<N1,
+			                            lak::index_sequence<N1, N...>,
+			                            parsers...>::parser;
+		};
+
+		template<typename INDICES, lak::dsl::parser auto... parsers>
+		struct capture_nths_t;
+
+		template<size_t... N, lak::dsl::parser auto... parsers>
+		struct capture_nths_t<lak::index_sequence<N...>, parsers...>
+		{
+			static constexpr auto _parser = lak::dsl::
+			  _capture_nths_t<0, lak::index_sequence<N...>, parsers...>::parser;
+
+			static constexpr bool is_pure_match = decltype(_parser)::is_pure_match;
+
+			using value_type = typename decltype(_parser)::value_type;
+
+			lak::dsl::result<value_type> parse(lak::u8string_view str) const
+			{
+				return _parser.parse(str);
+			}
+		};
+
+		template<lak::dsl::parser auto... parsers>
+		struct capture_nths_t<lak::index_sequence<>, parsers...>
+		{
+			static constexpr bool is_pure_match = true;
+
+			using value_type = lak::u8string_view;
+
+			lak::dsl::result<value_type> parse(lak::u8string_view str) const
+			{
+				return lak::dsl::as_pure<lak::dsl::sequence<parsers...>>.parse(str);
+			}
+		};
+
+		template<typename INDICES, lak::dsl::parser auto... parsers>
+		inline constexpr lak::dsl::capture_nths_t<INDICES, parsers...>
+		  capture_nths;
+
+		static_assert(
+		  lak::dsl::parser<lak::dsl::capture_nths_t<lak::index_sequence<0U, 1U>,
+		                                            lak::dsl::bottom,
+		                                            lak::dsl::bottom>>);
+
+		/* --- is_capture_nths --- */
+
+		template<typename T>
+		struct is_capture_nths : lak::false_type
+		{
+		};
+		template<size_t... N, lak::dsl::parser auto... parsers>
+		struct is_capture_nths<
+		  lak::dsl::capture_nths_t<lak::index_sequence<N...>, parsers...>>
+		: lak::true_type
+		{
+		};
+		template<typename T>
+		inline constexpr bool is_capture_nths_v =
+		  lak::dsl::is_capture_nths<T>::value;
+
+		static_assert(lak::dsl::is_capture_nths_v<
+		              lak::dsl::capture_nths_t<lak::index_sequence<0U>,
+		                                       lak::dsl::sequence<>>>);
+
+		/* --- capture_sequence --- */
+
+		// capture_sequence<capture<a>, b, capture<c>>
+		// -> sequence<capture_1st<a, b>, capture_1st<c>>
+
+		template<lak::dsl::parser auto... pars>
+		struct capture_sequence_t
+		: public lak::dsl::capture_nths_t<
+		    lak::indices_of_filter_pack_t<lak::dsl::is_capture,
+		                                  lak::type_pack<decltype(pars)...>>,
+		    pars...>
+		{
+		};
+
+		template<lak::dsl::parser auto... pars>
+		inline constexpr lak::dsl::capture_sequence_t<pars...> capture_sequence;
+
+		static_assert(
+		  lak::dsl::parser<
+		    lak::dsl::capture_sequence_t<lak::dsl::capture<lak::dsl::bottom>>>);
+
+		/* --- is_capture_sequence --- */
+
+		template<typename T>
+		struct is_capture_sequence : lak::false_type
+		{
+		};
+		template<lak::dsl::parser auto... parsers>
+		struct is_capture_sequence<lak::dsl::capture_sequence_t<parsers...>>
+		: lak::true_type
+		{
+		};
+		template<typename T>
+		inline constexpr bool is_capture_sequence_v =
+		  lak::dsl::is_capture_sequence<T>::value;
+
+		static_assert(lak::dsl::is_capture_sequence_v<
+		              lak::dsl::capture_sequence_t<lak::dsl::sequence<>>>);
+
 		/* --- negative_lookahead --- */
 
 		template<lak::dsl::pure_match_parser auto par>
