@@ -83,12 +83,12 @@ void lak::debugger_t::std_err(const lak::u8string &line_info,
 	       << lak::strconv<LAK_DEBUG_STREAM_CHAR>(str);
 	if (live_output_enabled)
 	{
-		std::cout << indent;
+		std::cerr << indent;
 		if (line_info_enabled)
 		{
-			std::cout << line_info;
+			std::cerr << line_info;
 		}
-		std::cout << str << std::flush;
+		std::cerr << str << std::flush;
 	}
 }
 
@@ -102,12 +102,12 @@ void lak::debugger_t::std_err(const lak::u8string &line_info,
 	       << lak::strconv<LAK_DEBUG_STREAM_CHAR>(str);
 	if (live_output_enabled)
 	{
-		std::wcout << indent;
+		std::wcerr << indent;
 		if (line_info_enabled)
 		{
-			std::wcout << line_info;
+			std::wcerr << line_info;
 		}
-		std::wcout << str << std::flush;
+		std::wcerr << str << std::flush;
 	}
 }
 
@@ -121,12 +121,12 @@ void lak::debugger_t::std_err(const lak::u8string &line_info,
 	       << lak::strconv<LAK_DEBUG_STREAM_CHAR>(str);
 	if (live_output_enabled)
 	{
-		std::wcout << indent;
+		std::wcerr << indent;
 		if (line_info_enabled)
 		{
-			std::wcout << line_info;
+			std::wcerr << line_info;
 		}
-		std::wcout << str << std::flush;
+		std::wcerr << str << std::flush;
 	}
 }
 
@@ -166,7 +166,7 @@ void lak::debugger_t::std_err_cont(const lak::astring &str)
 	stream << lak::strconv<LAK_DEBUG_STREAM_CHAR>(str);
 	if (live_output_enabled)
 	{
-		std::cout << str << std::flush;
+		std::cerr << str << std::flush;
 	}
 }
 
@@ -176,7 +176,7 @@ void lak::debugger_t::std_err_cont(const lak::wstring &str)
 	stream << lak::strconv<LAK_DEBUG_STREAM_CHAR>(str);
 	if (live_output_enabled)
 	{
-		std::wcout << str << std::flush;
+		std::wcerr << str << std::flush;
 	}
 }
 
@@ -186,7 +186,7 @@ void lak::debugger_t::std_err_cont(const lak::u8string &str)
 	stream << lak::strconv<LAK_DEBUG_STREAM_CHAR>(str);
 	if (live_output_enabled)
 	{
-		std::wcout << str << std::flush;
+		std::wcerr << str << std::flush;
 	}
 }
 
