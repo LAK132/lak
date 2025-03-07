@@ -170,7 +170,9 @@ namespace lak
 		struct sequence_t
 		{
 			static constexpr bool is_pure_match =
-			  ((lak::dsl::pure_match_parser<decltype(parsers)>) && ...);
+			  ((lak::dsl::pure_match_parser<
+			     lak::remove_cvref_t<decltype(parsers)>>) &&
+			   ...);
 
 			using value_type = lak::conditional_t<
 			  is_pure_match,
@@ -540,7 +542,9 @@ namespace lak
 		struct disjunction_t
 		{
 			static constexpr bool is_pure_match =
-			  ((lak::dsl::pure_match_parser<decltype(parsers)>) && ...);
+			  ((lak::dsl::pure_match_parser<
+			     lak::remove_cvref_t<decltype(parsers)>>) &&
+			   ...);
 			static constexpr bool _is_same_value_types =
 			  lak::are_all_same_v<typename decltype(parsers)::value_type...>;
 			using value_type = lak::conditional_t<
@@ -800,6 +804,9 @@ namespace lak
 		static_assert(
 		  lak::dsl::is_capture_v<
 		    lak::dsl::capture_t<lak::dsl::capture<lak::dsl::sequence<>>>>);
+		static_assert(
+		  lak::dsl::is_capture_v<lak::remove_cvref_t<
+		    decltype(lak::dsl::capture<lak::dsl::dummy_impure<int>>)>>);
 
 		/* --- capture_nth --- */
 
@@ -945,7 +952,8 @@ namespace lak
 		  lak::dsl::_nth_parser_t<N, parsers...>::parser;
 
 		template<size_t N, lak::dsl::parser auto... parsers>
-		using nth_parser_t = decltype(lak::dsl::nth_parser<N, parsers...>);
+		using nth_parser_t =
+		  lak::remove_cvref_t<decltype(lak::dsl::nth_parser<N, parsers...>)>;
 
 		static_assert(lak::dsl::parser<lak::dsl::nth_parser_t<0U,
 		                                                      lak::dsl::bottom,
@@ -978,7 +986,8 @@ namespace lak
 		  lak::dsl::_nth_parsers_t<INDICES, parsers...>::parser;
 
 		template<typename INDICES, lak::dsl::parser auto... parsers>
-		using nth_parsers_t = decltype(lak::dsl::nth_parsers<INDICES, parsers...>);
+		using nth_parsers_t = lak::remove_cvref_t<
+		  decltype(lak::dsl::nth_parsers<INDICES, parsers...>)>;
 
 		static_assert(
 		  lak::dsl::parser<lak::dsl::nth_parsers_t<lak::index_sequence<0U>,
@@ -1165,10 +1174,10 @@ namespace lak
 			static_assert(lak::dsl::parser<
 			              lak::dsl::capture_nths_impl_t<BEGIN, N0, N1, parsers...>>);
 			static_assert(
-			  lak::dsl::parser<
+			  lak::dsl::parser<lak::remove_cvref_t<
 			    decltype(lak::dsl::_capture_nths_t<N1,
 			                                       lak::index_sequence<N1, N...>,
-			                                       parsers...>::parser)>);
+			                                       parsers...>::parser)>>);
 
 			static constexpr auto parser =
 			  lak::dsl::capture_nths_impl_t<BEGIN, N0, N1, parsers...>{} +
@@ -1267,8 +1276,9 @@ namespace lak
 		template<lak::dsl::parser auto... pars>
 		struct capture_sequence_t
 		: public lak::dsl::capture_nths_t<
-		    lak::indices_of_filter_pack_t<lak::dsl::is_capture,
-		                                  lak::type_pack<decltype(pars)...>>,
+		    lak::indices_of_filter_pack_t<
+		      lak::dsl::is_capture,
+		      lak::type_pack<lak::remove_cvref_t<decltype(pars)>...>>,
 		    pars...>
 		{
 		};
@@ -1393,7 +1403,8 @@ namespace lak
 
 			lak::dsl::result<value_type> parse(lak::u8string_view str) const
 			{
-				if constexpr (lak::dsl::is_eof_v<decltype(parser)>)
+				if constexpr (lak::dsl::is_eof_v<
+				                lak::remove_cvref_t<decltype(parser)>>)
 				{
 					if (!str.empty())
 						return lak::ok_t<lak::dsl::parse_result<value_type>>{{
@@ -2002,7 +2013,9 @@ namespace lak
 		struct unordered_t
 		{
 			static constexpr bool is_pure_match =
-			  ((lak::dsl::pure_match_parser<decltype(parsers)>) && ...);
+			  ((lak::dsl::pure_match_parser<
+			     lak::remove_cvref_t<decltype(parsers)>>) &&
+			   ...);
 
 			using value_type = lak::conditional_t<
 			  is_pure_match,
