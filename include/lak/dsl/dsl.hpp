@@ -536,6 +536,174 @@ namespace lak
 			return lak::dsl::repeat_at_least<R, 1U>;
 		}
 
+		/* --- match --- */
+
+		template<lak::dsl::pure_match_parser auto condition,
+		         lak::dsl::parser auto par>
+		struct match_t
+		{
+			static constexpr bool is_pure_match =
+			  lak::dsl::pure_match_parser<lak::remove_cvref_t<decltype(par)>>;
+			using value_type = typename decltype(par)::value_type;
+
+			lak::optional<lak::dsl::result<value_type>> parse(
+			  lak::u8string_view str) const
+			{
+				auto rem = str;
+
+				if (condition.parse(rem)
+				      .if_ok([&](auto res) { rem = res.remaining; })
+				      .is_err())
+					return lak::nullopt;
+
+				return lak::some_t{par.parse(rem)};
+			}
+		};
+
+		template<lak::dsl::pure_match_parser auto condition,
+		         lak::dsl::parser auto par>
+		inline constexpr lak::dsl::match_t<condition, par> match;
+
+		/* --- is_match --- */
+
+		template<typename T>
+		struct is_match : lak::false_type
+		{
+		};
+		template<lak::dsl::pure_match_parser auto cond, lak::dsl::parser auto par>
+		struct is_match<lak::dsl::match_t<cond, par>> : lak::true_type
+		{
+		};
+		template<typename T>
+		inline constexpr auto is_match_v = lak::dsl::is_match<T>::value;
+
+		static_assert(lak::dsl::is_match_v<
+		              lak::dsl::match_t<lak::dsl::top, lak::dsl::bottom>>);
+
+		/* --- match_sequence --- */
+
+		template<auto... cases>
+		requires(
+		  ((lak::dsl::is_match_v<lak::remove_cvref_t<decltype(cases)>>) && ...))
+		struct match_sequence_t
+		{
+			static constexpr bool is_pure_match =
+			  ((decltype(cases)::is_pure_match) && ...);
+			static constexpr bool _is_same_value_types =
+			  lak::are_all_same_v<typename decltype(cases)::value_type...>;
+			using value_type = lak::conditional_t<
+			  is_pure_match,
+			  lak::u8string_view,
+			  lak::conditional_t<
+			    _is_same_value_types,
+			    lak::nth_type_t<0U, typename decltype(cases)::value_type...>,
+			    lak::create_from_pack_t<
+			      lak::variant,
+			      lak::make_unique_pack_t<
+			        typename decltype(cases)::value_type...>>>>;
+
+			lak::dsl::result<value_type> parse(lak::u8string_view str) const
+			requires(!_is_same_value_types)
+			{
+				lak::optional<lak::dsl::result<value_type>> result = lak::nullopt;
+
+				// nullopt: condition failed (keep going)
+				// err: condition passed, parser didn't (return err)
+				// ok: condition and parser passed (return ok)
+
+				(((result = cases.parse(str).map(
+				     []<typename T>(
+				       lak::dsl::result<T> &&res) -> lak::dsl::result<value_type>
+				     {
+					     return lak::move(res).map(
+					       [](lak::dsl::parse_result<T> &&res)
+					         -> lak::dsl::parse_result<value_type>
+					       {
+						       return {
+						         .consumed  = res.consumed,
+						         .remaining = res.remaining,
+						         .value     = value_type(lak::forward<T>(res.value)),
+						       };
+					       });
+				     }))
+				    .has_value()) ||
+				 ...);
+
+				if (!result.has_value())
+					return lak::err_t{
+					  lak::dsl::parse_error{.message = u8"match failed"}};
+				else
+					return lak::move(*result);
+			}
+
+			lak::dsl::result<value_type> parse(lak::u8string_view str) const
+			requires(_is_same_value_types)
+			{
+				lak::optional<lak::dsl::result<value_type>> result = lak::nullopt;
+
+				// nullopt: condition failed (keep going)
+				// err: condition passed, parser didn't (return err)
+				// ok: condition and parser passed (return ok)
+
+				(((result = cases.parse(str)).has_value()) || ...);
+
+				if (!result.has_value())
+					return lak::err_t{
+					  lak::dsl::parse_error{.message = u8"match failed"}};
+				else
+					return lak::move(*result);
+			}
+		};
+
+		template<auto... cases>
+		inline constexpr lak::dsl::match_sequence_t<cases...> match_sequence;
+
+		/* --- is_match_sequence --- */
+
+		template<typename T>
+		struct is_match_sequence : lak::false_type
+		{
+		};
+		template<auto... cases>
+		struct is_match_sequence<lak::dsl::match_sequence_t<cases...>>
+		: lak::true_type
+		{
+		};
+		template<typename T>
+		inline constexpr bool is_match_sequence_v =
+		  lak::dsl::is_match_sequence<T>::value;
+
+		/* --- operator| ---- */
+
+		template<typename L, typename R>
+		requires(lak::dsl::is_match_v<lak::remove_cvref_t<L>> &&
+		         lak::dsl::is_match_v<lak::remove_cvref_t<R>>)
+		inline constexpr auto operator|(L, R)
+		{
+			return lak::dsl::match_sequence<L{}, R{}>;
+		}
+
+		template<auto... L, typename R>
+		requires(lak::dsl::is_match_v<lak::remove_cvref_t<R>>)
+		inline constexpr auto operator|(lak::dsl::match_sequence_t<L...>, R)
+		{
+			return lak::dsl::match_sequence<L..., R{}>;
+		}
+
+		template<typename L, auto... R>
+		requires(lak::dsl::is_match_v<lak::remove_cvref_t<L>>)
+		inline constexpr auto operator|(L, lak::dsl::match_sequence_t<R...>)
+		{
+			return lak::dsl::match_sequence<L{}, R...>;
+		}
+
+		template<auto... L, auto... R>
+		inline constexpr auto operator|(lak::dsl::match_sequence_t<L...>,
+		                                lak::dsl::match_sequence_t<R...>)
+		{
+			return lak::dsl::match_sequence<L..., R...>;
+		}
+
 		/* --- disjunction --- */
 
 		template<lak::dsl::parser auto... parsers>
