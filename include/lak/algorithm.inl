@@ -807,6 +807,30 @@ void lak::heapsort(ITER begin, ITER end, CMP compare)
 	lak::sort_heap(begin, end, compare);
 }
 
+/* --- partial_order_sort --- */
+
+template<typename ITER, typename CMP>
+void lak::partial_order_sort(ITER begin, ITER end, CMP compare)
+{
+	static_assert(std::forward_iterator<ITER>);
+
+	while (lak::distance(begin, end) > 1)
+	{
+		if (lak::none_of(lak::next(begin),
+		                 end,
+		                 [&](const auto &v) { return compare(v, *begin); }))
+		{
+			++begin;
+			continue;
+		}
+		for (ITER it = lak::next(begin); it != end; ++it)
+			if (auto cmp = [&](const auto &v) { return compare(v, *it); };
+			    lak::none_of(begin, it, cmp) &&
+			    lak::none_of(lak::next(it), end, cmp))
+				lak::swap(*(begin++), *it);
+	}
+}
+
 /* --- minmax_element --- */
 
 template<typename ITER, typename CMP>

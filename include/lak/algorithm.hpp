@@ -211,6 +211,13 @@ namespace lak
 	template<typename ITER, typename CMP = lak::less<>>
 	void heapsort(ITER begin, ITER end, CMP compare = {});
 
+	/* --- partial_order_sort --- */
+
+	// Works in situations where a<b is ordered but !(a<b) is unordered
+
+	template<typename ITER, typename CMP = lak::less<>>
+	void partial_order_sort(ITER begin, ITER end, CMP compare = {});
+
 	/* --- minmax_element --- */
 
 	template<typename ITER, typename CMP = lak::less<>>

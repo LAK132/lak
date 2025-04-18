@@ -390,6 +390,95 @@ BEGIN_TEST(heapsort)
 }
 END_TEST()
 
+BEGIN_TEST(partial_order_sort)
+{
+	auto expected = {0, 1, 2, 3, 4, 5, 6, 7};
+	auto depends  = [](int a, int b) { return a + 1 == b; };
+
+	{
+		auto source = {7, 6, 5, 4, 3, 2, 1, 0};
+
+		lak::array<int> values{source.begin(), source.end()};
+
+		lak::partial_order_sort(values.begin(), values.end(), depends);
+
+		ASSERT_ARRAY_EQUAL(lak::span(values), lak::span(expected));
+	}
+
+	{
+		auto source = {7, 1, 0, 5, 6, 4, 3, 2};
+
+		lak::array<int> values{source.begin(), source.end()};
+
+		lak::partial_order_sort(values.begin(), values.end(), depends);
+
+		ASSERT_ARRAY_EQUAL(lak::span(values), lak::span(expected));
+	}
+
+	{
+		auto source = {0, 5, 1, 6, 4, 7, 3, 2};
+
+		lak::array<int> values{source.begin(), source.end()};
+
+		lak::partial_order_sort(values.begin(), values.end(), depends);
+
+		ASSERT_ARRAY_EQUAL(lak::span(values), lak::span(expected));
+	}
+
+	{
+		auto source = {4, 7, 3, 2, 0, 5, 1, 6};
+
+		lak::array<int> values{source.begin(), source.end()};
+
+		lak::partial_order_sort(values.begin(), values.end(), depends);
+
+		ASSERT_ARRAY_EQUAL(lak::span(values), lak::span(expected));
+	}
+
+	{
+		auto source = {7, 6, 5, 4, 3, 2, 1, 0};
+
+		lak::array<int> values{source.begin(), source.end()};
+
+		lak::partial_order_sort(values.begin(), values.end());
+
+		ASSERT_ARRAY_EQUAL(lak::span(values), lak::span(expected));
+	}
+
+	{
+		auto source = {7, 1, 0, 5, 6, 4, 3, 2};
+
+		lak::array<int> values{source.begin(), source.end()};
+
+		lak::partial_order_sort(values.begin(), values.end());
+
+		ASSERT_ARRAY_EQUAL(lak::span(values), lak::span(expected));
+	}
+
+	{
+		auto source = {0, 5, 1, 6, 4, 7, 3, 2};
+
+		lak::array<int> values{source.begin(), source.end()};
+
+		lak::partial_order_sort(values.begin(), values.end());
+
+		ASSERT_ARRAY_EQUAL(lak::span(values), lak::span(expected));
+	}
+
+	{
+		auto source = {4, 7, 3, 2, 0, 5, 1, 6};
+
+		lak::array<int> values{source.begin(), source.end()};
+
+		lak::partial_order_sort(values.begin(), values.end());
+
+		ASSERT_ARRAY_EQUAL(lak::span(values), lak::span(expected));
+	}
+
+	return EXIT_SUCCESS;
+}
+END_TEST()
+
 BEGIN_TEST(minmax_element)
 {
 	auto values = {0, 1, 2, 4, -10, 100, -1000, 4};
