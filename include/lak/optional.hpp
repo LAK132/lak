@@ -115,6 +115,38 @@ namespace lak
 
 		inline operator bool() const { return _has_value; }
 
+		template<
+		  lak::concepts::invocable<lak::add_lvalue_reference_t<value_type>> F>
+		auto map(F &&f) & -> lak::optional<
+		  lak::invoke_result_t<F, lak::add_lvalue_reference_t<value_type>>>
+		{
+			if (has_value())
+				return f(_value.value());
+			else
+				return lak::nullopt;
+		}
+
+		template<lak::concepts::invocable<
+		  lak::add_lvalue_reference_t<const value_type>> F>
+		auto map(F &&f) const & -> lak::optional<
+		  lak::invoke_result_t<F, lak::add_lvalue_reference_t<const value_type>>>
+		{
+			if (has_value())
+				return f(static_cast<lak::add_lvalue_reference_t<const value_type>>(
+				  _value.value()));
+			else
+				return lak::nullopt;
+		}
+
+		template<lak::concepts::invocable<value_type &&> F>
+		auto map(F &&f) && -> lak::optional<lak::invoke_result_t<F, value_type &&>>
+		{
+			if (has_value())
+				return f(lak::forward<value_type>(_value.value()));
+			else
+				return lak::nullopt;
+		}
+
 		template<typename U>
 		value_type &emplace(U &&other)
 		{
