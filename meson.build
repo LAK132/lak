@@ -41,6 +41,7 @@ else
 	version = 'c++20'
 
 	c_cpp_args = [
+		'-Wno-unknown-warning-option',
 		'-Wno-gnu-zero-variadic-macro-arguments',
 		'-Wno-language-extension-token',
 		'-Wno-dangling-else',
