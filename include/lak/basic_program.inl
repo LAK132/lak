@@ -36,7 +36,8 @@
 #define LAK_BASIC_PROGRAM(X) TOKEN_CONCAT(LAK_BASIC_PROGRAM_PREFIX, X)
 
 // Implement these program_* functions in your program.
-lak::optional<int> LAK_BASIC_PROGRAM(program_init)(int argc, char **argv);
+lak::optional<int> LAK_BASIC_PROGRAM(program_preinit)(int argc, char **argv);
+lak::optional<int> LAK_BASIC_PROGRAM(program_init)();
 bool LAK_BASIC_PROGRAM(program_loop)(uint64_t counter_delta);
 int LAK_BASIC_PROGRAM(program_quit)();
 
@@ -48,7 +49,7 @@ void LAK_BASIC_PROGRAM(window_loop)(lak::window &window,
                                     uint64_t counter_delta);
 void LAK_BASIC_PROGRAM(window_quit)(lak::window &window);
 
-// Set these inside of window_preinit
+// Set these inside of program_preinit or program_init.
 uint32_t LAK_BASIC_PROGRAM(window_target_framerate) = 60;
 bool LAK_BASIC_PROGRAM(window_force_software)       = false;
 lak::vec2l_t LAK_BASIC_PROGRAM(window_start_size)   = {1200, 700};
@@ -56,6 +57,8 @@ lak::vec4f_t LAK_BASIC_PROGRAM(window_clear_colour) = {
   0.0f, 0.3125f, 0.312f, 1.0f};
 lak::opengl_settings LAK_BASIC_PROGRAM(window_opengl_settings);
 lak::software_settings LAK_BASIC_PROGRAM(window_software_settings);
+
+bool LAK_BASIC_PROGRAM(platform_initialised) = false;
 
 struct LAK_BASIC_PROGRAM(window_instance)
 {
@@ -88,6 +91,7 @@ void APIENTRY
 
 lak::result<lak::window &, lak::u8string> LAK_BASIC_PROGRAM(create_window)()
 {
+	ASSERT(LAK_BASIC_PROGRAM(platform_initialised));
 #ifdef LAK_ENABLE_SOFTRENDER
 	auto make_software = [&]() -> lak::result<lak::window, lak::u8string>
 	{
@@ -201,6 +205,7 @@ lak::result<lak::window &, lak::u8string> LAK_BASIC_PROGRAM(create_window)()
 
 void LAK_BASIC_PROGRAM(destroy_window)(lak::window &window)
 {
+	ASSERT(LAK_BASIC_PROGRAM(platform_initialised));
 	if (auto *inst = LAK_BASIC_PROGRAM(find_window_instance)(window.handle());
 	    inst)
 	{
@@ -374,10 +379,14 @@ int LAK_BASIC_PROGRAM_MAIN(int argc, char **argv)
 
 	/* --- Window initialisation --- */
 
-	if (auto v = LAK_BASIC_PROGRAM(program_init)(argc, argv); v) return *v;
+	if (auto v = LAK_BASIC_PROGRAM(program_preinit)(argc, argv); v) return *v;
 
 	lak::platform_init();
+	LAK_BASIC_PROGRAM(platform_initialised) = true;
+	DEFER(LAK_BASIC_PROGRAM(platform_initialised) = false);
 	DEFER(lak::platform_quit());
+
+	if (auto v = LAK_BASIC_PROGRAM(program_init)(); v) return *v;
 
 	uint64_t last_counter = lak::performance_counter();
 	uint64_t counter_delta =

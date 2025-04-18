@@ -5,8 +5,14 @@
 
 #include "lak/basic_program.inl"
 
+lak::optional<int> lak_test_basic_program_preinit(int, char **)
+{
+	FUNCTION_CHECKPOINT();
+	return lak::nullopt;
+}
+
 bool running = true;
-lak::optional<int> lak_test_basic_program_init(int, char **)
+lak::optional<int> lak_test_basic_program_init()
 {
 	FUNCTION_CHECKPOINT();
 	running = true;
