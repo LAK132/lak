@@ -629,7 +629,7 @@ void ImplShutdownGLContext(ImGui::ImplGLContext context)
 	if (context->elements) glDeleteBuffers(1, &context->elements);
 	context->elements = 0;
 
-	context->shader.clear();
+	context->shader.clear().discard();
 
 	context->font.clear();
 	ImGui::GetIO().Fonts->TexID = (ImTextureID)(intptr_t)0;

@@ -195,7 +195,7 @@ void lak::init_file_modal(lak::graphics_mode graphics)
 			lak::opengl::call_checked(glGenerateMipmap, GL_TEXTURE_2D).UNWRAP();
 			lak::opengl::call_checked(glBindTexture, GL_TEXTURE_2D, 0).UNWRAP();
 
-			return (void *)tex;
+			return reinterpret_cast<void *>(static_cast<uintptr_t>(tex));
 		};
 
 		_texture_destroyer = [](void *tex)
