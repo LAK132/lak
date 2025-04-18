@@ -224,6 +224,11 @@ namespace lak
 
 		struct string_too_long_error
 		{
+			inline friend std::ostream &operator<<(std::ostream &strm,
+			                                       string_too_long_error)
+			{
+				return strm << "string too long";
+			}
 		};
 
 		template<typename CHAR, lak::endian E = lak::endian::little>
