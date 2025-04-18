@@ -1803,17 +1803,6 @@ namespace lak
 	template<typename T, template<typename...> typename U>
 	static constexpr bool is_of_template_v = lak::is_of_template<T, U>::value;
 
-	/* --- invoke_result --- */
-
-	template<typename F, typename... ARGS>
-	struct invoke_result
-	: lak::type_identity<decltype(lak::declval<F>()(lak::declval<ARGS>()...))>
-	{
-	};
-
-	template<typename F, typename... ARGS>
-	using invoke_result_t = typename lak::invoke_result<F, ARGS...>::type;
-
 	/* --- is_invocable --- */
 
 	template<typename F, typename... ARGS>
@@ -1840,6 +1829,18 @@ namespace lak
 	static_assert(!lak::is_invocable_v<decltype([](int &&) {}), const int &>);
 	static_assert(lak::is_invocable_v<void(int), int>);
 	static_assert(lak::is_invocable_v<void()>);
+
+	/* --- invoke_result --- */
+
+	template<typename F, typename... ARGS>
+	requires(lak::is_invocable_v<F, ARGS...>)
+	struct invoke_result
+	: lak::type_identity<decltype(lak::declval<F>()(lak::declval<ARGS>()...))>
+	{
+	};
+
+	template<typename F, typename... ARGS>
+	using invoke_result_t = typename lak::invoke_result<F, ARGS...>::type;
 
 	/* --- has_type_size_signature --- */
 
