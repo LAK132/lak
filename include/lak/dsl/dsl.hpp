@@ -1884,6 +1884,8 @@ namespace lak
 
 			lak::dsl::result<lak::u8string_view> parse(lak::u8string_view str) const
 			{
+				if (str.empty())
+					return lak::err_t{lak::dsl::parse_error{.message = u8"out of data"}};
 				const uint8_t clen = lak::character_length(str);
 				if (clen < 1 || clen > 4)
 					return lak::err_t{lak::dsl::parse_error{
@@ -1939,6 +1941,8 @@ namespace lak
 
 			lak::dsl::result<lak::u8string_view> parse(lak::u8string_view str) const
 			{
+				if (str.empty())
+					return lak::err_t{lak::dsl::parse_error{.message = u8"out of data"}};
 				const uint8_t clen = lak::character_length(str);
 				if (clen < 1 || clen > 4)
 					return lak::err_t{lak::dsl::parse_error{
@@ -2000,6 +2004,8 @@ namespace lak
 
 			lak::dsl::result<lak::u8string_view> parse(lak::u8string_view str) const
 			{
+				if (str.empty())
+					return lak::err_t{lak::dsl::parse_error{.message = u8"out of data"}};
 				const uint8_t clen = lak::character_length(str);
 				if (clen < 1 || clen > 4)
 					return lak::err_t{lak::dsl::parse_error{
@@ -2333,7 +2339,6 @@ namespace lak
 		static_assert(lak::dsl::is_unordered_v<lak::dsl::unordered_t<>>);
 		static_assert(
 		  lak::dsl::is_unordered_v<lak::dsl::unordered_t<lak::dsl::unordered<>>>);
-
 	}
 }
 
