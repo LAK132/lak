@@ -5,15 +5,6 @@
 #	if __has_include(<imgui.h>)
 #		include <imgui.h>
 #		define LAK_VEC_HPP_HAS_IMGUI
-#	elif __has_include("imgui.h")
-#		include "imgui.h"
-#		define LAK_VEC_HPP_HAS_IMGUI
-#	elif __has_include(<imgui/imgui.h>)
-#		include <imgui/imgui.h>
-#		define LAK_VEC_HPP_HAS_IMGUI
-#	elif __has_include("imgui/imgui.h")
-#		include "imgui/imgui.h"
-#		define LAK_VEC_HPP_HAS_IMGUI
 #	endif
 
 #	if __has_include(<glm/vec2.hpp>) && \
