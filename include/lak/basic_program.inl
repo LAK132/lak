@@ -338,7 +338,10 @@ int LAK_BASIC_PROGRAM_MAIN(int argc, char **argv)
 
 	/* --- Window initialisation --- */
 
-	if (auto v = LAK_BASIC_PROGRAM(program_preinit)(argc, argv); v) return *v;
+	if (auto v = LAK_BASIC_PROGRAM(program_preinit)(
+	      lak::span<char *>(argv, size_t(argc)));
+	    v)
+		return *v;
 
 	lak::platform_init();
 	LAK_BASIC_PROGRAM(platform_initialised) = true;

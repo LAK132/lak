@@ -6,6 +6,7 @@
 #include "lak/events.hpp"
 #include "lak/macro_utils.hpp"
 #include "lak/os.hpp"
+#include "lak/span.hpp"
 #include "lak/window.hpp"
 
 #ifdef LAK_BASIC_PROGRAM_IMGUI_IMPL
@@ -29,7 +30,7 @@
 #define LAK_BASIC_PROGRAM(X) TOKEN_CONCAT(LAK_BASIC_PROGRAM_PREFIX, X)
 
 // Implement these program_* functions in your program.
-lak::optional<int> LAK_BASIC_PROGRAM(program_preinit)(int argc, char **argv);
+lak::optional<int> LAK_BASIC_PROGRAM(program_preinit)(lak::span<char *> args);
 lak::optional<int> LAK_BASIC_PROGRAM(program_init)();
 bool LAK_BASIC_PROGRAM(program_loop)(uint64_t counter_delta);
 int LAK_BASIC_PROGRAM(program_quit)();
