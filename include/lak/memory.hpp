@@ -141,9 +141,7 @@ namespace lak
 	struct shared_ptr
 	{
 	private:
-		using internal_value_type = lak::_shared_ptr_value_type<T>;
-
-		internal_value_type *_data = nullptr;
+		lak::_shared_ptr_metadata *_data = nullptr;
 
 		template<typename U>
 		friend struct shared_ptr;
@@ -156,6 +154,11 @@ namespace lak
 
 		// increments the ref count and returns a copy of the data pointer
 		lak::_shared_ptr_metadata *release_copy() const;
+
+		lak::_shared_ptr_value_type<T> *_get() const
+		{
+			return static_cast<lak::_shared_ptr_value_type<T> *>(_data);
+		}
 
 	public:
 		template<typename... ARGS>
@@ -178,11 +181,11 @@ namespace lak
 
 		inline operator bool() const { return _data != nullptr; }
 
-		inline T &operator*() const { return _data->value; }
+		inline T &operator*() const { return _get()->value; }
 
-		inline T *operator->() const { return &_data->value; }
+		inline T *operator->() const { return &(_get()->value); }
 
-		inline T *get() const { return _data ? &_data->value : nullptr; }
+		inline T *get() const { return _data ? &(_get()->value) : nullptr; }
 	};
 
 	template<typename T>

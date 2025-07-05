@@ -125,8 +125,7 @@ lak::result<lak::unique_ref<T>> lak::unique_ref<T>::make(ARGS &&...args)
 /* --- shared_ptr --- */
 
 template<typename T>
-lak::shared_ptr<T>::shared_ptr(lak::_shared_ptr_metadata *d)
-: _data(static_cast<internal_value_type *>(d))
+lak::shared_ptr<T>::shared_ptr(lak::_shared_ptr_metadata *d) : _data(d)
 {
 }
 
@@ -134,7 +133,7 @@ template<typename T>
 void lak::shared_ptr<T>::reset(lak::_shared_ptr_metadata *d)
 {
 	reset();
-	_data = static_cast<internal_value_type *>(d);
+	_data = d;
 }
 
 template<typename T>
@@ -156,12 +155,12 @@ lak::shared_ptr<T> lak::shared_ptr<T>::make(ARGS &&...args)
 {
 	lak::shared_ptr<T> result;
 
-	result._data = new internal_value_type{
+	result._data = new lak::_shared_ptr_value_type<T>{
 	  {
 	    .ref_count{.value{1U}},
 	    .deleter{[](void *d)
 	             {
-		             if (auto data{static_cast<internal_value_type *>(
+		             if (auto data{static_cast<lak::_shared_ptr_value_type<T> *>(
 		                   reinterpret_cast<lak::_shared_ptr_metadata *>(d))};
 		                 data && (--data->ref_count) == 0)
 			             delete data;
@@ -179,10 +178,10 @@ lak::shared_ptr<T> lak::shared_ptr<T>::make(ARGS &&...args)
 			using cvp = const void *;
 
 			result._data->data.~vp();
-			new (&result._data->cdata) cvp(&result._data->value);
+			new (&result._data->cdata) cvp(&result._get()->value);
 		}
 		else
-			result._data->data = &result._data->value;
+			result._data->data = &result._get()->value;
 	}
 
 	return result;
