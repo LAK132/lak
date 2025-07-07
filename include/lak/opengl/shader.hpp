@@ -34,7 +34,7 @@ namespace lak
 
 			shader &clear();
 
-			inline operator bool() const { return _shader != 0; }
+			explicit inline operator bool() const { return _shader != 0; }
 			inline GLuint get() const { return _shader; }
 			inline GLenum type() const { return _type; }
 		};
@@ -116,7 +116,7 @@ namespace lak
 			lak::opengl::result<program &> use();
 			lak::opengl::result<const program &> use() const;
 
-			inline operator bool() const { return _program != 0; }
+			explicit inline operator bool() const { return _program != 0; }
 			inline operator GLuint() const { return _program; }
 			inline operator GLint() const { return (GLint)_program; }
 			inline GLuint get() const { return _program; }

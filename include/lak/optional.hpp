@@ -113,7 +113,7 @@ namespace lak
 
 		inline bool has_value() const { return _has_value; }
 
-		inline operator bool() const { return _has_value; }
+		explicit inline operator bool() const { return _has_value; }
 
 		template<
 		  lak::concepts::invocable<lak::add_lvalue_reference_t<value_type>> F>
@@ -219,7 +219,7 @@ namespace lak
 
 		inline bool has_value() const { return _value; }
 
-		inline operator bool() const { return _value; }
+		explicit inline operator bool() const { return _value; }
 
 		void emplace() { _value = true; }
 
@@ -265,7 +265,7 @@ namespace lak
 
 		inline bool has_value() const { return _value; }
 
-		inline operator bool() const { return _value; }
+		explicit inline operator bool() const { return _value; }
 
 		value_type &emplace(T &other)
 		{

@@ -31,7 +31,7 @@ namespace lak
 
 		void reset();
 
-		inline operator bool() const { return _value != nullptr; }
+		explicit inline operator bool() const { return _value != nullptr; }
 
 		inline T &operator*() const { return *_value; }
 
@@ -60,7 +60,7 @@ namespace lak
 
 		void reset();
 
-		inline operator bool() const { return _value != nullptr; }
+		explicit inline operator bool() const { return _value != nullptr; }
 
 		inline const lak::span<T> &operator*() const { return _value; }
 
@@ -179,7 +179,7 @@ namespace lak
 			return _data ? _data->ref_count.value.load() : 0U;
 		}
 
-		inline operator bool() const { return _data != nullptr; }
+		explicit inline operator bool() const { return _data != nullptr; }
 
 		inline T &operator*() const { return _get()->value; }
 
@@ -314,7 +314,7 @@ namespace lak
 			return _data ? _data->ref_count.value.load() : 0U;
 		}
 
-		inline operator bool() const { return _data != nullptr; }
+		explicit inline operator bool() const { return _data != nullptr; }
 
 		inline const lak::span<T> &operator*() const { return _data->value; }
 
@@ -403,7 +403,7 @@ namespace lak
 			return _data ? _data->ref_count.value.load() : 0U;
 		}
 
-		inline operator bool() const { return _data != nullptr; }
+		explicit inline operator bool() const { return _data != nullptr; }
 
 		inline void *get() const { return _data ? _data->data : nullptr; }
 
@@ -486,7 +486,7 @@ namespace lak
 			return _data ? _data->ref_count.value.load() : 0U;
 		}
 
-		inline operator bool() const { return _data != nullptr; }
+		explicit inline operator bool() const { return _data != nullptr; }
 
 		inline const void *get() const { return _data ? _data->cdata : nullptr; }
 

@@ -207,7 +207,7 @@ namespace lak
 			  const char *name                = nullptr,
 			  lak::lmdb::database_flags flags = lak::lmdb::database_flags::none);
 
-			operator bool() const;
+			explicit operator bool() const;
 		};
 
 		using rwtransaction = transaction<false>;
@@ -248,7 +248,7 @@ namespace lak
 			lak::lmdb::result<lak::lmdb::rtransaction> begin_rtransaction(
 			  lak::lmdb::rtransaction *parent);
 
-			operator bool() const;
+			explicit operator bool() const;
 		};
 	}
 }

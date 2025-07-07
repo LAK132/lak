@@ -28,7 +28,7 @@ namespace lak
 #		error "No implementation specified"
 #	endif
 
-    operator bool() const { return _platform_handle != NULL; }
+    explicit operator bool() const { return _platform_handle != NULL; }
 
     surface() = default;
 

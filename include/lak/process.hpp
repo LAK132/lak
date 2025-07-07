@@ -27,7 +27,7 @@ namespace lak
 
 		~process();
 
-		operator bool() const;
+		explicit operator bool() const;
 
 		bool joinable();
 

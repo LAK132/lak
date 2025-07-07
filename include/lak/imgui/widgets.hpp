@@ -85,7 +85,7 @@ namespace lak
 			}
 		}
 
-		inline operator bool() const { return _result; }
+		explicit inline operator bool() const { return _result; }
 	};
 
 #define LAK_TREE_NODE(...)                                                    \

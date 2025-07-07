@@ -45,7 +45,7 @@ namespace lak
 			// set_data unbinds the current vertex array and binds this buffer.
 			buffer &set_data(lak::span<const void> data, GLenum usage);
 
-			inline operator bool() const { return _buffer != 0U; }
+			explicit inline operator bool() const { return _buffer != 0U; }
 			inline operator GLuint() const { return _buffer; }
 			inline operator GLint() const { return (GLint)_buffer; }
 			inline GLuint get() const { return _buffer; }
@@ -72,7 +72,7 @@ namespace lak
 			const uniform_buffer &bind() const;
 			uniform_buffer &set_data();
 
-			inline operator bool() const { return _buffer; }
+			explicit inline operator bool() const { return !!_buffer; }
 			inline operator GLuint() const { return _buffer; }
 			inline operator GLint() const { return _buffer; }
 			inline GLuint get() const { return _buffer; }
@@ -156,7 +156,7 @@ namespace lak
 
 			lak::span<const lak::opengl::vertex_attribute> vertex_attributes() const;
 
-			inline operator bool() const { return _vertex_buffer; }
+			explicit inline operator bool() const { return !!_vertex_buffer; }
 		};
 
 		struct vertex_array
@@ -178,7 +178,7 @@ namespace lak
 			vertex_array &bind();
 			const vertex_array &bind() const;
 
-			inline operator bool() const { return _array != 0U; }
+			explicit inline operator bool() const { return _array != 0U; }
 			inline operator GLuint() const { return _array; }
 			inline operator GLint() const { return (GLint)_array; }
 			inline GLuint get() const { return _array; }
@@ -217,7 +217,7 @@ namespace lak
 
 			const shared_program &shader() const { return _shader; }
 
-			inline operator bool() const { return _vertex_array; }
+			explicit inline operator bool() const { return !!_vertex_array; }
 		};
 	}
 }

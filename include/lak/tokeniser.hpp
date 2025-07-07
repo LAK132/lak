@@ -203,7 +203,10 @@ namespace lak
 			return _current.source.begin() < _data.end();
 		}
 
-		operator bool() const noexcept { return _current.source.size() != 0; }
+		explicit operator bool() const noexcept
+		{
+			return _current.source.size() != 0;
+		}
 	};
 
 	LAK_EXTERN_TEMPLATE_FOREACH_CHAR(token)

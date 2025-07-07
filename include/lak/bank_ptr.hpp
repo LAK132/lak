@@ -125,7 +125,7 @@ namespace lak
 		bool operator==(lak::nullptr_t) const;
 		bool operator!=(lak::nullptr_t) const;
 
-		operator bool() const;
+		explicit operator bool() const;
 	};
 
 	template<typename T>
