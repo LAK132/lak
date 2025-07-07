@@ -71,6 +71,8 @@ namespace lak
 			               pnm_data<::lak::vec4f32_t, f32_t>>
 			  value;
 
+			uint8_t channels() const;
+
 			operator ::lak::image3_t() const;
 			operator ::lak::image4_t() const;
 

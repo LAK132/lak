@@ -1,5 +1,22 @@
 #include "lak/structure/pnm.hpp"
 
+uint8_t lak::pnm::pnm::channels() const
+{
+	return value.visit(::lak::overloaded{
+	  [](const ::lak::monostate &) -> uint8_t { return 0; },
+	  [](const pnm_data<bool, bool> &) -> uint8_t { return 1; },
+	  [](const pnm_data<uint8_t, uint8_t> &) -> uint8_t { return 1; },
+	  [](const pnm_data<uint16_t, uint16_t> &) -> uint8_t { return 1; },
+	  [](const pnm_data<f32_t, f32_t> &) -> uint8_t { return 1; },
+	  [](const pnm_data<::lak::vec3u8_t, uint8_t> &) -> uint8_t { return 3; },
+	  [](const pnm_data<::lak::vec4u8_t, uint8_t> &) -> uint8_t { return 4; },
+	  [](const pnm_data<::lak::vec3u16_t, uint16_t> &) -> uint8_t { return 3; },
+	  [](const pnm_data<::lak::vec4u16_t, uint16_t> &) -> uint8_t { return 4; },
+	  [](const pnm_data<::lak::vec3f32_t, f32_t> &) -> uint8_t { return 3; },
+	  [](const pnm_data<::lak::vec4f32_t, f32_t> &) -> uint8_t { return 4; },
+	});
+}
+
 lak::pnm::pnm::operator ::lak::image3_t() const
 {
 	return value.visit(::lak::overloaded{
