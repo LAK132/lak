@@ -998,8 +998,7 @@ namespace lak
 				return capture_nth_t<N - 1U, parsers...>::impl_parse(res.remaining);
 			}
 
-			static force_inline lak::dsl::result<value_type> impl_parse(
-			  lak::u8string_view str)
+			static lak::dsl::result<value_type> impl_parse(lak::u8string_view str)
 			requires(N == 0U)
 			{
 				RES_TRY_ASSIGN(auto res =, par.parse(str));

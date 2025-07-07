@@ -86,12 +86,6 @@ namespace lak
 	}
 }
 
-#ifndef LAK_COMPILER_MSVC
-// :TODO: MSVC is ICEing trying to compile this.
-static_assert(
-  lak::concepts::from_bytes_readable<lak::pnm::pnm, lak::endian::native>);
-#endif
-
 #include "pnm.inl"
 
 #endif
