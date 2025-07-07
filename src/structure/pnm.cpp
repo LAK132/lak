@@ -373,6 +373,87 @@ lak::pnm::pnm::operator ::lak::image4_t() const
 	});
 }
 
+static constexpr auto type_parser =
+  lak::dsl::replace_str_literal<u8"P1", lak::pnm::pnm_type::P1> |
+  lak::dsl::replace_str_literal<u8"P2", lak::pnm::pnm_type::P2> |
+  lak::dsl::replace_str_literal<u8"P3", lak::pnm::pnm_type::P3> |
+  lak::dsl::replace_str_literal<u8"P4", lak::pnm::pnm_type::P4> |
+  lak::dsl::replace_str_literal<u8"P5", lak::pnm::pnm_type::P5> |
+  lak::dsl::replace_str_literal<u8"P6", lak::pnm::pnm_type::P6> |
+  lak::dsl::replace_str_literal<u8"P7", lak::pnm::pnm_type::P7> |
+  lak::dsl::replace_str_literal<u8"PF4", lak::pnm::pnm_type::PF4> |
+  lak::dsl::replace_str_literal<u8"PF", lak::pnm::pnm_type::PF> |
+  lak::dsl::replace_str_literal<u8"Pf", lak::pnm::pnm_type::Pf>;
+
+static constexpr auto non_breaking_whitespace =
+  (!lak::dsl::char_literal<U'\n'>)&lak::dsl::whitespace;
+
+enum struct tupltype_t
+{
+	INVALID,
+	BLACKANDWHITE,
+	GRAYSCALE,
+	RGB,
+	BLACKANDWHITE_ALPHA,
+	GRAYSCALE_ALPHA,
+	RGB_ALPHA,
+};
+
+static constexpr auto tupltype_parser = lak::dsl::capture_nth<
+  1U,
+  lak::dsl::str_literal<u8"TUPLTYPE"> + (+non_breaking_whitespace),
+  (lak::dsl::replace_str_literal<u8"BLACKANDWHITE",
+                                 tupltype_t::BLACKANDWHITE> |
+   lak::dsl::replace_str_literal<u8"GRAYSCALE", tupltype_t::GRAYSCALE> |
+   lak::dsl::replace_str_literal<u8"RGB", tupltype_t::RGB> |
+   lak::dsl::replace_str_literal<u8"BLACKANDWHITE_ALPHA",
+                                 tupltype_t::BLACKANDWHITE_ALPHA> |
+   lak::dsl::replace_str_literal<u8"GRAYSCALE_ALPHA",
+                                 tupltype_t::GRAYSCALE_ALPHA> |
+   lak::dsl::replace_str_literal<u8"RGB_ALPHA", tupltype_t::RGB_ALPHA>),
+  lak::dsl::until_inc_char<U'\n'> +
+    (*(lak::dsl::pound_line_comment + lak::dsl::whitespace))>;
+
+static constexpr auto width_parser = lak::dsl::capture_nth<
+  1U,
+  lak::dsl::str_literal<u8"WIDTH"> + (+non_breaking_whitespace),
+  lak::dsl::parsed_dec_uint<uint32_t>,
+  lak::dsl::until_inc_char<U'\n'> +
+    (*(lak::dsl::pound_line_comment + lak::dsl::whitespace))>;
+
+static constexpr auto height_parser = lak::dsl::capture_nth<
+  1U,
+  lak::dsl::str_literal<u8"HEIGHT"> + (+non_breaking_whitespace),
+  lak::dsl::parsed_dec_uint<uint32_t>,
+  lak::dsl::until_inc_char<U'\n'> +
+    (*(lak::dsl::pound_line_comment + lak::dsl::whitespace))>;
+
+static constexpr auto depth_parser = lak::dsl::capture_nth<
+  1U,
+  lak::dsl::str_literal<u8"DEPTH"> + (+non_breaking_whitespace),
+  lak::dsl::parsed_dec_uint<uint8_t>,
+  lak::dsl::until_inc_char<U'\n'> +
+    (*(lak::dsl::pound_line_comment + lak::dsl::whitespace))>;
+
+static constexpr auto maxval_parser = lak::dsl::capture_nth<
+  1U,
+  lak::dsl::str_literal<u8"MAXVAL"> + (+non_breaking_whitespace),
+  lak::dsl::parsed_dec_uint<uint16_t>,
+  lak::dsl::until_inc_char<U'\n'> +
+    (*(lak::dsl::pound_line_comment + lak::dsl::whitespace))>;
+
+static constexpr auto endhdr_parser =
+  lak::dsl::str_literal<u8"ENDHDR"> + lak::dsl::until_inc_char<U'\n'>;
+
+static constexpr auto header_parser = lak::dsl::capture_nth<
+  0U,
+  lak::dsl::unordered<width_parser,
+                      height_parser,
+                      depth_parser,
+                      maxval_parser,
+                      lak::dsl::optional<tupltype_parser>>,
+  endhdr_parser>;
+
 ::lak::error_codes<lak::out_of_data_error,
                    lak::value_out_of_range_error,
                    lak::string_to_numeric_error,
@@ -398,92 +479,13 @@ lak::pnm::pnm::_read(::lak::binary_reader &strm)
 			return lak::ok_t{static_cast<T>(value)};
 	};
 
-	auto type_parser = lak::dsl::replace_str_literal<u8"P1", pnm_type::P1> |
-	                   lak::dsl::replace_str_literal<u8"P2", pnm_type::P2> |
-	                   lak::dsl::replace_str_literal<u8"P3", pnm_type::P3> |
-	                   lak::dsl::replace_str_literal<u8"P4", pnm_type::P4> |
-	                   lak::dsl::replace_str_literal<u8"P5", pnm_type::P5> |
-	                   lak::dsl::replace_str_literal<u8"P6", pnm_type::P6> |
-	                   lak::dsl::replace_str_literal<u8"P7", pnm_type::P7> |
-	                   lak::dsl::replace_str_literal<u8"PF4", pnm_type::PF4> |
-	                   lak::dsl::replace_str_literal<u8"PF", pnm_type::PF> |
-	                   lak::dsl::replace_str_literal<u8"Pf", pnm_type::Pf>;
-
-	auto non_breaking_whitespace =
-	  (!lak::dsl::char_literal<U'\n'>)&lak::dsl::whitespace;
-
 	RES_TRY_ASSIGN(type =, parser.read(type_parser));
 
 	RES_TRY(parser.read(*(lak::dsl::whitespace | lak::dsl::pound_line_comment)));
 
 	if (type == pnm_type::P7)
 	{
-		enum struct tupltype_t
-		{
-			INVALID,
-			BLACKANDWHITE,
-			GRAYSCALE,
-			RGB,
-			BLACKANDWHITE_ALPHA,
-			GRAYSCALE_ALPHA,
-			RGB_ALPHA,
-		};
 		[[maybe_unused]] tupltype_t tupltype = tupltype_t::INVALID;
-
-		auto tupltype_parser = lak::dsl::capture_nth<
-		  1U,
-		  lak::dsl::str_literal<u8"TUPLTYPE"> + (+non_breaking_whitespace),
-		  (lak::dsl::replace_str_literal<u8"BLACKANDWHITE",
-		                                 tupltype_t::BLACKANDWHITE> |
-		   lak::dsl::replace_str_literal<u8"GRAYSCALE", tupltype_t::GRAYSCALE> |
-		   lak::dsl::replace_str_literal<u8"RGB", tupltype_t::RGB> |
-		   lak::dsl::replace_str_literal<u8"BLACKANDWHITE_ALPHA",
-		                                 tupltype_t::BLACKANDWHITE_ALPHA> |
-		   lak::dsl::replace_str_literal<u8"GRAYSCALE_ALPHA",
-		                                 tupltype_t::GRAYSCALE_ALPHA> |
-		   lak::dsl::replace_str_literal<u8"RGB_ALPHA", tupltype_t::RGB_ALPHA>),
-		  lak::dsl::until_inc_char<U'\n'> +
-		    (*(lak::dsl::pound_line_comment + lak::dsl::whitespace))>;
-
-		auto width_parser = lak::dsl::capture_nth<
-		  1U,
-		  lak::dsl::str_literal<u8"WIDTH"> + (+non_breaking_whitespace),
-		  lak::dsl::parsed_dec_uint<uint32_t>,
-		  lak::dsl::until_inc_char<U'\n'> +
-		    (*(lak::dsl::pound_line_comment + lak::dsl::whitespace))>;
-
-		auto height_parser = lak::dsl::capture_nth<
-		  1U,
-		  lak::dsl::str_literal<u8"HEIGHT"> + (+non_breaking_whitespace),
-		  lak::dsl::parsed_dec_uint<uint32_t>,
-		  lak::dsl::until_inc_char<U'\n'> +
-		    (*(lak::dsl::pound_line_comment + lak::dsl::whitespace))>;
-
-		auto depth_parser = lak::dsl::capture_nth<
-		  1U,
-		  lak::dsl::str_literal<u8"DEPTH"> + (+non_breaking_whitespace),
-		  lak::dsl::parsed_dec_uint<uint8_t>,
-		  lak::dsl::until_inc_char<U'\n'> +
-		    (*(lak::dsl::pound_line_comment + lak::dsl::whitespace))>;
-
-		auto maxval_parser = lak::dsl::capture_nth<
-		  1U,
-		  lak::dsl::str_literal<u8"MAXVAL"> + (+non_breaking_whitespace),
-		  lak::dsl::parsed_dec_uint<uint16_t>,
-		  lak::dsl::until_inc_char<U'\n'> +
-		    (*(lak::dsl::pound_line_comment + lak::dsl::whitespace))>;
-
-		auto endhdr_parser =
-		  lak::dsl::str_literal<u8"ENDHDR"> + lak::dsl::until_inc_char<U'\n'>;
-
-		auto header_parser = lak::dsl::capture_nth<
-		  0U,
-		  lak::dsl::unordered<width_parser,
-		                      height_parser,
-		                      depth_parser,
-		                      maxval_parser,
-		                      lak::dsl::optional<tupltype_parser>>,
-		  endhdr_parser>;
 
 		RES_TRY_ASSIGN(auto header =, parser.read(header_parser));
 
