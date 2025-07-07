@@ -81,11 +81,22 @@ namespace lak
 			                   ::lak::value_out_of_range_error,
 			                   ::lak::string_to_numeric_error,
 			                   ::lak::dsl::parse_error>
-			read(::lak::binary_reader &strm);
+			read(::lak::binary_reader &strm)
+			{
+				// pnms have their on way of handling endianness
+				return _read(strm);
+			}
+
+			::lak::error_codes<::lak::out_of_data_error,
+			                   ::lak::value_out_of_range_error,
+			                   ::lak::string_to_numeric_error,
+			                   ::lak::dsl::parse_error>
+			_read(::lak::binary_reader &strm);
 		};
 	}
 }
 
-#include "pnm.inl"
+static_assert(
+  lak::concepts::from_bytes_readable<lak::pnm::pnm, lak::endian::native>);
 
 #endif

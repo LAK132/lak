@@ -4,6 +4,7 @@
 
 #include "lak/binary_reader.hpp"
 #include "lak/file.hpp"
+#include "lak/string_literals.hpp"
 
 BEGIN_TEST(pnm)
 {
