@@ -9,14 +9,14 @@
 #include "lak/span.hpp"
 #include "lak/window.hpp"
 
-#ifdef LAK_BASIC_PROGRAM_IMGUI_IMPL
-#	include "lak/imgui/backend.hpp"
-#	include "lak/imgui/widgets.hpp"
-#endif
-
 #if defined(LAK_BASIC_PROGRAM_IMGUI_WINDOW_IMPL) &&                           \
   !defined(LAK_BASIC_PROGRAM_IMGUI_IMPL)
 #	define LAK_BASIC_PROGRAM_IMGUI_IMPL
+#endif
+
+#ifdef LAK_BASIC_PROGRAM_IMGUI_IMPL
+#	include "lak/imgui/backend.hpp"
+#	include "lak/imgui/widgets.hpp"
 #endif
 
 #ifndef LAK_BASIC_PROGRAM_MAIN
