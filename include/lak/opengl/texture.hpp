@@ -4,6 +4,7 @@
 #include "lak/opengl/gl3w.hpp"
 
 #include "lak/image.hpp"
+#include "lak/memory.hpp"
 
 #include <memory>
 
@@ -54,6 +55,8 @@ namespace lak
 			               GLenum color_type,
 			               const GLvoid *pixels);
 		};
+
+		using shared_texture = lak::shared_ptr<lak::opengl::texture>;
 	}
 }
 

@@ -189,7 +189,7 @@ namespace lak
 		private:
 			shared_vertex_buffer _vertex_buffer;
 			shared_program _shader;
-			lak::array<lak::pair<lak::shared_ptr<texture>, lak::opengl::location>>
+			lak::array<lak::pair<lak::opengl::shared_texture, lak::opengl::location>>
 			  _textures;
 			vertex_array _vertex_array;
 
@@ -202,8 +202,8 @@ namespace lak
 			  shared_vertex_buffer vertices,
 			  shared_program shader_program,
 			  lak::span<const lak::opengl::location> attribute_locations,
-			  lak::array<lak::pair<lak::shared_ptr<texture>, lak::opengl::location>>
-			    textures);
+			  lak::array<lak::pair<lak::opengl::shared_texture,
+			                       lak::opengl::location>> textures);
 
 			static_object_part &clear();
 
