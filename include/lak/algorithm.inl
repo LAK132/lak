@@ -137,7 +137,7 @@ ITER lak::find(ITER begin, ITER end, const T &value)
 
 /* --- find_if --- */
 
-template<typename ITER>
+template<std::forward_iterator ITER>
 ITER lak::find_if(ITER begin, ITER end, auto predicate)
 {
 	for (; begin != end && !predicate(*begin); ++begin);
@@ -146,7 +146,7 @@ ITER lak::find_if(ITER begin, ITER end, auto predicate)
 
 /* --- any_of --- */
 
-template<typename ITER>
+template<std::forward_iterator ITER>
 bool lak::any_of(ITER begin, ITER end, auto predicate)
 {
 	for (; begin != end; ++begin)
@@ -156,7 +156,7 @@ bool lak::any_of(ITER begin, ITER end, auto predicate)
 
 /* --- all_of --- */
 
-template<typename ITER>
+template<std::forward_iterator ITER>
 bool lak::all_of(ITER begin, ITER end, auto predicate)
 {
 	for (; begin != end; ++begin)
@@ -166,7 +166,7 @@ bool lak::all_of(ITER begin, ITER end, auto predicate)
 
 /* --- none_of --- */
 
-template<typename ITER>
+template<std::forward_iterator ITER>
 bool lak::none_of(ITER begin, ITER end, auto predicate)
 {
 	for (; begin != end; ++begin)
@@ -813,8 +813,7 @@ void lak::reverse_sort_heap(ITER begin, ITER end, CMP compare)
 template<std::input_iterator ITER, typename F>
 ITER lak::breadth_first_search_heap(ITER begin, ITER end, F &&predicate)
 {
-	for (; begin != end && !predicate(*begin); ++begin)
-		;
+	for (; begin != end && !predicate(*begin); ++begin);
 	return begin;
 }
 
@@ -865,11 +864,9 @@ void lak::heapsort(ITER begin, ITER end, CMP compare)
 
 /* --- partial_order_sort --- */
 
-template<typename ITER, typename CMP>
+template<std::forward_iterator ITER, typename CMP>
 void lak::partial_order_sort(ITER begin, ITER end, CMP compare)
 {
-	static_assert(std::forward_iterator<ITER>);
-
 	while (lak::distance(begin, end) > 1)
 	{
 		if (lak::none_of(lak::next(begin),

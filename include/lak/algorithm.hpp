@@ -75,22 +75,22 @@ namespace lak
 
 	/* --- find_if --- */
 
-	template<typename ITER>
+	template<std::forward_iterator ITER>
 	ITER find_if(ITER begin, ITER end, auto predicate);
 
 	/* --- any_of --- */
 
-	template<typename ITER>
+	template<std::forward_iterator ITER>
 	bool any_of(ITER begin, ITER end, auto predicate);
 
 	/* --- all_of --- */
 
-	template<typename ITER>
+	template<std::forward_iterator ITER>
 	bool all_of(ITER begin, ITER end, auto predicate);
 
 	/* --- none_of --- */
 
-	template<typename ITER>
+	template<std::forward_iterator ITER>
 	bool none_of(ITER begin, ITER end, auto predicate);
 
 	/* --- mismatch --- */
@@ -166,7 +166,7 @@ namespace lak
 	template<std::forward_iterator ITER, typename CMP = lak::less<>>
 	ITER merge(ITER begin, ITER mid, ITER end, CMP compare = {});
 
-	// Merge the non-descending (*(it+1) >= *it) sorted sterams [begin_a, end_a)
+	// Merge the non-descending (*(it+1) >= *it) sorted streams [begin_a, end_a)
 	// and [begin_b, end_b) into a single sorted output range
 
 	template<std::forward_iterator ITER_A,
@@ -283,7 +283,7 @@ namespace lak
 
 	// Works in situations where a<b is ordered but !(a<b) is unordered
 
-	template<typename ITER, typename CMP = lak::less<>>
+	template<std::forward_iterator ITER, typename CMP = lak::less<>>
 	void partial_order_sort(ITER begin, ITER end, CMP compare = {});
 
 	/* --- minmax_element --- */
