@@ -105,7 +105,7 @@ namespace lak
 		result._data =
 		  lak::shared_ptr<typename lak::future<result_type>::future_impl>::make();
 		result._data->thread = lak::thread(
-		  [data = result._data, f, ... args = args]()
+		  [data = result._data, f, ... args = args]() mutable
 		  {
 			  if constexpr (!lak::is_void_v<result_type>)
 				  data->result.create(f(lak::forward<ARGS>(args)...));
