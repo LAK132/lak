@@ -35,6 +35,8 @@ namespace lak
 
 		tasks &operator=(tasks &&other);
 
+		void await();
+
 		~tasks();
 
 		template<typename FUNC>

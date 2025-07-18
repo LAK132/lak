@@ -49,9 +49,14 @@ lak::tasks &lak::tasks::operator=(tasks &&other)
 	return *this;
 }
 
-lak::tasks::~tasks()
+void lak::tasks::await()
 {
 	while (_active > 0) std::this_thread::yield();
+}
+
+lak::tasks::~tasks()
+{
+	await();
 	std::lock_guard lock{_mutex};
 	for (std::thread &t : _threads)
 		if (t.joinable()) t.join();
