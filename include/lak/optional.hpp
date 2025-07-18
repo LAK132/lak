@@ -155,6 +155,13 @@ namespace lak
 			_has_value = true;
 			return _value.value();
 		}
+		value_type &emplace()
+		{
+			reset();
+			_value.create();
+			_has_value = true;
+			return _value.value();
+		}
 
 		void reset()
 		{
