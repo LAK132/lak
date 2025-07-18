@@ -587,8 +587,10 @@ template<std::forward_iterator ITER_A,
          typename ITER_OUT,
          typename CMP>
 requires(
-  std::output_iterator<typename std::iterator_traits<ITER_A>::value_type> &&
-  std::output_iterator<typename std::iterator_traits<ITER_B>::value_type>)
+  std::output_iterator<typename std::iterator_traits<ITER_A>::value_type,
+                       ITER_OUT> &&
+  std::output_iterator<typename std::iterator_traits<ITER_B>::value_type,
+                       ITER_OUT>)
 ITER_OUT lak::merge(ITER_A begin_a,
                     ITER_A end_a,
                     ITER_B begin_b,
