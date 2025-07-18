@@ -51,6 +51,33 @@ namespace lak
 
 	static_assert(lak::integer_range_reverse(0, 2) == 1);
 	static_assert(lak::integer_range_reverse(1, 2) == 0);
+
+	// flicks (10^13 W/(sr m^2)/2)
+	inline double blackbody_radiance(double wavelength, double temperature)
+	{
+		constexpr double c     = 2.998E8;
+		constexpr double h     = 6.626E-34;
+		constexpr double k     = 1.381E-23;
+		constexpr double _2hc2 = 2.0 * h * c * c;
+		constexpr double _hck  = (h * c) / k;
+
+		const double w5 = std::pow(wavelength, 5.0);
+		const double wT = wavelength * temperature;
+
+		return (_2hc2 / w5) / std::expm1(_hck / wT) * 1E-13;
+	}
+
+	inline double blackbody_peak_wavelength(double temperature)
+	{
+		constexpr double b = 2.897771955E-3;
+		return b / temperature;
+	}
+
+	inline double blackbody_peak_radiance(double temperature)
+	{
+		return lak::blackbody_radiance(lak::blackbody_peak_wavelength(temperature),
+		                               temperature);
+	}
 }
 
 #endif
