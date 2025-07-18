@@ -338,17 +338,17 @@ int LAK_BASIC_PROGRAM_MAIN(int argc, char **argv)
 
 	/* --- Window initialisation --- */
 
-	if (auto v = LAK_BASIC_PROGRAM(program_preinit)(
-	      lak::span<char *>(argv, size_t(argc)));
-	    v)
-		return *v;
+	if_let_some (auto v,
+	             LAK_BASIC_PROGRAM(program_preinit)(
+	               lak::span<char *>(argv, size_t(argc))))
+		return v;
 
 	lak::platform_init();
 	LAK_BASIC_PROGRAM(platform_initialised) = true;
 	DEFER(LAK_BASIC_PROGRAM(platform_initialised) = false);
 	DEFER(lak::platform_quit());
 
-	if (auto v = LAK_BASIC_PROGRAM(program_init)(); v) return *v;
+	if_let_some (auto v, LAK_BASIC_PROGRAM(program_init)()) return v;
 
 	uint64_t last_counter = lak::performance_counter();
 	uint64_t counter_delta =

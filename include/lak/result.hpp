@@ -198,6 +198,13 @@ namespace lak
 			           lak::forward<decltype(UNIQUIFY(RESULT_))>(UNIQUIFY(RESULT_)) \
 			             .unsafe_unwrap()})
 
+// if_let_some (auto ok, result) { ok; }
+// else { }
+#	define if_let_some(VALUE, ...)                                             \
+		if (auto &&UNIQUIFY(RESULT_){__VA_ARGS__}; UNIQUIFY(RESULT_).has_value()) \
+			do_with (VALUE{lak::forward<decltype(*UNIQUIFY(RESULT_))>(              \
+			           *UNIQUIFY(RESULT_))})
+
 // if_let_err (auto err, result) { err; }
 // else { }
 #	define if_let_err(VALUE, ...)                                              \
