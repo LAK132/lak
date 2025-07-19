@@ -3,6 +3,7 @@
 
 #include "lak/stdint.hpp"
 
+#include <algorithm>
 #include <cmath>
 #include <type_traits>
 
@@ -53,6 +54,34 @@ namespace lak
 	constexpr FLOAT fpmod(FLOAT a, FLOAT b)
 	{
 		return a > 0U ? std::fmod(a, b) : b - std::fmod(-a, b);
+	}
+
+	// https://dinodini.wordpress.com/2010/04/05/normalized-tunable-sigmoid-functions/
+	template<typename FLOAT>
+	constexpr FLOAT _half_sigmoid(FLOAT k, FLOAT t)
+	{
+		return (k * t) / (FLOAT(1) + k - t);
+	}
+
+	template<typename FLOAT>
+	constexpr FLOAT _sigmoid(FLOAT k, FLOAT t)
+	{
+		return std::copysign(
+		  lak::_half_sigmoid(k, std::min<FLOAT>(std::fabs(t), FLOAT(1))), t);
+	}
+
+	template<typename FLOAT>
+	constexpr auto sigmoid_generator(FLOAT k)
+	{
+		k = k < FLOAT(0) ? std::min<FLOAT>(k, -FLOAT(1.0001))
+		                 : std::max<FLOAT>(k, FLOAT(0.0001));
+		return [k](FLOAT t) -> FLOAT { return lak::_sigmoid(k, t); };
+	}
+
+	template<typename FLOAT>
+	constexpr FLOAT sigmoid(FLOAT k, FLOAT t)
+	{
+		return lak::sigmoid_generator(k)(t);
 	}
 
 	bool close_to(double a, double b, uint32_t epsilon_count = 1);
