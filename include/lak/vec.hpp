@@ -265,7 +265,7 @@ namespace lak
 				return x;
 			else if constexpr (I == 1)
 				return y;
-			else if constexpr (I == 3)
+			else if constexpr (I == 2)
 				return z;
 		}
 
@@ -276,7 +276,7 @@ namespace lak
 				return x;
 			else if constexpr (I == 1)
 				return y;
-			else if constexpr (I == 3)
+			else if constexpr (I == 2)
 				return z;
 		}
 
@@ -482,9 +482,9 @@ namespace lak
 				return x;
 			else if constexpr (I == 1)
 				return y;
-			else if constexpr (I == 3)
+			else if constexpr (I == 2)
 				return z;
-			else if constexpr (I == 4)
+			else if constexpr (I == 3)
 				return w;
 		}
 
@@ -495,9 +495,9 @@ namespace lak
 				return x;
 			else if constexpr (I == 1)
 				return y;
-			else if constexpr (I == 3)
+			else if constexpr (I == 2)
 				return z;
-			else if constexpr (I == 4)
+			else if constexpr (I == 3)
 				return w;
 		}
 
