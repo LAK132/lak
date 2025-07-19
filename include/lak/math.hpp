@@ -4,6 +4,7 @@
 #include "lak/stdint.hpp"
 
 #include <cmath>
+#include <type_traits>
 
 namespace lak
 {
@@ -35,6 +36,23 @@ namespace lak
 	constexpr INTEGER to_multiple(INTEGER a, INTEGER b)
 	{
 		return a + lak::slack<INTEGER>(a, b);
+	}
+
+	// fit a to the range [0, b) by adding or subtracting multiples of b
+	template<typename INTEGER>
+	constexpr INTEGER pmod(INTEGER a, INTEGER b)
+	{
+		if constexpr (std::is_unsigned_v<INTEGER>)
+			return a % b;
+		else
+			return a > 0U ? a % b : b - ((-a) % b);
+	}
+
+	// fit a to the range [0.0, b) by adding or subtracting multiples of b
+	template<typename FLOAT>
+	constexpr FLOAT fpmod(FLOAT a, FLOAT b)
+	{
+		return a > 0U ? std::fmod(a, b) : b - std::fmod(-a, b);
 	}
 
 	bool close_to(double a, double b, uint32_t epsilon_count = 1);
