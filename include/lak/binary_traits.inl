@@ -269,7 +269,7 @@ namespace lak
 }
 
 template<lak::endian E, typename... T>
-requires((sizeof...(T) > 0) && (lak::to_bytes_traits<T, E>::const_size && ...))
+requires((sizeof...(T) > 1) && (lak::to_bytes_traits<T, E>::const_size && ...))
 void lak::to_bytes(
   lak::span<byte_t, (lak::to_bytes_traits<T, E>::size + ...)> bytes,
   const T &...values)
@@ -279,7 +279,7 @@ void lak::to_bytes(
 }
 
 template<lak::endian E, typename... T>
-requires((sizeof...(T) > 0) && (lak::to_bytes_traits<T, E>::const_size && ...))
+requires((sizeof...(T) > 1) && (lak::to_bytes_traits<T, E>::const_size && ...))
 lak::array<byte_t, (lak::to_bytes_traits<T, E>::size + ...)> lak::to_bytes(
   const T &...values)
 {
@@ -289,7 +289,7 @@ lak::array<byte_t, (lak::to_bytes_traits<T, E>::size + ...)> lak::to_bytes(
 }
 
 template<lak::endian E, typename... T>
-requires((sizeof...(T) > 0) &&
+requires((sizeof...(T) > 1) &&
          !(lak::to_bytes_traits<T, E>::const_size && ...))
 lak::result<lak::span<byte_t>, lak::to_bytes_traits_errors_t<E, T...>>
 lak::to_bytes(lak::span<byte_t> bytes, const T &...values)

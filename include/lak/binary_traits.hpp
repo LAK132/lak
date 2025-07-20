@@ -365,20 +365,20 @@ namespace lak
 	  const T &value);
 
 	template<lak::endian E = lak::endian::little, typename... T>
-	requires((sizeof...(T) > 0) &&
+	requires((sizeof...(T) > 1) &&
 	         (lak::to_bytes_traits<T, E>::const_size && ...))
 	void to_bytes(
 	  lak::span<byte_t, (lak::to_bytes_traits<T, E>::size + ...)> bytes,
 	  const T &...values);
 
 	template<lak::endian E = lak::endian::little, typename... T>
-	requires((sizeof...(T) > 0) &&
+	requires((sizeof...(T) > 1) &&
 	         (lak::to_bytes_traits<T, E>::const_size && ...))
 	lak::array<byte_t, (lak::to_bytes_traits<T, E>::size + ...)> to_bytes(
 	  const T &...values);
 
 	template<lak::endian E = lak::endian::little, typename... T>
-	requires((sizeof...(T) > 0) &&
+	requires((sizeof...(T) > 1) &&
 	         !(lak::to_bytes_traits<T, E>::const_size && ...))
 	lak::result<lak::span<byte_t>, lak::to_bytes_traits_errors_t<E, T...>>
 	to_bytes(lak::span<byte_t> bytes, const T &...values);
