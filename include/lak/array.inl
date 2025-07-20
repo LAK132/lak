@@ -609,6 +609,20 @@ bool operator!=(const lak::array<T, S> &a, const lak::array<T, S> &b)
 	return !(a == b);
 }
 
+template<typename T>
+lak::array<byte_t> lak::array<T, lak::dynamic_extent>::release_as_bytes()
+requires std::is_trivially_destructible_v<T>
+{
+	lak::array<byte_t> result;
+
+	result._data._data =
+	  lak::span<byte_t>(lak::exchange(_data._data, lak::span<T>{}));
+	result._data._committed = lak::exchange(_data._committed, 0U) * sizeof(T);
+	result._data._size      = lak::exchange(_data._size, 0U) * sizeof(T);
+
+	return result;
+}
+
 /* --- stack_array --- */
 
 template<typename T, size_t MAX_SIZE>

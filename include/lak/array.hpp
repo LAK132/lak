@@ -9,6 +9,9 @@
 
 namespace lak
 {
+	template<typename T, size_t SIZE = lak::dynamic_extent>
+	struct array;
+
 	template<typename T>
 	struct uninit_array
 	{
@@ -30,6 +33,9 @@ namespace lak
 		// assumes memory has already been reserved, just commits up to the new
 		// capacity
 		void commit_impl(size_t new_capacity);
+
+		template<typename U, size_t S>
+		friend struct lak::array;
 
 	public:
 		using value_type      = T;
@@ -103,7 +109,7 @@ namespace lak
 	template<typename T>
 	concept array_type_is_copyable = lak::_array_type_is_copyable<T>::value;
 
-	template<typename T, size_t SIZE = lak::dynamic_extent>
+	template<typename T, size_t SIZE>
 	struct array
 	{
 	private:
@@ -340,6 +346,9 @@ namespace lak
 		{
 			return erase(element, element + 1);
 		}
+
+		lak::array<byte_t> release_as_bytes()
+		requires std::is_trivially_destructible_v<T>;
 	};
 
 	template<typename T>
