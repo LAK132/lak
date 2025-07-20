@@ -472,18 +472,18 @@ struct lak::to_bytes_traits_fixed_struct_impl<T, E, MEMBERS...>
 
 	static lak::result<lak::span<byte_t>, error_type> to_bytes(
 	  lak::span<byte_t> bytes, const T &value)
+	requires(const_size)
 	{
-		if constexpr (!const_size)
-			return lak::to_bytes<E>(bytes, value.*MEMBERS...);
-		else if (bytes.size() < size)
-			return lak::err_t<lak::out_of_data_error>{};
-		else
-		{
-			static_assert(lak::is_void_v<decltype(lak::to_bytes<E>(
-			                bytes.template first<size>(), value.*MEMBERS...))>);
-			lak::to_bytes<E>(bytes.template first<size>(), value.*MEMBERS...);
-			return lak::ok_t{bytes.subspan(size)};
-		}
+		if (bytes.size() < size) return lak::err_t<lak::out_of_data_error>{};
+		to_bytes(bytes.template first<size>(), value);
+		return lak::ok_t{bytes.subspan(size)};
+	}
+
+	static lak::result<lak::span<byte_t>, error_type> to_bytes(
+	  lak::span<byte_t> bytes, const T &value)
+	requires(!const_size)
+	{
+		return lak::to_bytes<E>(bytes, value.*MEMBERS...);
 	}
 };
 
