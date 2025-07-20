@@ -610,9 +610,11 @@ bool operator!=(const lak::array<T, S> &a, const lak::array<T, S> &b)
 }
 
 template<typename T>
+template<typename V>
 lak::array<byte_t> lak::array<T, lak::dynamic_extent>::release_as_bytes()
-requires std::is_trivially_destructible_v<T>
 {
+	static_assert(std::is_trivially_destructible_v<T>);
+
 	lak::array<byte_t> result;
 
 	result._data._data =

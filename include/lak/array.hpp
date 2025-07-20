@@ -347,8 +347,8 @@ namespace lak
 			return erase(element, element + 1);
 		}
 
-		lak::array<byte_t> release_as_bytes()
-		requires std::is_trivially_destructible_v<T>;
+		template<typename V = void>
+		lak::array<byte_t> release_as_bytes();
 	};
 
 	template<typename T>
