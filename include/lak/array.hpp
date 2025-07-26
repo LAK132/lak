@@ -240,6 +240,9 @@ namespace lak
 		void grow_impl(size_t new_size);
 		void shrink_impl(size_t new_size);
 
+		template<typename U, size_t S>
+		friend struct lak::array;
+
 	public:
 		using value_type      = typename data_type::value_type;
 		using size_type       = typename data_type::size_type;

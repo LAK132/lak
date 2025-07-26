@@ -622,6 +622,8 @@ lak::array<byte_t> lak::array<T, lak::dynamic_extent>::release_as_bytes()
 	result._data._committed = lak::exchange(_data._committed, 0U) * sizeof(T);
 	result._data._size      = lak::exchange(_data._size, 0U) * sizeof(T);
 
+	force_clear();
+
 	return result;
 }
 
