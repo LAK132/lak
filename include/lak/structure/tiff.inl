@@ -233,7 +233,7 @@ lak::tiff::result<> lak::tiff::image_file_directory::read(
 			  strips.reserve(sizes_data.size());
 			  for (auto s : sizes_data) strips.emplace_back().data.resize(s);
 		  },
-		  [](auto &&a) { ASSERTF_UNREACHABLE(typeid(a).name()); },
+		  [](auto &&a) { ASSERT_UNREACHABLE(); },
 		});
 
 		rows_per_strip->visit(lak::overloaded{
@@ -243,7 +243,7 @@ lak::tiff::result<> lak::tiff::image_file_directory::read(
 			  ASSERT_EQUAL(rows_data.size(), 1U);
 			  rows = rows_data[0];
 		  },
-		  [](auto &&a) { ASSERTF_UNREACHABLE(typeid(a).name()); },
+		  [](auto &&a) { ASSERT_UNREACHABLE(); },
 		});
 
 		RES_TRY(strip_offsets->visit(lak::overloaded{
@@ -259,8 +259,7 @@ lak::tiff::result<> lak::tiff::image_file_directory::read(
 			  }
 			  return lak::ok_t{};
 		  },
-		  [](auto &&a) -> lak::tiff::result<>
-		  { ASSERTF_UNREACHABLE(typeid(a).name()); },
+		  [](auto &&a) -> lak::tiff::result<> { ASSERT_UNREACHABLE(); },
 		}));
 	}
 

@@ -108,8 +108,7 @@ BEGIN_TEST(tiff)
 
 			ASSERT_EQUAL(tiff.ifd[0].tags.size(), 0x6U);
 
-			auto unreachable = [](auto &&a)
-			{ ASSERTF_UNREACHABLE(typeid(a).name()); };
+			auto unreachable = [](auto &&a) { ASSERT_UNREACHABLE(); };
 
 			ASSERT_EQUAL(tiff.ifd[0].tags[0].id,
 			             lak::tiff::tag_name::NewSubfileType);
