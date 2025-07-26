@@ -86,12 +86,12 @@ BEGIN_TEST(tiff)
 			lak::tiff::tiff tiff;
 			tiff.ifh.version = 42;
 			auto &ifd        = tiff.ifd.emplace_back();
-			ifd.push_NewSubfileType(lak::fixed_array(0Ui32));
-			ifd.push_ImageWidth(lak::fixed_array(0x7D0Ui32));
-			ifd.push_ImageLength(lak::fixed_array(0xBB8Ui32));
-			ifd.push_Compression(lak::fixed_array(0x8005Ui16));
-			ifd.push_PhotometricInterpretation(lak::fixed_array(1Ui16));
-			ifd.push_RowsPerStrip(lak::fixed_array(0x10Ui32));
+			ifd.push_NewSubfileType(lak::fixed_array(uint32_t(0U)));
+			ifd.push_ImageWidth(lak::fixed_array(uint32_t(0x7D0U)));
+			ifd.push_ImageLength(lak::fixed_array(uint32_t(0xBB8U)));
+			ifd.push_Compression(lak::fixed_array(uint16_t(0x8005U)));
+			ifd.push_PhotometricInterpretation(lak::fixed_array(uint16_t(1U)));
+			ifd.push_RowsPerStrip(lak::fixed_array(uint32_t(0x10U)));
 
 			lak::binary_array_writer strm;
 			strm.template write<lak::endian::little>(tiff).UNWRAP();
