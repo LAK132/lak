@@ -268,7 +268,7 @@ namespace lak
 			str.resize(data.size());                                                \
 			lak::memcpy(lak::span<byte_t>(lak::span(str)),                          \
 			            lak::span<const byte_t>(lak::span<const TYPE>(data)));      \
-			str.push_back(TYPE(0));                                                 \
+			str.push_back(TYPE{});                                                  \
 			push<TYPE>(lak::tiff::tag_name::NAME, lak::move(str));                  \
 		}                                                                         \
 		else                                                                      \
