@@ -170,7 +170,7 @@ namespace lak
 			lak::array<byte_t> _data_store;
 			lak::create_from_pack_t<
 			  lak::variant,
-			  lak::pack_foreach_t<lak::span, lak::tiff::tag_types_pack>>
+			  lak::pack_foreach_t<lak::dynamic_span, lak::tiff::tag_types_pack>>
 			  data = lak::span<byte_t>{};
 
 			ifd_tag() = default;
