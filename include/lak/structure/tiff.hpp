@@ -17,6 +17,17 @@ namespace lak
 {
 	namespace tiff
 	{
+		struct image_file_directory;
+	}
+
+	template<>
+	struct _array_type_is_copyable<lak::tiff::image_file_directory>
+	: lak::true_type
+	{
+	};
+
+	namespace tiff
+	{
 		template<typename T = lak::monostate>
 		using result = lak::result<
 		  T,
