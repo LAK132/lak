@@ -102,8 +102,17 @@ namespace lak
 	};
 
 	template<typename T>
-	struct _array_type_is_copyable
+	struct _array_type_is_copyable;
+	template<typename T>
+	requires(!lak::is_array_v<T>)
+	struct _array_type_is_copyable<T>
 	: lak::bool_type<lak::concepts::copy_constructible<T>>
+	{
+	};
+	template<typename T>
+	requires(lak::is_array_v<T>)
+	struct _array_type_is_copyable<T>
+	: _array_type_is_copyable<typename T::value_type>
 	{
 	};
 	template<typename T>
