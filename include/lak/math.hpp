@@ -99,7 +99,9 @@ namespace lak
 	static_assert(lak::integer_range_reverse(0, 2) == 1);
 	static_assert(lak::integer_range_reverse(1, 2) == 0);
 
-	// flicks (10^13 W/(sr m^2)/2)
+	// wavelength = nanometers
+	// temperature = kelvins
+	// result = W/sr/m^2/nm = deciflicks
 	inline double blackbody_radiance(double wavelength, double temperature)
 	{
 		constexpr double c     = 2.998E8;
@@ -111,7 +113,7 @@ namespace lak
 		const double w5 = std::pow(wavelength, 5.0);
 		const double wT = wavelength * temperature;
 
-		return (_2hc2 / w5) / std::expm1(_hck / wT) * 1E-13;
+		return (_2hc2 / w5) / std::expm1(_hck / wT);
 	}
 
 	inline double blackbody_peak_wavelength(double temperature)
