@@ -110,10 +110,12 @@ namespace lak
 		constexpr double _2hc2 = 2.0 * h * c * c;
 		constexpr double _hck  = (h * c) / k;
 
+		wavelength *= 1E-9;
+
 		const double w5 = std::pow(wavelength, 5.0);
 		const double wT = wavelength * temperature;
 
-		return (_2hc2 / w5) / std::expm1(_hck / wT);
+		return ((_2hc2 / w5) / std::expm1(_hck / wT)) * 1E-9;
 	}
 
 	// earth irradiance (W/m^2/nm) = blackbody (W/sr/m^2/nm) * sun's steradian
@@ -124,7 +126,7 @@ namespace lak
 	                                             double temperature)
 	{
 		constexpr double suns_steradian = 6E-5;
-		return blackbody_radiance(wavelength, temperature) * suns_steradian;
+		return lak::blackbody_radiance(wavelength, temperature) * suns_steradian;
 	}
 
 	// temperature = kelvins
