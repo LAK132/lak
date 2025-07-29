@@ -116,9 +116,10 @@ namespace lak
 		return (_2hc2 / w5) / std::expm1(_hck / wT);
 	}
 
+	// earth irradiance (W/m^2/nm) = blackbody (W/sr/m^2/nm) * sun's steradian
 	// wavelength = nanometers
 	// temperature = kelvins
-	// earth irradiance (W/m^2/nm) = blackbody (W/sr/m^2/nm) * sun's steradian
+	// result = W/m^2/nm
 	inline double earth_sun_blackbody_irradiance(double wavelength,
 	                                             double temperature)
 	{
@@ -127,13 +128,15 @@ namespace lak
 	}
 
 	// temperature = kelvins
+	// result = nanometers
 	inline double blackbody_peak_wavelength(double temperature)
 	{
 		constexpr double b = 2.897771955E-3;
-		return b / temperature;
+		return (b / temperature) * 1E9;
 	}
 
 	// temperature = kelvins
+	// result = W/sr/m^2/nm = deciflicks
 	inline double blackbody_peak_radiance(double temperature)
 	{
 		return lak::blackbody_radiance(lak::blackbody_peak_wavelength(temperature),
