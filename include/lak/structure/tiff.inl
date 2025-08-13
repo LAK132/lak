@@ -206,10 +206,8 @@ lak::tiff::result<> lak::tiff::image_file_directory::read(
 	lak::optional<lak::tiff::ifd_tag &> subifd_tag;
 	lak::optional<lak::tiff::ifd_tag &> exif_tag;
 
-	size_t ti = 0;
 	for (auto &t : tags)
 	{
-		++ti;
 		RES_TRY(t.template read<E>(strm));
 
 		switch (t.id)
