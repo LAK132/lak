@@ -387,6 +387,8 @@
 	MACRO(ExposureProgram, uint16_t, 1U, __VA_ARGS__)                           \
 	MACRO(SpectralSensitivity, char, lak::dynamic_extent, __VA_ARGS__)          \
 	MACRO(GPSInfo, uint32_t, 1U, __VA_ARGS__)                                   \
+	MACRO(ISOSpeedRatings, uint16_t, 1U, __VA_ARGS__)                           \
+	MACRO(ISOSpeedRatings, uint16_t, 2U, __VA_ARGS__)                           \
 	MACRO(ISOSpeedRatings, uint16_t, 3U, __VA_ARGS__)                           \
 	MACRO(OECF, byte_t, lak::dynamic_extent, __VA_ARGS__)                       \
 	MACRO(Interlace, uint16_t, 1U, __VA_ARGS__)                                 \
