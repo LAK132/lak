@@ -159,11 +159,13 @@ lak::tiff::result<> lak::tiff::ifd_tag::write(
 		RES_TRY(strm.template write<E>(lak::tiff::tag_type::NAME));               \
 		ASSERT_LESS(data.size(), UINT32_MAX);                                     \
 		RES_TRY(strm.template write_u32<E>(static_cast<uint32_t>(data.size())));  \
-		if (data.size() * sizeof(TYPE) <= 4U)                                     \
+		if (data.size() * lak::to_bytes_traits<TYPE, E>::size <= 4U)              \
 		{                                                                         \
 			/* inline data */                                                       \
 			RES_TRY(strm.template write<E>(data));                                  \
-			for (size_t j = data.size() * sizeof(TYPE); j < 4U; ++j)                \
+			for (size_t j = data.size() * lak::to_bytes_traits<TYPE, E>::size;      \
+			     j < 4U;                                                            \
+			     ++j)                                                               \
 			{                                                                       \
 				RES_TRY(strm.template write_u8<E>(0U));                               \
 			}                                                                       \
@@ -171,6 +173,9 @@ lak::tiff::result<> lak::tiff::ifd_tag::write(
 		else                                                                      \
 		{                                                                         \
 			/* external data */                                                     \
+			RES_TRY(                                                                \
+			  ext_strm.seek(lak::to_multiple<size_t>(ext_strm.position(), 4U))      \
+			    .replace_err(lak::out_of_data_error{}));                            \
 			ASSERT_LESS(ext_strm.position(), UINT32_MAX);                           \
 			RES_TRY(strm.template write_u32<E>(                                     \
 			  static_cast<uint32_t>(ext_strm.position())));                         \
@@ -261,7 +266,8 @@ lak::tiff::result<> lak::tiff::image_file_directory::read(
 			  if (off_data.size() > strips.size()) strips.resize(off_data.size());
 			  for (size_t o = 0U; o < off_data.size(); ++o)
 			  {
-				  RES_TRY(strm.seek(off_data[o]));
+				  RES_TRY(
+				    strm.seek(off_data[o]).replace_err(lak::out_of_data_error{}));
 				  RES_TRY_ASSIGN(auto bytes =, strm.read_bytes(strips[o].data.size()));
 				  lak::memcpy(strips[o].data, bytes);
 			  }
@@ -322,22 +328,28 @@ lak::tiff::result<> lak::tiff::image_file_directory::read(
 
 size_t lak::tiff::image_file_directory::_write_size() const
 {
-	size_t result = 2U + 4U; // tag count + next ifd offset
-	if (!strips.empty()) result += lak::tiff::ifd_tag::_write_size * 3U;
-	if (!subifds.empty()) result += lak::tiff::ifd_tag::_write_size;
-	if (exif) result += lak::tiff::ifd_tag::_write_size;
-	result += lak::tiff::ifd_tag::_write_size * tags.size();
-	return result;
+	// tag count + next ifd offset + tags
+	return 2U + 4U + (lak::tiff::ifd_tag::_write_size * total_tag_count());
 }
 
 size_t lak::tiff::image_file_directory::write_size() const
 {
 	size_t result = _write_size();
-	if (strips.size() > 1U) result += 2U * 4U * strips.size();
-	for (const auto &s : strips) result += s.data.size();
-	for (const auto &ifd : subifds) result += ifd.write_size();
-	if (exif) result += exif->write_size();
-	for (const auto &t : tags) result += t._data_write_size();
+
+	size_t ext_tag_data = 0U;
+	for (const auto &t : tags) ext_tag_data += t._data_write_size();
+	result += ext_tag_data;
+
+	if (!strips.empty() || !subifds.empty() || !!exif || !!ext_tag_data)
+		result = lak::to_multiple<size_t>(result, 4U);
+
+	if (strips.size() > 1U) result += 2U * (4U * strips.size());
+	for (const auto &s : strips)
+		result += lak::to_multiple<size_t>(s.data.size(), 4U);
+	for (const auto &ifd : subifds)
+		result += lak::to_multiple<size_t>(ifd.write_size(), 4U);
+	if (exif) result += lak::to_multiple<size_t>(exif->write_size(), 4U);
+
 	return result;
 }
 
@@ -345,6 +357,7 @@ template<lak::endian E>
 lak::tiff::result<> lak::tiff::image_file_directory::write(
   lak::binary_span_writer &strm, lak::binary_span_writer &ext_strm) const
 {
+	ASSERT_EQUAL(strm.position() % 4U, 0U);
 	RES_TRY(ext_strm.seek(strm.position() + _write_size())
 	          .replace_err(lak::out_of_data_error{}));
 
@@ -363,6 +376,8 @@ lak::tiff::result<> lak::tiff::image_file_directory::write(
 
 		for (const auto &s : strips)
 		{
+			RES_TRY(ext_strm.seek(lak::to_multiple<size_t>(ext_strm.position(), 4U))
+			          .replace_err(lak::out_of_data_error{}));
 			offsets.push_back(static_cast<uint32_t>(ext_strm.position()));
 			RES_TRY(ext_strm.template write<E>(lak::span(s.data)));
 			counts.push_back(static_cast<uint32_t>(s.data.size()));
@@ -380,6 +395,8 @@ lak::tiff::result<> lak::tiff::image_file_directory::write(
 		lak::array<uint32_t> offsets;
 		for (const auto &ifd : subifds)
 		{
+			RES_TRY(ext_strm.seek(lak::to_multiple<size_t>(ext_strm.position(), 4U))
+			          .replace_err(lak::out_of_data_error{}));
 			uint32_t offset = static_cast<uint32_t>(ext_strm.position());
 			offsets.push_back(offset);
 			lak::binary_span_writer strm2 = ext_strm;
@@ -391,6 +408,8 @@ lak::tiff::result<> lak::tiff::image_file_directory::write(
 
 	if (exif)
 	{
+		RES_TRY(ext_strm.seek(lak::to_multiple<size_t>(ext_strm.position(), 4U))
+		          .replace_err(lak::out_of_data_error{}));
 		uint32_t offset               = static_cast<uint32_t>(ext_strm.position());
 		lak::binary_span_writer strm2 = ext_strm;
 		RES_TRY(exif->template write<E>(strm2, ext_strm));
@@ -403,7 +422,6 @@ lak::tiff::result<> lak::tiff::image_file_directory::write(
 	ASSERT_LESS(tag_count, UINT16_MAX);
 	RES_TRY(strm.template write_u16<E>(static_cast<uint16_t>(tag_count)));
 
-	size_t ti = 0;
 	for (const auto &t : tags)
 	{
 		if (strip_offsets &&
@@ -412,7 +430,6 @@ lak::tiff::result<> lak::tiff::image_file_directory::write(
 		{
 			RES_TRY(strip_offsets->template write<E>(strm, ext_strm));
 			strip_offsets.reset();
-			++ti;
 		}
 		if (rows_per_strip &&
 		    static_cast<uint16_t>(t.id) >
@@ -420,7 +437,6 @@ lak::tiff::result<> lak::tiff::image_file_directory::write(
 		{
 			RES_TRY(rows_per_strip->template write<E>(strm, ext_strm));
 			rows_per_strip.reset();
-			++ti;
 		}
 		if (strip_byte_counts &&
 		    static_cast<uint16_t>(t.id) >
@@ -428,7 +444,6 @@ lak::tiff::result<> lak::tiff::image_file_directory::write(
 		{
 			RES_TRY(strip_byte_counts->template write<E>(strm, ext_strm));
 			strip_byte_counts.reset();
-			++ti;
 		}
 		if (subifd_offsets &&
 		    static_cast<uint16_t>(t.id) >
@@ -436,7 +451,6 @@ lak::tiff::result<> lak::tiff::image_file_directory::write(
 		{
 			RES_TRY(subifd_offsets->template write<E>(strm, ext_strm));
 			subifd_offsets.reset();
-			++ti;
 		}
 		if (exif_offset &&
 		    static_cast<uint16_t>(t.id) >
@@ -444,10 +458,8 @@ lak::tiff::result<> lak::tiff::image_file_directory::write(
 		{
 			RES_TRY(exif_offset->template write<E>(strm, ext_strm));
 			exif_offset.reset();
-			++ti;
 		}
 
-		++ti;
 		RES_TRY(t.template write<E>(strm, ext_strm));
 	}
 
@@ -526,7 +538,8 @@ template<lak::endian E>
 size_t lak::tiff::tiff::write_size() const
 {
 	size_t result = 8U; // ifh
-	for (const auto &d : ifd) result += d.write_size();
+	for (const auto &d : ifd)
+		result = lak::to_multiple<size_t>(result, 4U) + d.write_size();
 	return result;
 }
 
@@ -551,7 +564,7 @@ lak::tiff::result<> lak::tiff::tiff::write(lak::binary_span_writer &strm) const
 
 	for (const auto &i : ifd)
 	{
-		const size_t next = ext_strm.position();
+		const size_t next = lak::to_multiple<size_t>(ext_strm.position(), 4U);
 		ASSERT_LESS(next, UINT32_MAX);
 		RES_TRY(strm.template write_u32<E>(static_cast<uint32_t>(next)));
 		RES_TRY(strm.seek(next).replace_err(lak::out_of_data_error{}));

@@ -172,7 +172,7 @@ BEGIN_TEST(tiff)
 			ifd.rows  = 1;
 			for (uint8_t i = 0; i < 10; ++i)
 			{
-				auto &strip = ifd.strips.emplace_back();
+				auto &strip = ifd.push_strip();
 				strip.data.resize(0x10);
 				lak::fill<byte_t>(strip.data, byte_t(i));
 			}

@@ -231,7 +231,7 @@ namespace lak
 		{
 			uint32_t rows;
 			lak::array<lak::tiff::strip> strips;
-			lak::array<lak::tiff::tile> tiles;
+			// lak::array<lak::tiff::tile> tiles;
 			lak::array<lak::tiff::ifd_tag> tags;
 			lak::array<image_file_directory> subifds;
 			lak::unique_ptr<image_file_directory> exif;
@@ -267,6 +267,10 @@ namespace lak
 				tag.id    = id;
 				tag.set_data(data);
 			}
+
+			inline lak::tiff::strip &push_strip() { return strips.emplace_back(); }
+
+			// inline lak::tiff::tile &push_tile() { return tiles.emplace_back(); }
 
 			inline image_file_directory &push_subifd()
 			{
