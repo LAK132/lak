@@ -138,10 +138,14 @@ lak::tiff::result<> lak::tiff::ifd_tag::read(lak::binary_reader &strm)
 	return lak::ok_t{};
 }
 
+size_t lak::tiff::ifd_tag::_data_write_size() const
+{
+	return lak::to_multiple<size_t>(_data_store.size(), 4U);
+}
+
 size_t lak::tiff::ifd_tag::write_size() const
 {
-	// id + type + count + offset + external data size
-	return 2U + 2U + 4U + 4U + lak::to_multiple<size_t>(_data_store.size(), 4U);
+	return _write_size + _data_write_size();
 }
 
 template<lak::endian E>
@@ -195,6 +199,7 @@ lak::tiff::result<> lak::tiff::image_file_directory::read(
 	lak::optional<lak::tiff::ifd_tag &> rows_per_strip;
 	lak::optional<lak::tiff::ifd_tag &> strip_byte_counts;
 	lak::optional<lak::tiff::ifd_tag &> subifd_tag;
+	lak::optional<lak::tiff::ifd_tag &> exif_tag;
 
 	size_t ti = 0;
 	for (auto &t : tags)
@@ -215,6 +220,9 @@ lak::tiff::result<> lak::tiff::image_file_directory::read(
 				break;
 			case lak::tiff::tag_name::SubIFDs:
 				subifd_tag = t;
+				break;
+			case lak::tiff::tag_name::ExifOffset:
+				exif_tag = t;
 				break;
 			default:
 				break;
@@ -275,13 +283,33 @@ lak::tiff::result<> lak::tiff::image_file_directory::read(
 				  size_t _off = off;
 				  while (_off != 0U)
 				  {
-					  RES_TRY(strm.seek(_off));
-					  auto &subifd = subifds.emplace_back();
+					  RES_TRY(strm.seek(_off).replace_err(lak::out_of_data_error{}));
+					  auto &subifd = push_subifd();
 					  RES_TRY(subifd.template read<E>(strm));
 					  _off = subifd._ifd_offset;
 				  }
 			  }
-			  RES_TRY(strm.seek(pos));
+			  RES_TRY(strm.seek(pos).replace_err(lak::out_of_data_error{}));
+			  return lak::ok_t{};
+		  },
+		  [](auto &&) -> lak::tiff::result<> { ASSERT_UNREACHABLE(); }}));
+	}
+
+	if (exif_tag)
+	{
+		RES_TRY(exif_tag->data.visit(lak::overloaded{
+		  [&](lak::span<uint32_t> offsets) -> lak::tiff::result<>
+		  {
+			  ASSERT_EQUAL(offsets.size(), 1U);
+
+			  const size_t pos = strm.position();
+
+			  RES_TRY(strm.seek(offsets[0]).replace_err(lak::out_of_data_error{}));
+
+			  RES_TRY(push_exif().template read<E>(strm));
+			  ASSERT_EQUAL(exif->_ifd_offset, 0U);
+
+			  RES_TRY(strm.seek(pos).replace_err(lak::out_of_data_error{}));
 			  return lak::ok_t{};
 		  },
 		  [](auto &&) -> lak::tiff::result<> { ASSERT_UNREACHABLE(); }}));
@@ -292,16 +320,24 @@ lak::tiff::result<> lak::tiff::image_file_directory::read(
 	return lak::ok_t{};
 }
 
-size_t lak::tiff::image_file_directory::write_size() const
+size_t lak::tiff::image_file_directory::_write_size() const
 {
 	size_t result = 2U + 4U; // tag count + next ifd offset
-	if (!strips.empty())
-	{
-		result += 3U * 12U;
-		if (strips.size() > 1U) result += 2U * sizeof(char32_t) * strips.size();
-		for (const auto &s : strips) result += s.data.size();
-	}
-	for (const auto &t : tags) result += t.write_size();
+	if (!strips.empty()) result += lak::tiff::ifd_tag::_write_size * 3U;
+	if (!subifds.empty()) result += lak::tiff::ifd_tag::_write_size;
+	if (exif) result += lak::tiff::ifd_tag::_write_size;
+	result += lak::tiff::ifd_tag::_write_size * tags.size();
+	return result;
+}
+
+size_t lak::tiff::image_file_directory::write_size() const
+{
+	size_t result = _write_size();
+	if (strips.size() > 1U) result += 2U * 4U * strips.size();
+	for (const auto &s : strips) result += s.data.size();
+	for (const auto &ifd : subifds) result += ifd.write_size();
+	if (exif) result += exif->write_size();
+	for (const auto &t : tags) result += t._data_write_size();
 	return result;
 }
 
@@ -309,12 +345,14 @@ template<lak::endian E>
 lak::tiff::result<> lak::tiff::image_file_directory::write(
   lak::binary_span_writer &strm, lak::binary_span_writer &ext_strm) const
 {
-	RES_TRY(ext_strm.skip((12U * tags.size()) + 4U)
+	RES_TRY(ext_strm.seek(strm.position() + _write_size())
 	          .replace_err(lak::out_of_data_error{}));
 
 	lak::optional<lak::tiff::ifd_tag> strip_offsets;
 	lak::optional<lak::tiff::ifd_tag> rows_per_strip;
 	lak::optional<lak::tiff::ifd_tag> strip_byte_counts;
+	lak::optional<lak::tiff::ifd_tag> subifd_offsets;
+	lak::optional<lak::tiff::ifd_tag> exif_offset;
 
 	if (!strips.empty())
 	{
@@ -337,7 +375,31 @@ lak::tiff::result<> lak::tiff::image_file_directory::write(
 		  lak::tiff::ifd_tag::make_StripByteCounts(lak::move(counts));
 	}
 
-	const size_t tag_count = tags.size() + (strips.empty() ? 0U : 3U);
+	if (!subifds.empty())
+	{
+		lak::array<uint32_t> offsets;
+		for (const auto &ifd : subifds)
+		{
+			uint32_t offset = static_cast<uint32_t>(ext_strm.position());
+			offsets.push_back(offset);
+			lak::binary_span_writer strm2 = ext_strm;
+			RES_TRY(ifd.template write<E>(strm2, ext_strm));
+			RES_TRY(strm2.template write_u32<E>(0U)); // next ifd offset
+		}
+		subifd_offsets = lak::tiff::ifd_tag::make_SubIFDs(lak::move(offsets));
+	}
+
+	if (exif)
+	{
+		uint32_t offset               = static_cast<uint32_t>(ext_strm.position());
+		lak::binary_span_writer strm2 = ext_strm;
+		RES_TRY(exif->template write<E>(strm2, ext_strm));
+		RES_TRY(strm2.template write_u32<E>(0U)); // next ifd offset
+		exif_offset =
+		  lak::tiff::ifd_tag::make_ExifOffset(lak::fixed_array(offset));
+	}
+
+	const size_t tag_count = total_tag_count();
 	ASSERT_LESS(tag_count, UINT16_MAX);
 	RES_TRY(strm.template write_u16<E>(static_cast<uint16_t>(tag_count)));
 
@@ -368,6 +430,22 @@ lak::tiff::result<> lak::tiff::image_file_directory::write(
 			strip_byte_counts.reset();
 			++ti;
 		}
+		if (subifd_offsets &&
+		    static_cast<uint16_t>(t.id) >
+		      static_cast<uint16_t>(lak::tiff::tag_name::SubIFDs))
+		{
+			RES_TRY(subifd_offsets->template write<E>(strm, ext_strm));
+			subifd_offsets.reset();
+			++ti;
+		}
+		if (exif_offset &&
+		    static_cast<uint16_t>(t.id) >
+		      static_cast<uint16_t>(lak::tiff::tag_name::ExifOffset))
+		{
+			RES_TRY(exif_offset->template write<E>(strm, ext_strm));
+			exif_offset.reset();
+			++ti;
+		}
 
 		++ti;
 		RES_TRY(t.template write<E>(strm, ext_strm));
@@ -387,6 +465,16 @@ lak::tiff::result<> lak::tiff::image_file_directory::write(
 	{
 		RES_TRY(strip_byte_counts->template write<E>(strm, ext_strm));
 		strip_byte_counts.reset();
+	}
+	if (subifd_offsets)
+	{
+		RES_TRY(subifd_offsets->template write<E>(strm, ext_strm));
+		subifd_offsets.reset();
+	}
+	if (exif_offset)
+	{
+		RES_TRY(exif_offset->template write<E>(strm, ext_strm));
+		exif_offset.reset();
 	}
 	return lak::ok_t{};
 }
@@ -473,6 +561,9 @@ lak::tiff::result<> lak::tiff::tiff::write(lak::binary_span_writer &strm) const
 	}
 
 	RES_TRY(strm.template write_u32<E>(0U));
+
+	RES_TRY(
+	  strm.seek(ext_strm.position()).replace_err(lak::out_of_data_error{}));
 
 	return lak::ok_t{};
 }

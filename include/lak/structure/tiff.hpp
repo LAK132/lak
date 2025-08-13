@@ -4,6 +4,7 @@
 #include "lak/binary_reader.hpp"
 #include "lak/binary_writer.hpp"
 #include "lak/math.hpp"
+#include "lak/memory.hpp"
 #include "lak/span.hpp"
 #include "lak/stdint.hpp"
 #include "lak/string_literals.hpp"
@@ -198,6 +199,9 @@ namespace lak
 			template<lak::endian E>
 			lak::tiff::result<> read(lak::binary_reader &strm);
 
+			// id + type + count + offset
+			static constexpr size_t _write_size = 2U + 2U + 4U + 4U;
+			inline size_t _data_write_size() const;
 			inline size_t write_size() const;
 
 			template<lak::endian E>
@@ -230,11 +234,19 @@ namespace lak
 			lak::array<lak::tiff::tile> tiles;
 			lak::array<lak::tiff::ifd_tag> tags;
 			lak::array<image_file_directory> subifds;
+			lak::unique_ptr<image_file_directory> exif;
 			uint32_t _ifd_offset;
+
+			inline size_t total_tag_count() const
+			{
+				return tags.size() + (strips.empty() ? 0U : 3U) +
+				       (subifds.empty() ? 0U : 1U) + (exif ? 1U : 0U);
+			}
 
 			template<lak::endian E>
 			lak::tiff::result<> read(lak::binary_reader &strm);
 
+			inline size_t _write_size() const;
 			inline size_t write_size() const;
 
 			template<lak::endian E>
@@ -254,6 +266,17 @@ namespace lak
 				auto &tag = tags.emplace_back();
 				tag.id    = id;
 				tag.set_data(data);
+			}
+
+			inline image_file_directory &push_subifd()
+			{
+				return subifds.emplace_back();
+			}
+
+			inline image_file_directory &push_exif()
+			{
+				ASSERT(!exif);
+				return *(exif = decltype(exif)::make());
 			}
 
 #define LAK_TIFF_TAG_MAKE(NAME, TYPE, COUNT, ...)                             \
