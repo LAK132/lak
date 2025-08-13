@@ -120,6 +120,9 @@
 
 #define LAK_FOREACH_EXIF_TAG_VALUE(MACRO, ...)                                \
 	MACRO(0x2BC, ApplicationNotes, __VA_ARGS__)                                 \
+	MACRO(0xA433, LensMake, __VA_ARGS__)                                        \
+	MACRO(0xA434, LensModel, __VA_ARGS__)                                       \
+	MACRO(0xA435, LensSerialNumber, __VA_ARGS__)                                \
 	MACRO(0x8769, ExifOffset, __VA_ARGS__)
 
 #define LAK_FOREACH_DNG_TAG_VALUE(MACRO, ...)                                 \
@@ -429,7 +432,13 @@
 	MACRO(TIFF_EPStandardID, uint8_t, 4U, __VA_ARGS__)                          \
 	MACRO(SensingMethod, uint16_t, 1U, __VA_ARGS__)
 
-#define LAK_FOREACH_TIFF_DNG_TAG_TYPES(MACRO, ...)                            \
+#define LAK_FOREACH_EXIF_TAG_TYPES(MACRO, ...)                                \
+	MACRO(LensMake, char, lak::dynamic_extent, __VA_ARGS__)                     \
+	MACRO(LensModel, char, lak::dynamic_extent, __VA_ARGS__)                    \
+	MACRO(LensSerialNumber, char, lak::dynamic_extent, __VA_ARGS__)             \
+	MACRO(ExifOffset, uint32_t, 1U, __VA_ARGS__)
+
+#define LAK_FOREACH_DNG_TAG_TYPES(MACRO, ...)                                 \
 	MACRO(DNGVersion, uint8_t, 4U, __VA_ARGS__)                                 \
 	MACRO(DNGBackwardVersion, uint8_t, 4U, __VA_ARGS__)                         \
 	MACRO(UniqueCameraModel, char, lak::dynamic_extent, __VA_ARGS__)            \
@@ -607,4 +616,5 @@
 #define LAK_FOREACH_TIFF_TAG_TYPES(MACRO, ...)                                \
 	LAK_FOREACH_TIFF6_TAG_TYPES(MACRO, __VA_ARGS__)                             \
 	LAK_FOREACH_TIFF_EP_TAG_TYPES(MACRO, __VA_ARGS__)                           \
-	LAK_FOREACH_TIFF_DNG_TAG_TYPES(MACRO, __VA_ARGS__)
+	LAK_FOREACH_EXIF_TAG_TYPES(MACRO, __VA_ARGS__)                              \
+	LAK_FOREACH_DNG_TAG_TYPES(MACRO, __VA_ARGS__)
