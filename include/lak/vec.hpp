@@ -948,11 +948,45 @@ lak::vec2<T> operator/(lak::vec2<T> lhs, T rhs)
 }
 
 template<typename T>
+lak::vec2<T> operator/(T lhs, lak::vec2<T> rhs)
+{
+	rhs.x = lhs / rhs.x;
+	rhs.y = lhs / rhs.y;
+	return rhs;
+}
+
+template<typename T>
+lak::vec2<T> operator/(lak::vec2<T> lhs, lak::vec2<T> rhs)
+{
+	lhs.x /= rhs.x;
+	lhs.y /= rhs.y;
+	return lhs;
+}
+
+template<typename T>
 lak::vec3<T> operator/(lak::vec3<T> lhs, T rhs)
 {
 	lhs.x /= rhs;
 	lhs.y /= rhs;
 	lhs.z /= rhs;
+	return lhs;
+}
+
+template<typename T>
+lak::vec3<T> operator/(T lhs, lak::vec3<T> rhs)
+{
+	rhs.x = lhs / rhs.x;
+	rhs.y = lhs / rhs.y;
+	rhs.z = lhs / rhs.z;
+	return rhs;
+}
+
+template<typename T>
+lak::vec3<T> operator/(lak::vec3<T> lhs, lak::vec3<T> rhs)
+{
+	lhs.x /= rhs.x;
+	lhs.y /= rhs.y;
+	lhs.z /= rhs.z;
 	return lhs;
 }
 
@@ -967,10 +1001,38 @@ lak::vec4<T> operator/(lak::vec4<T> lhs, T rhs)
 }
 
 template<typename T>
+lak::vec4<T> operator/(T lhs, lak::vec4<T> rhs)
+{
+	rhs.x = lhs / rhs.x;
+	rhs.y = lhs / rhs.y;
+	rhs.z = lhs / rhs.z;
+	rhs.w = lhs / rhs.w;
+	return rhs;
+}
+
+template<typename T>
+lak::vec4<T> operator/(lak::vec4<T> lhs, lak::vec4<T> rhs)
+{
+	lhs.x /= rhs.x;
+	lhs.y /= rhs.y;
+	lhs.z /= rhs.z;
+	lhs.w /= rhs.w;
+	return lhs;
+}
+
+template<typename T>
 lak::vec2<T> &operator/=(lak::vec2<T> &lhs, T rhs)
 {
 	lhs.x /= rhs;
 	lhs.y /= rhs;
+	return lhs;
+}
+
+template<typename T>
+lak::vec2<T> &operator/=(lak::vec2<T> &lhs, lak::vec2<T> rhs)
+{
+	lhs.x /= rhs.x;
+	lhs.y /= rhs.y;
 	return lhs;
 }
 
@@ -984,12 +1046,31 @@ lak::vec3<T> &operator/=(lak::vec3<T> &lhs, T rhs)
 }
 
 template<typename T>
+lak::vec3<T> &operator/=(lak::vec3<T> &lhs, lak::vec3<T> rhs)
+{
+	lhs.x /= rhs.x;
+	lhs.y /= rhs.y;
+	lhs.z /= rhs.z;
+	return lhs;
+}
+
+template<typename T>
 lak::vec4<T> &operator/=(lak::vec4<T> &lhs, T rhs)
 {
 	lhs.x /= rhs;
 	lhs.y /= rhs;
 	lhs.z /= rhs;
 	lhs.w /= rhs;
+	return lhs;
+}
+
+template<typename T>
+lak::vec4<T> &operator/=(lak::vec4<T> &lhs, lak::vec4<T> rhs)
+{
+	lhs.x /= rhs.x;
+	lhs.y /= rhs.y;
+	lhs.z /= rhs.z;
+	lhs.w /= rhs.w;
 	return lhs;
 }
 
