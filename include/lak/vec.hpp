@@ -217,6 +217,24 @@ namespace lak
 	using vec2u64_t = vec2<uint64_t>;
 
 	template<typename T>
+	using mat2      = vec2<vec2<T>>;
+	using mat2f_t   = mat2<float>;
+	using mat2c_t   = mat2<signed char>;
+	using mat2i_t   = mat2<int>;
+	using mat2l_t   = mat2<long>;
+	using mat2f32_t = mat2<f32_t>;
+	using mat2f64_t = mat2<f64_t>;
+	using mat2s_t   = mat2<size_t>;
+	using mat2i8_t  = mat2<int8_t>;
+	using mat2u8_t  = mat2<uint8_t>;
+	using mat2i16_t = mat2<int16_t>;
+	using mat2u16_t = mat2<uint16_t>;
+	using mat2i32_t = mat2<int32_t>;
+	using mat2u32_t = mat2<uint32_t>;
+	using mat2i64_t = mat2<int64_t>;
+	using mat2u64_t = mat2<uint64_t>;
+
+	template<typename T>
 	struct vec3
 	{
 		union
@@ -421,6 +439,24 @@ namespace lak
 	using vec3u32_t = vec3<uint32_t>;
 	using vec3i64_t = vec3<int64_t>;
 	using vec3u64_t = vec3<uint64_t>;
+
+	template<typename T>
+	using mat3      = vec3<vec3<T>>;
+	using mat3f_t   = mat3<float>;
+	using mat3c_t   = mat3<signed char>;
+	using mat3i_t   = mat3<int>;
+	using mat3l_t   = mat3<long>;
+	using mat3f32_t = mat3<f32_t>;
+	using mat3f64_t = mat3<f64_t>;
+	using mat3s_t   = mat3<size_t>;
+	using mat3i8_t  = mat3<int8_t>;
+	using mat3u8_t  = mat3<uint8_t>;
+	using mat3i16_t = mat3<int16_t>;
+	using mat3u16_t = mat3<uint16_t>;
+	using mat3i32_t = mat3<int32_t>;
+	using mat3u32_t = mat3<uint32_t>;
+	using mat3i64_t = mat3<int64_t>;
+	using mat3u64_t = mat3<uint64_t>;
 
 	template<typename T>
 	struct vec4
@@ -650,6 +686,24 @@ namespace lak
 	using vec4u32_t = vec4<uint32_t>;
 	using vec4i64_t = vec4<int64_t>;
 	using vec4u64_t = vec4<uint64_t>;
+
+	template<typename T>
+	using mat4      = vec4<vec4<T>>;
+	using mat4f_t   = mat4<float>;
+	using mat4c_t   = mat4<signed char>;
+	using mat4i_t   = mat4<int>;
+	using mat4l_t   = mat4<long>;
+	using mat4f32_t = mat4<f32_t>;
+	using mat4f64_t = mat4<f64_t>;
+	using mat4s_t   = mat4<size_t>;
+	using mat4i8_t  = mat4<int8_t>;
+	using mat4u8_t  = mat4<uint8_t>;
+	using mat4i16_t = mat4<int16_t>;
+	using mat4u16_t = mat4<uint16_t>;
+	using mat4i32_t = mat4<int32_t>;
+	using mat4u32_t = mat4<uint32_t>;
+	using mat4i64_t = mat4<int64_t>;
+	using mat4u64_t = mat4<uint64_t>;
 }
 
 namespace std
@@ -843,6 +897,44 @@ lak::vec4<T> &operator*=(lak::vec4<T> &lhs, T rhs)
 	lhs.z *= rhs;
 	lhs.w *= rhs;
 	return lhs;
+}
+
+// matrix multiplication
+
+template<typename T>
+lak::vec2<T> operator*(lak::mat2<T> mat, lak::vec2<T> vec)
+{
+	return {dot(mat.x, vec), dot(mat.y, vec)};
+}
+
+template<typename T>
+lak::vec3<T> operator*(lak::mat3<T> mat, lak::vec3<T> vec)
+{
+	return {dot(mat.x, vec), dot(mat.y, vec), dot(mat.z, vec)};
+}
+
+template<typename T>
+lak::vec4<T> operator*(lak::mat4<T> mat, lak::vec4<T> vec)
+{
+	return {dot(mat.x, vec), dot(mat.y, vec), dot(mat.z, vec), dot(mat.w, vec)};
+}
+
+template<typename T>
+lak::vec2<T> &operator*=(lak::vec2<T> &vec, lak::mat2<T> mat)
+{
+	return vec = mat * vec;
+}
+
+template<typename T>
+lak::vec3<T> &operator*=(lak::vec3<T> &vec, lak::mat3<T> mat)
+{
+	return vec = mat * vec;
+}
+
+template<typename T>
+lak::vec4<T> &operator*=(lak::vec4<T> &vec, lak::mat4<T> mat)
+{
+	return vec = mat * vec;
 }
 
 // division
