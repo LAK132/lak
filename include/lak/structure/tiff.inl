@@ -246,7 +246,7 @@ lak::tiff::result<> lak::tiff::image_file_directory::read(
 			  strips.reserve(sizes_data.size());
 			  for (auto s : sizes_data) strips.emplace_back().data.resize(s);
 		  },
-		  [](auto &&a) { ASSERT_UNREACHABLE(); },
+		  [](auto &&) { ASSERT_UNREACHABLE(); },
 		});
 
 		rows_per_strip->visit(lak::overloaded{
@@ -256,7 +256,7 @@ lak::tiff::result<> lak::tiff::image_file_directory::read(
 			  ASSERT_EQUAL(rows_data.size(), 1U);
 			  rows = rows_data[0];
 		  },
-		  [](auto &&a) { ASSERT_UNREACHABLE(); },
+		  [](auto &&) { ASSERT_UNREACHABLE(); },
 		});
 
 		RES_TRY(strip_offsets->visit(lak::overloaded{
@@ -273,7 +273,7 @@ lak::tiff::result<> lak::tiff::image_file_directory::read(
 			  }
 			  return lak::ok_t{};
 		  },
-		  [](auto &&a) -> lak::tiff::result<> { ASSERT_UNREACHABLE(); },
+		  [](auto &&) -> lak::tiff::result<> { ASSERT_UNREACHABLE(); },
 		}));
 	}
 
@@ -419,7 +419,7 @@ lak::tiff::result<> lak::tiff::image_file_directory::write(
 	}
 
 	const size_t tag_count = total_tag_count();
-	ASSERT_LESS(tag_count, UINT16_MAX);
+	ASSERT_LESS(tag_count, size_t(UINT16_MAX));
 	RES_TRY(strm.template write_u16<E>(static_cast<uint16_t>(tag_count)));
 
 	for (const auto &t : tags)
