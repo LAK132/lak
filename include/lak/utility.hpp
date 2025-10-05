@@ -79,6 +79,24 @@ namespace lak
 	};
 	inline constexpr in_place_t in_place{};
 
+	/* --- get_nth --- */
+
+	template<size_t I, typename T, typename... U>
+	requires(I != 0)
+	force_inline constexpr lak::nth_type_t<I, T, U...> &get_nth(T &t,
+	                                                            U &...u) noexcept
+	{
+		return lak::get_nth<I - 1U, U...>(u...);
+	}
+
+	template<size_t I, typename T, typename... U>
+	requires(I == 0)
+	force_inline constexpr lak::nth_type_t<I, T, U...> &get_nth(T &t,
+	                                                            U &...) noexcept
+	{
+		return t;
+	}
+
 	/* --- move --- */
 
 	template<typename T>
