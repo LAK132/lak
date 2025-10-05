@@ -45,6 +45,37 @@ namespace lak
 			lak::u8string_view consumed;
 			lak::u8string_view remaining;
 			T value;
+
+			template<lak::concepts::invocable<lak::add_lvalue_reference_t<T>> F>
+			auto map(F &&f) & -> parse_result<
+			  lak::invoke_result_t<F, lak::add_lvalue_reference_t<T>>>
+			{
+				return {
+				  .consumed  = consumed,
+				  .remaining = remaining,
+				  .value     = f(value),
+				};
+			}
+			template<
+			  lak::concepts::invocable<const lak::add_lvalue_reference_t<T>> F>
+			auto map(F &&f) const & -> parse_result<
+			  lak::invoke_result_t<F, const lak::add_lvalue_reference_t<T>>>
+			{
+				return {
+				  .consumed  = consumed,
+				  .remaining = remaining,
+				  .value     = f(value),
+				};
+			}
+			template<lak::concepts::invocable<T &&> F>
+			auto map(F &&f) && -> parse_result<lak::invoke_result_t<F, T &&>>
+			{
+				return {
+				  .consumed  = consumed,
+				  .remaining = remaining,
+				  .value     = f(value),
+				};
+			}
 		};
 
 		/* --- result --- */
