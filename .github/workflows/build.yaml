@@ -12,8 +12,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-2022, ubuntu-24.04, macos-13]
-        arch: [x86, x64]
+        os: [windows-2022, ubuntu-24.04, macos-15]
+        arch: [x86, x64, arm64]
         setup-options:
           - -Dlak_enable_tests=true
           - -Dlak_enable_tests=true -Dlak_enable_ebnf2cpp=true
@@ -23,15 +23,21 @@ jobs:
           - -Dlak_enable_tests=true -Dlak_enable_windowing=true -Dlak_use_native_file_dialog=false -Dsdl2_from_source=true -Dlak_backend=sdl -Dlak_enable_glm=true -Dlak_enable_imgui=true
           - -Dlak_enable_tests=true -Dlak_enable_godot_cpp=true
         exclude:
+          - os: windows-2022
+            arch: arm64
+          - os: ubuntu-24.04
+            arch: arm64
+          - os: macos-15
+            arch: x86
+          - os: macos-15
+            arch: x64
           - os: ubuntu-24.04
             setup-options: -Dlak_enable_tests=true -Dlak_enable_lmdb=true -Dlak_enable_libfive=true
           - os: ubuntu-24.04
             setup-options: -Dlak_enable_tests=true -Dlak_enable_windowing=true -Dlak_use_native_file_dialog=true -Dsdl2_from_source=true -Dlak_backend=sdl -Dlak_enable_glm=true -Dlak_enable_imgui=true
-          - os: macos-13
-            arch: x86
-          - os: macos-13
+          - os: macos-15
             setup-options: -Dlak_enable_tests=true -Dlak_enable_lmdb=true -Dlak_enable_libfive=true
-          - os: macos-13
+          - os: macos-15
             setup-options: -Dlak_enable_tests=true -Dlak_enable_windowing=true -Dlak_use_native_file_dialog=true -Dsdl2_from_source=true -Dlak_backend=sdl -Dlak_enable_glm=true -Dlak_enable_imgui=true
     runs-on: ${{ matrix.os }}
     steps:
