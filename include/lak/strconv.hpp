@@ -15,6 +15,8 @@
 namespace lak
 {
 	template<typename TO, typename FROM>
+	inline void strconv(lak::string<TO> &dst, const lak::string<FROM> &src);
+	template<typename TO, typename FROM>
 	inline lak::string<TO> strconv(const lak::string<FROM> &str);
 	template<typename FROM>
 	inline lak::astring to_astring(const lak::string<FROM> &str);
@@ -27,6 +29,8 @@ namespace lak
 	template<typename FROM>
 	inline lak::u32string to_u32string(const lak::string<FROM> &str);
 
+	template<typename TO, typename FROM>
+	inline void strconv(lak::string<TO> &dst, lak::string_view<FROM> src);
 	template<typename TO, typename FROM>
 	inline lak::string<TO> strconv(lak::string_view<FROM> str);
 	template<typename FROM>

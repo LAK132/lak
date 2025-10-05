@@ -2,13 +2,20 @@
 #include "lak/unicode.hpp"
 
 template<typename TO, typename FROM>
+inline void lak::strconv(lak::string<TO> &dst, const lak::string<FROM> &src)
+{
+	if constexpr (lak::is_same_v<TO, FROM>)
+		dst += src;
+	else
+		for (const auto &[c, len] : lak::codepoint_range(src))
+			lak::append_codepoint(dst, c);
+}
+
+template<typename TO, typename FROM>
 inline lak::string<TO> lak::strconv(const lak::string<FROM> &str)
 {
 	lak::string<TO> result;
-
-	for (const auto &[c, len] : lak::codepoint_range(str))
-		lak::append_codepoint(result, c);
-
+	lak::strconv(result, str);
 	return result;
 }
 
@@ -43,13 +50,20 @@ inline lak::u32string lak::to_u32string(const lak::string<FROM> &str)
 }
 
 template<typename TO, typename FROM>
+inline void lak::strconv(lak::string<TO> &dst, lak::string_view<FROM> src)
+{
+	if constexpr (lak::is_same_v<TO, FROM>)
+		dst += src;
+	else
+		for (const auto &[c, len] : lak::codepoint_range(src))
+			lak::append_codepoint(dst, c);
+}
+
+template<typename TO, typename FROM>
 inline lak::string<TO> lak::strconv(lak::string_view<FROM> str)
 {
 	lak::string<TO> result;
-
-	for (const auto &[c, len] : lak::codepoint_range(str))
-		lak::append_codepoint(result, c);
-
+	lak::strconv(result, str);
 	return result;
 }
 
