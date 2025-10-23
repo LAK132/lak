@@ -4,23 +4,157 @@
 #include "lak/memmanip.hpp"
 #include "lak/span_manip.hpp"
 
-lak::u8string_view uintmax_max_dec_str()
+template<lak::numeric_base base>
+static force_inline uint8_t char_to_value(char8_t c)
+{
+	if constexpr (base == lak::numeric_base::bin ||
+	              base == lak::numeric_base::oct ||
+	              base == lak::numeric_base::dec)
+		return static_cast<uint8_t>(c - u8'0');
+	else
+	{
+		static_assert(base == lak::numeric_base::hex);
+		if (c >= u8'0' && c <= u8'9')
+			return static_cast<uint8_t>(c - u8'0');
+		else if (c >= u8'a' && c <= u8'f')
+			return static_cast<uint8_t>(c - u8'a') + 0xAU;
+		else
+			return static_cast<uint8_t>(c - u8'A') + 0xAU;
+	}
+}
+
+lak::u8string_view lak::uintmax_max_bin_str()
 {
 	static lak::u8string str = []() -> lak::u8string
 	{
 		lak::u8string str;
-		// :TODO: this math doesn't seem right
-		// str.reserve((UINTMAX_MAX / 9) + 1);
+		str.resize(sizeof(uintmax_t) * CHAR_BIT, u8'1');
+		return str;
+	}();
+	return lak::u8string_view(str);
+}
+
+lak::u8string_view lak::uintmax_max_oct_str()
+{
+	static lak::u8string str = []() -> lak::u8string
+	{
+		lak::u8string str;
 		uintmax_t max = UINTMAX_MAX;
-		for (; max != 0;)
+		for (; max != 0U;)
 		{
-			str.push_back(static_cast<char8_t>((max % 10) + u8'0'));
-			max /= 10;
+			str.push_back(static_cast<char8_t>((max % 010U) + u8'0'));
+			max /= 010U;
 		}
 		lak::reverse(lak::span<char8_t>(str.data(), str.size()));
 		return str;
 	}();
 	return lak::u8string_view(str);
+}
+
+lak::u8string_view lak::uintmax_max_dec_str()
+{
+	static lak::u8string str = []() -> lak::u8string
+	{
+		lak::u8string str;
+		uintmax_t max = UINTMAX_MAX;
+		for (; max != 0U;)
+		{
+			str.push_back(static_cast<char8_t>((max % 10U) + u8'0'));
+			max /= 10U;
+		}
+		lak::reverse(lak::span<char8_t>(str.data(), str.size()));
+		return str;
+	}();
+	return lak::u8string_view(str);
+}
+
+lak::u8string_view lak::uintmax_max_hex_str()
+{
+	static lak::u8string str = []() -> lak::u8string
+	{
+		lak::u8string str;
+		uintmax_t max = UINTMAX_MAX;
+		for (; max != 0U;)
+		{
+			if (uintmax_t m = max % 0x10U; m < 0xA)
+				str.push_back(static_cast<char8_t>(m + u8'0'));
+			else
+				str.push_back(static_cast<char8_t>(m + u8'A'));
+			max /= 0x10U;
+		}
+		lak::reverse(lak::span<char8_t>(str.data(), str.size()));
+		return str;
+	}();
+	return lak::u8string_view(str);
+}
+
+static lak::error_code<lak::string_to_numeric_error> validate_bin_str(
+  lak::u8string_view str)
+{
+	lak::u8string_view max = lak::uintmax_max_bin_str();
+	if (str.size() > max.size())
+		return lak::err_t{lak::string_to_numeric_error::out_of_bounds};
+	for (const char8_t &c : str)
+		if (c < u8'0' || c > u8'1')
+			return lak::err_t{lak::string_to_numeric_error::invalid_string};
+	if (str.size() == max.size())
+		for (size_t i = 0; i < str.size(); ++i)
+			if (char_to_value<lak::numeric_base::bin>(str[i]) >
+			    char_to_value<lak::numeric_base::bin>(max[i]))
+				return lak::err_t{lak::string_to_numeric_error::out_of_bounds};
+	return lak::ok_t{};
+}
+
+static lak::error_code<lak::string_to_numeric_error> validate_oct_str(
+  lak::u8string_view str)
+{
+	lak::u8string_view max = lak::uintmax_max_oct_str();
+	if (str.size() > max.size())
+		return lak::err_t{lak::string_to_numeric_error::out_of_bounds};
+	for (const char8_t &c : str)
+		if (c < u8'0' || c > u8'7')
+			return lak::err_t{lak::string_to_numeric_error::invalid_string};
+	if (str.size() == max.size())
+		for (size_t i = 0; i < str.size(); ++i)
+			if (char_to_value<lak::numeric_base::oct>(str[i]) >
+			    char_to_value<lak::numeric_base::oct>(max[i]))
+				return lak::err_t{lak::string_to_numeric_error::out_of_bounds};
+	return lak::ok_t{};
+}
+
+static lak::error_code<lak::string_to_numeric_error> validate_dec_str(
+  lak::u8string_view str)
+{
+	lak::u8string_view max = lak::uintmax_max_dec_str();
+	if (str.size() > max.size())
+		return lak::err_t{lak::string_to_numeric_error::out_of_bounds};
+	for (const char8_t &c : str)
+		if (c < u8'0' || c > u8'9')
+			return lak::err_t{lak::string_to_numeric_error::invalid_string};
+	if (str.size() == max.size())
+		for (size_t i = 0; i < str.size(); ++i)
+			if (char_to_value<lak::numeric_base::dec>(str[i]) >
+			    char_to_value<lak::numeric_base::dec>(max[i]))
+				return lak::err_t{lak::string_to_numeric_error::out_of_bounds};
+	return lak::ok_t{};
+}
+
+static lak::error_code<lak::string_to_numeric_error> validate_hex_str(
+  lak::u8string_view str)
+{
+	lak::u8string_view max = lak::uintmax_max_hex_str();
+	if (str.size() > max.size())
+		return lak::err_t{lak::string_to_numeric_error::out_of_bounds};
+	for (const char8_t &c : str)
+		if (!(c >= u8'0' && c <= u8'9') && !(c >= u8'a' && c <= u8'f') &&
+		    !(c >= u8'A' && c <= u8'F'))
+			return lak::err_t{lak::string_to_numeric_error::invalid_string};
+	if (str.size() == max.size())
+		for (size_t i = 0; i < str.size(); ++i)
+			if (char_to_value<lak::numeric_base::hex>(str[i]) >
+			    char_to_value<lak::numeric_base::hex>(max[i]))
+				return lak::err_t{lak::string_to_numeric_error::out_of_bounds};
+	return lak::ok_t{};
 }
 
 lak::result<uintmax_t, lak::string_to_numeric_error> lak::string_to_uintmax(
@@ -34,18 +168,13 @@ lak::result<uintmax_t, lak::string_to_numeric_error> lak::string_to_uintmax(
 		case lak::numeric_base::bin:
 		{
 			// [0-1]+
-			if (integer.size() > (sizeof(uintmax_t) * CHAR_BIT))
-				return lak::err_t{lak::string_to_numeric_error::out_of_bounds};
-
-			for (const char8_t &c : integer)
-				if (c < u8'0' || c > u8'1')
-					return lak::err_t{lak::string_to_numeric_error::invalid_string};
+			RES_TRY(validate_bin_str(integer));
 
 			uintmax_t result = 0;
 			for (const char8_t &c : integer)
 			{
 				result <<= 1U;
-				result |= static_cast<uint8_t>(c - u8'0');
+				result |= char_to_value<lak::numeric_base::bin>(c);
 			}
 
 			return lak::ok_t<uintmax_t>{result};
@@ -55,37 +184,13 @@ lak::result<uintmax_t, lak::string_to_numeric_error> lak::string_to_uintmax(
 		case lak::numeric_base::oct:
 		{
 			// [0-7]+
-			if ((integer.size() * 3) < (sizeof(uintmax_t) * CHAR_BIT))
-			{
-				// fast path
-			}
-			else if (((integer.size() - 1) * 3) < (sizeof(uintmax_t) * CHAR_BIT))
-			{
-				// have to check first value
-				const size_t max_high_bits =
-				  (sizeof(uintmax_t) * CHAR_BIT) - ((integer.size() - 1) * 3);
-
-				if (integer[0] < u8'0' || integer[0] > u8'7')
-					return lak::err_t{lak::string_to_numeric_error::invalid_string};
-
-				if (const uintmax_t first_value =
-				      static_cast<uintmax_t>(integer[0] - u8'0');
-				    (static_cast<uintmax_t>(~(UINTMAX_MAX << max_high_bits)) &
-				     first_value) != first_value)
-					return lak::err_t{lak::string_to_numeric_error::out_of_bounds};
-			}
-			else
-				return lak::err_t{lak::string_to_numeric_error::out_of_bounds};
-
-			for (const char8_t &c : integer)
-				if (c < u8'0' || c > u8'7')
-					return lak::err_t{lak::string_to_numeric_error::invalid_string};
+			RES_TRY(validate_oct_str(integer));
 
 			uintmax_t result = 0;
 			for (const char8_t &c : integer)
 			{
 				result <<= 3U;
-				result |= static_cast<uint8_t>(c - u8'0');
+				result |= char_to_value<lak::numeric_base::oct>(c);
 			}
 
 			return lak::ok_t<uintmax_t>{result};
@@ -95,37 +200,14 @@ lak::result<uintmax_t, lak::string_to_numeric_error> lak::string_to_uintmax(
 		case lak::numeric_base::dec:
 		{
 			// [0-9]+
+			RES_TRY(validate_dec_str(integer));
+
 			uintmax_t result = 0;
-
-			if ((integer.size() * 9) < (sizeof(uintmax_t) * CHAR_BIT))
-			{
-				// fast path
-				for (const char8_t &c : integer)
-					if (c < u8'0' || c > u8'9')
-						return lak::err_t{lak::string_to_numeric_error::invalid_string};
-			}
-			else if (((integer.size() - 1) * 9) < (sizeof(uintmax_t) * CHAR_BIT))
-			{
-				// have to bounds check
-				lak::u8string_view max = uintmax_max_dec_str();
-				while (!integer.empty())
-				{
-					if (integer[0] > max[0])
-						return lak::err_t{lak::string_to_numeric_error::out_of_bounds};
-					if (integer[0] < max[0]) break; // continue with the fast path
-					result *= 10U;
-					result += static_cast<uint8_t>(integer[0] - u8'0');
-					max     = max.substr(1);
-					integer = integer.substr(1);
-				}
-			}
-			else
-				return lak::err_t{lak::string_to_numeric_error::out_of_bounds};
-
 			for (const char8_t &c : integer)
 			{
 				result *= 10U;
-				result += static_cast<uint8_t>(c - u8'0');
+				result += char_to_value<lak::numeric_base::dec>(c);
+				DEBUG_EXPR(result);
 			}
 
 			return lak::ok_t<uintmax_t>{result};
@@ -135,21 +217,13 @@ lak::result<uintmax_t, lak::string_to_numeric_error> lak::string_to_uintmax(
 		case lak::numeric_base::hex:
 		{
 			// [0-9a-fA-F]+
-			if (integer.size() > (sizeof(uintmax_t) * CHAR_BIT))
-				return lak::err_t{lak::string_to_numeric_error::out_of_bounds};
+			RES_TRY(validate_hex_str(integer));
 
 			uintmax_t result = 0;
 			for (const char8_t &c : integer)
 			{
 				result <<= 4U;
-				if (c >= u8'0' && c <= u8'9')
-					result |= static_cast<uint8_t>((c - u8'0') + 0x0U);
-				else if (c >= u8'a' && c <= u8'f')
-					result |= static_cast<uint8_t>((c - u8'a') + 0xAU);
-				else if (c >= u8'A' && c <= u8'F')
-					result |= static_cast<uint8_t>((c - u8'A') + 0xAU);
-				else
-					return lak::err_t{lak::string_to_numeric_error::invalid_string};
+				result |= char_to_value<lak::numeric_base::hex>(c);
 			}
 
 			return lak::ok_t<uintmax_t>{result};

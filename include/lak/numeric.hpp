@@ -22,6 +22,11 @@ namespace lak
 		out_of_bounds,
 	};
 
+	lak::u8string_view uintmax_max_bin_str();
+	lak::u8string_view uintmax_max_oct_str();
+	lak::u8string_view uintmax_max_dec_str();
+	lak::u8string_view uintmax_max_hex_str();
+
 	// bin: [0-1]+
 	// oct: [0-7]+
 	// dec: [0-9]+
