@@ -181,6 +181,48 @@ int main(int argc, char **argv)
 					}
 					break;
 
+				case match_case:
+					if (index == 0U)
+					{
+						std::cout << indent_str() << "lak::dsl::match<\n";
+						++index;
+						stack.push_back(
+						  {grammar.rule_values[grammar.match_cases[val.index].condition],
+						   0U});
+					}
+					else if (index == 1U)
+					{
+						std::cout << ",\n";
+						++index;
+						stack.push_back(
+						  {grammar.rule_values[grammar.match_cases[val.index].matched],
+						   0U});
+					}
+					else
+					{
+						std::cout << ">";
+						stack.pop_back();
+					}
+					break;
+
+				case match_sequence:
+					if (index == 0U)
+						std::cout << indent_str() << "lak::dsl::match_sequence<\n";
+					if (index >= grammar.match_sequences[val.index].size())
+					{
+						std::cout << ">";
+						stack.pop_back();
+					}
+					else
+					{
+						if (index != 0U) std::cout << ",\n";
+						stack.push_back(
+						  {grammar.rule_values[grammar.match_sequences[val.index].begin +
+						                       (index++)],
+						   0U});
+					}
+					break;
+
 				case grouping:
 				{
 					lak::dsl::ebnf_rule_value v =
@@ -240,10 +282,15 @@ int main(int argc, char **argv)
 
 		if (rule.transform)
 		{
-			std::cout
-			  << ",\n"
-			  << grammar.transforms[grammar.rule_values[*rule.transform].index]
-			  << ">";
+			lak::u8string transform =
+			  grammar.transforms[grammar.rule_values[*rule.transform].index];
+			// strip \r
+			transform.erase(lak::stable_partition(transform.begin(),
+			                                      transform.end(),
+			                                      [](char8_t c)
+			                                      { return c != u8'\r'; }),
+			                transform.end());
+			std::cout << ",\n" << lak::u8string_view(transform) << ">";
 		}
 
 		std::cout << ";\n\n";
