@@ -28,7 +28,8 @@ static constexpr auto repeat_n =
 
 static constexpr auto trailing_punct =
   (*ws) +
-  lak::dsl::one_of_chars<U',', U'|', U';', U')', U']', U'}', U'>', U'$'>;
+  (lak::dsl::str_literal<u8"->"> |
+   lak::dsl::one_of_chars<U',', U'|', U';', U')', U']', U'}', U'>', U'$'>);
 
 lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
   lak::u8string_view str) const
@@ -55,16 +56,17 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 	{
 		enum struct value_type
 		{
-			group,
-			capture,
-			transform,
-			repeat,
-			repeat_n,
-			option,
+			rule,
 			concat,
 			altern,
+			option,
+			repeat,
+			repeat_n,
+			match_case,
+			group,
+			capture,
 			except,
-			rule,
+			transform,
 		} type;
 
 		size_t begin;
@@ -144,13 +146,95 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 		return pop_tree();
 	};
 
+	auto pop_match_case = [&]() -> lak::error_code<lak::dsl::parse_error>
+	{
+		if (working_tree.back().size != 2U)
+			return lak::err_t{
+			  lak::dsl::parse_error{.message = u8"invalid match case"}};
+
+		// abuse .index to hold subvalue indices until it can be patched in
+		// pop_altern
+		working_values.push_back({
+		  .type  = lak::dsl::ebnf_rule_value::value_type::match_case,
+		  .index = pop_values(2U),
+		});
+		return pop_tree();
+	};
+
 	auto pop_altern = [&]() -> lak::error_code<lak::dsl::parse_error>
 	{
-		const size_t sz = working_tree.back().size;
-
-		if (sz <= working_tree.back().begin)
+		if (working_tree.back().size <= working_tree.back().begin)
 			return lak::err_t{lak::dsl::parse_error{
 			  .message = u8"missing final value of alternation"}};
+
+		// subsequences of match cases should be treated as if they were grouped
+
+		auto first_match_case_subsequence =
+		  [](lak::span<lak::dsl::ebnf_rule_value> values)
+		  -> lak::span<lak::dsl::ebnf_rule_value>
+		{
+			auto first_match_case = lak::find_if(
+			  values.begin(),
+			  values.end(),
+			  [](const lak::dsl::ebnf_rule_value &v)
+			  {
+				  return v.type == lak::dsl::ebnf_rule_value::value_type::match_case;
+			  });
+			if (first_match_case == values.end()) return {};
+			auto first_non_match_case = lak::find_if(
+			  first_match_case,
+			  values.end(),
+			  [](const lak::dsl::ebnf_rule_value &v)
+			  {
+				  return v.type != lak::dsl::ebnf_rule_value::value_type::match_case;
+			  });
+			return lak::span(first_match_case, first_non_match_case);
+		};
+
+		for (lak::span<lak::dsl::ebnf_rule_value> match_subseq;
+		     !(match_subseq = first_match_case_subsequence(
+		         lak::span(working_values).last(working_tree.back().size)))
+		        .empty();)
+		{
+			ASSERT_GREATER_OR_EQUAL(working_tree.back().size, match_subseq.size());
+			working_tree.back().size -= (match_subseq.size() - 1U);
+
+			// fix up match case indexing
+			for (auto &mc : match_subseq)
+			{
+				const size_t index = result.match_cases.size();
+				result.match_cases.push_back({
+				  .condition = mc.index,
+				  .matched   = mc.index + 1U,
+				});
+				mc.index = index;
+			}
+
+			const size_t ret_idx = match_subseq.begin() - working_values.begin();
+			const size_t sz      = match_subseq.size();
+			const size_t rem_sz  = working_values.end() - match_subseq.begin();
+
+			lak::rotate_left(
+			  match_subseq.begin(), working_values.end(), match_subseq.size());
+			const size_t begin = pop_values(sz);
+
+			working_values.insert(
+			  working_values.begin() + ret_idx,
+			  {
+			    .type  = lak::dsl::ebnf_rule_value::value_type::match_sequence,
+			    .index = result.match_sequences.size(),
+			  });
+			result.match_sequences.push_back({
+			  .begin = begin,
+			  .end   = begin + sz,
+			});
+		}
+
+		const size_t sz = working_tree.back().size;
+
+		if (sz == 1U && working_values.back().type ==
+		                  lak::dsl::ebnf_rule_value::value_type::match_sequence)
+			return pop_tree();
 
 		if (sz < 2U)
 			return lak::err_t{
@@ -273,9 +357,10 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 				{
 					RES_TRY(pop_except());
 				}
-				else if (working_tree.back().type == working_data::value_type::except)
+				else if (working_tree.back().type ==
+				         working_data::value_type::match_case)
 				{
-					RES_TRY(pop_except());
+					RES_TRY(pop_match_case());
 				}
 				else
 					break;
@@ -324,6 +409,11 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 				else if (working_tree.back().type == working_data::value_type::except)
 				{
 					RES_TRY(pop_except());
+				}
+				else if (working_tree.back().type ==
+				         working_data::value_type::match_case)
+				{
+					RES_TRY(pop_match_case());
 				}
 				else
 					break;
@@ -374,6 +464,11 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 				{
 					RES_TRY(pop_except());
 				}
+				else if (working_tree.back().type ==
+				         working_data::value_type::match_case)
+				{
+					RES_TRY(pop_match_case());
+				}
 				else
 					break;
 				ASSERT_GREATER(s, working_tree.size());
@@ -422,6 +517,11 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 				{
 					RES_TRY(pop_except());
 				}
+				else if (working_tree.back().type ==
+				         working_data::value_type::match_case)
+				{
+					RES_TRY(pop_match_case());
+				}
 				else
 					break;
 				ASSERT_GREATER(s, working_tree.size());
@@ -444,6 +544,41 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 			  .index = index,
 			});
 			RES_TRY(pop_tree());
+		}
+		else if (lak::dsl::str_literal<u8"->">.EBNF_PARSE().is_ok())
+		{
+			while (true)
+			{
+				size_t s = working_tree.size();
+				if (working_tree.back().type == working_data::value_type::except)
+				{
+					RES_TRY(pop_except());
+				}
+				else
+					break;
+				ASSERT_GREATER(s, working_tree.size());
+			}
+
+			if (working_values.size() < 1U)
+				return lak::err_t{lak::dsl::parse_error{
+				  .message = u8"missing beginning of match case"}};
+
+			--working_tree.back().size;
+
+			if (working_tree.back().type != working_data::value_type::altern)
+			{
+				working_tree.push_back({
+				  .type  = working_data::value_type::altern,
+				  .begin = 0U,
+				  .size  = 0U,
+				});
+			}
+
+			working_tree.push_back({
+			  .type  = working_data::value_type::match_case,
+			  .begin = 0U,
+			  .size  = 1U,
+			});
 		}
 		else if (lak::dsl::char_literal<U'-'>.EBNF_PARSE().is_ok())
 		{
@@ -470,6 +605,11 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 				else if (working_tree.back().type == working_data::value_type::except)
 				{
 					RES_TRY(pop_except());
+				}
+				else if (working_tree.back().type ==
+				         working_data::value_type::match_case)
+				{
+					RES_TRY(pop_match_case());
 				}
 				else
 					break;
@@ -500,6 +640,11 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 				if (working_tree.back().type == working_data::value_type::except)
 				{
 					RES_TRY(pop_except());
+				}
+				else if (working_tree.back().type ==
+				         working_data::value_type::match_case)
+				{
+					RES_TRY(pop_match_case());
 				}
 				else
 					break;
@@ -538,6 +683,11 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 				else if (working_tree.back().type == working_data::value_type::except)
 				{
 					RES_TRY(pop_except());
+				}
+				else if (working_tree.back().type ==
+				         working_data::value_type::match_case)
+				{
+					RES_TRY(pop_match_case());
 				}
 				else if (working_tree.back().type ==
 				         working_data::value_type::repeat_n)
@@ -580,6 +730,11 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 				else if (working_tree.back().type == working_data::value_type::except)
 				{
 					RES_TRY(pop_except());
+				}
+				else if (working_tree.back().type ==
+				         working_data::value_type::match_case)
+				{
+					RES_TRY(pop_match_case());
 				}
 				else if (working_tree.back().type ==
 				         working_data::value_type::repeat_n)

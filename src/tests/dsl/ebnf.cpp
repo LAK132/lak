@@ -16,6 +16,8 @@ BEGIN_TEST(ebnf)
 		ASSERT_EQUAL(res.alternations.size(), 0U);
 		ASSERT_EQUAL(res.optionals.size(), 0U);
 		ASSERT_EQUAL(res.repetitions.size(), 0U);
+		ASSERT_EQUAL(res.match_cases.size(), 0U);
+		ASSERT_EQUAL(res.match_sequences.size(), 0U);
 		ASSERT_EQUAL(res.groupings.size(), 0U);
 		ASSERT_EQUAL(res.exceptions.size(), 0U);
 		ASSERT_EQUAL(res.transforms.size(), 0U);
@@ -35,6 +37,8 @@ BEGIN_TEST(ebnf)
 		ASSERT_EQUAL(res.alternations.size(), 0U);
 		ASSERT_EQUAL(res.optionals.size(), 0U);
 		ASSERT_EQUAL(res.repetitions.size(), 0U);
+		ASSERT_EQUAL(res.match_cases.size(), 0U);
+		ASSERT_EQUAL(res.match_sequences.size(), 0U);
 		ASSERT_EQUAL(res.groupings.size(), 0U);
 		ASSERT_EQUAL(res.exceptions.size(), 0U);
 		ASSERT_EQUAL(res.transforms.size(), 0U);
@@ -54,6 +58,8 @@ BEGIN_TEST(ebnf)
 		ASSERT_EQUAL(res.alternations.size(), 1U);
 		ASSERT_EQUAL(res.optionals.size(), 0U);
 		ASSERT_EQUAL(res.repetitions.size(), 1U);
+		ASSERT_EQUAL(res.match_cases.size(), 0U);
+		ASSERT_EQUAL(res.match_sequences.size(), 0U);
 		ASSERT_EQUAL(res.groupings.size(), 1U);
 		ASSERT_EQUAL(res.exceptions.size(), 0U);
 		ASSERT_EQUAL(res.transforms.size(), 0U);
@@ -84,6 +90,73 @@ BEGIN_TEST(ebnf)
 	}
 
 	{
+		auto str = u8"rule = \"hello\"->\"world\";"_view;
+		auto res = lak::dsl::ebnf.parse(str).UNWRAP().value;
+
+		ASSERT_EQUAL(res.strings.size(), 2U);
+		ASSERT_EQUAL(res.identifiers.size(), 0U);
+		ASSERT_EQUAL(res.specials.size(), 0U);
+		ASSERT_EQUAL(res.concatenations.size(), 0U);
+		ASSERT_EQUAL(res.alternations.size(), 0U);
+		ASSERT_EQUAL(res.optionals.size(), 0U);
+		ASSERT_EQUAL(res.repetitions.size(), 0U);
+		ASSERT_EQUAL(res.match_cases.size(), 1U);
+		ASSERT_EQUAL(res.match_sequences.size(), 1U);
+		ASSERT_EQUAL(res.groupings.size(), 0U);
+		ASSERT_EQUAL(res.exceptions.size(), 0U);
+		ASSERT_EQUAL(res.transforms.size(), 0U);
+		ASSERT_EQUAL(res.captures.size(), 0U);
+		ASSERT_EQUAL(res.rule_values.size(), 4U);
+		ASSERT_EQUAL(res.rules.size(), 1U);
+	}
+
+	{
+		auto str =
+		  u8"rule = \"hello\"->\" world\"|\"how\"->\" are you today?\";"_view;
+		auto res = lak::dsl::ebnf.parse(str).UNWRAP().value;
+
+		ASSERT_EQUAL(res.strings.size(), 4U);
+		ASSERT_EQUAL(res.identifiers.size(), 0U);
+		ASSERT_EQUAL(res.specials.size(), 0U);
+		ASSERT_EQUAL(res.concatenations.size(), 0U);
+		ASSERT_EQUAL(res.alternations.size(), 0U);
+		ASSERT_EQUAL(res.optionals.size(), 0U);
+		ASSERT_EQUAL(res.repetitions.size(), 0U);
+		ASSERT_EQUAL(res.match_cases.size(), 2U);
+		ASSERT_EQUAL(res.match_sequences.size(), 1U);
+		ASSERT_EQUAL(res.groupings.size(), 0U);
+		ASSERT_EQUAL(res.exceptions.size(), 0U);
+		ASSERT_EQUAL(res.transforms.size(), 0U);
+		ASSERT_EQUAL(res.captures.size(), 0U);
+		ASSERT_EQUAL(res.rule_values.size(), 7U);
+		ASSERT_EQUAL(res.rules.size(), 1U);
+	}
+
+	{
+		auto str =
+		  u8"rule = \"hello\"->\" world\""
+		  "|not_a_match_case"
+		  "|\"how\"->\" are you today?\";"_view;
+		auto res = lak::dsl::ebnf.parse(str).UNWRAP().value;
+
+		ASSERT_EQUAL(res.strings.size(), 4U);
+		ASSERT_EQUAL(res.identifiers.size(), 1U);
+		ASSERT_EQUAL(res.specials.size(), 0U);
+		ASSERT_EQUAL(res.concatenations.size(), 0U);
+		ASSERT_EQUAL(res.alternations.size(), 1U);
+		ASSERT_EQUAL(res.optionals.size(), 0U);
+		ASSERT_EQUAL(res.repetitions.size(), 0U);
+		ASSERT_EQUAL(res.match_cases.size(), 2U);
+		ASSERT_EQUAL(res.match_sequences.size(), 2U);
+		ASSERT_EQUAL(res.groupings.size(), 0U);
+		ASSERT_EQUAL(res.exceptions.size(), 0U);
+		ASSERT_EQUAL(res.transforms.size(), 0U);
+		ASSERT_EQUAL(res.captures.size(), 0U);
+		ASSERT_EQUAL(res.rule_values.size(), 10U);
+		ASSERT_EQUAL(res.rules.size(), 1U);
+	}
+
+	{
 		auto str = u8"rule1 = rule2,<rule3>,rule4;"_view;
 		auto res = lak::dsl::ebnf.parse(str).UNWRAP().value;
 
@@ -94,6 +167,8 @@ BEGIN_TEST(ebnf)
 		ASSERT_EQUAL(res.alternations.size(), 0U);
 		ASSERT_EQUAL(res.optionals.size(), 0U);
 		ASSERT_EQUAL(res.repetitions.size(), 0U);
+		ASSERT_EQUAL(res.match_cases.size(), 0U);
+		ASSERT_EQUAL(res.match_sequences.size(), 0U);
 		ASSERT_EQUAL(res.groupings.size(), 0U);
 		ASSERT_EQUAL(res.exceptions.size(), 0U);
 		ASSERT_EQUAL(res.transforms.size(), 0U);
@@ -130,6 +205,8 @@ BEGIN_TEST(ebnf)
 		ASSERT_EQUAL(res.alternations.size(), 1U);
 		ASSERT_EQUAL(res.optionals.size(), 0U);
 		ASSERT_EQUAL(res.repetitions.size(), 1U);
+		ASSERT_EQUAL(res.match_cases.size(), 0U);
+		ASSERT_EQUAL(res.match_sequences.size(), 0U);
 		ASSERT_EQUAL(res.groupings.size(), 0U);
 		ASSERT_EQUAL(res.exceptions.size(), 0U);
 		ASSERT_EQUAL(res.transforms.size(), 0U);

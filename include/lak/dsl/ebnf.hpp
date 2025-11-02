@@ -54,6 +54,20 @@ namespace lak
 			size_t except_rule;
 		};
 
+		struct ebnf_match_case
+		{
+			size_t condition;
+			size_t matched;
+		};
+
+		struct ebnf_match_sequence
+		{
+			size_t begin;
+			size_t end;
+
+			size_t size() const { return end - begin; }
+		};
+
 		struct ebnf_rule_value
 		{
 			enum struct value_type
@@ -64,6 +78,8 @@ namespace lak
 				alternation,
 				optional,
 				repetition,
+				match_case,
+				match_sequence,
 				grouping,
 				capture,
 				special,
@@ -91,6 +107,8 @@ namespace lak
 			lak::array<lak::dsl::ebnf_alternation_sequence> alternations;
 			lak::array<lak::dsl::ebnf_optional_sequence> optionals;
 			lak::array<lak::dsl::ebnf_repetition_sequence> repetitions;
+			lak::array<lak::dsl::ebnf_match_case> match_cases;
+			lak::array<lak::dsl::ebnf_match_sequence> match_sequences;
 			lak::array<lak::dsl::ebnf_grouping_sequence> groupings;
 			lak::array<lak::dsl::ebnf_capture_sequence> captures;
 

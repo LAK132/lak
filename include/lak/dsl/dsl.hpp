@@ -778,9 +778,9 @@ namespace lak
 				      [&](const lak::dsl::parse_error &err)
 				      {
 					      if (err_msg.empty())
-						      err_msg = err.message;
+						      err_msg = u8"(" + err.message + u8")";
 					      else
-						      err_msg += u8" or " + err.message;
+						      err_msg += u8" or (" + err.message + u8")";
 				      })
 				    .is_ok()) ||
 				 ...);
@@ -802,9 +802,9 @@ namespace lak
 				      [&](const lak::dsl::parse_error &err)
 				      {
 					      if (err_msg.empty())
-						      err_msg = err.message;
+						      err_msg = u8"(" + err.message + u8")";
 					      else
-						      err_msg += u8" or " + err.message;
+						      err_msg += u8" or (" + err.message + u8")";
 				      })
 				    .is_ok()) ||
 				 ...);
@@ -1923,8 +1923,20 @@ namespace lak
 					  .message = u8"invalid unicode character length"}};
 				const char32_t c = lak::codepoint(str);
 				if (c != chr)
+				{
+					lak::codepoint_buffer_t<char8_t> buffers[2];
 					return lak::err_t{lak::dsl::parse_error{
-					  .message = lak::streamify("expected '", chr, "' got '", c, "'")}};
+					  .message = lak::streamify(
+					    "expected '",
+					    lak::is_ascii_printable(chr)
+					      ? lak::u8string_view(lak::from_codepoint(buffers[0], chr))
+					      : lak::u8string_view(lak::streamify(chr)),
+					    "' got '",
+					    lak::is_ascii_printable(c)
+					      ? lak::u8string_view(lak::from_codepoint(buffers[1], c))
+					      : lak::u8string_view(lak::streamify(c)),
+					    "'")}};
+				}
 				return lak::ok_t{lak::dsl::parse_result<value_type>{
 				  .consumed  = str.first(clen),
 				  .remaining = str.substr(clen),
