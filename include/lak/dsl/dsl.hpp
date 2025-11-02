@@ -414,6 +414,41 @@ namespace lak
 		template<typename T>
 		inline constexpr bool is_optional_v = lak::dsl::is_optional<T>::value;
 
+		/* --- get_optional_parser --- */
+
+		template<lak::dsl::parser par>
+		struct get_optional_parser_t;
+
+		template<lak::dsl::parser auto par>
+		struct get_optional_parser_t<lak::dsl::optional_t<par>>
+		{
+			static constexpr auto parser = par;
+		};
+
+		/* --- remove_optional --- */
+
+		template<lak::dsl::parser auto par>
+		struct remove_optional_t;
+
+		template<lak::dsl::parser auto par>
+		requires(!lak::dsl::is_optional_v<decltype(par)>)
+		struct remove_optional_t<par>
+		{
+			static constexpr auto parser = par;
+		};
+
+		template<lak::dsl::parser auto par>
+		requires(lak::dsl::is_optional_v<decltype(par)>)
+		struct remove_optional_t<par>
+		{
+			static constexpr auto parser =
+			  lak::dsl::get_optional_parser_t<decltype(par)>::parser;
+		};
+
+		template<lak::dsl::parser auto par>
+		inline constexpr auto remove_optional =
+		  lak::dsl::remove_optional_t<par>::parser;
+
 		/* --- operator~ --- */
 
 		template<lak::dsl::parser R>
@@ -2297,42 +2332,42 @@ namespace lak
 			lak::dsl::result<value_type> parse(lak::u8string_view str,
 			                                   lak::index_sequence<I...>) const
 			{
-				// :TODO: this needs to keep track of whether or not optionals
-				// *actually* parsed correctly, and only bail out when making no
-				// progress *and* no optionals are parsing.
 				lak::dsl::parse_result<lak::u8string_view> result{
 				  .consumed  = {},
 				  .remaining = str,
 				  .value     = {},
 				};
 
-				lak::tuple<lak::optional<typename decltype(parsers)::value_type>...>
+				lak::tuple<lak::optional<typename decltype(lak::dsl::remove_optional<
+				                                           parsers>)::value_type>...>
 				  values;
 
 				lak::u8string err_msg;
-				while (((values.template get<I>().has_value()
-				           ? false
-				           : (parsers.parse(result.remaining)
-				                .if_ok(
-				                  [&]<typename T>(lak::dsl::parse_result<T> &&res)
-				                  {
-					                  result.remaining = res.remaining;
-					                  values.template get<I>() =
-					                    lak::forward<T>(res.value);
-				                  })
-				                .if_err(
-				                  [&](const lak::dsl::parse_error &err)
-				                  {
-					                  if (err_msg.empty())
-						                  err_msg = err.message;
-					                  else
-						                  err_msg += u8" or " + err.message;
-				                  })
-				                .is_ok())) ||
-				        ...))
+				while (
+				  ((values.template get<I>().has_value()
+				      ? false
+				      : (lak::dsl::remove_optional<parsers>.parse(result.remaining)
+				           .if_ok(
+				             [&]<typename T>(lak::dsl::parse_result<T> &&res)
+				             {
+					             result.remaining         = res.remaining;
+					             values.template get<I>() = lak::forward<T>(res.value);
+				             })
+				           .if_err(
+				             [&](const lak::dsl::parse_error &err)
+				             {
+					             if (err_msg.empty())
+						             err_msg = err.message;
+					             else
+						             err_msg += u8" or " + err.message;
+				             })
+				           .is_ok())) ||
+				   ...))
 					err_msg.clear();
 
-				if (!((values.template get<I>().has_value()) && ...))
+				if (!((lak::dsl::is_optional_v<decltype(parsers)> ||
+				       values.template get<I>().has_value()) &&
+				      ...))
 					return lak::err_t{
 					  lak::dsl::parse_error{.message = lak::move(err_msg)}};
 
