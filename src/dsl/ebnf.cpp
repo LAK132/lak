@@ -66,6 +66,7 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 			group,
 			capture,
 			except,
+			pos_lookahead,
 			transform,
 		} type;
 
@@ -89,24 +90,41 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 
 	auto pop_repeat_n = [&]() -> lak::error_code<lak::dsl::parse_error>
 	{
-		while (working_tree.back().type == working_data::value_type::repeat_n)
-		{
-			if (working_tree.back().size != 1U)
-				return lak::err_t{
-				  lak::dsl::parse_error{.message = u8"invalid repeat"}};
+		if (working_tree.back().size != 1U)
+			return lak::err_t{lak::dsl::parse_error{.message = u8"invalid repeat"}};
 
-			const size_t index = pop_values(1U);
-			working_values.push_back({
-			  .type  = lak::dsl::ebnf_rule_value::value_type::repetition,
-			  .index = result.repetitions.size(),
-			});
-			result.repetitions.push_back({
-			  .count = working_tree.back().begin,
-			  .index = index,
-			});
-			working_tree.pop_back();
-			++working_tree.back().size;
-		}
+		const size_t index = pop_values(1U);
+		working_values.push_back({
+		  .type  = lak::dsl::ebnf_rule_value::value_type::repetition,
+		  .index = result.repetitions.size(),
+		});
+		result.repetitions.push_back({
+		  .count = working_tree.back().begin,
+		  .index = index,
+		});
+		working_tree.pop_back();
+		++working_tree.back().size;
+
+		return lak::ok_t{};
+	};
+
+	auto pop_positive_lookahead = [&]() -> lak::error_code<lak::dsl::parse_error>
+	{
+		if (working_tree.back().size != 1U)
+			return lak::err_t{
+			  lak::dsl::parse_error{.message = u8"invalid positive lookahead"}};
+
+		const size_t index = pop_values(1U);
+		working_values.push_back({
+		  .type  = lak::dsl::ebnf_rule_value::value_type::positive_lookahead,
+		  .index = result.positive_lookaheads.size(),
+		});
+		result.positive_lookaheads.push_back({
+		  .index = index,
+		});
+		working_tree.pop_back();
+		++working_tree.back().size;
+
 		return lak::ok_t{};
 	};
 
@@ -114,9 +132,19 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 	{
 		++working_tree.back().size;
 
-		if (working_tree.back().type == working_data::value_type::repeat_n)
+		while (!working_tree.empty())
 		{
-			RES_TRY(pop_repeat_n());
+			if (working_tree.back().type == working_data::value_type::repeat_n)
+			{
+				RES_TRY(pop_repeat_n());
+			}
+			else if (working_tree.back().type ==
+			         working_data::value_type::pos_lookahead)
+			{
+				RES_TRY(pop_positive_lookahead());
+			}
+			else
+				break;
 		}
 
 		return lak::ok_t{};
@@ -358,6 +386,11 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 					RES_TRY(pop_except());
 				}
 				else if (working_tree.back().type ==
+				         working_data::value_type::pos_lookahead)
+				{
+					RES_TRY(pop_positive_lookahead());
+				}
+				else if (working_tree.back().type ==
 				         working_data::value_type::match_case)
 				{
 					RES_TRY(pop_match_case());
@@ -409,6 +442,11 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 				else if (working_tree.back().type == working_data::value_type::except)
 				{
 					RES_TRY(pop_except());
+				}
+				else if (working_tree.back().type ==
+				         working_data::value_type::pos_lookahead)
+				{
+					RES_TRY(pop_positive_lookahead());
 				}
 				else if (working_tree.back().type ==
 				         working_data::value_type::match_case)
@@ -465,6 +503,11 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 					RES_TRY(pop_except());
 				}
 				else if (working_tree.back().type ==
+				         working_data::value_type::pos_lookahead)
+				{
+					RES_TRY(pop_positive_lookahead());
+				}
+				else if (working_tree.back().type ==
 				         working_data::value_type::match_case)
 				{
 					RES_TRY(pop_match_case());
@@ -518,6 +561,11 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 					RES_TRY(pop_except());
 				}
 				else if (working_tree.back().type ==
+				         working_data::value_type::pos_lookahead)
+				{
+					RES_TRY(pop_positive_lookahead());
+				}
+				else if (working_tree.back().type ==
 				         working_data::value_type::match_case)
 				{
 					RES_TRY(pop_match_case());
@@ -553,6 +601,11 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 				if (working_tree.back().type == working_data::value_type::except)
 				{
 					RES_TRY(pop_except());
+				}
+				else if (working_tree.back().type ==
+				         working_data::value_type::pos_lookahead)
+				{
+					RES_TRY(pop_positive_lookahead());
 				}
 				else
 					break;
@@ -593,6 +646,14 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 			  .size  = 1U,
 			});
 		}
+		else if (lak::dsl::char_literal<U'+'>.EBNF_PARSE().is_ok())
+		{
+			working_tree.push_back({
+			  .type  = working_data::value_type::pos_lookahead,
+			  .begin = 0U,
+			  .size  = 0U,
+			});
+		}
 		else if (lak::dsl::char_literal<U','>.EBNF_PARSE().is_ok())
 		{
 			while (true)
@@ -605,6 +666,11 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 				else if (working_tree.back().type == working_data::value_type::except)
 				{
 					RES_TRY(pop_except());
+				}
+				else if (working_tree.back().type ==
+				         working_data::value_type::pos_lookahead)
+				{
+					RES_TRY(pop_positive_lookahead());
 				}
 				else if (working_tree.back().type ==
 				         working_data::value_type::match_case)
@@ -640,6 +706,11 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 				if (working_tree.back().type == working_data::value_type::except)
 				{
 					RES_TRY(pop_except());
+				}
+				else if (working_tree.back().type ==
+				         working_data::value_type::pos_lookahead)
+				{
+					RES_TRY(pop_positive_lookahead());
 				}
 				else if (working_tree.back().type ==
 				         working_data::value_type::match_case)
@@ -683,6 +754,11 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 				else if (working_tree.back().type == working_data::value_type::except)
 				{
 					RES_TRY(pop_except());
+				}
+				else if (working_tree.back().type ==
+				         working_data::value_type::pos_lookahead)
+				{
+					RES_TRY(pop_positive_lookahead());
 				}
 				else if (working_tree.back().type ==
 				         working_data::value_type::match_case)
@@ -730,6 +806,11 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 				else if (working_tree.back().type == working_data::value_type::except)
 				{
 					RES_TRY(pop_except());
+				}
+				else if (working_tree.back().type ==
+				         working_data::value_type::pos_lookahead)
+				{
+					RES_TRY(pop_positive_lookahead());
 				}
 				else if (working_tree.back().type ==
 				         working_data::value_type::match_case)

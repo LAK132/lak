@@ -20,6 +20,7 @@ BEGIN_TEST(ebnf)
 		ASSERT_EQUAL(res.match_sequences.size(), 0U);
 		ASSERT_EQUAL(res.groupings.size(), 0U);
 		ASSERT_EQUAL(res.exceptions.size(), 0U);
+		ASSERT_EQUAL(res.positive_lookaheads.size(), 0U);
 		ASSERT_EQUAL(res.transforms.size(), 0U);
 		ASSERT_EQUAL(res.captures.size(), 0U);
 		ASSERT_EQUAL(res.rule_values.size(), 0U);
@@ -41,6 +42,7 @@ BEGIN_TEST(ebnf)
 		ASSERT_EQUAL(res.match_sequences.size(), 0U);
 		ASSERT_EQUAL(res.groupings.size(), 0U);
 		ASSERT_EQUAL(res.exceptions.size(), 0U);
+		ASSERT_EQUAL(res.positive_lookaheads.size(), 0U);
 		ASSERT_EQUAL(res.transforms.size(), 0U);
 		ASSERT_EQUAL(res.captures.size(), 0U);
 		ASSERT_EQUAL(res.rule_values.size(), 1U);
@@ -62,6 +64,7 @@ BEGIN_TEST(ebnf)
 		ASSERT_EQUAL(res.match_sequences.size(), 0U);
 		ASSERT_EQUAL(res.groupings.size(), 1U);
 		ASSERT_EQUAL(res.exceptions.size(), 0U);
+		ASSERT_EQUAL(res.positive_lookaheads.size(), 0U);
 		ASSERT_EQUAL(res.transforms.size(), 0U);
 		ASSERT_EQUAL(res.captures.size(), 0U);
 		ASSERT_EQUAL(res.rule_values.size(), 7U);
@@ -104,6 +107,7 @@ BEGIN_TEST(ebnf)
 		ASSERT_EQUAL(res.match_sequences.size(), 1U);
 		ASSERT_EQUAL(res.groupings.size(), 0U);
 		ASSERT_EQUAL(res.exceptions.size(), 0U);
+		ASSERT_EQUAL(res.positive_lookaheads.size(), 0U);
 		ASSERT_EQUAL(res.transforms.size(), 0U);
 		ASSERT_EQUAL(res.captures.size(), 0U);
 		ASSERT_EQUAL(res.rule_values.size(), 4U);
@@ -126,6 +130,7 @@ BEGIN_TEST(ebnf)
 		ASSERT_EQUAL(res.match_sequences.size(), 1U);
 		ASSERT_EQUAL(res.groupings.size(), 0U);
 		ASSERT_EQUAL(res.exceptions.size(), 0U);
+		ASSERT_EQUAL(res.positive_lookaheads.size(), 0U);
 		ASSERT_EQUAL(res.transforms.size(), 0U);
 		ASSERT_EQUAL(res.captures.size(), 0U);
 		ASSERT_EQUAL(res.rule_values.size(), 7U);
@@ -150,6 +155,7 @@ BEGIN_TEST(ebnf)
 		ASSERT_EQUAL(res.match_sequences.size(), 2U);
 		ASSERT_EQUAL(res.groupings.size(), 0U);
 		ASSERT_EQUAL(res.exceptions.size(), 0U);
+		ASSERT_EQUAL(res.positive_lookaheads.size(), 0U);
 		ASSERT_EQUAL(res.transforms.size(), 0U);
 		ASSERT_EQUAL(res.captures.size(), 0U);
 		ASSERT_EQUAL(res.rule_values.size(), 10U);
@@ -171,6 +177,7 @@ BEGIN_TEST(ebnf)
 		ASSERT_EQUAL(res.match_sequences.size(), 0U);
 		ASSERT_EQUAL(res.groupings.size(), 0U);
 		ASSERT_EQUAL(res.exceptions.size(), 0U);
+		ASSERT_EQUAL(res.positive_lookaheads.size(), 0U);
 		ASSERT_EQUAL(res.transforms.size(), 0U);
 		ASSERT_EQUAL(res.captures.size(), 1U);
 		ASSERT_EQUAL(res.rule_values.size(), 5U);
@@ -209,6 +216,7 @@ BEGIN_TEST(ebnf)
 		ASSERT_EQUAL(res.match_sequences.size(), 0U);
 		ASSERT_EQUAL(res.groupings.size(), 0U);
 		ASSERT_EQUAL(res.exceptions.size(), 0U);
+		ASSERT_EQUAL(res.positive_lookaheads.size(), 0U);
 		ASSERT_EQUAL(res.transforms.size(), 0U);
 		ASSERT_EQUAL(res.captures.size(), 0U);
 		ASSERT_EQUAL(res.rule_values.size(), 8U);

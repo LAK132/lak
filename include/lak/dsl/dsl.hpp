@@ -1591,6 +1591,54 @@ namespace lak
 			return lak::dsl::negative_lookahead<par{}>;
 		}
 
+		/* --- positive_lookahead --- */
+
+		template<lak::dsl::pure_match_parser auto par>
+		struct positive_lookahead_t
+		{
+			static constexpr bool is_pure_match = true;
+
+			using value_type = lak::u8string_view;
+
+			lak::dsl::result<value_type> parse(lak::u8string_view str) const
+			{
+				if (par.parse(str).is_ok())
+					return lak::ok_t{lak::dsl::parse_result<value_type>{
+					  .consumed  = str.first(0),
+					  .remaining = str,
+					  .value     = {},
+					}};
+				else
+					return lak::err_t<lak::dsl::parse_error>{};
+			}
+		};
+
+		template<lak::dsl::pure_match_parser auto par>
+		inline constexpr lak::dsl::positive_lookahead_t<par> positive_lookahead;
+
+		static_assert(
+		  lak::dsl::parser<lak::dsl::positive_lookahead_t<lak::dsl::bottom>>);
+		static_assert(lak::dsl::pure_match_parser<
+		              lak::dsl::positive_lookahead_t<lak::dsl::bottom>>);
+
+		/* --- is_positive_lookahead --- */
+
+		template<typename T>
+		struct is_positive_lookahead : lak::false_type
+		{
+		};
+		template<lak::dsl::pure_match_parser auto par>
+		struct is_positive_lookahead<lak::dsl::positive_lookahead_t<par>>
+		: lak::true_type
+		{
+		};
+		template<typename T>
+		inline constexpr bool is_positive_lookahead_v =
+		  lak::dsl::is_positive_lookahead<T>::value;
+
+		static_assert(lak::dsl::is_positive_lookahead_v<
+		              lak::dsl::positive_lookahead_t<lak::dsl::bottom>>);
+
 		/* --- until --- */
 
 		template<lak::dsl::pure_match_parser auto parser>
