@@ -4,6 +4,16 @@
 This library is dual licensed under the Unlicense and MIT license. See LICENSE and UNLICENSE.
 Attribution would be nice but is not required.
 
+## Philosophy
+
+* Reserving address space should not increase physical memory usage on a hosted system.
+* Prefer dense allocation over sparse allocation.
+* Recursion is evil.
+* Abuse the type system whenever and wherever possible.
+* Types should be either primarily data (POD/C-structs) or primarily functionality (containers, traits), but not both (OOP).
+* `virtual` is a sign of systematic design failure.
+* Design APIs to be granular.
+
 ## Basic setup
 
 ### Windows
