@@ -2374,16 +2374,16 @@ namespace lak
 				result.consumed = str.first(str.size() - result.remaining.size());
 
 				auto forwarder =
-				  []<typename T, size_t I, bool B>(
-				    lak::optional<T> &val, lak::size_type<I>, lak::bool_type<B>)
+				  []<typename T, size_t J, bool B>(
+				    lak::optional<T> &val, lak::size_type<J>, lak::bool_type<B>)
 				  -> lak::conditional_t<B,
 				                        lak::optional<T> &&,
-				                        lak::tuple_element_t<I, value_type> &&>
+				                        lak::tuple_element_t<J, value_type> &&>
 				{
 					if constexpr (B)
 						return lak::forward<lak::optional<T>>(val);
 					else
-						return lak::forward<lak::tuple_element_t<I, value_type>>(*val);
+						return lak::forward<lak::tuple_element_t<J, value_type>>(*val);
 				};
 
 				return lak::ok_t{lak::dsl::parse_result<value_type>{
