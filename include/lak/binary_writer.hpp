@@ -4,7 +4,7 @@
 #	define LAK_BINARY_WRITER_HPP
 
 #	include "lak/array.hpp"
-#	include "lak/endian.hpp"
+#	include "lak/system/endian.hpp"
 #	include "lak/result.hpp"
 #	include "lak/span.hpp"
 #	include "lak/stdint.hpp"

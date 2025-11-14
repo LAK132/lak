@@ -1,8 +1,9 @@
 #ifndef LAK_PTR_INTRIN_HPP
 #define LAK_PTR_INTRIN_HPP
 
+#include "lak/system/compiler.hpp"
+
 #include "lak/compare.hpp"
-#include "lak/compiler.hpp"
 #include "lak/memmanip.hpp"
 
 #include <functional>

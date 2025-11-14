@@ -1,12 +1,12 @@
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include "lak/imgui/widgets.hpp"
 
-#include "lak/opengl/gl3w.hpp"
-#include "lak/opengl/state.hpp"
+#include "lak/system/opengl/gl3w.hpp"
+#include "lak/system/opengl/state.hpp"
+
+#include "lak/system/file.hpp"
 
 #include "lak/debug.hpp"
-
-#include "lak/file.hpp"
 
 #include <imgui_internal.h>
 #include <texture.h>
@@ -93,7 +93,7 @@ bool lak::TreeNode(const char *fmt, ...)
 /* --- Open* --- */
 
 #ifdef LAK_USE_NATIVE_FILE_DIALOG
-#	include "lak/os.hpp"
+#	include "lak/system/os.hpp"
 #	if defined(LAK_OS_WINDOWS)
 #		define LAK_USE_WIN_NATIVE_FILE_DIALOG
 #	else
@@ -221,7 +221,7 @@ void lak::flush_file_modal()
 #endif
 
 #ifdef LAK_USE_WIN_NATIVE_FILE_DIALOG
-#	include "../win32/wrapper.hpp"
+#	include "lak/system/win32/wrapper.hpp"
 
 void lak::init_file_modal(lak::graphics_mode) {}
 void lak::flush_file_modal() {}

@@ -5,9 +5,7 @@
 #include "lak/uninitialised.hpp"
 #include "lak/utility.hpp"
 
-#ifndef LAK_NO_STD
-#	include <optional>
-#endif
+#include <optional>
 
 namespace lak
 {
@@ -307,13 +305,11 @@ namespace lak
 		return lak::as_ptr(p.operator->());
 	}
 
-#ifndef LAK_NO_STD
 	template<typename T>
 	force_inline lak::remove_reference_t<T> *as_ptr(std::optional<T &> p)
 	{
 		return lak::as_ptr(p.operator->());
 	}
-#endif
 
 	template<typename T>
 	lak::optional<lak::remove_cvref_t<T>> make_optional(T &&t)

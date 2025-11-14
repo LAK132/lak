@@ -4,9 +4,6 @@
 #include "lak/array.hpp"
 #include "lak/railcar.hpp"
 
-#ifdef LAK_NO_STD
-#	error STL required
-#endif
 #include <mutex>
 
 namespace lak

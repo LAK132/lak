@@ -1,15 +1,13 @@
 #ifndef LAK_BIT_FIELD_HPP
 #define LAK_BIT_FIELD_HPP
 
-#include "lak/compiler.hpp"
-#include "lak/endian.hpp"
 #include "lak/packed_array.hpp"
 #include "lak/span.hpp"
 #include "lak/stdint.hpp"
+#include "lak/system/compiler.hpp"
+#include "lak/system/endian.hpp"
 
-#ifndef LAK_NO_STD
-#	include <initializer_list>
-#endif
+#include <initializer_list>
 
 namespace lak
 {
@@ -68,15 +66,13 @@ namespace lak
 		{
 		}
 
-#ifndef LAK_NO_STD
-#	ifdef LAK_COMPILER_CPP20
+#ifdef LAK_COMPILER_CPP20
 		constexpr
-#	endif
+#endif
 		  bit_field(std::initializer_list<UINT> init)
 		: bit_field(lak::span<const UINT>(init.begin(), init.end()))
 		{
 		}
-#endif
 
 		template<size_t INDEX>
 		constexpr UINT get() const

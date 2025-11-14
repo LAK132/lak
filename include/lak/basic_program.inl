@@ -1,10 +1,8 @@
 #include "lak/basic_program.hpp"
 
 #ifdef LAK_ENABLE_OPENGL
-#	include "lak/opengl/state.hpp"
+#	include "lak/system/opengl/state.hpp"
 #endif
-
-// #include "lak/windows.hpp"
 
 #ifndef APP_NAME
 #	define APP_NAME "basic window"

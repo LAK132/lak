@@ -4,7 +4,7 @@
 #include "lak/array.hpp"
 #include "lak/colour.hpp"
 #include "lak/defer.hpp"
-#include "lak/window.hpp"
+#include "lak/system/windowing/window.hpp"
 
 #if 0
 namespace lak

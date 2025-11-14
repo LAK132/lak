@@ -1,6 +1,8 @@
+#include "lak/system/compiler.hpp"
+#include "lak/system/page_memory.hpp"
+
 #include "lak/algorithm.hpp"
 #include "lak/alloc.hpp"
-#include "lak/compiler.hpp"
 #include "lak/integer_range.hpp"
 #include "lak/memmanip.hpp"
 #include "lak/result.hpp"

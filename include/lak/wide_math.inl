@@ -1,6 +1,6 @@
 #include "lak/wide_math.hpp"
 
-#include "lak/compiler.hpp"
+#include "lak/system/compiler.hpp"
 
 #if defined(LAK_COMPILER_MSVC) && defined(LAK_ARCH_X86_COMPAT)
 #	include <intrin.h>

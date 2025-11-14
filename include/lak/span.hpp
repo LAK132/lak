@@ -1,12 +1,13 @@
 #ifndef LAK_SPAN_HPP
 #	define LAK_SPAN_HPP
 
+#	include "lak/system/compiler.hpp"
+#	include "lak/system/os.hpp"
+
 #	include "lak/char.hpp"
 #	include "lak/concepts.hpp"
 #	include "lak/stdint.hpp"
 #	include "lak/type_traits.hpp"
-#	include "lak/compiler.hpp"
-#	include "lak/os.hpp"
 
 #	include <array>
 #	include <vector>

@@ -26,15 +26,15 @@ namespace lak
 		}
 	};
 
-	template<typename T = lak::monostate>
-	using errno_result = lak::result<T, lak::errno_error>;
-
 	template<typename CHAR>
 	std::basic_ostream<CHAR> &operator<<(std::basic_ostream<CHAR> &strm,
 	                                     const lak::errno_error &err)
 	{
 		return strm << lak::string_view{err.to_string()};
 	}
+
+	template<typename T = lak::monostate>
+	using errno_result = lak::result<T, lak::errno_error>;
 }
 
 #endif

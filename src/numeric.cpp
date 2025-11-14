@@ -1,8 +1,8 @@
 #include "lak/numeric.hpp"
 
-#include "lak/architecture.hpp"
 #include "lak/memmanip.hpp"
 #include "lak/span_manip.hpp"
+#include "lak/system/architecture.hpp"
 
 template<lak::numeric_base base>
 static force_inline uint8_t char_to_value(char8_t c)

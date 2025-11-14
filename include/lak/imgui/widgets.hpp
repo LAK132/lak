@@ -4,8 +4,8 @@
 #include "lak/error_code_result.hpp"
 #include "lak/macro_utils.hpp"
 #include "lak/optional.hpp"
+#include "lak/system/windowing/window.hpp"
 #include "lak/utility.hpp"
-#include "lak/window.hpp"
 
 #include <imgui.h>
 

@@ -1,8 +1,8 @@
 #include "lak/test.hpp"
 
-#include "lak/events.hpp"
-#include "lak/platform.hpp"
-#include "lak/window.hpp"
+#include "lak/system/windowing/events.hpp"
+#include "lak/system/windowing/platform.hpp"
+#include "lak/system/windowing/window.hpp"
 
 #include "lak/imgui/backend.hpp"
 #include "lak/imgui/widgets.hpp"

@@ -1,7 +1,7 @@
 #ifndef LAK_COLOUR_HPP
 #define LAK_COLOUR_HPP
 
-#include "lak/compiler.hpp"
+#include "lak/system/compiler.hpp"
 #include "lak/type_traits.hpp"
 
 namespace lak

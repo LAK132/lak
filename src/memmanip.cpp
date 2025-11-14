@@ -1,11 +1,10 @@
 #include "lak/memmanip.hpp"
-#include "lak/compiler.hpp"
 #include "lak/functional.hpp"
 #include "lak/math.hpp"
-#include "lak/os.hpp"
 #include "lak/ptr_intrin.hpp"
 #include "lak/span.hpp"
 #include "lak/span_manip.hpp"
+#include "lak/system/compiler.hpp"
 
 #include <cstdlib>
 
@@ -53,22 +52,3 @@ void lak::aligned_free(void *p)
 	std::free(p);
 #endif
 }
-
-size_t lak::round_to_page_multiple(size_t size, size_t *page_size_out)
-{
-	const size_t page_size = lak::page_size();
-	if (page_size_out) *page_size_out = page_size;
-	return size + lak::slack<size_t>(size, page_size);
-}
-
-#ifndef LAK_DONT_AUTO_COMPILE_PLATFORM_SPECIFICS
-#	if defined(LAK_OS_WINDOWS)
-#		include "win32/memmanip.cpp"
-#		include "win32/wrapper.cpp"
-#	endif
-
-#	if defined(LAK_OS_LINUX) || defined(LAK_OS_APPLE)
-#		include "posix/memmanip.cpp"
-#	endif
-
-#endif

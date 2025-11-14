@@ -1,8 +1,8 @@
 #ifndef LAK_CHAR_HPP
 #define LAK_CHAR_HPP
 
-#include "lak/compiler.hpp"
 #include "lak/stdint.hpp"
+#include "lak/system/compiler.hpp"
 
 // char8_t typedef for C++ < 20
 #ifndef LAK_COMPILER_CPP20

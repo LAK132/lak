@@ -1,6 +1,7 @@
 #include "lak/visit.hpp"
 
-#include "lak/compiler.hpp"
+#include "lak/system/compiler.hpp"
+
 #include "lak/concepts.hpp"
 #include "lak/index_set.hpp"
 #include "lak/optional.hpp"

@@ -1,8 +1,8 @@
 #include "lak/test.hpp"
 
-#include "lak/compiler.hpp"
 #include "lak/macro_utils.hpp"
 #include "lak/string_literals.hpp"
+#include "lak/system/compiler.hpp"
 
 #ifdef LAK_COMPILER_MSVC
 #	pragma warning(push)

@@ -4,22 +4,10 @@
 #include "lak/type_traits.hpp"
 #include "lak/utility.hpp"
 
-#ifndef LAK_NO_STD
-#	include <tuple>
-#endif
+#include <tuple>
 
 namespace lak
 {
-#ifdef LAK_NO_STD
-#	define LAK_TUPLE_ELEMENT lak::tuple_element
-#	define LAK_TUPLE_SIZE    lak::tuple_size
-	template<size_t I, typename T>
-	struct tuple_element;
-	template<typename T>
-	struct tuple_size;
-#else
-#	define LAK_TUPLE_ELEMENT std::tuple_element
-#	define LAK_TUPLE_SIZE    std::tuple_size
 	template<size_t I, typename T>
 	struct tuple_element : std::tuple_element<I, T>
 	{
@@ -28,7 +16,6 @@ namespace lak
 	struct tuple_size : std::tuple_size<T>
 	{
 	};
-#endif
 
 	template<size_t I, typename T>
 	using tuple_element_t = typename lak::tuple_element<I, T>::type;
@@ -113,9 +100,9 @@ namespace lak
 		auto apply(F &&func) const;
 
 		template<typename F>
-		void foreach(F &&func);
+		void foreach (F &&func);
 		template<typename F>
-		void foreach(F &&func) const;
+		void foreach (F &&func) const;
 
 		template<size_t I>
 		auto &get();
@@ -182,19 +169,19 @@ namespace lak
 /* --- pair --- */
 
 template<typename T, typename U>
-struct LAK_TUPLE_SIZE<lak::pair<T, U>>
+struct std::tuple_size<lak::pair<T, U>>
 {
 	static constexpr size_t value = 2;
 };
 
 template<typename T, typename U>
-struct LAK_TUPLE_ELEMENT<0, lak::pair<T, U>>
+struct std::tuple_element<0, lak::pair<T, U>>
 {
 	using type = T;
 };
 
 template<typename T, typename U>
-struct LAK_TUPLE_ELEMENT<1, lak::pair<T, U>>
+struct std::tuple_element<1, lak::pair<T, U>>
 {
 	using type = U;
 };
@@ -202,21 +189,21 @@ struct LAK_TUPLE_ELEMENT<1, lak::pair<T, U>>
 /* --- tuple --- */
 
 template<typename... T>
-struct LAK_TUPLE_SIZE<lak::tuple<T...>>
+struct std::tuple_size<lak::tuple<T...>>
 {
 	static constexpr size_t value = sizeof...(T);
 };
 
 template<typename T, typename... U>
-struct LAK_TUPLE_ELEMENT<0, lak::tuple<T, U...>>
+struct std::tuple_element<0, lak::tuple<T, U...>>
 {
 	using type = T;
 };
 
 template<size_t I, typename T, typename... U>
-struct LAK_TUPLE_ELEMENT<I, lak::tuple<T, U...>>
+struct std::tuple_element<I, lak::tuple<T, U...>>
 {
-	using type = typename LAK_TUPLE_ELEMENT<I - 1, lak::tuple<U...>>::type;
+	using type = typename std::tuple_element<I - 1, lak::tuple<U...>>::type;
 };
 
 #include "lak/tuple.inl"

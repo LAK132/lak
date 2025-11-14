@@ -4,7 +4,7 @@
 #include "lak/await.hpp"
 #include "lak/macro_utils.hpp"
 #include "lak/span.hpp"
-#include "lak/window.hpp"
+#include "lak/system/windowing/window.hpp"
 
 #include <glm/mat4x4.hpp>
 

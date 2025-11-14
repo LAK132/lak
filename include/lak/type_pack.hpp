@@ -422,12 +422,12 @@ namespace lak
 /* --- tuple_element --- */
 
 template<size_t I, typename T, typename... U>
-struct LAK_TUPLE_ELEMENT<I, lak::type_pack<T, U...>>
-: public LAK_TUPLE_ELEMENT<I - 1, lak::type_pack<U...>>
+struct std::tuple_element<I, lak::type_pack<T, U...>>
+: public std::tuple_element<I - 1, lak::type_pack<U...>>
 {
 };
 template<typename T, typename... U>
-struct LAK_TUPLE_ELEMENT<0, lak::type_pack<T, U...>>
+struct std::tuple_element<0, lak::type_pack<T, U...>>
 : public lak::type_identity<T>
 {
 };

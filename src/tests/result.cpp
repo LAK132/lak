@@ -1,7 +1,7 @@
 #include "lak/test.hpp"
 
-#include "lak/compiler.hpp"
 #include "lak/result.hpp"
+#include "lak/system/compiler.hpp"
 
 #ifdef LAK_COMPILER_MSVC
 #	pragma warning(push)

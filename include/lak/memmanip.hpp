@@ -53,31 +53,6 @@ namespace lak
 	void *aligned_alloc(size_t alignment, size_t size);
 
 	void aligned_free(void *p);
-
-	size_t page_size();
-
-	size_t round_to_page_multiple(size_t size, size_t *page_size_out = nullptr);
-
-	enum struct page_error
-	{
-	};
-	template<typename OK = lak::monostate>
-	using page_result_t = lak::result<OK, page_error>;
-
-	lak::page_result_t<lak::span<void>> page_reserve(
-	  size_t size, size_t *page_size_out = nullptr);
-
-	lak::page_result_t<> page_commit(lak::span<void> pages);
-
-	lak::page_result_t<> page_decommit(lak::span<void> pages);
-
-	lak::page_result_t<> page_free(lak::span<void> pages);
-
-#if 0
-  lak::page_result_t<bool> pages_are_committed(lak::span<void> pages);
-
-  lak::page_result_t<bool> pages_are_reserved(lak::span<void> pages);
-#endif
 }
 
 #include "lak/memmanip.inl"

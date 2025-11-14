@@ -190,7 +190,7 @@ if get_option('lak_enable_windowing')
 	endif
 
 	if get_option('lak_enable_opengl')
-		subdir('src'/'opengl')
+		subdir('src'/'system'/'opengl')
 		dependencies += lakopengl_dep
 	endif
 
@@ -207,7 +207,7 @@ if get_option('lak_enable_windowing')
 	glm_dep = subproject('glm').get_variable('glm_dep')
 	dependencies += glm_dep
 
-	subdir('src'/'windowing')
+	subdir('src'/'system'/'windowing')
 	dependencies += lakwindowing_dep
 
 	if get_option('lak_enable_tests')

@@ -3,11 +3,11 @@
 
 #include "lak/bank_ptr.hpp"
 #include "lak/debug.hpp"
-#include "lak/events.hpp"
 #include "lak/macro_utils.hpp"
-#include "lak/os.hpp"
 #include "lak/span.hpp"
-#include "lak/window.hpp"
+#include "lak/system/os.hpp"
+#include "lak/system/windowing/events.hpp"
+#include "lak/system/windowing/window.hpp"
 
 #if defined(LAK_BASIC_PROGRAM_IMGUI_WINDOW_IMPL) &&                           \
   !defined(LAK_BASIC_PROGRAM_IMGUI_IMPL)

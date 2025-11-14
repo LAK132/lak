@@ -5,26 +5,28 @@ if cxx.get_id() == 'msvc'
 	lakcore_linkargs += '/NATVIS:@0@'.format(lakcore_natvis)
 endif
 
+lakcore_inc = include_directories('..', '..'/'include')
+
+subdir('compression')
+subdir('dsl')
+subdir('ebpf')
+subdir('structure')
+subdir('system')
+
 lakcore = static_library(
 	'lakcore',
 	[
-		'compression'/'deflate.cpp',
-		'compression'/'lz4.cpp',
-		'dsl'/'ebnf.cpp',
-		'ebpf'/'assembler.cpp',
-		'ebpf'/'vm.cpp',
-		'structure'/'pnm.cpp',
-		'architecture.cpp',
+		lakcore_compression_files,
+		lakcore_dsl_files,
+		lakcore_ebpf_files,
+		lakcore_structure_files,
 		'bigint.cpp',
 		'alloc.cpp',
 		'debug.cpp',
-		'file.cpp',
 		'json.cpp',
 		'math.cpp',
 		'memmanip.cpp',
 		'numeric.cpp',
-		'process.cpp',
-		'profile.cpp',
 		'runtime_type.cpp',
 		'strconv.cpp',
 		'string_view.cpp',
@@ -33,17 +35,17 @@ lakcore = static_library(
 		'tinflate.cpp',
 		'tokeniser.cpp',
 		'unicode.cpp',
-		'unique_pages.cpp',
 	],
 	override_options: override_options_w3,
-	include_directories: include_directories('..', '..'/'include'),
+	include_directories: lakcore_inc,
 	dependencies: dependency('threads'),
+	link_with: lakcore_system,
 	link_args: lakcore_linkargs,
 	link_depends: lakcore_natvis,
 )
 
 lakcore_dep = declare_dependency(
 	link_with: lakcore,
-	include_directories: include_directories('..', '..'/'include'),
+	include_directories: lakcore_inc,
 	link_args: lakcore_linkargs,
 )

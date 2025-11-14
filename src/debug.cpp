@@ -1,8 +1,8 @@
 #include "lak/debug.hpp"
 
-#include "lak/os.hpp"
 #include "lak/strconv.hpp"
 #include "lak/string_ostream.hpp"
+#include "lak/system/os.hpp"
 
 #include <fstream>
 #include <locale>
@@ -213,18 +213,15 @@ void lak::debugger_t::abort()
 #	endif
 	DEBUG_BREAK();
 #endif
-#ifndef LAK_NO_FILESYSTEM
 	if (!crash_path.empty())
 		std::cerr
 		  << "Saving crash log to '" << lak::debugger.save()
 		  << "'.\nPlease forward the crash log onto the developer so they can "
 		     "attempt to fix the issues that caused this crash.\n";
-#endif
 	PAUSE();
 	std::abort();
 }
 
-#ifndef LAK_NO_FILESYSTEM
 std::filesystem::path lak::debugger_t::save()
 {
 	std::lock_guard lock{mutex};
@@ -246,7 +243,6 @@ std::filesystem::path lak::debugger_t::save(const std::filesystem::path &path)
 	else
 		return absolute;
 }
-#endif
 
 lak::scoped_indenter::scoped_indenter(const lak::u8string &name)
 {

@@ -5,7 +5,7 @@
 #ifndef LAK_STRCAST_HPP
 #define LAK_STRCAST_HPP
 
-#include "lak/compiler.hpp"
+#include "lak/system/compiler.hpp"
 
 #define LAK_STRING_VIEW_FORWARD_ONLY
 #include "lak/string_view.hpp"

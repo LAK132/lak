@@ -1,5 +1,5 @@
-#include "lak/events.hpp"
-#include "lak/os.hpp"
+#include "lak/system/os.hpp"
+#include "lak/system/windowing/events.hpp"
 
 #include "lak/debug.hpp"
 #include "lak/defer.hpp"
@@ -7,9 +7,9 @@
 #include "lak/trace.hpp"
 
 #ifdef LAK_ENABLE_OPENGL
-#	include "lak/opengl/shader.hpp"
-#	include "lak/opengl/state.hpp"
-#	include "lak/opengl/texture.hpp"
+#	include "lak/system/opengl/shader.hpp"
+#	include "lak/system/opengl/state.hpp"
+#	include "lak/system/opengl/texture.hpp"
 #endif
 
 #define IMGUI_DEFINE_MATH_OPERATORS
@@ -17,13 +17,13 @@
 
 #if defined(LAK_USE_WINAPI)
 // #  error "NYI"
-#	include "../windowing/win32/impl.hpp"
+#	include "../system/windowing/win32/impl.hpp"
 #elif defined(LAK_USE_XLIB)
 #	error "NYI"
 #elif defined(LAK_USE_XCB)
 #	error "NYI"
 #elif defined(LAK_USE_SDL)
-#	include "../windowing/sdl/impl.hpp"
+#	include "../system/windowing/sdl/impl.hpp"
 #	include <SDL.h>
 #	ifdef LAK_OS_WINDOWS
 #		include <SDL_syswm.h>

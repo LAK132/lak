@@ -2,12 +2,10 @@
 #	define LAK_DEBUG_INL
 
 #	include "lak/string.hpp"
-#	include "lak/os.hpp"
+#	include "lak/system/os.hpp"
 
 #	include <cstdlib>
-#	ifndef LAK_NO_FILESYSTEM
-#		include <filesystem>
-#	endif
+#	include <filesystem>
 #	include <iostream>
 #	include <mutex>
 #	include <sstream>
@@ -50,13 +48,11 @@ namespace lak
 
 		[[noreturn]] void abort();
 
-#	ifndef LAK_NO_FILESYSTEM
 		std::filesystem::path save();
 
 		std::filesystem::path save(const std::filesystem::path &path);
 
 		std::filesystem::path crash_path;
-#	endif
 
 		std::mutex mutex;
 		bool live_output_enabled = true;

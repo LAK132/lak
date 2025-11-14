@@ -2,10 +2,10 @@
 #define LAK_BINARY_TRAITS_HPP
 
 #include "lak/array.hpp"
-#include "lak/endian.hpp"
 #include "lak/result.hpp"
 #include "lak/span.hpp"
 #include "lak/stdint.hpp"
+#include "lak/system/endian.hpp"
 #include "lak/type_traits.hpp"
 
 namespace lak
@@ -556,6 +556,6 @@ static_assert(lak::concepts::to_bytes_writeable<float, lak::endian::native>);
 #include "lak/binary_reader.hpp"
 #include "lak/binary_writer.hpp"
 
-#include "binary_traits.inl"
+#include "lak/binary_traits.inl"
 
 #endif

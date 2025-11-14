@@ -1,5 +1,4 @@
 #include "lak/algorithm.hpp"
-#include "lak/compiler.hpp"
 #include "lak/memmanip.hpp"
 #include "lak/span.hpp"
 

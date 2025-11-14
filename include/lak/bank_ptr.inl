@@ -1,10 +1,6 @@
 #include "lak/ptr_intrin.hpp"
 #include "lak/utility.hpp"
 
-#ifdef LAK_NO_STD
-#	error Requires std::sort
-#endif
-
 #include <algorithm>
 
 /* --- lak::bank<T> --- */

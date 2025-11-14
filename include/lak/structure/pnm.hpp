@@ -18,9 +18,9 @@ P7: PAM binary anymap
 #include "lak/binary_reader.hpp"
 #include "lak/binary_traits.hpp"
 #include "lak/bit_reader.hpp"
-#include "lak/endian.hpp"
 #include "lak/image.hpp"
 #include "lak/numeric.hpp"
+#include "lak/system/endian.hpp"
 #include "lak/variant.hpp"
 #include "lak/vec.hpp"
 

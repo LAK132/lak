@@ -1,10 +1,11 @@
 #ifndef LAK_ARRAY_HPP
 #	define LAK_ARRAY_HPP
 
+#	include "lak/system/page_memory.hpp"
+
 #	include "lak/alloc.hpp"
 #	include "lak/stdint.hpp"
 #	include "lak/type_traits.hpp"
-#	include "lak/unique_pages.hpp"
 #	include "lak/utility.hpp"
 
 namespace lak
