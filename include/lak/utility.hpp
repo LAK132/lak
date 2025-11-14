@@ -81,7 +81,7 @@ namespace lak
 
 	template<size_t I, typename T, typename... U>
 	requires(I != 0)
-	force_inline constexpr lak::nth_type_t<I, T, U...> &get_nth(T &t,
+	force_inline constexpr lak::nth_type_t<I, T, U...> &get_nth(T &,
 	                                                            U &...u) noexcept
 	{
 		return lak::get_nth<I - 1U, U...>(u...);
