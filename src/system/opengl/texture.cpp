@@ -1,5 +1,4 @@
 #include "lak/system/opengl/texture.hpp"
-
 #include "lak/system/opengl/state.hpp"
 
 lak::opengl::texture::texture(GLenum target) : _target(target), _size({0, 0})

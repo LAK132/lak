@@ -1,8 +1,8 @@
 #include <lak/array.hpp>
 #include <lak/debug.hpp>
-#include <lak/file.hpp>
 #include <lak/span.hpp>
 #include <lak/string_view.hpp>
+#include <lak/system/file.hpp>
 
 #include <lak/dsl/ebnf.hpp>
 

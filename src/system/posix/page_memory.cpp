@@ -1,8 +1,8 @@
-#include "lak/os/page_memory.hpp"
-#include "lak/compiler.hpp"
-#include "lak/os/os.hpp"
-#include "lak/os/posix/wrapper.hpp"
+#include "lak/system/page_memory.hpp"
 #include "lak/span.hpp"
+#include "lak/system/compiler.hpp"
+#include "lak/system/os.hpp"
+#include "lak/system/posix/wrapper.hpp"
 
 size_t lak::page_size()
 {

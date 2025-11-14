@@ -18,7 +18,7 @@ if target_machine.system() == 'linux'
 	lakcore_system = [
 		lakcore_system_common,
 		lakcore_system_posix,
-		lakcore_system_macos,
+		lakcore_system_linux,
 	]
 elif target_machine.system() == 'darwin'
 	subdir('posix')

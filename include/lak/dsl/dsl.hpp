@@ -2373,12 +2373,26 @@ namespace lak
 
 				result.consumed = str.first(str.size() - result.remaining.size());
 
+				auto forwarder =
+				  []<typename T, size_t I, bool B>(
+				    lak::optional<T> &val, lak::size_type<I>, lak::bool_type<B>)
+				  -> lak::conditional_t<B,
+				                        lak::optional<T> &&,
+				                        lak::tuple_element_t<I, value_type> &&>
+				{
+					if constexpr (B)
+						return lak::forward<lak::optional<T>>(val);
+					else
+						return lak::forward<lak::tuple_element_t<I, value_type>>(*val);
+				};
+
 				return lak::ok_t{lak::dsl::parse_result<value_type>{
 				  .consumed  = result.consumed,
 				  .remaining = result.remaining,
-				  .value =
-				    value_type(lak::forward<lak::tuple_element_t<I, value_type>>(
-				      *values.template get<I>())...),
+				  .value     = value_type(forwarder(
+            values.template get<I>(),
+            lak::size_type<I>{},
+            lak::bool_type<lak::dsl::is_optional_v<decltype(parsers)>>{})...),
 				}};
 			}
 

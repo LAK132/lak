@@ -207,7 +207,6 @@ lak::result<uintmax_t, lak::string_to_numeric_error> lak::string_to_uintmax(
 			{
 				result *= 10U;
 				result += char_to_value<lak::numeric_base::dec>(c);
-				DEBUG_EXPR(result);
 			}
 
 			return lak::ok_t<uintmax_t>{result};
