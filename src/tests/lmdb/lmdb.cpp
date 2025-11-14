@@ -1,8 +1,8 @@
 #include "lak/test.hpp"
 
-#include "lak/file.hpp"
 #include "lak/lmdb/lmdb.hpp"
 #include "lak/string_literals.hpp"
+#include "lak/system/file.hpp"
 
 BEGIN_TEST(lmdb)
 {
@@ -73,8 +73,7 @@ BEGIN_TEST(lmdb)
 
 		if (csr(MDB_FIRST).map(print_key_val).is_ok())
 		{
-			while (csr(MDB_NEXT).map(print_key_val).is_ok())
-				;
+			while (csr(MDB_NEXT).map(print_key_val).is_ok());
 		}
 
 		const auto stat{db.stat().UNWRAP()};
