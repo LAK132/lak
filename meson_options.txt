@@ -170,6 +170,14 @@ option('libgphoto2_msys_prefix',
 	yield: true,
 )
 
+# openvr options
+
+option('lak_enable_openvr',
+	type: 'boolean',
+	value: false,
+	yield: true,
+)
+
 # stb options
 
 option('lak_enable_stb',

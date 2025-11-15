@@ -158,6 +158,10 @@ if get_option('lak_use_native_file_dialog')
 	c_cpp_args += '-DLAK_USE_NATIVE_FILE_DIALOG'
 endif
 
+if get_option('lak_enable_windowing') or get_option('lak_enable_glm')
+	c_cpp_args += '-DLAK_ENABLE_GLM'
+endif
+
 add_project_arguments(c_cpp_args + cpp_args, language: ['cpp'])
 add_project_arguments(c_cpp_args + c_args, language: ['c'])
 
@@ -217,6 +221,8 @@ if get_option('lak_enable_windowing')
 elif get_option('lak_enable_glm')
 	glm_dep = subproject('glm').get_variable('glm_dep')
 	dependencies += glm_dep
+else
+	glm_dep = []
 endif
 
 if get_option('lak_enable_llvm')
@@ -290,6 +296,11 @@ if get_option('lak_enable_libgphoto2')
 		endforeach
 		dll_depends += libgphoto2_subprj.get_variable('libgphoto2_dlls_dep')
 	endif
+endif
+
+if get_option('lak_enable_openvr')
+	subdir('src'/'openvr')
+	dependencies += lakopenvr_dep
 endif
 
 if get_option('lak_enable_stb')

@@ -1,0 +1,4 @@
+[wrap-git]
+url = https://github.com/ValveSoftware/openvr
+revision = v2.12.14
+depth = 1
