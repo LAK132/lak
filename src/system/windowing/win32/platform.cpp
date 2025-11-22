@@ -6,14 +6,19 @@
 
 #include "impl.hpp"
 
+#ifdef LAK_ENABLE_OPENGL
+#	include <GL/gl3w.h>
+#endif
+
 #include <thread>
 
 lak::wstring win32_error_string(LPCWSTR lpszFunction);
 void win32_error_popup(LPCWSTR lpszFunction);
 
 EXTERN_C IMAGE_DOS_HEADER __ImageBase;
-#define HINST_THISCOMPONENT ((HINSTANCE)&__ImageBase)
+#define HINST_THISCOMPONENT ((HINSTANCE) & __ImageBase)
 
+#ifdef LAK_ENABLE_OPENGL
 PFNWGLGETEXTENSIONSSTRINGARB wglGetExtensionsStringARB       = nullptr;
 bool has_pixel_format                                        = false;
 PFNWGLCHOOSEPIXELFORMATARB wglChoosePixelFormatARB           = nullptr;
@@ -23,6 +28,7 @@ bool has_swap_control_tear                                   = false;
 PFNWGLGETPIXELFORMATATTRIBFVARB wglGetPixelFormatAttribfvARB = nullptr;
 PFNWGLSWAPINTERVALEXT wglSwapIntervalEXT                     = nullptr;
 PFNWGLGETSWAPINTERVALEXT wglGetSwapIntervalEXT               = nullptr;
+#endif
 
 template<typename TO, typename FROM>
 bool set_bits(HBITMAP hBitmap, lak::image_view<FROM> image)
@@ -231,6 +237,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 				break;
 
 			case WM_PAINT:
+#ifdef LAK_ENABLE_SOFTRENDER
 				if (window->graphics_mode() == lak::graphics_mode::Software)
 				{
 					if (window->software_context().platform_handle.contig_size() > 0)
@@ -241,6 +248,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 					}
 					return 0;
 				}
+#endif
 				break;
 		}
 	}
@@ -264,132 +272,138 @@ void win32_error_popup(LPCWSTR lpszFunction)
 	MessageBoxW(NULL, str.c_str(), L"Error", MB_OK);
 }
 
+#ifdef LAK_ENABLE_OPENGL
 bool init_opengl()
 {
-	return false;
-#if 0
-  auto hwnd = CreateWindowW(/* class name */,
-                            /* window name */,
-                            (WS_POPUP | WS_DISABLED),
-                            0,
-                            0,
-                            10,
-                            10,
-                            NULL,
-                            NULL,
-                            /* instance */,
-                            NULL);
+	auto hwnd =
+	  CreateWindowW(lak::_platform_instance->window_class.lpszClassName,
+	                L" ",
+	                (WS_POPUP | WS_DISABLED),
+	                0,
+	                0,
+	                10,
+	                10,
+	                NULL,
+	                NULL,
+	                lak::_platform_instance->handle,
+	                NULL);
 
-  if (!hwnd)
-  {
-    ERROR("Failed to create dummy window for initialising OpenGL");
-    return false;
-  }
+	if (!hwnd)
+	{
+		ERROR("Failed to create dummy window for initialising OpenGL");
+		return false;
+	}
 
-  /* pump events */
+	/* pump events */
 
-  auto hdc = GetDC(hwnd);
+	auto hdc = GetDC(hwnd);
 
-  PIXELFORMATDESCRIPTOR format;
-  format.nSize    = sizeof(format);
-  format.nVersion = 1;
-  format.dwFlags  = (PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL);
-  // if (config.double_buffer)
-  // {
-  //   format.dwFlags |= PFD_DOUBLEBUFFER;
-  // }
-  // if (config.stereo)
-  // {
-  //   format.dwFlags |= PFD_STEREO;
-  // }
-  format.iLayerType = PFD_MAIN_PLANE;
-  format.iPixelType = PFD_TYPE_RGBA;
-  // format.cRedBits   = config.red_size;
-  // format.cGreenBits = config.green_size;
-  // format.cBlueBits  = config.blue_size;
-  // format.cAlphaBits = config.alpha_size;
-  // if (config.buffer_size)
-  // {
-  //   format.cColorBits = config.buffer_size - config.alpha_size;
-  // }
-  // else
-  {
-    format.cColorBits =
-      (format.cRedBits + format.cGreenBits + format.cBlueBits);
-  }
-  // format.cAccumRedBits   = config.accum_red_size;
-  // format.cAccumGreenBits = config.accum_green_size;
-  // format.cAccumBlueBits  = config.accum_blue_size;
-  // format.cAccumAlphaBits = config.accum_alpha_size;
-  format.cAccumBits = (format.cAccumRedBits + format.cAccumGreenBits +
-                       format.cAccumBlueBits + format.cAccumAlphaBits);
-  // format.cDepthBits      = config.depth_size;
-  // format.cStencilBits    = config.stencil_size;
+	PIXELFORMATDESCRIPTOR format;
+	format.nSize    = sizeof(format);
+	format.nVersion = 1;
+	format.dwFlags  = (PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL);
+	// if (config.double_buffer)
+	// {
+	//   format.dwFlags |= PFD_DOUBLEBUFFER;
+	// }
+	// if (config.stereo)
+	// {
+	//   format.dwFlags |= PFD_STEREO;
+	// }
+	format.iLayerType = PFD_MAIN_PLANE;
+	format.iPixelType = PFD_TYPE_RGBA;
+	// format.cRedBits   = config.red_size;
+	// format.cGreenBits = config.green_size;
+	// format.cBlueBits  = config.blue_size;
+	// format.cAlphaBits = config.alpha_size;
+	// if (config.buffer_size)
+	// {
+	//   format.cColorBits = config.buffer_size - config.alpha_size;
+	// }
+	// else
+	{
+		format.cColorBits =
+		  (format.cRedBits + format.cGreenBits + format.cBlueBits);
+	}
+	// format.cAccumRedBits   = config.accum_red_size;
+	// format.cAccumGreenBits = config.accum_green_size;
+	// format.cAccumBlueBits  = config.accum_blue_size;
+	// format.cAccumAlphaBits = config.accum_alpha_size;
+	format.cAccumBits = (format.cAccumRedBits + format.cAccumGreenBits +
+	                     format.cAccumBlueBits + format.cAccumAlphaBits);
+	// format.cDepthBits      = config.depth_size;
+	// format.cStencilBits    = config.stencil_size;
 
-  SetPixelFormat(hdc, ChoosePixelFormat(hdc, &format), &format);
+	SetPixelFormat(hdc, ChoosePixelFormat(hdc, &format), &format);
 
-  auto hglrc = wglCreateContext(hdc);
+	auto hglrc = wglCreateContext(hdc);
 
-  if (!hglrc)
-  {
-    DestroyWindow(hwnd);
-    ERROR("Failed to create OpenGL context");
-    return false;
-  }
+	if (!hglrc)
+	{
+		DestroyWindow(hwnd);
+		ERROR("Failed to create OpenGL context");
+		return false;
+	}
 
-  wglMakeCurrent(hdc, hglrc);
+	wglMakeCurrent(hdc, hglrc);
 
-  wglGetExtensionsStringARB = (PFNWGLGETEXTENSIONSSTRINGARB)wglGetProcAddress(
-    "wglGetExtensionsStringARB");
+	wglGetExtensionsStringARB = (PFNWGLGETEXTENSIONSSTRINGARB)wglGetProcAddress(
+	  "wglGetExtensionsStringARB");
 
-  auto extensions = lak::string_view(
-    wglGetExtensionsStringARB ? wglGetExtensionsStringARB(hdc) : nullptr);
+	auto extensions = lak::astring_view(
+	  wglGetExtensionsStringARB ? wglGetExtensionsStringARB(hdc) : nullptr);
 
-  auto has_extension = [&extensions](const char *extension) -> bool {
-    return lak::find_subspan(extensions, lak::string_view(extension)).size() >
-           0;
-  };
+	auto has_extension = [&extensions](const char *extension) -> bool
+	{
+		return lak::find_subspan(extensions.to_span(),
+		                         lak::astring_view(extension).to_span())
+		         .size() > 0;
+	};
 
-  if (has_extension("WGL_ARB_pixel_format"))
-  {
-    wglChoosePixelFormatARB =
-      (PFNWGLCHOOSEPIXELFORMATARB)wglGetProcAddress("wglChoosePixelFormatARB");
-    wglGetPixelFormatAttribivARB =
-      (PFNWGLGETPIXELFORMATATTRIBIVARB)wglGetProcAddress(
-        "wglGetPixelFormatAttribivARB");
-    wglGetPixelFormatAttribfvARB =
-      (PFNWGLGETPIXELFORMATATTRIBFVARB)wglGetProcAddress(
-        "wglGetPixelFormatAttribfvARB");
-  }
-  else
-  {
-    wglChoosePixelFormatARB      = NULL;
-    wglGetPixelFormatAttribivARB = NULL;
-  }
-  has_pixel_format = wglChoosePixelFormatARB && wglGetPixelFormatAttribivARB;
+	if (has_extension("WGL_ARB_pixel_format"))
+	{
+		wglChoosePixelFormatARB =
+		  (PFNWGLCHOOSEPIXELFORMATARB)wglGetProcAddress("wglChoosePixelFormatARB");
+		wglGetPixelFormatAttribivARB =
+		  (PFNWGLGETPIXELFORMATATTRIBIVARB)wglGetProcAddress(
+		    "wglGetPixelFormatAttribivARB");
+		wglGetPixelFormatAttribfvARB =
+		  (PFNWGLGETPIXELFORMATATTRIBFVARB)wglGetProcAddress(
+		    "wglGetPixelFormatAttribfvARB");
+	}
+	else
+	{
+		wglChoosePixelFormatARB      = NULL;
+		wglGetPixelFormatAttribivARB = NULL;
+	}
+	has_pixel_format = wglChoosePixelFormatARB && wglGetPixelFormatAttribivARB;
 
-  if (has_extension("WGL_EXT_swap_control"))
-  {
-    wglSwapIntervalEXT =
-      (PFNWGLSWAPINTERVALEXT)wglGetProcAddress("wglSwapIntervalEXT");
-    wglGetSwapIntervalEXT =
-      (PFNWGLGETSWAPINTERVALEXT)wglGetProcAddress("wglGetSwapIntervalEXT");
-    has_swap_control_tear = has_extension("WGL_EXT_swap_control_tear");
-  }
-  else
-  {
-    wglSwapIntervalEXT    = NULL;
-    wglGetSwapIntervalEXT = NULL;
-  }
-  has_swap_control = wglSwapIntervalEXT && wglGetSwapIntervalEXT;
+	if (has_extension("WGL_EXT_swap_control"))
+	{
+		wglSwapIntervalEXT =
+		  (PFNWGLSWAPINTERVALEXT)wglGetProcAddress("wglSwapIntervalEXT");
+		wglGetSwapIntervalEXT =
+		  (PFNWGLGETSWAPINTERVALEXT)wglGetProcAddress("wglGetSwapIntervalEXT");
+		has_swap_control_tear = has_extension("WGL_EXT_swap_control_tear");
+	}
+	else
+	{
+		wglSwapIntervalEXT    = NULL;
+		wglGetSwapIntervalEXT = NULL;
+	}
+	has_swap_control = wglSwapIntervalEXT && wglGetSwapIntervalEXT;
 
-  wglMakeCurrent(hdc, NULL);
-  wglDeleteContext(hglrc);
-  ReleaseDC(hwnd, hdc);
-  DestroyWindow(hwnd);
-  /* pump events */
-#endif
+	bool result = gl3wInit() == GL3W_OK;
+
+	wglMakeCurrent(hdc, NULL);
+	wglDeleteContext(hglrc);
+	ReleaseDC(hwnd, hdc);
+	DestroyWindow(hwnd);
+	/* pump events */
+
+	return result;
 }
+#endif
 
 bool lak::platform_init()
 {
@@ -416,6 +430,10 @@ bool lak::platform_init()
 		// :TODO: get a proper error message from windows?
 		return false;
 	}
+
+#ifdef LAK_ENABLE_OPENGL
+	if (!init_opengl()) return false;
+#endif
 
 	return true;
 }
@@ -464,48 +482,48 @@ bool lak::get_clipboard(lak::u8string *s)
 
 bool lak::set_clipboard(lak::u8string_view s)
 {
-	[&]() -> lak::winapi::result<lak::monostate>
+	auto do_copy = [&]() -> lak::error_code_result<lak::monostate>
 	{
 		std::wstring str = lak::to_wstring(s);
 
 		if (BOOL result = ::OpenClipboard(NULL); result == 0)
-			return lak::err_t{::GetLastError()};
+			return lak::err_t{lak::winapi::last_win32_error()};
 
 		DEFER(::CloseClipboard());
 
 		if (BOOL result = ::EmptyClipboard(); result == 0)
-			return lak::err_t{::GetLastError()};
+			return lak::err_t{lak::winapi::last_win32_error()};
 
 		size_t size = (str.size() + 1) * sizeof(wchar_t);
 
 		RES_TRY_ASSIGN(HGLOBAL clipboard_data =,
-		               lak::winapi::invoke_nullerr(::GlobalAlloc, NULL, size));
+		               lak::winapi::invoke_null_err(::GlobalAlloc, NULL, size));
 
 		{
 			RES_TRY_ASSIGN(
 			  wchar_t *data = (wchar_t *),
-			  lak::winapi::invoke_nullerr(::GlobalLock, clipboard_data));
+			  lak::winapi::invoke_null_err(::GlobalLock, clipboard_data));
 
-			lak::memcpy(lak::span<char>(lak::span(data, size)),
-			            lak::span<const char>(lak::span(str.c_str(), size)));
+			lak::memcpy(lak::span<byte_t>(lak::span(data, size)),
+			            lak::span<const byte_t>(lak::span(str.c_str(), size)));
 
 			if (BOOL result = ::GlobalUnlock(clipboard_data);
 			    result == 0 && ::GetLastError() != NO_ERROR)
-				return lak::err_t{::GetLastError()};
+				return lak::err_t{lak::winapi::last_win32_error()};
 		}
 
-		return lak::winapi::invoke_nullerr(
+		return lak::winapi::invoke_null_err(
 		         ::SetClipboardData, CF_UNICODETEXT, clipboard_data)
 		  .map([](auto &&) -> lak::monostate { return lak::monostate{}; })
 		  .if_err(
 		    [&](auto &&)
 		    {
 			    if (HGLOBAL result = ::GlobalFree(clipboard_data); result != NULL)
-				    lak::winapi::result<>::make_err(::GetLastError())
+				    lak::error_code_result<>::make_err(lak::winapi::last_win32_error())
 				      .EXPECT("GlobalFree failed");
 		    });
-	}()
-	           .EXPECT("set_clipboard failed");
+	};
+	do_copy().EXPECT("set_clipboard failed");
 	return true;
 }
 

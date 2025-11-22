@@ -371,6 +371,8 @@ bool lak::set_active_window(const lak::window_handle *handle)
 				//                win32_error_string(L"wglMakeCurrent"));
 				return false;
 			}
+			else
+				return true;
 		}
 #endif
 	}

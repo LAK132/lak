@@ -92,38 +92,48 @@
 		LAK_BRIGHT_RED LAK_BOLD "FATAL " LAK_SGR_RESET LAK_TRACE_MODIFIER(LF) ": "
 #endif
 
-#undef DEBUG_LINE_FILE
 #undef DEBUG_DEBUG_LINE_FILE
+#undef DEBUG_WARNING_LINE_FILE
+#undef DEBUG_ERROR_LINE_FILE
+#undef DEBUG_FATAL_LINE_FILE
 #undef DEBUG_CHECKPOINT_LINE_FILE
+#define DEBUG_DEBUG_LINE_FILE   LAK_DEBUG_MESSAGE(LINE_TRACE_STR)
+#define DEBUG_WARNING_LINE_FILE LAK_WARNING_MESSAGE(LINE_TRACE_STR)
+#define DEBUG_ERROR_LINE_FILE   LAK_ERROR_MESSAGE(LINE_TRACE_STR)
+#define DEBUG_FATAL_LINE_FILE   LAK_FATAL_MESSAGE(LINE_TRACE_STR)
+#define DEBUG_CHECKPOINT_LINE_FILE                                            \
+	"CHECKPOINT " LAK_TRACE_MODIFIER(LINE_TRACE_STR)
+
+#undef DEBUG
+#undef DEBUG_EXPR
+#if defined(NOLOG)
+#	define DEBUG(...)
+#	define DEBUG_EXPR(...)
+#else
+#	define DEBUG(...)                                                          \
+		lak::debugger.std_out(TO_U8STRING(DEBUG_DEBUG_LINE_FILE),                 \
+		                      lak::streamify(__VA_ARGS__, "\n"));
+#	define DEBUG_EXPR(...)                                                     \
+		lak::debugger.std_out(TO_U8STRING(DEBUG_DEBUG_LINE_FILE),                 \
+		                      lak::streamify(DEBUG_EXPR_EX(__VA_ARGS__), "\n"));
+#endif
+
 #undef CHECKPOINT
 #undef SCOPED_CHECKPOINT
 #undef FUNCTION_CHECKPOINT
 #undef MEMBER_FUNCTION_CHECKPOINT
-#undef DEBUG
-#undef DEBUG_EXPR
 #if defined(NOLOG)
 #	define CHECKPOINT()
 #	define SCOPED_CHECKPOINT(...)
 #	define FUNCTION_CHECKPOINT(...)
-#	define DEBUG(...)
-#	define DEBUG_EXPR(...)
+#	define MEMBER_FUNCTION_CHECKPOINT(...)
 #else
-#	if defined(LAK_NO_DEBUG_COLOURS)
-#		define DEBUG_LINE_FILE "(" LINE_TRACE_STR ")"
-#	elif defined(LAK_OS_WINDOWS)
-#		define DEBUG_LINE_FILE                                                   \
-			LAK_BRIGHT_BLACK "(" LINE_TRACE_STR ")" LAK_SGR_RESET
-#	else
-#		define DEBUG_LINE_FILE LAK_FAINT "(" LINE_TRACE_STR ")" LAK_SGR_RESET
-#	endif
-#	define DEBUG_DEBUG_LINE_FILE      LAK_DEBUG_MESSAGE(DEBUG_LINE_FILE)
-#	define DEBUG_CHECKPOINT_LINE_FILE "CHECKPOINT " DEBUG_LINE_FILE
 #	define CHECKPOINT()                                                        \
 		lak::debugger.std_out(TO_U8STRING(DEBUG_CHECKPOINT_LINE_FILE),            \
 		                      lak::to_u8string("\n"));
 #	define SCOPED_CHECKPOINT(...)                                              \
-		lak::scoped_indenter UNIQUIFY(SCOPED_INDENTOR_)(                          \
-		  lak::streamify(__VA_ARGS__ __VA_OPT__(, " ") DEBUG_LINE_FILE));
+		lak::scoped_indenter UNIQUIFY(SCOPED_INDENTOR_)(lak::streamify(           \
+		  __VA_ARGS__ __VA_OPT__(, " ") LAK_TRACE_MODIFIER(LINE_TRACE_STR)));
 #	define FUNCTION_CHECKPOINT(...)                                            \
 		SCOPED_CHECKPOINT(__func__, "(" __VA_OPT__(, ) __VA_ARGS__, ")")
 #	define MEMBER_FUNCTION_CHECKPOINT(...)                                     \
@@ -132,12 +142,6 @@
 		                  __func__,                                               \
 		                  "(" __VA_OPT__(, ) __VA_ARGS__,                         \
 		                  ")")
-#	define DEBUG(...)                                                          \
-		lak::debugger.std_out(TO_U8STRING(DEBUG_DEBUG_LINE_FILE),                 \
-		                      lak::streamify(__VA_ARGS__, "\n"));
-#	define DEBUG_EXPR(...)                                                     \
-		lak::debugger.std_out(TO_U8STRING(DEBUG_DEBUG_LINE_FILE),                 \
-		                      lak::streamify(DEBUG_EXPR_EX(__VA_ARGS__), "\n"));
 #endif
 
 #undef ABORT
@@ -151,8 +155,7 @@
 #define ABORTF(...)                                                           \
 	do                                                                          \
 	{                                                                           \
-		lak::debugger.std_err(reinterpret_cast<const char8_t *>(""),              \
-		                      lak::streamify(__VA_ARGS__, "\n"));                 \
+		lak::debugger.std_err(u8"", lak::streamify(__VA_ARGS__, "\n"));           \
 		ABORT();                                                                  \
 	} while (false)
 #define NOISY_ABORT()                                                         \
@@ -163,9 +166,6 @@
 		ABORT();                                                                  \
 	} while (false)
 
-#undef DEBUG_WARNING_LINE_FILE
-#undef DEBUG_ERROR_LINE_FILE
-#undef DEBUG_FATAL_LINE_FILE
 #undef WARNING
 #undef ERROR
 #undef FATAL
@@ -174,9 +174,6 @@
 #	define ERROR(...)
 #	define FATAL(...) ABORT()
 #else
-#	define DEBUG_WARNING_LINE_FILE LAK_WARNING_MESSAGE(DEBUG_LINE_FILE)
-#	define DEBUG_ERROR_LINE_FILE   LAK_ERROR_MESSAGE(DEBUG_LINE_FILE)
-#	define DEBUG_FATAL_LINE_FILE   LAK_FATAL_MESSAGE(DEBUG_LINE_FILE)
 #	define WARNING(...)                                                        \
 		lak::debugger.std_err(TO_U8STRING(DEBUG_WARNING_LINE_FILE),               \
 		                      lak::streamify(__VA_ARGS__, "\n"));

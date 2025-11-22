@@ -19,11 +19,13 @@ bool lak::get_clipboard(lak::u8string *s)
 	auto *clip = SDL_GetClipboardText();
 	*s         = (const char8_t *)clip;
 	SDL_free(clip);
+	// impossible to tell the difference between an empty clipboard and an error
+	return true;
 }
 
 bool lak::set_clipboard(lak::u8string_view s)
 {
-	SDL_SetClipboardText((const char *)s.begin());
+	return SDL_SetClipboardText((const char *)s.begin()) == 0;
 }
 
 bool lak::cursor_visible() { ASSERT_NYI(); }

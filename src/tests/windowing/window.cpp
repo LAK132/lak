@@ -1,18 +1,21 @@
 #include "lak/test.hpp"
 
+#include "lak/string_literals.hpp"
+
 #include "lak/system/windowing/events.hpp"
 #include "lak/system/windowing/platform.hpp"
 #include "lak/system/windowing/window.hpp"
 
-#ifndef LAK_ENABLE_SOFTRENDER
-#	error Test requires softrender to be enabled
+#if !(defined(LAK_ENABLE_SOFTRENDER) || defined(LAK_ENABLE_OPENGL))
+#	error Test requires a graphics backend to be enabled
 #endif
 
-#ifdef LAK_RUN_WINDOWING_TESTS
-BEGIN_TEST(window)
-#else
-int window_compile_test()
-#endif
+#ifdef LAK_ENABLE_SOFTRENDER
+#	ifdef LAK_RUN_WINDOWING_TESTS
+BEGIN_TEST(softrender_window)
+#	else
+int softrender_window_compile_test()
+#	endif
 {
 	DEBUG("platform init");
 	ASSERT(lak::platform_init());
@@ -22,7 +25,10 @@ int window_compile_test()
 		lak::window w = lak::window::make(lak::software_settings{}).UNWRAP();
 
 		w.set_title(L"Test Window");
-		ASSERT_EQUAL(w.title(), L"Test Window");
+		auto title = w.title();
+		ASSERT_EQUAL(title.c_str(), L"Test Window"_str);
+
+		ASSERT_EQUAL(w.graphics(), lak::graphics_mode::Software);
 
 		DEBUG("starting event loop");
 		for (bool running = true; running;)
@@ -51,6 +57,69 @@ int window_compile_test()
 
 	return 0;
 }
-#ifdef LAK_RUN_WINDOWING_TESTS
+#	ifdef LAK_RUN_WINDOWING_TESTS
 END_TEST()
+#	endif
+#endif
+
+#ifdef LAK_ENABLE_OPENGL
+#	include "lak/system/opengl/state.hpp"
+
+#	ifdef LAK_RUN_WINDOWING_TESTS
+BEGIN_TEST(opengl_window)
+#	else
+int opengl_window_compile_test()
+#	endif
+{
+	DEBUG("platform init");
+	ASSERT(lak::platform_init());
+
+	{
+		DEBUG("create window");
+		lak::window w = lak::window::make(lak::opengl_settings{}).UNWRAP();
+
+		w.set_title(L"Test Window");
+		auto title = w.title();
+		ASSERT_EQUAL(title.c_str(), L"Test Window"_str);
+
+		ASSERT_EQUAL(w.graphics(), lak::graphics_mode::OpenGL);
+
+		DEBUG("starting event loop");
+		for (bool running = true; running;)
+		{
+			for (lak::event e; lak::next_event(&e);)
+			{
+				switch (e.type)
+				{
+					case lak::event_type::close_window:
+						[[fallthrough]];
+					case lak::event_type::quit_program:
+						running = false;
+						break;
+					default:
+						break;
+				}
+			}
+
+			w.set_active();
+
+			glViewport(0, 0, w.drawable_size().x, w.drawable_size().y);
+			glScissor(0, 0, w.drawable_size().x, w.drawable_size().y);
+			glClearColor(0.0f, 0.3125f, 0.312f, 1.0f);
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT |
+			        GL_STENCIL_BUFFER_BIT);
+
+			w.swap();
+		}
+		DEBUG("event loop finished");
+	}
+
+	DEBUG("platform quit");
+	lak::platform_quit();
+
+	return 0;
+}
+#	ifdef LAK_RUN_WINDOWING_TESTS
+END_TEST()
+#	endif
 #endif
