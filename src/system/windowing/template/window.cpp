@@ -22,26 +22,6 @@ lak::result<lak::window_handle *, lak::u8string> lak::create_window(
 }
 #endif
 
-#ifdef LAK_ENABLE_VULKAN
-lak::result<lak::window_handle *, lak::u8string> lak::create_window(
-  const lak::vulkan_settings &s)
-{
-	(void)s;
-	return lak::ok_t{
-	  lak::unique_bank_ptr<lak::window_handle>::create().release()};
-}
-#endif
-
-#ifdef LAK_ENABLE_METAL
-lak::result<lak::window_handle *, lak::u8string> lak::create_window(
-  const lak::metal_settings &s)
-{
-	(void)s;
-	return lak::ok_t{
-	  lak::unique_bank_ptr<lak::window_handle>::create().release()};
-}
-#endif
-
 bool lak::destroy_window(lak::window_handle *w)
 {
 	lak::bank<lak::window_handle>::destroy(w);

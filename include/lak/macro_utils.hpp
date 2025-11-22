@@ -105,7 +105,7 @@
 // do_with (var = stmt) { }
 #define do_with(...)                                                          \
 	if (__VA_ARGS__; false)                                                     \
-		UNREACHABLE();                                                            \
+		LAK_UNREACHABLE();                                                        \
 	else
 
 #undef do_for

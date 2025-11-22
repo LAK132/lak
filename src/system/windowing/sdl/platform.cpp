@@ -16,14 +16,14 @@ bool lak::platform_quit()
 
 bool lak::get_clipboard(lak::u8string *s)
 {
-	LAK_UNUSED(s);
-	ASSERT_NYI();
+	auto *clip = SDL_GetClipboardText();
+	*s         = (const char8_t *)clip;
+	SDL_free(clip);
 }
 
 bool lak::set_clipboard(lak::u8string_view s)
 {
-	LAK_UNUSED(s);
-	ASSERT_NYI();
+	SDL_SetClipboardText((const char *)s.begin());
 }
 
 bool lak::cursor_visible() { ASSERT_NYI(); }

@@ -59,8 +59,6 @@ namespace lak
 		None     = 0,
 		Software = 1,
 		OpenGL   = 2,
-		Vulkan   = 3,
-		Metal    = 4,
 	};
 
 	inline std::ostream &operator<<(std::ostream &strm, lak::graphics_mode mode)
@@ -72,12 +70,6 @@ namespace lak
 				break;
 			case lak::graphics_mode::Software:
 				strm << "Software";
-				break;
-			case lak::graphics_mode::Vulkan:
-				strm << "Vulkan";
-				break;
-			case lak::graphics_mode::Metal:
-				strm << "Metal";
 				break;
 			default:
 				strm << "None";
@@ -106,21 +98,9 @@ namespace lak
 		int minor            = 2;
 	};
 
-	struct vulkan_settings
-	{
-	};
-
-	struct metal_settings
-	{
-	};
-
 	struct software_context;
 
 	struct opengl_context;
-
-	struct vulkan_context;
-
-	struct metal_context;
 
 	struct window_handle;
 
@@ -146,16 +126,6 @@ namespace lak
 #ifdef LAK_ENABLE_OPENGL
 	lak::result<lak::window_handle *, lak::u8string> create_window(
 	  const lak::opengl_settings &s);
-#endif
-
-#ifdef LAK_ENABLE_VULKAN
-	lak::result<lak::window_handle *, lak::u8string> create_window(
-	  const lak::vulkan_settings &s);
-#endif
-
-#ifdef LAK_ENABLE_METAL
-	lak::result<lak::window_handle *, lak::u8string> create_window(
-	  const lak::metal_settings &s);
 #endif
 
 	bool destroy_window(lak::window_handle *w);
@@ -214,16 +184,6 @@ namespace lak
 #ifdef LAK_ENABLE_OPENGL
 		static lak::result<window, lak::u8string> make(
 		  const lak::opengl_settings &s);
-#endif
-
-#ifdef LAK_ENABLE_VULKAN
-		static lak::result<window, lak::u8string> make(
-		  const lak::vulkan_settings &s);
-#endif
-
-#ifdef LAK_ENABLE_METAL
-		static lak::result<window, lak::u8string> make(
-		  const lak::metal_settings &s);
 #endif
 
 		~window();

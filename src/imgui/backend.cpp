@@ -1,5 +1,6 @@
 #include "lak/system/os.hpp"
 #include "lak/system/windowing/events.hpp"
+#include "lak/system/windowing/window.hpp"
 
 #include "lak/debug.hpp"
 #include "lak/defer.hpp"
@@ -16,8 +17,8 @@
 #include "lak/imgui/backend.hpp"
 
 #if defined(LAK_USE_WINAPI)
-// #  error "NYI"
 #	include "../system/windowing/win32/impl.hpp"
+#	include "lak/system/win32/windows.hpp"
 #elif defined(LAK_USE_XLIB)
 #	error "NYI"
 #elif defined(LAK_USE_XCB)
@@ -148,12 +149,6 @@ namespace ImGui
 #endif
 	} *ImplGLContext;
 
-	typedef struct _ImplVkContext
-	{
-#ifdef LAK_ENABLE_VULKAN
-#endif
-	} *ImplVkContext;
-
 	typedef struct _ImplContext
 	{
 		ImGuiContext *imgui_context;
@@ -166,7 +161,6 @@ namespace ImGui
 			void *vd_context;
 			ImplSRContext sr_context;
 			ImplGLContext gl_context;
-			ImplVkContext vk_context;
 		};
 	} *ImplContext;
 
@@ -187,11 +181,6 @@ ImGui::ImplContext ImGui::ImplCreateContext(lak::graphics_mode mode)
 #ifdef LAK_ENABLE_OPENGL
 		case lak::graphics_mode::OpenGL:
 			result->gl_context = new _ImplGLContext();
-			break;
-#endif
-#ifdef LAK_ENABLE_VULKAN
-		case lak::graphics_mode::Vulkan:
-			result->vk_context = new _ImplVkContext();
 			break;
 #endif
 		default:
@@ -218,11 +207,6 @@ void ImGui::ImplDestroyContext(ImplContext context)
 #ifdef LAK_ENABLE_OPENGL
 				case lak::graphics_mode::OpenGL:
 					delete context->gl_context;
-					break;
-#endif
-#ifdef LAK_ENABLE_VULKAN
-				case lak::graphics_mode::Vulkan:
-					delete context->vk_context;
 					break;
 #endif
 				default:
@@ -302,13 +286,6 @@ inline void ImplUpdateDisplaySize(ImGui::ImplContext context,
 			  (window_size.x > 0) ? (drawable_size.x / (float)window_size.x) : 1.0f;
 			io.DisplayFramebufferScale.y =
 			  (window_size.y > 0) ? (drawable_size.y / (float)window_size.y) : 1.0f;
-		}
-		break;
-#endif
-
-#ifdef LAK_ENABLE_VULKAN
-		case lak::graphics_mode::Vulkan:
-		{
 		}
 		break;
 #endif
@@ -397,6 +374,8 @@ void ImplInitSRContext(ImGui::ImplSRContext context, const lak::window &window)
 {
 	ImGuiIO &io = ImGui::GetIO();
 
+	io.BackendRendererName = "imgui_impl_lak_softraster";
+
 #	if defined(LAK_USE_WINAPI)
 	context->screen_surface =
 	  &window.handle()->software_context().platform_handle;
@@ -442,40 +421,42 @@ void ImplInitGLContext(ImGui::ImplGLContext context, const lak::window &)
 	using namespace lak::opengl::literals;
 
 	context->shader = lak::opengl::program::create(
-	                    "#version 150\n"
-	                    "uniform mat4 viewProj;\n"
-	                    "in vec2 vPosition;\n"
-	                    "in vec2 vUV;\n"
-	                    "in vec4 vColor;\n"
-	                    "out vec2 fUV;\n"
-	                    "out vec4 fColor;\n"
-	                    "void main()\n"
-	                    "{\n"
-	                    "   fUV = vUV;\n"
-	                    "   fColor = vColor;\n"
-	                    "   gl_Position = viewProj * vec4(vPosition.xy, 0, 1);\n"
-	                    "}"_vertex_shader.UNWRAP(),
-	                    "#version 150\n"
-	                    "uniform sampler2D fTexture;\n"
-	                    "in vec2 fUV;\n"
-	                    "in vec4 fColor;\n"
-	                    "out vec4 pColor;\n"
-	                    "void main()\n"
-	                    "{\n"
-	                    "   pColor = fColor * texture(fTexture, fUV.st);\n"
-	                    "}"_fragment_shader.UNWRAP())
+	                    R"(#version 150
+uniform mat4 viewProj;
+in vec2 vPosition;
+in vec2 vUV;
+in vec4 vColour;
+out vec2 fUV;
+out vec4 fColour;
+void main()
+{
+	fUV = vUV;
+	fColour = vColour;
+	gl_Position = viewProj * vec4(vPosition.xy, 0, 1);
+})"_vertex_shader.UNWRAP(),
+	                    R"(#version 150
+uniform sampler2D fTexture;
+in vec2 fUV;
+in vec4 fColour;
+out vec4 pColour;
+void main()
+{
+	pColour = fColour * texture(fTexture, fUV.st);
+})"_fragment_shader.UNWRAP())
 	                    .UNWRAP();
 
 	context->attrib_tex       = *context->shader.uniform_location("fTexture");
 	context->attrib_view_proj = *context->shader.uniform_location("viewProj");
 	context->attrib_pos       = *context->shader.attrib_location("vPosition");
 	context->attrib_UV        = *context->shader.attrib_location("vUV");
-	context->attrib_col       = *context->shader.attrib_location("vColor");
+	context->attrib_col       = *context->shader.attrib_location("vColour");
 
 	lak::opengl::call_checked(glGenBuffers, 1, &context->array_buffer).UNWRAP();
 	lak::opengl::call_checked(glGenBuffers, 1, &context->elements).UNWRAP();
 
 	ImGuiIO &io = ImGui::GetIO();
+
+	io.BackendRendererName = "imgui_impl_lak_opengl";
 
 	// Create fonts texture
 	uint8_t *pixels;
@@ -494,10 +475,6 @@ void ImplInitGLContext(ImGui::ImplGLContext context, const lak::window &)
 
 	io.Fonts->TexID = (ImTextureID)(intptr_t)context->font.get();
 }
-#endif
-
-#ifdef LAK_ENABLE_VULKAN
-void ImplInitVkContext(ImGui::ImplVkContext, const lak::window &) {}
 #endif
 
 void ImGui::ImplInitContext(ImplContext context, const lak::window &window)
@@ -560,11 +537,6 @@ void ImGui::ImplInitContext(ImplContext context, const lak::window &window)
 			ImplInitGLContext(context->gl_context, window);
 			break;
 #endif
-#ifdef LAK_ENABLE_VULKAN
-		case lak::graphics_mode::Vulkan:
-			ImplInitVkContext(context->vk_context, window);
-			break;
-#endif
 		default:
 			ASSERTF(false, "Invalid Context Mode");
 			break;
@@ -574,7 +546,7 @@ void ImGui::ImplInitContext(ImplContext context, const lak::window &window)
 
 #ifdef LAK_OS_WINDOWS
 #	if defined(LAK_USE_WINAPI)
-	ImGui::GetIO().ImeWindowHandle = window.platform_handle();
+	ImGui::GetIO().ImeWindowHandle = window.handle()->_platform_handle;
 #	elif defined(LAK_USE_XLIB)
 #		error "NYI"
 #	elif defined(LAK_USE_XCB)
@@ -636,10 +608,6 @@ void ImplShutdownGLContext(ImGui::ImplGLContext context)
 }
 #endif
 
-#ifdef LAK_ENABLE_VULKAN
-void ImplShutdownVkContext(ImGui::ImplVkContext) {}
-#endif
-
 void ImGui::ImplShutdownContext(ImplContext context)
 {
 	for (auto &cursor : context->mouse_cursors)
@@ -668,11 +636,6 @@ void ImGui::ImplShutdownContext(ImplContext context)
 #ifdef LAK_ENABLE_OPENGL
 		case lak::graphics_mode::OpenGL:
 			ImplShutdownGLContext(context->gl_context);
-			break;
-#endif
-#ifdef LAK_ENABLE_VULKAN
-		case lak::graphics_mode::Vulkan:
-			ImplShutdownVkContext(context->vk_context);
 			break;
 #endif
 		default:
@@ -899,9 +862,9 @@ bool ImGui::ImplProcessEvent(ImplContext context, const lak::event &event)
 	}
 
 #if defined(LAK_USE_WINAPI)
-	if (event.platform_event.message == WM_CHAR)
+	if (event._platform_event->msg.message == WM_CHAR)
 	{
-		io.AddInputCharacter((unsigned int)event.platform_event.wParam);
+		io.AddInputCharacter((unsigned int)event._platform_event->msg.wParam);
 		return true;
 	}
 #elif defined(LAK_USE_XLIB)
@@ -1020,32 +983,15 @@ void ImplGLRender(ImGui::ImplContext context, ImDrawData *draw_data)
 	{
 		const float &W = draw_data->DisplaySize.x;
 		const float &H = draw_data->DisplaySize.y;
-		const float O1 = ((draw_data->DisplayPos.x * 2) + W) / -W;
-		const float O2 = ((draw_data->DisplayPos.y * 2) + H) / H;
-		// // clang-format off
-		// const float orthoProj[] = {
-		//   2.0f / W, 0.0f,       0.0f,   0.0f,
-		//   0.0f,     2.0f / -H,  0.0f,   0.0f,
-		//   0.0f,     0.0f,       -1.0f,  0.0f,
-		//   O1,       O2,         0.0f,   1.0f
-		// };
-		// // clang-format on
 		// clang-format off
-      [[maybe_unused]] const glm::mat4x4 orthoProj = {
-        2.0f / W, 0.0f,       0.0f,   0.0f,
-        0.0f,     2.0f / -H,  0.0f,   0.0f,
-        0.0f,     0.0f,       -1.0f,  0.0f,
-        O1,       O2,         0.0f,   1.0f
-      };
+		const glm::mat4x4 orthoProj = {
+			2.0f / W,  0.0f,      0.0f,  0.0f,
+			0.0f,      2.0f / -H, 0.0f,  0.0f,
+			0.0f,      0.0f,      1.0f,  0.0f,
+			-1.0,      1.0,       0.0f,  1.0f
+		};
 		// clang-format on
-		// const glm::mat4x4 transform = context->transform * orthoProj;
-		// const glm::mat4x4 transform = glm::mat4x4(1.0f);
-		const glm::mat4x4 transform = glm::scale(
-		  glm::translate(glm::mat4x4(1.0f), glm::vec3(-1.0, 1.0, 0.0)),
-		  glm::vec3(
-		    2.0 / draw_data->DisplaySize.x, 2.0 / -draw_data->DisplaySize.y, 1.0));
-		// const glm::mat4x4 transform = orthoProj * glm::mat4x4(1.0f);
-		return transform;
+		return orthoProj;
 	}();
 
 	auto set_state = [&]()
@@ -1189,8 +1135,8 @@ void ImplGLRender(ImGui::ImplContext context, ImDrawData *draw_data)
 						lak::opengl::call_checked(glScissor,
 						                          (GLint)clip.x,
 						                          (GLint)clip.y,
-						                          (GLsizei)clip.z,
-						                          (GLsizei)clip.w)
+						                          (GLsizei)(clip.z - clip.x),
+						                          (GLsizei)(clip.w - clip.y))
 						  .UNWRAP();
 					else
 #		endif
@@ -1220,10 +1166,6 @@ void ImplGLRender(ImGui::ImplContext context, ImDrawData *draw_data)
 }
 #endif
 
-#ifdef LAK_ENABLE_VULKAN
-void ImplVkRender(ImGui::ImplContext, ImDrawData *) {}
-#endif
-
 void ImGui::ImplRenderData(ImplContext context, ImDrawData *draw_data)
 {
 	ASSERT(context);
@@ -1240,11 +1182,6 @@ void ImGui::ImplRenderData(ImplContext context, ImDrawData *draw_data)
 			ImplGLRender(context, draw_data);
 			break;
 #endif
-#ifdef LAK_ENABLE_VULKAN
-		case lak::graphics_mode::Vulkan:
-			ImplVkRender(context, draw_data);
-			break;
-#endif
 		default:
 			FATAL("Invalid context mode");
 			break;
@@ -1257,34 +1194,14 @@ void ImGui::ImplRenderData(ImplContext context, ImDrawData *draw_data)
 
 void ImGui::ImplSetClipboard(void *, const char *text)
 {
-#if defined(LAK_USE_WINAPI)
-	SetClipboardTextFn_DefaultImpl(v, text);
-#elif defined(LAK_USE_XLIB)
-#	error "NYI"
-#elif defined(LAK_USE_XCB)
-#	error "NYI"
-#elif defined(LAK_USE_SDL)
-	SDL_SetClipboardText(text);
-#else
-#	error "No implementation specified"
-#endif
+	lak::set_clipboard(text);
 }
 
-const char *ImGui::ImplGetClipboard(char **clipboard)
+const char *ImGui::ImplGetClipboard(lak::u8string **user_data)
 {
-#if defined(LAK_USE_WINAPI)
-	return GetClipboardTextFn_DefaultImpl(clipboard);
-#elif defined(LAK_USE_XLIB)
-#	error "NYI"
-#elif defined(LAK_USE_XCB)
-#	error "NYI"
-#elif defined(LAK_USE_SDL)
-	if (*clipboard) SDL_free(*clipboard);
-	*clipboard = SDL_GetClipboardText();
-#else
-#	error "No implementation specified"
-#endif
-	return *clipboard;
+	if (!*user_data) *user_data = new lak::u8string;
+	lak::get_clipboard(*user_data);
+	return (const char *)(*user_data)->c_str();
 }
 
 ImTextureID ImGui::ImplGetFontTexture(ImplContext context)
@@ -1298,9 +1215,6 @@ ImTextureID ImGui::ImplGetFontTexture(ImplContext context)
 #ifdef LAK_ENABLE_OPENGL
 		case lak::graphics_mode::OpenGL:
 			return (ImTextureID)(uintptr_t)context->gl_context->font.get();
-#endif
-#ifdef LAK_ENABLE_VULKAN
-		case lak::graphics_mode::Vulkan:
 #endif
 		default:
 			FATAL("Invalid context mode");

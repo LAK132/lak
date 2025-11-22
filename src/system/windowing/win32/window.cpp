@@ -11,6 +11,7 @@
 #include "lak/debug.hpp"
 #include "lak/defer.hpp"
 #include "lak/image.hpp"
+#include "lak/result.hpp"
 #include "lak/string_literals.hpp"
 
 #include "impl.hpp"
@@ -232,69 +233,6 @@ lak::result<lak::window_handle *, lak::u8string> lak::create_window(
 }
 #endif
 
-#ifdef LAK_ENABLE_VULKAN
-lak::result<lak::window_handle *, lak::u8string> lak::create_window(
-  const lak::vulkan_settings &)
-{
-	auto handle = lak::unique_bank_ptr<lak::window_handle>::create();
-	ASSERT(handle);
-
-	DEFER(if (handle) lak::destroy_window(handle.release()));
-
-	DWORD style = WS_OVERLAPPEDWINDOW;
-
-	// CS_OWNDC means that each window has its own unique HDC that doesn't need
-	// to be released.
-	ASSERT((lak::_platform_instance->window_class.style & CS_OWNDC) != 0);
-
-	handle->_platform_handle = ::CreateWindowExW(
-	  0,                                                   /* styles */
-	  lak::_platform_instance->window_class.lpszClassName, /* class name */
-	  L"insert window name here",                          /* window name */
-	  style,                                               /* style */
-	  CW_USEDEFAULT,                                       /* x */
-	  CW_USEDEFAULT,                                       /* y */
-	  720,                                                 /* width */
-	  480,                                                 /* height */
-	  nullptr,                                             /* parent */
-	  nullptr,                                             /* menu */
-	  lak::_platform_instance->handle,                     /* hInstance */
-	  handle.get()                                         /* user data */
-	);
-
-	if (!handle->_platform_handle)
-	{
-		return lak::err_t<lak::u8string>{
-		  lak::streamify("Failed to create window: "_view,
-		                 win32_error_string(L"CreateWindowExW"))};
-	}
-
-	handle->_device_context = ::GetDC(handle->_platform_handle);
-
-	if (!handle->_device_context)
-	{
-		return lak::err_t<lak::u8string>{
-		  lak::streamify("Failed to get window device context: "_view,
-		                 win32_error_string(L"GetDC"))};
-	}
-
-	// auto &context = handle->_context.emplace<lak::vulkan_context>();
-
-	::ShowWindow(handle->_platform_handle, SW_SHOWNORMAL);
-
-	return lak::ok_t{handle.release()};
-}
-#endif
-
-#ifdef LAK_ENABLE_METAL
-lak::result<lak::window_handle *, lak::u8string> lak::create_window(
-  const lak::metal_settings &s)
-{
-	(void)s;
-	return lak::err_t<lak::u8string>{u8"NYI"_str};
-}
-#endif
-
 bool lak::destroy_window(lak::window_handle *handle)
 {
 	ASSERT(handle);
@@ -344,12 +282,14 @@ bool lak::destroy_window(lak::window_handle *handle)
 	return true;
 }
 
-/* --- OpenGL --- */
+/* --- graphics control --- */
 
 lak::graphics_mode lak::window_graphics_mode(const lak::window_handle *w)
 {
 	return w->graphics_mode();
 }
+
+/* --- OpenGL --- */
 
 #ifdef LAK_ENABLE_OPENGL
 bool lak::set_opengl_swap_interval(const lak::opengl_context &, int interval)

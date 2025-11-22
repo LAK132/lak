@@ -25,19 +25,9 @@ namespace lak
 	{
 	};
 
-	struct vulkan_context
-	{
-	};
-
-	struct metal_context
-	{
-	};
-
 	using graphics_context = std::variant<std::monostate,
 	                                      lak::software_context,
-	                                      lak::opengl_context,
-	                                      lak::vulkan_context,
-	                                      lak::metal_context>;
+	                                      lak::opengl_context>;
 
 	struct window_handle
 	{
@@ -52,12 +42,9 @@ namespace lak
 					return lak::graphics_mode::Software;
 				case 2:
 					return lak::graphics_mode::OpenGL;
-				case 3:
-					return lak::graphics_mode::Vulkan;
-				case 4:
-					return lak::graphics_mode::Metal;
 				default:
 					FATAL("Invalid graphics mode");
+					[[fallthrough]];
 				case 0:
 					return lak::graphics_mode::None;
 			}
@@ -73,18 +60,6 @@ namespace lak
 		{
 			ASSERT(gc.template holds<lak::opengl_context>());
 			return *gc.template get<lak::opengl_context>();
-		}
-
-		inline const lak::vulkan_context &vulkan_context() const
-		{
-			ASSERT(gc.template holds<lak::vulkan_context>());
-			return *gc.template get<lak::vulkan_context>();
-		}
-
-		inline const lak::metal_context &metal_context() const
-		{
-			ASSERT(gc.template holds<lak::metal_context>());
-			return *gc.template get<lak::metal_context>();
 		}
 	};
 

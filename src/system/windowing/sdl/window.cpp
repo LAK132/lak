@@ -1,7 +1,9 @@
 #include "lak/system/windowing/window.hpp"
 
-#include "lak/system/opengl/gl3w.hpp"
-#include "lak/system/opengl/state.hpp"
+#ifdef LAK_ENABLE_OPENGL
+#	include "lak/system/opengl/gl3w.hpp"
+#	include "lak/system/opengl/state.hpp"
+#endif
 
 #include "lak/system/os.hpp"
 
@@ -116,40 +118,6 @@ lak::result<lak::window_handle *, lak::u8string> lak::create_window(
 }
 #endif
 
-#ifdef LAK_ENABLE_VULKAN
-lak::result<lak::window_handle *, lak::u8string> lak::create_window(
-  const lak::vulkan_settings &)
-{
-	auto handle = lak::unique_bank_ptr<lak::window_handle>::create();
-	ASSERT(handle);
-
-	DEFER(if (handle) lak::destroy_window(handle.release()););
-
-	handle->sdl_window =
-	  SDL_CreateWindow("",
-	                   SDL_WINDOWPOS_CENTERED,
-	                   SDL_WINDOWPOS_CENTERED,
-	                   720,
-	                   480,
-	                   SDL_WINDOW_RESIZABLE | SDL_WINDOW_VULKAN);
-
-	if (!handle->sdl_window)
-		return lak::err_t<lak::u8string>{u8"Failed to create window"_str};
-
-	[[maybe_unused]] auto &context = handle->gc.emplace<lak::vulkan_context>();
-
-	return lak::ok_t{handle.release()};
-}
-#endif
-
-#ifdef LAK_ENABLE_METAL
-lak::result<lak::window_handle *, lak::u8string> lak::create_window(
-  const lak::metal_settings &s)
-{
-	ASSERT_NYI();
-}
-#endif
-
 bool lak::destroy_window(lak::window_handle *handle)
 {
 	ASSERT(handle);
@@ -172,20 +140,6 @@ bool lak::destroy_window(lak::window_handle *handle)
 		case lak::graphics_mode::OpenGL:
 		{
 			SDL_GL_DeleteContext(handle->opengl_context().sdl_glcontext);
-		}
-		break;
-#endif
-
-#ifdef LAK_ENABLE_VULKAN
-		case lak::graphics_mode::Vulkan:
-		{
-		}
-		break;
-#endif
-
-#ifdef LAK_ENABLE_METAL
-		case lak::graphics_mode::Metal:
-		{
 		}
 		break;
 #endif

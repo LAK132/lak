@@ -1,6 +1,9 @@
 project(
 	'lak',
 	['c', 'cpp'],
+	default_options: [
+		'prefix=@0@'.format(meson.global_source_root()/'install'),
+	],
 )
 
 cxx = meson.get_compiler('cpp')
@@ -140,14 +143,6 @@ if get_option('lak_enable_opengl')
 	c_cpp_args += '-DLAK_ENABLE_OPENGL'
 endif
 
-if get_option('lak_enable_vulkan')
-	c_cpp_args += '-DLAK_ENABLE_VULKAN'
-endif
-
-if get_option('lak_enable_metal')
-	c_cpp_args += '-DLAK_ENABLE_METAL'
-endif
-
 if get_option('lak_run_windowing_tests')
 	c_cpp_args += [
 		'-DLAK_RUN_WINDOWING_TESTS',
@@ -196,16 +191,6 @@ if get_option('lak_enable_windowing')
 	if get_option('lak_enable_opengl')
 		subdir('src'/'system'/'opengl')
 		dependencies += lakopengl_dep
-	endif
-
-	if get_option('lak_enable_vulkan')
-		lakvulkan_dep = []
-		dependencies += lakvulkan_dep
-	endif
-
-	if get_option('lak_enable_metal')
-		lakmetal_dep = []
-		dependencies += lakmetal_dep
 	endif
 
 	glm_dep = subproject('glm').get_variable('glm_dep')
@@ -349,6 +334,10 @@ lak_dep = declare_dependency(
 	link_args: system_libraries,
 	sources: lakdlls_h,
 )
+
+if get_option('lak_enable_examples')
+	subdir('examples')
+endif
 
 if get_option('lak_enable_tests')
 	lak_test_prog = executable(

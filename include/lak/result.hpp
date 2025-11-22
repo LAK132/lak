@@ -291,11 +291,11 @@ namespace lak
 			  else if constexpr (lak::concepts::streamable<                         \
 			                       lak::remove_cvref_t<decltype(err)>>)             \
 			  {                                                                     \
-				  DEBUG(__VA_ARGS__, ": ", val);                                      \
+				  DEBUG(__VA_ARGS__ __VA_OPT__(, ": ", ) val);                        \
 			  }                                                                     \
 			  else                                                                  \
 			  {                                                                     \
-				  DEBUG(__VA_ARGS__, ": ", typeid(err).name());                       \
+				  DEBUG(__VA_ARGS__ __VA_OPT__(, ": ", ) typeid(err).name());         \
 			  }                                                                     \
 		  })
 #	define IF_ERR(...)                                                         \
@@ -310,11 +310,11 @@ namespace lak
 			  else if constexpr (lak::concepts::streamable<                         \
 			                       lak::remove_cvref_t<decltype(err)>>)             \
 			  {                                                                     \
-				  ERROR(__VA_ARGS__, ": ", err);                                      \
+				  ERROR(__VA_ARGS__ __VA_OPT__(, ": ", ) err);                        \
 			  }                                                                     \
 			  else                                                                  \
 			  {                                                                     \
-				  ERROR(__VA_ARGS__, ": ", typeid(err).name());                       \
+				  ERROR(__VA_ARGS__ __VA_OPT__(, ": ", ) typeid(err).name());         \
 			  }                                                                     \
 		  })
 #	define IF_ERR_WARN(...)                                                    \
@@ -329,11 +329,11 @@ namespace lak
 			  else if constexpr (lak::concepts::streamable<                         \
 			                       lak::remove_cvref_t<decltype(err)>>)             \
 			  {                                                                     \
-				  WARNING(__VA_ARGS__, ": ", err);                                    \
+				  WARNING(__VA_ARGS__ __VA_OPT__(, ": ", ) err);                      \
 			  }                                                                     \
 			  else                                                                  \
 			  {                                                                     \
-				  WARNING(__VA_ARGS__, ": ", typeid(err).name());                     \
+				  WARNING(__VA_ARGS__ __VA_OPT__(, ": ", ) typeid(err).name());       \
 			  }                                                                     \
 		  })
 

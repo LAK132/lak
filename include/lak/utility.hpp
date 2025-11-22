@@ -31,7 +31,7 @@ namespace lak
 
 	/* --- unreachable --- */
 
-	[[noreturn]] inline void unreachable() { UNREACHABLE(); }
+	[[noreturn]] inline void unreachable() { LAK_UNREACHABLE(); }
 
 	/* --- reference_wrapper --- */
 

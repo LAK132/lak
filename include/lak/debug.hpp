@@ -65,6 +65,33 @@
 	DEBUG_STRINGIFY_EXPR(__VA_ARGS__)                                           \
 	": ", lak::spaced_streamify(u8", ", __VA_ARGS__)
 
+#undef LAK_TRACE_MODIFIER
+#if defined(LAK_NO_DEBUG_COLOURS)
+#	define LAK_TRACE_MODIFIER(STR) "(" STR ")"
+#elif defined(LAK_OS_WINDOWS)
+#	define LAK_TRACE_MODIFIER(STR) LAK_BRIGHT_BLACK "(" STR ")" LAK_SGR_RESET
+#else
+#	define LAK_TRACE_MODIFIER(STR) LAK_FAINT "(" STR ")" LAK_SGR_RESET
+#endif
+
+#undef LAK_DEBUG_MESSAGE
+#undef LAK_WARNING_MESSAGE
+#undef LAK_ERROR_MESSAGE
+#undef LAK_FATAL_MESSAGE
+#define LAK_DEBUG_MESSAGE(LF) "DEBUG " LAK_TRACE_MODIFIER(LF) ": "
+#if defined(LAK_NO_DEBUG_COLOURS)
+#	define LAK_WARNING_MESSAGE(LF) "WARNING " LAK_TRACE_MODIFIER(LF) ": "
+#	define LAK_ERROR_MESSAGE(LF)   "ERROR " LAK_TRACE_MODIFIER(LF) ": "
+#	define LAK_FATAL_MESSAGE(LF)   "FATAL " LAK_TRACE_MODIFIER(LF) ": "
+#else
+#	define LAK_WARNING_MESSAGE(LF)                                             \
+		LAK_YELLOW LAK_BOLD "WARNING " LAK_SGR_RESET LAK_TRACE_MODIFIER(LF) ": "
+#	define LAK_ERROR_MESSAGE(LF)                                               \
+		LAK_BRIGHT_RED LAK_BOLD "ERROR " LAK_SGR_RESET LAK_TRACE_MODIFIER(LF) ": "
+#	define LAK_FATAL_MESSAGE(LF)                                               \
+		LAK_BRIGHT_RED LAK_BOLD "FATAL " LAK_SGR_RESET LAK_TRACE_MODIFIER(LF) ": "
+#endif
+
 #undef DEBUG_LINE_FILE
 #undef DEBUG_DEBUG_LINE_FILE
 #undef DEBUG_CHECKPOINT_LINE_FILE
@@ -89,7 +116,7 @@
 #	else
 #		define DEBUG_LINE_FILE LAK_FAINT "(" LINE_TRACE_STR ")" LAK_SGR_RESET
 #	endif
-#	define DEBUG_DEBUG_LINE_FILE      "DEBUG " DEBUG_LINE_FILE ": "
+#	define DEBUG_DEBUG_LINE_FILE      LAK_DEBUG_MESSAGE(DEBUG_LINE_FILE)
 #	define DEBUG_CHECKPOINT_LINE_FILE "CHECKPOINT " DEBUG_LINE_FILE
 #	define CHECKPOINT()                                                        \
 		lak::debugger.std_out(TO_U8STRING(DEBUG_CHECKPOINT_LINE_FILE),            \
@@ -147,18 +174,9 @@
 #	define ERROR(...)
 #	define FATAL(...) ABORT()
 #else
-#	if defined(LAK_NO_DEBUG_COLOURS)
-#		define DEBUG_WARNING_LINE_FILE "WARNING " DEBUG_LINE_FILE ": "
-#		define DEBUG_ERROR_LINE_FILE   "ERROR " DEBUG_LINE_FILE ": "
-#		define DEBUG_FATAL_LINE_FILE   "FATAL " DEBUG_LINE_FILE ": "
-#	else
-#		define DEBUG_WARNING_LINE_FILE                                           \
-			LAK_YELLOW LAK_BOLD "WARNING " LAK_SGR_RESET DEBUG_LINE_FILE ": "
-#		define DEBUG_ERROR_LINE_FILE                                             \
-			LAK_BRIGHT_RED LAK_BOLD "ERROR " LAK_SGR_RESET DEBUG_LINE_FILE ": "
-#		define DEBUG_FATAL_LINE_FILE                                             \
-			LAK_BRIGHT_RED LAK_BOLD "FATAL " LAK_SGR_RESET DEBUG_LINE_FILE ": "
-#	endif
+#	define DEBUG_WARNING_LINE_FILE LAK_WARNING_MESSAGE(DEBUG_LINE_FILE)
+#	define DEBUG_ERROR_LINE_FILE   LAK_ERROR_MESSAGE(DEBUG_LINE_FILE)
+#	define DEBUG_FATAL_LINE_FILE   LAK_FATAL_MESSAGE(DEBUG_LINE_FILE)
 #	define WARNING(...)                                                        \
 		lak::debugger.std_err(TO_U8STRING(DEBUG_WARNING_LINE_FILE),               \
 		                      lak::streamify(__VA_ARGS__, "\n"));

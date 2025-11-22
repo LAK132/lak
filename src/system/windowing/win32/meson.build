@@ -13,14 +13,6 @@ if get_option('lak_enable_opengl')
 	]
 endif
 
-if get_option('lak_enable_vulkan')
-	_lakwindowing_dependencies += lakvulkan_dep
-endif
-
-if get_option('lak_enable_metal')
-	_lakwindowing_dependencies += lakmetal_dep
-endif
-
 lakwindowing_dependencies = declare_dependency(
 	dependencies: _lakwindowing_dependencies,
 )

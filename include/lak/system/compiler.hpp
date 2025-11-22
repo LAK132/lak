@@ -114,10 +114,10 @@ static inline void lak_debug_break()
 #endif
 
 #if defined(LAK_COMPILER_EMSCRIPTEN)
-#	define force_inline  inline __attribute__((always_inline))
-#	define packed_struct struct [[gnu::packed]]
-#	define DLL_EXPORT    [[gnu::dllexport]]
-#	define UNREACHABLE() __builtin_unreachable()
+#	define force_inline      inline __attribute__((always_inline))
+#	define packed_struct     struct [[gnu::packed]]
+#	define DLL_EXPORT        [[gnu::dllexport]]
+#	define LAK_UNREACHABLE() __builtin_unreachable()
 #elif defined(LAK_COMPILER_CLANG) || defined(LAK_COMPILER_GNUC)
 #	define force_inline  inline __attribute__((always_inline))
 #	define packed_struct struct [[gnu::packed]]
@@ -137,7 +137,7 @@ static inline void lak_debug_break()
 #	if defined(__aarch64__)
 #		define LAK_ARCH_ARM64
 #	endif
-#	define UNREACHABLE() __builtin_unreachable()
+#	define LAK_UNREACHABLE() __builtin_unreachable()
 #elif defined(LAK_COMPILER_MSVC)
 #	include <intrin.h>
 #	define force_inline  inline __forceinline
@@ -167,7 +167,7 @@ static inline void lak_debug_break()
 #	if defined(__AVX512__)
 #		define LAK_ARCH_AVX512
 #	endif
-#	define UNREACHABLE() __assume(false)
+#	define LAK_UNREACHABLE() __assume(false)
 #else
 #	error "Compiler not supported"
 #endif
