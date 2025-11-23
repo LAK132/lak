@@ -3,8 +3,8 @@ lakimgui_dependencies = declare_dependency(
 		lakcore_dep,
 		lakwindowing_dep,
 		imgui_dep,
-		subproject('imgui').get_variable('im_file_dialog_dep'),
-		subproject('glm').get_variable('glm_dep'),
+		imgui_file_dialog_dep,
+		glm_dep,
 	],
 )
 
@@ -23,3 +23,4 @@ lakimgui_dep = declare_dependency(
 	dependencies: lakimgui_dependencies.partial_dependency(
 		includes: true, compile_args: true),
 )
+meson.override_dependency('lak-imgui', lakimgui_dep)

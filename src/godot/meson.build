@@ -1,5 +1,3 @@
-godot_cpp_dep = subproject('godot-cpp-4.1').get_variable('godot_cpp_dep')
-
 lakgodot = static_library(
 	'lakgodot',
 	[
@@ -16,3 +14,4 @@ lakgodot_dep = declare_dependency(
 	link_with: lakgodot,
 	dependencies: godot_cpp_dep,
 )
+meson.override_dependency('lak-godot', lakgodot_dep)

@@ -1,6 +1,8 @@
+subproject('SDL2-2.32.10')
+
 _lakwindowing_dependencies = [
 	lakcore_dep,
-	subproject('SDL2').get_variable('sdl2_dep'),
+	dependency('SDL-2.32.10')
 	dependency('dl', required: false),
 ]
 

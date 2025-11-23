@@ -1,5 +1,3 @@
-lua_dep = subproject('lua').get_variable('lua_lib_dep')
-
 laklua = static_library(
 	'laklua',
 	[
@@ -16,3 +14,4 @@ laklua_dep = declare_dependency(
 	link_with: laklua,
 	dependencies: lua_dep,
 )
+meson.override_dependency('lak-lua', laklua_dep)

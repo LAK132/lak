@@ -119,9 +119,7 @@ c_cpp_args += [
 ]
 
 if get_option('buildtype') != 'debug'
-	c_cpp_args += [
-		'-DNDEBUG',
-	]
+	c_cpp_args += '-DNDEBUG'
 endif
 
 if get_option('lak_backend') == 'sdl'
@@ -130,9 +128,7 @@ if get_option('lak_backend') == 'sdl'
 		'-DSDL_MAIN_HANDLED',
 	]
 elif get_option('lak_backend') == 'win32'
-	c_cpp_args += [
-		'-DLAK_USE_WINAPI',
-	]
+	c_cpp_args += '-DLAK_USE_WINAPI'
 endif
 
 if get_option('lak_enable_softrender')
@@ -144,9 +140,7 @@ if get_option('lak_enable_opengl')
 endif
 
 if get_option('lak_run_windowing_tests')
-	c_cpp_args += [
-		'-DLAK_RUN_WINDOWING_TESTS',
-	]
+	c_cpp_args += '-DLAK_RUN_WINDOWING_TESTS'
 endif
 
 if get_option('lak_use_native_file_dialog')
@@ -173,13 +167,17 @@ dlls = []
 subdir('src')
 dependencies += lakcore_dep
 
-if get_option('lak_enable_ebnf2cpp')
-	subdir('tools'/'ebnf2cpp')
-endif
+subdir('tools')
 
 if get_option('lak_enable_tests')
 	subdir('src'/'tests')
 	dependencies += laktestcore_dep
+endif
+
+if get_option('lak_enable_glm')
+	subproject('glm-1.0.2')
+	glm_dep = dependency('glm-1.0.2')
+	dependencies += glm_dep
 endif
 
 if get_option('lak_enable_windowing')
@@ -193,9 +191,6 @@ if get_option('lak_enable_windowing')
 		dependencies += lakopengl_dep
 	endif
 
-	glm_dep = subproject('glm').get_variable('glm_dep')
-	dependencies += glm_dep
-
 	subdir('src'/'system'/'windowing')
 	dependencies += lakwindowing_dep
 
@@ -203,45 +198,14 @@ if get_option('lak_enable_windowing')
 		subdir('src'/'tests'/'windowing')
 		dependencies += laktestwindowing_dep
 	endif
-elif get_option('lak_enable_glm')
-	glm_dep = subproject('glm').get_variable('glm_dep')
-	dependencies += glm_dep
-else
-	glm_dep = []
-endif
-
-if get_option('lak_enable_llvm')
-	subdir('src'/'llvm')
-	dependencies += lakllvm_dep
-
-	if get_option('lak_enable_tests')
-		subdir('src'/'tests'/'llvm')
-		dependencies += laktestllvm_dep
-	endif
-endif
-
-if get_option('lak_enable_lmdb')
-	subdir('src'/'lmdb')
-	dependencies += laklmdb_dep
-
-	if get_option('lak_enable_tests')
-		subdir('src'/'tests'/'lmdb')
-		dependencies += laktestlmdb_dep
-	endif
-endif
-
-if get_option('lak_enable_lua')
-	subdir('src'/'lua')
-	dependencies += laklua_dep
-
-	if get_option('lak_enable_tests')
-		subdir('src'/'tests'/'lua')
-		dependencies += laktestlua_dep
-	endif
 endif
 
 if get_option('lak_enable_imgui')
-	imgui_dep = subproject('imgui').get_variable('imgui_dep')
+	subproject('imgui-1.88')
+	imgui_dep = dependency('imgui-1.88')
+	imgui_node_editor_dep = dependency('imgui-node-editor-0.9.2')
+	imgui_color_text_edit_dep = dependency('ImGuiColorTextEdit')
+	imgui_file_dialog_dep = dependency('ImFileDialog')
 	dependencies += imgui_dep
 
 	if get_option('lak_enable_windowing')
@@ -249,13 +213,29 @@ if get_option('lak_enable_imgui')
 		dependencies += lakimgui_dep
 
 		if get_option('lak_enable_tests')
-			subdir('src'/'tests'/'imgui')
-			dependencies += laktestimgui_dep
+				subdir('src'/'tests'/'imgui')
+				dependencies += laktestimgui_dep
 		endif
 	endif
 endif
 
+if get_option('lak_enable_godot_cpp')
+	subproject('godot-cpp-4.1')
+	godot_cpp_dep = dependency('godot-cpp-4.1')
+
+	subdir('src'/'godot')
+	# dependencies += lakgodot_dep
+
+	# if get_option('lak_enable_tests')
+	# 	subdir('src'/'tests'/'godot')
+	# 	dependencies += laktestgodot_dep
+	# endif
+endif
+
 if get_option('lak_enable_libfive')
+	subproject('libfive-6f844b1')
+	libfive_dep = dependency('libfive-6f844b1')
+
 	subdir('src'/'libfive')
 	dependencies += laklibfive_dep
 
@@ -283,31 +263,65 @@ if get_option('lak_enable_libgphoto2')
 	endif
 endif
 
+if get_option('lak_enable_llvm')
+	llvm_subprj = subproject('llvm-15.0.1')
+	llvm_dep = llvm_subprj.get_variable('llvm_dep')
+
+	subdir('src'/'llvm')
+	dependencies += lakllvm_dep
+
+	if get_option('lak_enable_tests')
+		subdir('src'/'tests'/'llvm')
+		dependencies += laktestllvm_dep
+	endif
+endif
+
+if get_option('lak_enable_lmdb')
+	subproject('lmdb-0.9.31')
+	lmdb_dep = dependency('lmdb-0.9.31')
+
+	subdir('src'/'lmdb')
+	dependencies += laklmdb_dep
+
+	if get_option('lak_enable_tests')
+		subdir('src'/'tests'/'lmdb')
+		dependencies += laktestlmdb_dep
+	endif
+endif
+
+if get_option('lak_enable_lua')
+	subproject('lua-5.4.4')
+	lua_dep = dependency('lua-5.4.4')
+
+	subdir('src'/'lua')
+	dependencies += laklua_dep
+
+	if get_option('lak_enable_tests')
+		subdir('src'/'tests'/'lua')
+		dependencies += laktestlua_dep
+	endif
+endif
+
 if get_option('lak_enable_openvr')
+	subproject('openvr-2.12.14')
+	openvr_dep = dependency('openvr-2.12.14')
+
 	subdir('src'/'openvr')
 	dependencies += lakopenvr_dep
 endif
 
 if get_option('lak_enable_stb')
-	stb_subprj = subproject('stb')
+	subproject('stb')
 
 	if get_option('lak_enable_stb_image')
-		dependencies += stb_subprj.get_variable('stb_image_dep')
+		stb_image_dep = dependency('stb_image-2.30')
+		dependencies += stb_image_dep
 	endif
 
 	if get_option('lak_enable_stb_image_write')
-		dependencies += stb_subprj.get_variable('stb_image_write_dep')
+		stb_image_write_dep = dependency('stb_image_write-1.16')
+		dependencies += stb_image_write_dep
 	endif
-endif
-
-if get_option('lak_enable_godot_cpp')
-	subdir('src'/'godot')
-	# dependencies += lakgodot_dep
-
-	# if get_option('lak_enable_tests')
-	# 	subdir('src'/'tests'/'godot')
-	# 	dependencies += laktestgodot_dep
-	# endif
 endif
 
 if target_machine.system() == 'windows'

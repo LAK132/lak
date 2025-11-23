@@ -1,5 +1,3 @@
-libfive_dep = subproject('libfive').get_variable('libfive_dep')
-
 laklibfive_dependencies = declare_dependency(
 	dependencies: [
 		lakcore_dep,
@@ -21,3 +19,4 @@ laklibfive_dep = declare_dependency(
 	dependencies: laklibfive_dependencies.partial_dependency(
 		includes: true, compile_args: true),
 )
+meson.override_dependency('lak-libfive', laklibfive_dep)

@@ -1,4 +1,7 @@
 [wrap-git]
 url = https://github.com/LAK132/wraps
-revision = godot-cpp-4.1
+revision = 4fce3a38e6c42fa6a9ec1a7ca89ed042bfa7891f
 depth = 1
+
+[provide]
+dependency_names = godot-cpp-4.1

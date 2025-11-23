@@ -1,0 +1,7 @@
+[wrap-git]
+url = https://github.com/LAK132/wraps
+revision = 26e91173632015e3c66dcad085a5052b2db35129
+depth = 1
+
+[provide]
+dependency_names = stb_c_lexer-0.12, stb_divide-0.94, stb_dxt-1.12, stb_easy_font-1.1, stb_herringbone_wang_tile-0.7, stb_hexwave-0.5, stb_image_resize-2.17, stb_image_resize-0.97, stb_image_write-1.16, stb_image-2.30, stb_include-0.02, stb_perlin-0.5, stb_rect_pack-1.01, stb_sprintf-1.10, stb_truetype-1.26, stb_vorbis-1.22

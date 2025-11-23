@@ -1,0 +1,7 @@
+[wrap-git]
+url = https://github.com/LAK132/wraps
+revision = a68a3b483d68559335319eeb749272271134efdb
+depth = 1
+
+[provide]
+dependency_names = libfive-6f844b1

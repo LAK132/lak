@@ -1,4 +1,4 @@
 [wrap-git]
 url = https://github.com/LAK132/wraps
-revision = libgphoto2
+revision = 7053fb18bf48d7da1b1e4868a4e79c6392828f19
 depth = 1
