@@ -1,7 +1,10 @@
-[wrap-git]
-url = https://github.com/LAK132/wraps
-revision = 6ba7ea05a54af28fd703b7473e6be5ad24cd82ab
-depth = 1
+[wrap-file]
+directory = lua-5.4.4
+source_url = https://www.lua.org/ftp/lua-5.4.4.tar.gz
+source_fallback_url = http://www.lua.org/ftp/lua-5.4.4.tar.gz
+source_filename = lua-5.4.4.tar.gz
+source_hash = 164C7849653B80AE67BEC4B7473B884BF5CC8D2DCA05653475EC2ED27B9EBF61
+patch_directory = lua
 
 [provide]
 dependency_names = lua-5.4.4-core, lua-5.4.4

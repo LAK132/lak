@@ -1,0 +1,8 @@
+[wrap-git]
+url = https://github.com/BalazsJako/ImGuiColorTextEdit
+revision = 0a88824f7de8d0bd11d8419066caa7d3469395c4
+depth = 1
+patch_directory = ImGuiColorTextEdit
+
+[provide]
+dependency_names = ImGuiColorTextEdit

@@ -1,0 +1,11 @@
+option('lua_linux_use_readline',
+	type: 'boolean',
+	value: false,
+	yield: true,
+)
+
+option('lua_darwin_use_readline',
+	type: 'boolean',
+	value: false,
+	yield: true,
+)

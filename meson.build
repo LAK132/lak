@@ -4,6 +4,7 @@ project(
 	default_options: [
 		'prefix=@0@'.format(meson.global_source_root()/'install'),
 	],
+	meson_version: '>=1.1.0',
 )
 
 cxx = meson.get_compiler('cpp')
@@ -220,8 +221,8 @@ if get_option('lak_enable_imgui')
 endif
 
 if get_option('lak_enable_godot_cpp')
-	subproject('godot-cpp-4.1')
-	godot_cpp_dep = dependency('godot-cpp-4.1')
+	subproject('godot-cpp-4.5.0')
+	godot_cpp_dep = dependency('godot-cpp-4.5.0')
 
 	subdir('src'/'godot')
 	# dependencies += lakgodot_dep
@@ -234,7 +235,7 @@ endif
 
 if get_option('lak_enable_libfive')
 	subproject('libfive-6f844b1')
-	libfive_dep = dependency('libfive-6f844b1')
+	libfive_dep = dependency('libfive')
 
 	subdir('src'/'libfive')
 	dependencies += laklibfive_dep
@@ -303,15 +304,12 @@ if get_option('lak_enable_lua')
 endif
 
 if get_option('lak_enable_openvr')
-	subproject('openvr-2.12.14')
-	openvr_dep = dependency('openvr-2.12.14')
-
 	subdir('src'/'openvr')
 	dependencies += lakopenvr_dep
 endif
 
 if get_option('lak_enable_stb')
-	subproject('stb')
+	subproject('stb-f1c79c0')
 
 	if get_option('lak_enable_stb_image')
 		stb_image_dep = dependency('stb_image-2.30')

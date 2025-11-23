@@ -1,4 +1,5 @@
 [wrap-git]
-url = https://github.com/LAK132/wraps
-revision = 7053fb18bf48d7da1b1e4868a4e79c6392828f19
+url = https://github.com/gphoto/libgphoto2
+revision = 48136a68094301fe465684abc00dc2bdffa94b4a
 depth = 1
+patch_directory = libgphoto2

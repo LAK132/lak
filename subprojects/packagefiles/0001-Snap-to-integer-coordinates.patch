@@ -1,0 +1,34 @@
+From a1c55c9eeefe72ac388fe2e44465dad7d775d7b7 Mon Sep 17 00:00:00 2001
+From: LAK132 <1386467+LAK132@users.noreply.github.com>
+Date: Sun, 23 Nov 2025 19:36:41 +1030
+Subject: [PATCH] Snap to integer coordinates
+
+---
+ imgui_canvas.cpp | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/imgui_canvas.cpp b/imgui_canvas.cpp
+index 3bd1322..e3fb147 100644
+--- a/imgui_canvas.cpp
++++ b/imgui_canvas.cpp
+@@ -3,6 +3,7 @@
+ # endif
+ # include "imgui_canvas.h"
+ # include <type_traits>
++# include <cmath>
+ 
+ // https://stackoverflow.com/a/36079786
+ # define DECLARE_HAS_MEMBER(__trait_name__, __member_name__)                         \
+@@ -200,7 +201,8 @@ void ImGuiEx::Canvas::SetView(const CanvasView& view)
+ 
+     if (m_View.Origin.x != view.Origin.x || m_View.Origin.y != view.Origin.y)
+     {
+-        m_View.Origin = view.Origin;
++        m_View.Origin.x = std::truncf(view.Origin.x);
++        m_View.Origin.y = std::truncf(view.Origin.y);
+ 
+         UpdateViewTransformPosition();
+     }
+-- 
+2.43.0
+

@@ -30,7 +30,7 @@ elif get_option('b_vscrt') != 'none'
 	error('unsupported vscrt link mode')
 endif
 
-openvr_subprj = cmake.subproject('openvr', options: openvr_opts)
+openvr_subprj = cmake.subproject('openvr-2.12.14', options: openvr_opts)
 
 if host_machine.system() == 'windows'
 	openvr_dep = openvr_subprj.dependency('openvr_api64').as_link_whole()

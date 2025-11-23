@@ -1,0 +1,8 @@
+[wrap-git]
+url = https://github.com/godotengine/godot-cpp
+revision = godot-4.5-stable
+depth = 1
+patch_directory = godot-cpp
+
+[provide]
+dependency_names = godot-cpp, godot-cpp-4.5.0

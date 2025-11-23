@@ -8,8 +8,11 @@
 
 #include "lak/debug.hpp"
 
+#ifdef LAK_ENABLE_SOFTRENDER
+#	include "lak/softrender/texture.hpp"
+#endif
+
 #include <imgui_internal.h>
-#include <texture.h>
 
 /* --- VertSplitter --- */
 

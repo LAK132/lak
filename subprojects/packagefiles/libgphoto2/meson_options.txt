@@ -1,0 +1,5 @@
+option('libgphoto2_msys_prefix',
+	type: 'string',
+	value: 'C:/msys64',
+	yield: true,
+)

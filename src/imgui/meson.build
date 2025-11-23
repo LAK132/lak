@@ -12,6 +12,7 @@ lakimgui = static_library(
 	'lakimgui',
 	[
 		'backend.cpp',
+		'softraster.cpp',
 		'widgets.cpp',
 	],
 	override_options: override_options,

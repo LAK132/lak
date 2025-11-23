@@ -1,4 +1,10 @@
 [wrap-git]
-url = https://github.com/LAK132/wraps
-revision = 9e974e3f19bba405d6a88b6cc729665ed82fb4ba
+url = https://github.com/llvm/llvm-project
+revision = llvmorg-15.0.1
 depth = 1
+patch_directory = llvm
+
+[provide]
+dependency_names = llvm, llvm-15.0.1
+llvm = llvm_dep
+llvm-15.0.1 = llvm_dep

@@ -1,0 +1,15 @@
+libfive_render_brep_dc = files(
+	'dc_contourer.cpp',
+	'dc_mesher.cpp',
+	'dc_neighbors2.cpp',
+	'dc_neighbors3.cpp',
+	'dc_object_pool2.cpp',
+	'dc_object_pool3.cpp',
+	'dc_tree2.cpp',
+	'dc_tree3.cpp',
+	'dc_worker_pool2.cpp',
+	'dc_worker_pool3.cpp',
+	'dc_xtree2.cpp',
+	'dc_xtree3.cpp',
+	'marching.cpp',
+)

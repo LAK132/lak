@@ -1,7 +1,8 @@
 [wrap-git]
-url = https://github.com/LAK132/wraps
-revision = 614e15ee16b0b670ce47bdd52551702577c0bfde
+url = https://github.com/LMDB/lmdb
+revision = LMDB_0.9.31
 depth = 1
+patch_directory = lmdb
 
 [provide]
 dependency_names = lmdb-0.9.31

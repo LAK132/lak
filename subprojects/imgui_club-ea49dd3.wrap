@@ -1,0 +1,8 @@
+[wrap-git]
+url = https://github.com/ocornut/imgui_club
+revision = ea49dd3c6803088d50b496e3fe981501543b7cbc
+depth = 1
+patch_directory = imgui_club
+
+[provide]
+dependency_names = imgui_memory_editor, imgui_memory_editor-0.50

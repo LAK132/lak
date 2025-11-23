@@ -1,7 +1,8 @@
 [wrap-git]
-url = https://github.com/LAK132/wraps
-revision = bf7b6d3b81139f14f1647f2607b1bf24de34b169
+url = https://github.com/g-truc/glm
+revision = 1.0.2
 depth = 1
+patch_directory = glm
 
 [provide]
-dependency_names = glm-1.0.2
+dependency_names = glm, glm-1.0.2

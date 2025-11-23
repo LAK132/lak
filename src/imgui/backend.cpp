@@ -34,7 +34,7 @@
 #endif
 
 #ifdef LAK_ENABLE_SOFTRENDER
-#	include <examples/imgui_impl_softraster.h>
+#	include "lak/imgui/softrender.hpp"
 #endif
 
 #include <imgui_internal.h>
@@ -374,7 +374,7 @@ void ImplInitSRContext(ImGui::ImplSRContext context, const lak::window &window)
 {
 	ImGuiIO &io = ImGui::GetIO();
 
-	io.BackendRendererName = "imgui_impl_lak_softraster";
+	io.BackendRendererName = "imgui_impl_lak_softrender";
 
 #	if defined(LAK_USE_WINAPI)
 	context->screen_surface =
@@ -411,7 +411,7 @@ void ImplInitSRContext(ImGui::ImplSRContext context, const lak::window &window)
 
 	ImplUpdateDisplaySize(context, window.handle(), window.size());
 
-	ImGui_ImplSoftraster_Init(&context->screen_texture);
+	ImGui_ImplSoftrender_Init(&context->screen_texture);
 }
 #endif
 
@@ -565,7 +565,7 @@ void ImGui::ImplInitContext(ImplContext context, const lak::window &window)
 #ifdef LAK_ENABLE_SOFTRENDER
 void ImplShutdownSRContext(ImGui::ImplSRContext context)
 {
-	ImGui_ImplSoftraster_Shutdown();
+	ImGui_ImplSoftrender_Shutdown();
 
 #	if defined(LAK_USE_WINAPI)
 	context->screen_surface = nullptr;
@@ -897,7 +897,7 @@ void ImplSRRender(ImGui::ImplContext context, ImDrawData *draw_data)
 	ASSERT(context->sr_context != nullptr);
 	auto *sr_context = context->sr_context;
 
-	ImGui_ImplSoftraster_RenderDrawData(draw_data);
+	ImGui_ImplSoftrender_RenderDrawData(draw_data);
 
 #	if defined(LAK_USE_WINAPI)
 #		if defined(LAK_SOFTWARE_RENDER_32BIT)

@@ -1,7 +1,0 @@
-[wrap-git]
-url = https://github.com/LAK132/wraps
-revision = b46f841ee00f1304abc4b34ba3a4e04edb51ca95
-depth = 1
-
-[provide]
-dependency_names = SDL2-2.32.10

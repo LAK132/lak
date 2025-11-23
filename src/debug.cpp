@@ -193,7 +193,7 @@ void lak::debugger_t::std_err_cont(const lak::u8string &str)
 void lak::debugger_t::clear()
 {
 	std::lock_guard lock{mutex};
-	stream.clear();
+	stream.str(lak::string<LAK_DEBUG_STREAM_CHAR>());
 }
 
 lak::string<LAK_DEBUG_STREAM_CHAR> lak::debugger_t::str()
