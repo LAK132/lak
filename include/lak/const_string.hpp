@@ -81,18 +81,40 @@ namespace lak
 
 #define LAK_BASIC_CONST_STRING(CHAR, PREFIX, ...)                             \
 	template<size_t N>                                                          \
-	using PREFIX##const_string = lak::const_string<CHAR, N>;                    \
-                                                                              \
-	template<template<CHAR...> typename T, lak::const_string str, typename>     \
+	struct PREFIX##const_string : public lak::const_string<CHAR, N>             \
+	{                                                                           \
+		using lak::const_string<CHAR, N>::const_string;                           \
+		using lak::const_string<CHAR, N>::operator=;                              \
+		using lak::const_string<CHAR, N>::from_ptr;                               \
+		using lak::const_string<CHAR, N>::operator[];                             \
+		using lak::const_string<CHAR, N>::begin;                                  \
+		using lak::const_string<CHAR, N>::end;                                    \
+		using lak::const_string<CHAR, N>::cbegin;                                 \
+		using lak::const_string<CHAR, N>::cend;                                   \
+		using lak::const_string<CHAR, N>::data;                                   \
+		using lak::const_string<CHAR, N>::size;                                   \
+		using lak::const_string<CHAR, N>::operator lak::c_array<CHAR, N>;         \
+		using lak::const_string<CHAR, N>::operator std::basic_string<CHAR>;       \
+		using lak::const_string<CHAR, N>::crc32;                                  \
+	};                                                                          \
+	template<size_t N>                                                          \
+	PREFIX##const_string(const CHAR(&)[N])->PREFIX##const_string<N - 1>;
+	LAK_FOREACH_CHAR(LAK_BASIC_CONST_STRING)
+#undef LAK_BASIC_CONST_STRING
+
+#define LAK_BASIC_CONST_STRING(CHAR, PREFIX, ...)                             \
+	template<template<CHAR...> typename T,                                      \
+	         lak::PREFIX##const_string str,                                     \
+	         typename>                                                          \
 	struct _##PREFIX##apply_const_string;                                       \
-	template<template<CHAR...> typename T, lak::const_string str, size_t... I>  \
-	requires(lak::is_same_v<typename decltype(str)::char_type, CHAR>)           \
+	template<template<CHAR...> typename T,                                      \
+	         lak::PREFIX##const_string str,                                     \
+	         size_t... I>                                                       \
 	struct _##PREFIX##apply_const_string<T, str, lak::index_sequence<I...>>     \
 	{                                                                           \
 		using type = T<str[I]...>;                                                \
 	};                                                                          \
-	template<template<CHAR...> typename T, lak::const_string str>               \
-	requires(lak::is_same_v<typename decltype(str)::char_type, CHAR>)           \
+	template<template<CHAR...> typename T, lak::PREFIX##const_string str>       \
 	struct PREFIX##apply_const_string                                           \
 	{                                                                           \
 		using type = typename _##PREFIX##apply_const_string<                      \
@@ -100,8 +122,7 @@ namespace lak
 		  str,                                                                    \
 		  lak::make_index_sequence<str.size()>>::type;                            \
 	};                                                                          \
-	template<template<CHAR...> typename T, lak::const_string str>               \
-	requires(lak::is_same_v<typename decltype(str)::char_type, CHAR>)           \
+	template<template<CHAR...> typename T, lak::PREFIX##const_string str>       \
 	using PREFIX##apply_const_string_t =                                        \
 	  typename PREFIX##apply_const_string<T, str>::type;
 
