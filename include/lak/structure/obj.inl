@@ -178,7 +178,8 @@ lak::obj::obj::read(lak::binary_reader &strm)
 	                   usemtl_parser | object_parser | group_parser |
 	                   smooth_parser;
 
-	auto lines_parser = lak::dsl::capture_nth<1U, empty_lines, data_parser>;
+	[[maybe_unused]] auto lines_parser =
+	  lak::dsl::capture_nth<1U, empty_lines, data_parser>;
 
 	RES_TRY(parser.read(empty_lines));
 	while (!strm.empty())

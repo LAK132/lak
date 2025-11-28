@@ -465,7 +465,8 @@ lak::pnm::pnm::_read(::lak::binary_reader &strm)
 	uint32_t height    = 0U;
 	bool ascii_encoded = false;
 
-	auto value_check = []<typename T>(uintmax_t value, T max_value)
+	[[maybe_unused]] auto value_check = []<typename T>(uintmax_t value,
+	                                                   T max_value)
 	  -> lak::result<T,
 	                 lak::variant<lak::err::out_of_data,
 	                              lak::err::value_out_of_range,

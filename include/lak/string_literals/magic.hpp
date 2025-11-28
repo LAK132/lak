@@ -4,6 +4,8 @@
 #include "lak/const_string.hpp"
 #include "lak/math.hpp"
 
+#include "lak/system/endian.hpp"
+
 #include <bit>
 
 template<lak::u8const_string STR>
@@ -19,7 +21,7 @@ inline consteval auto operator"" _magic_ne()
 	    uint16_t,
 	    lak::conditional_t<STR.size() == 4U, uint32_t, uint64_t>>>;
 
-	static_assert(sizeof(STR) == sizeof(result_type));
+	static_assert(STR.size() == sizeof(result_type));
 
 	return std::bit_cast<result_type>(STR._value);
 }

@@ -74,7 +74,7 @@ namespace lak
 				constexpr auto rbracket      = lak::dsl::char_literal<U']'>;
 				constexpr auto colon         = lak::dsl::char_literal<U':'>;
 				constexpr auto comma         = lak::dsl::char_literal<U','>;
-				constexpr auto whitepsace    = lak::dsl::one_of_chars_str<U" \r\n\t">;
+				constexpr auto whitespace    = lak::dsl::one_of_chars_str<U" \r\n\t">;
 				constexpr auto number_parser = lak::dsl::as_pure<
 				  lak::dsl::dec_float<lak::dsl::char_literal<U'.'>,
 				                      lak::dsl::one_of_chars_str<U"eE">>>;
