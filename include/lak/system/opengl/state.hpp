@@ -7,8 +7,9 @@
 
 #include "lak/debug.hpp"
 #include "lak/result.hpp"
-#include "lak/string_literals.hpp"
 #include "lak/type_traits.hpp"
+
+#include "lak/string_literals/view.hpp"
 
 #include <array>
 

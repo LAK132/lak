@@ -1,6 +1,8 @@
 #ifndef LAK_CRC_HPP
 #define LAK_CRC_HPP
 
+#include "lak/stdint.hpp"
+
 namespace lak
 {
 	static constexpr uint32_t crc32_table[256] = {

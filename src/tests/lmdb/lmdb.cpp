@@ -1,8 +1,9 @@
 #include "lak/test.hpp"
 
 #include "lak/lmdb/lmdb.hpp"
-#include "lak/string_literals.hpp"
 #include "lak/system/file.hpp"
+
+#include "lak/string_literals/span.hpp"
 
 BEGIN_TEST(lmdb)
 {

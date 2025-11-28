@@ -1,5 +1,7 @@
-#include "lak/string_literals.hpp"
 #include "lak/test.hpp"
+
+#include "lak/string_literals/span.hpp"
+#include "lak/string_literals/view.hpp"
 
 BEGIN_TEST(string_literals)
 {

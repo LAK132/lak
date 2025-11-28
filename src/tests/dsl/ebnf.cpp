@@ -1,7 +1,8 @@
 #include "lak/test.hpp"
 
 #include "lak/dsl/ebnf.hpp"
-#include "lak/string_literals.hpp"
+
+#include "lak/string_literals/view.hpp"
 
 BEGIN_TEST(ebnf)
 {

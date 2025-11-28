@@ -9,6 +9,8 @@
 #include "lak/utility.hpp"
 #include "lak/variant.hpp"
 
+#include "lak/string_literals/string.hpp"
+
 namespace lak
 {
 	namespace nbt

@@ -1,6 +1,6 @@
 #include "lak/test.hpp"
 
-#include "lak/string_literals.hpp"
+#include "lak/string_literals/string.hpp"
 
 #include "lak/system/windowing/events.hpp"
 #include "lak/system/windowing/platform.hpp"

@@ -1,5 +1,5 @@
-#ifndef LAK_STRING_OSTREAM
-#define LAK_STRING_OSTREAM
+#ifndef LAK_STRING_OSTREAM_HPP
+#define LAK_STRING_OSTREAM_HPP
 
 #include "lak/string.hpp"
 #include "lak/string_view.hpp"

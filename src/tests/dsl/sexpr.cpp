@@ -2,7 +2,8 @@
 
 #include "lak/dsl/sexpr.hpp"
 #include "lak/dsl/utility.hpp"
-#include "lak/string_literals.hpp"
+
+#include "lak/string_literals/view.hpp"
 
 BEGIN_TEST(sexpr)
 {

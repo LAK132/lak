@@ -1,5 +1,5 @@
-#ifndef LAK_CONST_STRING
-#define LAK_CONST_STRING
+#ifndef LAK_CONST_STRING_HPP
+#define LAK_CONST_STRING_HPP
 
 #define LAK_ARRAY_FORWARD_ONLY
 #include "lak/array.hpp"
@@ -113,13 +113,5 @@ namespace lak
 	// u32const_string
 	LAK_FOREACH_CHAR(LAK_BASIC_CONST_STRING)
 }
-
-#define LAK_BASIC_CONST_STRING_LITERAL_OPERATOR(CHAR, PREFIX, ...)            \
-	template<lak::PREFIX##const_string_literal STR>                             \
-	constexpr auto operator"" _##PREFIX##const()                                \
-	{                                                                           \
-		return lak::PREFIX##const_string<STR.size>::from_ptr(STR.data);           \
-	}
-LAK_FOREACH_CHAR(LAK_BASIC_CONST_STRING_LITERAL_OPERATOR)
 
 #endif

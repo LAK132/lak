@@ -7,12 +7,11 @@
 #include "lak/memory.hpp"
 #include "lak/span.hpp"
 #include "lak/stdint.hpp"
-#include "lak/string_literals.hpp"
 #include "lak/type_pack.hpp"
 #include "lak/utility.hpp"
 #include "lak/variant.hpp"
 
-#include "tiff_tags.inl"
+#include "lak/structure/tiff_tags.inl"
 
 namespace lak
 {
@@ -326,6 +325,6 @@ namespace lak
 	}
 }
 
-#include "tiff.inl"
+#include "lak/structure/tiff.inl"
 
 #endif

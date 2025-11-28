@@ -5,7 +5,8 @@
 #include "lak/compression/deflate.hpp"
 
 #include "lak/binary_writer.hpp"
-#include "lak/string_literals.hpp"
+
+#include "lak/string_literals/view.hpp"
 
 BEGIN_TEST(nbt)
 {

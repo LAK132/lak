@@ -1,5 +1,7 @@
 #include "lak/structure/tiff.hpp"
 
+#include "lak/string_literals/magic.hpp"
+
 /* --- ifd_tag --- */
 
 lak::tiff::ifd_tag::ifd_tag(ifd_tag &&other)

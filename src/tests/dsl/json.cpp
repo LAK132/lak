@@ -1,7 +1,8 @@
 #include "lak/test.hpp"
 
 #include "lak/dsl/json.hpp"
-#include "lak/string_literals.hpp"
+
+#include "lak/string_literals/view.hpp"
 
 BEGIN_TEST(json)
 {

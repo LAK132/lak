@@ -12,7 +12,8 @@
 #include "lak/defer.hpp"
 #include "lak/image.hpp"
 #include "lak/result.hpp"
-#include "lak/string_literals.hpp"
+
+#include "lak/string_literals/view.hpp"
 
 #include "impl.hpp"
 

@@ -3,6 +3,8 @@
 #include "lak/const_string.hpp"
 #include "lak/string_view.hpp"
 
+#include "lak/string_literals/const.hpp"
+
 template<lak::u8const_string STR>
 lak::u8string_view template_test_function()
 {
@@ -17,6 +19,8 @@ lak::u8string template_test_function2()
 
 BEGIN_TEST(const_string)
 {
+	// auto thing = "asd"_aconst;
+
 	lak::u8string_view view = template_test_function<u8"Hello, World!">();
 	lak::u8string str =
 	  template_test_function2<u8"Hello", u8", ", u8"World", u8"!">();

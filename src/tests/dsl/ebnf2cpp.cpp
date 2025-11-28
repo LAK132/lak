@@ -1,6 +1,6 @@
 #include "lak/test.hpp"
 
-#include "lak/string_literals.hpp"
+#include "lak/string_literals/view.hpp"
 
 #include "ebnf2cpp_test.hpp"
 

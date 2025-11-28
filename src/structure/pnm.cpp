@@ -2,7 +2,6 @@
 
 #include "lak/bit_reader.hpp"
 #include "lak/overloaded.hpp"
-#include "lak/string_literals.hpp"
 
 #include "lak/dsl/binary_reader.hpp"
 #include "lak/dsl/dsl.hpp"

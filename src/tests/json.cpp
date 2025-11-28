@@ -1,7 +1,8 @@
 #include "lak/json.hpp"
 #include "lak/debug.hpp"
 #include "lak/math.hpp"
-#include "lak/string_literals.hpp"
+
+#include "lak/string_literals/view.hpp"
 
 #include "lak/test.hpp"
 

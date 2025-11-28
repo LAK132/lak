@@ -1,5 +1,6 @@
 #include "lak/string.hpp"
-#include "lak/string_literals.hpp"
+
+#include "lak/string_literals/view.hpp"
 
 #include "lak/test.hpp"
 

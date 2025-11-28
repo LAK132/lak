@@ -2,7 +2,8 @@
 
 #include "lak/binary_reader.hpp"
 #include "lak/dsl/binary_reader.hpp"
-#include "lak/string_literals.hpp"
+
+#include "lak/string_literals/string.hpp"
 
 #include "lak/ebpf/assembler.hpp"
 #include "lak/ebpf/vm.hpp"
@@ -12,11 +13,11 @@ BEGIN_TEST(ebpf_assembler)
 	{
 		auto str =
 		  u8R"(
-alu k add r0 0x1234
-jmp ja 0x1234
-alu64 k add r0 0x1234
-alu x add r1 r2
-ld dw imm r0 0x1234
+alu   k  add r0 0x1234
+jmp   ja        0x1234
+alu64 k  add r0 0x1234
+alu   x  add r1 r2
+ld    dw imm r0 0x1234
 )"_str;
 
 		lak::binary_reader strm{lak::span<byte_t>(lak::span(str))};

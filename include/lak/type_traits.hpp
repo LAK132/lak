@@ -1,5 +1,5 @@
-#ifndef LAK_TYPE_TRAITS
-#define LAK_TYPE_TRAITS
+#ifndef LAK_TYPE_TRAITS_HPP
+#define LAK_TYPE_TRAITS_HPP
 
 #include "lak/macro_utils.hpp"
 #include "lak/stdint.hpp"

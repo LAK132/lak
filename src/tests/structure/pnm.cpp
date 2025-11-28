@@ -5,7 +5,8 @@
 #include "lak/system/file.hpp"
 
 #include "lak/binary_reader.hpp"
-#include "lak/string_literals.hpp"
+
+#include "lak/string_literals/span.hpp"
 
 BEGIN_TEST(pnm)
 {

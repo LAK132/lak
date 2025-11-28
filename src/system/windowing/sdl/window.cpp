@@ -10,6 +10,8 @@
 #include "lak/defer.hpp"
 #include "lak/memmanip.hpp"
 
+#include "lak/string_literals/string.hpp"
+
 #include "impl.hpp"
 
 #ifdef LAK_ENABLE_SOFTRENDER

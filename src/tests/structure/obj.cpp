@@ -2,7 +2,7 @@
 
 #include "lak/structure/obj.hpp"
 
-#include "lak/string_literals.hpp"
+#include "lak/string_literals/span.hpp"
 
 BEGIN_TEST(obj)
 {

@@ -2,7 +2,7 @@
 
 #include "lak/numeric.hpp"
 
-#include "lak/string_literals.hpp"
+#include "lak/string_literals/view.hpp"
 
 BEGIN_TEST(string_to_number)
 {

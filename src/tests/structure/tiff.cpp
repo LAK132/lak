@@ -2,7 +2,7 @@
 
 #include "lak/structure/tiff.hpp"
 
-#include "lak/string_literals.hpp"
+#include "lak/string_literals/magic.hpp"
 
 BEGIN_TEST(tiff)
 {

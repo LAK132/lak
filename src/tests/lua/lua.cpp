@@ -1,6 +1,6 @@
 #include "lak/lua/lua.hpp"
 
-#include "lak/string_literals.hpp"
+#include "lak/string_literals/view.hpp"
 
 #include "lak/test.hpp"
 

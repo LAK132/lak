@@ -10,6 +10,8 @@
 #include "lak/unicode.hpp"
 #include "lak/utility.hpp"
 
+#include "lak/string_literals/string.hpp"
+
 #include <ostream>
 
 namespace lak

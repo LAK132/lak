@@ -1,8 +1,9 @@
 #include "lak/json.hpp"
 #include "lak/char_utils.hpp"
-#include "lak/string_literals.hpp"
 #include "lak/string_utils.hpp"
 #include "lak/string_view.hpp"
+
+#include "lak/string_literals/view.hpp"
 
 #include <cmath>
 
@@ -12,7 +13,8 @@ lak::result<lak::JSON::object_proxy> lak::JSON::value_proxy::get_object() const
 {
 	return _index(lak::span(_parser._data))
 	  .and_then(
-	    [](const value_type &v) -> lak::result<const object &> {
+	    [](const value_type &v) -> lak::result<const object &>
+	    {
 		    return lak::result_from_pointer(v.get<value_type::index_of<object>>());
 	    })
 	  .map([&](const object &o) -> object_proxy
@@ -23,7 +25,8 @@ lak::result<lak::JSON::array_proxy> lak::JSON::value_proxy::get_array() const
 {
 	return _index(lak::span(_parser._data))
 	  .and_then(
-	    [](const value_type &v) -> lak::result<const array &> {
+	    [](const value_type &v) -> lak::result<const array &>
+	    {
 		    return lak::result_from_pointer(v.get<value_type::index_of<array>>());
 	    })
 	  .map([&](const array &a) -> array_proxy
@@ -38,7 +41,8 @@ lak::result<lak::JSON::number_proxy> lak::JSON::value_proxy::get_number() const
 	    {
 		    return lak::visit(
 		      lak::overloaded{
-		        [](const uintmax_t &v) -> lak::result<number> {
+		        [](const uintmax_t &v) -> lak::result<number>
+		        {
 			        return lak::ok_t{number::make<number::index_of<uintmax_t>>(v)};
 		        },
 		        [](const intmax_t &v) -> lak::result<number>
@@ -55,7 +59,8 @@ lak::result<lak::u8string_view> lak::JSON::value_proxy::get_string() const
 {
 	return _index(lak::span(_parser._data))
 	  .and_then(
-	    [](const value_type &v) -> lak::result<const subspan &> {
+	    [](const value_type &v) -> lak::result<const subspan &>
+	    {
 		    return lak::result_from_pointer(
 		      v.get<value_type::index_of<subspan>>());
 	    })
@@ -116,7 +121,8 @@ lak::result<lak::JSON::value_proxy::value> lak::JSON::value_proxy::get_value()
 			        return value::make<value::index_of<object_proxy>>(
 			          object_proxy(_parser, o));
 		        },
-		        [&](const array &a) -> value {
+		        [&](const array &a) -> value
+		        {
 			        return value::make<value::index_of<array_proxy>>(
 			          array_proxy(_parser, a));
 		        }},

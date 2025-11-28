@@ -1,7 +1,9 @@
 #include "lak/test.hpp"
 
 #include "lak/runtime_type.hpp"
-#include "lak/string_literals.hpp"
+
+#include "lak/string_literals/string.hpp"
+#include "lak/string_literals/view.hpp"
 
 BEGIN_TEST(runtime_type)
 {

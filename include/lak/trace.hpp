@@ -3,7 +3,6 @@
 
 #include "lak/debug.hpp"
 #include "lak/result.hpp"
-#include "lak/string_literals.hpp"
 #include "lak/unicode.hpp"
 
 #include <ostream>
