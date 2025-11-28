@@ -3,34 +3,15 @@
 
 #include "lak/const_string.hpp"
 
-template<lak::aconst_string_literal STR>
-constexpr auto operator"" _aconst()
+template<lak::const_string STR>
+constexpr auto operator""_const()
 {
-	return lak::const_string<char, STR.size>(STR);
+	return STR;
 }
-
-template<lak::wconst_string_literal STR>
-constexpr auto operator"" _wconst()
-{
-	return lak::const_string<wchar_t, STR.size>(STR);
-}
-
-template<lak::u8const_string_literal STR>
-constexpr auto operator"" _u8const()
-{
-	return lak::const_string<char8_t, STR.size>(STR);
-}
-
-template<lak::u16const_string_literal STR>
-constexpr auto operator"" _16const()
-{
-	return lak::const_string<char16_t, STR.size>(STR);
-}
-
-template<lak::u32const_string_literal STR>
-constexpr auto operator"" _32const()
-{
-	return lak::const_string<char32_t, STR.size>(STR);
-}
+static_assert(("hello"_const).size() == 5U);
+static_assert((L"world"_const).size() == 5U);
+static_assert((u8"how"_const).size() == 3U);
+static_assert((u"are"_const).size() == 3U);
+static_assert((U"you"_const).size() == 3U);
 
 #endif

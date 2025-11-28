@@ -12,24 +12,8 @@ namespace lak
 	template<typename CHAR>
 	constexpr size_t const_strlen(const CHAR *str);
 
-	template<typename CHAR>
-	struct const_string_literal
-	{
-		const CHAR *data;
-		const size_t size;
-		constexpr const_string_literal(const CHAR *str)
-		: data(str), size(const_strlen(str))
-		{
-		}
-	};
-
 #define LAK_BASIC_CONST_STRING(CHAR, PREFIX, ...)                             \
-	constexpr size_t PREFIX##const_strlen(const CHAR *str);                     \
-	struct PREFIX##const_string_literal                                         \
-	: public lak::const_string_literal<CHAR>                                    \
-	{                                                                           \
-		using lak::const_string_literal<CHAR>::const_string_literal;              \
-	};
+	constexpr size_t PREFIX##const_strlen(const CHAR *str);
 	LAK_FOREACH_CHAR(LAK_BASIC_CONST_STRING)
 #undef LAK_BASIC_CONST_STRING
 
@@ -39,22 +23,9 @@ namespace lak
 		using char_type = CHAR;
 		CHAR _value[N];
 		const_string() = delete;
-		inline constexpr const_string(const const_string_literal<CHAR> &other);
 		inline constexpr const_string(const const_string &other);
 		inline constexpr const_string &operator=(const const_string &other);
 		inline constexpr const_string(const CHAR (&str)[N + 1]);
-		inline consteval static const_string from_ptr(const CHAR *str)
-		{
-			if (!std::is_constant_evaluated())
-			{
-				ASSERT_EQUAL(const_strlen(str), N);
-			}
-			else if (const_strlen(str) != N)
-				throw "invalid string lenght";
-			CHAR _arr[N + 1];
-			for (size_t i = 0; i < N; ++i) _arr[i] = str[i];
-			return const_string{_arr};
-		}
 		inline constexpr CHAR &operator[](size_t index) { return _value[index]; }
 		inline constexpr const CHAR &operator[](size_t index) const
 		{
@@ -89,7 +60,6 @@ namespace lak
 	{                                                                           \
 		using lak::const_string<CHAR, N>::const_string;                           \
 		using lak::const_string<CHAR, N>::operator=;                              \
-		using lak::const_string<CHAR, N>::from_ptr;                               \
 		using lak::const_string<CHAR, N>::operator[];                             \
 		using lak::const_string<CHAR, N>::begin;                                  \
 		using lak::const_string<CHAR, N>::end;                                    \

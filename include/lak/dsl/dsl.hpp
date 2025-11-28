@@ -2422,20 +2422,19 @@ namespace lak
 	}
 }
 
-// not working on mac/linux
+template<lak::u32const_string const_str>
+inline consteval auto operator""_dsl_char()
+{
+	static_assert(const_str.size() == 1U);
+	return lak::dsl::char_literal<const_str[0]>;
+}
+static_assert(lak::dsl::is_char_literal_v<decltype(U"0"_dsl_char)>);
 
-// template<lak::u32const_string_literal const_str>
-// requires(const_str.size == 1U)
-// inline consteval auto operator""_dsl_char()
-// {
-// 	return lak::dsl::char_literal<const_str.data[0]>;
-// }
-
-// template<lak::u8const_string_literal const_str>
-// inline consteval auto operator""_dsl_str()
-// {
-// 	return lak::dsl::str_literal<lak::u8const_string<const_str.size>::from_ptr(
-// 	  const_str.data)>;
-// }
+template<lak::u8const_string const_str>
+inline consteval auto operator""_dsl_str()
+{
+	return lak::dsl::str_literal<const_str>;
+}
+static_assert(lak::dsl::is_str_literal_v<decltype(u8"hello"_dsl_str)>);
 
 #endif

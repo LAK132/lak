@@ -20,13 +20,6 @@ LAK_FOREACH_CHAR(LAK_BASIC_CONST_STRING)
 
 template<typename CHAR, size_t N>
 inline constexpr lak::const_string<CHAR, N>::const_string(
-  const lak::const_string_literal<CHAR> &other)
-{
-	for (size_t i = 0; i < N; ++i) _value[i] = other.data[i];
-}
-
-template<typename CHAR, size_t N>
-inline constexpr lak::const_string<CHAR, N>::const_string(
   const const_string &other)
 {
 	for (size_t i = 0; i < N; ++i) _value[i] = other._value[i];
