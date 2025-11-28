@@ -10,7 +10,7 @@ namespace lak
 	template<typename T = lak::monostate>
 	using bit_reader_result = lak::result<
 	  T,
-	  lak::variant<lak::out_of_data_error, lak::value_out_of_range_error>>;
+	  lak::variant<lak::err::out_of_data, lak::err::value_out_of_range>>;
 
 	template<lak::endian ENDIAN = lak::endian::little>
 	struct bit_reader

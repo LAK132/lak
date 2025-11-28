@@ -26,7 +26,7 @@ BEGIN_TEST(dsl)
 	(void)sequence;
 	(void)disjunction;
 
-	static_assert(lak::dsl::pure_match_parser<lak::dsl::disjunction_t<
+	static_assert(lak::dsl::concepts::pure_match_parser<lak::dsl::disjunction_t<
 	                lak::dsl::sequence<lak::dsl::str_literal<u8"a">>,
 	                lak::dsl::sequence<
 	                  lak::dsl::str_literal<u8"b">,
@@ -36,7 +36,7 @@ BEGIN_TEST(dsl)
 	                    lak::dsl::sequence<lak::dsl::str_literal<u8"e">,
 	                                       lak::dsl::str_literal<u8"f">>>>>>);
 
-	static_assert(lak::dsl::pure_match_parser<lak::dsl::conjunction_t<
+	static_assert(lak::dsl::concepts::pure_match_parser<lak::dsl::conjunction_t<
 	                lak::dsl::sequence<lak::dsl::str_literal<u8"a">>,
 	                lak::dsl::sequence<
 	                  lak::dsl::str_literal<u8"b">,
@@ -46,8 +46,8 @@ BEGIN_TEST(dsl)
 	                    lak::dsl::sequence<lak::dsl::str_literal<u8"e">,
 	                                       lak::dsl::str_literal<u8"f">>>>>>);
 
-	// static_assert(lak::dsl::pure_match_parser<decltype(U"a"_dsl_char)>);
-	// static_assert(lak::dsl::pure_match_parser<decltype(u8"asdf"_dsl_str)>);
+	// static_assert(lak::dsl::concepts::pure_match_parser<decltype(U"a"_dsl_char)>);
+	// static_assert(lak::dsl::concepts::pure_match_parser<decltype(u8"asdf"_dsl_str)>);
 
 	{
 		DEBUG("a+b");
@@ -289,19 +289,19 @@ BEGIN_TEST(dsl)
 		auto match1 = lak::dsl::match_sequence<
 		  lak::dsl::match<lak::dsl::bottom, lak::dsl::dummy_impure<int>>,
 		  lak::dsl::match<lak::dsl::bottom, lak::dsl::top>>;
-		static_assert(
-		  !lak::dsl::pure_match_parser<lak::remove_cvref_t<decltype(match1)>>);
+		static_assert(!lak::dsl::concepts::pure_match_parser<
+		              lak::remove_cvref_t<decltype(match1)>>);
 		ASSERT_NOT_EQUAL(match1.parse(str).UNWRAP_ERR().message, u8"bottom"_view);
 
 		auto match2 = match1 | lak::dsl::match<lak::dsl::top, lak::dsl::bottom>;
-		static_assert(
-		  !lak::dsl::pure_match_parser<lak::remove_cvref_t<decltype(match2)>>);
+		static_assert(!lak::dsl::concepts::pure_match_parser<
+		              lak::remove_cvref_t<decltype(match2)>>);
 		ASSERT_EQUAL(match2.parse(str).UNWRAP_ERR().message, u8"bottom"_view);
 
 		auto match3 =
 		  lak::dsl::match_sequence<lak::dsl::match<lak::dsl::top, lak::dsl::top>>;
-		static_assert(
-		  lak::dsl::pure_match_parser<lak::remove_cvref_t<decltype(match3)>>);
+		static_assert(lak::dsl::concepts::pure_match_parser<
+		              lak::remove_cvref_t<decltype(match3)>>);
 		match3.parse(str).UNWRAP();
 	}
 

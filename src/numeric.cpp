@@ -88,80 +88,80 @@ lak::u8string_view lak::uintmax_max_hex_str()
 	return lak::u8string_view(str);
 }
 
-static lak::error_code<lak::string_to_numeric_error> validate_bin_str(
+static lak::error_code<lak::err::string_to_numeric> validate_bin_str(
   lak::u8string_view str)
 {
 	lak::u8string_view max = lak::uintmax_max_bin_str();
 	if (str.size() > max.size())
-		return lak::err_t{lak::string_to_numeric_error::out_of_bounds};
+		return lak::err_t{lak::err::string_to_numeric::out_of_bounds};
 	for (const char8_t &c : str)
 		if (c < u8'0' || c > u8'1')
-			return lak::err_t{lak::string_to_numeric_error::invalid_string};
+			return lak::err_t{lak::err::string_to_numeric::invalid_string};
 	if (str.size() == max.size())
 		for (size_t i = 0; i < str.size(); ++i)
 			if (char_to_value<lak::numeric_base::bin>(str[i]) >
 			    char_to_value<lak::numeric_base::bin>(max[i]))
-				return lak::err_t{lak::string_to_numeric_error::out_of_bounds};
+				return lak::err_t{lak::err::string_to_numeric::out_of_bounds};
 	return lak::ok_t{};
 }
 
-static lak::error_code<lak::string_to_numeric_error> validate_oct_str(
+static lak::error_code<lak::err::string_to_numeric> validate_oct_str(
   lak::u8string_view str)
 {
 	lak::u8string_view max = lak::uintmax_max_oct_str();
 	if (str.size() > max.size())
-		return lak::err_t{lak::string_to_numeric_error::out_of_bounds};
+		return lak::err_t{lak::err::string_to_numeric::out_of_bounds};
 	for (const char8_t &c : str)
 		if (c < u8'0' || c > u8'7')
-			return lak::err_t{lak::string_to_numeric_error::invalid_string};
+			return lak::err_t{lak::err::string_to_numeric::invalid_string};
 	if (str.size() == max.size())
 		for (size_t i = 0; i < str.size(); ++i)
 			if (char_to_value<lak::numeric_base::oct>(str[i]) >
 			    char_to_value<lak::numeric_base::oct>(max[i]))
-				return lak::err_t{lak::string_to_numeric_error::out_of_bounds};
+				return lak::err_t{lak::err::string_to_numeric::out_of_bounds};
 	return lak::ok_t{};
 }
 
-static lak::error_code<lak::string_to_numeric_error> validate_dec_str(
+static lak::error_code<lak::err::string_to_numeric> validate_dec_str(
   lak::u8string_view str)
 {
 	lak::u8string_view max = lak::uintmax_max_dec_str();
 	if (str.size() > max.size())
-		return lak::err_t{lak::string_to_numeric_error::out_of_bounds};
+		return lak::err_t{lak::err::string_to_numeric::out_of_bounds};
 	for (const char8_t &c : str)
 		if (c < u8'0' || c > u8'9')
-			return lak::err_t{lak::string_to_numeric_error::invalid_string};
+			return lak::err_t{lak::err::string_to_numeric::invalid_string};
 	if (str.size() == max.size())
 		for (size_t i = 0; i < str.size(); ++i)
 			if (char_to_value<lak::numeric_base::dec>(str[i]) >
 			    char_to_value<lak::numeric_base::dec>(max[i]))
-				return lak::err_t{lak::string_to_numeric_error::out_of_bounds};
+				return lak::err_t{lak::err::string_to_numeric::out_of_bounds};
 	return lak::ok_t{};
 }
 
-static lak::error_code<lak::string_to_numeric_error> validate_hex_str(
+static lak::error_code<lak::err::string_to_numeric> validate_hex_str(
   lak::u8string_view str)
 {
 	lak::u8string_view max = lak::uintmax_max_hex_str();
 	if (str.size() > max.size())
-		return lak::err_t{lak::string_to_numeric_error::out_of_bounds};
+		return lak::err_t{lak::err::string_to_numeric::out_of_bounds};
 	for (const char8_t &c : str)
 		if (!(c >= u8'0' && c <= u8'9') && !(c >= u8'a' && c <= u8'f') &&
 		    !(c >= u8'A' && c <= u8'F'))
-			return lak::err_t{lak::string_to_numeric_error::invalid_string};
+			return lak::err_t{lak::err::string_to_numeric::invalid_string};
 	if (str.size() == max.size())
 		for (size_t i = 0; i < str.size(); ++i)
 			if (char_to_value<lak::numeric_base::hex>(str[i]) >
 			    char_to_value<lak::numeric_base::hex>(max[i]))
-				return lak::err_t{lak::string_to_numeric_error::out_of_bounds};
+				return lak::err_t{lak::err::string_to_numeric::out_of_bounds};
 	return lak::ok_t{};
 }
 
-lak::result<uintmax_t, lak::string_to_numeric_error> lak::string_to_uintmax(
+lak::result<uintmax_t, lak::err::string_to_numeric> lak::string_to_uintmax(
   lak::u8string_view integer, lak::numeric_base base)
 {
 	if (integer.empty())
-		return lak::err_t{lak::string_to_numeric_error::invalid_string};
+		return lak::err_t{lak::err::string_to_numeric::invalid_string};
 
 	switch (base)
 	{
@@ -230,15 +230,15 @@ lak::result<uintmax_t, lak::string_to_numeric_error> lak::string_to_uintmax(
 		break;
 
 		default:
-			return lak::err_t{lak::string_to_numeric_error::invalid_base};
+			return lak::err_t{lak::err::string_to_numeric::invalid_base};
 	}
 }
 
-lak::result<intmax_t, lak::string_to_numeric_error> lak::string_to_intmax(
+lak::result<intmax_t, lak::err::string_to_numeric> lak::string_to_intmax(
   lak::u8string_view integer, lak::numeric_base base)
 {
 	if (integer.empty())
-		return lak::err_t{lak::string_to_numeric_error::invalid_string};
+		return lak::err_t{lak::err::string_to_numeric::invalid_string};
 
 	bool is_negative = integer[0] == u8'-';
 	if (is_negative || integer[0] == u8'+') integer = integer.substr(1);
@@ -246,19 +246,19 @@ lak::result<intmax_t, lak::string_to_numeric_error> lak::string_to_intmax(
 	return lak::string_to_uintmax(integer, base)
 	  .and_then(
 	    [is_negative](uintmax_t uresult)
-	      -> lak::result<intmax_t, lak::string_to_numeric_error>
+	      -> lak::result<intmax_t, lak::err::string_to_numeric>
 	    {
 		    // C++20 guarantees signed integers are two's complement, bit cast and
 		    // negation is always safe.
 		    intmax_t result = lak::bit_cast<intmax_t>(uresult);
 		    if (result < 0)
-			    return lak::err_t{lak::string_to_numeric_error::out_of_bounds};
+			    return lak::err_t{lak::err::string_to_numeric::out_of_bounds};
 		    return lak::ok_t<intmax_t>{is_negative ? -result : result};
 	    });
 }
 
 #if 0
-lak::result<double, lak::string_to_numeric_error> dec_string_to_double(
+lak::result<double, lak::err::string_to_numeric> dec_string_to_double(
   lak::u8string_view integer_part,
   lak::u8string_view fraction_part,
   lak::u8string_view exponent_part)
@@ -277,7 +277,7 @@ lak::result<double, lak::string_to_numeric_error> dec_string_to_double(
 }
 #endif
 
-lak::result<double, lak::string_to_numeric_error> lak::string_to_double(
+lak::result<double, lak::err::string_to_numeric> lak::string_to_double(
   lak::u8string_view integer_part,
   lak::u8string_view fraction_part,
   lak::u8string_view exponent_part,
@@ -285,7 +285,7 @@ lak::result<double, lak::string_to_numeric_error> lak::string_to_double(
   lak::numeric_base character_base)
 {
 	if (integer_part.empty())
-		return lak::err_t{lak::string_to_numeric_error::invalid_string};
+		return lak::err_t{lak::err::string_to_numeric::invalid_string};
 
 	const bool is_negative = integer_part[0] == u8'-';
 	if (is_negative || integer_part[0] == u8'+')
@@ -325,7 +325,7 @@ lak::result<double, lak::string_to_numeric_error> lak::string_to_double(
 	return lak::ok_t{is_negative ? -res : res};
 }
 
-lak::result<double, lak::string_to_numeric_error> lak::string_to_double(
+lak::result<double, lak::err::string_to_numeric> lak::string_to_double(
   lak::u8string_view integer_part,
   lak::u8string_view fraction_part,
   lak::u8string_view exponent_part,
@@ -339,7 +339,7 @@ lak::result<double, lak::string_to_numeric_error> lak::string_to_double(
 	  integer_part, fraction_part, exponent_part, integer_base, character_base);
 }
 
-lak::result<double, lak::string_to_numeric_error> lak::dec_string_to_double(
+lak::result<double, lak::err::string_to_numeric> lak::dec_string_to_double(
   lak::u8string_view integer_part,
   lak::u8string_view fraction_part,
   lak::u8string_view exponent_part)
@@ -348,48 +348,13 @@ lak::result<double, lak::string_to_numeric_error> lak::dec_string_to_double(
 	  integer_part, fraction_part, exponent_part, 10, lak::numeric_base::dec);
 }
 
-lak::result<double, lak::string_to_numeric_error> lak::hex_string_to_double(
+lak::result<double, lak::err::string_to_numeric> lak::hex_string_to_double(
   lak::u8string_view integer_part,
   lak::u8string_view fraction_part,
   lak::u8string_view exponent_part)
 {
 	return lak::string_to_double(
 	  integer_part, fraction_part, exponent_part, 2, lak::numeric_base::hex);
-}
-
-lak::uint128_t lak::add_u128(uint64_t A, uint64_t B)
-{
-	const uint64_t low = static_cast<uint64_t>(static_cast<uint32_t>(A)) +
-	                     static_cast<uint64_t>(static_cast<uint32_t>(B));
-
-	const uint64_t mid = static_cast<uint64_t>(A >> 32U) +
-	                     static_cast<uint64_t>(B >> 32U) +
-	                     static_cast<uint64_t>(low >> 32U);
-
-	return {
-	  .high = static_cast<uint64_t>(mid >> 32U),
-	  .low  = static_cast<uint64_t>(static_cast<uint32_t>(low)) |
-	         static_cast<uint64_t>(mid << 32U),
-	};
-}
-
-lak::uint128_t lak::mul_u128(uint64_t A, uint64_t B)
-{
-	const uint64_t a_low  = static_cast<uint32_t>(A);
-	const uint64_t a_high = static_cast<uint32_t>(A >> 32U);
-	const uint64_t b_low  = static_cast<uint32_t>(B);
-	const uint64_t b_high = static_cast<uint32_t>(B >> 32U);
-
-	const uint64_t low       = a_low * b_low;
-	const lak::uint128_t mid = lak::add_u128(a_low * b_high, a_high * b_low);
-	const uint64_t high      = a_high * b_high;
-
-	const lak::uint128_t low2 = lak::add_u128(low, mid.low << 32U);
-
-	return {
-	  .high = high + (mid.high << 32U) + (mid.low >> 32U) + low2.high,
-	  .low  = low2.low,
-	};
 }
 
 lak::uintmax2_t lak::add_uintmax2(uintmax_t A, uintmax_t B, uintmax_t C)
@@ -466,23 +431,3 @@ lak::uintmax2_t lak::mul_uintmax2(uintmax_t A, uintmax_t B)
 	         static_cast<uintmax_t>(mid.low << half_shift),
 	};
 }
-
-std::ostream &lak::operator<<(std::ostream &strm,
-                              lak::string_to_numeric_error err)
-{
-	switch (err)
-	{
-		case lak::string_to_numeric_error::invalid_string:
-			strm << "invalid string";
-			break;
-		case lak::string_to_numeric_error::invalid_base:
-			strm << "invalid base";
-			break;
-		case lak::string_to_numeric_error::out_of_bounds:
-			strm << "out of bounds";
-			break;
-	}
-	return strm;
-}
-
-static_assert(lak::concepts::streamable<lak::string_to_numeric_error>);

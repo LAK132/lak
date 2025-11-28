@@ -65,11 +65,11 @@ void lak::from_bytes(
 template<lak::endian E, typename... T>
 requires((sizeof...(T) > 0) &&
          (lak::from_bytes_traits<T, E>::const_size && ...))
-lak::result<lak::span<const byte_t>, lak::out_of_data_error> lak::from_bytes(
+lak::result<lak::span<const byte_t>, lak::err::out_of_data> lak::from_bytes(
   lak::span<const byte_t> bytes, T &...values)
 {
 	constexpr size_t size = (lak::from_bytes_traits<T, E>::size + ...);
-	if (bytes.size() < size) return lak::err_t<lak::out_of_data_error>{};
+	if (bytes.size() < size) return lak::err_t<lak::err::out_of_data>{};
 	lak::from_bytes<E>(bytes.template first<size>(), values...);
 	return lak::ok_t{bytes.subspan(size)};
 }
@@ -127,12 +127,12 @@ lak::array<T, S> lak::array_from_bytes(
 
 template<typename T, size_t S, lak::endian E>
 requires(lak::from_bytes_traits<T, E>::const_size)
-lak::result<lak::array<T, S>, lak::out_of_data_error> lak::array_from_bytes(
+lak::result<lak::array<T, S>, lak::err::out_of_data> lak::array_from_bytes(
   lak::span<const byte_t> bytes)
 {
 	return lak::first_as_const_sized<lak::from_bytes_traits<T, E>::size * S>(
 	         bytes)
-	  .map_err([](lak::monostate) { return lak::out_of_data_error{}; })
+	  .map_err([](lak::monostate) { return lak::err::out_of_data{}; })
 	  .map(static_cast<lak::array<T, S> (*)(
 	         lak::span<const byte_t, lak::from_bytes_traits<T, E>::size * S>)>(
 	    &lak::array_from_bytes<T, S, E>));
@@ -140,13 +140,13 @@ lak::result<lak::array<T, S>, lak::out_of_data_error> lak::array_from_bytes(
 
 template<typename T, lak::endian E>
 requires(lak::from_bytes_traits<T, E>::const_size)
-lak::result<lak::array<T>, lak::out_of_data_error> lak::array_from_bytes(
+lak::result<lak::array<T>, lak::err::out_of_data> lak::array_from_bytes(
   lak::span<const byte_t> bytes, size_t count)
 {
 	constexpr size_t single_size = lak::from_bytes_traits<T, E>::size;
 	const size_t req_size        = single_size * count;
 
-	if (bytes.size() < req_size) return lak::err_t<lak::out_of_data_error>{};
+	if (bytes.size() < req_size) return lak::err_t<lak::err::out_of_data>{};
 
 	lak::array<T> result;
 	result.reserve(count);
@@ -163,13 +163,13 @@ lak::result<lak::array<T>, lak::out_of_data_error> lak::array_from_bytes(
 
 template<lak::endian E, typename T>
 requires(lak::from_bytes_traits<T, E>::const_size)
-lak::result<lak::span<const byte_t>, lak::out_of_data_error>
+lak::result<lak::span<const byte_t>, lak::err::out_of_data>
 lak::array_from_bytes(lak::span<const byte_t> bytes, lak::span<T> values)
 {
 	constexpr size_t size = lak::from_bytes_traits<T, E>::size;
 
 	if (values.size() > bytes.size() * size)
-		return lak::err_t<lak::out_of_data_error>{};
+		return lak::err_t<lak::err::out_of_data>{};
 
 	for (size_t i = 0U; T & val : values)
 		lak::from_bytes_traits<T, E>::from_bytes(
@@ -474,7 +474,7 @@ struct lak::to_bytes_traits_fixed_struct_impl<T, E, MEMBERS...>
 	  lak::span<byte_t> bytes, const T &value)
 	requires(const_size)
 	{
-		if (bytes.size() < size) return lak::err_t<lak::out_of_data_error>{};
+		if (bytes.size() < size) return lak::err_t<lak::err::out_of_data>{};
 		to_bytes(bytes.template first<size>(), value);
 		return lak::ok_t{bytes.subspan(size)};
 	}

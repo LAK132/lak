@@ -16,7 +16,7 @@ BEGIN_TEST(obj)
 
 		ASSERT(strm.template read<lak::obj::obj>()
 		         .UNWRAP_ERR()
-		         .template holds<lak::value_out_of_range_error>());
+		         .template holds<lak::err::value_out_of_range>());
 	}
 
 	{
@@ -29,7 +29,7 @@ BEGIN_TEST(obj)
 
 		ASSERT(strm.template read<lak::obj::obj>()
 		         .UNWRAP_ERR()
-		         .template holds<lak::value_out_of_range_error>());
+		         .template holds<lak::err::value_out_of_range>());
 	}
 
 	{

@@ -71,7 +71,7 @@ inline lak::bit_reader_result<uintmax_t> lak::bit_reader<ENDIAN>::peek_bits(
 	static_assert(ENDIAN == lak::endian::little || ENDIAN == lak::endian::big);
 
 	if (bits > std::numeric_limits<uintmax_t>::digits)
-		return lak::err_t{lak::value_out_of_range_error{}};
+		return lak::err_t{lak::err::value_out_of_range{}};
 
 	if (bits > _num_bits)
 	{
@@ -79,7 +79,7 @@ inline lak::bit_reader_result<uintmax_t> lak::bit_reader<ENDIAN>::peek_bits(
 		if (const uint8_t bytes = bits / 8U, frac_bits = bits % 8U;
 		    !((bytes_rem > bytes) ||
 		      ((bytes_rem == bytes) && (bits_rem >= frac_bits))))
-			return lak::err_t<lak::out_of_data_error>{};
+			return lak::err_t<lak::err::out_of_data>{};
 	}
 
 	accumulate_to(bits);
@@ -139,7 +139,7 @@ inline lak::bit_reader_result<> lak::bit_reader<ENDIAN>::skip(size_t bytes,
 	}
 
 	if (!((_data.size() > bytes) || ((_data.size() == bytes) && (bits == 0U))))
-		return lak::err_t<lak::out_of_data_error>{};
+		return lak::err_t<lak::err::out_of_data>{};
 
 	_bit_accum = 0U;
 	_num_bits  = 0U;

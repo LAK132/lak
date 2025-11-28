@@ -4,10 +4,10 @@
 #include "lak/dsl/utility.hpp"
 
 template<lak::endian E>
-lak::error_codes<lak::out_of_data_error,
-                 lak::value_out_of_range_error,
-                 lak::string_to_numeric_error,
-                 lak::dsl::parse_error>
+lak::error_codes<lak::err::out_of_data,
+                 lak::err::value_out_of_range,
+                 lak::err::string_to_numeric,
+                 lak::dsl::err::parse>
 lak::obj::obj::read(lak::binary_reader &strm)
 {
 	lak::dsl::binary_reader parser{strm};
@@ -214,11 +214,11 @@ lak::obj::obj::read(lak::binary_reader &strm)
 		if (f.v >= vertex_coords.size() ||
 		    (f.vt != lak::dynamic_extent && f.vt >= texture_coords.size()) ||
 		    (f.vn != lak::dynamic_extent && f.vn >= vertex_normals.size()))
-			return lak::err_t{lak::value_out_of_range_error{}};
+			return lak::err_t{lak::err::value_out_of_range{}};
 
 	for (const auto &l : line_coords)
 		if (l.v >= vertex_coords.size())
-			return lak::err_t{lak::value_out_of_range_error{}};
+			return lak::err_t{lak::err::value_out_of_range{}};
 
 	return lak::ok_t{};
 }

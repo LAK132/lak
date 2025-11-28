@@ -3,12 +3,6 @@
 
 #include "lak/system/compiler.hpp"
 
-#include "lak/type_traits.hpp"
-
-#include <functional>
-#include <memory>
-#include <utility>
-
 namespace lak
 {
 	/* --- incomplete --- */
@@ -20,7 +14,9 @@ namespace lak
 	struct monostate
 	{
 	};
-	static_assert(lak::is_default_constructible_v<lak::monostate>);
+
+	template<typename...>
+	using monostate_t = monostate;
 
 	/* --- bottom --- */
 
@@ -29,9 +25,94 @@ namespace lak
 		bottom() = delete;
 	};
 
+	/* --- nonsuch --- */
+
+	struct nonesuch
+	{
+		~nonesuch()                      = delete;
+		nonesuch(const nonesuch &)       = delete;
+		void operator=(const nonesuch &) = delete;
+	};
+
 	/* --- unreachable --- */
 
 	[[noreturn]] inline void unreachable() { LAK_UNREACHABLE(); }
+
+	/* --- void_t --- */
+
+	template<typename...>
+	using void_t = void;
+}
+
+#include "lak/type_traits.hpp"
+
+#include <functional>
+#include <memory>
+#include <utility>
+
+namespace lak
+{
+	static_assert(lak::is_default_constructible_v<lak::monostate>);
+	static_assert(!lak::is_constructible_v<lak::bottom>);
+	static_assert(!lak::is_constructible_v<lak::nonesuch>);
+
+	/* --- detected_or --- */
+
+	template<typename DEFAULT,
+	         typename V,
+	         template<typename...> typename OP,
+	         typename... ARGS>
+	struct _detected
+	{
+		using value_t = lak::false_type;
+		using type    = DEFAULT;
+	};
+
+	template<typename DEFAULT,
+	         template<typename...> typename OP,
+	         typename... ARGS>
+	struct _detected<DEFAULT, void_t<OP<ARGS...>>, OP, ARGS...>
+	{
+		using value_t = lak::true_type;
+		using type    = OP<ARGS...>;
+	};
+
+	template<typename DEFAULT,
+	         template<typename...> typename OP,
+	         typename... ARGS>
+	using detected_or = lak::_detected<DEFAULT, void, OP, ARGS...>;
+
+	template<typename DEFAULT,
+	         template<typename...> typename OP,
+	         typename... ARGS>
+	using detected_or_t = typename lak::detected_or<DEFAULT, OP, ARGS...>::type;
+
+	template<template<typename...> typename OP, typename... ARGS>
+	using detected_t =
+	  typename lak::detected_or<lak::nonesuch, OP, ARGS...>::type;
+
+	/* --- is_detected --- */
+
+	template<template<typename...> typename OP, typename... ARGS>
+	using is_detected =
+	  typename lak::detected_or<lak::nonesuch, OP, ARGS...>::value_t;
+
+	template<template<typename...> typename OP, typename... ARGS>
+	constexpr inline bool is_detected_v = lak::is_detected<OP, ARGS...>::value;
+
+	/* --- is_detected_exact --- */
+
+	template<typename EXPECTED,
+	         template<typename...> typename OP,
+	         typename... ARGS>
+	using is_detected_exact =
+	  lak::is_same<EXPECTED, lak::detected_t<OP, ARGS...>>;
+
+	template<typename EXPECTED,
+	         template<typename...> typename OP,
+	         typename... ARGS>
+	constexpr inline bool is_detected_exact_v =
+	  lak::is_detected_exact<EXPECTED, OP, ARGS...>::value;
 
 	/* --- reference_wrapper --- */
 
@@ -84,6 +165,7 @@ namespace lak
 	force_inline constexpr lak::nth_type_t<I, T, U...> &get_nth(T &,
 	                                                            U &...u) noexcept
 	{
+		static_assert(I <= sizeof...(U));
 		return lak::get_nth<I - 1U, U...>(u...);
 	}
 

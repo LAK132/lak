@@ -131,7 +131,7 @@ namespace lak
 				};
 
 				auto pop_kvpair =
-				  [&](bool allow_empty) -> lak::error_code<lak::dsl::parse_error>
+				  [&](bool allow_empty) -> lak::error_code<lak::dsl::err::parse>
 				{
 					if (working_tree.back().size == 2U)
 					{
@@ -142,10 +142,10 @@ namespace lak
 						working_tree.pop_back();
 					else if (working_tree.back().size == 1U)
 						return lak::err_t{
-						  lak::dsl::parse_error{.message = u8"expected kvpair value"}};
+						  lak::dsl::err::parse{.message = u8"expected kvpair value"}};
 					else
 						return lak::err_t{
-						  lak::dsl::parse_error{.message = u8"invalid kvpair length"}};
+						  lak::dsl::err::parse{.message = u8"invalid kvpair length"}};
 
 					return lak::ok_t{};
 				};
@@ -160,7 +160,7 @@ namespace lak
 
 					if (rem.empty())
 						return lak::err_t{
-						  lak::dsl::parse_error{.message = u8"out of data"}};
+						  lak::dsl::err::parse{.message = u8"out of data"}};
 
 					if (lbrace.parse(rem).if_ok(move_str).is_ok())
 					{
@@ -179,14 +179,14 @@ namespace lak
 					{
 						if (working_tree.back().type != working_data::value_type::kvpair)
 							return lak::err_t{
-							  lak::dsl::parse_error{.message = u8"unexpected ':'"}};
+							  lak::dsl::err::parse{.message = u8"unexpected ':'"}};
 
 						if (working_tree.back().begin + 1U > working_values.size())
-							return lak::err_t{lak::dsl::parse_error{
+							return lak::err_t{lak::dsl::err::parse{
 							  .message = u8"expected kvpair key, got ':'"}};
 
 						if (working_tree.back().size >= 1U)
-							return lak::err_t{lak::dsl::parse_error{
+							return lak::err_t{lak::dsl::err::parse{
 							  .message = u8"expected kvpair value, got ':'"}};
 
 						++working_tree.back().size;
@@ -197,7 +197,7 @@ namespace lak
 						{
 							if (working_tree.back().begin + working_tree.back().size >=
 							    working_values.size())
-								return lak::err_t{lak::dsl::parse_error{
+								return lak::err_t{lak::dsl::err::parse{
 								  .message = u8"expected array value, got ','"}};
 
 							++working_tree.back().size;
@@ -206,11 +206,11 @@ namespace lak
 						         working_data::value_type::kvpair)
 						{
 							if (working_tree.back().size == 0U)
-								return lak::err_t{lak::dsl::parse_error{
+								return lak::err_t{lak::dsl::err::parse{
 								  .message = u8"expected kvpair key, got ','"}};
 
 							if (working_tree.back().begin + 2U > working_values.size())
-								return lak::err_t{lak::dsl::parse_error{
+								return lak::err_t{lak::dsl::err::parse{
 								  .message = u8"expected kvpair value, got ','"}};
 
 							++working_tree.back().size;
@@ -225,19 +225,19 @@ namespace lak
 						}
 						else
 							return lak::err_t{
-							  lak::dsl::parse_error{.message = u8"unexpected ','"}};
+							  lak::dsl::err::parse{.message = u8"unexpected ','"}};
 					}
 					else if (rbrace.parse(rem).if_ok(move_str).is_ok())
 					{
 						if (working_tree.back().type != working_data::value_type::kvpair ||
 						    working_tree.back().size >= 2U)
 							return lak::err_t{
-							  lak::dsl::parse_error{.message = u8"unexpected '}'"}};
+							  lak::dsl::err::parse{.message = u8"unexpected '}'"}};
 
 						if (working_tree.back().size == 1U)
 						{
 							if (working_tree.back().begin + 2U != working_values.size())
-								return lak::err_t{lak::dsl::parse_error{
+								return lak::err_t{lak::dsl::err::parse{
 								  .message = u8"expected kvpair value, got ','"}};
 							else
 								++working_tree.back().size;
@@ -247,7 +247,7 @@ namespace lak
 
 						if (working_tree.back().type != working_data::value_type::object)
 							return lak::err_t{
-							  lak::dsl::parse_error{.message = u8"unexpected '}'"}};
+							  lak::dsl::err::parse{.message = u8"unexpected '}'"}};
 
 						size_t begin = pop_values(working_tree.back().size);
 						working_values.push_back({
@@ -272,7 +272,7 @@ namespace lak
 					{
 						if (working_tree.back().type != working_data::value_type::array)
 							return lak::err_t{
-							  lak::dsl::parse_error{.message = u8"unexpected ']'"}};
+							  lak::dsl::err::parse{.message = u8"unexpected ']'"}};
 
 						if (working_tree.back().begin + working_tree.back().size + 1U ==
 						    working_values.size())
@@ -315,15 +315,15 @@ namespace lak
 					}
 					else
 						return lak::err_t{
-						  lak::dsl::parse_error{.message = u8"unexpected data"}};
+						  lak::dsl::err::parse{.message = u8"unexpected data"}};
 				} while (!working_tree.empty());
 
 				if (working_values.size() == 0U)
 					return lak::err_t{
-					  lak::dsl::parse_error{.message = u8"missing root value"}};
+					  lak::dsl::err::parse{.message = u8"missing root value"}};
 				else if (working_values.size() > 1U)
 					return lak::err_t{
-					  lak::dsl::parse_error{.message = u8"unused working values"}};
+					  lak::dsl::err::parse{.message = u8"unused working values"}};
 
 				result.values.front() = working_values.back();
 
@@ -337,7 +337,7 @@ namespace lak
 
 		inline constexpr json_t json;
 
-		static_assert(lak::dsl::parser<json_t>);
+		static_assert(lak::dsl::concepts::parser<json_t>);
 	}
 }
 

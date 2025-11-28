@@ -24,7 +24,7 @@ BEGIN_TEST(sexpr)
 	constexpr auto token_parser =
 	  string_parser | character_parser | identifier_parser;
 
-	static_assert(lak::dsl::pure_match_parser<decltype(token_parser)>);
+	static_assert(lak::dsl::concepts::pure_match_parser<decltype(token_parser)>);
 
 	constexpr auto sexpr_parser =
 	  lak::dsl::sexpr<token_parser, lak::dsl::whitespace>;

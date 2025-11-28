@@ -116,7 +116,7 @@ namespace lak
 
 		template<lak::endian E = lak::endian::little, typename CHAR = void>
 		requires(lak::to_bytes_traits<CHAR, E>::const_size)
-		lak::error_code<error_type<CHAR, E, lak::out_of_data_error>> write_c_str(
+		lak::error_code<error_type<CHAR, E, lak::err::out_of_data>> write_c_str(
 		  lak::string_view<CHAR> string)
 		{
 			constexpr size_t char_size = lak::to_bytes_traits<CHAR, E>::size;
@@ -124,7 +124,7 @@ namespace lak
 
 			auto bytes{remaining()};
 
-			if (req_size > bytes.size()) return lak::err_t<lak::out_of_data_error>{};
+			if (req_size > bytes.size()) return lak::err_t<lak::err::out_of_data>{};
 
 			bytes = bytes.last(req_size);
 			lak::array_to_bytes<CHAR, E>(bytes.first(char_size * string.size()),
@@ -227,7 +227,7 @@ namespace lak
 
 		template<lak::endian E = lak::endian::little, typename T = void>
 		requires(lak::concepts::to_bytes_writeable<lak::remove_const_t<T>, E>)
-		lak::error_code<error_type<T, E, lak::out_of_data_error>> write(
+		lak::error_code<error_type<T, E, lak::err::out_of_data>> write(
 		  lak::span<T> values)
 		{
 			using value_type = lak::remove_const_t<T>;

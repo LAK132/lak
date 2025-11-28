@@ -28,23 +28,25 @@ namespace lak
 
 		inline constexpr auto number_sign = lak::dsl::one_of_chars<U'+', U'-'>;
 
-		template<lak::dsl::parser auto PAR, lak::numeric_base BASE, typename UINT>
+		template<lak::dsl::concepts::parser auto PAR,
+		         lak::numeric_base BASE,
+		         typename UINT>
 		inline constexpr auto parsed_uint = lak::dsl::transform<
 		  PAR,
 		  [](lak::u8string_view num)
 		  {
 			  return lak::string_to_uintmax(num, BASE)
 			    .map_err(
-			      [](lak::string_to_numeric_error)
+			      [](lak::err::string_to_numeric)
 			      {
-				      return lak::dsl::parse_error{
+				      return lak::dsl::err::parse{
 				        .message = u8"error converting string to uintmax_t"};
 			      })
 			    .and_then(
-			      [](uintmax_t v) -> lak::result<UINT, lak::dsl::parse_error>
+			      [](uintmax_t v) -> lak::result<UINT, lak::dsl::err::parse>
 			      {
 				      if (v > std::numeric_limits<UINT>::max())
-					      return lak::err_t{lak::dsl::parse_error{
+					      return lak::err_t{lak::dsl::err::parse{
 					        .message = u8"parsed value out of range"}};
 				      else
 					      return lak::ok_t{UINT(v)};
@@ -80,17 +82,17 @@ namespace lak
 		  {
 			  return lak::string_to_intmax(num, lak::numeric_base::dec)
 			    .map_err(
-			      [](lak::string_to_numeric_error)
+			      [](lak::err::string_to_numeric)
 			      {
-				      return lak::dsl::parse_error{
+				      return lak::dsl::err::parse{
 				        .message = u8"error converting dec string to intmax_t"};
 			      })
 			    .and_then(
-			      [](intmax_t v) -> lak::result<SINT, lak::dsl::parse_error>
+			      [](intmax_t v) -> lak::result<SINT, lak::dsl::err::parse>
 			      {
 				      if (v > std::numeric_limits<SINT>::max() ||
 				          v < std::numeric_limits<SINT>::lowest())
-					      return lak::err_t{lak::dsl::parse_error{
+					      return lak::err_t{lak::dsl::err::parse{
 					        .message = u8"parsed value out of range"}};
 				      else
 					      return lak::ok_t{SINT(v)};
@@ -120,8 +122,8 @@ namespace lak
 		   -lak::dsl::dec_digit) |
 		  lak::dsl::parsed_dec_uint<UINT>;
 
-		template<lak::dsl::pure_match_parser auto frac_separator,
-		         lak::dsl::pure_match_parser auto exp_separator>
+		template<lak::dsl::concepts::pure_match_parser auto frac_separator,
+		         lak::dsl::concepts::pure_match_parser auto exp_separator>
 		inline constexpr auto dec_float =
 		  lak::dsl::capture<lak::dsl::signed_dec_number> +
 		  lak::dsl::capture<lak::dsl::conditional<frac_separator,
@@ -132,8 +134,8 @@ namespace lak
 		                                          lak::dsl::top>>;
 
 		template<typename FLOAT,
-		         lak::dsl::pure_match_parser auto frac_separator,
-		         lak::dsl::pure_match_parser auto exp_separator>
+		         lak::dsl::concepts::pure_match_parser auto frac_separator,
+		         lak::dsl::concepts::pure_match_parser auto exp_separator>
 		inline constexpr auto parsed_dec_float = lak::dsl::transform<
 		  lak::dsl::dec_float<frac_separator, exp_separator>,
 		  [](const lak::tuple<lak::u8string_view,
@@ -142,7 +144,7 @@ namespace lak
 		  {
 			  return result.apply(lak::dec_string_to_double)
 			    .map_err(
-			      [&](lak::string_to_numeric_error)
+			      [&](lak::err::string_to_numeric)
 			      {
 				      ERROR("string to numeric error: ",
 				            result.template get<0>(),
@@ -150,15 +152,15 @@ namespace lak
 				            result.template get<1>(),
 				            "e",
 				            result.template get<2>());
-				      return lak::dsl::parse_error{
+				      return lak::dsl::err::parse{
 				        .message = u8"error converting dec string to double"};
 			      })
 			    .and_then(
-			      [](double v) -> lak::result<FLOAT, lak::dsl::parse_error>
+			      [](double v) -> lak::result<FLOAT, lak::dsl::err::parse>
 			      {
 				      if (v > std::numeric_limits<FLOAT>::max() ||
 				          v < std::numeric_limits<FLOAT>::lowest())
-					      return lak::err_t{lak::dsl::parse_error{
+					      return lak::err_t{lak::dsl::err::parse{
 					        .message = u8"parsed value out of range"}};
 				      else
 					      return lak::ok_t{FLOAT(v)};

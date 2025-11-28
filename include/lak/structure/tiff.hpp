@@ -31,7 +31,7 @@ namespace lak
 		template<typename T = lak::monostate>
 		using result = lak::result<
 		  T,
-		  lak::variant<lak::out_of_data_error, lak::value_out_of_range_error>>;
+		  lak::variant<lak::err::out_of_data, lak::err::value_out_of_range>>;
 
 		struct urational
 		{

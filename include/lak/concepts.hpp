@@ -1,7 +1,7 @@
 #ifndef LAK_CONCEPTS_HPP
 #define LAK_CONCEPTS_HPP
 
-#include "lak/type_traits.hpp"
+#include "lak/utility.hpp"
 
 #include <concepts>
 
@@ -91,8 +91,7 @@ namespace lak
 		concept detected = lak::is_detected_v<OP, ARGS...>;
 
 		template<typename EXPECTED,
-		         template<typename...>
-		         typename OP,
+		         template<typename...> typename OP,
 		         typename... ARGS>
 		concept detected_exact = lak::is_detected_exact_v<EXPECTED, OP, ARGS...>;
 
@@ -171,8 +170,7 @@ namespace lak
 		/* --- same_template --- */
 
 		template<template<typename...> typename T,
-		         template<typename...>
-		         typename U>
+		         template<typename...> typename U>
 		concept same_template = lak::is_same_template_v<T, U>;
 
 		/* --- of_template --- */
@@ -213,12 +211,8 @@ namespace lak
 			typename R::value_type;
 			typename R::size_type;
 
-			{
-				range.data()
-			} -> lak::concepts::same_as<typename R::value_type *>;
-			{
-				range.size()
-			} -> lak::concepts::same_as<typename R::size_type>;
+			{ range.data() } -> lak::concepts::same_as<typename R::value_type *>;
+			{ range.size() } -> lak::concepts::same_as<typename R::size_type>;
 		};
 
 		/* --- fixed_contiguous_range --- */

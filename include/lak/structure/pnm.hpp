@@ -77,20 +77,20 @@ namespace lak
 			operator ::lak::image4_t() const;
 
 			template<::lak::endian E>
-			::lak::error_codes<::lak::out_of_data_error,
-			                   ::lak::value_out_of_range_error,
-			                   ::lak::string_to_numeric_error,
-			                   ::lak::dsl::parse_error>
+			::lak::error_codes<::lak::err::out_of_data,
+			                   ::lak::err::value_out_of_range,
+			                   ::lak::err::string_to_numeric,
+			                   ::lak::dsl::err::parse>
 			read(::lak::binary_reader &strm)
 			{
 				// pnms have their on way of handling endianness
 				return _read(strm);
 			}
 
-			::lak::error_codes<::lak::out_of_data_error,
-			                   ::lak::value_out_of_range_error,
-			                   ::lak::string_to_numeric_error,
-			                   ::lak::dsl::parse_error>
+			::lak::error_codes<::lak::err::out_of_data,
+			                   ::lak::err::value_out_of_range,
+			                   ::lak::err::string_to_numeric,
+			                   ::lak::dsl::err::parse>
 			_read(::lak::binary_reader &strm);
 		};
 	}

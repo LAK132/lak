@@ -126,7 +126,7 @@ namespace lak
 			lak::array<value_type> value;
 
 			template<lak::endian E>
-			lak::error_code<lak::out_of_data_error> read(lak::binary_reader &strm)
+			lak::error_code<lak::err::out_of_data> read(lak::binary_reader &strm)
 			{
 				RES_TRY_ASSIGN(auto size =,
 				               strm.template read<lak::nbt::TAG_Int, E>());
@@ -147,7 +147,7 @@ namespace lak
 			}
 
 			template<lak::endian E>
-			lak::error_code<lak::out_of_data_error> write(
+			lak::error_code<lak::err::out_of_data> write(
 			  lak::binary_span_writer &strm) const
 			{
 				RES_TRY(strm.template write<E>(lak::nbt::TAG_Int{
@@ -205,7 +205,7 @@ namespace lak
 			lak::u8string value;
 
 			template<lak::endian E>
-			lak::error_code<lak::out_of_data_error> read(lak::binary_reader &strm)
+			lak::error_code<lak::err::out_of_data> read(lak::binary_reader &strm)
 			{
 				RES_TRY_ASSIGN(auto size =,
 				               strm.template read<lak::nbt::TAG_Short, E>());
@@ -222,7 +222,7 @@ namespace lak
 			}
 
 			template<lak::endian E>
-			lak::error_code<lak::out_of_data_error> write(
+			lak::error_code<lak::err::out_of_data> write(
 			  lak::binary_span_writer &strm) const
 			{
 				RES_TRY(strm.template write<E>(lak::nbt::TAG_Short{
@@ -245,7 +245,7 @@ namespace lak
 			value_type value;
 
 			template<lak::endian E>
-			lak::error_code<lak::out_of_data_error> read(lak::binary_reader &strm)
+			lak::error_code<lak::err::out_of_data> read(lak::binary_reader &strm)
 			{
 				for (;;)
 				{
@@ -273,7 +273,7 @@ namespace lak
 			size_t write_size() const;
 
 			template<lak::endian E>
-			lak::error_code<lak::out_of_data_error> write(
+			lak::error_code<lak::err::out_of_data> write(
 			  lak::binary_span_writer &strm) const
 			{
 				RES_TRY(strm.template write<E>(lak::span(value)));
@@ -337,7 +337,7 @@ namespace lak
 			}
 
 			template<lak::endian E>
-			lak::error_codes<lak::out_of_data_error, lak::nbt::invalid_type_error>
+			lak::error_codes<lak::err::out_of_data, lak::nbt::invalid_type_error>
 			read(lak::binary_reader &strm)
 			{
 				RES_TRY_ASSIGN(auto type =,
@@ -377,17 +377,17 @@ namespace lak
 			}
 
 			template<lak::endian E>
-			lak::error_code<lak::out_of_data_error> write(
+			lak::error_code<lak::err::out_of_data> write(
 			  lak::binary_span_writer &strm) const
 			{
 				RES_TRY(strm.template write<E>(type()));
 				RES_TRY(strm.template write<E>(lak::nbt::TAG_Int{
 				  .value = static_cast<lak::nbt::TAG_Int::value_type>(size()),
 				}));
-				RES_TRY(
-				  value.visit([&]<typename T>(const lak::array<T> &arr)
-				                -> lak::error_code<lak::out_of_data_error>
-				              { return strm.template write<E>(lak::span(arr)); }));
+				RES_TRY(value.visit(
+				  [&]<typename T>(
+				    const lak::array<T> &arr) -> lak::error_code<lak::err::out_of_data>
+				  { return strm.template write<E>(lak::span(arr)); }));
 				return lak::ok_t{};
 			}
 
@@ -433,7 +433,7 @@ namespace lak
 			}
 
 			template<lak::endian E>
-			lak::error_code<lak::out_of_data_error> write(
+			lak::error_code<lak::err::out_of_data> write(
 			  lak::binary_span_writer &strm) const
 			{
 				return value.visit([&]<typename T>(const T &val)
@@ -455,7 +455,7 @@ namespace lak
 			inline lak::nbt::tag_type type() const { return payload.type(); }
 
 			template<lak::endian E>
-			lak::error_codes<lak::out_of_data_error, lak::nbt::invalid_type_error>
+			lak::error_codes<lak::err::out_of_data, lak::nbt::invalid_type_error>
 			read(lak::binary_reader &strm)
 			{
 				RES_TRY_ASSIGN(lak::nbt::tag_type type =,
@@ -486,7 +486,7 @@ namespace lak
 			}
 
 			template<lak::endian E>
-			lak::error_code<lak::out_of_data_error> write(
+			lak::error_code<lak::err::out_of_data> write(
 			  lak::binary_span_writer &strm) const
 			{
 				RES_TRY(strm.template write<E>(type()));

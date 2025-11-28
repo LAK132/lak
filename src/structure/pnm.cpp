@@ -453,10 +453,10 @@ static constexpr auto header_parser = lak::dsl::capture_nth<
                       lak::dsl::optional<tupltype_parser>>,
   endhdr_parser>;
 
-::lak::error_codes<lak::out_of_data_error,
-                   lak::value_out_of_range_error,
-                   lak::string_to_numeric_error,
-                   lak::dsl::parse_error>
+::lak::error_codes<lak::err::out_of_data,
+                   lak::err::value_out_of_range,
+                   lak::err::string_to_numeric,
+                   lak::dsl::err::parse>
 lak::pnm::pnm::_read(::lak::binary_reader &strm)
 {
 	lak::dsl::binary_reader parser{strm};
@@ -467,13 +467,13 @@ lak::pnm::pnm::_read(::lak::binary_reader &strm)
 
 	auto value_check = []<typename T>(uintmax_t value, T max_value)
 	  -> lak::result<T,
-	                 lak::variant<lak::out_of_data_error,
-	                              lak::value_out_of_range_error,
-	                              lak::string_to_numeric_error,
-	                              lak::dsl::parse_error>>
+	                 lak::variant<lak::err::out_of_data,
+	                              lak::err::value_out_of_range,
+	                              lak::err::string_to_numeric,
+	                              lak::dsl::err::parse>>
 	{
 		if (value > max_value)
-			return lak::err_t{::lak::value_out_of_range_error{}};
+			return lak::err_t{::lak::err::value_out_of_range{}};
 		else
 			return lak::ok_t{static_cast<T>(value)};
 	};
@@ -493,7 +493,7 @@ lak::pnm::pnm::_read(::lak::binary_reader &strm)
 		height = header.template get<1>();
 
 		uint8_t depth = header.template get<2>();
-		if (depth > 4U) return lak::err_t{lak::value_out_of_range_error{}};
+		if (depth > 4U) return lak::err_t{lak::err::value_out_of_range{}};
 
 		uint16_t max_value = header.template get<3>();
 
@@ -688,7 +688,7 @@ lak::pnm::pnm::_read(::lak::binary_reader &strm)
 
 	char c = 0;
 
-	auto skip_whitespace = [&]() -> ::lak::error_code<::lak::out_of_data_error>
+	auto skip_whitespace = [&]() -> ::lak::error_code<::lak::err::out_of_data>
 	{
 		while (::lak::is_ascii_whitespace(c))
 		{
@@ -697,7 +697,7 @@ lak::pnm::pnm::_read(::lak::binary_reader &strm)
 		return ::lak::ok_t{};
 	};
 
-	auto skip_comments = [&]() -> ::lak::error_code<::lak::out_of_data_error>
+	auto skip_comments = [&]() -> ::lak::error_code<::lak::err::out_of_data>
 	{
 		RES_TRY(skip_whitespace());
 		while (c == '#')
@@ -714,21 +714,21 @@ lak::pnm::pnm::_read(::lak::binary_reader &strm)
 
 	auto read_integer = [&]<typename T>(uintmax_t max_v)
 	  -> ::lak::result<T,
-	                   ::lak::variant<lak::out_of_data_error,
-	                                  lak::value_out_of_range_error,
-	                                  lak::string_to_numeric_error,
-	                                  lak::dsl::parse_error>>
+	                   ::lak::variant<lak::err::out_of_data,
+	                                  lak::err::value_out_of_range,
+	                                  lak::err::string_to_numeric,
+	                                  lak::dsl::err::parse>>
 	{
 		RES_TRY(skip_whitespace());
 		uintmax_t result = 0U;
 		do
 		{
 			if (!::lak::is_alphanumeric(c))
-				return ::lak::err_t{::lak::value_out_of_range_error{}};
+				return ::lak::err_t{::lak::err::value_out_of_range{}};
 			result *= 10;
 			result += uint32_t(c - '0');
 			if (result > max_v)
-				return ::lak::err_t{::lak::value_out_of_range_error{}};
+				return ::lak::err_t{::lak::err::value_out_of_range{}};
 			if_let_ok (uint8_t u8 =, strm.read_u8le())
 				c = char(u8);
 			else
@@ -738,16 +738,16 @@ lak::pnm::pnm::_read(::lak::binary_reader &strm)
 	};
 
 	auto res = value.visit(::lak::overloaded{
-	  [](::lak::monostate &) -> ::lak::error_codes<lak::out_of_data_error,
-	                                               lak::value_out_of_range_error,
-	                                               lak::string_to_numeric_error,
-	                                               lak::dsl::parse_error>
-	  { return ::lak::err_t{::lak::value_out_of_range_error{}}; },
+	  [](::lak::monostate &) -> ::lak::error_codes<lak::err::out_of_data,
+	                                               lak::err::value_out_of_range,
+	                                               lak::err::string_to_numeric,
+	                                               lak::dsl::err::parse>
+	  { return ::lak::err_t{::lak::err::value_out_of_range{}}; },
 	  [&](pnm_data<bool, bool> &data)
-	    -> ::lak::error_codes<lak::out_of_data_error,
-	                          lak::value_out_of_range_error,
-	                          lak::string_to_numeric_error,
-	                          lak::dsl::parse_error>
+	    -> ::lak::error_codes<lak::err::out_of_data,
+	                          lak::err::value_out_of_range,
+	                          lak::err::string_to_numeric,
+	                          lak::dsl::err::parse>
 	  {
 		  data.resize(width * height);
 		  if (ascii_encoded)
@@ -771,10 +771,10 @@ lak::pnm::pnm::_read(::lak::binary_reader &strm)
 					  RES_TRY_ASSIGN(
 					    auto bits =,
 					    row_reader.read_bits(1U).map_err(
-					      [](auto &&err) -> lak::variant<lak::out_of_data_error,
-					                                     lak::value_out_of_range_error,
-					                                     lak::string_to_numeric_error,
-					                                     lak::dsl::parse_error>
+					      [](auto &&err) -> lak::variant<lak::err::out_of_data,
+					                                     lak::err::value_out_of_range,
+					                                     lak::err::string_to_numeric,
+					                                     lak::dsl::err::parse>
 					      { return err; }));
 					  data[(y * width) + x] = bool(bits);
 				  }
@@ -783,10 +783,10 @@ lak::pnm::pnm::_read(::lak::binary_reader &strm)
 		  return lak::ok_t{};
 	  },
 	  [&](pnm_data<uint8_t, uint8_t> &data)
-	    -> ::lak::error_codes<lak::out_of_data_error,
-	                          lak::value_out_of_range_error,
-	                          lak::string_to_numeric_error,
-	                          lak::dsl::parse_error>
+	    -> ::lak::error_codes<lak::err::out_of_data,
+	                          lak::err::value_out_of_range,
+	                          lak::err::string_to_numeric,
+	                          lak::dsl::err::parse>
 	  {
 		  data.resize(width * height);
 		  if (ascii_encoded)
@@ -804,16 +804,16 @@ lak::pnm::pnm::_read(::lak::binary_reader &strm)
 			  {
 				  RES_TRY_ASSIGN(v =, strm.read_u8be());
 				  if (v > data.max_value)
-					  return ::lak::err_t{::lak::value_out_of_range_error{}};
+					  return ::lak::err_t{::lak::err::value_out_of_range{}};
 			  }
 		  }
 		  return lak::ok_t{};
 	  },
 	  [&](pnm_data<uint16_t, uint16_t> &data)
-	    -> ::lak::error_codes<lak::out_of_data_error,
-	                          lak::value_out_of_range_error,
-	                          lak::string_to_numeric_error,
-	                          lak::dsl::parse_error>
+	    -> ::lak::error_codes<lak::err::out_of_data,
+	                          lak::err::value_out_of_range,
+	                          lak::err::string_to_numeric,
+	                          lak::dsl::err::parse>
 	  {
 		  data.resize(width * height);
 		  if (ascii_encoded)
@@ -831,16 +831,16 @@ lak::pnm::pnm::_read(::lak::binary_reader &strm)
 			  {
 				  RES_TRY_ASSIGN(v =, strm.read_u16be());
 				  if (v > data.max_value)
-					  return ::lak::err_t{::lak::value_out_of_range_error{}};
+					  return ::lak::err_t{::lak::err::value_out_of_range{}};
 			  }
 		  }
 		  return lak::ok_t{};
 	  },
 	  [&](pnm_data<f32_t, f32_t> &data)
-	    -> ::lak::error_codes<lak::out_of_data_error,
-	                          lak::value_out_of_range_error,
-	                          lak::string_to_numeric_error,
-	                          lak::dsl::parse_error>
+	    -> ::lak::error_codes<lak::err::out_of_data,
+	                          lak::err::value_out_of_range,
+	                          lak::err::string_to_numeric,
+	                          lak::dsl::err::parse>
 	  {
 		  ASSERT(!ascii_encoded);
 		  data.resize(width * height);
@@ -852,7 +852,7 @@ lak::pnm::pnm::_read(::lak::binary_reader &strm)
 			  {
 				  RES_TRY_ASSIGN(v =, strm.read_f32le());
 				  if (v < 0.0f || v > data.max_value)
-					  return ::lak::err_t{::lak::value_out_of_range_error{}};
+					  return ::lak::err_t{::lak::err::value_out_of_range{}};
 			  }
 		  }
 		  else
@@ -862,16 +862,16 @@ lak::pnm::pnm::_read(::lak::binary_reader &strm)
 			  {
 				  RES_TRY_ASSIGN(v =, strm.read_f32be());
 				  if (v < 0.0f || v > data.max_value)
-					  return ::lak::err_t{::lak::value_out_of_range_error{}};
+					  return ::lak::err_t{::lak::err::value_out_of_range{}};
 			  }
 		  }
 		  return lak::ok_t{};
 	  },
 	  [&](pnm_data<::lak::vec3u8_t, uint8_t> &data)
-	    -> ::lak::error_codes<lak::out_of_data_error,
-	                          lak::value_out_of_range_error,
-	                          lak::string_to_numeric_error,
-	                          lak::dsl::parse_error>
+	    -> ::lak::error_codes<lak::err::out_of_data,
+	                          lak::err::value_out_of_range,
+	                          lak::err::string_to_numeric,
+	                          lak::dsl::err::parse>
 	  {
 		  data.resize(width * height);
 		  if (ascii_encoded)
@@ -893,22 +893,22 @@ lak::pnm::pnm::_read(::lak::binary_reader &strm)
 			  {
 				  RES_TRY_ASSIGN(v.r =, strm.read_u8be());
 				  if (v.r > data.max_value)
-					  return ::lak::err_t{::lak::value_out_of_range_error{}};
+					  return ::lak::err_t{::lak::err::value_out_of_range{}};
 				  RES_TRY_ASSIGN(v.g =, strm.read_u8be());
 				  if (v.g > data.max_value)
-					  return ::lak::err_t{::lak::value_out_of_range_error{}};
+					  return ::lak::err_t{::lak::err::value_out_of_range{}};
 				  RES_TRY_ASSIGN(v.b =, strm.read_u8be());
 				  if (v.b > data.max_value)
-					  return ::lak::err_t{::lak::value_out_of_range_error{}};
+					  return ::lak::err_t{::lak::err::value_out_of_range{}};
 			  }
 		  }
 		  return lak::ok_t{};
 	  },
 	  [&](pnm_data<::lak::vec4u8_t, uint8_t> &data)
-	    -> ::lak::error_codes<lak::out_of_data_error,
-	                          lak::value_out_of_range_error,
-	                          lak::string_to_numeric_error,
-	                          lak::dsl::parse_error>
+	    -> ::lak::error_codes<lak::err::out_of_data,
+	                          lak::err::value_out_of_range,
+	                          lak::err::string_to_numeric,
+	                          lak::dsl::err::parse>
 	  {
 		  data.resize(width * height);
 		  if (ascii_encoded)
@@ -932,25 +932,25 @@ lak::pnm::pnm::_read(::lak::binary_reader &strm)
 			  {
 				  RES_TRY_ASSIGN(v.r =, strm.read_u8be());
 				  if (v.r > data.max_value)
-					  return ::lak::err_t{::lak::value_out_of_range_error{}};
+					  return ::lak::err_t{::lak::err::value_out_of_range{}};
 				  RES_TRY_ASSIGN(v.g =, strm.read_u8be());
 				  if (v.g > data.max_value)
-					  return ::lak::err_t{::lak::value_out_of_range_error{}};
+					  return ::lak::err_t{::lak::err::value_out_of_range{}};
 				  RES_TRY_ASSIGN(v.b =, strm.read_u8be());
 				  if (v.b > data.max_value)
-					  return ::lak::err_t{::lak::value_out_of_range_error{}};
+					  return ::lak::err_t{::lak::err::value_out_of_range{}};
 				  RES_TRY_ASSIGN(v.a =, strm.read_u8be());
 				  if (v.a > data.max_value)
-					  return ::lak::err_t{::lak::value_out_of_range_error{}};
+					  return ::lak::err_t{::lak::err::value_out_of_range{}};
 			  }
 		  }
 		  return lak::ok_t{};
 	  },
 	  [&](pnm_data<::lak::vec3u16_t, uint16_t> &data)
-	    -> ::lak::error_codes<lak::out_of_data_error,
-	                          lak::value_out_of_range_error,
-	                          lak::string_to_numeric_error,
-	                          lak::dsl::parse_error>
+	    -> ::lak::error_codes<lak::err::out_of_data,
+	                          lak::err::value_out_of_range,
+	                          lak::err::string_to_numeric,
+	                          lak::dsl::err::parse>
 	  {
 		  data.resize(width * height);
 		  if (ascii_encoded)
@@ -972,22 +972,22 @@ lak::pnm::pnm::_read(::lak::binary_reader &strm)
 			  {
 				  RES_TRY_ASSIGN(v.r =, strm.read_u16be());
 				  if (v.r > data.max_value)
-					  return ::lak::err_t{::lak::value_out_of_range_error{}};
+					  return ::lak::err_t{::lak::err::value_out_of_range{}};
 				  RES_TRY_ASSIGN(v.g =, strm.read_u16be());
 				  if (v.g > data.max_value)
-					  return ::lak::err_t{::lak::value_out_of_range_error{}};
+					  return ::lak::err_t{::lak::err::value_out_of_range{}};
 				  RES_TRY_ASSIGN(v.b =, strm.read_u16be());
 				  if (v.b > data.max_value)
-					  return ::lak::err_t{::lak::value_out_of_range_error{}};
+					  return ::lak::err_t{::lak::err::value_out_of_range{}};
 			  }
 		  }
 		  return lak::ok_t{};
 	  },
 	  [&](pnm_data<::lak::vec4u16_t, uint16_t> &data)
-	    -> ::lak::error_codes<lak::out_of_data_error,
-	                          lak::value_out_of_range_error,
-	                          lak::string_to_numeric_error,
-	                          lak::dsl::parse_error>
+	    -> ::lak::error_codes<lak::err::out_of_data,
+	                          lak::err::value_out_of_range,
+	                          lak::err::string_to_numeric,
+	                          lak::dsl::err::parse>
 	  {
 		  data.resize(width * height);
 		  if (ascii_encoded)
@@ -1011,25 +1011,25 @@ lak::pnm::pnm::_read(::lak::binary_reader &strm)
 			  {
 				  RES_TRY_ASSIGN(v.r =, strm.read_u16be());
 				  if (v.r > data.max_value)
-					  return ::lak::err_t{::lak::value_out_of_range_error{}};
+					  return ::lak::err_t{::lak::err::value_out_of_range{}};
 				  RES_TRY_ASSIGN(v.g =, strm.read_u16be());
 				  if (v.g > data.max_value)
-					  return ::lak::err_t{::lak::value_out_of_range_error{}};
+					  return ::lak::err_t{::lak::err::value_out_of_range{}};
 				  RES_TRY_ASSIGN(v.b =, strm.read_u16be());
 				  if (v.b > data.max_value)
-					  return ::lak::err_t{::lak::value_out_of_range_error{}};
+					  return ::lak::err_t{::lak::err::value_out_of_range{}};
 				  RES_TRY_ASSIGN(v.a =, strm.read_u16be());
 				  if (v.a > data.max_value)
-					  return ::lak::err_t{::lak::value_out_of_range_error{}};
+					  return ::lak::err_t{::lak::err::value_out_of_range{}};
 			  }
 		  }
 		  return lak::ok_t{};
 	  },
 	  [&](pnm_data<::lak::vec3f32_t, f32_t> &data)
-	    -> ::lak::error_codes<lak::out_of_data_error,
-	                          lak::value_out_of_range_error,
-	                          lak::string_to_numeric_error,
-	                          lak::dsl::parse_error>
+	    -> ::lak::error_codes<lak::err::out_of_data,
+	                          lak::err::value_out_of_range,
+	                          lak::err::string_to_numeric,
+	                          lak::dsl::err::parse>
 	  {
 		  ASSERT(!ascii_encoded);
 		  data.resize(width * height);
@@ -1041,13 +1041,13 @@ lak::pnm::pnm::_read(::lak::binary_reader &strm)
 			  {
 				  RES_TRY_ASSIGN(v.r =, strm.read_f32le());
 				  if (v.r < 0.0f || v.r > data.max_value)
-					  return ::lak::err_t{::lak::value_out_of_range_error{}};
+					  return ::lak::err_t{::lak::err::value_out_of_range{}};
 				  RES_TRY_ASSIGN(v.g =, strm.read_f32le());
 				  if (v.g < 0.0f || v.g > data.max_value)
-					  return ::lak::err_t{::lak::value_out_of_range_error{}};
+					  return ::lak::err_t{::lak::err::value_out_of_range{}};
 				  RES_TRY_ASSIGN(v.b =, strm.read_f32le());
 				  if (v.b < 0.0f || v.b > data.max_value)
-					  return ::lak::err_t{::lak::value_out_of_range_error{}};
+					  return ::lak::err_t{::lak::err::value_out_of_range{}};
 			  }
 		  }
 		  else
@@ -1057,22 +1057,22 @@ lak::pnm::pnm::_read(::lak::binary_reader &strm)
 			  {
 				  RES_TRY_ASSIGN(v.r =, strm.read_f32be());
 				  if (v.r < 0.0f || v.r > data.max_value)
-					  return ::lak::err_t{::lak::value_out_of_range_error{}};
+					  return ::lak::err_t{::lak::err::value_out_of_range{}};
 				  RES_TRY_ASSIGN(v.g =, strm.read_f32be());
 				  if (v.g < 0.0f || v.g > data.max_value)
-					  return ::lak::err_t{::lak::value_out_of_range_error{}};
+					  return ::lak::err_t{::lak::err::value_out_of_range{}};
 				  RES_TRY_ASSIGN(v.b =, strm.read_f32be());
 				  if (v.b < 0.0f || v.b > data.max_value)
-					  return ::lak::err_t{::lak::value_out_of_range_error{}};
+					  return ::lak::err_t{::lak::err::value_out_of_range{}};
 			  }
 		  }
 		  return lak::ok_t{};
 	  },
 	  [&](pnm_data<::lak::vec4f32_t, f32_t> &data)
-	    -> ::lak::error_codes<lak::out_of_data_error,
-	                          lak::value_out_of_range_error,
-	                          lak::string_to_numeric_error,
-	                          lak::dsl::parse_error>
+	    -> ::lak::error_codes<lak::err::out_of_data,
+	                          lak::err::value_out_of_range,
+	                          lak::err::string_to_numeric,
+	                          lak::dsl::err::parse>
 	  {
 		  ASSERT(!ascii_encoded);
 		  data.resize(width * height);
@@ -1084,16 +1084,16 @@ lak::pnm::pnm::_read(::lak::binary_reader &strm)
 			  {
 				  RES_TRY_ASSIGN(v.r =, strm.read_f32le());
 				  if (v.r < 0.0f || v.r > data.max_value)
-					  return ::lak::err_t{::lak::value_out_of_range_error{}};
+					  return ::lak::err_t{::lak::err::value_out_of_range{}};
 				  RES_TRY_ASSIGN(v.g =, strm.read_f32le());
 				  if (v.g < 0.0f || v.g > data.max_value)
-					  return ::lak::err_t{::lak::value_out_of_range_error{}};
+					  return ::lak::err_t{::lak::err::value_out_of_range{}};
 				  RES_TRY_ASSIGN(v.b =, strm.read_f32le());
 				  if (v.b < 0.0f || v.b > data.max_value)
-					  return ::lak::err_t{::lak::value_out_of_range_error{}};
+					  return ::lak::err_t{::lak::err::value_out_of_range{}};
 				  RES_TRY_ASSIGN(v.a =, strm.read_f32le());
 				  if (v.a < 0.0f || v.a > data.max_value)
-					  return ::lak::err_t{::lak::value_out_of_range_error{}};
+					  return ::lak::err_t{::lak::err::value_out_of_range{}};
 			  }
 		  }
 		  else
@@ -1103,16 +1103,16 @@ lak::pnm::pnm::_read(::lak::binary_reader &strm)
 			  {
 				  RES_TRY_ASSIGN(v.r =, strm.read_f32be());
 				  if (v.r < 0.0f || v.r > data.max_value)
-					  return ::lak::err_t{::lak::value_out_of_range_error{}};
+					  return ::lak::err_t{::lak::err::value_out_of_range{}};
 				  RES_TRY_ASSIGN(v.g =, strm.read_f32be());
 				  if (v.g < 0.0f || v.g > data.max_value)
-					  return ::lak::err_t{::lak::value_out_of_range_error{}};
+					  return ::lak::err_t{::lak::err::value_out_of_range{}};
 				  RES_TRY_ASSIGN(v.b =, strm.read_f32be());
 				  if (v.b < 0.0f || v.b > data.max_value)
-					  return ::lak::err_t{::lak::value_out_of_range_error{}};
+					  return ::lak::err_t{::lak::err::value_out_of_range{}};
 				  RES_TRY_ASSIGN(v.a =, strm.read_f32be());
 				  if (v.a < 0.0f || v.a > data.max_value)
-					  return ::lak::err_t{::lak::value_out_of_range_error{}};
+					  return ::lak::err_t{::lak::err::value_out_of_range{}};
 			  }
 		  }
 		  return lak::ok_t{};

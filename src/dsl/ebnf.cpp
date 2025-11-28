@@ -88,10 +88,10 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 		return begin;
 	};
 
-	auto pop_repeat_n = [&]() -> lak::error_code<lak::dsl::parse_error>
+	auto pop_repeat_n = [&]() -> lak::error_code<lak::dsl::err::parse>
 	{
 		if (working_tree.back().size != 1U)
-			return lak::err_t{lak::dsl::parse_error{.message = u8"invalid repeat"}};
+			return lak::err_t{lak::dsl::err::parse{.message = u8"invalid repeat"}};
 
 		const size_t index = pop_values(1U);
 		working_values.push_back({
@@ -108,11 +108,11 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 		return lak::ok_t{};
 	};
 
-	auto pop_positive_lookahead = [&]() -> lak::error_code<lak::dsl::parse_error>
+	auto pop_positive_lookahead = [&]() -> lak::error_code<lak::dsl::err::parse>
 	{
 		if (working_tree.back().size != 1U)
 			return lak::err_t{
-			  lak::dsl::parse_error{.message = u8"invalid positive lookahead"}};
+			  lak::dsl::err::parse{.message = u8"invalid positive lookahead"}};
 
 		const size_t index = pop_values(1U);
 		working_values.push_back({
@@ -128,7 +128,7 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 		return lak::ok_t{};
 	};
 
-	auto inc_tree = [&]() -> lak::error_code<lak::dsl::parse_error>
+	auto inc_tree = [&]() -> lak::error_code<lak::dsl::err::parse>
 	{
 		++working_tree.back().size;
 
@@ -150,17 +150,17 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 		return lak::ok_t{};
 	};
 
-	auto pop_tree = [&]() -> lak::error_code<lak::dsl::parse_error>
+	auto pop_tree = [&]() -> lak::error_code<lak::dsl::err::parse>
 	{
 		working_tree.pop_back();
 		return inc_tree();
 	};
 
-	auto pop_except = [&]() -> lak::error_code<lak::dsl::parse_error>
+	auto pop_except = [&]() -> lak::error_code<lak::dsl::err::parse>
 	{
 		if (working_tree.back().size != 2U)
 			return lak::err_t{
-			  lak::dsl::parse_error{.message = u8"invalid exception"}};
+			  lak::dsl::err::parse{.message = u8"invalid exception"}};
 
 		const size_t begin = pop_values(2U);
 		working_values.push_back({
@@ -174,11 +174,11 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 		return pop_tree();
 	};
 
-	auto pop_match_case = [&]() -> lak::error_code<lak::dsl::parse_error>
+	auto pop_match_case = [&]() -> lak::error_code<lak::dsl::err::parse>
 	{
 		if (working_tree.back().size != 2U)
 			return lak::err_t{
-			  lak::dsl::parse_error{.message = u8"invalid match case"}};
+			  lak::dsl::err::parse{.message = u8"invalid match case"}};
 
 		// abuse .index to hold subvalue indices until it can be patched in
 		// pop_altern
@@ -189,10 +189,10 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 		return pop_tree();
 	};
 
-	auto pop_altern = [&]() -> lak::error_code<lak::dsl::parse_error>
+	auto pop_altern = [&]() -> lak::error_code<lak::dsl::err::parse>
 	{
 		if (working_tree.back().size <= working_tree.back().begin)
-			return lak::err_t{lak::dsl::parse_error{
+			return lak::err_t{lak::dsl::err::parse{
 			  .message = u8"missing final value of alternation"}};
 
 		// subsequences of match cases should be treated as if they were grouped
@@ -266,7 +266,7 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 
 		if (sz < 2U)
 			return lak::err_t{
-			  lak::dsl::parse_error{.message = u8"invalid alternation length"}};
+			  lak::dsl::err::parse{.message = u8"invalid alternation length"}};
 
 		const size_t begin = pop_values(sz);
 		working_values.push_back({
@@ -280,17 +280,17 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 		return pop_tree();
 	};
 
-	auto pop_concat = [&]() -> lak::error_code<lak::dsl::parse_error>
+	auto pop_concat = [&]() -> lak::error_code<lak::dsl::err::parse>
 	{
 		const size_t sz = working_tree.back().size;
 
 		if (sz <= working_tree.back().begin)
-			return lak::err_t{lak::dsl::parse_error{
+			return lak::err_t{lak::dsl::err::parse{
 			  .message = u8"missing final value of concatenation"}};
 
 		if (sz < 2U)
 			return lak::err_t{
-			  lak::dsl::parse_error{.message = u8"invalid concatenation length"}};
+			  lak::dsl::err::parse{.message = u8"invalid concatenation length"}};
 
 		const size_t begin = pop_values(sz);
 		working_values.push_back({
@@ -402,11 +402,11 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 
 			if (working_tree.back().type != working_data::value_type::option)
 				return lak::err_t{
-				  lak::dsl::parse_error{.message = u8"unexpected end of optional"}};
+				  lak::dsl::err::parse{.message = u8"unexpected end of optional"}};
 
 			if (working_tree.back().size != 1U)
 				return lak::err_t{
-				  lak::dsl::parse_error{.message = u8"invalid optional length"}};
+				  lak::dsl::err::parse{.message = u8"invalid optional length"}};
 
 			const size_t index = pop_values(1U);
 			working_values.push_back({
@@ -460,11 +460,11 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 
 			if (working_tree.back().type != working_data::value_type::repeat)
 				return lak::err_t{
-				  lak::dsl::parse_error{.message = u8"unexpected end of repetition"}};
+				  lak::dsl::err::parse{.message = u8"unexpected end of repetition"}};
 
 			if (working_tree.back().size != 1U)
 				return lak::err_t{
-				  lak::dsl::parse_error{.message = u8"invalid repetition length"}};
+				  lak::dsl::err::parse{.message = u8"invalid repetition length"}};
 
 			const size_t index = pop_values(1U);
 			working_values.push_back({
@@ -519,11 +519,11 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 
 			if (working_tree.back().type != working_data::value_type::group)
 				return lak::err_t{
-				  lak::dsl::parse_error{.message = u8"unexpected end of grouping"}};
+				  lak::dsl::err::parse{.message = u8"unexpected end of grouping"}};
 
 			if (working_tree.back().size != 1U)
 				return lak::err_t{
-				  lak::dsl::parse_error{.message = u8"invalid grouping length"}};
+				  lak::dsl::err::parse{.message = u8"invalid grouping length"}};
 
 			const size_t index = pop_values(1U);
 			working_values.push_back({
@@ -576,12 +576,12 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 			}
 
 			if (working_tree.back().type != working_data::value_type::capture)
-				return lak::err_t{lak::dsl::parse_error{
+				return lak::err_t{lak::dsl::err::parse{
 				  .message = u8"unexpected end of capture group"}};
 
 			if (working_tree.back().size != 1U)
 				return lak::err_t{
-				  lak::dsl::parse_error{.message = u8"invalid capture group length"}};
+				  lak::dsl::err::parse{.message = u8"invalid capture group length"}};
 
 			const size_t index = pop_values(1U);
 			working_values.push_back({
@@ -613,7 +613,7 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 			}
 
 			if (working_values.size() < 1U)
-				return lak::err_t{lak::dsl::parse_error{
+				return lak::err_t{lak::dsl::err::parse{
 				  .message = u8"missing beginning of match case"}};
 
 			--working_tree.back().size;
@@ -636,8 +636,8 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 		else if (lak::dsl::char_literal<U'-'>.EBNF_PARSE().is_ok())
 		{
 			if (working_values.size() < 1U)
-				return lak::err_t{lak::dsl::parse_error{
-				  .message = u8"missing beginning of exception"}};
+				return lak::err_t{
+				  lak::dsl::err::parse{.message = u8"missing beginning of exception"}};
 
 			--working_tree.back().size;
 			working_tree.push_back({
@@ -685,7 +685,7 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 			if (working_tree.back().type != working_data::value_type::concat)
 			{
 				if (working_values.size() < 1U)
-					return lak::err_t{lak::dsl::parse_error{
+					return lak::err_t{lak::dsl::err::parse{
 					  .message = u8"missing beginning of concatenation"}};
 
 				--working_tree.back().size;
@@ -725,7 +725,7 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 			if (working_tree.back().type != working_data::value_type::altern)
 			{
 				if (working_values.size() < 1U)
-					return lak::err_t{lak::dsl::parse_error{
+					return lak::err_t{lak::dsl::err::parse{
 					  .message = u8"missing beginning of alternation"}};
 
 				--working_tree.back().size;
@@ -776,11 +776,11 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 			}
 
 			if (working_tree.back().type != working_data::value_type::rule)
-				return lak::err_t{lak::dsl::parse_error{
+				return lak::err_t{lak::dsl::err::parse{
 				  .message =
 				    u8"transform sequences are only valid at the end of a rule"}};
 			if (working_tree.back().size != 1U)
-				return lak::err_t{lak::dsl::parse_error{
+				return lak::err_t{lak::dsl::err::parse{
 				  .message = u8"unexpected overlong transformed rule"}};
 
 			working_values.push_back({
@@ -829,13 +829,13 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 
 			if (working_tree.back().type != working_data::value_type::rule)
 				return lak::err_t{
-				  lak::dsl::parse_error{.message = u8"unexpected end of rule"}};
+				  lak::dsl::err::parse{.message = u8"unexpected end of rule"}};
 			if (working_tree.back().size != 1U &&
 			    !(working_tree.back().size == 2U &&
 			      working_values.back().type ==
 			        ebnf_rule_value::value_type::transform))
 				return lak::err_t{
-				  lak::dsl::parse_error{.message = u8"unexpected overlong rule"}};
+				  lak::dsl::err::parse{.message = u8"unexpected overlong rule"}};
 
 			const size_t begin = pop_values(working_tree.back().size);
 			result.rules[working_tree.back().begin].definition = begin;
@@ -846,14 +846,14 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 			working_tree.pop_back();
 		}
 		else
-			return lak::err_t{lak::dsl::parse_error{.message = u8"bad state"}};
+			return lak::err_t{lak::dsl::err::parse{.message = u8"bad state"}};
 
 		RES_TRY((*ws).EBNF_PARSE());
 	}
 #undef EBNF_PARSE
 
 	if (working_tree.size() > 0U)
-		return lak::err_t{lak::dsl::parse_error{.message = u8"out of data"}};
+		return lak::err_t{lak::dsl::err::parse{.message = u8"out of data"}};
 
 	ASSERT_EQUAL(working_tree.size(), 0U);
 

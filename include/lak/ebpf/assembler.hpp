@@ -29,7 +29,7 @@ namespace lak
 
 		inline constexpr instruction_parser_t instruction_parser;
 
-		template<lak::dsl::pure_match_parser auto whitespace_parser>
+		template<lak::dsl::concepts::pure_match_parser auto whitespace_parser>
 		struct program_parser_t
 		{
 			static constexpr bool is_pure_match = false;
@@ -101,24 +101,24 @@ namespace lak
 					}
 					if (!jump)
 						return lak::err_t{
-						  lak::dsl::parse_error{.message = u8"label not found"}};
+						  lak::dsl::err::parse{.message = u8"label not found"}};
 
 					if (inst.offset == UINT16_MAX)
 						if (*jump > INT16_MAX || *jump < INT16_MIN)
 							return lak::err_t{
-							  lak::dsl::parse_error{.message = u8"jump out of range"}};
+							  lak::dsl::err::parse{.message = u8"jump out of range"}};
 						else
 							inst.offset = static_cast<uint16_t>(static_cast<int16_t>(*jump));
 					else if (inst.immediate == UINT32_MAX)
 						if (*jump > INT32_MAX || *jump < INT32_MIN)
 							return lak::err_t{
-							  lak::dsl::parse_error{.message = u8"jump out of range"}};
+							  lak::dsl::err::parse{.message = u8"jump out of range"}};
 						else
 							inst.immediate =
 							  static_cast<uint32_t>(static_cast<int32_t>(*jump));
 					else
 						return lak::err_t{
-						  lak::dsl::parse_error{.message = u8"bad jump patch"}};
+						  lak::dsl::err::parse{.message = u8"bad jump patch"}};
 
 					result[index] = inst;
 				}
@@ -131,7 +131,7 @@ namespace lak
 			}
 		};
 
-		template<lak::dsl::pure_match_parser auto whitespace_parser>
+		template<lak::dsl::concepts::pure_match_parser auto whitespace_parser>
 		constexpr program_parser_t<whitespace_parser> program_parser;
 	}
 }

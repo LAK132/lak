@@ -29,18 +29,18 @@ namespace lak
 			return lak::move(result.value);                                         \
 	  })
 
-			auto _impl_peek(lak::dsl::parser auto par)
+			auto _impl_peek(lak::dsl::concepts::parser auto par)
 			{
 				return par.parse(
 				  lak::u8string_view(lak::span<const char8_t>(strm.remaining())));
 			}
 
-			auto peek(lak::dsl::parser auto par)
+			auto peek(lak::dsl::concepts::parser auto par)
 			{
 				return _impl_peek(par).LAK_BINARY_READER_PEEK_MAP;
 			}
 
-			auto read(lak::dsl::parser auto par)
+			auto read(lak::dsl::concepts::parser auto par)
 			{
 				return _impl_peek(par).LAK_BINARY_READER_READ_MAP;
 			}
@@ -48,20 +48,20 @@ namespace lak
 			template<typename T>
 			using _impl_number_parse_result =
 			  lak::result<lak::dsl::parse_result<T>,
-			              lak::variant<lak::string_to_numeric_error,
-			                           lak::value_out_of_range_error,
-			                           lak::dsl::parse_error>>;
+			              lak::variant<lak::err::string_to_numeric,
+			                           lak::err::value_out_of_range,
+			                           lak::dsl::err::parse>>;
 
 			template<typename T>
 			using number_parse_result =
 			  lak::result<T,
-			              lak::variant<lak::string_to_numeric_error,
-			                           lak::value_out_of_range_error,
-			                           lak::dsl::parse_error>>;
+			              lak::variant<lak::err::string_to_numeric,
+			                           lak::err::value_out_of_range,
+			                           lak::dsl::err::parse>>;
 
 			_impl_number_parse_result<uintmax_t> _impl_peek_uintmax(
-			  lak::dsl::pure_match_parser auto par = lak::dsl::dec_number,
-			  lak::numeric_base base               = lak::numeric_base::dec)
+			  lak::dsl::concepts::pure_match_parser auto par = lak::dsl::dec_number,
+			  lak::numeric_base base = lak::numeric_base::dec)
 			{
 				return _impl_peek(par).and_then(
 				  [&](const lak::dsl::parse_result<lak::u8string_view> &result)
@@ -82,22 +82,23 @@ namespace lak
 			}
 
 			number_parse_result<uintmax_t> peek_uintmax(
-			  lak::dsl::pure_match_parser auto par = lak::dsl::dec_number,
-			  lak::numeric_base base               = lak::numeric_base::dec)
+			  lak::dsl::concepts::pure_match_parser auto par = lak::dsl::dec_number,
+			  lak::numeric_base base = lak::numeric_base::dec)
 			{
 				return _impl_peek_uintmax(par, base).LAK_BINARY_READER_PEEK_MAP;
 			}
 
 			number_parse_result<uintmax_t> read_uintmax(
-			  lak::dsl::pure_match_parser auto par = lak::dsl::dec_number,
-			  lak::numeric_base base               = lak::numeric_base::dec)
+			  lak::dsl::concepts::pure_match_parser auto par = lak::dsl::dec_number,
+			  lak::numeric_base base = lak::numeric_base::dec)
 			{
 				return _impl_peek_uintmax(par, base).LAK_BINARY_READER_READ_MAP;
 			}
 
 			_impl_number_parse_result<intmax_t> _impl_peek_intmax(
-			  lak::dsl::pure_match_parser auto par = lak::dsl::signed_dec_number,
-			  lak::numeric_base base               = lak::numeric_base::dec)
+			  lak::dsl::concepts::pure_match_parser auto par =
+			    lak::dsl::signed_dec_number,
+			  lak::numeric_base base = lak::numeric_base::dec)
 			{
 				return _impl_peek(par).and_then(
 				  [&](const lak::dsl::parse_result<lak::u8string_view> &result)
@@ -117,25 +118,27 @@ namespace lak
 			}
 
 			number_parse_result<intmax_t> peek_intmax(
-			  lak::dsl::pure_match_parser auto par = lak::dsl::signed_dec_number,
-			  lak::numeric_base base               = lak::numeric_base::dec)
+			  lak::dsl::concepts::pure_match_parser auto par =
+			    lak::dsl::signed_dec_number,
+			  lak::numeric_base base = lak::numeric_base::dec)
 			{
 				return _impl_peek_intmax(par, base).LAK_BINARY_READER_PEEK_MAP;
 			}
 
 			number_parse_result<intmax_t> read_intmax(
-			  lak::dsl::pure_match_parser auto par = lak::dsl::signed_dec_number,
-			  lak::numeric_base base               = lak::numeric_base::dec)
+			  lak::dsl::concepts::pure_match_parser auto par =
+			    lak::dsl::signed_dec_number,
+			  lak::numeric_base base = lak::numeric_base::dec)
 			{
 				return _impl_peek_intmax(par, base).LAK_BINARY_READER_READ_MAP;
 			}
 
 			template<
-			  lak::dsl::pure_match_parser auto int_part =
+			  lak::dsl::concepts::pure_match_parser auto int_part =
 			    lak::dsl::signed_dec_number,
-			  lak::dsl::pure_match_parser auto frac_part = lak::dsl::
+			  lak::dsl::concepts::pure_match_parser auto frac_part = lak::dsl::
 			    capture_nth<1U, lak::dsl::char_literal<U'.'>, lak::dsl::dec_number>,
-			  lak::dsl::pure_match_parser auto exp_part =
+			  lak::dsl::concepts::pure_match_parser auto exp_part =
 			    lak::dsl::capture_nth<1U,
 			                          lak::dsl::one_of_chars<U'e', U'E'>,
 			                          lak::dsl::signed_dec_number>>
@@ -169,11 +172,11 @@ namespace lak
 			}
 
 			template<
-			  lak::dsl::pure_match_parser auto int_part =
+			  lak::dsl::concepts::pure_match_parser auto int_part =
 			    lak::dsl::signed_dec_number,
-			  lak::dsl::pure_match_parser auto frac_part = lak::dsl::
+			  lak::dsl::concepts::pure_match_parser auto frac_part = lak::dsl::
 			    capture_nth<1U, lak::dsl::char_literal<U'.'>, lak::dsl::dec_number>,
-			  lak::dsl::pure_match_parser auto exp_part =
+			  lak::dsl::concepts::pure_match_parser auto exp_part =
 			    lak::dsl::capture_nth<1U,
 			                          lak::dsl::one_of_chars<U'e', U'E'>,
 			                          lak::dsl::signed_dec_number>>
@@ -185,11 +188,11 @@ namespace lak
 			}
 
 			template<
-			  lak::dsl::pure_match_parser auto int_part =
+			  lak::dsl::concepts::pure_match_parser auto int_part =
 			    lak::dsl::signed_dec_number,
-			  lak::dsl::pure_match_parser auto frac_part = lak::dsl::
+			  lak::dsl::concepts::pure_match_parser auto frac_part = lak::dsl::
 			    capture_nth<1U, lak::dsl::char_literal<U'.'>, lak::dsl::dec_number>,
-			  lak::dsl::pure_match_parser auto exp_part =
+			  lak::dsl::concepts::pure_match_parser auto exp_part =
 			    lak::dsl::capture_nth<1U,
 			                          lak::dsl::one_of_chars<U'e', U'E'>,
 			                          lak::dsl::signed_dec_number>>
@@ -202,7 +205,7 @@ namespace lak
 
 #define BINARY_READER_MEMBERS(TYPE, NAME, ...)                                \
 	inline _impl_number_parse_result<TYPE> _impl_peek_##NAME(                   \
-	  lak::dsl::pure_match_parser auto par,                                     \
+	  lak::dsl::concepts::pure_match_parser auto par,                           \
 	  lak::numeric_base base = lak::numeric_base::dec)                          \
 	{                                                                           \
 		return _impl_peek_uintmax(par, base).and_then(                            \
@@ -210,7 +213,7 @@ namespace lak
 		    -> _impl_number_parse_result<TYPE>                                    \
 		  {                                                                       \
 				if (v.value > std::numeric_limits<TYPE>::max())                       \
-					return lak::err_t{lak::value_out_of_range_error{}};                 \
+					return lak::err_t{lak::err::value_out_of_range{}};                  \
 				else                                                                  \
 					return lak::ok_t{lak::dsl::parse_result<TYPE>{                      \
 					  .consumed  = v.consumed,                                          \
@@ -220,13 +223,13 @@ namespace lak
 		  });                                                                     \
 	}                                                                           \
 	inline number_parse_result<TYPE> peek_##NAME(                               \
-	  lak::dsl::pure_match_parser auto par,                                     \
+	  lak::dsl::concepts::pure_match_parser auto par,                           \
 	  lak::numeric_base base = lak::numeric_base::dec)                          \
 	{                                                                           \
 		return _impl_peek_##NAME(par, base).LAK_BINARY_READER_PEEK_MAP;           \
 	}                                                                           \
 	inline number_parse_result<TYPE> read_##NAME(                               \
-	  lak::dsl::pure_match_parser auto par,                                     \
+	  lak::dsl::concepts::pure_match_parser auto par,                           \
 	  lak::numeric_base base = lak::numeric_base::dec)                          \
 	{                                                                           \
 		return _impl_peek_##NAME(par, base).LAK_BINARY_READER_READ_MAP;           \
@@ -236,7 +239,7 @@ namespace lak
 
 #define BINARY_READER_MEMBERS(TYPE, NAME, ...)                                \
 	inline _impl_number_parse_result<TYPE> _impl_peek_##NAME(                   \
-	  lak::dsl::pure_match_parser auto par,                                     \
+	  lak::dsl::concepts::pure_match_parser auto par,                           \
 	  lak::numeric_base base = lak::numeric_base::dec)                          \
 	{                                                                           \
 		return _impl_peek_intmax(par, base).and_then(                             \
@@ -245,7 +248,7 @@ namespace lak
 		  {                                                                       \
 				if (v.value < std::numeric_limits<TYPE>::lowest() ||                  \
 				    v.value > std::numeric_limits<TYPE>::max())                       \
-					return lak::err_t{lak::value_out_of_range_error{}};                 \
+					return lak::err_t{lak::err::value_out_of_range{}};                  \
 				else                                                                  \
 					return lak::ok_t{lak::dsl::parse_result<TYPE>{                      \
 					  .consumed  = v.consumed,                                          \
@@ -255,13 +258,13 @@ namespace lak
 		  });                                                                     \
 	}                                                                           \
 	inline number_parse_result<TYPE> peek_##NAME(                               \
-	  lak::dsl::pure_match_parser auto par,                                     \
+	  lak::dsl::concepts::pure_match_parser auto par,                           \
 	  lak::numeric_base base = lak::numeric_base::dec)                          \
 	{                                                                           \
 		return _impl_peek_##NAME(par, base).LAK_BINARY_READER_PEEK_MAP;           \
 	}                                                                           \
 	inline number_parse_result<TYPE> read_##NAME(                               \
-	  lak::dsl::pure_match_parser auto par,                                     \
+	  lak::dsl::concepts::pure_match_parser auto par,                           \
 	  lak::numeric_base base = lak::numeric_base::dec)                          \
 	{                                                                           \
 		return _impl_peek_##NAME(par, base).LAK_BINARY_READER_READ_MAP;           \
@@ -271,10 +274,11 @@ namespace lak
 
 #define BINARY_READER_MEMBERS(TYPE, NAME, ...)                                \
 	template<                                                                   \
-	  lak::dsl::pure_match_parser auto int_part  = lak::dsl::signed_dec_number, \
-	  lak::dsl::pure_match_parser auto frac_part = lak::dsl::                   \
+	  lak::dsl::concepts::pure_match_parser auto int_part =                     \
+	    lak::dsl::signed_dec_number,                                            \
+	  lak::dsl::concepts::pure_match_parser auto frac_part = lak::dsl::         \
 	    capture_nth<1U, lak::dsl::char_literal<U'.'>, lak::dsl::dec_number>,    \
-	  lak::dsl::pure_match_parser auto exp_part =                               \
+	  lak::dsl::concepts::pure_match_parser auto exp_part =                     \
 	    lak::dsl::capture_nth<1U,                                               \
 	                          lak::dsl::one_of_chars<U'e', U'E'>,               \
 	                          lak::dsl::signed_dec_number>>                     \
@@ -287,7 +291,7 @@ namespace lak
 		  {                                                                       \
 				if (v.value < std::numeric_limits<TYPE>::lowest() ||                  \
 				    v.value > std::numeric_limits<TYPE>::max())                       \
-					return lak::err_t{lak::value_out_of_range_error{}};                 \
+					return lak::err_t{lak::err::value_out_of_range{}};                  \
 				else                                                                  \
 					return lak::ok_t{lak::dsl::parse_result<TYPE>{                      \
 					  .consumed  = v.consumed,                                          \
@@ -297,10 +301,11 @@ namespace lak
 		  });                                                                     \
 	}                                                                           \
 	template<                                                                   \
-	  lak::dsl::pure_match_parser auto int_part  = lak::dsl::signed_dec_number, \
-	  lak::dsl::pure_match_parser auto frac_part = lak::dsl::                   \
+	  lak::dsl::concepts::pure_match_parser auto int_part =                     \
+	    lak::dsl::signed_dec_number,                                            \
+	  lak::dsl::concepts::pure_match_parser auto frac_part = lak::dsl::         \
 	    capture_nth<1U, lak::dsl::char_literal<U'.'>, lak::dsl::dec_number>,    \
-	  lak::dsl::pure_match_parser auto exp_part =                               \
+	  lak::dsl::concepts::pure_match_parser auto exp_part =                     \
 	    lak::dsl::capture_nth<1U,                                               \
 	                          lak::dsl::one_of_chars<U'e', U'E'>,               \
 	                          lak::dsl::signed_dec_number>>                     \
@@ -311,10 +316,11 @@ namespace lak
 		  .LAK_BINARY_READER_READ_MAP_STIP;                                       \
 	}                                                                           \
 	template<                                                                   \
-	  lak::dsl::pure_match_parser auto int_part  = lak::dsl::signed_dec_number, \
-	  lak::dsl::pure_match_parser auto frac_part = lak::dsl::                   \
+	  lak::dsl::concepts::pure_match_parser auto int_part =                     \
+	    lak::dsl::signed_dec_number,                                            \
+	  lak::dsl::concepts::pure_match_parser auto frac_part = lak::dsl::         \
 	    capture_nth<1U, lak::dsl::char_literal<U'.'>, lak::dsl::dec_number>,    \
-	  lak::dsl::pure_match_parser auto exp_part =                               \
+	  lak::dsl::concepts::pure_match_parser auto exp_part =                     \
 	    lak::dsl::capture_nth<1U,                                               \
 	                          lak::dsl::one_of_chars<U'e', U'E'>,               \
 	                          lak::dsl::signed_dec_number>>                     \

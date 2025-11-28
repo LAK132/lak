@@ -2,6 +2,7 @@
 #define LAK_BINARY_TRAITS_HPP
 
 #include "lak/array.hpp"
+#include "lak/errors.hpp"
 #include "lak/result.hpp"
 #include "lak/span.hpp"
 #include "lak/stdint.hpp"
@@ -12,24 +13,6 @@ namespace lak
 {
 	struct binary_reader;
 	struct binary_span_writer;
-
-	struct out_of_data_error
-	{
-		inline friend std::ostream &operator<<(std::ostream &strm,
-		                                       const out_of_data_error &)
-		{
-			return strm << "out of data";
-		}
-	};
-
-	struct value_out_of_range_error
-	{
-		inline friend std::ostream &operator<<(std::ostream &strm,
-		                                       const value_out_of_range_error &)
-		{
-			return strm << "value out of range";
-		}
-	};
 
 	/* --- bytes_traits --- */
 
@@ -239,7 +222,7 @@ namespace lak
 	template<lak::endian E = lak::endian::little, typename... T>
 	requires((sizeof...(T) > 0) &&
 	         (lak::from_bytes_traits<T, E>::const_size && ...))
-	lak::result<lak::span<const byte_t>, lak::out_of_data_error> from_bytes(
+	lak::result<lak::span<const byte_t>, lak::err::out_of_data> from_bytes(
 	  lak::span<const byte_t> bytes, T &...values);
 
 	template<lak::endian E = lak::endian::little, typename... T>
@@ -258,18 +241,18 @@ namespace lak
 
 	template<typename T, size_t S, lak::endian E = lak::endian::little>
 	requires(lak::from_bytes_traits<T, E>::const_size)
-	lak::result<lak::array<T, S>, lak::out_of_data_error> array_from_bytes(
+	lak::result<lak::array<T, S>, lak::err::out_of_data> array_from_bytes(
 	  lak::span<const byte_t> bytes);
 
 	template<typename T, lak::endian E = lak::endian::little>
 	requires(lak::from_bytes_traits<T, E>::const_size)
-	lak::result<lak::array<T>, lak::out_of_data_error> array_from_bytes(
+	lak::result<lak::array<T>, lak::err::out_of_data> array_from_bytes(
 	  lak::span<const byte_t> bytes, size_t count);
 
 	template<lak::endian E = lak::endian::little, typename T>
 	requires(lak::from_bytes_traits<T, E>::const_size)
-	lak::result<lak::span<const byte_t>, lak::out_of_data_error>
-	array_from_bytes(lak::span<const byte_t> bytes, lak::span<T> values);
+	lak::result<lak::span<const byte_t>, lak::err::out_of_data> array_from_bytes(
+	  lak::span<const byte_t> bytes, lak::span<T> values);
 
 	template<lak::endian E = lak::endian::little, typename T, size_t S>
 	requires((S != lak::dynamic_extent) &&
@@ -486,7 +469,7 @@ namespace lak
 	struct lak::bytes_traits<TYPE, E>                                           \
 	{                                                                           \
 		using value_type                 = TYPE;                                  \
-		using error_type                 = lak::out_of_data_error;                \
+		using error_type                 = lak::err::out_of_data;                 \
 		static constexpr bool const_size = true;                                  \
 		static constexpr size_t size     = sizeof(value_type);                    \
 		static_assert((size != lak::dynamic_extent) == const_size);               \
@@ -505,7 +488,7 @@ namespace lak
 		static lak::result<lak::span<const byte_t>, error_type> from_bytes(       \
 		  lak::span<const byte_t> bytes, value_type &value)                       \
 		{                                                                         \
-			if (bytes.size() < size) return lak::err_t<lak::out_of_data_error>{};   \
+			if (bytes.size() < size) return lak::err_t<lak::err::out_of_data>{};    \
 			from_bytes(bytes.template first<size>(), value);                        \
 			return lak::ok_t{bytes.subspan(size)};                                  \
 		}                                                                         \
@@ -521,7 +504,7 @@ namespace lak
 		static lak::result<lak::span<byte_t>, error_type> to_bytes(               \
 		  lak::span<byte_t> bytes, const value_type &value)                       \
 		{                                                                         \
-			if (bytes.size() < size) return lak::err_t<lak::out_of_data_error>{};   \
+			if (bytes.size() < size) return lak::err_t<lak::err::out_of_data>{};    \
 			to_bytes(bytes.template first<size>(), value);                          \
 			return lak::ok_t{bytes.subspan(size)};                                  \
 		}                                                                         \

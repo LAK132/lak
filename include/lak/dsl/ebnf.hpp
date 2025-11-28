@@ -138,7 +138,7 @@ namespace lak
 
 		constexpr ebnf_t ebnf;
 
-		static_assert(lak::dsl::parser<lak::dsl::ebnf_t>);
+		static_assert(lak::dsl::concepts::parser<lak::dsl::ebnf_t>);
 	}
 }
 

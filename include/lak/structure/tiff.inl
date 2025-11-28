@@ -177,14 +177,14 @@ lak::tiff::result<> lak::tiff::ifd_tag::write(
 			/* external data */                                                     \
 			RES_TRY(                                                                \
 			  ext_strm.seek(lak::to_multiple<size_t>(ext_strm.position(), 4U))      \
-			    .replace_err(lak::out_of_data_error{}));                            \
+			    .replace_err(lak::err::out_of_data{}));                             \
 			ASSERT_LESS(ext_strm.position(), UINT32_MAX);                           \
 			RES_TRY(strm.template write_u32<E>(                                     \
 			  static_cast<uint32_t>(ext_strm.position())));                         \
 			RES_TRY(ext_strm.template write<E>(data));                              \
 			RES_TRY(                                                                \
 			  ext_strm.seek(lak::to_multiple<size_t>(ext_strm.position(), 4U))      \
-			    .replace_err(lak::out_of_data_error{}));                            \
+			    .replace_err(lak::err::out_of_data{}));                             \
 		}                                                                         \
 		return lak::ok_t{};                                                       \
 	},
@@ -266,8 +266,7 @@ lak::tiff::result<> lak::tiff::image_file_directory::read(
 			  if (off_data.size() > strips.size()) strips.resize(off_data.size());
 			  for (size_t o = 0U; o < off_data.size(); ++o)
 			  {
-				  RES_TRY(
-				    strm.seek(off_data[o]).replace_err(lak::out_of_data_error{}));
+				  RES_TRY(strm.seek(off_data[o]).replace_err(lak::err::out_of_data{}));
 				  RES_TRY_ASSIGN(auto bytes =, strm.read_bytes(strips[o].data.size()));
 				  lak::memcpy(strips[o].data, bytes);
 			  }
@@ -289,13 +288,13 @@ lak::tiff::result<> lak::tiff::image_file_directory::read(
 				  size_t _off = off;
 				  while (_off != 0U)
 				  {
-					  RES_TRY(strm.seek(_off).replace_err(lak::out_of_data_error{}));
+					  RES_TRY(strm.seek(_off).replace_err(lak::err::out_of_data{}));
 					  auto &subifd = push_subifd();
 					  RES_TRY(subifd.template read<E>(strm));
 					  _off = subifd._ifd_offset;
 				  }
 			  }
-			  RES_TRY(strm.seek(pos).replace_err(lak::out_of_data_error{}));
+			  RES_TRY(strm.seek(pos).replace_err(lak::err::out_of_data{}));
 			  return lak::ok_t{};
 		  },
 		  [](auto &&) -> lak::tiff::result<> { ASSERT_UNREACHABLE(); }}));
@@ -310,12 +309,12 @@ lak::tiff::result<> lak::tiff::image_file_directory::read(
 
 			  const size_t pos = strm.position();
 
-			  RES_TRY(strm.seek(offsets[0]).replace_err(lak::out_of_data_error{}));
+			  RES_TRY(strm.seek(offsets[0]).replace_err(lak::err::out_of_data{}));
 
 			  RES_TRY(push_exif().template read<E>(strm));
 			  ASSERT_EQUAL(exif->_ifd_offset, 0U);
 
-			  RES_TRY(strm.seek(pos).replace_err(lak::out_of_data_error{}));
+			  RES_TRY(strm.seek(pos).replace_err(lak::err::out_of_data{}));
 			  return lak::ok_t{};
 		  },
 		  [](auto &&) -> lak::tiff::result<> { ASSERT_UNREACHABLE(); }}));
@@ -359,7 +358,7 @@ lak::tiff::result<> lak::tiff::image_file_directory::write(
 {
 	ASSERT_EQUAL(strm.position() % 4U, 0U);
 	RES_TRY(ext_strm.seek(strm.position() + _write_size())
-	          .replace_err(lak::out_of_data_error{}));
+	          .replace_err(lak::err::out_of_data{}));
 
 	lak::optional<lak::tiff::ifd_tag> strip_offsets;
 	lak::optional<lak::tiff::ifd_tag> rows_per_strip;
@@ -377,7 +376,7 @@ lak::tiff::result<> lak::tiff::image_file_directory::write(
 		for (const auto &s : strips)
 		{
 			RES_TRY(ext_strm.seek(lak::to_multiple<size_t>(ext_strm.position(), 4U))
-			          .replace_err(lak::out_of_data_error{}));
+			          .replace_err(lak::err::out_of_data{}));
 			offsets.push_back(static_cast<uint32_t>(ext_strm.position()));
 			RES_TRY(ext_strm.template write<E>(lak::span(s.data)));
 			counts.push_back(static_cast<uint32_t>(s.data.size()));
@@ -396,7 +395,7 @@ lak::tiff::result<> lak::tiff::image_file_directory::write(
 		for (const auto &ifd : subifds)
 		{
 			RES_TRY(ext_strm.seek(lak::to_multiple<size_t>(ext_strm.position(), 4U))
-			          .replace_err(lak::out_of_data_error{}));
+			          .replace_err(lak::err::out_of_data{}));
 			uint32_t offset = static_cast<uint32_t>(ext_strm.position());
 			offsets.push_back(offset);
 			lak::binary_span_writer strm2 = ext_strm;
@@ -409,7 +408,7 @@ lak::tiff::result<> lak::tiff::image_file_directory::write(
 	if (exif)
 	{
 		RES_TRY(ext_strm.seek(lak::to_multiple<size_t>(ext_strm.position(), 4U))
-		          .replace_err(lak::out_of_data_error{}));
+		          .replace_err(lak::err::out_of_data{}));
 		uint32_t offset               = static_cast<uint32_t>(ext_strm.position());
 		lak::binary_span_writer strm2 = ext_strm;
 		RES_TRY(exif->template write<E>(strm2, ext_strm));
@@ -531,7 +530,7 @@ lak::tiff::result<> lak::tiff::tiff::read(lak::binary_reader &strm)
 	else if (byte_order == u8"MM"_magic_ne)
 		return _read<lak::endian::big>(strm).map(update_strm);
 	else
-		return lak::err_t<lak::value_out_of_range_error>{};
+		return lak::err_t<lak::err::value_out_of_range>{};
 }
 
 template<lak::endian E>
@@ -560,23 +559,22 @@ lak::tiff::result<> lak::tiff::tiff::write(lak::binary_span_writer &strm) const
 	RES_TRY(strm.template write_u16<E>(ifh.version));
 
 	RES_TRY(ext_strm.seek((strm.position()) + 4U)
-	          .replace_err(lak::out_of_data_error{}));
+	          .replace_err(lak::err::out_of_data{}));
 
 	for (const auto &i : ifd)
 	{
 		const size_t next = lak::to_multiple<size_t>(ext_strm.position(), 4U);
 		ASSERT_LESS(next, UINT32_MAX);
 		RES_TRY(strm.template write_u32<E>(static_cast<uint32_t>(next)));
-		RES_TRY(strm.seek(next).replace_err(lak::out_of_data_error{}));
-		RES_TRY(ext_strm.seek(next).replace_err(lak::out_of_data_error{}));
+		RES_TRY(strm.seek(next).replace_err(lak::err::out_of_data{}));
+		RES_TRY(ext_strm.seek(next).replace_err(lak::err::out_of_data{}));
 
 		RES_TRY(i.template write<E>(strm, ext_strm));
 	}
 
 	RES_TRY(strm.template write_u32<E>(0U));
 
-	RES_TRY(
-	  strm.seek(ext_strm.position()).replace_err(lak::out_of_data_error{}));
+	RES_TRY(strm.seek(ext_strm.position()).replace_err(lak::err::out_of_data{}));
 
 	return lak::ok_t{};
 }

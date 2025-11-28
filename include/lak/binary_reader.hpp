@@ -37,39 +37,39 @@ namespace lak
 		inline bool empty() const { return _cursor >= _data.size(); }
 		inline size_t position() const { return _cursor; }
 		inline size_t size() const { return _data.size(); }
-		inline lak::error_code<lak::out_of_data_error> seek(size_t pos)
+		inline lak::error_code<lak::err::out_of_data> seek(size_t pos)
 		{
-			if (pos > _data.size()) return lak::err_t<lak::out_of_data_error>{};
+			if (pos > _data.size()) return lak::err_t<lak::err::out_of_data>{};
 			_cursor = pos;
 			return lak::ok_t{};
 		}
-		inline lak::error_code<lak::out_of_data_error> skip(size_t count)
+		inline lak::error_code<lak::err::out_of_data> skip(size_t count)
 		{
 			if (_cursor + count > _data.size())
-				return lak::err_t<lak::out_of_data_error>{};
+				return lak::err_t<lak::err::out_of_data>{};
 			_cursor += count;
 			return lak::ok_t{};
 		}
-		inline lak::error_code<lak::out_of_data_error> unread(size_t count)
+		inline lak::error_code<lak::err::out_of_data> unread(size_t count)
 		{
-			if (count > _cursor) return lak::err_t<lak::out_of_data_error>{};
+			if (count > _cursor) return lak::err_t<lak::err::out_of_data>{};
 			_cursor -= count;
 			return lak::ok_t{};
 		}
 
-		lak::result<lak::span<const byte_t>, lak::out_of_data_error> peek_bytes(
+		lak::result<lak::span<const byte_t>, lak::err::out_of_data> peek_bytes(
 		  size_t count) const
 		{
 			if (_cursor + count > _data.size())
-				return lak::err_t<lak::out_of_data_error>{};
+				return lak::err_t<lak::err::out_of_data>{};
 			return lak::ok_t{_data.subspan(_cursor, count)};
 		}
 
-		lak::result<lak::span<const byte_t>, lak::out_of_data_error> read_bytes(
+		lak::result<lak::span<const byte_t>, lak::err::out_of_data> read_bytes(
 		  size_t count)
 		{
 			if (_cursor + count > _data.size())
-				return lak::err_t<lak::out_of_data_error>{};
+				return lak::err_t<lak::err::out_of_data>{};
 			lak::span<const byte_t> result = _data.subspan(_cursor, count);
 			_cursor += count;
 			return lak::ok_t{result};
@@ -130,13 +130,13 @@ namespace lak
 
 		template<typename T, lak::endian E = lak::endian::little>
 		requires(lak::concepts::from_bytes_readable<T, E>)
-		lak::result<lak::array<T>, error_type<T, E, lak::out_of_data_error>> peek(
+		lak::result<lak::array<T>, error_type<T, E, lak::err::out_of_data>> peek(
 		  size_t count)
 		requires(lak::from_bytes_traits<T, E>::const_size)
 		{
 			if (auto rem = remaining();
 			    rem.size() < (lak::from_bytes_traits<T, E>::size * count))
-				return lak::err_t<lak::out_of_data_error>{};
+				return lak::err_t<lak::err::out_of_data>{};
 			else
 				return lak::array_from_bytes<T, E>(
 				  rem.first(lak::from_bytes_traits<T, E>::size * count), count);
@@ -166,7 +166,7 @@ namespace lak
 
 		template<typename T, lak::endian E = lak::endian::little>
 		requires(lak::concepts::from_bytes_readable<T, E>)
-		lak::result<lak::array<T>, error_type<T, E, lak::out_of_data_error>> read(
+		lak::result<lak::array<T>, error_type<T, E, lak::err::out_of_data>> read(
 		  size_t count)
 		requires(lak::from_bytes_traits<T, E>::const_size)
 		{
@@ -206,7 +206,7 @@ namespace lak
 		// always read count bytes even if the c string isn't the full count bytes
 		template<typename CHAR, lak::endian E = lak::endian::little>
 		requires(lak::concepts::from_bytes_readable<CHAR, E>)
-		lak::result<lak::string<CHAR>, error_type<CHAR, E, lak::out_of_data_error>>
+		lak::result<lak::string<CHAR>, error_type<CHAR, E, lak::err::out_of_data>>
 		read_exact_c_str(size_t count)
 		{
 			return read<CHAR, E>(count).map(
@@ -235,7 +235,7 @@ namespace lak
 		requires(lak::concepts::from_bytes_readable<CHAR, E>)
 		lak::result<
 		  lak::string<CHAR>,
-		  error_type<CHAR, E, lak::out_of_data_error, string_too_long_error>>
+		  error_type<CHAR, E, lak::err::out_of_data, string_too_long_error>>
 		read_c_str(size_t max_size = SIZE_MAX)
 		{
 			lak::string<CHAR> result;

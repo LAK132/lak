@@ -2,17 +2,17 @@
 
 #include "lak/binary_writer.hpp"
 
-const char *lak::lz4_error_name(lak::lz4_decode_error err)
+const char *lak::lz4_error_name(lak::err::lz4_decode err)
 {
 	switch (err)
 	{
-		case lak::lz4_decode_error::too_many_literals:
+		case lak::err::lz4_decode::too_many_literals:
 			return "too many literals";
-		case lak::lz4_decode_error::zero_offset:
+		case lak::err::lz4_decode::zero_offset:
 			return "zero offset";
-		case lak::lz4_decode_error::offset_too_large:
+		case lak::err::lz4_decode::offset_too_large:
 			return "offset too large";
-		case lak::lz4_decode_error::match_too_long:
+		case lak::err::lz4_decode::match_too_long:
 			return "match too long";
 		default:
 			return "invalid error code";
@@ -20,7 +20,7 @@ const char *lak::lz4_error_name(lak::lz4_decode_error err)
 }
 
 lak::result<lak::array<byte_t>,
-            lak::variant<lak::out_of_data_error, lak::lz4_decode_error>>
+            lak::variant<lak::err::out_of_data, lak::err::lz4_decode>>
 lak::decode_lz4_block(lak::binary_reader &strm,
                       size_t output_size,
                       bool allow_partial_read)
@@ -42,7 +42,7 @@ lak::decode_lz4_block(lak::binary_reader &strm,
 			{
 				RES_TRY_ASSIGN(uint8_t another =, strm.read_u8());
 				if (length + another < length)
-					return lak::err_t{lak::lz4_decode_error::too_many_literals};
+					return lak::err_t{lak::err::lz4_decode::too_many_literals};
 				length += another;
 				if (another != 255) break;
 			}
@@ -55,17 +55,17 @@ lak::decode_lz4_block(lak::binary_reader &strm,
 			if (allow_partial_read)
 				length = writer.remaining().size();
 			else
-				return lak::err_t{lak::lz4_decode_error::output_full};
+				return lak::err_t{lak::err::lz4_decode::output_full};
 		}
 		if (strm.remaining().size() < length)
-			return lak::err_t<lak::out_of_data_error>{};
+			return lak::err_t<lak::err::out_of_data>{};
 		writer.write(strm.remaining().first(length)).unwrap();
 		RES_TRY(strm.skip(length));
 
 		if (strm.empty()) break; // reached the end of the last block
 
 		RES_TRY_ASSIGN(const auto offset =, strm.read_u16());
-		if (offset == 0) return lak::err_t{lak::lz4_decode_error::zero_offset};
+		if (offset == 0) return lak::err_t{lak::err::lz4_decode::zero_offset};
 
 		if (match_length == 15)
 		{
@@ -73,7 +73,7 @@ lak::decode_lz4_block(lak::binary_reader &strm,
 			{
 				RES_TRY_ASSIGN(uint8_t another =, strm.read_u8());
 				if (match_length + another < match_length)
-					return lak::err_t{lak::lz4_decode_error::match_too_long};
+					return lak::err_t{lak::err::lz4_decode::match_too_long};
 				match_length += another;
 				if (another != 255) break;
 			}
@@ -81,18 +81,18 @@ lak::decode_lz4_block(lak::binary_reader &strm,
 
 		// match_length is always offset by 4 (the minimum match length)
 		if (match_length + 4 < match_length)
-			return lak::err_t{lak::lz4_decode_error::match_too_long};
+			return lak::err_t{lak::err::lz4_decode::match_too_long};
 		match_length += 4;
 
 		// this may be an aliasing copy!
 		if (writer.position() < offset)
-			return lak::err_t{lak::lz4_decode_error::offset_too_large};
+			return lak::err_t{lak::err::lz4_decode::offset_too_large};
 		if (writer.remaining().size() < match_length)
 		{
 			if (allow_partial_read)
 				match_length = writer.remaining().size();
 			else
-				return lak::err_t{lak::lz4_decode_error::output_full};
+				return lak::err_t{lak::err::lz4_decode::output_full};
 		}
 		for (const auto &v : lak::span<const byte_t>(
 		       writer.remaining().begin() - offset, match_length))

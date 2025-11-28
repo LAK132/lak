@@ -1,16 +1,16 @@
 #ifndef LAK_DSL_DSL_HPP
 #define LAK_DSL_DSL_HPP
 
+#include "lak/dsl/concepts.hpp"
+#include "lak/dsl/result.hpp"
+
 #include "lak/array.hpp"
 #include "lak/char_utils.hpp"
 #include "lak/compare.hpp"
-#include "lak/concepts.hpp"
 #include "lak/const_string.hpp"
 #include "lak/result.hpp"
 #include "lak/unicode.hpp"
 #include "lak/utility.hpp"
-
-#include "lak/string_literals/string.hpp"
 
 #include <ostream>
 
@@ -18,93 +18,6 @@ namespace lak
 {
 	namespace dsl
 	{
-		/* --- parse_error --- */
-
-		struct parse_error
-		{
-			lak::u8string message;
-
-			inline lak::u8string to_string() const
-			{
-				return u8"parse error" +
-				       (message.empty() ? u8""_str : u8": " + message);
-			}
-
-			inline friend std::ostream &operator<<(std::ostream &strm,
-			                                       const lak::dsl::parse_error &err)
-			{
-				return strm << lak::u8string_view(err.to_string());
-			}
-		};
-
-		/* --- parse_result --- */
-
-		template<typename T>
-		requires(!lak::is_void_v<T>)
-		struct parse_result
-		{
-			using value_type = T;
-			lak::u8string_view consumed;
-			lak::u8string_view remaining;
-			T value;
-
-			template<lak::concepts::invocable<lak::add_lvalue_reference_t<T>> F>
-			auto map(F &&f) & -> parse_result<
-			  lak::invoke_result_t<F, lak::add_lvalue_reference_t<T>>>
-			{
-				return {
-				  .consumed  = consumed,
-				  .remaining = remaining,
-				  .value     = f(value),
-				};
-			}
-			template<
-			  lak::concepts::invocable<const lak::add_lvalue_reference_t<T>> F>
-			auto map(F &&f) const & -> parse_result<
-			  lak::invoke_result_t<F, const lak::add_lvalue_reference_t<T>>>
-			{
-				return {
-				  .consumed  = consumed,
-				  .remaining = remaining,
-				  .value     = f(value),
-				};
-			}
-			template<lak::concepts::invocable<T &&> F>
-			auto map(F &&f) && -> parse_result<lak::invoke_result_t<F, T &&>>
-			{
-				return {
-				  .consumed  = consumed,
-				  .remaining = remaining,
-				  .value     = f(value),
-				};
-			}
-		};
-
-		/* --- result --- */
-
-		template<typename T>
-		requires(!lak::is_void_v<T>)
-		using result =
-		  lak::result<lak::dsl::parse_result<T>, lak::dsl::parse_error>;
-
-		/* --- parser --- */
-
-		template<typename T>
-		concept parser = requires(const T t) {
-			typename T::value_type;
-
-			requires(T::is_pure_match
-			           ? lak::is_same_v<typename T::value_type, lak::u8string_view>
-			           : true);
-
-			{
-				t.parse(lak::u8string_view{})
-			} -> lak::concepts::same_as<lak::dsl::result<typename T::value_type>>;
-		};
-
-		template<typename T>
-		concept pure_match_parser = lak::dsl::parser<T> && T::is_pure_match;
-
 		/* --- bottom --- */
 
 		struct bottom_t
@@ -113,7 +26,7 @@ namespace lak
 			using value_type                    = lak::u8string_view;
 			lak::dsl::result<value_type> parse(lak::u8string_view) const
 			{
-				return lak::err_t{lak::dsl::parse_error{.message = u8"bottom"}};
+				return lak::err_t{lak::dsl::err::parse{.message = u8"bottom"}};
 			}
 		};
 
@@ -128,7 +41,7 @@ namespace lak
 			using value_type                    = T;
 			lak::dsl::result<value_type> parse(lak::u8string_view) const
 			{
-				return lak::err_t{lak::dsl::parse_error{.message = u8"dummy"}};
+				return lak::err_t{lak::dsl::err::parse{.message = u8"dummy"}};
 			}
 		};
 
@@ -174,13 +87,13 @@ namespace lak
 					}};
 				else
 					return lak::err_t{
-					  lak::dsl::parse_error{.message = u8"expected end of file"}};
+					  lak::dsl::err::parse{.message = u8"expected end of file"}};
 			}
 		};
 
 		inline constexpr lak::dsl::eof_t eof;
 
-		static_assert(lak::dsl::parser<lak::dsl::eof_t>);
+		static_assert(lak::dsl::concepts::parser<lak::dsl::eof_t>);
 
 		/* --- is_eof --- */
 
@@ -199,11 +112,11 @@ namespace lak
 
 		/* --- sequence --- */
 
-		template<lak::dsl::parser auto... parsers>
+		template<lak::dsl::concepts::parser auto... parsers>
 		struct sequence_t
 		{
 			static constexpr bool is_pure_match =
-			  ((lak::dsl::pure_match_parser<
+			  ((lak::dsl::concepts::pure_match_parser<
 			     lak::remove_cvref_t<decltype(parsers)>>) &&
 			   ...);
 
@@ -234,7 +147,7 @@ namespace lak
 				  });
 
 				((parsers.parse(result.unsafe_unwrap().remaining)
-				    .if_err([&](const lak::dsl::parse_error &err)
+				    .if_err([&](const lak::dsl::err::parse &err)
 				            { result = lak::err_t{err}; })
 				    .if_ok(
 				      [&]<typename T>(lak::dsl::parse_result<T> &&res)
@@ -265,7 +178,7 @@ namespace lak
 				  });
 
 				((parsers.parse(result.unsafe_unwrap().remaining)
-				    .if_err([&](const lak::dsl::parse_error &err)
+				    .if_err([&](const lak::dsl::err::parse &err)
 				            { result = lak::err_t{err}; })
 				    .if_ok([&]<typename T>(lak::dsl::parse_result<T> &&res)
 				           { result.unsafe_unwrap().remaining = res.remaining; })
@@ -296,12 +209,12 @@ namespace lak
 			}
 		};
 
-		template<lak::dsl::parser auto... parsers>
+		template<lak::dsl::concepts::parser auto... parsers>
 		inline constexpr lak::dsl::sequence_t<parsers...> sequence;
 
-		static_assert(lak::dsl::parser<lak::dsl::sequence_t<>>);
+		static_assert(lak::dsl::concepts::parser<lak::dsl::sequence_t<>>);
 		static_assert(
-		  lak::dsl::parser<lak::dsl::sequence_t<lak::dsl::sequence<>>>);
+		  lak::dsl::concepts::parser<lak::dsl::sequence_t<lak::dsl::sequence<>>>);
 
 		/* --- is_sequence --- */
 
@@ -309,7 +222,7 @@ namespace lak
 		struct is_sequence : lak::false_type
 		{
 		};
-		template<lak::dsl::parser auto... parsers>
+		template<lak::dsl::concepts::parser auto... parsers>
 		struct is_sequence<lak::dsl::sequence_t<parsers...>> : lak::true_type
 		{
 		};
@@ -322,28 +235,31 @@ namespace lak
 
 		/* --- operator+ --- */
 
-		template<lak::dsl::parser L, lak::dsl::parser R>
+		template<lak::dsl::concepts::parser L, lak::dsl::concepts::parser R>
 		requires(!lak::dsl::is_sequence_v<L> && !lak::dsl::is_sequence_v<R>)
 		inline constexpr auto operator+(L, R)
 		{
 			return lak::dsl::sequence<L{}, R{}>;
 		}
 
-		template<lak::dsl::parser auto... L, lak::dsl::parser R>
+		template<lak::dsl::concepts::parser auto... L,
+		         lak::dsl::concepts::parser R>
 		requires(!lak::dsl::is_sequence_v<R>)
 		inline constexpr auto operator+(lak::dsl::sequence_t<L...>, R)
 		{
 			return lak::dsl::sequence<L..., R{}>;
 		}
 
-		template<lak::dsl::parser L, lak::dsl::parser auto... R>
+		template<lak::dsl::concepts::parser L,
+		         lak::dsl::concepts::parser auto... R>
 		requires(!lak::dsl::is_sequence_v<L>)
 		inline constexpr auto operator+(L, lak::dsl::sequence_t<R...>)
 		{
 			return lak::dsl::sequence<L{}, R...>;
 		}
 
-		template<lak::dsl::parser auto... L, lak::dsl::parser auto... R>
+		template<lak::dsl::concepts::parser auto... L,
+		         lak::dsl::concepts::parser auto... R>
 		inline constexpr auto operator+(lak::dsl::sequence_t<L...>,
 		                                lak::dsl::sequence_t<R...>)
 		{
@@ -352,7 +268,7 @@ namespace lak
 
 		/* --- optional --- */
 
-		template<lak::dsl::parser auto par>
+		template<lak::dsl::concepts::parser auto par>
 		struct optional_t
 		{
 			static constexpr bool is_pure_match = decltype(par)::is_pure_match;
@@ -397,11 +313,11 @@ namespace lak
 			}
 		};
 
-		template<lak::dsl::parser auto par>
+		template<lak::dsl::concepts::parser auto par>
 		inline constexpr lak::dsl::optional_t<par> optional;
 
 		static_assert(
-		  lak::dsl::parser<lak::dsl::optional_t<lak::dsl::sequence<>>>);
+		  lak::dsl::concepts::parser<lak::dsl::optional_t<lak::dsl::sequence<>>>);
 
 		/* --- is_optional --- */
 
@@ -409,7 +325,7 @@ namespace lak
 		struct is_optional : lak::false_type
 		{
 		};
-		template<lak::dsl::parser auto parser>
+		template<lak::dsl::concepts::parser auto parser>
 		struct is_optional<lak::dsl::optional_t<parser>> : lak::true_type
 		{
 		};
@@ -418,10 +334,10 @@ namespace lak
 
 		/* --- get_optional_parser --- */
 
-		template<lak::dsl::parser par>
+		template<lak::dsl::concepts::parser par>
 		struct get_optional_parser_t;
 
-		template<lak::dsl::parser auto par>
+		template<lak::dsl::concepts::parser auto par>
 		struct get_optional_parser_t<lak::dsl::optional_t<par>>
 		{
 			static constexpr auto parser = par;
@@ -429,17 +345,17 @@ namespace lak
 
 		/* --- remove_optional --- */
 
-		template<lak::dsl::parser auto par>
+		template<lak::dsl::concepts::parser auto par>
 		struct remove_optional_t;
 
-		template<lak::dsl::parser auto par>
+		template<lak::dsl::concepts::parser auto par>
 		requires(!lak::dsl::is_optional_v<decltype(par)>)
 		struct remove_optional_t<par>
 		{
 			static constexpr auto parser = par;
 		};
 
-		template<lak::dsl::parser auto par>
+		template<lak::dsl::concepts::parser auto par>
 		requires(lak::dsl::is_optional_v<decltype(par)>)
 		struct remove_optional_t<par>
 		{
@@ -447,20 +363,20 @@ namespace lak
 			  lak::dsl::get_optional_parser_t<decltype(par)>::parser;
 		};
 
-		template<lak::dsl::parser auto par>
+		template<lak::dsl::concepts::parser auto par>
 		inline constexpr auto remove_optional =
 		  lak::dsl::remove_optional_t<par>::parser;
 
 		/* --- operator~ --- */
 
-		template<lak::dsl::parser R>
+		template<lak::dsl::concepts::parser R>
 		requires(!lak::dsl::is_optional_v<R>)
 		inline constexpr auto operator~(R)
 		{
 			return lak::dsl::optional<R{}>;
 		}
 
-		template<lak::dsl::parser auto R>
+		template<lak::dsl::concepts::parser auto R>
 		inline constexpr auto operator~(lak::dsl::optional_t<R>)
 		{
 			return lak::dsl::optional<R>;
@@ -468,7 +384,7 @@ namespace lak
 
 		/* --- repeat --- */
 
-		template<lak::dsl::parser auto par,
+		template<lak::dsl::concepts::parser auto par,
 		         size_t min = 0,
 		         size_t max = lak::dynamic_extent>
 		struct repeat_t
@@ -499,14 +415,14 @@ namespace lak
 					           result.remaining = res.remaining;
 					           result.value.push_back(lak::forward<T>(res.value));
 				           })
-				         .if_err([&](const lak::dsl::parse_error &err)
+				         .if_err([&](const lak::dsl::err::parse &err)
 				                 { err_msg = err.message; })
 				         .is_ok())
 					++count;
 
 				if (count < min)
 					return lak::err_t{
-					  lak::dsl::parse_error{.message = lak::move(err_msg)}};
+					  lak::dsl::err::parse{.message = lak::move(err_msg)}};
 
 				result.consumed = str.first(str.size() - result.remaining.size());
 
@@ -529,14 +445,14 @@ namespace lak
 				       par.parse(result.remaining)
 				         .if_ok([&]<typename T>(lak::dsl::parse_result<T> &&res)
 				                { result.remaining = res.remaining; })
-				         .if_err([&](const lak::dsl::parse_error &err)
+				         .if_err([&](const lak::dsl::err::parse &err)
 				                 { err_msg = err.message; })
 				         .is_ok())
 					++count;
 
 				if (count < min)
 					return lak::err_t{
-					  lak::dsl::parse_error{.message = lak::move(err_msg)}};
+					  lak::dsl::err::parse{.message = lak::move(err_msg)}};
 
 				result.value = result.consumed =
 				  str.first(str.size() - result.remaining.size());
@@ -545,21 +461,22 @@ namespace lak
 			}
 		};
 
-		template<lak::dsl::parser auto par>
+		template<lak::dsl::concepts::parser auto par>
 		inline constexpr lak::dsl::repeat_t<par> repeat;
 
-		template<lak::dsl::parser auto par, size_t count>
+		template<lak::dsl::concepts::parser auto par, size_t count>
 		inline constexpr lak::dsl::repeat_t<par, count> repeat_at_least;
 
-		template<lak::dsl::parser auto par, size_t count>
+		template<lak::dsl::concepts::parser auto par, size_t count>
 		inline constexpr lak::dsl::repeat_t<par, count, count> repeat_exact;
 
-		template<lak::dsl::parser auto par, size_t min, size_t max>
+		template<lak::dsl::concepts::parser auto par, size_t min, size_t max>
 		inline constexpr lak::dsl::repeat_t<par, min, max> repeat_range;
 
-		static_assert(lak::dsl::parser<lak::dsl::repeat_t<lak::dsl::sequence<>>>);
 		static_assert(
-		  lak::dsl::parser<lak::dsl::repeat_t<lak::dsl::sequence<>, 1>>);
+		  lak::dsl::concepts::parser<lak::dsl::repeat_t<lak::dsl::sequence<>>>);
+		static_assert(
+		  lak::dsl::concepts::parser<lak::dsl::repeat_t<lak::dsl::sequence<>, 1>>);
 
 		/* --- is_repeat --- */
 
@@ -567,7 +484,7 @@ namespace lak
 		struct is_repeat : lak::false_type
 		{
 		};
-		template<lak::dsl::parser auto parser, size_t count>
+		template<lak::dsl::concepts::parser auto parser, size_t count>
 		struct is_repeat<lak::dsl::repeat_t<parser, count>> : lak::true_type
 		{
 		};
@@ -576,14 +493,14 @@ namespace lak
 
 		/* --- operator* --- */
 
-		template<lak::dsl::parser R>
+		template<lak::dsl::concepts::parser R>
 		requires(!lak::dsl::is_repeat_v<R>)
 		inline constexpr auto operator*(R)
 		{
 			return lak::dsl::repeat<R{}>;
 		}
 
-		template<lak::dsl::parser auto R, size_t S>
+		template<lak::dsl::concepts::parser auto R, size_t S>
 		inline constexpr auto operator*(lak::dsl::repeat_t<R, S>)
 		{
 			return lak::dsl::repeat<R>;
@@ -591,14 +508,14 @@ namespace lak
 
 		/* --- operator+ --- */
 
-		template<lak::dsl::parser R>
+		template<lak::dsl::concepts::parser R>
 		requires(!lak::dsl::is_repeat_v<R>)
 		inline constexpr auto operator+(R)
 		{
 			return lak::dsl::repeat_at_least<R{}, 1U>;
 		}
 
-		template<lak::dsl::parser auto R, size_t S>
+		template<lak::dsl::concepts::parser auto R, size_t S>
 		inline constexpr auto operator+(lak::dsl::repeat_t<R, S>)
 		{
 			return lak::dsl::repeat_at_least<R, 1U>;
@@ -606,12 +523,13 @@ namespace lak
 
 		/* --- match --- */
 
-		template<lak::dsl::pure_match_parser auto condition,
-		         lak::dsl::parser auto par>
+		template<lak::dsl::concepts::pure_match_parser auto condition,
+		         lak::dsl::concepts::parser auto par>
 		struct match_t
 		{
 			static constexpr bool is_pure_match =
-			  lak::dsl::pure_match_parser<lak::remove_cvref_t<decltype(par)>>;
+			  lak::dsl::concepts::pure_match_parser<
+			    lak::remove_cvref_t<decltype(par)>>;
 			using value_type = typename decltype(par)::value_type;
 
 			lak::optional<lak::dsl::result<value_type>> parse(
@@ -628,8 +546,8 @@ namespace lak
 			}
 		};
 
-		template<lak::dsl::pure_match_parser auto condition,
-		         lak::dsl::parser auto par>
+		template<lak::dsl::concepts::pure_match_parser auto condition,
+		         lak::dsl::concepts::parser auto par>
 		inline constexpr lak::dsl::match_t<condition, par> match;
 
 		/* --- is_match --- */
@@ -638,7 +556,8 @@ namespace lak
 		struct is_match : lak::false_type
 		{
 		};
-		template<lak::dsl::pure_match_parser auto cond, lak::dsl::parser auto par>
+		template<lak::dsl::concepts::pure_match_parser auto cond,
+		         lak::dsl::concepts::parser auto par>
 		struct is_match<lak::dsl::match_t<cond, par>> : lak::true_type
 		{
 		};
@@ -698,8 +617,7 @@ namespace lak
 				 ...);
 
 				if (!result.has_value())
-					return lak::err_t{
-					  lak::dsl::parse_error{.message = u8"match failed"}};
+					return lak::err_t{lak::dsl::err::parse{.message = u8"match failed"}};
 				else
 					return lak::move(*result);
 			}
@@ -716,8 +634,7 @@ namespace lak
 				(((result = cases.parse(str)).has_value()) || ...);
 
 				if (!result.has_value())
-					return lak::err_t{
-					  lak::dsl::parse_error{.message = u8"match failed"}};
+					return lak::err_t{lak::dsl::err::parse{.message = u8"match failed"}};
 				else
 					return lak::move(*result);
 			}
@@ -774,11 +691,11 @@ namespace lak
 
 		/* --- disjunction --- */
 
-		template<lak::dsl::parser auto... parsers>
+		template<lak::dsl::concepts::parser auto... parsers>
 		struct disjunction_t
 		{
 			static constexpr bool is_pure_match =
-			  ((lak::dsl::pure_match_parser<
+			  ((lak::dsl::concepts::pure_match_parser<
 			     lak::remove_cvref_t<decltype(parsers)>>) &&
 			   ...);
 			static constexpr bool _is_same_value_types =
@@ -812,7 +729,7 @@ namespace lak
 					     };
 				     }))
 				    .if_err(
-				      [&](const lak::dsl::parse_error &err)
+				      [&](const lak::dsl::err::parse &err)
 				      {
 					      if (err_msg.empty())
 						      err_msg = u8"(" + err.message + u8")";
@@ -836,7 +753,7 @@ namespace lak
 				lak::u8string err_msg;
 				(((result = parsers.parse(str))
 				    .if_err(
-				      [&](const lak::dsl::parse_error &err)
+				      [&](const lak::dsl::err::parse &err)
 				      {
 					      if (err_msg.empty())
 						      err_msg = u8"(" + err.message + u8")";
@@ -864,12 +781,12 @@ namespace lak
 			}
 		};
 
-		template<lak::dsl::parser auto... parsers>
+		template<lak::dsl::concepts::parser auto... parsers>
 		inline constexpr lak::dsl::disjunction_t<parsers...> disjunction;
 
-		static_assert(lak::dsl::parser<lak::dsl::disjunction_t<>>);
+		static_assert(lak::dsl::concepts::parser<lak::dsl::disjunction_t<>>);
 		static_assert(
-		  lak::dsl::parser<
+		  lak::dsl::concepts::parser<
 		    lak::dsl::disjunction_t<lak::dsl::sequence<>, lak::dsl::sequence<>>>);
 
 		/* --- is_disjunction --- */
@@ -878,7 +795,7 @@ namespace lak
 		struct is_disjunction : lak::false_type
 		{
 		};
-		template<lak::dsl::parser auto... parsers>
+		template<lak::dsl::concepts::parser auto... parsers>
 		struct is_disjunction<lak::dsl::disjunction_t<parsers...>> : lak::true_type
 		{
 		};
@@ -892,28 +809,31 @@ namespace lak
 
 		/* --- operator| --- */
 
-		template<lak::dsl::parser L, lak::dsl::parser R>
+		template<lak::dsl::concepts::parser L, lak::dsl::concepts::parser R>
 		requires(!lak::dsl::is_disjunction_v<L> && !lak::dsl::is_disjunction_v<R>)
 		inline constexpr auto operator|(L, R)
 		{
 			return lak::dsl::disjunction<L{}, R{}>;
 		}
 
-		template<lak::dsl::parser auto... L, lak::dsl::parser R>
+		template<lak::dsl::concepts::parser auto... L,
+		         lak::dsl::concepts::parser R>
 		requires(!lak::dsl::is_disjunction_v<R>)
 		inline constexpr auto operator|(lak::dsl::disjunction_t<L...>, R)
 		{
 			return lak::dsl::disjunction<L..., R{}>;
 		}
 
-		template<lak::dsl::parser L, lak::dsl::parser auto... R>
+		template<lak::dsl::concepts::parser L,
+		         lak::dsl::concepts::parser auto... R>
 		requires(!lak::dsl::is_disjunction_v<L>)
 		inline constexpr auto operator|(L, lak::dsl::disjunction_t<R...>)
 		{
 			return lak::dsl::disjunction<L{}, R...>;
 		}
 
-		template<lak::dsl::parser auto... L, lak::dsl::parser auto... R>
+		template<lak::dsl::concepts::parser auto... L,
+		         lak::dsl::concepts::parser auto... R>
 		inline constexpr auto operator|(lak::dsl::disjunction_t<L...>,
 		                                lak::dsl::disjunction_t<R...>)
 		{
@@ -924,8 +844,8 @@ namespace lak
 
 		// first parser determines the maximum parse range, all other parsers must
 		// then successfully parse on the same range.
-		template<lak::dsl::pure_match_parser auto parser,
-		         lak::dsl::pure_match_parser auto... parsers>
+		template<lak::dsl::concepts::pure_match_parser auto parser,
+		         lak::dsl::concepts::pure_match_parser auto... parsers>
 		struct conjunction_t
 		{
 			static constexpr bool is_pure_match = true;
@@ -947,7 +867,7 @@ namespace lak
 					                     result1.unsafe_unwrap().consumed.size())
 						                 return lak::ok_t{value};
 					                 else
-						                 return lak::err_t<lak::dsl::parse_error>{};
+						                 return lak::err_t<lak::dsl::err::parse>{};
 				                 }))
 				    .is_ok()));
 
@@ -956,7 +876,7 @@ namespace lak
 			}
 		};
 
-		template<lak::dsl::pure_match_parser auto... parsers>
+		template<lak::dsl::concepts::pure_match_parser auto... parsers>
 		inline constexpr lak::dsl::conjunction_t<parsers...> conjunction;
 
 		/* --- is_conjunction --- */
@@ -965,7 +885,7 @@ namespace lak
 		struct is_conjunction : lak::false_type
 		{
 		};
-		template<lak::dsl::parser auto... parsers>
+		template<lak::dsl::concepts::parser auto... parsers>
 		struct is_conjunction<lak::dsl::conjunction_t<parsers...>> : lak::true_type
 		{
 		};
@@ -975,28 +895,31 @@ namespace lak
 
 		/* --- operator& --- */
 
-		template<lak::dsl::parser L, lak::dsl::parser R>
+		template<lak::dsl::concepts::parser L, lak::dsl::concepts::parser R>
 		requires(!lak::dsl::is_conjunction_v<L> && !lak::dsl::is_conjunction_v<R>)
 		inline constexpr auto operator&(L, R)
 		{
 			return lak::dsl::conjunction<L{}, R{}>;
 		}
 
-		template<lak::dsl::parser auto... L, lak::dsl::parser R>
+		template<lak::dsl::concepts::parser auto... L,
+		         lak::dsl::concepts::parser R>
 		requires(!lak::dsl::is_conjunction_v<R>)
 		inline constexpr auto operator&(lak::dsl::conjunction_t<L...>, R)
 		{
 			return lak::dsl::conjunction<L..., R{}>;
 		}
 
-		template<lak::dsl::parser L, lak::dsl::parser auto... R>
+		template<lak::dsl::concepts::parser L,
+		         lak::dsl::concepts::parser auto... R>
 		requires(!lak::dsl::is_conjunction_v<L>)
 		inline constexpr auto operator&(L, lak::dsl::conjunction_t<R...>)
 		{
 			return lak::dsl::conjunction<L{}, R...>;
 		}
 
-		template<lak::dsl::parser auto... L, lak::dsl::parser auto... R>
+		template<lak::dsl::concepts::parser auto... L,
+		         lak::dsl::concepts::parser auto... R>
 		inline constexpr auto operator&(lak::dsl::conjunction_t<L...>,
 		                                lak::dsl::conjunction_t<R...>)
 		{
@@ -1005,7 +928,7 @@ namespace lak
 
 		/* --- capture --- */
 
-		template<lak::dsl::parser auto par>
+		template<lak::dsl::concepts::parser auto par>
 		struct capture_t
 		{
 			static constexpr bool is_pure_match = false;
@@ -1017,10 +940,11 @@ namespace lak
 			}
 		};
 
-		template<lak::dsl::parser auto par>
+		template<lak::dsl::concepts::parser auto par>
 		inline constexpr lak::dsl::capture_t<par> capture;
 
-		static_assert(lak::dsl::parser<lak::dsl::capture_t<lak::dsl::sequence<>>>);
+		static_assert(
+		  lak::dsl::concepts::parser<lak::dsl::capture_t<lak::dsl::sequence<>>>);
 
 		/* --- is_capture --- */
 
@@ -1028,7 +952,7 @@ namespace lak
 		struct is_capture : lak::false_type
 		{
 		};
-		template<lak::dsl::parser auto par>
+		template<lak::dsl::concepts::parser auto par>
 		struct is_capture<lak::dsl::capture_t<par>> : lak::true_type
 		{
 		};
@@ -1047,8 +971,8 @@ namespace lak
 		/* --- capture_nth --- */
 
 		template<size_t N,
-		         lak::dsl::parser auto par,
-		         lak::dsl::parser auto... parsers>
+		         lak::dsl::concepts::parser auto par,
+		         lak::dsl::concepts::parser auto... parsers>
 		struct capture_nth_t
 		{
 			static_assert(N <= sizeof...(parsers));
@@ -1083,17 +1007,17 @@ namespace lak
 			}
 		};
 
-		template<size_t N, lak::dsl::parser auto... parsers>
+		template<size_t N, lak::dsl::concepts::parser auto... parsers>
 		inline constexpr lak::dsl::capture_nth_t<N, parsers...> capture_nth;
 
-		template<lak::dsl::parser auto... parsers>
+		template<lak::dsl::concepts::parser auto... parsers>
 		inline constexpr lak::dsl::capture_nth_t<0U, parsers...> capture_1st;
 
-		template<lak::dsl::parser auto... parsers>
+		template<lak::dsl::concepts::parser auto... parsers>
 		inline constexpr lak::dsl::capture_nth_t<1U, parsers...> capture_2nd;
 
-		static_assert(
-		  lak::dsl::parser<lak::dsl::capture_nth_t<0U, lak::dsl::sequence<>>>);
+		static_assert(lak::dsl::concepts::parser<
+		              lak::dsl::capture_nth_t<0U, lak::dsl::sequence<>>>);
 
 		/* --- is_capture_nth --- */
 
@@ -1101,7 +1025,7 @@ namespace lak
 		struct is_capture_nth : lak::false_type
 		{
 		};
-		template<size_t N, lak::dsl::parser auto... parsers>
+		template<size_t N, lak::dsl::concepts::parser auto... parsers>
 		struct is_capture_nth<lak::dsl::capture_nth_t<N, parsers...>>
 		: lak::true_type
 		{
@@ -1118,7 +1042,7 @@ namespace lak
 
 		/* --- as_pure --- */
 
-		template<lak::dsl::parser auto par>
+		template<lak::dsl::concepts::parser auto par>
 		struct as_pure_t
 		{
 			static constexpr bool is_pure_match = true;
@@ -1139,12 +1063,12 @@ namespace lak
 			}
 		};
 
-		template<lak::dsl::parser auto par>
+		template<lak::dsl::concepts::parser auto par>
 		inline constexpr lak::dsl::as_pure_t<par> as_pure;
 
-		static_assert(
-		  !lak::dsl::pure_match_parser<lak::dsl::capture_t<lak::dsl::bottom>>);
-		static_assert(lak::dsl::pure_match_parser<
+		static_assert(!lak::dsl::concepts::pure_match_parser<
+		              lak::dsl::capture_t<lak::dsl::bottom>>);
+		static_assert(lak::dsl::concepts::pure_match_parser<
 		              lak::dsl::as_pure_t<dsl::capture<lak::dsl::bottom>>>);
 
 		/* --- is_as_pure --- */
@@ -1153,7 +1077,7 @@ namespace lak
 		struct is_as_pure : lak::false_type
 		{
 		};
-		template<lak::dsl::parser auto par>
+		template<lak::dsl::concepts::parser auto par>
 		struct is_as_pure<lak::dsl::as_pure_t<par>> : lak::true_type
 		{
 		};
@@ -1165,49 +1089,53 @@ namespace lak
 
 		/* --- nth_parser --- */
 
-		template<size_t N, lak::dsl::parser auto... parsers>
+		template<size_t N, lak::dsl::concepts::parser auto... parsers>
 		struct _nth_parser_t;
 
-		template<lak::dsl::parser auto par, lak::dsl::parser auto... parsers>
+		template<lak::dsl::concepts::parser auto par,
+		         lak::dsl::concepts::parser auto... parsers>
 		struct _nth_parser_t<0U, par, parsers...>
 		{
 			static constexpr auto parser = par;
 		};
 
 		template<size_t N,
-		         lak::dsl::parser auto par,
-		         lak::dsl::parser auto... parsers>
+		         lak::dsl::concepts::parser auto par,
+		         lak::dsl::concepts::parser auto... parsers>
 		requires(N > 0U)
 		struct _nth_parser_t<N, par, parsers...>
 		: public _nth_parser_t<N - 1, parsers...>
 		{
 		};
 
-		template<size_t N, lak::dsl::parser auto... parsers>
+		template<size_t N, lak::dsl::concepts::parser auto... parsers>
 		inline constexpr auto nth_parser =
 		  lak::dsl::_nth_parser_t<N, parsers...>::parser;
 
-		template<size_t N, lak::dsl::parser auto... parsers>
+		template<size_t N, lak::dsl::concepts::parser auto... parsers>
 		using nth_parser_t =
 		  lak::remove_cvref_t<decltype(lak::dsl::nth_parser<N, parsers...>)>;
 
-		static_assert(lak::dsl::parser<lak::dsl::nth_parser_t<0U,
-		                                                      lak::dsl::bottom,
-		                                                      lak::dsl::bottom,
-		                                                      lak::dsl::bottom>>);
+		static_assert(
+		  lak::dsl::concepts::parser<lak::dsl::nth_parser_t<0U,
+		                                                    lak::dsl::bottom,
+		                                                    lak::dsl::bottom,
+		                                                    lak::dsl::bottom>>);
 
 		/* --- nth_parsers --- */
 
-		template<typename INDICES, lak::dsl::parser auto... parsers>
+		template<typename INDICES, lak::dsl::concepts::parser auto... parsers>
 		struct _nth_parsers_t;
 
-		template<size_t N, lak::dsl::parser auto... parsers>
+		template<size_t N, lak::dsl::concepts::parser auto... parsers>
 		struct _nth_parsers_t<lak::index_sequence<N>, parsers...>
 		{
 			static constexpr auto parser = lak::dsl::nth_parser<N, parsers...>;
 		};
 
-		template<size_t N0, size_t... N, lak::dsl::parser auto... parsers>
+		template<size_t N0,
+		         size_t... N,
+		         lak::dsl::concepts::parser auto... parsers>
 		requires(sizeof...(N) > 0U)
 		struct _nth_parsers_t<lak::index_sequence<N0, N...>, parsers...>
 		{
@@ -1217,38 +1145,38 @@ namespace lak
 			                           parsers...>::parser;
 		};
 
-		template<typename INDICES, lak::dsl::parser auto... parsers>
+		template<typename INDICES, lak::dsl::concepts::parser auto... parsers>
 		inline constexpr auto nth_parsers =
 		  lak::dsl::_nth_parsers_t<INDICES, parsers...>::parser;
 
-		template<typename INDICES, lak::dsl::parser auto... parsers>
+		template<typename INDICES, lak::dsl::concepts::parser auto... parsers>
 		using nth_parsers_t = lak::remove_cvref_t<
 		  decltype(lak::dsl::nth_parsers<INDICES, parsers...>)>;
 
-		static_assert(
-		  lak::dsl::parser<lak::dsl::nth_parsers_t<lak::index_sequence<0U>,
-		                                           lak::dsl::bottom,
-		                                           lak::dsl::bottom,
-		                                           lak::dsl::bottom>>);
+		static_assert(lak::dsl::concepts::parser<
+		              lak::dsl::nth_parsers_t<lak::index_sequence<0U>,
+		                                      lak::dsl::bottom,
+		                                      lak::dsl::bottom,
+		                                      lak::dsl::bottom>>);
 
-		static_assert(
-		  lak::dsl::parser<lak::dsl::nth_parsers_t<lak::index_sequence<0U, 1U>,
-		                                           lak::dsl::bottom,
-		                                           lak::dsl::bottom,
-		                                           lak::dsl::bottom>>);
+		static_assert(lak::dsl::concepts::parser<
+		              lak::dsl::nth_parsers_t<lak::index_sequence<0U, 1U>,
+		                                      lak::dsl::bottom,
+		                                      lak::dsl::bottom,
+		                                      lak::dsl::bottom>>);
 
 		/* --- capture_nths --- */
 
 		template<typename BEGIN,
 		         size_t N,
 		         typename END,
-		         lak::dsl::parser auto... parsers>
+		         lak::dsl::concepts::parser auto... parsers>
 		struct _capture_nths_impl_t;
 
 		template<size_t... PRE,
 		         size_t N,
 		         size_t... POST,
-		         lak::dsl::parser auto... parsers>
+		         lak::dsl::concepts::parser auto... parsers>
 		requires((sizeof...(PRE) > 0U) && (sizeof...(POST) > 0U))
 		struct _capture_nths_impl_t<lak::index_sequence<PRE...>,
 		                            N,
@@ -1262,15 +1190,17 @@ namespace lak
 		{
 		};
 
-		static_assert(
-		  lak::dsl::parser<lak::dsl::_capture_nths_impl_t<lak::index_sequence<0U>,
-		                                                  1U,
-		                                                  lak::index_sequence<2U>,
-		                                                  lak::dsl::bottom,
-		                                                  lak::dsl::bottom,
-		                                                  lak::dsl::bottom>>);
+		static_assert(lak::dsl::concepts::parser<
+		              lak::dsl::_capture_nths_impl_t<lak::index_sequence<0U>,
+		                                             1U,
+		                                             lak::index_sequence<2U>,
+		                                             lak::dsl::bottom,
+		                                             lak::dsl::bottom,
+		                                             lak::dsl::bottom>>);
 
-		template<size_t N, size_t... POST, lak::dsl::parser auto... parsers>
+		template<size_t N,
+		         size_t... POST,
+		         lak::dsl::concepts::parser auto... parsers>
 		requires(sizeof...(POST) > 0U)
 		struct _capture_nths_impl_t<lak::index_sequence<>,
 		                            N,
@@ -1283,14 +1213,16 @@ namespace lak
 		{
 		};
 
-		static_assert(
-		  lak::dsl::parser<lak::dsl::_capture_nths_impl_t<lak::index_sequence<>,
-		                                                  0U,
-		                                                  lak::index_sequence<1U>,
-		                                                  lak::dsl::bottom,
-		                                                  lak::dsl::bottom>>);
+		static_assert(lak::dsl::concepts::parser<
+		              lak::dsl::_capture_nths_impl_t<lak::index_sequence<>,
+		                                             0U,
+		                                             lak::index_sequence<1U>,
+		                                             lak::dsl::bottom,
+		                                             lak::dsl::bottom>>);
 
-		template<size_t... PRE, size_t N, lak::dsl::parser auto... parsers>
+		template<size_t... PRE,
+		         size_t N,
+		         lak::dsl::concepts::parser auto... parsers>
 		requires(sizeof...(PRE) > 0U)
 		struct _capture_nths_impl_t<lak::index_sequence<PRE...>,
 		                            N,
@@ -1303,14 +1235,14 @@ namespace lak
 		{
 		};
 
-		static_assert(
-		  lak::dsl::parser<lak::dsl::_capture_nths_impl_t<lak::index_sequence<0U>,
-		                                                  1U,
-		                                                  lak::index_sequence<>,
-		                                                  lak::dsl::bottom,
-		                                                  lak::dsl::bottom>>);
+		static_assert(lak::dsl::concepts::parser<
+		              lak::dsl::_capture_nths_impl_t<lak::index_sequence<0U>,
+		                                             1U,
+		                                             lak::index_sequence<>,
+		                                             lak::dsl::bottom,
+		                                             lak::dsl::bottom>>);
 
-		template<size_t N, lak::dsl::parser auto... parsers>
+		template<size_t N, lak::dsl::concepts::parser auto... parsers>
 		struct _capture_nths_impl_t<lak::index_sequence<>,
 		                            N,
 		                            lak::index_sequence<>,
@@ -1319,22 +1251,22 @@ namespace lak
 		{
 		};
 
-		static_assert(
-		  lak::dsl::parser<lak::dsl::_capture_nths_impl_t<lak::index_sequence<>,
-		                                                  0U,
-		                                                  lak::index_sequence<>,
-		                                                  lak::dsl::bottom>>);
+		static_assert(lak::dsl::concepts::parser<
+		              lak::dsl::_capture_nths_impl_t<lak::index_sequence<>,
+		                                             0U,
+		                                             lak::index_sequence<>,
+		                                             lak::dsl::bottom>>);
 
 		template<size_t BEGIN,
 		         size_t N,
 		         size_t END,
-		         lak::dsl::parser auto... parsers>
+		         lak::dsl::concepts::parser auto... parsers>
 		struct capture_nths_impl_t;
 
 		template<size_t BEGIN,
 		         size_t N,
 		         size_t END,
-		         lak::dsl::parser auto... parsers>
+		         lak::dsl::concepts::parser auto... parsers>
 		requires((BEGIN < N) && (END > N + 1U))
 		struct capture_nths_impl_t<BEGIN, N, END, parsers...>
 		: public lak::dsl::_capture_nths_impl_t<
@@ -1348,7 +1280,7 @@ namespace lak
 		template<size_t BEGIN,
 		         size_t N,
 		         size_t END,
-		         lak::dsl::parser auto... parsers>
+		         lak::dsl::concepts::parser auto... parsers>
 		requires((BEGIN == N) && (END > N + 1U))
 		struct capture_nths_impl_t<BEGIN, N, END, parsers...>
 		: public lak::dsl::_capture_nths_impl_t<
@@ -1362,7 +1294,7 @@ namespace lak
 		template<size_t BEGIN,
 		         size_t N,
 		         size_t END,
-		         lak::dsl::parser auto... parsers>
+		         lak::dsl::concepts::parser auto... parsers>
 		requires((BEGIN < N) && (END == N + 1U))
 		struct capture_nths_impl_t<BEGIN, N, END, parsers...>
 		: public lak::dsl::_capture_nths_impl_t<
@@ -1376,7 +1308,7 @@ namespace lak
 		template<size_t BEGIN,
 		         size_t N,
 		         size_t END,
-		         lak::dsl::parser auto... parsers>
+		         lak::dsl::concepts::parser auto... parsers>
 		requires((BEGIN == N) && (END == N + 1U))
 		struct capture_nths_impl_t<BEGIN, N, END, parsers...>
 		: public lak::dsl::_capture_nths_impl_t<lak::index_sequence<>,
@@ -1388,10 +1320,12 @@ namespace lak
 
 		template<size_t BEGIN,
 		         typename INDEX_SET,
-		         lak::dsl::parser auto... parsers>
+		         lak::dsl::concepts::parser auto... parsers>
 		struct _capture_nths_t;
 
-		template<size_t BEGIN, size_t N, lak::dsl::parser auto... parsers>
+		template<size_t BEGIN,
+		         size_t N,
+		         lak::dsl::concepts::parser auto... parsers>
 		struct _capture_nths_t<BEGIN, lak::index_sequence<N>, parsers...>
 		{
 			static constexpr auto parser = lak::dsl::
@@ -1402,15 +1336,15 @@ namespace lak
 		         size_t N0,
 		         size_t N1,
 		         size_t... N,
-		         lak::dsl::parser auto... parsers>
+		         lak::dsl::concepts::parser auto... parsers>
 		struct _capture_nths_t<BEGIN,
 		                       lak::index_sequence<N0, N1, N...>,
 		                       parsers...>
 		{
-			static_assert(lak::dsl::parser<
+			static_assert(lak::dsl::concepts::parser<
 			              lak::dsl::capture_nths_impl_t<BEGIN, N0, N1, parsers...>>);
 			static_assert(
-			  lak::dsl::parser<lak::remove_cvref_t<
+			  lak::dsl::concepts::parser<lak::remove_cvref_t<
 			    decltype(lak::dsl::_capture_nths_t<N1,
 			                                       lak::index_sequence<N1, N...>,
 			                                       parsers...>::parser)>>);
@@ -1422,10 +1356,10 @@ namespace lak
 			                            parsers...>::parser;
 		};
 
-		template<typename INDICES, lak::dsl::parser auto... parsers>
+		template<typename INDICES, lak::dsl::concepts::parser auto... parsers>
 		struct capture_nths_t;
 
-		template<size_t... N, lak::dsl::parser auto... parsers>
+		template<size_t... N, lak::dsl::concepts::parser auto... parsers>
 		struct capture_nths_t<lak::index_sequence<N...>, parsers...>
 		{
 			static constexpr auto _parser = lak::dsl::
@@ -1441,7 +1375,7 @@ namespace lak
 			}
 		};
 
-		template<lak::dsl::parser auto... parsers>
+		template<lak::dsl::concepts::parser auto... parsers>
 		struct capture_nths_t<lak::index_sequence<>, parsers...>
 		{
 			static constexpr bool is_pure_match = true;
@@ -1454,14 +1388,14 @@ namespace lak
 			}
 		};
 
-		template<typename INDICES, lak::dsl::parser auto... parsers>
+		template<typename INDICES, lak::dsl::concepts::parser auto... parsers>
 		inline constexpr lak::dsl::capture_nths_t<INDICES, parsers...>
 		  capture_nths;
 
-		static_assert(
-		  lak::dsl::parser<lak::dsl::capture_nths_t<lak::index_sequence<0U, 1U>,
-		                                            lak::dsl::bottom,
-		                                            lak::dsl::bottom>>);
+		static_assert(lak::dsl::concepts::parser<
+		              lak::dsl::capture_nths_t<lak::index_sequence<0U, 1U>,
+		                                       lak::dsl::bottom,
+		                                       lak::dsl::bottom>>);
 
 		static_assert(
 		  lak::is_same_v<
@@ -1490,7 +1424,7 @@ namespace lak
 		struct is_capture_nths : lak::false_type
 		{
 		};
-		template<size_t... N, lak::dsl::parser auto... parsers>
+		template<size_t... N, lak::dsl::concepts::parser auto... parsers>
 		struct is_capture_nths<
 		  lak::dsl::capture_nths_t<lak::index_sequence<N...>, parsers...>>
 		: lak::true_type
@@ -1509,7 +1443,7 @@ namespace lak
 		// capture_sequence<capture<a>, b, capture<c>>
 		// -> sequence<capture_1st<a, b>, capture_1st<c>>
 
-		template<lak::dsl::parser auto... pars>
+		template<lak::dsl::concepts::parser auto... pars>
 		struct capture_sequence_t
 		: public lak::dsl::capture_nths_t<
 		    lak::indices_of_filter_pack_t<
@@ -1519,11 +1453,11 @@ namespace lak
 		{
 		};
 
-		template<lak::dsl::parser auto... pars>
+		template<lak::dsl::concepts::parser auto... pars>
 		inline constexpr lak::dsl::capture_sequence_t<pars...> capture_sequence;
 
 		static_assert(
-		  lak::dsl::parser<
+		  lak::dsl::concepts::parser<
 		    lak::dsl::capture_sequence_t<lak::dsl::capture<lak::dsl::bottom>>>);
 
 		static_assert(
@@ -1559,7 +1493,7 @@ namespace lak
 		struct is_capture_sequence : lak::false_type
 		{
 		};
-		template<lak::dsl::parser auto... parsers>
+		template<lak::dsl::concepts::parser auto... parsers>
 		struct is_capture_sequence<lak::dsl::capture_sequence_t<parsers...>>
 		: lak::true_type
 		{
@@ -1573,7 +1507,7 @@ namespace lak
 
 		/* --- negative_lookahead --- */
 
-		template<lak::dsl::pure_match_parser auto par>
+		template<lak::dsl::concepts::pure_match_parser auto par>
 		struct negative_lookahead_t
 		{
 			static constexpr bool is_pure_match = true;
@@ -1589,16 +1523,16 @@ namespace lak
 					  .value     = {},
 					}};
 				else
-					return lak::err_t<lak::dsl::parse_error>{};
+					return lak::err_t<lak::dsl::err::parse>{};
 			}
 		};
 
-		template<lak::dsl::pure_match_parser auto par>
+		template<lak::dsl::concepts::pure_match_parser auto par>
 		inline constexpr lak::dsl::negative_lookahead_t<par> negative_lookahead;
 
-		static_assert(
-		  lak::dsl::parser<lak::dsl::negative_lookahead_t<lak::dsl::bottom>>);
-		static_assert(lak::dsl::pure_match_parser<
+		static_assert(lak::dsl::concepts::parser<
+		              lak::dsl::negative_lookahead_t<lak::dsl::bottom>>);
+		static_assert(lak::dsl::concepts::pure_match_parser<
 		              lak::dsl::negative_lookahead_t<lak::dsl::bottom>>);
 
 		/* --- is_negative_lookahead --- */
@@ -1607,7 +1541,7 @@ namespace lak
 		struct is_negative_lookahead : lak::false_type
 		{
 		};
-		template<lak::dsl::pure_match_parser auto par>
+		template<lak::dsl::concepts::pure_match_parser auto par>
 		struct is_negative_lookahead<lak::dsl::negative_lookahead_t<par>>
 		: lak::true_type
 		{
@@ -1621,7 +1555,7 @@ namespace lak
 
 		/* --- operator- --- */
 
-		template<lak::dsl::pure_match_parser par>
+		template<lak::dsl::concepts::pure_match_parser par>
 		requires(!lak::dsl::is_negative_lookahead_v<par>)
 		inline constexpr auto operator-(par)
 		{
@@ -1630,7 +1564,7 @@ namespace lak
 
 		/* --- positive_lookahead --- */
 
-		template<lak::dsl::pure_match_parser auto par>
+		template<lak::dsl::concepts::pure_match_parser auto par>
 		struct positive_lookahead_t
 		{
 			static constexpr bool is_pure_match = true;
@@ -1646,16 +1580,16 @@ namespace lak
 					  .value     = {},
 					}};
 				else
-					return lak::err_t<lak::dsl::parse_error>{};
+					return lak::err_t<lak::dsl::err::parse>{};
 			}
 		};
 
-		template<lak::dsl::pure_match_parser auto par>
+		template<lak::dsl::concepts::pure_match_parser auto par>
 		inline constexpr lak::dsl::positive_lookahead_t<par> positive_lookahead;
 
-		static_assert(
-		  lak::dsl::parser<lak::dsl::positive_lookahead_t<lak::dsl::bottom>>);
-		static_assert(lak::dsl::pure_match_parser<
+		static_assert(lak::dsl::concepts::parser<
+		              lak::dsl::positive_lookahead_t<lak::dsl::bottom>>);
+		static_assert(lak::dsl::concepts::pure_match_parser<
 		              lak::dsl::positive_lookahead_t<lak::dsl::bottom>>);
 
 		/* --- is_positive_lookahead --- */
@@ -1664,7 +1598,7 @@ namespace lak
 		struct is_positive_lookahead : lak::false_type
 		{
 		};
-		template<lak::dsl::pure_match_parser auto par>
+		template<lak::dsl::concepts::pure_match_parser auto par>
 		struct is_positive_lookahead<lak::dsl::positive_lookahead_t<par>>
 		: lak::true_type
 		{
@@ -1678,7 +1612,7 @@ namespace lak
 
 		/* --- until --- */
 
-		template<lak::dsl::pure_match_parser auto parser>
+		template<lak::dsl::concepts::pure_match_parser auto parser>
 		struct until_t
 		{
 			static constexpr auto is_pure_match = true;
@@ -1714,18 +1648,18 @@ namespace lak
 					}
 				}
 
-				return lak::err_t<lak::dsl::parse_error>{{.message = u8"out of data"}};
+				return lak::err_t<lak::dsl::err::parse>{{.message = u8"out of data"}};
 			}
 		};
 
-		template<lak::dsl::pure_match_parser auto parser>
+		template<lak::dsl::concepts::pure_match_parser auto parser>
 		inline constexpr lak::dsl::until_t<parser> until;
 
-		template<lak::dsl::pure_match_parser auto parser>
+		template<lak::dsl::concepts::pure_match_parser auto parser>
 		inline constexpr auto until_inc = lak::dsl::until<parser> + parser;
 
-		static_assert(
-		  lak::dsl::pure_match_parser<lak::dsl::until_t<lak::dsl::bottom>>);
+		static_assert(lak::dsl::concepts::pure_match_parser<
+		              lak::dsl::until_t<lak::dsl::bottom>>);
 
 		/* --- is_until --- */
 
@@ -1733,7 +1667,7 @@ namespace lak
 		struct is_until : lak::false_type
 		{
 		};
-		template<lak::dsl::pure_match_parser auto par>
+		template<lak::dsl::concepts::pure_match_parser auto par>
 		struct is_until<lak::dsl::until_t<par>> : lak::true_type
 		{
 		};
@@ -1744,9 +1678,9 @@ namespace lak
 
 		/* --- conditional --- */
 
-		template<lak::dsl::pure_match_parser auto condition,
-		         lak::dsl::parser auto true_parser,
-		         lak::dsl::parser auto false_parser>
+		template<lak::dsl::concepts::pure_match_parser auto condition,
+		         lak::dsl::concepts::parser auto true_parser,
+		         lak::dsl::concepts::parser auto false_parser>
 		struct conditional_t
 		{
 			static constexpr bool is_pure_match =
@@ -1832,14 +1766,15 @@ namespace lak
 			}
 		};
 
-		template<lak::dsl::pure_match_parser auto condition,
-		         lak::dsl::parser auto true_parser,
-		         lak::dsl::parser auto false_parser>
+		template<lak::dsl::concepts::pure_match_parser auto condition,
+		         lak::dsl::concepts::parser auto true_parser,
+		         lak::dsl::concepts::parser auto false_parser>
 		lak::dsl::conditional_t<condition, true_parser, false_parser> conditional;
 
-		static_assert(lak::dsl::parser<lak::dsl::conditional_t<lak::dsl::top,
-		                                                       lak::dsl::top,
-		                                                       lak::dsl::bottom>>);
+		static_assert(
+		  lak::dsl::concepts::parser<lak::dsl::conditional_t<lak::dsl::top,
+		                                                     lak::dsl::top,
+		                                                     lak::dsl::bottom>>);
 
 		/* --- is_conditional --- */
 
@@ -1847,9 +1782,9 @@ namespace lak
 		struct is_conditional : lak::false_type
 		{
 		};
-		template<lak::dsl::pure_match_parser auto condition,
-		         lak::dsl::parser auto true_parser,
-		         lak::dsl::parser auto false_parser>
+		template<lak::dsl::concepts::pure_match_parser auto condition,
+		         lak::dsl::concepts::parser auto true_parser,
+		         lak::dsl::concepts::parser auto false_parser>
 		struct is_conditional<
 		  lak::dsl::conditional_t<condition, true_parser, false_parser>>
 		: lak::true_type
@@ -1887,7 +1822,7 @@ namespace lak
 					  .value     = str.first(_comp_str.size()),
 					}};
 				else
-					return lak::err_t{lak::dsl::parse_error{
+					return lak::err_t{lak::dsl::err::parse{
 					  .message =
 					    lak::streamify("expected '",
 					                   lak::u8string(_comp_str),
@@ -1900,7 +1835,7 @@ namespace lak
 		template<lak::u8const_string const_str>
 		inline constexpr lak::dsl::str_literal_t<const_str> str_literal;
 
-		static_assert(lak::dsl::parser<lak::dsl::str_literal_t<u8"a">>);
+		static_assert(lak::dsl::concepts::parser<lak::dsl::str_literal_t<u8"a">>);
 
 		template<lak::u8const_string... const_strs>
 		inline constexpr lak::dsl::disjunction_t<
@@ -1944,7 +1879,7 @@ namespace lak
 					  .value     = str.first(comp),
 					}};
 				else
-					return lak::err_t{lak::dsl::parse_error{
+					return lak::err_t{lak::dsl::err::parse{
 					  .message =
 					    lak::streamify("expected !'",
 					                   lak::u8string(_comp_str),
@@ -1958,7 +1893,8 @@ namespace lak
 		inline constexpr lak::dsl::negative_str_literal_t<const_str>
 		  negative_str_literal;
 
-		static_assert(lak::dsl::parser<lak::dsl::negative_str_literal_t<u8"a">>);
+		static_assert(
+		  lak::dsl::concepts::parser<lak::dsl::negative_str_literal_t<u8"a">>);
 
 		/* --- is_negative_str_literal --- */
 
@@ -2001,16 +1937,16 @@ namespace lak
 			lak::dsl::result<lak::u8string_view> parse(lak::u8string_view str) const
 			{
 				if (str.empty())
-					return lak::err_t{lak::dsl::parse_error{.message = u8"out of data"}};
+					return lak::err_t{lak::dsl::err::parse{.message = u8"out of data"}};
 				const uint8_t clen = lak::character_length(str);
 				if (clen < 1 || clen > 4)
-					return lak::err_t{lak::dsl::parse_error{
+					return lak::err_t{lak::dsl::err::parse{
 					  .message = u8"invalid unicode character length"}};
 				const char32_t c = lak::codepoint(str);
 				if (c != chr)
 				{
 					lak::codepoint_buffer_t<char8_t> buffers[2];
-					return lak::err_t{lak::dsl::parse_error{
+					return lak::err_t{lak::dsl::err::parse{
 					  .message = lak::streamify(
 					    "expected '",
 					    lak::is_ascii_printable(chr)
@@ -2033,7 +1969,7 @@ namespace lak
 		template<char32_t chr>
 		inline constexpr lak::dsl::char_literal_t<chr> char_literal;
 
-		static_assert(lak::dsl::parser<lak::dsl::char_literal_t<U'a'>>);
+		static_assert(lak::dsl::concepts::parser<lak::dsl::char_literal_t<U'a'>>);
 
 		template<char32_t... chars>
 		using one_of_chars_t =
@@ -2070,14 +2006,14 @@ namespace lak
 			lak::dsl::result<lak::u8string_view> parse(lak::u8string_view str) const
 			{
 				if (str.empty())
-					return lak::err_t{lak::dsl::parse_error{.message = u8"out of data"}};
+					return lak::err_t{lak::dsl::err::parse{.message = u8"out of data"}};
 				const uint8_t clen = lak::character_length(str);
 				if (clen < 1 || clen > 4)
-					return lak::err_t{lak::dsl::parse_error{
+					return lak::err_t{lak::dsl::err::parse{
 					  .message = u8"invalid unicode character length"}};
 				const char32_t c = lak::codepoint(str);
 				if (c == chr)
-					return lak::err_t{lak::dsl::parse_error{
+					return lak::err_t{lak::dsl::err::parse{
 					  .message = lak::streamify("expected !'", chr, "' got '", c, "'")}};
 				return lak::ok_t{lak::dsl::parse_result<value_type>{
 				  .consumed  = str.first(clen),
@@ -2091,7 +2027,8 @@ namespace lak
 		inline constexpr lak::dsl::negative_char_literal_t<chr>
 		  negative_char_literal;
 
-		static_assert(lak::dsl::parser<lak::dsl::negative_char_literal_t<U'a'>>);
+		static_assert(
+		  lak::dsl::concepts::parser<lak::dsl::negative_char_literal_t<U'a'>>);
 
 		/* --- is_negative_char_literal --- */
 
@@ -2133,14 +2070,14 @@ namespace lak
 			lak::dsl::result<lak::u8string_view> parse(lak::u8string_view str) const
 			{
 				if (str.empty())
-					return lak::err_t{lak::dsl::parse_error{.message = u8"out of data"}};
+					return lak::err_t{lak::dsl::err::parse{.message = u8"out of data"}};
 				const uint8_t clen = lak::character_length(str);
 				if (clen < 1 || clen > 4)
-					return lak::err_t{lak::dsl::parse_error{
+					return lak::err_t{lak::dsl::err::parse{
 					  .message = u8"invalid unicode character length"}};
 				const char32_t c = lak::codepoint(str);
 				if (c < begin || c > end)
-					return lak::err_t{lak::dsl::parse_error{
+					return lak::err_t{lak::dsl::err::parse{
 					  .message = lak::streamify(
 					    "expected '", begin, "'<=c<='", end, "' got '", c, "'")}};
 				return lak::ok_t{lak::dsl::parse_result<value_type>{
@@ -2154,7 +2091,8 @@ namespace lak
 		template<char32_t begin, char32_t end>
 		inline constexpr lak::dsl::char_range_t<begin, end> char_range;
 
-		static_assert(lak::dsl::parser<lak::dsl::char_range_t<U'a', U'b'>>);
+		static_assert(
+		  lak::dsl::concepts::parser<lak::dsl::char_range_t<U'a', U'b'>>);
 
 		/* --- is_char_range --- */
 
@@ -2171,7 +2109,7 @@ namespace lak
 
 		/* --- replace --- */
 
-		template<lak::dsl::parser auto par, auto value>
+		template<lak::dsl::concepts::parser auto par, auto value>
 		struct replace_t
 		{
 			static constexpr bool is_pure_match = false;
@@ -2191,7 +2129,7 @@ namespace lak
 			}
 		};
 
-		template<lak::dsl::parser auto par, auto value>
+		template<lak::dsl::concepts::parser auto par, auto value>
 		inline constexpr lak::dsl::replace_t<par, value> replace;
 
 		template<lak::u8const_string const_str, auto value>
@@ -2199,15 +2137,15 @@ namespace lak
 		                                     value>
 		  replace_str_literal;
 
-		static_assert(
-		  lak::dsl::parser<lak::dsl::replace_t<lak::dsl::str_literal<u8"a">, 0>>);
+		static_assert(lak::dsl::concepts::parser<
+		              lak::dsl::replace_t<lak::dsl::str_literal<u8"a">, 0>>);
 
 		template<char32_t chr, auto value>
 		inline constexpr lak::dsl::replace_t<lak::dsl::char_literal<chr>, value>
 		  replace_char_literal;
 
-		static_assert(
-		  lak::dsl::parser<lak::dsl::replace_t<lak::dsl::char_literal<U'a'>, 0>>);
+		static_assert(lak::dsl::concepts::parser<
+		              lak::dsl::replace_t<lak::dsl::char_literal<U'a'>, 0>>);
 
 		/* --- is_replace --- */
 
@@ -2239,14 +2177,14 @@ namespace lak
 		template<typename RESULT>
 		requires(
 		  lak::is_result_v<RESULT> &&
-		  lak::is_same_v<lak::result_err_type_t<RESULT>, lak::dsl::parse_error>)
+		  lak::is_same_v<lak::result_err_type_t<RESULT>, lak::dsl::err::parse>)
 		struct _transform_t<RESULT>
 		{
 			static constexpr bool _can_flatten = true;
 			using value_type                   = lak::result_ok_type_t<RESULT>;
 		};
 
-		template<lak::dsl::parser auto par, auto func>
+		template<lak::dsl::concepts::parser auto par, auto func>
 		struct transform_t
 		{
 			static constexpr bool is_pure_match = false;
@@ -2293,7 +2231,7 @@ namespace lak
 			}
 		};
 
-		template<lak::dsl::parser auto par, auto func>
+		template<lak::dsl::concepts::parser auto par, auto func>
 		inline constexpr lak::dsl::transform_t<par, func> transform;
 
 		/* --- is_transform --- */
@@ -2311,11 +2249,11 @@ namespace lak
 
 		/* --- unordered --- */
 
-		template<lak::dsl::parser auto... parsers>
+		template<lak::dsl::concepts::parser auto... parsers>
 		struct unordered_t
 		{
 			static constexpr bool is_pure_match =
-			  ((lak::dsl::pure_match_parser<
+			  ((lak::dsl::concepts::pure_match_parser<
 			     lak::remove_cvref_t<decltype(parsers)>>) &&
 			   ...);
 
@@ -2356,7 +2294,7 @@ namespace lak
 					             values.template get<I>() = lak::forward<T>(res.value);
 				             })
 				           .if_err(
-				             [&](const lak::dsl::parse_error &err)
+				             [&](const lak::dsl::err::parse &err)
 				             {
 					             if (err_msg.empty())
 						             err_msg = err.message;
@@ -2371,7 +2309,7 @@ namespace lak
 				       values.template get<I>().has_value()) &&
 				      ...))
 					return lak::err_t{
-					  lak::dsl::parse_error{.message = lak::move(err_msg)}};
+					  lak::dsl::err::parse{.message = lak::move(err_msg)}};
 
 				result.consumed = str.first(str.size() - result.remaining.size());
 
@@ -2420,7 +2358,7 @@ namespace lak
 				             .if_ok([&]<typename T>(lak::dsl::parse_result<T> &&res)
 				                    { result.remaining = res.remaining; })
 				             .if_err(
-				               [&](const lak::dsl::parse_error &err)
+				               [&](const lak::dsl::err::parse &err)
 				               {
 					               if (err_msg.empty())
 						               err_msg = err.message;
@@ -2433,7 +2371,7 @@ namespace lak
 
 				if (!((succeeded[I]) && ...))
 					return lak::err_t{
-					  lak::dsl::parse_error{.message = lak::move(err_msg)}};
+					  lak::dsl::err::parse{.message = lak::move(err_msg)}};
 
 				result.value = result.consumed =
 				  str.first(str.size() - result.remaining.size());
@@ -2458,12 +2396,12 @@ namespace lak
 			}
 		};
 
-		template<lak::dsl::parser auto... parsers>
+		template<lak::dsl::concepts::parser auto... parsers>
 		inline constexpr lak::dsl::unordered_t<parsers...> unordered;
 
-		static_assert(lak::dsl::parser<lak::dsl::unordered_t<>>);
-		static_assert(
-		  lak::dsl::parser<lak::dsl::unordered_t<lak::dsl::unordered<>>>);
+		static_assert(lak::dsl::concepts::parser<lak::dsl::unordered_t<>>);
+		static_assert(lak::dsl::concepts::parser<
+		              lak::dsl::unordered_t<lak::dsl::unordered<>>>);
 
 		/* --- is_unordered --- */
 
@@ -2471,7 +2409,7 @@ namespace lak
 		struct is_unordered : lak::false_type
 		{
 		};
-		template<lak::dsl::parser auto... parsers>
+		template<lak::dsl::concepts::parser auto... parsers>
 		struct is_unordered<lak::dsl::unordered_t<parsers...>> : lak::true_type
 		{
 		};

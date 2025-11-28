@@ -74,8 +74,8 @@ namespace lak
 			}
 		};
 
-		template<lak::dsl::pure_match_parser auto token_parser,
-		         lak::dsl::pure_match_parser auto whitespace_parser>
+		template<lak::dsl::concepts::pure_match_parser auto token_parser,
+		         lak::dsl::concepts::pure_match_parser auto whitespace_parser>
 		struct sexpr_t
 		{
 			static constexpr bool is_pure_match = false;
@@ -117,7 +117,7 @@ namespace lak
 
 					if (rem.empty())
 						return lak::err_t{
-						  lak::dsl::parse_error{.message = u8"out of data"}};
+						  lak::dsl::err::parse{.message = u8"out of data"}};
 
 					if (lparen.parse(rem).if_ok(move_str).is_ok())
 					{
@@ -174,12 +174,12 @@ namespace lak
 			}
 		};
 
-		template<lak::dsl::pure_match_parser auto token_parser,
-		         lak::dsl::pure_match_parser auto whitespace_parser>
+		template<lak::dsl::concepts::pure_match_parser auto token_parser,
+		         lak::dsl::concepts::pure_match_parser auto whitespace_parser>
 		inline constexpr lak::dsl::sexpr_t<token_parser, whitespace_parser> sexpr;
 
-		static_assert(
-		  lak::dsl::parser<lak::dsl::sexpr_t<lak::dsl::bottom, lak::dsl::bottom>>);
+		static_assert(lak::dsl::concepts::parser<
+		              lak::dsl::sexpr_t<lak::dsl::bottom, lak::dsl::bottom>>);
 	}
 }
 
