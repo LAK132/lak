@@ -53,21 +53,6 @@ inline constexpr lak::const_string<CHAR, N>::const_string(
 }
 
 template<typename CHAR, size_t N>
-inline consteval static lak::const_string<CHAR, N>
-lak::const_string<CHAR, N>::from_ptr(const CHAR *str)
-{
-	if (!std::is_constant_evaluated())
-	{
-		ASSERT_EQUAL(const_strlen(str), N);
-	}
-	else if (const_strlen(str) != N)
-		throw "invalid string lenght";
-	CHAR _arr[N + 1];
-	for (size_t i = 0; i < N; ++i) _arr[i] = str[i];
-	return const_string{_arr};
-}
-
-template<typename CHAR, size_t N>
 inline constexpr lak::const_string<CHAR, N>::operator lak::c_array<CHAR, N>()
   const
 {

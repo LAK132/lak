@@ -39,7 +39,18 @@ namespace lak
 		inline constexpr const_string(const const_string &other);
 		inline constexpr const_string &operator=(const const_string &other);
 		inline constexpr const_string(const CHAR (&str)[N + 1]);
-		inline consteval static const_string from_ptr(const CHAR *str);
+		inline consteval static const_string from_ptr(const CHAR *str)
+		{
+			if (!std::is_constant_evaluated())
+			{
+				ASSERT_EQUAL(const_strlen(str), N);
+			}
+			else if (const_strlen(str) != N)
+				throw "invalid string lenght";
+			CHAR _arr[N + 1];
+			for (size_t i = 0; i < N; ++i) _arr[i] = str[i];
+			return const_string{_arr};
+		}
 		inline constexpr CHAR &operator[](size_t index) { return _value[index]; }
 		inline constexpr const CHAR &operator[](size_t index) const
 		{
@@ -72,16 +83,16 @@ namespace lak
 	template<size_t N>                                                          \
 	using PREFIX##const_string = lak::const_string<CHAR, N>;                    \
                                                                               \
-	template<template<CHAR...> typename T, PREFIX##const_string str, typename>  \
+	template<template<CHAR...> typename T, lak::const_string str, typename>     \
 	struct _##PREFIX##apply_const_string;                                       \
-	template<template<CHAR...> typename T,                                      \
-	         PREFIX##const_string str,                                          \
-	         size_t... I>                                                       \
+	template<template<CHAR...> typename T, lak::const_string str, size_t... I>  \
+	requires(lak::is_same_v<typename decltype(str)::char_type, CHAR>)           \
 	struct _##PREFIX##apply_const_string<T, str, lak::index_sequence<I...>>     \
 	{                                                                           \
 		using type = T<str[I]...>;                                                \
 	};                                                                          \
-	template<template<CHAR...> typename T, PREFIX##const_string str>            \
+	template<template<CHAR...> typename T, lak::const_string str>               \
+	requires(lak::is_same_v<typename decltype(str)::char_type, CHAR>)           \
 	struct PREFIX##apply_const_string                                           \
 	{                                                                           \
 		using type = typename _##PREFIX##apply_const_string<                      \
@@ -89,7 +100,8 @@ namespace lak
 		  str,                                                                    \
 		  lak::make_index_sequence<str.size()>>::type;                            \
 	};                                                                          \
-	template<template<CHAR...> typename T, PREFIX##const_string str>            \
+	template<template<CHAR...> typename T, lak::const_string str>               \
+	requires(lak::is_same_v<typename decltype(str)::char_type, CHAR>)           \
 	using PREFIX##apply_const_string_t =                                        \
 	  typename PREFIX##apply_const_string<T, str>::type;
 
