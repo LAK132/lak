@@ -698,7 +698,8 @@ lak::pnm::pnm::_read(::lak::binary_reader &strm)
 		return ::lak::ok_t{};
 	};
 
-	auto skip_comments = [&]() -> ::lak::error_code<::lak::err::out_of_data>
+	[[maybe_unused]] auto skip_comments =
+	  [&]() -> ::lak::error_code<::lak::err::out_of_data>
 	{
 		RES_TRY(skip_whitespace());
 		while (c == '#')
