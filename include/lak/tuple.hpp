@@ -46,18 +46,18 @@ namespace lak
 		template<typename V, typename W>
 		constexpr pair(V &&f, W &&s);
 
-		pair &operator=(const pair &p);
-		pair &operator=(pair &&p);
+		constexpr pair &operator=(const pair &p);
+		constexpr pair &operator=(pair &&p);
 
 		template<typename... V>
-		pair &operator=(const tuple<V...> &p);
+		constexpr pair &operator=(const tuple<V...> &p);
 		template<typename... V>
-		pair &operator=(tuple<V...> &&p);
+		constexpr pair &operator=(tuple<V...> &&p);
 
 		template<size_t I>
-		auto &get();
+		constexpr auto &get();
 		template<size_t I>
-		auto &get() const;
+		constexpr auto &get() const;
 	};
 
 	template<typename T, typename U>
@@ -86,13 +86,13 @@ namespace lak
 		template<typename V, typename... W>
 		constexpr explicit tuple(V &&v, W &&...n);
 
-		tuple &operator=(const tuple &p);
-		tuple &operator=(tuple &&p);
+		constexpr tuple &operator=(const tuple &p);
+		constexpr tuple &operator=(tuple &&p);
 
 		template<typename... V>
-		tuple &operator=(const pair<V...> &p);
+		constexpr tuple &operator=(const pair<V...> &p);
 		template<typename... V>
-		tuple &operator=(pair<V...> &&p);
+		constexpr tuple &operator=(pair<V...> &&p);
 
 		template<typename F>
 		auto apply(F &&func);
@@ -105,9 +105,9 @@ namespace lak
 		void foreach (F &&func) const;
 
 		template<size_t I>
-		auto &get();
+		constexpr auto &get();
 		template<size_t I>
-		auto &get() const;
+		constexpr auto &get() const;
 	};
 
 	template<>

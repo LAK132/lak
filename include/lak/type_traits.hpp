@@ -1,25 +1,27 @@
+#include "lak/utility.hpp"
+
 #ifndef LAK_TYPE_TRAITS_HPP
-#define LAK_TYPE_TRAITS_HPP
+#	define LAK_TYPE_TRAITS_HPP
 
-#include "lak/macro_utils.hpp"
-#include "lak/stdint.hpp"
+#	include "lak/macro_utils.hpp"
+#	include "lak/stdint.hpp"
 
-#include <type_traits>
+#	include <type_traits>
 
-#define TEMPLATE_VALUE_TYPE(NAME, TEMPL_TYPE, VAL_TYPE)                       \
-	template<TEMPL_TYPE T>                                                      \
-	struct NAME;                                                                \
-	template<TEMPL_TYPE T>                                                      \
-	static constexpr VAL_TYPE NAME##_v = NAME<T>::value;
+#	define TEMPLATE_VALUE_TYPE(NAME, TEMPL_TYPE, VAL_TYPE)                     \
+		template<TEMPL_TYPE T>                                                    \
+		struct NAME;                                                              \
+		template<TEMPL_TYPE T>                                                    \
+		static constexpr VAL_TYPE NAME##_v = NAME<T>::value;
 
-#define DEFAULTED_TEMPLATE_VALUE_TYPE(NAME, TEMPL_TYPE, VAL_TYPE, DEFAULT)    \
-	template<TEMPL_TYPE T>                                                      \
-	struct NAME                                                                 \
-	{                                                                           \
-		static constexpr VAL_TYPE value = DEFAULT;                                \
-	};                                                                          \
-	template<TEMPL_TYPE T>                                                      \
-	static constexpr VAL_TYPE NAME##_v = NAME<T>::value;
+#	define DEFAULTED_TEMPLATE_VALUE_TYPE(NAME, TEMPL_TYPE, VAL_TYPE, DEFAULT)  \
+		template<TEMPL_TYPE T>                                                    \
+		struct NAME                                                               \
+		{                                                                         \
+			static constexpr VAL_TYPE value = DEFAULT;                              \
+		};                                                                        \
+		template<TEMPL_TYPE T>                                                    \
+		static constexpr VAL_TYPE NAME##_v = NAME<T>::value;
 
 namespace lak
 {
@@ -1337,6 +1339,30 @@ namespace lak
 	static_assert(lak::is_array_v<char[]>);
 	static_assert(lak::is_array_v<const volatile char[]>);
 
+	/* --- remove_array --- */
+
+	template<typename T>
+	struct remove_array : lak::type_identity<T>
+	{
+	};
+
+	template<typename T>
+	struct remove_array<T[]> : lak::type_identity<T>
+	{
+	};
+
+	template<typename T, size_t N>
+	struct remove_array<T[N]> : lak::type_identity<T>
+	{
+	};
+
+	template<typename T>
+	using remove_array_t = typename lak::remove_array<T>::type;
+
+	static_assert(lak::is_same_v<lak::remove_array_t<char>, char>);
+	static_assert(lak::is_same_v<lak::remove_array_t<char[]>, char>);
+	static_assert(lak::is_same_v<lak::remove_array_t<char[3]>, char>);
+
 	/* --- is_function --- */
 
 	template<typename T>
@@ -1344,11 +1370,11 @@ namespace lak
 	{
 	};
 
-#define LAK_IS_FUNCTION(CVT, A, B)                                            \
-	template<typename RET, typename... ARGS>                                    \
-	struct is_function<A CVT B> : lak::true_type                                \
-	{                                                                           \
-	};
+#	define LAK_IS_FUNCTION(CVT, A, B)                                          \
+		template<typename RET, typename... ARGS>                                  \
+		struct is_function<A CVT B> : lak::true_type                              \
+		{                                                                         \
+		};
 	LAK_ALL_CVTS(LAK_IS_FUNCTION, RET(ARGS...), )
 	// LAK_ALL_CVTS(LAK_IS_FUNCTION, RET(ARGS......), )
 	LAK_ALL_CVTS(LAK_IS_FUNCTION, RET(ARGS...), &)
@@ -1361,7 +1387,7 @@ namespace lak
 	// LAK_ALL_CVTS(LAK_IS_FUNCTION, RET(ARGS......), &noexcept)
 	LAK_ALL_CVTS(LAK_IS_FUNCTION, RET(ARGS...), && noexcept)
 	// LAK_ALL_CVTS(LAK_IS_FUNCTION, RET(ARGS......), &&noexcept)
-#undef LAK_IS_FUNCTION
+#	undef LAK_IS_FUNCTION
 
 	template<typename T>
 	inline constexpr bool is_function_v = lak::is_function<T>::value;
@@ -1390,6 +1416,29 @@ namespace lak
 	template<typename T>
 	inline constexpr bool is_function_of_function_pointer_v =
 	  lak::is_function_or_function_pointer<T>::value;
+
+	/* --- decay --- */
+
+	template<typename T>
+	struct decay : lak::type_identity<lak::remove_cvref_t<T>>
+	{
+	};
+
+	template<typename T>
+	requires(lak::is_function_v<lak::remove_reference_t<T>>)
+	struct decay<T> : lak::type_identity<lak::remove_reference_t<T> *>
+	{
+	};
+
+	template<typename T>
+	requires(lak::is_array_v<lak::remove_reference_t<T>>)
+	struct decay<T>
+	: lak::type_identity<lak::remove_array_t<lak::remove_reference_t<T>> *>
+	{
+	};
+
+	template<typename T>
+	using decay_t = typename lak::decay<T>::type;
 
 	/* --- lvalue_to_ptr --- */
 

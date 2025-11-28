@@ -50,4 +50,35 @@ static_assert(sizeof(f64_t) == 8);
 
 #define LAK_ALL_FLOATS f32_t, f64_t
 
+#define LAK_FOREACH_STD_SIGNED_INTEGER(MACRO, ...)                            \
+	MACRO(signed char, __VA_ARGS__)                                             \
+	MACRO(signed short, __VA_ARGS__)                                            \
+	MACRO(signed int, __VA_ARGS__)                                              \
+	MACRO(signed long, __VA_ARGS__)                                             \
+	MACRO(signed long long, __VA_ARGS__)
+
+#define LAK_ALL_STD_SIGNED_INTEGERS                                           \
+	signed char, signed short, signed int, signed long, signed long long
+
+#define LAK_FOREACH_STD_UNSIGNED_INTEGER(MACRO, ...)                          \
+	MACRO(unsigned char, __VA_ARGS__)                                           \
+	MACRO(unsigned short, __VA_ARGS__)                                          \
+	MACRO(unsigned int, __VA_ARGS__)                                            \
+	MACRO(unsigned long, __VA_ARGS__)                                           \
+	MACRO(unsigned long long, __VA_ARGS__)
+
+#define LAK_ALL_STD_UNSIGNED_INTEGERS                                         \
+	unsigned char, unsigned short, unsigned int, unsigned long,                 \
+	  unsigned long long
+
+#define LAK_ALL_STD_INTEGERS                                                  \
+	LAK_ALL_STD_SIGNED_INTEGERS, LAK_ALL_STD_UNSIGNED_INTEGERS
+
+#define LAK_FOREACH_STD_FLOAT(MACRO, ...)                                     \
+	MACRO(float, __VA_ARGS__)                                                   \
+	MACRO(double, __VA_ARGS__)                                                  \
+	MACRO(long double, __VA_ARGS__)
+
+#define LAK_ALL_STD_FLOATS float, double, long double
+
 #endif

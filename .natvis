@@ -32,6 +32,15 @@
 					</ArrayItems>
 			</Expand>
 	</Type>
+	<Type Name="lak::c_array&lt;*,0U&gt;">
+			<DisplayString>{{ size=0 }}</DisplayString>
+	</Type>
+	<Type Name="lak::c_array&lt;*,*&gt;" Priority="Low">
+			<DisplayString>{data}</DisplayString>
+			<Expand>
+				<ExpandedItem>data</ExpandedItem>
+			</Expand>
+	</Type>
 	<Type Name="lak::array&lt;*,-1&gt;">
 			<DisplayString>{_data}</DisplayString>
 			<Expand>
@@ -46,6 +55,15 @@
 							<Size>$T2</Size>
 							<ValuePointer>_data</ValuePointer>
 					</ArrayItems>
+			</Expand>
+	</Type>
+	<Type Name="lak::format_string&lt;*&gt;">
+			<DisplayString>{{ size={specifier_count} }}</DisplayString>
+			<Expand>
+				<Item Name="[specifiers buffer]" ExcludeView="simple">_specifiers_buffer</Item>
+				<Item Name="[prefixes buffer]" ExcludeView="simple">_prefixes_buffer</Item>
+				<ExpandItem>specifiers</ExpandItem>
+				<ExpandItem>prefixes</ExpandItem>
 			</Expand>
 	</Type>
 	<Type Name="lak::binary_reader">

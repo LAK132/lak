@@ -6,31 +6,31 @@
 template<lak::aconst_string_literal STR>
 constexpr auto operator"" _aconst()
 {
-	return lak::aconst_string<STR.size>::from_ptr(STR.data);
+	return lak::const_string<char, STR.size>(STR);
 }
 
 template<lak::wconst_string_literal STR>
 constexpr auto operator"" _wconst()
 {
-	return lak::wconst_string<STR.size>::from_ptr(STR.data);
+	return lak::const_string<wchar_t, STR.size>(STR);
 }
 
 template<lak::u8const_string_literal STR>
 constexpr auto operator"" _u8const()
 {
-	return lak::u8const_string<STR.size>::from_ptr(STR.data);
+	return lak::const_string<char8_t, STR.size>(STR);
 }
 
 template<lak::u16const_string_literal STR>
 constexpr auto operator"" _16const()
 {
-	return lak::u16const_string<STR.size>::from_ptr(STR.data);
+	return lak::const_string<char16_t, STR.size>(STR);
 }
 
 template<lak::u32const_string_literal STR>
 constexpr auto operator"" _32const()
 {
-	return lak::u32const_string<STR.size>::from_ptr(STR.data);
+	return lak::const_string<char32_t, STR.size>(STR);
 }
 
 #endif

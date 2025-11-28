@@ -22,7 +22,7 @@ constexpr lak::pair<T, U>::pair(V &&f, W &&s)
 }
 
 template<typename T, typename U>
-lak::pair<T, U> &lak::pair<T, U>::operator=(const pair &p)
+constexpr lak::pair<T, U> &lak::pair<T, U>::operator=(const pair &p)
 {
 	first  = p.first;
 	second = p.second;
@@ -30,7 +30,7 @@ lak::pair<T, U> &lak::pair<T, U>::operator=(const pair &p)
 }
 
 template<typename T, typename U>
-lak::pair<T, U> &lak::pair<T, U>::operator=(pair &&p)
+constexpr lak::pair<T, U> &lak::pair<T, U>::operator=(pair &&p)
 {
 	first  = lak::move(p.first);
 	second = lak::move(p.second);
@@ -39,7 +39,7 @@ lak::pair<T, U> &lak::pair<T, U>::operator=(pair &&p)
 
 template<typename T, typename U>
 template<typename... V>
-lak::pair<T, U> &lak::pair<T, U>::operator=(const tuple<V...> &p)
+constexpr lak::pair<T, U> &lak::pair<T, U>::operator=(const tuple<V...> &p)
 {
 	static_assert(sizeof...(V) == 2);
 	first  = p.first;
@@ -49,7 +49,7 @@ lak::pair<T, U> &lak::pair<T, U>::operator=(const tuple<V...> &p)
 
 template<typename T, typename U>
 template<typename... V>
-lak::pair<T, U> &lak::pair<T, U>::operator=(tuple<V...> &&p)
+constexpr lak::pair<T, U> &lak::pair<T, U>::operator=(tuple<V...> &&p)
 {
 	static_assert(sizeof...(V) == 2);
 	first  = lak::move(p.first);
@@ -59,7 +59,7 @@ lak::pair<T, U> &lak::pair<T, U>::operator=(tuple<V...> &&p)
 
 template<typename T, typename U>
 template<size_t I>
-auto &lak::pair<T, U>::get()
+constexpr auto &lak::pair<T, U>::get()
 {
 	static_assert(I < 2);
 	if constexpr (I == 0)
@@ -70,7 +70,7 @@ auto &lak::pair<T, U>::get()
 
 template<typename T, typename U>
 template<size_t I>
-auto &lak::pair<T, U>::get() const
+constexpr auto &lak::pair<T, U>::get() const
 {
 	static_assert(I < 2);
 	if constexpr (I == 0)
@@ -101,7 +101,7 @@ constexpr lak::tuple<T, U...>::tuple(V &&v, W &&...n)
 }
 
 template<typename T, typename... U>
-lak::tuple<T, U...> &lak::tuple<T, U...>::operator=(const tuple &p)
+constexpr lak::tuple<T, U...> &lak::tuple<T, U...>::operator=(const tuple &p)
 {
 	value = p.value;
 	next  = p.next;
@@ -109,7 +109,7 @@ lak::tuple<T, U...> &lak::tuple<T, U...>::operator=(const tuple &p)
 }
 
 template<typename T, typename... U>
-lak::tuple<T, U...> &lak::tuple<T, U...>::operator=(tuple &&p)
+constexpr lak::tuple<T, U...> &lak::tuple<T, U...>::operator=(tuple &&p)
 {
 	value = lak::move(p.value);
 	next  = lak::move(p.next);
@@ -118,7 +118,8 @@ lak::tuple<T, U...> &lak::tuple<T, U...>::operator=(tuple &&p)
 
 template<typename T, typename... U>
 template<typename... V>
-lak::tuple<T, U...> &lak::tuple<T, U...>::operator=(const pair<V...> &p)
+constexpr lak::tuple<T, U...> &lak::tuple<T, U...>::operator=(
+  const pair<V...> &p)
 {
 	static_assert(sizeof...(U) == 1);
 	value      = p.first;
@@ -128,7 +129,7 @@ lak::tuple<T, U...> &lak::tuple<T, U...>::operator=(const pair<V...> &p)
 
 template<typename T, typename... U>
 template<typename... V>
-lak::tuple<T, U...> &lak::tuple<T, U...>::operator=(pair<V...> &&p)
+constexpr lak::tuple<T, U...> &lak::tuple<T, U...>::operator=(pair<V...> &&p)
 {
 	static_assert(sizeof...(U) == 1);
 	value      = lak::move(p.first);
@@ -152,23 +153,23 @@ auto lak::tuple<T, U...>::apply(F &&func) const
 
 template<typename T, typename... U>
 template<typename F>
-void lak::tuple<T, U...>::foreach(F &&func)
+void lak::tuple<T, U...>::foreach (F &&func)
 {
 	func(value);
-	next.foreach(func);
+	next.foreach (func);
 }
 
 template<typename T, typename... U>
 template<typename F>
-void lak::tuple<T, U...>::foreach(F &&func) const
+void lak::tuple<T, U...>::foreach (F &&func) const
 {
 	func(value);
-	next.foreach(func);
+	next.foreach (func);
 }
 
 template<typename T, typename... U>
 template<size_t I>
-auto &lak::tuple<T, U...>::get()
+constexpr auto &lak::tuple<T, U...>::get()
 {
 	static_assert(I <= sizeof...(U));
 	if constexpr (I == 0)
@@ -179,7 +180,7 @@ auto &lak::tuple<T, U...>::get()
 
 template<typename T, typename... U>
 template<size_t I>
-auto &lak::tuple<T, U...>::get() const
+constexpr auto &lak::tuple<T, U...>::get() const
 {
 	static_assert(I <= sizeof...(U));
 	if constexpr (I == 0)

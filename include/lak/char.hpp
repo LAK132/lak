@@ -4,11 +4,6 @@
 #include "lak/stdint.hpp"
 #include "lak/system/compiler.hpp"
 
-// char8_t typedef for C++ < 20
-#ifndef LAK_COMPILER_CPP20
-using char8_t = uint_least8_t;
-#endif
-
 #if WCHAR_MAX == 0x7FFFFFFF || WCHAR_MAX == 0xFFFFFFFF
 using wchar_unicode_t = char32_t;
 #elif WCHAR_MAX == 0x7FFF || WCHAR_MAX == 0xFFFF
@@ -26,6 +21,8 @@ using wchar_unicode_t = char8_t;
 	MACRO(char8_t, u8, __VA_ARGS__)                                             \
 	MACRO(char16_t, u16, __VA_ARGS__)                                           \
 	MACRO(char32_t, u32, __VA_ARGS__)
+
+#define LAK_ALL_CHARS char, wchar_t, char8_t, char16_t, char32_t
 
 #define LAK_TEMPLATE_FOREACH_CHAR_EX(CHAR, PREFIX, TYPE)                      \
 	template struct TYPE<CHAR>;
