@@ -25,7 +25,11 @@ namespace lak
 
 #define LAK_BASIC_CONST_STRING(CHAR, PREFIX, ...)                             \
 	constexpr size_t PREFIX##const_strlen(const CHAR *str);                     \
-	using PREFIX##const_string_literal = lak::const_string_literal<CHAR>;
+	struct PREFIX##const_string_literal                                         \
+	: public lak::const_string_literal<CHAR>                                    \
+	{                                                                           \
+		using lak::const_string_literal<CHAR>::const_string_literal;              \
+	};
 	LAK_FOREACH_CHAR(LAK_BASIC_CONST_STRING)
 #undef LAK_BASIC_CONST_STRING
 

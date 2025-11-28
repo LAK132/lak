@@ -9,7 +9,7 @@
 #include <bit>
 
 template<lak::u8const_string_literal STR>
-inline consteval auto operator"" _magic_ne()
+inline consteval auto operator""_magic_ne()
 {
 	static_assert(STR.size == 1U || STR.size == 2U || STR.size == 4U ||
 	              STR.size == 8U);
@@ -38,7 +38,7 @@ static_assert(u8"ABCD"_magic_ne == 0x41'42'43'44);
 #endif
 
 template<lak::u8const_string_literal STR>
-inline consteval auto operator"" _magic_le()
+inline consteval auto operator""_magic_le()
 {
 	static_assert(STR.size == 1U || STR.size == 2U || STR.size == 4U ||
 	              STR.size == 8U);
@@ -63,7 +63,7 @@ inline consteval auto operator"" _magic_le()
 static_assert(u8"ABCD"_magic_le == 0x44'43'42'41);
 
 template<lak::u8const_string_literal STR>
-inline consteval auto operator"" _magic_be()
+inline consteval auto operator""_magic_be()
 {
 	static_assert(STR.size == 1U || STR.size == 2U || STR.size == 4U ||
 	              STR.size == 8U);
