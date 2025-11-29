@@ -28,7 +28,13 @@ int imgui_compile_test()
 
 	{
 		DEBUG("create window");
+#if defined(LAK_ENABLE_SOFTRENDER)
 		lak::window w = lak::window::make(lak::software_settings{}).UNWRAP();
+#elif defined(LAK_ENABLE_OPENGL)
+		lak::window w = lak::window::make(lak::opengl_settings{}).UNWRAP();
+#else
+#	error no graphics backend
+#endif
 
 		w.set_title(L"ImGui Test Window");
 

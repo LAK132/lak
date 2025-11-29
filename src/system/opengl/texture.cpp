@@ -130,3 +130,25 @@ lak::opengl::texture &lak::opengl::texture::build(GLint level,
 	  .UNWRAP();
 	return *this;
 }
+
+lak::opengl::texture &lak::opengl::texture::rebuild(GLint level,
+                                                    vec2<GLsizei> pos,
+                                                    vec2<GLsizei> size,
+                                                    GLenum pixel_format,
+                                                    GLenum color_type,
+                                                    const GLvoid *pixels)
+{
+	_size = size;
+	lak::opengl::call_checked(glTexSubImage2D,
+	                          _target,
+	                          level,
+	                          pos.x,
+	                          pos.y,
+	                          size.x,
+	                          size.y,
+	                          pixel_format,
+	                          color_type,
+	                          pixels)
+	  .UNWRAP();
+	return *this;
+}

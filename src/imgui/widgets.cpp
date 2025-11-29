@@ -3,6 +3,7 @@
 
 #include "lak/system/opengl/gl3w.hpp"
 #include "lak/system/opengl/state.hpp"
+#include "lak/system/opengl/texture.hpp"
 
 #include "lak/system/file.hpp"
 
@@ -169,44 +170,30 @@ void lak::init_file_modal(lak::graphics_mode graphics)
 		_file_dialog->CreateTexture =
 		  [](uint8_t *data, int w, int h, char fmt) -> ifd::TextureID
 		{
-			GLuint tex;
+			auto tex = new lak::opengl::texture;
 
-			lak::opengl::call_checked(glGenTextures, 1, &tex).UNWRAP();
-			lak::opengl::call_checked(glBindTexture, GL_TEXTURE_2D, tex).UNWRAP();
-			lak::opengl::call_checked(
-			  glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
-			  .UNWRAP();
-			lak::opengl::call_checked(
-			  glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
-			  .UNWRAP();
-			lak::opengl::call_checked(
-			  glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE)
-			  .UNWRAP();
-			lak::opengl::call_checked(
-			  glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE)
-			  .UNWRAP();
-			lak::opengl::call_checked(glTexImage2D,
-			                          GL_TEXTURE_2D,
-			                          0,
-			                          GL_RGBA,
-			                          w,
-			                          h,
-			                          0,
-			                          (fmt == 0) ? GL_BGRA : GL_RGBA,
-			                          GL_UNSIGNED_BYTE,
-			                          data)
-			  .UNWRAP();
+			tex->init(GL_TEXTURE_2D)
+			  .bind()
+			  .apply(GL_TEXTURE_MIN_FILTER, GL_NEAREST)
+			  .apply(GL_TEXTURE_MAG_FILTER, GL_NEAREST)
+			  .apply(GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE)
+			  .apply(GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE)
+			  .store_mode(GL_UNPACK_ROW_LENGTH, 0)
+			  .build(0,
+			         GL_RGBA,
+			         lak::vec2i_t{w, h},
+			         0,
+			         (fmt == 0) ? GL_BGRA : GL_RGBA,
+			         GL_UNSIGNED_BYTE,
+			         data);
 			lak::opengl::call_checked(glGenerateMipmap, GL_TEXTURE_2D).UNWRAP();
 			lak::opengl::call_checked(glBindTexture, GL_TEXTURE_2D, 0).UNWRAP();
 
-			return static_cast<ifd::TextureID>(tex);
+			return (ifd::TextureID)(uintptr_t)tex;
 		};
 
 		_texture_destroyer = [](ifd::TextureID tex)
-		{
-			GLuint texID = static_cast<GLuint>(tex);
-			lak::opengl::call_checked(glDeleteTextures, 1, &texID).UNWRAP();
-		};
+		{ delete (lak::opengl::texture *)(uintptr_t)tex; };
 	}
 	else
 #	endif

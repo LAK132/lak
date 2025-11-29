@@ -9,6 +9,8 @@ bool ImGui_ImplSoftrender_Init(texture_base_t *screen);
 void ImGui_ImplSoftrender_Shutdown();
 void ImGui_ImplSoftrender_NewFrame();
 void ImGui_ImplSoftrender_RenderDrawData(ImDrawData *draw_data);
+void ImGui_ImplSoftrender_DestroyTexture(ImTextureData *texture);
+void ImGui_ImplSoftrender_UpdateTexture(ImTextureData *texture);
 
 template<typename POS, typename SCREEN>
 void renderCommand(texture_t<SCREEN> &screen,

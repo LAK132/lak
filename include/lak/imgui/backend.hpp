@@ -47,8 +47,6 @@ namespace ImGui
 
 	const char *ImplGetClipboard(ImGuiContext *ctx);
 
-	ImTextureID ImplGetFontTexture(ImplContext context);
-
 	template<typename T>
 	lak::span<T> ToSpan(ImVector<T> &vec)
 	{

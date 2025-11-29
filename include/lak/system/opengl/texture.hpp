@@ -54,6 +54,13 @@ namespace lak
 			               GLenum pixel_format,
 			               GLenum color_type,
 			               const GLvoid *pixels);
+
+			texture &rebuild(GLint level,
+			                 vec2<GLint> pos,
+			                 vec2<GLsizei> size,
+			                 GLenum pixel_format,
+			                 GLenum color_type,
+			                 const GLvoid *pixels);
 		};
 
 		using shared_texture = lak::shared_ptr<lak::opengl::texture>;

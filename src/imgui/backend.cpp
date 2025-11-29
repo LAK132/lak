@@ -118,7 +118,6 @@ namespace ImGui
 #		error "No implementation specified"
 #	endif
 
-		texture_alpha8_t atlas_texture;
 #	if defined(LAK_SOFTWARE_RENDER_32BIT)
 		texture_color32_t screen_texture;
 #	elif defined(LAK_SOFTWARE_RENDER_24BIT)
@@ -145,7 +144,6 @@ namespace ImGui
 		GLuint array_buffer;
 		GLuint vertex_array;
 		lak::opengl::program shader;
-		lak::opengl::texture font;
 #endif
 	} *ImplGLContext;
 
@@ -330,6 +328,8 @@ void ImplInitSRContext(ImGui::ImplSRContext context, const lak::window &window)
 
 	io.BackendRendererName = "imgui_impl_lak_softrender";
 
+	io.BackendFlags |= ImGuiBackendFlags_RendererHasTextures;
+
 #	if defined(LAK_USE_WINAPI)
 	context->screen_surface =
 	  &window.handle()->software_context().platform_handle;
@@ -356,12 +356,6 @@ void ImplInitSRContext(ImGui::ImplSRContext context, const lak::window &window)
 #	else
 #		error "No implementation specified"
 #	endif
-
-	uint8_t *pixels;
-	int width, height;
-	io.Fonts->GetTexDataAsAlpha8(&pixels, &width, &height);
-	context->atlas_texture.init(width, height, (alpha8_t *)pixels);
-	io.Fonts->TexID = (ImTextureID)(uintptr_t)&context->atlas_texture;
 
 	ImplUpdateDisplaySize(context, window.handle(), window.size());
 
@@ -412,22 +406,7 @@ void main()
 
 	io.BackendRendererName = "imgui_impl_lak_opengl";
 
-	// Create fonts texture
-	uint8_t *pixels;
-	lak::vec2i_t size;
-	io.Fonts->GetTexDataAsRGBA32(&pixels, &size.x, &size.y);
-
-	auto old_texture = lak::opengl::get_uint(GL_TEXTURE_BINDING_2D).UNWRAP();
-	DEFER(glBindTexture(GL_TEXTURE_2D, old_texture));
-
-	context->font.init(GL_TEXTURE_2D)
-	  .bind()
-	  .apply(GL_TEXTURE_MIN_FILTER, GL_LINEAR)
-	  .apply(GL_TEXTURE_MAG_FILTER, GL_NEAREST)
-	  .store_mode(GL_UNPACK_ROW_LENGTH, 0)
-	  .build(0, GL_RGBA, size, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
-
-	io.Fonts->TexID = (ImTextureID)(uintptr_t)context->font.get();
+	io.BackendFlags |= ImGuiBackendFlags_RendererHasTextures;
 }
 #endif
 
@@ -539,7 +518,9 @@ void ImplShutdownSRContext(ImGui::ImplSRContext context)
 #	endif
 
 	context->screen_texture.init(0, 0);
-	context->atlas_texture.init(0, 0);
+
+	for (ImTextureData *tex : ImGui::GetPlatformIO().Textures)
+		if (tex->RefCount == 1U) ImGui_ImplSoftrender_DestroyTexture(tex);
 }
 #endif
 
@@ -554,8 +535,9 @@ void ImplShutdownGLContext(ImGui::ImplGLContext context)
 
 	context->shader.clear().discard();
 
-	context->font.clear();
-	ImGui::GetIO().Fonts->TexID = (ImTextureID)(intptr_t)0;
+	for (ImTextureData *tex : ImGui::GetPlatformIO().Textures)
+		if (tex->RefCount == 1U)
+			delete (lak::opengl::texture *)(uintptr_t)tex->GetTexID();
 }
 #endif
 
@@ -620,8 +602,6 @@ void ImGui::ImplNewFrame(ImplContext context,
                          const bool call_base_new_frame)
 {
 	ImGuiIO &io = ImGui::GetIO();
-
-	ASSERTF(io.Fonts->IsBuilt(), "Font atlas not built");
 
 	ASSERT(delta_time > 0);
 	io.DeltaTime = delta_time;
@@ -1047,6 +1027,56 @@ void ImplGLRender(ImGui::ImplContext context, ImDrawData *draw_data)
 #		endif
 #	endif
 
+	auto update_texture = [](ImTextureData *texture)
+	{
+		if (texture->Status == ImTextureStatus_WantCreate)
+		{
+			ASSERT(texture->Format == ImTextureFormat_RGBA32);
+
+			auto tex = new lak::opengl::texture;
+
+			tex->init(GL_TEXTURE_2D)
+			  .bind()
+			  .apply(GL_TEXTURE_MIN_FILTER, GL_LINEAR)
+			  .apply(GL_TEXTURE_MAG_FILTER, GL_NEAREST)
+			  .store_mode(GL_UNPACK_ROW_LENGTH, 0)
+			  .build(0,
+			         GL_RGBA,
+			         lak::vec2i_t{texture->Width, texture->Height},
+			         0,
+			         GL_RGBA,
+			         GL_UNSIGNED_BYTE,
+			         texture->GetPixels());
+
+			texture->SetTexID((ImTextureID)(uintptr_t)tex);
+			texture->SetStatus(ImTextureStatus_OK);
+		}
+		else if (texture->Status == ImTextureStatus_WantUpdates)
+		{
+			auto tex = (lak::opengl::texture *)(uintptr_t)texture->GetTexID();
+			tex->bind().store_mode(GL_UNPACK_ROW_LENGTH, texture->Width);
+			for (ImTextureRect &r : texture->Updates)
+				tex->rebuild(0,
+				             lak::vec2i_t{r.x, r.y},
+				             lak::vec2i_t{r.w, r.h},
+				             GL_RGBA,
+				             GL_UNSIGNED_BYTE,
+				             texture->GetPixelsAt(r.x, r.y));
+			tex->store_mode(GL_UNPACK_ROW_LENGTH, 0);
+			texture->SetStatus(ImTextureStatus_OK);
+		}
+		else if (texture->Status == ImTextureStatus_WantDestroy &&
+		         texture->UnusedFrames > 0U)
+		{
+			delete (lak::opengl::texture *)(uintptr_t)texture->GetTexID();
+			texture->SetStatus(ImTextureStatus_Destroyed);
+		}
+	};
+
+	if (draw_data->Textures != nullptr)
+		for (ImTextureData *tex : *draw_data->Textures)
+			if (tex->Status != ImTextureStatus_OK) update_texture(tex);
+
 	lak::opengl::call_checked(glGenVertexArrays, 1, &gl_context->vertex_array)
 	  .UNWRAP();
 
@@ -1070,7 +1100,6 @@ void ImplGLRender(ImGui::ImplContext context, ImDrawData *draw_data)
 	auto set_state = [&]()
 	{
 		gl_context->shader.use().UNWRAP();
-		gl_context->font.bind();
 		lak::opengl::call_checked(glActiveTexture, GL_TEXTURE0).UNWRAP();
 		lak::opengl::call_checked(glBindVertexArray, gl_context->vertex_array)
 		  .UNWRAP();
@@ -1123,7 +1152,7 @@ void ImplGLRender(ImGui::ImplContext context, ImDrawData *draw_data)
 	                          GL_FLOAT,
 	                          GL_FALSE,
 	                          sizeof(ImDrawVert),
-	                          (GLvoid *)IM_OFFSETOF(ImDrawVert, pos))
+	                          (GLvoid *)offsetof(ImDrawVert, pos))
 	  .UNWRAP();
 
 	lak::opengl::call_checked(glEnableVertexAttribArray, gl_context->attrib_UV)
@@ -1134,7 +1163,7 @@ void ImplGLRender(ImGui::ImplContext context, ImDrawData *draw_data)
 	                          GL_FLOAT,
 	                          GL_FALSE,
 	                          sizeof(ImDrawVert),
-	                          (GLvoid *)IM_OFFSETOF(ImDrawVert, uv))
+	                          (GLvoid *)offsetof(ImDrawVert, uv))
 	  .UNWRAP();
 
 	lak::opengl::call_checked(glEnableVertexAttribArray, gl_context->attrib_col)
@@ -1145,7 +1174,7 @@ void ImplGLRender(ImGui::ImplContext context, ImDrawData *draw_data)
 	                          GL_UNSIGNED_BYTE,
 	                          GL_TRUE,
 	                          sizeof(ImDrawVert),
-	                          (GLvoid *)IM_OFFSETOF(ImDrawVert, col))
+	                          (GLvoid *)offsetof(ImDrawVert, col))
 	  .UNWRAP();
 
 	for (int n = 0; n < draw_data->CmdListsCount; ++n)
@@ -1221,9 +1250,8 @@ void ImplGLRender(ImGui::ImplContext context, ImDrawData *draw_data)
 						                          (GLsizei)(clip.w - clip.y))
 						  .UNWRAP();
 
-					lak::opengl::call_checked(
-					  glBindTexture, GL_TEXTURE_2D, (GLuint)(intptr_t)pcmd.GetTexID())
-					  .UNWRAP();
+					((const lak::opengl::texture *)(uintptr_t)pcmd.GetTexID())->bind();
+
 					lak::opengl::call_checked(glDrawElements,
 					                          GL_TRIANGLES,
 					                          (GLsizei)pcmd.ElemCount,
@@ -1273,22 +1301,4 @@ const char *ImGui::ImplGetClipboard(ImGuiContext *ctx)
 	if (!user_data) user_data = new lak::u8string;
 	lak::get_clipboard(user_data);
 	return (const char *)user_data->c_str();
-}
-
-ImTextureID ImGui::ImplGetFontTexture(ImplContext context)
-{
-	switch (context->mode)
-	{
-#ifdef LAK_ENABLE_SOFTRENDER
-		case lak::graphics_mode::Software:
-			return (ImTextureID)&context->sr_context->atlas_texture;
-#endif
-#ifdef LAK_ENABLE_OPENGL
-		case lak::graphics_mode::OpenGL:
-			return (ImTextureID)(uintptr_t)context->gl_context->font.get();
-#endif
-		default:
-			FATAL("Invalid context mode");
-			break;
-	}
 }
