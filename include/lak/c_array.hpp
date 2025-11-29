@@ -1,6 +1,8 @@
 #ifndef LAK_C_ARRAY_HPP
 #define LAK_C_ARRAY_HPP
 
+#include "lak/system/compiler.hpp"
+
 #include <cstddef>
 
 namespace lak
@@ -32,7 +34,7 @@ namespace lak
 	};
 
 	template<typename T>
-	struct alignas(T) c_array<T, 0U>
+	struct c_array<T, 0U>
 	{
 		using value_type      = T;
 		using size_type       = size_t;
@@ -47,8 +49,16 @@ namespace lak
 		byte_t _data[sizeof(T)] = {};
 
 		constexpr size_t size() const { return 0U; }
-		constexpr T &operator[](size_t) { return *begin(); };
-		constexpr const T &operator[](size_t) const { return *begin(); };
+		constexpr T &operator[](size_t)
+		{
+			LAK_UNREACHABLE();
+			return *begin();
+		};
+		constexpr const T &operator[](size_t) const
+		{
+			LAK_UNREACHABLE();
+			return *begin();
+		};
 		constexpr T *begin() { return reinterpret_cast<T *>(_data); }
 		constexpr T *end() { return reinterpret_cast<T *>(_data); }
 		constexpr const T *begin() const
