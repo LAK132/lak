@@ -19,7 +19,7 @@ im_file_dialog = static_library(
 	],
 	include_directories: includes,
 	dependencies: [
-		subproject('imgui-1.88').get_variable('imgui_dep'),
+		dependency('imgui'),
 		dependency('stb_image')
 	],
 )

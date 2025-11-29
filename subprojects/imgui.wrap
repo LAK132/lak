@@ -1,8 +1,8 @@
 [wrap-git]
 url = https://github.com/ocornut/imgui
-revision = v1.88
+revision = v1.90
 depth = 1
 patch_directory = imgui
 
 [provide]
-dependency_names = imgui, imgui-1.88
+dependency_names = imgui, imgui-1.90

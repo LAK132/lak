@@ -11,6 +11,7 @@ namespace lak
 		HINSTANCE handle;
 		WNDCLASSW window_class;
 		ATOM window_class_atom;
+		lak::mod_key mod_key_state;
 		mutable bool opengl_initialised = false;
 		mutable lak::buffer<MSG, 0x100> platform_events;
 	};
@@ -36,9 +37,8 @@ namespace lak
 #endif
 	};
 
-	using graphics_context = lak::variant<std::monostate,
-	                                      lak::software_context,
-	                                      lak::opengl_context>;
+	using graphics_context =
+	  lak::variant<std::monostate, lak::software_context, lak::opengl_context>;
 
 	struct window_handle
 	{

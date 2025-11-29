@@ -7,6 +7,8 @@
 #include "lak/imgui/backend.hpp"
 #include "lak/imgui/widgets.hpp"
 
+#include "misc/cpp/imgui_stdlib.h"
+
 #ifdef LAK_RUN_WINDOWING_TESTS
 BEGIN_TEST(imgui)
 #else
@@ -43,6 +45,8 @@ int imgui_compile_test()
 		uint32_t target_framerate = 30U;
 		uint64_t last_counter     = lak::performance_counter();
 		uint64_t counter_delta = lak::performance_frequency() / target_framerate;
+
+		std::string str;
 
 		DEBUG("starting event loop");
 		for (bool running = true; running;)
@@ -91,6 +95,7 @@ int imgui_compile_test()
 						result  = EXIT_SUCCESS;
 						running = false;
 					}
+					ImGui::InputTextMultiline("##Input Test", &str);
 					ImGui::End();
 				}
 

@@ -26,6 +26,10 @@ namespace lak
 		window_closed,
 		window_changed,
 		window_exposed,
+		window_hover,
+		window_leave,
+		window_focus,
+		window_no_focus,
 
 		dropfile,
 
@@ -54,13 +58,54 @@ namespace lak
 		std::u8string path;
 	};
 
+	enum struct key_code : uint32_t
+	{
+		none = 0,
+		lshift,
+		rshift,
+		lctrl,
+		rctrl,
+		lalt,
+		ralt,
+		lsuper,
+		rsuper,
+		menu,
+		tab,
+		left,
+		right,
+		up,
+		down,
+		page_up,
+		page_down,
+		home,
+		end,
+		insert,
+		del,
+		backspace,
+		space,
+		enter,
+		escape,
+	};
+
 	enum struct mod_key : uint32_t
 	{
-		none  = 0,
-		shift = 1 << 0,
-		ctrl  = 1 << 1,
-		alt   = 1 << 2,
-		super = 1 << 3
+		none = 0,
+
+		lshift = 1 << 0,
+		lctrl  = 1 << 1,
+		lalt   = 1 << 2,
+		lsuper = 1 << 3,
+		menu   = 1 << 4,
+
+		rshift = lshift << 16U,
+		rctrl  = lctrl << 16U,
+		ralt   = lalt << 16U,
+		rsuper = lsuper << 16U,
+
+		shift = lshift | rshift,
+		ctrl  = lctrl | rctrl,
+		alt   = lalt | ralt,
+		super = lsuper | rsuper,
 	};
 
 	static inline lak::mod_key operator|(lak::mod_key m1, lak::mod_key m2)
@@ -75,10 +120,16 @@ namespace lak
 		                                 static_cast<uint32_t>(m2));
 	}
 
+	static inline lak::mod_key operator-(lak::mod_key m)
+	{
+		return static_cast<lak::mod_key>(UINT32_MAX ^ static_cast<uint32_t>(m));
+	}
+
 	struct key_event
 	{
-		uint32_t scancode;
+		lak::key_code key;
 		lak::mod_key mod;
+		uint32_t native_scancode;
 	};
 
 	struct character_event

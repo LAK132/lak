@@ -11,6 +11,134 @@ EXTERN_C IMAGE_DOS_HEADER __ImageBase;
 lak::wstring win32_error_string(LPCWSTR lpszFunction);
 void win32_error_popup(LPCWSTR lpszFunction);
 
+lak::mod_key key_to_mod(lak::key_code key)
+{
+	switch (key)
+	{
+		case lak::key_code::lshift:
+			return lak::mod_key::lshift;
+		case lak::key_code::rshift:
+			return lak::mod_key::rshift;
+		case lak::key_code::lctrl:
+			return lak::mod_key::lctrl;
+		case lak::key_code::rctrl:
+			return lak::mod_key::rctrl;
+		case lak::key_code::lalt:
+			return lak::mod_key::lalt;
+		case lak::key_code::ralt:
+			return lak::mod_key::ralt;
+		case lak::key_code::lsuper:
+			return lak::mod_key::lsuper;
+		case lak::key_code::rsuper:
+			return lak::mod_key::rsuper;
+		default:
+			return lak::mod_key::none;
+	}
+}
+
+lak::mod_key get_mod_key_state(lak::key_code key, bool pressed)
+{
+	lak::mod_key mod = lak::_platform_instance->mod_key_state;
+
+	if (key == lak::key_code::lshift)
+		mod = pressed ? mod | lak::mod_key::lshift : mod & -lak::mod_key::lshift;
+	if (key == lak::key_code::rshift)
+		mod = pressed ? mod | lak::mod_key::rshift : mod & -lak::mod_key::rshift;
+	if (key == lak::key_code::lctrl)
+		mod = pressed ? mod | lak::mod_key::lctrl : mod & -lak::mod_key::lctrl;
+	if (key == lak::key_code::rctrl)
+		mod = pressed ? mod | lak::mod_key::rctrl : mod & -lak::mod_key::rctrl;
+	if (key == lak::key_code::lalt)
+		mod = pressed ? mod | lak::mod_key::lalt : mod & -lak::mod_key::lalt;
+	if (key == lak::key_code::ralt)
+		mod = pressed ? mod | lak::mod_key::ralt : mod & -lak::mod_key::ralt;
+	if (key == lak::key_code::lsuper)
+		mod = pressed ? mod | lak::mod_key::lsuper : mod & -lak::mod_key::lsuper;
+	if (key == lak::key_code::rsuper)
+		mod = pressed ? mod | lak::mod_key::rsuper : mod & -lak::mod_key::rsuper;
+
+	lak::_platform_instance->mod_key_state = mod;
+
+	return mod;
+}
+
+uint32_t get_scancode(LPARAM lParam)
+{
+	WORD keyFlags   = HIWORD(lParam);
+	WORD scanCode   = LOBYTE(keyFlags);
+	BOOL isExtended = (keyFlags & KF_EXTENDED) == KF_EXTENDED;
+	if (isExtended) scanCode = MAKEWORD(scanCode, 0xE0);
+	return scanCode;
+}
+
+lak::key_code get_key_code(WPARAM wParam, uint32_t scancode)
+{
+	WORD vkCode = LOWORD(wParam);
+	switch (vkCode)
+	{
+		case VK_SHIFT:
+		case VK_CONTROL:
+		case VK_MENU:
+		{
+			vkCode = LOWORD(MapVirtualKeyW(scancode, MAPVK_VSC_TO_VK_EX));
+		}
+		break;
+	}
+	switch (vkCode)
+	{
+		case VK_LSHIFT:
+			return lak::key_code::lshift;
+		case VK_RSHIFT:
+			return lak::key_code::rshift;
+		case VK_LCONTROL:
+			return lak::key_code::lctrl;
+		case VK_RCONTROL:
+			return lak::key_code::rctrl;
+		case VK_LMENU:
+			return lak::key_code::lalt;
+		case VK_RMENU:
+			return lak::key_code::ralt;
+		case VK_LWIN:
+			return lak::key_code::lsuper;
+		case VK_RWIN:
+			return lak::key_code::rsuper;
+		// case VK_???:
+		// 	return lak::key_code::menu;
+		case VK_TAB:
+			return lak::key_code::tab;
+		case VK_LEFT:
+			return lak::key_code::left;
+		case VK_RIGHT:
+			return lak::key_code::right;
+		case VK_UP:
+			return lak::key_code::up;
+		case VK_DOWN:
+			return lak::key_code::down;
+		case VK_PRIOR:
+			return lak::key_code::page_up;
+		case VK_NEXT:
+			return lak::key_code::page_down;
+		case VK_HOME:
+			return lak::key_code::home;
+		case VK_END:
+			return lak::key_code::end;
+		case VK_INSERT:
+			return lak::key_code::insert;
+		case VK_DELETE:
+			return lak::key_code::del;
+		case VK_BACK:
+			return lak::key_code::backspace;
+		case VK_SPACE:
+			return lak::key_code::space;
+		case VK_RETURN:
+			return lak::key_code::enter;
+		case VK_ESCAPE:
+			return lak::key_code::escape;
+		default:
+			return lak::key_code::none;
+	}
+}
+
 void translate_event(const MSG &msg,
                      lak::event *event,
                      const lak::window_handle *window = nullptr)
@@ -56,6 +184,44 @@ void translate_event(const MSG &msg,
 		}
 		break;
 
+			/* --- hover changed --- */
+
+		case WM_MOUSEHOVER:
+		{
+			*event = lak::event(lak::event_type::window_hover,
+			                    window,
+			                    lak::move(platform_event),
+			                    lak::window_event{});
+		}
+		break;
+		case WM_MOUSELEAVE:
+		{
+			*event = lak::event(lak::event_type::window_leave,
+			                    window,
+			                    lak::move(platform_event),
+			                    lak::window_event{});
+		}
+		break;
+
+			/* --- focus changed --- */
+
+		case WM_SETFOCUS:
+		{
+			*event = lak::event(lak::event_type::window_focus,
+			                    window,
+			                    lak::move(platform_event),
+			                    lak::window_event{});
+		}
+		break;
+		case WM_KILLFOCUS:
+		{
+			*event = lak::event(lak::event_type::window_no_focus,
+			                    window,
+			                    lak::move(platform_event),
+			                    lak::window_event{});
+		}
+		break;
+
 			/* --- window_changed --- */
 
 		case WM_WINDOWPOSCHANGED:
@@ -81,25 +247,33 @@ void translate_event(const MSG &msg,
 
 			/* --- key_down --- */
 
+		case WM_SYSKEYDOWN:
 		case WM_KEYDOWN:
 		{
-			// :TODO:
+			uint32_t scancode = get_scancode(msg.lParam);
+			lak::key_code key = get_key_code(msg.wParam, scancode);
+			lak::mod_key mod  = get_mod_key_state(key, true);
+
 			*event = lak::event(lak::event_type::key_down,
 			                    window,
 			                    lak::move(platform_event),
-			                    lak::key_event{});
+			                    lak::key_event{key, mod, scancode});
 		}
 		break;
 
 			/* --- key_up --- */
 
+		case WM_SYSKEYUP:
 		case WM_KEYUP:
 		{
-			// :TODO:
+			uint32_t scancode = get_scancode(msg.lParam);
+			lak::key_code key = get_key_code(msg.wParam, scancode);
+			lak::mod_key mod  = get_mod_key_state(key, true);
+
 			*event = lak::event(lak::event_type::key_up,
 			                    window,
 			                    lak::move(platform_event),
-			                    lak::key_event{});
+			                    lak::key_event{key, mod, scancode});
 		}
 		break;
 

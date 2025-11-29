@@ -20,7 +20,7 @@ imgui_node_editor = static_library(
 		'cpp_std=c++14',
 	],
 	include_directories: includes,
-	dependencies: subproject('imgui-1.88').get_variable('imgui_dep'),
+	dependencies: dependency('imgui'),
 )
 
 imgui_node_editor_dep = declare_dependency(
@@ -33,4 +33,3 @@ meson.override_dependency(
 	'imgui-node-editor-@0@'.format(meson.project_version()),
 	imgui_node_editor_dep)
 meson.override_dependency('imgui-node-editor', imgui_node_editor_dep)
-

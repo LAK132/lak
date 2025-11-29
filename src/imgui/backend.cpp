@@ -1,3 +1,6 @@
+#define IMGUI_DISABLE_OBSOLETE_FUNCTIONS
+#define IMGUI_DISABLE_OBSOLETE_KEYIO
+
 #define IMGUI_DEFINE_MATH_OPERATORS
 
 #include "lak/system/os.hpp"
@@ -154,7 +157,6 @@ namespace ImGui
 	{
 		ImGuiContext *imgui_context;
 		lak::cursor mouse_cursors[ImGuiMouseCursor_COUNT];
-		bool mouse_release[3];
 		lak::graphics_mode mode;
 		glm::mat4x4 transform = glm::mat4x4(1.0f);
 		union
@@ -303,32 +305,13 @@ void ImGui::ImplInit()
 
 	io.BackendRendererName = "imgui_impl_lak";
 
+	io.BackendUsingLegacyKeyArrays     = 0;
+	io.BackendUsingLegacyNavInputArray = 0;
+
 #if defined(LAK_USE_WINAPI)
 	io.BackendFlags |= ImGuiBackendFlags_HasMouseCursors;
 	io.BackendFlags |= ImGuiBackendFlags_HasSetMousePos;
 	io.BackendPlatformName = "imgui_impl_lak_win32";
-
-	io.KeyMap[ImGuiKey_Tab]        = VK_TAB;
-	io.KeyMap[ImGuiKey_LeftArrow]  = VK_LEFT;
-	io.KeyMap[ImGuiKey_RightArrow] = VK_RIGHT;
-	io.KeyMap[ImGuiKey_UpArrow]    = VK_UP;
-	io.KeyMap[ImGuiKey_DownArrow]  = VK_DOWN;
-	io.KeyMap[ImGuiKey_PageUp]     = VK_PRIOR;
-	io.KeyMap[ImGuiKey_PageDown]   = VK_NEXT;
-	io.KeyMap[ImGuiKey_Home]       = VK_HOME;
-	io.KeyMap[ImGuiKey_End]        = VK_END;
-	io.KeyMap[ImGuiKey_Insert]     = VK_INSERT;
-	io.KeyMap[ImGuiKey_Delete]     = VK_DELETE;
-	io.KeyMap[ImGuiKey_Backspace]  = VK_BACK;
-	io.KeyMap[ImGuiKey_Space]      = VK_SPACE;
-	io.KeyMap[ImGuiKey_Enter]      = VK_RETURN;
-	io.KeyMap[ImGuiKey_Escape]     = VK_ESCAPE;
-	io.KeyMap[ImGuiKey_A]          = 'A';
-	io.KeyMap[ImGuiKey_C]          = 'C';
-	io.KeyMap[ImGuiKey_V]          = 'V';
-	io.KeyMap[ImGuiKey_X]          = 'X';
-	io.KeyMap[ImGuiKey_Y]          = 'Y';
-	io.KeyMap[ImGuiKey_Z]          = 'Z';
 #elif defined(LAK_USE_XLIB)
 #	error "NYI"
 	io.BackendPlatformName = "imgui_impl_lak_xlib";
@@ -339,28 +322,6 @@ void ImGui::ImplInit()
 	io.BackendFlags |= ImGuiBackendFlags_HasMouseCursors;
 	io.BackendFlags |= ImGuiBackendFlags_HasSetMousePos;
 	io.BackendPlatformName = "imgui_impl_lak_sdl2";
-
-	io.KeyMap[ImGuiKey_Tab]        = SDL_SCANCODE_TAB;
-	io.KeyMap[ImGuiKey_LeftArrow]  = SDL_SCANCODE_LEFT;
-	io.KeyMap[ImGuiKey_RightArrow] = SDL_SCANCODE_RIGHT;
-	io.KeyMap[ImGuiKey_UpArrow]    = SDL_SCANCODE_UP;
-	io.KeyMap[ImGuiKey_DownArrow]  = SDL_SCANCODE_DOWN;
-	io.KeyMap[ImGuiKey_PageUp]     = SDL_SCANCODE_PAGEUP;
-	io.KeyMap[ImGuiKey_PageDown]   = SDL_SCANCODE_PAGEDOWN;
-	io.KeyMap[ImGuiKey_Home]       = SDL_SCANCODE_HOME;
-	io.KeyMap[ImGuiKey_End]        = SDL_SCANCODE_END;
-	io.KeyMap[ImGuiKey_Insert]     = SDL_SCANCODE_INSERT;
-	io.KeyMap[ImGuiKey_Delete]     = SDL_SCANCODE_DELETE;
-	io.KeyMap[ImGuiKey_Backspace]  = SDL_SCANCODE_BACKSPACE;
-	io.KeyMap[ImGuiKey_Space]      = SDL_SCANCODE_SPACE;
-	io.KeyMap[ImGuiKey_Enter]      = SDL_SCANCODE_RETURN;
-	io.KeyMap[ImGuiKey_Escape]     = SDL_SCANCODE_ESCAPE;
-	io.KeyMap[ImGuiKey_A]          = SDL_SCANCODE_A;
-	io.KeyMap[ImGuiKey_C]          = SDL_SCANCODE_C;
-	io.KeyMap[ImGuiKey_V]          = SDL_SCANCODE_V;
-	io.KeyMap[ImGuiKey_X]          = SDL_SCANCODE_X;
-	io.KeyMap[ImGuiKey_Y]          = SDL_SCANCODE_Y;
-	io.KeyMap[ImGuiKey_Z]          = SDL_SCANCODE_Z;
 #else
 #	error "No implementation specified"
 #endif
@@ -522,10 +483,6 @@ void ImGui::ImplInitContext(ImplContext context, const lak::window &window)
 #	error "No implementation specified"
 #endif
 
-	context->mouse_release[0] = false;
-	context->mouse_release[1] = false;
-	context->mouse_release[2] = false;
-
 	switch (context->mode)
 	{
 #ifdef LAK_ENABLE_SOFTRENDER
@@ -547,7 +504,8 @@ void ImGui::ImplInitContext(ImplContext context, const lak::window &window)
 
 #ifdef LAK_OS_WINDOWS
 #	if defined(LAK_USE_WINAPI)
-	ImGui::GetIO().ImeWindowHandle = window.handle()->_platform_handle;
+	ImGui::GetMainViewport()->PlatformHandleRaw =
+	  window.handle()->_platform_handle;
 #	elif defined(LAK_USE_XLIB)
 #		error "NYI"
 #	elif defined(LAK_USE_XCB)
@@ -556,7 +514,7 @@ void ImGui::ImplInitContext(ImplContext context, const lak::window &window)
 	SDL_SysWMinfo wmInfo;
 	SDL_VERSION(&wmInfo.version);
 	SDL_GetWindowWMInfo(window.handle()->sdl_window, &wmInfo);
-	ImGui::GetIO().ImeWindowHandle = wmInfo.info.win.window;
+	ImGui::GetMainViewport()->PlatformHandleRaw = wmInfo.info.win.window;
 #	else
 #		error "No implementation specified"
 #	endif
@@ -744,24 +702,34 @@ bool ImGui::ImplProcessEvent(ImplContext context, const lak::event &event)
 
 		case lak::event_type::wheel:
 		{
-			if (event.wheel().wheel.y > 0)
-				io.MouseWheel += 1;
-			else if (event.wheel().wheel.y < 0)
-				io.MouseWheel -= 1;
+			io.AddMouseWheelEvent(-event.wheel().wheel.x, event.wheel().wheel.y);
+			return true;
+		}
 
-			if (event.wheel().wheel.x > 0)
-				io.MouseWheelH -= 1;
-			else if (event.wheel().wheel.x < 0)
-				io.MouseWheelH += 1;
+		case lak::event_type::window_focus:
+		{
+			io.AddFocusEvent(true);
+			return true;
+		}
 
+		case lak::event_type::window_no_focus:
+		{
+			io.AddFocusEvent(false);
+			return true;
+		}
+
+		case lak::event_type::window_leave:
+		{
+			if (io.WantSetMousePos) return false;
+			io.AddMousePosEvent(-FLT_MAX, -FLT_MAX);
 			return true;
 		}
 
 		case lak::event_type::motion:
 		{
 			if (io.WantSetMousePos) return false;
-			io.MousePos.x = (float)event.motion().position.x;
-			io.MousePos.y = (float)event.motion().position.y;
+			io.AddMousePosEvent((float)event.motion().position.x,
+			                    (float)event.motion().position.y);
 			return true;
 		}
 
@@ -770,23 +738,14 @@ bool ImGui::ImplProcessEvent(ImplContext context, const lak::event &event)
 			switch (event.button().button)
 			{
 				case lak::mouse_button::left:
-				{
-					io.MouseDown[0]           = true;
-					context->mouse_release[0] = false;
-				}
-				break;
+					io.AddMouseButtonEvent(ImGuiMouseButton_Left, true);
+					break;
 				case lak::mouse_button::right:
-				{
-					io.MouseDown[1]           = true;
-					context->mouse_release[1] = false;
-				}
-				break;
+					io.AddMouseButtonEvent(ImGuiMouseButton_Right, true);
+					break;
 				case lak::mouse_button::middle:
-				{
-					io.MouseDown[2]           = true;
-					context->mouse_release[2] = false;
-				}
-				break;
+					io.AddMouseButtonEvent(ImGuiMouseButton_Middle, true);
+					break;
 				default:
 					return false;
 			}
@@ -809,20 +768,14 @@ bool ImGui::ImplProcessEvent(ImplContext context, const lak::event &event)
 			switch (event.button().button)
 			{
 				case lak::mouse_button::left:
-				{
-					context->mouse_release[0] = true;
-				}
-				break;
+					io.AddMouseButtonEvent(ImGuiMouseButton_Left, false);
+					break;
 				case lak::mouse_button::right:
-				{
-					context->mouse_release[1] = true;
-				}
-				break;
+					io.AddMouseButtonEvent(ImGuiMouseButton_Right, false);
+					break;
 				case lak::mouse_button::middle:
-				{
-					context->mouse_release[2] = true;
-				}
-				break;
+					io.AddMouseButtonEvent(ImGuiMouseButton_Middle, false);
+					break;
 				default:
 					return false;
 			}
@@ -844,17 +797,136 @@ bool ImGui::ImplProcessEvent(ImplContext context, const lak::event &event)
 			[[fallthrough]];
 		case lak::event_type::key_up:
 		{
-			const int key = event.key().scancode;
-			ASSERT(key >= 0 && key <= IM_ARRAYSIZE(io.KeysDown));
-			io.KeysDown[key] = event.type == lak::event_type::key_down;
+			lak::key_code key  = event.key().key;
+			const int scancode = event.key().native_scancode;
+			const bool down    = event.type == lak::event_type::key_down;
 
-			io.KeyShift =
-			  (event.key().mod & lak::mod_key::shift) != lak::mod_key::none;
-			io.KeyCtrl =
-			  (event.key().mod & lak::mod_key::ctrl) != lak::mod_key::none;
-			io.KeyAlt = (event.key().mod & lak::mod_key::alt) != lak::mod_key::none;
-			io.KeySuper =
-			  (event.key().mod & lak::mod_key::super) != lak::mod_key::none;
+			switch (key)
+			{
+				case lak::key_code::lshift:
+					io.AddKeyEvent(ImGuiKey_LeftShift, down);
+					break;
+				case lak::key_code::rshift:
+					io.AddKeyEvent(ImGuiKey_RightShift, down);
+					break;
+				case lak::key_code::lctrl:
+					io.AddKeyEvent(ImGuiKey_LeftCtrl, down);
+					break;
+				case lak::key_code::rctrl:
+					io.AddKeyEvent(ImGuiKey_RightCtrl, down);
+					break;
+				case lak::key_code::lalt:
+					io.AddKeyEvent(ImGuiKey_LeftAlt, down);
+					break;
+				case lak::key_code::ralt:
+					io.AddKeyEvent(ImGuiKey_RightAlt, down);
+					break;
+				case lak::key_code::menu:
+					io.AddKeyEvent(ImGuiKey_Menu, down);
+					break;
+				case lak::key_code::tab:
+					io.AddKeyEvent(ImGuiKey_Tab, down);
+					break;
+				case lak::key_code::left:
+					io.AddKeyEvent(ImGuiKey_LeftArrow, down);
+					break;
+				case lak::key_code::right:
+					io.AddKeyEvent(ImGuiKey_RightArrow, down);
+					break;
+				case lak::key_code::up:
+					io.AddKeyEvent(ImGuiKey_UpArrow, down);
+					break;
+				case lak::key_code::down:
+					io.AddKeyEvent(ImGuiKey_DownArrow, down);
+					break;
+				case lak::key_code::page_up:
+					io.AddKeyEvent(ImGuiKey_PageUp, down);
+					break;
+				case lak::key_code::page_down:
+					io.AddKeyEvent(ImGuiKey_PageDown, down);
+					break;
+				case lak::key_code::home:
+					io.AddKeyEvent(ImGuiKey_Home, down);
+					break;
+				case lak::key_code::end:
+					io.AddKeyEvent(ImGuiKey_End, down);
+					break;
+				case lak::key_code::insert:
+					io.AddKeyEvent(ImGuiKey_Insert, down);
+					break;
+				case lak::key_code::del:
+					io.AddKeyEvent(ImGuiKey_Delete, down);
+					break;
+				case lak::key_code::backspace:
+					io.AddKeyEvent(ImGuiKey_Backspace, down);
+					break;
+				case lak::key_code::space:
+					io.AddKeyEvent(ImGuiKey_Space, down);
+					break;
+				case lak::key_code::enter:
+					io.AddKeyEvent(ImGuiKey_Enter, down);
+					break;
+				case lak::key_code::escape:
+					io.AddKeyEvent(ImGuiKey_Escape, down);
+					break;
+			}
+
+#if defined(LAK_USE_WINAPI)
+			DEBUG_EXPR(scancode);
+			switch (scancode)
+			{
+				case 'A':
+					io.AddKeyEvent(ImGuiKey_A, down);
+					break;
+				case 'C':
+					io.AddKeyEvent(ImGuiKey_C, down);
+					break;
+				case 'V':
+					io.AddKeyEvent(ImGuiKey_V, down);
+					break;
+				case 'X':
+					io.AddKeyEvent(ImGuiKey_X, down);
+					break;
+				case 'Y':
+					io.AddKeyEvent(ImGuiKey_Y, down);
+					break;
+				case 'Z':
+					io.AddKeyEvent(ImGuiKey_Z, down);
+					break;
+				default:
+					break;
+			}
+#elif defined(LAK_USE_XLIB)
+#	error "NYI"
+			io.BackendPlatformName = "imgui_impl_lak_xlib";
+#elif defined(LAK_USE_XCB)
+#	error "NYI"
+			io.BackendPlatformName = "imgui_impl_lak_xcb";
+#elif defined(LAK_USE_SDL)
+			switch (scancode)
+			{
+				case SDL_SCANCODE_A:
+					io.AddKeyEvent(ImGuiKey_A, down);
+					break;
+				case SDL_SCANCODE_C:
+					io.AddKeyEvent(ImGuiKey_C, down);
+					break;
+				case SDL_SCANCODE_V:
+					io.AddKeyEvent(ImGuiKey_V, down);
+					break;
+				case SDL_SCANCODE_X:
+					io.AddKeyEvent(ImGuiKey_X, down);
+					break;
+				case SDL_SCANCODE_Y:
+					io.AddKeyEvent(ImGuiKey_Y, down);
+					break;
+				case SDL_SCANCODE_Z:
+					io.AddKeyEvent(ImGuiKey_Z, down);
+					break;
+			}
+#else
+#	error "No implementation specified"
+#endif
 			return true;
 		}
 
@@ -1108,7 +1180,7 @@ void ImplGLRender(ImGui::ImplContext context, ImDrawData *draw_data)
 			else if (!using_scissor_test)
 			{
 				lak::opengl::call_checked(
-				  glBindTexture, GL_TEXTURE_2D, (GLuint)(intptr_t)pcmd.TextureId)
+				  glBindTexture, GL_TEXTURE_2D, (GLuint)(intptr_t)pcmd.GetTexID())
 				  .UNWRAP();
 				lak::opengl::call_checked(glDrawElements,
 				                          GL_TRIANGLES,
@@ -1150,7 +1222,7 @@ void ImplGLRender(ImGui::ImplContext context, ImDrawData *draw_data)
 						  .UNWRAP();
 
 					lak::opengl::call_checked(
-					  glBindTexture, GL_TEXTURE_2D, (GLuint)(intptr_t)pcmd.TextureId)
+					  glBindTexture, GL_TEXTURE_2D, (GLuint)(intptr_t)pcmd.GetTexID())
 					  .UNWRAP();
 					lak::opengl::call_checked(glDrawElements,
 					                          GL_TRIANGLES,
@@ -1187,10 +1259,6 @@ void ImGui::ImplRenderData(ImplContext context, ImDrawData *draw_data)
 			FATAL("Invalid context mode");
 			break;
 	}
-
-	ImGuiIO &io = ImGui::GetIO();
-	for (size_t i = 0; i < 3; ++i)
-		if (context->mouse_release[i]) io.MouseDown[i] = false;
 }
 
 void ImGui::ImplSetClipboard(void *, const char *text)

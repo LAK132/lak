@@ -24,6 +24,7 @@ laktestcore = static_library(
 		'com_ptr.cpp',
 		'compare.cpp',
 		'const_string.cpp',
+		'format.cpp',
 		'functional.cpp',
 		'integer_range.cpp',
 		'json.cpp',

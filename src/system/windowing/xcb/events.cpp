@@ -18,6 +18,10 @@ bool lak::next_event(const lak::platform_instance &handle, lak::event *event)
 
 			/* --- window_destroyed --- */
 
+			/* --- hover changed --- */
+
+			/* --- focus changed --- */
+
 			/* --- window_created --- */
 
 			/* --- window_resized --- */
