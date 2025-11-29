@@ -38,15 +38,25 @@ namespace lak
 		constexpr string_view &operator=(const string_view &) = default;
 
 		template<size_t N>
-		constexpr string_view(const CHAR (&str)[N]);
+		constexpr string_view(const CHAR (&str)[N]) : _value(str, str + N - 1)
+		{
+		}
 
-		explicit constexpr string_view(const CHAR *str, size_t sz);
+		explicit constexpr string_view(const CHAR *str, size_t sz)
+		: _value(str, sz)
+		{
+		}
 
-		explicit constexpr string_view(const CHAR *begin, const CHAR *end);
+		explicit constexpr string_view(const CHAR *begin, const CHAR *end)
+		: _value(begin, end)
+		{
+		}
 
-		explicit constexpr string_view(lak::span<const CHAR> str);
+		explicit constexpr string_view(lak::span<const CHAR> str) : _value(str) {}
 
-		string_view(const lak::string<CHAR> &str);
+		string_view(const lak::string<CHAR> &str) : _value(str.data(), str.size())
+		{
+		}
 
 		constexpr static string_view from_c_str(const CHAR *str);
 

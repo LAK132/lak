@@ -104,8 +104,9 @@ namespace lak
 
 	struct window_handle;
 
+	extern template struct lak::uninit_array<lak::window_handle>;
+	extern template struct lak::uninit_railcar<lak::window_handle>;
 	extern template struct lak::array<lak::window_handle, lak::dynamic_extent>;
-	extern template struct lak::railcar<lak::window_handle>;
 	extern template struct lak::bank<lak::window_handle>;
 	extern template size_t lak::bank<lak::window_handle>::internal_create<
 	  lak::window_handle>(lak::window_handle &&);

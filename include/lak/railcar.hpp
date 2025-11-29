@@ -9,6 +9,59 @@ namespace lak
 	template<typename T>
 	struct railcar;
 
+	/* --- uninit_railcar --- */
+
+	template<typename T>
+	struct uninit_railcar
+	{
+	private:
+		lak::array<lak::uninit_array<T>> _data = {};
+		size_t _bin_size                       = 0;
+
+		void internal_init_bin_size();
+		void internal_alloc_end();
+
+	public:
+		using value_type      = T;
+		using size_type       = size_t;
+		using difference_type = ptrdiff_t;
+		using reference       = T &;
+		using const_reference = const T &;
+		using pointer         = T *;
+		using const_pointer   = const T *;
+
+		uninit_railcar()                                  = default;
+		uninit_railcar(const uninit_railcar &)            = delete;
+		uninit_railcar(uninit_railcar &&)                 = delete;
+		uninit_railcar &operator=(const uninit_railcar &) = delete;
+		uninit_railcar &operator=(uninit_railcar &&)      = delete;
+
+		size_t size() const;
+
+		void resize(size_t new_size);
+		void push_back();
+		void pop_back();
+
+		void clear() { _data.clear(); }
+		void force_clear() { _data.force_clear(); }
+
+		[[nodiscard]] bool empty() const { return size() == 0U; }
+
+		size_t find(const T *iter) const;
+
+		T &at(size_t index);
+		const T &at(size_t index) const;
+
+		T &operator[](size_t index) { return at(index); }
+		const T &operator[](size_t index) const { return at(index); }
+
+		T &front() { return _data.front().front(); }
+		const T &front() const { return _data.front().front(); }
+
+		T &back() { return _data.back().back(); }
+		const T &back() const { return _data.back().back(); }
+	};
+
 	/* --- railcar_iterator --- */
 
 	template<typename T>

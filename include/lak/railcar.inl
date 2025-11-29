@@ -1,6 +1,104 @@
 #include "lak/railcar.hpp"
 
 #include "lak/debug.hpp"
+#include "lak/ptr_intrin.hpp"
+
+/* --- uninit_railcar --- */
+
+template<typename T>
+void lak::uninit_railcar<T>::internal_init_bin_size()
+{
+	if (_bin_size == 0)
+		_bin_size = std::max<size_t>(lak::page_size() / sizeof(T), size_t(1));
+	ASSERT_GREATER(_bin_size, 1U);
+}
+
+template<typename T>
+void lak::uninit_railcar<T>::internal_alloc_end()
+{
+	if (_data.empty() || _data.back().size() == _bin_size)
+	{
+		internal_init_bin_size();
+		lak::uninit_array<T> new_bin;
+		new_bin.reserve(_bin_size);
+		_data.emplace_back(lak::move(new_bin));
+	}
+	ASSERT_GREATER_OR_EQUAL(_data.back().capacity(), _bin_size);
+	ASSERT_LESS(_data.back().size(), _bin_size);
+}
+
+template<typename T>
+size_t lak::uninit_railcar<T>::size() const
+{
+	return _data.empty()
+	         ? 0U
+	         : ((_data.size() - 1U) * _bin_size) + _data.back().size();
+}
+
+template<typename T>
+void lak::uninit_railcar<T>::resize(size_t new_size)
+{
+	internal_alloc_end();
+	if (new_size > size())
+	{
+		new_size -= size();
+		while (new_size >= _bin_size)
+		{
+			new_size -= _bin_size;
+			_data.push_back(lak::uninit_array<T>(_bin_size));
+		}
+		if (new_size == 0U) return;
+		auto &last = _data.emplace_back();
+		last.reserve(_bin_size);
+		last.resize(new_size);
+	}
+	else if (new_size < size())
+	{
+		new_size = size() - new_size;
+		while (new_size >= _bin_size)
+		{
+			new_size -= _bin_size;
+			_data.pop_back();
+		}
+		if (new_size == 0U) return;
+		_data.back().resize(_bin_size - new_size);
+	}
+}
+
+template<typename T>
+void lak::uninit_railcar<T>::push_back()
+{
+	internal_alloc_end();
+	_data.back().push_back();
+}
+
+template<typename T>
+void lak::uninit_railcar<T>::pop_back()
+{
+	_data.back().pop_back();
+	if (_data.back().empty()) _data.pop_back();
+}
+
+template<typename T>
+size_t lak::uninit_railcar<T>::find(const T *iter) const
+{
+	for (size_t i = 0; i < _data.size(); ++i)
+		if (lak::ptr_in_range(iter, _data[i].data(), _data[i].size()))
+			return (i * _bin_size) + size_t(lak::distance(_data[i].data(), iter));
+	return size();
+}
+
+template<typename T>
+T &lak::uninit_railcar<T>::at(size_t index)
+{
+	return _data[index / _bin_size][index % _bin_size];
+}
+
+template<typename T>
+const T &lak::uninit_railcar<T>::at(size_t index) const
+{
+	return _data[index / _bin_size][index % _bin_size];
+}
 
 /* --- railcar_iterator --- */
 
@@ -412,8 +510,7 @@ T *lak::railcar<T>::erase(const T *element)
 	size_t page = 0;
 
 	for (; page < _data.size() && !contains(lak::span(_data[page]), element);
-	     ++page)
-		;
+	     ++page);
 
 	ASSERT(contains(lak::span(_data[page]), element));
 

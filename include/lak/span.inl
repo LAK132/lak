@@ -17,39 +17,15 @@ inline constexpr lak::span<T, SIZE> lak::span<T, SIZE>::from_ptr(
 }
 
 template<typename T, size_t SIZE>
-inline constexpr T *lak::span<T, SIZE>::data() const noexcept
-{
-	return _data;
-}
-
-template<typename T, size_t SIZE>
 [[nodiscard]] inline constexpr bool lak::span<T, SIZE>::empty() const noexcept
 {
 	return size() == 0;
 }
 
 template<typename T, size_t SIZE>
-inline constexpr size_t lak::span<T, SIZE>::size() const noexcept
-{
-	return SIZE;
-}
-
-template<typename T, size_t SIZE>
 inline constexpr size_t lak::span<T, SIZE>::size_bytes() const noexcept
 {
 	return SIZE * sizeof(T);
-}
-
-template<typename T, size_t SIZE>
-inline constexpr T *lak::span<T, SIZE>::begin() const noexcept
-{
-	return _data;
-}
-
-template<typename T, size_t SIZE>
-inline constexpr T *lak::span<T, SIZE>::end() const noexcept
-{
-	return _data + SIZE;
 }
 
 template<typename T, size_t SIZE>
@@ -115,28 +91,10 @@ constexpr lak::span<T, SIZE>::operator span<U, lak::dynamic_extent>()
 /* --- lak::span<void, SIZE> --- */
 
 template<size_t SIZE>
-inline constexpr void *lak::span<void, SIZE>::data() const noexcept
-{
-	return _data;
-}
-
-template<size_t SIZE>
 [[nodiscard]] inline constexpr bool lak::span<void, SIZE>::empty()
   const noexcept
 {
 	return size() == 0;
-}
-
-template<size_t SIZE>
-inline constexpr size_t lak::span<void, SIZE>::size() const noexcept
-{
-	return SIZE;
-}
-
-template<size_t SIZE>
-inline constexpr size_t lak::span<void, SIZE>::size_bytes() const noexcept
-{
-	return SIZE;
 }
 
 template<size_t SIZE>
@@ -179,29 +137,10 @@ constexpr lak::span<void, SIZE>::operator span<V, lak::dynamic_extent>()
 /* --- lak::span<const void, SIZE> --- */
 
 template<size_t SIZE>
-inline constexpr const void *lak::span<const void, SIZE>::data() const noexcept
-{
-	return _data;
-}
-
-template<size_t SIZE>
 [[nodiscard]] inline constexpr bool lak::span<const void, SIZE>::empty()
   const noexcept
 {
 	return size() == 0;
-}
-
-template<size_t SIZE>
-inline constexpr size_t lak::span<const void, SIZE>::size() const noexcept
-{
-	return SIZE;
-}
-
-template<size_t SIZE>
-inline constexpr size_t lak::span<const void, SIZE>::size_bytes()
-  const noexcept
-{
-	return SIZE;
 }
 
 template<size_t SIZE>
@@ -234,12 +173,6 @@ constexpr lak::span<const void, SIZE>::operator span<const void,
 /* --- lak::span<T, lak::dynamic_extent> --- */
 
 template<typename T>
-inline constexpr T *lak::span<T, lak::dynamic_extent>::data() const noexcept
-{
-	return _data;
-}
-
-template<typename T>
 [[nodiscard]] inline constexpr bool lak::span<T, lak::dynamic_extent>::empty()
   const noexcept
 {
@@ -247,29 +180,10 @@ template<typename T>
 }
 
 template<typename T>
-inline constexpr size_t lak::span<T, lak::dynamic_extent>::size()
-  const noexcept
-{
-	return _size;
-}
-
-template<typename T>
 inline constexpr size_t lak::span<T, lak::dynamic_extent>::size_bytes()
   const noexcept
 {
 	return _size * sizeof(T);
-}
-
-template<typename T>
-inline constexpr T *lak::span<T, lak::dynamic_extent>::begin() const noexcept
-{
-	return _data;
-}
-
-template<typename T>
-inline constexpr T *lak::span<T, lak::dynamic_extent>::end() const noexcept
-{
-	return _data + _size;
 }
 
 template<typename T>
@@ -311,28 +225,10 @@ requires(lak::is_reinterpret_castable_v<T *, V *>)
 
 /* --- lak::span<void, lak::dynamic_extent> --- */
 
-inline constexpr void *lak::span<void, lak::dynamic_extent>::data()
-  const noexcept
-{
-	return _data;
-}
-
 [[nodiscard]] inline constexpr bool
 lak::span<void, lak::dynamic_extent>::empty() const noexcept
 {
 	return size() == 0;
-}
-
-inline constexpr size_t lak::span<void, lak::dynamic_extent>::size()
-  const noexcept
-{
-	return _size;
-}
-
-inline constexpr size_t lak::span<void, lak::dynamic_extent>::size_bytes()
-  const noexcept
-{
-	return _size;
 }
 
 inline constexpr bool lak::span<void, lak::dynamic_extent>::contains(
@@ -361,28 +257,10 @@ requires(!lak::is_void_v<U>)
 
 /* --- lak::span<const void, lak::dynamic_extent> --- */
 
-inline constexpr const void *lak::span<const void, lak::dynamic_extent>::data()
-  const noexcept
-{
-	return _data;
-}
-
 [[nodiscard]] inline constexpr bool
 lak::span<const void, lak::dynamic_extent>::empty() const noexcept
 {
 	return size() == 0;
-}
-
-inline constexpr size_t lak::span<const void, lak::dynamic_extent>::size()
-  const noexcept
-{
-	return _size;
-}
-
-inline constexpr size_t
-lak::span<const void, lak::dynamic_extent>::size_bytes() const noexcept
-{
-	return _size;
 }
 
 inline constexpr bool lak::span<const void, lak::dynamic_extent>::contains(

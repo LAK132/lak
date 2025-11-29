@@ -12,38 +12,6 @@ lak::span<CHAR> lak::null_string_span(CHAR *str)
 /* --- string_view --- */
 
 template<typename CHAR>
-template<size_t N>
-constexpr lak::string_view<CHAR>::string_view(const CHAR (&str)[N])
-: _value(str, str + N - 1)
-{
-}
-
-template<typename CHAR>
-constexpr lak::string_view<CHAR>::string_view(const CHAR *str, size_t sz)
-: _value(str, sz)
-{
-}
-
-template<typename CHAR>
-constexpr lak::string_view<CHAR>::string_view(const CHAR *begin,
-                                              const CHAR *end)
-: _value(begin, end)
-{
-}
-
-template<typename CHAR>
-constexpr lak::string_view<CHAR>::string_view(lak::span<const CHAR> str)
-: _value(str)
-{
-}
-
-template<typename CHAR>
-lak::string_view<CHAR>::string_view(const lak::string<CHAR> &str)
-: _value(str.data(), str.size())
-{
-}
-
-template<typename CHAR>
 constexpr lak::string_view<CHAR> lak::string_view<CHAR>::from_c_str(
   const CHAR *str)
 {

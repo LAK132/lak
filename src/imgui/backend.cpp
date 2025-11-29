@@ -77,10 +77,6 @@ auto _call_checked =
 #	endif
 #endif
 
-[[maybe_unused]] static const char *GetClipboardTextFn_DefaultImpl(void *);
-[[maybe_unused]] static void SetClipboardTextFn_DefaultImpl(void *,
-                                                            const char *text);
-
 namespace ImGui
 {
 	typedef struct _ImplSRContext
@@ -821,6 +817,12 @@ bool ImGui::ImplProcessEvent(ImplContext context, const lak::event &event)
 				case lak::key_code::ralt:
 					io.AddKeyEvent(ImGuiKey_RightAlt, down);
 					break;
+				case lak::key_code::lsuper:
+					io.AddKeyEvent(ImGuiKey_LeftSuper, down);
+					break;
+				case lak::key_code::rsuper:
+					io.AddKeyEvent(ImGuiKey_RightSuper, down);
+					break;
 				case lak::key_code::menu:
 					io.AddKeyEvent(ImGuiKey_Menu, down);
 					break;
@@ -868,6 +870,9 @@ bool ImGui::ImplProcessEvent(ImplContext context, const lak::event &event)
 					break;
 				case lak::key_code::escape:
 					io.AddKeyEvent(ImGuiKey_Escape, down);
+					break;
+				case lak::key_code::none:
+				default:
 					break;
 			}
 

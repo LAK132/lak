@@ -34,7 +34,7 @@ BEGIN_TEST(runtime_type)
 		  .first(type->size() * count);
 	};
 
-	auto access =
+	[[maybe_unused]] auto access =
 	  [&](lak::runtime_type_ptr type, lak::span<byte_t> data, size_t index)
 	{
 		ASSERT_GREATER_OR_EQUAL(data.size(), type->size() * index);

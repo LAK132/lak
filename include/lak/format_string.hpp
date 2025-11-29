@@ -257,7 +257,6 @@ namespace lak
 	template<lak::const_string const_str, size_t index>
 	consteval auto format_specifier_deduped()
 	{
-		using CHAR               = typename decltype(const_str)::char_type;
 		constexpr auto specifier = lak::format_specifier<const_str, index>();
 		return lak::pair(specifier.first,
 		                 lak::format_specifier_dedup<const_str,
@@ -310,7 +309,7 @@ namespace lak
 	}
 
 	template<lak::const_string const_str, size_t... I>
-	consteval auto format_specifier_prefixes_deduped(lak::index_sequence<I...> i)
+	consteval auto format_specifier_prefixes_deduped(lak::index_sequence<I...>)
 	{
 		using CHAR = typename decltype(const_str)::char_type;
 		lak::c_array<lak::pair<size_t, size_t>, sizeof...(I)> offsets;

@@ -7,6 +7,8 @@
 #include "lak/string_literals/format.hpp"
 #include "lak/string_literals/view.hpp"
 
+#include "lak/string_view.hpp"
+
 #include <system_error>
 
 template<typename T, typename CHAR>
@@ -23,16 +25,15 @@ struct lak::format_traits<T, CHAR>
 	}
 };
 
-// redefinition error on gcc
-// template<typename T, typename CHAR>
-// requires(std::is_enum_v<T>)
-// struct lak::format_traits<T, CHAR>
-// {
-// 	static lak::string<CHAR> to_string(const T &value)
-// 	{
-// 		return lak::fmt<CHAR, "{:#0X}">(static_cast<uintmax_t>(value));
-// 	}
-// };
+template<typename T, typename CHAR>
+requires(std::is_enum_v<T>)
+struct lak::format_traits<T, CHAR>
+{
+	static lak::string<CHAR> to_string(const T &value)
+	{
+		return lak::fmt<CHAR, "{:#0X}">(static_cast<uintmax_t>(value));
+	}
+};
 
 template<typename T, typename CHAR>
 requires((lak::is_array_v<T> || lak::is_pointer_v<T>) &&
@@ -204,6 +205,8 @@ struct lak::format_traits<T, CHAR>
 			case lak::numeric_base::oct:
 				strm << std::oct;
 				break;
+			default:
+				break;
 		}
 		strm << std::noshowbase;
 		if (args.uppercase) strm << std::uppercase;
@@ -350,6 +353,8 @@ struct lak::format_traits<T, CHAR>
 				break;
 			case lak::numeric_base::oct:
 				strm << std::oct;
+				break;
+			default:
 				break;
 		}
 		strm << std::noshowbase;

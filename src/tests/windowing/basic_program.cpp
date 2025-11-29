@@ -37,7 +37,9 @@ void lak_test_basic_window_init(lak::window &window)
 {
 	FUNCTION_CHECKPOINT();
 	window.set_title(L"Test Window");
-	ASSERT_EQUAL(window.title(), L"Test Window");
+	auto title = window.title();
+	ASSERT_EQUAL(lak::wstring_view::from_c_str(title.c_str()),
+	             L"Test Window"_view);
 
 	if (lak_test_basic_window_force_software)
 		ASSERT(window.graphics() == lak::graphics_mode::Software);

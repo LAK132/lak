@@ -70,17 +70,17 @@ namespace lak
 
 		inline constexpr T &operator[](size_t index) const noexcept;
 
-		inline constexpr T *data() const noexcept;
+		inline constexpr T *data() const noexcept { return _data; }
 
 		[[nodiscard]] inline constexpr bool empty() const noexcept;
 
-		inline constexpr size_t size() const noexcept;
+		inline constexpr size_t size() const noexcept { return SIZE; }
 
 		inline constexpr size_t size_bytes() const noexcept;
 
-		inline constexpr T *begin() const noexcept;
+		inline constexpr T *begin() const noexcept { return data(); }
 
-		inline constexpr T *end() const noexcept;
+		inline constexpr T *end() const noexcept { return data() + size(); }
 
 		template<size_t offset, size_t count = lak::dynamic_extent>
 		inline constexpr span<T, count> subspan() const;
@@ -143,13 +143,13 @@ namespace lak
 		{
 		}
 
-		inline constexpr void *data() const noexcept;
+		inline constexpr void *data() const noexcept { return _data; }
 
 		[[nodiscard]] inline constexpr bool empty() const noexcept;
 
-		inline constexpr size_t size() const noexcept;
+		inline constexpr size_t size() const noexcept { return SIZE; }
 
-		inline constexpr size_t size_bytes() const noexcept;
+		inline constexpr size_t size_bytes() const noexcept { return SIZE; }
 
 		inline constexpr bool contains(const void *ptr) const noexcept;
 
@@ -185,13 +185,13 @@ namespace lak
 		{
 		}
 
-		inline constexpr const void *data() const noexcept;
+		inline constexpr const void *data() const noexcept { return _data; }
 
 		[[nodiscard]] inline constexpr bool empty() const noexcept;
 
-		inline constexpr size_t size() const noexcept;
+		inline constexpr size_t size() const noexcept { return SIZE; }
 
-		inline constexpr size_t size_bytes() const noexcept;
+		inline constexpr size_t size_bytes() const noexcept { return SIZE; }
 
 		inline constexpr bool contains(const void *ptr) const noexcept;
 
@@ -253,17 +253,17 @@ namespace lak
 
 		inline constexpr T &operator[](size_t index) const noexcept;
 
-		inline constexpr T *data() const noexcept;
+		inline constexpr T *data() const noexcept { return _data; }
 
 		[[nodiscard]] inline constexpr bool empty() const noexcept;
 
-		inline constexpr size_t size() const noexcept;
+		inline constexpr size_t size() const noexcept { return _size; }
 
 		inline constexpr size_t size_bytes() const noexcept;
 
-		inline constexpr T *begin() const noexcept;
+		inline constexpr T *begin() const noexcept { return data(); }
 
-		inline constexpr T *end() const noexcept;
+		inline constexpr T *end() const noexcept { return data() + size(); }
 
 		template<size_t offset, size_t count = lak::dynamic_extent>
 		inline constexpr span<T, count> subspan() const;
@@ -320,13 +320,13 @@ namespace lak
 		{
 		}
 
-		inline constexpr void *data() const noexcept;
+		inline constexpr void *data() const noexcept { return _data; }
 
 		[[nodiscard]] inline constexpr bool empty() const noexcept;
 
-		inline constexpr size_t size() const noexcept;
+		inline constexpr size_t size() const noexcept { return _size; }
 
-		inline constexpr size_t size_bytes() const noexcept;
+		inline constexpr size_t size_bytes() const noexcept { return _size; }
 
 		inline constexpr bool contains(const void *ptr) const noexcept;
 
@@ -359,13 +359,13 @@ namespace lak
 		{
 		}
 
-		inline constexpr const void *data() const noexcept;
+		inline constexpr const void *data() const noexcept { return _data; }
 
 		[[nodiscard]] inline constexpr bool empty() const noexcept;
 
-		inline constexpr size_t size() const noexcept;
+		inline constexpr size_t size() const noexcept { return _size; }
 
-		inline constexpr size_t size_bytes() const noexcept;
+		inline constexpr size_t size_bytes() const noexcept { return _size; }
 
 		inline constexpr bool contains(const void *ptr) const noexcept;
 

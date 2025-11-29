@@ -269,9 +269,10 @@ bool lak::set_active_window(const lak::window_handle *handle)
 			return SDL_GL_MakeCurrent(handle->opengl_context().sdl_window,
 			                          handle->opengl_context().sdl_glcontext) == 0;
 #endif
-	}
 
-	return false;
+		default:
+			return false;
+	}
 }
 
 bool lak::swap_window(lak::window_handle *handle)

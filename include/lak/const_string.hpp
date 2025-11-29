@@ -12,11 +12,6 @@ namespace lak
 	template<typename CHAR>
 	constexpr size_t const_strlen(const CHAR *str);
 
-#define LAK_BASIC_CONST_STRING(CHAR, PREFIX, ...)                             \
-	constexpr size_t PREFIX##const_strlen(const CHAR *str);
-	LAK_FOREACH_CHAR(LAK_BASIC_CONST_STRING)
-#undef LAK_BASIC_CONST_STRING
-
 	template<typename CHAR, size_t N>
 	struct const_string
 	{
@@ -57,9 +52,14 @@ namespace lak
 	const_string(const CHAR (&)[N]) -> const_string<CHAR, N - 1>;
 
 #define LAK_BASIC_CONST_STRING(CHAR, PREFIX, ...)                             \
+	constexpr size_t PREFIX##const_strlen(const CHAR *str);                     \
 	template<size_t N>                                                          \
 	struct PREFIX##const_string : public lak::const_string<CHAR, N>             \
 	{                                                                           \
+		inline constexpr PREFIX##const_string(const CHAR (&str)[N + 1])           \
+		: lak::const_string<CHAR, N>(str)                                         \
+		{                                                                         \
+		}                                                                         \
 		using lak::const_string<CHAR, N>::const_string;                           \
 		using lak::const_string<CHAR, N>::operator=;                              \
 		using lak::const_string<CHAR, N>::operator[];                             \

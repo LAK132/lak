@@ -5,12 +5,14 @@
 
 BEGIN_TEST(ptr_intrin)
 {
-	static constinit const char str[14]{"hello, world!"};
+	static constinit const char _str[14]{"hello, world!"};
+	const char *str = _str;
 
-	static_assert(lak::ptr_compare(str, str + 2) == lak::strong_ordering::less);
-	static_assert(lak::ptr_compare(str + 2, str) ==
+	static_assert(lak::ptr_compare(+_str, _str + 2) ==
+	              lak::strong_ordering::less);
+	static_assert(lak::ptr_compare(_str + 2, +_str) ==
 	              lak::strong_ordering::greater);
-	static_assert(lak::ptr_compare(str, str) == lak::strong_ordering::equal);
+	static_assert(lak::ptr_compare(+_str, +_str) == lak::strong_ordering::equal);
 
 	ASSERT_EQUAL(__lakc_ptr_diff(str, str).diff, 0U);
 	ASSERT_EQUAL(__lakc_ptr_diff(str, str).overflow, 0U);

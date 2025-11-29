@@ -18,7 +18,7 @@ namespace lak
 		friend struct unique_bank_ptr;
 
 		static std::mutex _mutex;
-		static lak::railcar<lak::uninitialised<T>> _container;
+		static lak::uninit_railcar<T> _container;
 		static lak::array<size_t> _deleted;
 
 		static void internal_sort();
@@ -68,9 +68,8 @@ namespace lak
 
 		unique_bank_ptr(size_t index) : _index(index)
 		{
-			_value = _index == std::numeric_limits<size_t>::max()
-			           ? nullptr
-			           : &bank<T>::_container[index].value();
+			_value =
+			  _index == lak::dynamic_extent ? nullptr : &bank<T>::_container[index];
 		}
 
 	public:
@@ -184,7 +183,7 @@ namespace lak
 	template<typename T>
 	std::mutex lak::bank<T>::_mutex;
 	template<typename T>
-	lak::railcar<lak::uninitialised<T>> lak::bank<T>::_container;
+	lak::uninit_railcar<T> lak::bank<T>::_container;
 	template<typename T>
 	lak::array<size_t> lak::bank<T>::_deleted;
 	template<typename T>
