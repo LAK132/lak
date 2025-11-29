@@ -5,7 +5,7 @@
 BEGIN_TEST(format)
 {
 	{
-		constexpr auto fmt = "asdf"_afmt;
+		constexpr auto fmt = "asdf"_fmt;
 		ASSERT_EQUAL(fmt.specifiers.size(), 0U);
 		ASSERT_EQUAL(fmt.prefixes.size(), fmt.specifiers.size() + 1U);
 		ASSERT_EQUAL(fmt.prefixes_buffer().size(), 4U);
@@ -14,7 +14,7 @@ BEGIN_TEST(format)
 		ASSERT_EQUAL(fmt.specifiers_buffer(), ""_view);
 	}
 	{
-		constexpr auto fmt = "{}"_afmt;
+		constexpr auto fmt = "{}"_fmt;
 		ASSERT_EQUAL(fmt.specifiers.size(), 1U);
 		ASSERT_EQUAL(fmt.prefixes.size(), fmt.specifiers.size() + 1U);
 		ASSERT_EQUAL(fmt.specifiers[0].first, 0U);
@@ -24,7 +24,7 @@ BEGIN_TEST(format)
 		ASSERT_EQUAL(fmt.specifiers_buffer(), ""_view);
 	}
 	{
-		constexpr auto fmt = "{1}"_afmt;
+		constexpr auto fmt = "{1}"_fmt;
 		ASSERT_EQUAL(fmt.specifiers.size(), 1U);
 		ASSERT_EQUAL(fmt.prefixes.size(), fmt.specifiers.size() + 1U);
 		ASSERT_EQUAL(fmt.specifiers[0].first, 1U);
@@ -34,7 +34,7 @@ BEGIN_TEST(format)
 		ASSERT_EQUAL(fmt.specifiers_buffer(), ""_view);
 	}
 	{
-		constexpr auto fmt = "{:}"_afmt;
+		constexpr auto fmt = "{:}"_fmt;
 		ASSERT_EQUAL(fmt.specifiers.size(), 1U);
 		ASSERT_EQUAL(fmt.prefixes.size(), fmt.specifiers.size() + 1U);
 		ASSERT_EQUAL(fmt.specifiers[0].first, 0U);
@@ -44,7 +44,7 @@ BEGIN_TEST(format)
 		ASSERT_EQUAL(fmt.specifiers_buffer(), ""_view);
 	}
 	{
-		constexpr auto fmt = "{:asdf}"_afmt;
+		constexpr auto fmt = "{:asdf}"_fmt;
 		ASSERT_EQUAL(fmt.specifiers.size(), 1U);
 		ASSERT_EQUAL(fmt.prefixes.size(), fmt.specifiers.size() + 1U);
 		ASSERT_EQUAL(fmt.specifiers[0].first, 0U);
@@ -54,7 +54,7 @@ BEGIN_TEST(format)
 		ASSERT_EQUAL(fmt.specifiers_buffer(), "asdf"_view);
 	}
 	{
-		constexpr auto fmt = "123{4:hello}asdf"_afmt;
+		constexpr auto fmt = "123{4:hello}asdf"_fmt;
 		ASSERT_EQUAL(fmt.specifiers.size(), 1U);
 		ASSERT_EQUAL(fmt.prefixes.size(), fmt.specifiers.size() + 1U);
 		ASSERT_EQUAL(fmt.specifiers[0].first, 4U);
@@ -64,7 +64,7 @@ BEGIN_TEST(format)
 		ASSERT_EQUAL(fmt.specifiers_buffer(), "hello"_view);
 	}
 	{
-		constexpr auto fmt = "1{1}2{2}3{3}4"_afmt;
+		constexpr auto fmt = "1{1}2{2}3{3}4"_fmt;
 		ASSERT_EQUAL(fmt.specifiers.size(), 3U);
 		ASSERT_EQUAL(fmt.prefixes.size(), fmt.specifiers.size() + 1U);
 		ASSERT_EQUAL(fmt.specifiers[0].first, 1U);
@@ -76,7 +76,7 @@ BEGIN_TEST(format)
 		ASSERT_EQUAL(fmt.specifiers_buffer(), ""_view);
 	}
 	{
-		constexpr auto fmt = "LAK{}{2}{}!"_afmt;
+		constexpr auto fmt = "LAK{}{2}{}!"_fmt;
 		ASSERT_EQUAL(fmt.specifiers.size(), 3U);
 		ASSERT_EQUAL(fmt.prefixes.size(), fmt.specifiers.size() + 1U);
 		ASSERT_EQUAL(fmt.specifiers[0].first, 0U);
