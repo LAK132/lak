@@ -43,9 +43,9 @@ namespace ImGui
 
 	void ImplRenderData(ImplContext context, ImDrawData *draw_data);
 
-	void ImplSetClipboard(void *user_data, const char *text);
+	void ImplSetClipboard(ImGuiContext *ctx, const char *text);
 
-	const char *ImplGetClipboard(lak::u8string **user_data);
+	const char *ImplGetClipboard(ImGuiContext *ctx);
 
 	ImTextureID ImplGetFontTexture(ImplContext context);
 

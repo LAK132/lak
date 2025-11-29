@@ -162,8 +162,6 @@ namespace ImGui
 			ImplGLContext gl_context;
 		};
 	} *ImplContext;
-
-	char *ImplStaticClipboard = nullptr;
 }
 
 ImGui::ImplContext ImGui::ImplCreateContext(lak::graphics_mode mode)
@@ -322,9 +320,10 @@ void ImGui::ImplInit()
 #	error "No implementation specified"
 #endif
 
-	io.SetClipboardTextFn = ImplSetClipboard;
-	io.GetClipboardTextFn = (const char *(*)(void *))ImplGetClipboard;
-	io.ClipboardUserData  = (void *)&ImplStaticClipboard;
+	ImGuiPlatformIO &pio            = ImGui::GetPlatformIO();
+	pio.Platform_SetClipboardTextFn = ImplSetClipboard;
+	pio.Platform_GetClipboardTextFn = ImplGetClipboard;
+	pio.Platform_ClipboardUserData  = nullptr;
 }
 
 #ifdef LAK_ENABLE_SOFTRENDER
@@ -1265,16 +1264,18 @@ void ImGui::ImplRenderData(ImplContext context, ImDrawData *draw_data)
 	}
 }
 
-void ImGui::ImplSetClipboard(void *, const char *text)
+void ImGui::ImplSetClipboard(ImGuiContext *, const char *text)
 {
 	lak::set_clipboard(text);
 }
 
-const char *ImGui::ImplGetClipboard(lak::u8string **user_data)
+const char *ImGui::ImplGetClipboard(ImGuiContext *ctx)
 {
-	if (!*user_data) *user_data = new lak::u8string;
-	lak::get_clipboard(*user_data);
-	return (const char *)(*user_data)->c_str();
+	lak::u8string *user_data = reinterpret_cast<lak::u8string *>(
+	  ctx->PlatformIO.Platform_ClipboardUserData);
+	if (!user_data) user_data = new lak::u8string;
+	lak::get_clipboard(user_data);
+	return (const char *)user_data->c_str();
 }
 
 ImTextureID ImGui::ImplGetFontTexture(ImplContext context)
