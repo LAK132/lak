@@ -1,5 +1,7 @@
 #include "lak/system/windowing/window.hpp"
 
+#include "lak/string_literals/string.hpp"
+
 #include <thread>
 
 template struct lak::array<lak::window_handle, lak::dynamic_extent>;

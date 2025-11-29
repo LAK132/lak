@@ -279,8 +279,10 @@ namespace lak
 		lak::c_array<lak::pair<size_t, lak::pair<size_t, size_t>>, sizeof...(I)>
 		  offsets;
 
-		size_t offset  = 0U;
-		size_t dyn_idx = 0U;
+		// [[maybe_unused]] to suppress warning on gcc. even though we're clearly
+		// using them
+		[[maybe_unused]] size_t offset  = 0U;
+		[[maybe_unused]] size_t dyn_idx = 0U;
 		((
 		   [&]<size_t J>(lak::size_type<J>)
 		   {

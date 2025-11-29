@@ -23,15 +23,16 @@ struct lak::format_traits<T, CHAR>
 	}
 };
 
-template<typename T, typename CHAR>
-requires(std::is_enum_v<T>)
-struct lak::format_traits<T, CHAR>
-{
-	static lak::string<CHAR> to_string(const T &value)
-	{
-		return lak::fmt<CHAR, "{:#0X}">(static_cast<uintmax_t>(value));
-	}
-};
+// redefinition error on gcc
+// template<typename T, typename CHAR>
+// requires(std::is_enum_v<T>)
+// struct lak::format_traits<T, CHAR>
+// {
+// 	static lak::string<CHAR> to_string(const T &value)
+// 	{
+// 		return lak::fmt<CHAR, "{:#0X}">(static_cast<uintmax_t>(value));
+// 	}
+// };
 
 template<typename T, typename CHAR>
 requires((lak::is_array_v<T> || lak::is_pointer_v<T>) &&

@@ -872,7 +872,6 @@ bool ImGui::ImplProcessEvent(ImplContext context, const lak::event &event)
 			}
 
 #if defined(LAK_USE_WINAPI)
-			DEBUG_EXPR(scancode);
 			switch (scancode)
 			{
 				case 'A':
