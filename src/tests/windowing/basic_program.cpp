@@ -5,6 +5,8 @@
 
 #include "lak/basic_program.inl"
 
+#include "lak/string_literals/view.hpp"
+
 lak::optional<int> lak_test_basic_program_preinit(lak::span<char *>)
 {
 	FUNCTION_CHECKPOINT();
