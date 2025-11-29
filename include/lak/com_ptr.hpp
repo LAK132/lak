@@ -69,6 +69,12 @@ namespace lak
 		}
 
 		void reset() { reset(nullptr); }
+		void reset(handle_type handle)
+		{
+			if (_handle) lak::unique_com_ptr_traits<T>::dtor(_handle);
+			_handle = handle;
+		}
+		handle_type release() { return lak::exchange(_handle, nullptr); }
 
 		operator handle_type() const { return _handle; }
 		exposed_type operator->() const { return _handle; }
@@ -80,12 +86,6 @@ namespace lak
 		static unique_com_ptr creator(handle_type handle)
 		{
 			return unique_com_ptr(handle);
-		}
-
-		void reset(handle_type handle)
-		{
-			if (_handle) lak::unique_com_ptr_traits<T>::dtor(_handle);
-			_handle = handle;
 		}
 
 		handle_type _handle = nullptr;

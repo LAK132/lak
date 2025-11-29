@@ -4,11 +4,10 @@
 #include <lak/imgui/backend.hpp>
 #include <lak/imgui/widgets.hpp>
 
-#include <lak/opengl/texture.hpp>
+#include <lak/system/opengl/texture.hpp>
 
 #include <lak/bit_reader.hpp>
 #include <lak/span_manip.hpp>
-#include <lak/string_literals.hpp>
 
 namespace lak
 {

@@ -55,6 +55,12 @@ inline constexpr lak::const_string<CHAR, N>::operator lak::c_array<CHAR, N>()
 }
 
 template<typename CHAR, size_t N>
+inline lak::const_string<CHAR, N>::operator lak::span<const CHAR, N>() const
+{
+	return lak::span<const CHAR, N>::from_ptr(begin());
+}
+
+template<typename CHAR, size_t N>
 inline lak::const_string<CHAR, N>::operator std::basic_string<CHAR>() const
 {
 	return std::basic_string<CHAR>(begin(), end());

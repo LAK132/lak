@@ -1,3 +1,5 @@
+#define IMGUI_DEFINE_MATH_OPERATORS
+
 #include "lak/system/os.hpp"
 #include "lak/system/windowing/events.hpp"
 #include "lak/system/windowing/window.hpp"
@@ -13,7 +15,6 @@
 #	include "lak/system/opengl/texture.hpp"
 #endif
 
-#define IMGUI_DEFINE_MATH_OPERATORS
 #include "lak/imgui/backend.hpp"
 
 #if defined(LAK_USE_WINAPI)
@@ -187,7 +188,7 @@ ImGui::ImplContext ImGui::ImplCreateContext(lak::graphics_mode mode)
 			result->vd_context = nullptr;
 			break;
 	}
-	result->imgui_context = CreateContext();
+	result->imgui_context = ImGui::CreateContext();
 	return result;
 }
 
@@ -645,7 +646,7 @@ void ImGui::ImplShutdownContext(ImplContext context)
 
 	if (context->imgui_context != nullptr)
 	{
-		DestroyContext(context->imgui_context);
+		ImGui::DestroyContext(context->imgui_context);
 		context->imgui_context = nullptr;
 	}
 
@@ -655,7 +656,7 @@ void ImGui::ImplShutdownContext(ImplContext context)
 
 void ImGui::ImplSetCurrentContext(ImplContext context)
 {
-	SetCurrentContext(context->imgui_context);
+	ImGui::SetCurrentContext(context->imgui_context);
 }
 
 void ImGui::ImplSetTransform(ImplContext context, const glm::mat4x4 &transform)
