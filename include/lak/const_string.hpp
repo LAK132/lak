@@ -20,9 +20,9 @@ namespace lak
 	template<typename CHAR, size_t N>
 	struct const_string
 	{
-		using char_type = CHAR;
-		CHAR _value[N];
-		const_string() = delete;
+		using char_type              = CHAR;
+		CHAR _value[N == 0 ? 1U : N] = {0};
+		const_string()               = delete;
 		inline constexpr const_string(const const_string &other);
 		inline constexpr const_string &operator=(const const_string &other);
 		inline constexpr const_string(const CHAR (&str)[N + 1]);
