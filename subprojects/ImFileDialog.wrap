@@ -1,6 +1,6 @@
 [wrap-git]
 url = https://github.com/LAK132/ImFileDialog
-revision = 6916ab4547b476231e3b73d04f713d46256d3eaa
+revision = 78b3fea89fd0c53b85183b39ea4dae04b770fb51
 depth = 1
 patch_directory = ImFileDialog
 

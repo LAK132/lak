@@ -9,6 +9,12 @@
 
 #include "misc/cpp/imgui_stdlib.h"
 
+#include "TextEditor.h"
+
+#include "imgui_node_editor.h"
+
+#include "imgui_memory_editor.h"
+
 #ifdef LAK_RUN_WINDOWING_TESTS
 BEGIN_TEST(imgui)
 #else
@@ -41,6 +47,8 @@ int imgui_compile_test()
 			ImGui::StyleColorsDark();
 			ImGui::GetStyle().WindowRounding = 0;
 		}
+
+		lak::init_file_modal(w.graphics());
 
 		uint32_t target_framerate = 30U;
 		uint64_t last_counter     = lak::performance_counter();
@@ -95,11 +103,30 @@ int imgui_compile_test()
 						result  = EXIT_SUCCESS;
 						running = false;
 					}
-					ImGui::InputTextMultiline("##Input Test", &str);
+					static lak::path_getter pg;
+					if (ImGui::Button("Open Folder Dialog")) pg.folder();
+					if_let_some (std::filesystem::path path, pg()) DEBUG(path);
+
+					static lak::vert_split_child vs;
+
+					vs.begin("vs");
+
+					static TextEditor te;
+					te.Render("Text");
+
+					vs.split();
+
+					static byte_t me_mem[0x1000] = {};
+					static MemoryEditor me;
+					me.DrawContents(me_mem, sizeof(me_mem));
+
+					vs.end();
+
 					ImGui::End();
 				}
 
 				ImGui::ImplRender(imgui_context);
+				lak::flush_file_modal();
 			}
 
 			w.swap();

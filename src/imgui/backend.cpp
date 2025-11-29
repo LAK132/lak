@@ -364,7 +364,7 @@ void ImplInitSRContext(ImGui::ImplSRContext context, const lak::window &window)
 	int width, height;
 	io.Fonts->GetTexDataAsAlpha8(&pixels, &width, &height);
 	context->atlas_texture.init(width, height, (alpha8_t *)pixels);
-	io.Fonts->TexID = &context->atlas_texture;
+	io.Fonts->TexID = (ImTextureID)(uintptr_t)&context->atlas_texture;
 
 	ImplUpdateDisplaySize(context, window.handle(), window.size());
 
@@ -430,7 +430,7 @@ void main()
 	  .store_mode(GL_UNPACK_ROW_LENGTH, 0)
 	  .build(0, GL_RGBA, size, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
 
-	io.Fonts->TexID = (ImTextureID)(intptr_t)context->font.get();
+	io.Fonts->TexID = (ImTextureID)(uintptr_t)context->font.get();
 }
 #endif
 

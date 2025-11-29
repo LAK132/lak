@@ -1,9 +1,10 @@
 [wrap-git]
 url = https://github.com/thedmd/imgui-node-editor
-revision = v0.9.2
+revision = e78e447900909a051817a760efe13fe83e6e1afc
+#revision = v0.9.4
 depth = 1
 patch_directory = imgui-node-editor
 diff_files = 0001-Snap-to-integer-coordinates.patch
 
 [provide]
-dependency_names = imgui-node-editor, imgui-node-editor-0.9.2
+dependency_names = imgui-node-editor, imgui-node-editor-0.9.4

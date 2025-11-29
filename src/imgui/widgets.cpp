@@ -111,8 +111,8 @@ bool lak::TreeNode(const char *fmt, ...)
 
 lak::optional<ifd::FileDialog> _file_dialog;
 
-lak::array<void *> _textures_to_destroy;
-void (*_texture_destroyer)(void *) = nullptr;
+lak::array<ifd::TextureID> _textures_to_destroy;
+void (*_texture_destroyer)(ifd::TextureID) = nullptr;
 
 void lak::init_file_modal(lak::graphics_mode graphics)
 {
@@ -120,14 +120,14 @@ void lak::init_file_modal(lak::graphics_mode graphics)
 
 	if (!_file_dialog) _file_dialog.emplace(ifd::FileDialog{});
 
-	_file_dialog->DeleteTexture = [](void *tex)
+	_file_dialog->DeleteTexture = [](ifd::TextureID tex)
 	{ _textures_to_destroy.push_back(tex); };
 
 #	ifdef LAK_ENABLE_SOFTRENDER
 	if (graphics == lak::graphics_mode::Software)
 	{
 		_file_dialog->CreateTexture =
-		  [](uint8_t *data, int w, int h, char fmt) -> void *
+		  [](uint8_t *data, int w, int h, char fmt) -> ifd::TextureID
 		{
 			texture_color32_t *result = new texture_color32_t{};
 			result->init(w, h);
@@ -155,10 +155,11 @@ void lak::init_file_modal(lak::graphics_mode graphics)
 					pixels->a = *(data++);
 				}
 			}
-			return (void *)result;
+			return (uintptr_t)result;
 		};
 
-		_texture_destroyer = [](void *tex) { delete (texture_color32_t *)tex; };
+		_texture_destroyer = [](ifd::TextureID tex)
+		{ delete (texture_color32_t *)tex; };
 	}
 	else
 #	endif
@@ -166,7 +167,7 @@ void lak::init_file_modal(lak::graphics_mode graphics)
 	  if (graphics == lak::graphics_mode::OpenGL)
 	{
 		_file_dialog->CreateTexture =
-		  [](uint8_t *data, int w, int h, char fmt) -> void *
+		  [](uint8_t *data, int w, int h, char fmt) -> ifd::TextureID
 		{
 			GLuint tex;
 
@@ -198,12 +199,12 @@ void lak::init_file_modal(lak::graphics_mode graphics)
 			lak::opengl::call_checked(glGenerateMipmap, GL_TEXTURE_2D).UNWRAP();
 			lak::opengl::call_checked(glBindTexture, GL_TEXTURE_2D, 0).UNWRAP();
 
-			return reinterpret_cast<void *>(static_cast<uintptr_t>(tex));
+			return static_cast<ifd::TextureID>(tex);
 		};
 
-		_texture_destroyer = [](void *tex)
+		_texture_destroyer = [](ifd::TextureID tex)
 		{
-			GLuint texID = (GLuint)((uintptr_t)tex);
+			GLuint texID = static_cast<GLuint>(tex);
 			lak::opengl::call_checked(glDeleteTextures, 1, &texID).UNWRAP();
 		};
 	}

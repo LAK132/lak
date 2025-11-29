@@ -3,7 +3,7 @@ project(
 	'cpp',
 	license: 'MIT',
 	license_files: 'LICENSE',
-	version: '0.9.2',
+	version: '0.9.4',
 )
 
 includes = include_directories('.')

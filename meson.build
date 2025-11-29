@@ -204,9 +204,10 @@ endif
 if get_option('lak_enable_imgui')
 	subproject('imgui')
 	imgui_dep = dependency('imgui')
-	imgui_node_editor_dep = dependency('imgui-node-editor-0.9.2')
+	imgui_node_editor_dep = dependency('imgui-node-editor')
 	imgui_color_text_edit_dep = dependency('ImGuiColorTextEdit')
 	imgui_file_dialog_dep = dependency('ImFileDialog')
+	imgui_memory_editor_dep = dependency('imgui_memory_editor')
 	dependencies += imgui_dep
 
 	if get_option('lak_enable_windowing')
