@@ -299,9 +299,6 @@ void ImGui::ImplInit()
 
 	io.BackendRendererName = "imgui_impl_lak";
 
-	io.BackendUsingLegacyKeyArrays     = 0;
-	io.BackendUsingLegacyNavInputArray = 0;
-
 #if defined(LAK_USE_WINAPI)
 	io.BackendFlags |= ImGuiBackendFlags_HasMouseCursors;
 	io.BackendFlags |= ImGuiBackendFlags_HasSetMousePos;

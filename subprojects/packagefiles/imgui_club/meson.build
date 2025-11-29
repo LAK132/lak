@@ -7,7 +7,13 @@ project(
 
 imgui_club_libraries = {
 	'imgui_memory_editor': {
-		'version': '0.50',
+		'version': '0.59',
+	},
+	'imgui_multicontext_compositor': {
+		'version': '0.11',
+	},
+	'imgui_threaded_rendering': {
+		'version': '0.10',
 	},
 }
 

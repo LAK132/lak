@@ -1,6 +1,6 @@
 [wrap-git]
-url = https://github.com/thedmd/imgui-node-editor
-revision = e78e447900909a051817a760efe13fe83e6e1afc
+url = https://github.com/LAK132/imgui-node-editor
+revision = e7b0e279b09f00324126eaca26dbb130da6b5e93
 #revision = v0.9.4
 depth = 1
 patch_directory = imgui-node-editor

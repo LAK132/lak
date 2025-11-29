@@ -1,0 +1,8 @@
+[wrap-git]
+url = https://github.com/ocornut/imgui_club
+revision = 1e7facddfd50ba9ce4b75477b111d611c439076e
+depth = 1
+patch_directory = imgui_club
+
+[provide]
+dependency_names = imgui_memory_editor, imgui_memory_editor-0.59, imgui_multicontext_compositor, imgui_multicontext_compositor-0.11, imgui_threaded_rendering, imgui_threaded_rendering-0.10
