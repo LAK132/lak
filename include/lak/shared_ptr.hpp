@@ -600,9 +600,10 @@ namespace lak
 
 		lak::basic_shared_ptr<T, META> get() const;
 	};
-	template<typename T, typename META>
-	basic_weak_ptr(const lak::basic_shared_ptr<T, META> &)
-	  -> basic_weak_ptr<T, META>;
+	// :TODO: (apple-)clang doesn't like type deduction on aliases.
+	// template<typename T, typename META>
+	// basic_weak_ptr(const lak::basic_shared_ptr<T, META> &)
+	//   -> basic_weak_ptr<T, META>;
 
 	template<typename T>
 	using tiny_shared_ptr = lak::basic_shared_ptr<T, _tiny_shared_ptr_metadata>;

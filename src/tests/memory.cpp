@@ -166,7 +166,7 @@ BEGIN_TEST(memory)
 		ASSERT_EQUAL(strong.use_count(), 1U);
 		ASSERT_EQUAL(*strong, 132);
 
-		auto weak{lak::weak_ptr(strong)};
+		auto weak{lak::weak_ptr<int>(strong)};
 
 		ASSERT_EQUAL(strong.use_count(), 1U);
 
