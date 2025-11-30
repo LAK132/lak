@@ -298,9 +298,10 @@ void ImGui::ImplInit()
 	io.BackendRendererName = "imgui_impl_lak";
 
 #if defined(LAK_USE_WINAPI)
+	io.BackendPlatformName = "imgui_impl_lak_win32";
 	io.BackendFlags |= ImGuiBackendFlags_HasMouseCursors;
 	io.BackendFlags |= ImGuiBackendFlags_HasSetMousePos;
-	io.BackendPlatformName = "imgui_impl_lak_win32";
+	io.Fonts->Flags |= ImFontAtlasFlags_NoMouseCursors;
 #elif defined(LAK_USE_XLIB)
 #	error "NYI"
 	io.BackendPlatformName = "imgui_impl_lak_xlib";
@@ -308,9 +309,10 @@ void ImGui::ImplInit()
 #	error "NYI"
 	io.BackendPlatformName = "imgui_impl_lak_xcb";
 #elif defined(LAK_USE_SDL)
+	io.BackendPlatformName = "imgui_impl_lak_sdl2";
 	io.BackendFlags |= ImGuiBackendFlags_HasMouseCursors;
 	io.BackendFlags |= ImGuiBackendFlags_HasSetMousePos;
-	io.BackendPlatformName = "imgui_impl_lak_sdl2";
+	io.Fonts->Flags |= ImFontAtlasFlags_NoMouseCursors;
 #else
 #	error "No implementation specified"
 #endif
