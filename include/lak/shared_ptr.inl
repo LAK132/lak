@@ -190,7 +190,7 @@ META *lak::basic_weak_ptr<T, META>::release_copy() const
 
 template<typename T, typename META>
 lak::basic_weak_ptr<T, META>::basic_weak_ptr(const basic_weak_ptr &other)
-: basic_shared_ptr(other.release_copy())
+: basic_weak_ptr(other.release_copy())
 {
 }
 
