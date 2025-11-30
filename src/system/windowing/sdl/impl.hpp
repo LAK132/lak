@@ -14,6 +14,10 @@
 #	undef None
 #endif
 
+#ifdef Status
+#	undef Status
+#endif
+
 namespace lak
 {
 	struct platform_instance

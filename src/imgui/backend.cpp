@@ -22,17 +22,12 @@
 
 #if defined(LAK_USE_WINAPI)
 #	include "../system/windowing/win32/impl.hpp"
-#	include "lak/system/win32/windows.hpp"
 #elif defined(LAK_USE_XLIB)
-#	error "NYI"
+#	include "../system/windowing/xlib/impl.hpp"
 #elif defined(LAK_USE_XCB)
-#	error "NYI"
+#	include "../system/windowing/xcb/impl.hpp"
 #elif defined(LAK_USE_SDL)
 #	include "../system/windowing/sdl/impl.hpp"
-#	include <SDL.h>
-#	ifdef LAK_OS_WINDOWS
-#		include <SDL_syswm.h>
-#	endif
 #else
 #	error "No implementation specified"
 #endif
