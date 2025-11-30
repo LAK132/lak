@@ -491,30 +491,6 @@ bool handle_size_move(lak::window_handle &handle)
 	return false;
 }
 
-bool is_size_move_event(const lak::window_handle *handle, const MSG &msg)
-{
-	if (!handle) return false;
-
-	switch (msg.message)
-	{
-		case WM_SYSCOMMAND:
-			return true;
-
-		case WM_LBUTTONUP:
-		case WM_NCLBUTTONUP:
-		case WM_MOUSEMOVE:
-		case WM_MOUSELEAVE:
-		case WM_MOUSEHOVER:
-		case WM_NCMOUSEMOVE:
-		case WM_NCMOUSELEAVE:
-		case WM_NCMOUSEHOVER:
-			return handle->_moving || handle->_resizing;
-
-		default:
-			return false;
-	}
-}
-
 // Returns true if the event has handled by this function.
 bool handle_size_move_event(lak::window_handle *handle, const MSG &msg)
 {
@@ -656,6 +632,9 @@ bool handle_next_event(lak::event *event, const bool pop_messages)
 		::DispatchMessageW(&previous_event);
 		lak::bzero(&previous_event);
 	}
+
+	// Some messages are hacked into our own message queue via the WndProc in
+	// platform.cpp, those messages are marked as buffered.
 
 	const UINT filter_min = 0;
 	const UINT filter_max = 0;

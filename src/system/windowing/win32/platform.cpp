@@ -181,6 +181,26 @@ bool paint_image(HWND hWnd, lak::image_view<COLOUR> image)
 	              ) != 0;
 }
 
+void set_window_hovered(const lak::window_handle &window,
+                        HWND hWnd,
+                        WPARAM wParam,
+                        LPARAM lParam)
+{
+	window._hovered = true;
+	lak::_platform_instance->platform_events.push_back(
+	  MSG{hWnd, WM_MOUSEHOVER, wParam, lParam});
+
+	TRACKMOUSEEVENT tme;
+	tme.cbSize      = sizeof(tme);
+	tme.dwFlags     = TME_LEAVE;
+	tme.hwndTrack   = window._platform_handle;
+	tme.dwHoverTime = 0;
+	if (::TrackMouseEvent(&tme) == 0)
+	{
+		ERROR(lak::winapi::last_win32_error());
+	}
+}
+
 LRESULT CALLBACK WndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 {
 	const lak::window_handle *window =
@@ -221,14 +241,37 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 			case WM_WINDOWPOSCHANGED:
 				lak::_platform_instance->platform_events.push_back(
 				  MSG{hWnd, Msg, wParam, lParam});
-				return 0;
+				return false;
+
+			case WM_MOUSELEAVE:
+				window->_hovered = false;
+				break;
+
+			case WM_MOUSEHOVER:
+				set_window_hovered(*window, hWnd, wParam, lParam);
+				return false;
+
+			// Handle generating our own WM_MOUSEHOVER events because
+			// ::TrackMouseEvent is extremely inconsistent about generating them.
+			case WM_MOUSEMOVE:
+			{
+				if (window->_hovered) break;
+
+				RECT rc;
+				if (!::GetClientRect(window->_platform_handle, &rc)) break;
+				if (::PtInRect(&rc,
+				               POINT{.x = GET_X_LPARAM(lParam),
+				                     .y = GET_Y_LPARAM(lParam)}) != 0U)
+					set_window_hovered(*window, hWnd, wParam, lParam);
+			}
+			break;
 
 			case WM_SYSCOMMAND:
 				if (WPARAM w = wParam & 0xFFF0; w == SC_MOVE || w == SC_SIZE)
 				{
 					lak::_platform_instance->platform_events.push_back(
 					  MSG{hWnd, Msg, wParam, lParam});
-					return 0;
+					return false;
 				}
 				break;
 
@@ -246,7 +289,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 						  window->_platform_handle,
 						  lak::image_view(window->software_context().platform_handle)));
 					}
-					return 0;
+					return false;
 				}
 #endif
 				break;

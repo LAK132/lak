@@ -47,6 +47,7 @@ namespace lak
 
 		mutable bool _moving   = false;
 		mutable bool _resizing = false;
+		mutable bool _hovered  = false;
 		mutable POINT _cursor_start;
 		mutable RECT _window_start;
 		enum

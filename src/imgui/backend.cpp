@@ -151,6 +151,7 @@ namespace ImGui
 	{
 		ImGuiContext *imgui_context;
 		lak::cursor mouse_cursors[ImGuiMouseCursor_COUNT];
+		bool allow_set_cursor = false;
 		lak::graphics_mode mode;
 		glm::mat4x4 transform = glm::mat4x4(1.0f);
 		union
@@ -574,7 +575,7 @@ void ImGui::ImplShutdownContext(ImplContext context)
 			break;
 #endif
 		default:
-			ASSERTF(false, "Invalid Context Mode");
+			FATAL("Invalid Context Mode");
 			break;
 	}
 
@@ -616,7 +617,8 @@ void ImGui::ImplNewFrame(ImplContext context,
 	}
 
 	// UpdateMouseCursor()
-	if ((io.ConfigFlags & ImGuiConfigFlags_NoMouseCursorChange) == 0)
+	if (context->allow_set_cursor &&
+	    (io.ConfigFlags & ImGuiConfigFlags_NoMouseCursorChange) == 0)
 	{
 		ImGuiMouseCursor cursor = ImGui::GetMouseCursor();
 
@@ -692,8 +694,16 @@ bool ImGui::ImplProcessEvent(ImplContext context, const lak::event &event)
 			return true;
 		}
 
+		case lak::event_type::window_hover:
+		{
+			context->allow_set_cursor = true;
+			return true;
+		}
+		break;
+
 		case lak::event_type::window_leave:
 		{
+			context->allow_set_cursor = false;
 			if (io.WantSetMousePos) return false;
 			io.AddMousePosEvent(-FLT_MAX, -FLT_MAX);
 			return true;
