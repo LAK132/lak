@@ -124,28 +124,26 @@ lak::result<lak::strong_ref<LAK_BASIC_PROGRAM(window_instance<WINDOW_CLASS>)>,
             lak::u8string>
 LAK_BASIC_PROGRAM(create_window)(const lak::opengl_settings &settings)
 {
-	RES_TRY_ASSIGN(
-	  auto wnd =,
-	  lak::window::make(settings).and_then(
-	    [&](auto &&window) -> lak::result<lak::window, lak::u8string>
-	    {
-		    if (window.graphics() != lak::graphics_mode::OpenGL)
-			    return lak::err_t<lak::u8string>{lak::streamify(
-			      "Expected OpenGL graphics, got ", window.graphics())};
+	auto mapper = [&](auto &&window) -> lak::result<lak::window, lak::u8string>
+	{
+		if (window.graphics() != lak::graphics_mode::OpenGL)
+			return lak::err_t<lak::u8string>{
+			  lak::streamify("Expected OpenGL graphics, got ", window.graphics())};
 
-		    glViewport(0, 0, window.drawable_size().x, window.drawable_size().y);
-		    glEnable(GL_DEPTH_TEST);
+		glViewport(0, 0, window.drawable_size().x, window.drawable_size().y);
+		glEnable(GL_DEPTH_TEST);
 
 #	ifndef NDEBUG
 #		ifndef LAK_OS_APPLE
-		    glEnable(GL_DEBUG_OUTPUT);
-		    glDebugMessageCallback(
-		      &LAK_BASIC_PROGRAM(opengl_debug_message_callback), 0);
+		glEnable(GL_DEBUG_OUTPUT);
+		glDebugMessageCallback(&LAK_BASIC_PROGRAM(opengl_debug_message_callback),
+		                       0);
 #		endif
 #	endif
 
-		    return lak::move_ok(window);
-	    }));
+		return lak::move_ok(window);
+	};
+	RES_TRY_ASSIGN(auto wnd =, lak::window::make(settings).and_then(mapper));
 	return LAK_BASIC_PROGRAM(create_window<WINDOW_CLASS>)(lak::move(wnd));
 }
 #endif
@@ -180,6 +178,7 @@ LAK_BASIC_PROGRAM(create_window)()
 	         .or_else(
 	           [&](const lak::u8string &err)
 	           {
+		           WARNING(err);
 		           WARNING("Attempting to create a Software window instead");
 		           return LAK_BASIC_PROGRAM(create_window<WINDOW_CLASS>)(
 		             LAK_BASIC_PROGRAM(window_software_settings));

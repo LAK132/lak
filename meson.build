@@ -18,6 +18,7 @@ if cxx.get_id() == 'msvc'
 		'-DNOMINMAX',
 		'-wd4315',
 		'-wd4366',
+		'-wd4250',
 		'-Wv:18',
 	]
 

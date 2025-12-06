@@ -143,8 +143,6 @@ requires((lak::is_copy_constructible_v<T> && ...))
 	lak::visit_switch(_index,
 	                  [&, this]<size_t I>(lak::size_type<I>)
 	                  {
-		                  static_assert(
-		                    lak::is_copy_constructible_v<value_type<I>>);
 		                  if constexpr (_is_ref<I>)
 			                  _value.template emplace<I>(other.template get<I>());
 		                  else
@@ -156,17 +154,15 @@ template<typename... T>
 lak::variant<T...>::variant(variant &&other)
 : _index(other._index), _value(lak::uninitialised_union_flag)
 {
-	lak::visit_switch(
-	  _index,
-	  [&, this]<size_t I>(lak::size_type<I>)
-	  {
-		  static_assert(lak::is_move_constructible_v<value_type<I>>);
-		  if constexpr (_is_ref<I>)
-			  _value.template emplace<I>(other.template get<I>());
-		  else
-			  _value.template emplace<I>(
-			    lak::forward<value_type<I>>(*other.template get<I>()));
-	  });
+	lak::visit_switch(_index,
+	                  [&, this]<size_t I>(lak::size_type<I>)
+	                  {
+		                  if constexpr (_is_ref<I>)
+			                  _value.template emplace<I>(other.template get<I>());
+		                  else
+			                  _value.template emplace<I>(lak::forward<value_type<I>>(
+			                    *other.template get<I>()));
+	                  });
 }
 
 template<typename... T>

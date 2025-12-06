@@ -1067,7 +1067,7 @@ void ImplGLRender(ImGui::ImplContext context, ImDrawData *draw_data)
 			texture->SetStatus(ImTextureStatus_OK);
 		}
 		else if (texture->Status == ImTextureStatus_WantDestroy &&
-		         texture->UnusedFrames > 0U)
+		         texture->UnusedFrames > 0)
 		{
 			delete (lak::opengl::texture *)(uintptr_t)texture->GetTexID();
 			texture->SetStatus(ImTextureStatus_Destroyed);
