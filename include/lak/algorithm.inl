@@ -284,6 +284,73 @@ void lak::reverse(ITER begin, ITER end)
 	}
 }
 
+/* --- erase_if --- */
+
+template<std::forward_iterator ITER>
+ITER lak::erase_if(ITER begin, ITER end, auto predicate)
+{
+	if (begin == end) return end;
+
+	// XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+	// ^ <- begin                            ^ <- end
+	//
+	// KKKKEEEEEEKKKKKKKKEEEEKKKKEEEEEKKKEEEE
+	//     ^ <- first erase
+	//
+	// KKKKEEEEEEKKKKKKKKEEEEKKKKEEEEEKKKEEEE
+	//     ^     ^ <- swap
+	// KKKKKEEEEEEKKKKKKKEEEEKKKKEEEEEKKKEEEE
+	//      ^     ^ <- swap
+	// KKKKKKEEEEEEKKKKKKEEEEKKKKEEEEEKKKEEEE
+	//       ^     ^ <- swap
+	// ...
+	// KKKKKKKKKKKKEEEEEEEEEEKKKKEEEEEKKKEEEE
+	//             ^         ^ <- swap
+	// ...
+	//
+	// KKKKKKKKKKKKKKKKKKKEEEEEEEEEEEEEEEEEEE
+	//                    ^ <- result
+
+	ITER first_erase = begin;
+	while (first_erase != end && !predicate(*first_erase)) ++first_erase;
+
+	ITER iter = first_erase;
+	if (iter != end) ++iter;
+
+	for (; iter != end; ++iter)
+	{
+		if (!predicate(*iter))
+		{
+			lak::swap(*iter, *first_erase);
+			++first_erase;
+		}
+	}
+
+	return first_erase;
+}
+
+/* --- erase_if_contains --- */
+
+template<std::forward_iterator ITER1,
+         std::forward_iterator ITER2,
+         typename CMP>
+ITER1 lak::erase_if_contains(ITER1 begin,
+                             ITER1 end,
+                             ITER2 erase_begin,
+                             ITER2 erase_end,
+                             CMP compare_i1_i2)
+{
+	return lak::erase_if(begin,
+	                     end,
+	                     [&](const auto &v)
+	                     {
+		                     return lak::any_of(erase_begin,
+		                                        erase_end,
+		                                        [&](const auto &e)
+		                                        { return compare_i1_i2(v, e); });
+	                     });
+}
+
 /* --- partition --- */
 
 template<std::forward_iterator ITER>

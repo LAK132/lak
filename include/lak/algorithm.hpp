@@ -124,6 +124,24 @@ namespace lak
 	template<std::bidirectional_iterator ITER>
 	void reverse(ITER begin, ITER end);
 
+	/* --- erase_if --- */
+
+	// stable in the range of [begin, result), possibly unstable in the range of
+	// [result, end)
+	template<std::forward_iterator ITER>
+	ITER erase_if(ITER begin, ITER end, auto predicate);
+
+	/* --- erase_if_contains --- */
+
+	template<std::forward_iterator ITER1,
+	         std::forward_iterator ITER2,
+	         typename CMP = lak::equal_to<>>
+	ITER1 erase_if_contains(ITER1 begin,
+	                        ITER1 end,
+	                        ITER2 erase_begin,
+	                        ITER2 erase_end,
+	                        CMP compare_i1_i2 = {});
+
 	/* --- partition --- */
 
 	template<std::forward_iterator ITER>
