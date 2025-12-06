@@ -12,27 +12,33 @@
 uint32_t LAK_BASIC_PROGRAM(window_target_framerate) = 60;
 bool LAK_BASIC_PROGRAM(window_force_software)       = false;
 lak::vec2l_t LAK_BASIC_PROGRAM(window_start_size)   = {1200, 700};
-lak::vec4f_t LAK_BASIC_PROGRAM(window_clear_colour) = {
-  0.0f, 0.3125f, 0.312f, 1.0f};
 lak::opengl_settings LAK_BASIC_PROGRAM(window_opengl_settings);
 lak::software_settings LAK_BASIC_PROGRAM(window_software_settings);
 
 bool LAK_BASIC_PROGRAM(platform_initialised) = false;
+lak::array<LAK_BASIC_PROGRAM(window_instance_base) *> LAK_BASIC_PROGRAM(
+  window_destroy_queue);
 
-lak::bank<LAK_BASIC_PROGRAM(window_instance)> LAK_BASIC_PROGRAM(
-  window_instances_bank);
+lak::array<lak::strong_ref<LAK_BASIC_PROGRAM(window_instance_base)>>
+  LAK_BASIC_PROGRAM(window_instances_bank);
 
-const lak::bank<LAK_BASIC_PROGRAM(window_instance)> &LAK_BASIC_PROGRAM(
-  window_instances)()
+lak::span<const lak::strong_ref<LAK_BASIC_PROGRAM(window_instance_base)>>
+LAK_BASIC_PROGRAM(window_instances)()
 {
 	return LAK_BASIC_PROGRAM(window_instances_bank);
 }
 
-LAK_BASIC_PROGRAM(window_instance) *
-  LAK_BASIC_PROGRAM(find_window_instance)(const lak::window_handle *window)
+lak::strong_ptr<LAK_BASIC_PROGRAM(window_instance_base)> LAK_BASIC_PROGRAM(
+  find_window_instance)(const lak::window_handle *window)
 {
-	return LAK_BASIC_PROGRAM(window_instances_bank)
-	  .find_if([&](auto &inst) { return inst.window.handle() == window; });
+	auto p = lak::find_if(LAK_BASIC_PROGRAM(window_instances_bank).begin(),
+	                      LAK_BASIC_PROGRAM(window_instances_bank).end(),
+	                      [&](auto &inst)
+	                      { return inst->window().handle() == window; });
+	if (p != LAK_BASIC_PROGRAM(window_instances_bank).end())
+		return *p;
+	else
+		return {};
 }
 
 #ifdef LAK_ENABLE_OPENGL
@@ -46,9 +52,13 @@ void APIENTRY
                                                    const void *userParam);
 #endif
 
-lak::result<lak::window &, lak::u8string> LAK_BASIC_PROGRAM(create_window)()
+template<typename WINDOW_CLASS>
+lak::result<lak::strong_ref<LAK_BASIC_PROGRAM(window_instance<WINDOW_CLASS>)>,
+            lak::u8string>
+LAK_BASIC_PROGRAM(create_window)()
 {
 	ASSERT(LAK_BASIC_PROGRAM(platform_initialised));
+
 #ifdef LAK_ENABLE_SOFTRENDER
 	auto make_software = [&]() -> lak::result<lak::window, lak::u8string>
 	{
@@ -76,10 +86,6 @@ lak::result<lak::window &, lak::u8string> LAK_BASIC_PROGRAM(create_window)()
 				      "Expected OpenGL graphics, got ", window.graphics())};
 
 			    glViewport(0, 0, window.drawable_size().x, window.drawable_size().y);
-			    glClearColor(LAK_BASIC_PROGRAM(window_clear_colour).r,
-			                 LAK_BASIC_PROGRAM(window_clear_colour).g,
-			                 LAK_BASIC_PROGRAM(window_clear_colour).b,
-			                 LAK_BASIC_PROGRAM(window_clear_colour).a);
 			    glEnable(GL_DEPTH_TEST);
 
 #	ifndef NDEBUG
@@ -119,25 +125,25 @@ lak::result<lak::window &, lak::u8string> LAK_BASIC_PROGRAM(create_window)()
 	         }))
 #endif
 	    .map(
-	      [](lak::window &&wnd) -> lak::window &
+	      [](lak::window &&wnd)
+	        -> lak::strong_ref<LAK_BASIC_PROGRAM(window_instance<WINDOW_CLASS>)>
 	      {
-		      auto *result = LAK_BASIC_PROGRAM(window_instances_bank)
-		                       .create({
-		                         .window = lak::move(wnd),
-		                       });
-		      ASSERT(!!result);
+		      auto result = lak::strong_ref<LAK_BASIC_PROGRAM(
+		        window_instance<WINDOW_CLASS>)>::make(lak::move(wnd))
+		                      .UNWRAP();
+		      LAK_BASIC_PROGRAM(window_instances_bank).emplace_back(result);
 
 #ifdef LAK_BASIC_PROGRAM_IMGUI_IMPL
 		      auto current_context = ImGui::GetCurrentContext();
 		      DEFER(ImGui::SetCurrentContext(current_context));
 
 		      result->imgui_context =
-		        ImGui::ImplCreateContext(result->window.graphics());
+		        ImGui::ImplCreateContext(result->window().graphics());
 		      ImGui::ImplSetCurrentContext(result->imgui_context);
 		      ImGui::ImplInit();
-		      ImGui::ImplInitContext(result->imgui_context, result->window);
+		      ImGui::ImplInitContext(result->imgui_context, result->window());
 
-		      if (result->window.graphics() == lak::graphics_mode::Software)
+		      if (result->window().graphics() == lak::graphics_mode::Software)
 		      {
 			      ImGuiStyle &style      = ImGui::GetStyle();
 			      style.AntiAliasedLines = false;
@@ -149,57 +155,51 @@ lak::result<lak::window &, lak::u8string> LAK_BASIC_PROGRAM(create_window)()
 		      ImGui::StyleColorsDark();
 		      ImGui::GetStyle().WindowRounding = 0;
 
-		      lak::init_file_modal(result->window.graphics());
+		      lak::init_file_modal(result->window().graphics());
 #endif
 
-		      result->window.set_title(L"" APP_NAME);
-		      result->window.set_size(LAK_BASIC_PROGRAM(window_start_size));
+		      result->window().set_title(L"" APP_NAME);
+		      result->window().set_size(LAK_BASIC_PROGRAM(window_start_size));
 
-		      LAK_BASIC_PROGRAM(window_init)(result->window);
-		      return result->window;
+		      result->init();
+		      return result;
 	      });
 }
 
-void LAK_BASIC_PROGRAM(destroy_window)(lak::window &window)
+void LAK_BASIC_PROGRAM(window_instance_base)::destroy()
 {
 	ASSERT(LAK_BASIC_PROGRAM(platform_initialised));
-	if (auto *inst = LAK_BASIC_PROGRAM(find_window_instance)(window.handle());
-	    inst)
-	{
-		inst->window.set_active();
-		LAK_BASIC_PROGRAM(window_quit)(inst->window);
+
+	LAK_BASIC_PROGRAM(window_destroy_queue).emplace_back(this);
+}
+
+LAK_BASIC_PROGRAM(window_instance_base)::~LAK_BASIC_PROGRAM(
+  window_instance_base)()
+{
+	ASSERT(LAK_BASIC_PROGRAM(platform_initialised));
+
+	window().set_active();
+
 #ifdef LAK_BASIC_PROGRAM_IMGUI_IMPL
-		{
-			auto ctx = ImGui::GetCurrentContext();
-			DEFER(ImGui::SetCurrentContext(ctx));
-			ImGui::ImplSetCurrentContext(inst->imgui_context);
-			ImGui::ImplShutdownContext(inst->imgui_context);
-		}
-#endif
-		// #ifdef LAK_ENABLE_OPENGL
-		// #	ifndef NDEBUG
-		// 		if (inst->window.graphics() == lak::graphics_mode::OpenGL)
-		// 		{
-		// 			glDisable(GL_DEBUG_OUTPUT);
-		// 		}
-		// #	endif
-		// #endif
-
-		LAK_BASIC_PROGRAM(window_instances_bank).destroy(inst);
-		return;
+	{
+		auto ctx = ImGui::GetCurrentContext();
+		DEFER(ImGui::SetCurrentContext(ctx));
+		ImGui::ImplSetCurrentContext(imgui_context);
+		ImGui::ImplShutdownContext(imgui_context);
 	}
-
-	ERROR("Invalid window");
+#endif
+	// #ifdef LAK_ENABLE_OPENGL
+	// #	ifndef NDEBUG
+	// 		if (window.graphics() == lak::graphics_mode::OpenGL)
+	// 		{
+	// 			glDisable(GL_DEBUG_OUTPUT);
+	// 		}
+	// #	endif
+	// #endif
 }
 
 #ifdef LAK_BASIC_PROGRAM_IMGUI_IMPL
 ImGui::ImplContext LAK_BASIC_PROGRAM(imgui_context) = nullptr;
-#endif
-#ifdef LAK_BASIC_PROGRAM_IMGUI_WINDOW_IMPL
-ImGuiWindowFlags LAK_BASIC_PROGRAM(imgui_main_window_flags) =
-  ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoScrollbar
-  | ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoSavedSettings
-  | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove;
 #endif
 
 #ifdef LAK_ENABLE_OPENGL
@@ -336,9 +336,9 @@ int LAK_BASIC_PROGRAM_MAIN(int argc, char **argv)
 
 	/* --- Window initialisation --- */
 
-	if_let_some (auto v,
-	             LAK_BASIC_PROGRAM(program_preinit)(
-	               lak::span<char *>(argv, size_t(argc))))
+	if_let_err (auto v,
+	            LAK_BASIC_PROGRAM(program_preinit)(
+	              lak::span<char *>(argv, size_t(argc))))
 		return v;
 
 	lak::platform_init();
@@ -346,7 +346,7 @@ int LAK_BASIC_PROGRAM_MAIN(int argc, char **argv)
 	DEFER(LAK_BASIC_PROGRAM(platform_initialised) = false);
 	DEFER(lak::platform_quit());
 
-	if_let_some (auto v, LAK_BASIC_PROGRAM(program_init)()) return v;
+	if_let_err (auto v, LAK_BASIC_PROGRAM(program_init)()) return v;
 
 	uint64_t last_counter = lak::performance_counter();
 	uint64_t counter_delta =
@@ -358,81 +358,91 @@ int LAK_BASIC_PROGRAM_MAIN(int argc, char **argv)
 		{
 			if (event.handle)
 			{
-				auto *inst = LAK_BASIC_PROGRAM(find_window_instance)(event.handle);
+				auto inst = LAK_BASIC_PROGRAM(find_window_instance)(event.handle);
 				// ASSERT(!!inst);
 				if (!inst) continue;
 #ifdef LAK_BASIC_PROGRAM_IMGUI_IMPL
 				ImGui::ImplSetCurrentContext(inst->imgui_context);
 				ImGui::ImplProcessEvent(inst->imgui_context, event);
 #endif
-				LAK_BASIC_PROGRAM(window_handle_event)(&inst->window, event);
+				inst->handle_event(event);
 			}
 			else
-				LAK_BASIC_PROGRAM(window_handle_event)(nullptr, event);
+				LAK_BASIC_PROGRAM(program_handle_event)(event);
 		}
 
-		LAK_BASIC_PROGRAM(window_instances_bank)
-		  .for_each(
-		    [&](auto &inst)
-		    {
-			    auto &window = inst.window;
+		for (const auto &_inst : LAK_BASIC_PROGRAM(window_instances_bank))
+		{
+			auto &inst = *_inst;
 
-			    window.set_active();
+			auto &window = inst.window();
+
+			window.set_active();
 
 #ifdef LAK_ENABLE_OPENGL
-			    if (window.graphics() == lak::graphics_mode::OpenGL)
-			    {
-				    glViewport(
-				      0, 0, window.drawable_size().x, window.drawable_size().y);
-				    glScissor(
-				      0, 0, window.drawable_size().x, window.drawable_size().y);
-				    glClearColor(LAK_BASIC_PROGRAM(window_clear_colour).r,
-				                 LAK_BASIC_PROGRAM(window_clear_colour).g,
-				                 LAK_BASIC_PROGRAM(window_clear_colour).b,
-				                 LAK_BASIC_PROGRAM(window_clear_colour).a);
-				    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT |
-				            GL_STENCIL_BUFFER_BIT);
-			    }
+			if (window.graphics() == lak::graphics_mode::OpenGL)
+			{
+				glViewport(0, 0, window.drawable_size().x, window.drawable_size().y);
+				glScissor(0, 0, window.drawable_size().x, window.drawable_size().y);
+				glClearColor(inst.clear_colour.r,
+				             inst.clear_colour.g,
+				             inst.clear_colour.b,
+				             inst.clear_colour.a);
+				glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT |
+				        GL_STENCIL_BUFFER_BIT);
+			}
 #endif
 
 #ifdef LAK_BASIC_PROGRAM_IMGUI_IMPL
-			    {
-				    const float frame_time =
-				      (float)counter_delta / lak::performance_frequency();
-				    ImGui::ImplSetCurrentContext(inst.imgui_context);
-				    ImGui::ImplNewFrame(inst.imgui_context, window, frame_time);
+			{
+				const float frame_time =
+				  (float)counter_delta / lak::performance_frequency();
+				ImGui::ImplSetCurrentContext(inst.imgui_context);
+				ImGui::ImplNewFrame(inst.imgui_context, window, frame_time);
 
 #	ifdef LAK_BASIC_PROGRAM_IMGUI_WINDOW_IMPL
-				    bool mainOpen = true;
+				bool mainOpen = true;
 
-				    ImGuiStyle &style = ImGui::GetStyle();
-				    ImGuiIO &io       = ImGui::GetIO();
+				ImGuiStyle &style = ImGui::GetStyle();
+				ImGuiIO &io       = ImGui::GetIO();
 
-				    ImGui::SetNextWindowPos(ImVec2(0, 0));
-				    ImGui::SetNextWindowSize(io.DisplaySize);
-				    ImVec2 old_window_padding = style.WindowPadding;
-				    style.WindowPadding       = ImVec2(0.0f, 0.0f);
-				    if (ImGui::Begin(APP_NAME,
-				                     &mainOpen,
-				                     LAK_BASIC_PROGRAM(imgui_main_window_flags)))
-				    {
-					    style.WindowPadding = old_window_padding;
-					    LAK_BASIC_PROGRAM(window_loop)(window, counter_delta);
-				    }
-				    ImGui::End();
+				ImGui::SetNextWindowPos(ImVec2(0, 0));
+				ImGui::SetNextWindowSize(io.DisplaySize);
+				ImVec2 old_window_padding = style.WindowPadding;
+				style.WindowPadding       = ImVec2(0.0f, 0.0f);
+				if (ImGui::Begin(APP_NAME, &mainOpen, inst.imgui_window_flags))
+				{
+					style.WindowPadding = old_window_padding;
+					inst.loop(counter_delta);
+				}
+				ImGui::End();
 #	else
-				    LAK_BASIC_PROGRAM(window_loop)(window, counter_delta);
+				inst.loop(counter_delta);
 #	endif
 
-				    ImGui::ImplRender(inst.imgui_context);
-				    lak::flush_file_modal();
-			    }
+				ImGui::ImplRender(inst.imgui_context);
+				lak::flush_file_modal();
+			}
 #else
-			    LAK_BASIC_PROGRAM(window_loop)(window, counter_delta);
+			inst.loop(counter_delta);
 #endif
 
-			    window.swap();
-		    });
+			window.swap();
+		}
+
+		if (!LAK_BASIC_PROGRAM(window_destroy_queue).empty())
+		{
+			LAK_BASIC_PROGRAM(window_instances_bank)
+			  .erase(lak::erase_if_contains(
+			           LAK_BASIC_PROGRAM(window_instances_bank).begin(),
+			           LAK_BASIC_PROGRAM(window_instances_bank).end(),
+			           LAK_BASIC_PROGRAM(window_destroy_queue).begin(),
+			           LAK_BASIC_PROGRAM(window_destroy_queue).end(),
+			           [](const auto &p1, const auto *p2)
+			           { return lak::equal_to<>{}(p1.get(), p2); }),
+			         LAK_BASIC_PROGRAM(window_instances_bank).end());
+			LAK_BASIC_PROGRAM(window_destroy_queue).clear();
+		}
 
 		const auto counter = lak::yield_frame(
 		  last_counter, LAK_BASIC_PROGRAM(window_target_framerate));
@@ -440,24 +450,7 @@ int LAK_BASIC_PROGRAM_MAIN(int argc, char **argv)
 		last_counter  = counter;
 	}
 
-	LAK_BASIC_PROGRAM(window_instances_bank)
-	  .for_each(
-	    [&](auto &inst)
-	    {
-		    LAK_BASIC_PROGRAM(destroy_window)(inst.window);
-#ifdef LAK_BASIC_PROGRAM_IMGUI_IMPL
-		    ImGui::ImplSetCurrentContext(inst.imgui_context);
-		    ImGui::ImplShutdownContext(inst.imgui_context);
-#endif
-		    // #ifdef LAK_ENABLE_OPENGL
-		    // #	ifndef NDEBUG
-		    // 		    if (inst->window.graphics() == lak::graphics_mode::OpenGL)
-		    // 		    {
-		    // 			    glDisable(GL_DEBUG_OUTPUT);
-		    // 		    }
-		    // #	endif
-		    // #endif
-	    });
+	LAK_BASIC_PROGRAM(window_instances_bank).clear();
 
 	return LAK_BASIC_PROGRAM(program_quit)();
 }
