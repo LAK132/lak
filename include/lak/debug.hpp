@@ -137,11 +137,8 @@
 #	define FUNCTION_CHECKPOINT(...)                                            \
 		SCOPED_CHECKPOINT(__func__, "(" __VA_OPT__(, ) __VA_ARGS__, ")")
 #	define MEMBER_FUNCTION_CHECKPOINT(...)                                     \
-		SCOPED_CHECKPOINT(typeid(*this).name(),                                   \
-		                  "::",                                                   \
-		                  __func__,                                               \
-		                  "(" __VA_OPT__(, ) __VA_ARGS__,                         \
-		                  ")")
+		SCOPED_CHECKPOINT(                                                        \
+		  TYPE_NAME(*this), "::", __func__, "(" __VA_OPT__(, ) __VA_ARGS__, ")")
 #endif
 
 #undef ABORT

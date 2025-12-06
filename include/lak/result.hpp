@@ -799,7 +799,7 @@ namespace lak
 					}
 					else
 					{
-						ABORTF(error_str, ": ", typeid(err).name());
+						ABORTF(error_str, ": ", TYPE_NAME(err));
 					}
 				};
 
@@ -828,7 +828,7 @@ namespace lak
 					}
 					else
 					{
-						ABORTF(error_str, ": ", typeid(err).name());
+						ABORTF(error_str, ": ", TYPE_NAME(err));
 					}
 				};
 
@@ -857,7 +857,7 @@ namespace lak
 					}
 					else
 					{
-						ABORTF(error_str, ": ", typeid(err).name());
+						ABORTF(error_str, ": ", TYPE_NAME(err));
 					}
 				};
 

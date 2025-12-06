@@ -118,7 +118,9 @@ static inline void lak_debug_break()
 #	define packed_struct     struct [[gnu::packed]]
 #	define DLL_EXPORT        [[gnu::dllexport]]
 #	define LAK_UNREACHABLE() __builtin_unreachable()
+#	define TYPE_NAME(X)      [&]() -> lak::astring { return {typeid(X).name()}; }()
 #elif defined(LAK_COMPILER_CLANG) || defined(LAK_COMPILER_GNUC)
+#	include <cxxabi.h>
 #	define force_inline  inline __attribute__((always_inline))
 #	define packed_struct struct [[gnu::packed]]
 #	define DLL_EXPORT    [[gnu::dllexport]]
@@ -138,6 +140,16 @@ static inline void lak_debug_break()
 #		define LAK_ARCH_ARM64
 #	endif
 #	define LAK_UNREACHABLE() __builtin_unreachable()
+#	define TYPE_NAME(X)                                                        \
+		[&]() -> lak::astring                                                     \
+		{                                                                         \
+			const char *mn = typeid(X).name();                                      \
+			int st;                                                                 \
+			char *rn = abi::__cxa_demangle(mn, NULL, NULL, &st);                    \
+			lak::astring result(st == 0 ? rn : mn);                                 \
+			free(rn);                                                               \
+			return result;                                                          \
+		}()
 #elif defined(LAK_COMPILER_MSVC)
 #	include <intrin.h>
 #	define force_inline  inline __forceinline
@@ -168,6 +180,7 @@ static inline void lak_debug_break()
 #		define LAK_ARCH_AVX512
 #	endif
 #	define LAK_UNREACHABLE() __assume(false)
+#	define TYPE_NAME(X)      [&]() -> lak::astring { return {typeid(X).name()}; }()
 #else
 #	error "Compiler not supported"
 #endif
