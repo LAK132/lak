@@ -30,7 +30,7 @@ void shared_ptr_test_type_erasure()
 			ASSERT_EQUAL(ptr3.use_count(), 2U);
 			ASSERT(lak::equal_to<>{}(ptr.get(), ptr3.get()));
 
-			auto ptr4{SHARED_PTR<const void>(SHARED_PTR<void>(lak::move(ptr3)))};
+			auto ptr4{SHARED_PTR<void>(SHARED_PTR<void>(lak::move(ptr3)))};
 
 			ASSERT_EQUAL(ptr3.use_count(), 0U);
 			ASSERT_EQUAL(ptr2.use_count(), 0U);
@@ -69,7 +69,7 @@ void shared_ptr_test_type_erasure()
 			ASSERT_EQUAL(ptr3.use_count(), 2U);
 			ASSERT(lak::equal_to<>{}(s.data(), ptr3.get()));
 
-			auto ptr4{SHARED_PTR<const void>(SHARED_PTR<void>(lak::move(ptr3)))};
+			auto ptr4{SHARED_PTR<void>(SHARED_PTR<void>(lak::move(ptr3)))};
 			ASSERT_EQUAL(ptr3.use_count(), 0U);
 			ASSERT_EQUAL(ptr2.use_count(), 0U);
 			ASSERT_EQUAL(ptr.use_count(), 2U);

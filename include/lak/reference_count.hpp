@@ -5,47 +5,48 @@
 
 namespace lak
 {
+	template<typename T>
 	struct reference_count
 	{
 	private:
-		std::atomic_uintmax_t value = 0U;
+		std::atomic<T> value = 0U;
 
 	public:
 		reference_count() = default;
-		reference_count(uintmax_t v) : value(v) {}
+		reference_count(T v) : value(v) {}
 
-		inline uintmax_t operator++()
+		inline T operator++()
 		{
-			for (uintmax_t s = value.load();;)
+			for (T s = value.load();;)
 				if (value.compare_exchange_weak(s, s + 1U)) return s + 1;
 		}
 
-		inline uintmax_t operator++(int)
+		inline T operator++(int)
 		{
-			for (uintmax_t s = value.load();;)
+			for (T s = value.load();;)
 				if (value.compare_exchange_weak(s, s + 1U)) return s;
 		}
 
-		inline uintmax_t non_zero_inc()
+		inline T non_zero_inc()
 		{
-			for (uintmax_t s = value.load(); s != 0U;)
+			for (T s = value.load(); s != 0U;)
 				if (value.compare_exchange_weak(s, s + 1U)) return s;
 			return 0U;
 		}
 
-		inline uintmax_t operator--()
+		inline T operator--()
 		{
-			for (uintmax_t s = value.load();;)
+			for (T s = value.load();;)
 				if (value.compare_exchange_weak(s, s - 1U)) return s - 1;
 		}
 
-		inline uintmax_t operator--(int)
+		inline T operator--(int)
 		{
-			for (uintmax_t s = value.load();;)
+			for (T s = value.load();;)
 				if (value.compare_exchange_weak(s, s - 1U)) return s;
 		}
 
-		inline uintmax_t load() { return value.load(); }
+		inline T load() { return value.load(); }
 	};
 }
 
