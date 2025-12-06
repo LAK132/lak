@@ -57,7 +57,7 @@ namespace lak
 	{
 		inline void inc_ref() { ++ref_count; }
 		inline void dec_ref();
-		inline size_t load_ref() { return ref_count.load(); }
+		inline uintmax_t load_ref() { return ref_count.load(); }
 
 		inline _tiny_shared_ptr_metadata(
 		  void (*del)(lak::basic_shared_ptr_metadata *, _shared_ptr_df))
@@ -80,7 +80,7 @@ namespace lak
 	{
 		inline void inc_ref() { ++ref_count; }
 		inline void dec_ref();
-		inline size_t load_ref() { return ref_count.load(); }
+		inline uintmax_t load_ref() { return ref_count.load(); }
 
 		inline _shared_ptr_metadata(void (*del)(lak::basic_shared_ptr_metadata *,
 		                                        _shared_ptr_df))
@@ -118,8 +118,8 @@ namespace lak
 		inline void inc_weak_ref() { ++weak_ref_count; }
 		inline void dec_ref();
 		inline void dec_weak_ref();
-		inline size_t load_ref() { return ref_count.load(); }
-		inline size_t load_weak_ref() { return weak_ref_count.load(); }
+		inline uintmax_t load_ref() { return ref_count.load(); }
+		inline uintmax_t load_weak_ref() { return weak_ref_count.load(); }
 
 		inline _strong_shared_ptr_metadata(
 		  void (*del)(lak::basic_shared_ptr_metadata *, _shared_ptr_df))
@@ -199,7 +199,7 @@ namespace lak
 
 		void reset();
 
-		size_t use_count() const { return _data ? _data->load_ref() : 0U; }
+		uintmax_t use_count() const { return _data ? _data->load_ref() : 0U; }
 
 		explicit inline operator bool() const { return _data != nullptr; }
 
@@ -332,7 +332,7 @@ namespace lak
 			_data = nullptr;
 		}
 
-		size_t use_count() const { return _data ? _data->load_ref() : 0U; }
+		uintmax_t use_count() const { return _data ? _data->load_ref() : 0U; }
 
 		explicit inline operator bool() const { return _data != nullptr; }
 
@@ -422,7 +422,7 @@ namespace lak
 			_data = nullptr;
 		}
 
-		size_t use_count() const { return _data ? _data->load_ref() : 0U; }
+		uintmax_t use_count() const { return _data ? _data->load_ref() : 0U; }
 
 		explicit inline operator bool() const { return _data != nullptr; }
 
@@ -511,7 +511,7 @@ namespace lak
 			_data = nullptr;
 		}
 
-		size_t use_count() const { return _data ? _data->load_ref() : 0U; }
+		uintmax_t use_count() const { return _data ? _data->load_ref() : 0U; }
 
 		explicit inline operator bool() const { return _data != nullptr; }
 
@@ -547,7 +547,7 @@ namespace lak
 		basic_shared_ref &operator=(const basic_shared_ref &) = default;
 		basic_shared_ref &operator=(basic_shared_ref &&)      = default;
 
-		size_t use_count() const { return _value.use_count(); }
+		uintmax_t use_count() const { return _value.use_count(); }
 
 		inline value_type &operator*() const { return *_value; }
 

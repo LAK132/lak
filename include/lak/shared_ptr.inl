@@ -61,6 +61,7 @@ lak::basic_shared_ptr<T, META> lak::basic_shared_ptr<T, META>::make(
 		  if ((df & _shared_ptr_df::do_delete) == _shared_ptr_df::do_delete)
 			  delete d;
 	  },
+	  lak::in_place,
 	  lak::forward<ARGS>(args)...);
 
 	if (result._data) result._data->set_data(&result._get()->value);
