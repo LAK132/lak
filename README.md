@@ -19,7 +19,7 @@ Attribution would be nice but is not required.
 An example of an extremely simple program that opens a fullscreen Dear ImGui
 window (backend renderer determined by settings in `meson_options.txt`):
 
-![basic_program.png](basic_program.png)
+![basic_program.png](/basic_program.png?raw=true)
 
 ```cpp
 // default window name and ID for root Dear ImGui window
