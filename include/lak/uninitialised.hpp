@@ -24,7 +24,8 @@ namespace lak
 
 		template<typename... ARGS>
 		requires requires { value_type(lak::declval<ARGS>()...); }
-		uninitialised(ARGS &&...args) : _value(lak::forward<ARGS>(args)...)
+		uninitialised(lak::in_place_t, ARGS &&...args)
+		: _value(lak::forward<ARGS>(args)...)
 		{
 		}
 

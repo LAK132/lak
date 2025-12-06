@@ -63,13 +63,14 @@ namespace lak
 		template<typename U>
 		requires(!lak::is_same_v<optional, lak::remove_cvref_t<U>> &&
 		         requires { value_type(lak::declval<U>()); })
-		optional(U &&other) : _has_value(true), _value(lak::forward<U>(other))
+		optional(U &&other)
+		: _has_value(true), _value(lak::in_place, lak::forward<U>(other))
 		{
 		}
 
 		template<typename... ARGS>
 		optional(lak::in_place_t, ARGS &&...args)
-		: _has_value(true), _value(lak::forward<ARGS>(args)...)
+		: _has_value(true), _value(lak::in_place, lak::forward<ARGS>(args)...)
 		{
 		}
 
