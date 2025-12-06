@@ -8,6 +8,63 @@ on:
   workflow_dispatch:
 
 jobs:
+  build-examples:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-2022, ubuntu-24.04, macos-15]
+        arch: [x86, x64, arm64]
+        setup-options:
+          - -Dlak_enable_examples=true -Dlak_enable_windowing=true -Dlak_enable_glm=true -Dlak_enable_imgui=true
+        target:
+          - basic_program
+        exclude:
+          - os: windows-2022
+            arch: arm64
+          - os: ubuntu-24.04
+            arch: arm64
+          - os: macos-15
+            arch: x86
+          - os: macos-15
+            arch: x64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.9.x'
+
+      - if: startsWith(matrix.os, 'windows')
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: ${{ matrix.arch }}
+          vsversion: 2022
+      - if: startsWith(matrix.os, 'windows')
+        run: |
+          python3 -m pip install --upgrade pip setuptools wheel
+          python3 -m pip install meson ninja
+
+      - if: startsWith(matrix.os, 'ubuntu')
+        uses: egor-tensin/setup-gcc@v1
+        with:
+          version: 13
+          platform: ${{ matrix.arch }}
+      - if: startsWith(matrix.os, 'ubuntu')
+        run: |
+          sudo python3 -m pip install --upgrade setuptools
+          sudo python3 -m pip install meson ninja
+
+      - if: startsWith(matrix.os, 'macos')
+        run: |
+          brew install meson ninja
+          echo "CC=$(brew --prefix llvm@18)/bin/clang" >> $GITHUB_ENV
+          echo "CXX=$(brew --prefix llvm@18)/bin/clang++" >> $GITHUB_ENV
+
+        # _DISABLE_CONSTEXPR_MUTEX_CONSTRUCTOR is a hack fix for broken runners
+      - run: meson setup build -Dcpp_args="-D_DISABLE_CONSTEXPR_MUTEX_CONSTRUCTOR" --buildtype debugoptimized ${{ matrix.setup-options }}
+      - run: meson compile -C build ${{ matrix.target }}
   run-tests:
     strategy:
       fail-fast: false
@@ -21,6 +78,8 @@ jobs:
           # windows only:
           - -Dlak_enable_tests=true -Dlak_enable_lmdb=true -Dlak_enable_libfive=true
           - -Dlak_enable_tests=true -Dlak_enable_windowing=true -Dlak_use_native_file_dialog=true -Dsdl2_from_source=true -Dlak_backend=sdl -Dlak_enable_glm=true -Dlak_enable_imgui=true
+        target:
+          - lak_test lak_test_bigint_standalone
         exclude:
           - os: windows-2022
             arch: arm64
@@ -32,10 +91,10 @@ jobs:
             arch: x64
           - os: ubuntu-24.04
             setup-options: -Dlak_enable_tests=true -Dlak_enable_lmdb=true -Dlak_enable_libfive=true
-          - os: ubuntu-24.04
-            setup-options: -Dlak_enable_tests=true -Dlak_enable_windowing=true -Dlak_use_native_file_dialog=true -Dsdl2_from_source=true -Dlak_backend=sdl -Dlak_enable_glm=true -Dlak_enable_imgui=true
           - os: macos-15
             setup-options: -Dlak_enable_tests=true -Dlak_enable_lmdb=true -Dlak_enable_libfive=true
+          - os: ubuntu-24.04
+            setup-options: -Dlak_enable_tests=true -Dlak_enable_windowing=true -Dlak_use_native_file_dialog=true -Dsdl2_from_source=true -Dlak_backend=sdl -Dlak_enable_glm=true -Dlak_enable_imgui=true
           - os: macos-15
             setup-options: -Dlak_enable_tests=true -Dlak_enable_windowing=true -Dlak_use_native_file_dialog=true -Dsdl2_from_source=true -Dlak_backend=sdl -Dlak_enable_glm=true -Dlak_enable_imgui=true
     runs-on: ${{ matrix.os }}
@@ -75,12 +134,12 @@ jobs:
 
         # _DISABLE_CONSTEXPR_MUTEX_CONSTRUCTOR is a hack fix for broken runners
       - run: meson setup build -Dcpp_args="-D_DISABLE_CONSTEXPR_MUTEX_CONSTRUCTOR" --buildtype debugoptimized ${{ matrix.setup-options }}
-      - run: meson compile -C build
+      - run: meson compile -C build ${{ matrix.target }}
       - run: build/lak_test --help
       - run: build/lak_test --testall
       - run: build/lak_test_bigint_standalone --testall
   push-staging:
-    needs: run-tests
+    needs: [build-examples, run-tests]
     runs-on: windows-2022
     steps:
       - uses: actions/checkout@v4
