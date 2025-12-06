@@ -51,7 +51,7 @@ void shared_ptr_test_type_erasure()
 
 		ASSERT_EQUAL(ptr.use_count(), 1U);
 
-		lak::span<int> s = *ptr;
+		const lak::span<int> &s = *ptr;
 		ASSERT_EQUAL(s.size(), 5U);
 
 		const auto expected = {0, 1, 2, 3, 4};
@@ -61,20 +61,20 @@ void shared_ptr_test_type_erasure()
 			auto ptr2{ptr};
 			ASSERT_EQUAL(ptr.use_count(), 2U);
 			ASSERT_EQUAL(ptr2.use_count(), 2U);
-			ASSERT(lak::equal_to<>{}(ptr.get(), ptr2.get()));
+			ASSERT_EQUAL(ptr.get(), ptr2.get());
 
 			auto ptr3{SHARED_PTR<void>(SHARED_PTR<int[]>(lak::move(ptr2)))};
 			ASSERT_EQUAL(ptr2.use_count(), 0U);
 			ASSERT_EQUAL(ptr.use_count(), 2U);
 			ASSERT_EQUAL(ptr3.use_count(), 2U);
-			ASSERT(lak::equal_to<>{}(s.data(), ptr3.get()));
+			ASSERT_EQUAL((const void *)&s, ptr3.get());
 
 			auto ptr4{SHARED_PTR<void>(SHARED_PTR<void>(lak::move(ptr3)))};
 			ASSERT_EQUAL(ptr3.use_count(), 0U);
 			ASSERT_EQUAL(ptr2.use_count(), 0U);
 			ASSERT_EQUAL(ptr.use_count(), 2U);
 			ASSERT_EQUAL(ptr4.use_count(), 2U);
-			ASSERT(lak::equal_to<>{}(s.data(), ptr4.get()));
+			ASSERT_EQUAL((const void *)&s, ptr4.get());
 		}
 
 		ptr.reset();

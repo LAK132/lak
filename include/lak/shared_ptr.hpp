@@ -354,7 +354,7 @@ namespace lak
 
 		typename lak::basic_shared_ptr_ptr<T>::internal_value_type *get() const
 		{
-			return _allocator->get();
+			return _allocator ? _allocator->get() : nullptr;
 		}
 
 		metadata_type *get_meta() const { return static_cast<META *>(_allocator); }
