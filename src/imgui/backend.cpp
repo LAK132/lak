@@ -174,9 +174,7 @@ ImGui::ImplContext ImGui::ImplCreateContext(lak::graphics_mode mode)
 			result->gl_context = new _ImplGLContext();
 			break;
 #endif
-		default:
-			result->vd_context = nullptr;
-			break;
+		default: result->vd_context = nullptr; break;
 	}
 	result->imgui_context = ImGui::CreateContext();
 	return result;
@@ -191,18 +189,12 @@ void ImGui::ImplDestroyContext(ImplContext context)
 			switch (context->mode)
 			{
 #ifdef LAK_ENABLE_SOFTRENDER
-				case lak::graphics_mode::Software:
-					delete context->sr_context;
-					break;
+				case lak::graphics_mode::Software: delete context->sr_context; break;
 #endif
 #ifdef LAK_ENABLE_OPENGL
-				case lak::graphics_mode::OpenGL:
-					delete context->gl_context;
-					break;
+				case lak::graphics_mode::OpenGL: delete context->gl_context; break;
 #endif
-				default:
-					FATAL("Invalid graphics mode");
-					break;
+				default: FATAL("Invalid graphics mode"); break;
 			}
 		}
 		delete context;
@@ -281,9 +273,7 @@ inline void ImplUpdateDisplaySize(ImGui::ImplContext context,
 		break;
 #endif
 
-		default:
-			FATAL("Invalid Context Mode");
-			break;
+		default: FATAL("Invalid Context Mode"); break;
 	}
 }
 
@@ -464,9 +454,7 @@ void ImGui::ImplInitContext(ImplContext context, const lak::window &window)
 			ImplInitGLContext(context->gl_context, window);
 			break;
 #endif
-		default:
-			ASSERTF(false, "Invalid Context Mode");
-			break;
+		default: ASSERTF(false, "Invalid Context Mode"); break;
 	}
 
 	ImplUpdateDisplaySize(context, window.handle());
@@ -569,9 +557,7 @@ void ImGui::ImplShutdownContext(ImplContext context)
 			ImplShutdownGLContext(context->gl_context);
 			break;
 #endif
-		default:
-			FATAL("Invalid Context Mode");
-			break;
+		default: FATAL("Invalid Context Mode"); break;
 	}
 
 	if (context->imgui_context != nullptr)
@@ -700,7 +686,9 @@ bool ImGui::ImplProcessEvent(ImplContext context, const lak::event &event)
 		{
 			context->allow_set_cursor = false;
 			if (io.WantSetMousePos) return false;
+			io.ClearInputMouse();
 			io.AddMousePosEvent(-FLT_MAX, -FLT_MAX);
+			io.ClearInputKeys();
 			return true;
 		}
 
@@ -725,8 +713,7 @@ bool ImGui::ImplProcessEvent(ImplContext context, const lak::event &event)
 				case lak::mouse_button::middle:
 					io.AddMouseButtonEvent(ImGuiMouseButton_Middle, true);
 					break;
-				default:
-					return false;
+				default: return false;
 			}
 #if defined(LAK_USE_WINAPI)
 			SetCapture(event.handle->_platform_handle);
@@ -755,8 +742,7 @@ bool ImGui::ImplProcessEvent(ImplContext context, const lak::event &event)
 				case lak::mouse_button::middle:
 					io.AddMouseButtonEvent(ImGuiMouseButton_Middle, false);
 					break;
-				default:
-					return false;
+				default: return false;
 			}
 #if defined(LAK_USE_WINAPI)
 			ReleaseCapture();
@@ -772,13 +758,22 @@ bool ImGui::ImplProcessEvent(ImplContext context, const lak::event &event)
 			return true;
 		}
 
-		case lak::event_type::key_down:
-			[[fallthrough]];
+		case lak::event_type::key_down: [[fallthrough]];
 		case lak::event_type::key_up:
 		{
 			lak::key_code key  = event.key().key;
+			lak::mod_key mod   = event.key().mod;
 			const int scancode = event.key().native_scancode;
 			const bool down    = event.type == lak::event_type::key_down;
+
+			io.AddKeyEvent(ImGuiMod_Ctrl,
+			               (mod & lak::mod_key::ctrl) != lak::mod_key::none);
+			io.AddKeyEvent(ImGuiMod_Shift,
+			               (mod & lak::mod_key::shift) != lak::mod_key::none);
+			io.AddKeyEvent(ImGuiMod_Alt,
+			               (mod & lak::mod_key::alt) != lak::mod_key::none);
+			io.AddKeyEvent(ImGuiMod_Super,
+			               (mod & lak::mod_key::super) != lak::mod_key::none);
 
 			switch (key)
 			{
@@ -860,7 +855,7 @@ bool ImGui::ImplProcessEvent(ImplContext context, const lak::event &event)
 			}
 
 #if defined(LAK_USE_WINAPI)
-			switch (scancode)
+			switch (LOWORD(event._platform_event->msg.wParam))
 			{
 				case 'A':
 					io.AddKeyEvent(ImGuiKey_A, down);
@@ -917,8 +912,7 @@ bool ImGui::ImplProcessEvent(ImplContext context, const lak::event &event)
 			return true;
 		}
 
-		default:
-			break;
+		default: break;
 	}
 
 #if defined(LAK_USE_WINAPI)
@@ -1281,18 +1275,12 @@ void ImGui::ImplRenderData(ImplContext context, ImDrawData *draw_data)
 	switch (context->mode)
 	{
 #ifdef LAK_ENABLE_SOFTRENDER
-		case lak::graphics_mode::Software:
-			ImplSRRender(context, draw_data);
-			break;
+		case lak::graphics_mode::Software: ImplSRRender(context, draw_data); break;
 #endif
 #ifdef LAK_ENABLE_OPENGL
-		case lak::graphics_mode::OpenGL:
-			ImplGLRender(context, draw_data);
-			break;
+		case lak::graphics_mode::OpenGL: ImplGLRender(context, draw_data); break;
 #endif
-		default:
-			FATAL("Invalid context mode");
-			break;
+		default: FATAL("Invalid context mode"); break;
 	}
 }
 

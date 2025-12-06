@@ -289,7 +289,8 @@ namespace lak
 		{
 		}
 
-		variant(const variant &other);
+		variant(const variant &other)
+		requires((lak::is_copy_constructible_v<T> && ...));
 
 		variant(variant &&other);
 

@@ -106,4 +106,23 @@ lak::result<lak::strong_ref<LAK_BASIC_PROGRAM(window_instance<WINDOW_CLASS>)>,
             lak::u8string>
   LAK_BASIC_PROGRAM(create_window)();
 
+template<typename WINDOW_CLASS>
+lak::result<lak::strong_ref<LAK_BASIC_PROGRAM(window_instance<WINDOW_CLASS>)>,
+            lak::u8string>
+  LAK_BASIC_PROGRAM(create_window)(lak::window &&);
+
+#ifdef LAK_ENABLE_SOFTRENDER
+template<typename WINDOW_CLASS>
+lak::result<lak::strong_ref<LAK_BASIC_PROGRAM(window_instance<WINDOW_CLASS>)>,
+            lak::u8string>
+  LAK_BASIC_PROGRAM(create_window)(const lak::software_settings &);
+#endif
+
+#ifdef LAK_ENABLE_OPENGL
+template<typename WINDOW_CLASS>
+lak::result<lak::strong_ref<LAK_BASIC_PROGRAM(window_instance<WINDOW_CLASS>)>,
+            lak::u8string>
+  LAK_BASIC_PROGRAM(create_window)(const lak::opengl_settings &);
+#endif
+
 #endif

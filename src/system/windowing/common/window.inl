@@ -10,8 +10,6 @@ template struct lak::array<lak::window_handle, lak::dynamic_extent>;
 template struct lak::bank<lak::window_handle>;
 template size_t lak::bank<lak::window_handle>::internal_create<
   lak::window_handle>(lak::window_handle &&);
-template size_t lak::bank<lak::window_handle>::internal_create<
-  lak::const_window_handle_ref>(lak::const_window_handle_ref &&);
 template struct lak::unique_bank_ptr<lak::window_handle>;
 template struct lak::shared_bank_ptr<lak::window_handle>;
 

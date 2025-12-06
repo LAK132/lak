@@ -11,7 +11,6 @@ namespace lak
 		HINSTANCE handle;
 		WNDCLASSW window_class;
 		ATOM window_class_atom;
-		lak::mod_key mod_key_state;
 		mutable bool opengl_initialised = false;
 		mutable lak::buffer<MSG, 0x100> platform_events;
 	};
@@ -65,15 +64,10 @@ namespace lak
 		{
 			switch (gc.index())
 			{
-				case 1:
-					return lak::graphics_mode::Software;
-				case 2:
-					return lak::graphics_mode::OpenGL;
-				default:
-					FATAL("Invalid graphics mode");
-					[[fallthrough]];
-				case 0:
-					return lak::graphics_mode::None;
+				case 1:  return lak::graphics_mode::Software;
+				case 2:  return lak::graphics_mode::OpenGL;
+				default: FATAL("Invalid graphics mode"); [[fallthrough]];
+				case 0:  return lak::graphics_mode::None;
 			}
 		}
 

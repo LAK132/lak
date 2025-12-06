@@ -11,53 +11,21 @@ EXTERN_C IMAGE_DOS_HEADER __ImageBase;
 lak::wstring win32_error_string(LPCWSTR lpszFunction);
 void win32_error_popup(LPCWSTR lpszFunction);
 
-lak::mod_key key_to_mod(lak::key_code key)
+lak::mod_key get_mod_key_state(lak::key_code key)
 {
-	switch (key)
-	{
-		case lak::key_code::lshift:
-			return lak::mod_key::lshift;
-		case lak::key_code::rshift:
-			return lak::mod_key::rshift;
-		case lak::key_code::lctrl:
-			return lak::mod_key::lctrl;
-		case lak::key_code::rctrl:
-			return lak::mod_key::rctrl;
-		case lak::key_code::lalt:
-			return lak::mod_key::lalt;
-		case lak::key_code::ralt:
-			return lak::mod_key::ralt;
-		case lak::key_code::lsuper:
-			return lak::mod_key::lsuper;
-		case lak::key_code::rsuper:
-			return lak::mod_key::rsuper;
-		default:
-			return lak::mod_key::none;
-	}
-}
+	lak::mod_key mod = lak::mod_key::none;
 
-lak::mod_key get_mod_key_state(lak::key_code key, bool pressed)
-{
-	lak::mod_key mod = lak::_platform_instance->mod_key_state;
+	auto pressed = [](int key) -> bool
+	{ return (::GetKeyState(key) & 0x8000) != 0; };
 
-	if (key == lak::key_code::lshift)
-		mod = pressed ? mod | lak::mod_key::lshift : mod & -lak::mod_key::lshift;
-	if (key == lak::key_code::rshift)
-		mod = pressed ? mod | lak::mod_key::rshift : mod & -lak::mod_key::rshift;
-	if (key == lak::key_code::lctrl)
-		mod = pressed ? mod | lak::mod_key::lctrl : mod & -lak::mod_key::lctrl;
-	if (key == lak::key_code::rctrl)
-		mod = pressed ? mod | lak::mod_key::rctrl : mod & -lak::mod_key::rctrl;
-	if (key == lak::key_code::lalt)
-		mod = pressed ? mod | lak::mod_key::lalt : mod & -lak::mod_key::lalt;
-	if (key == lak::key_code::ralt)
-		mod = pressed ? mod | lak::mod_key::ralt : mod & -lak::mod_key::ralt;
-	if (key == lak::key_code::lsuper)
-		mod = pressed ? mod | lak::mod_key::lsuper : mod & -lak::mod_key::lsuper;
-	if (key == lak::key_code::rsuper)
-		mod = pressed ? mod | lak::mod_key::rsuper : mod & -lak::mod_key::rsuper;
-
-	lak::_platform_instance->mod_key_state = mod;
+	if (pressed(VK_LSHIFT)) mod = mod | lak::mod_key::lshift;
+	if (pressed(VK_RSHIFT)) mod = mod | lak::mod_key::rshift;
+	if (pressed(VK_LCONTROL)) mod = mod | lak::mod_key::lctrl;
+	if (pressed(VK_RCONTROL)) mod = mod | lak::mod_key::rctrl;
+	if (pressed(VK_LMENU)) mod = mod | lak::mod_key::lalt;
+	if (pressed(VK_RMENU)) mod = mod | lak::mod_key::ralt;
+	if (pressed(VK_LWIN)) mod = mod | lak::mod_key::lsuper;
+	if (pressed(VK_RWIN)) mod = mod | lak::mod_key::rsuper;
 
 	return mod;
 }
@@ -71,71 +39,53 @@ uint32_t get_scancode(LPARAM lParam)
 	return scanCode;
 }
 
-lak::key_code get_key_code(WPARAM wParam, uint32_t scancode)
+lak::key_code get_key_code(WPARAM wParam, LPARAM lParam)
 {
 	WORD vkCode = LOWORD(wParam);
+
+	WORD keyFlags   = HIWORD(lParam);
+	WORD scanCode   = LOBYTE(keyFlags);
+	BOOL isExtended = (keyFlags & KF_EXTENDED) == KF_EXTENDED;
+	if (isExtended) scanCode = MAKEWORD(scanCode, 0xE0);
+
 	switch (vkCode)
 	{
 		case VK_SHIFT:
 		case VK_CONTROL:
 		case VK_MENU:
 		{
-			vkCode = LOWORD(MapVirtualKeyW(scancode, MAPVK_VSC_TO_VK_EX));
+			vkCode = LOWORD(MapVirtualKeyW(scanCode, MAPVK_VSC_TO_VK_EX));
 		}
 		break;
 	}
 	switch (vkCode)
 	{
-		case VK_LSHIFT:
-			return lak::key_code::lshift;
-		case VK_RSHIFT:
-			return lak::key_code::rshift;
-		case VK_LCONTROL:
-			return lak::key_code::lctrl;
-		case VK_RCONTROL:
-			return lak::key_code::rctrl;
-		case VK_LMENU:
-			return lak::key_code::lalt;
-		case VK_RMENU:
-			return lak::key_code::ralt;
-		case VK_LWIN:
-			return lak::key_code::lsuper;
-		case VK_RWIN:
-			return lak::key_code::rsuper;
-		// case VK_???:
-		// 	return lak::key_code::menu;
-		case VK_TAB:
-			return lak::key_code::tab;
-		case VK_LEFT:
-			return lak::key_code::left;
-		case VK_RIGHT:
-			return lak::key_code::right;
-		case VK_UP:
-			return lak::key_code::up;
-		case VK_DOWN:
-			return lak::key_code::down;
-		case VK_PRIOR:
-			return lak::key_code::page_up;
-		case VK_NEXT:
-			return lak::key_code::page_down;
-		case VK_HOME:
-			return lak::key_code::home;
-		case VK_END:
-			return lak::key_code::end;
-		case VK_INSERT:
-			return lak::key_code::insert;
-		case VK_DELETE:
-			return lak::key_code::del;
-		case VK_BACK:
-			return lak::key_code::backspace;
-		case VK_SPACE:
-			return lak::key_code::space;
-		case VK_RETURN:
-			return lak::key_code::enter;
-		case VK_ESCAPE:
-			return lak::key_code::escape;
-		default:
-			return lak::key_code::none;
+		case VK_LSHIFT:   return lak::key_code::lshift;
+		case VK_RSHIFT:   return lak::key_code::rshift;
+		case VK_LCONTROL: return lak::key_code::lctrl;
+		case VK_RCONTROL: return lak::key_code::rctrl;
+		case VK_LMENU:    return lak::key_code::lalt;
+		case VK_RMENU:    return lak::key_code::ralt;
+		case VK_LWIN:     return lak::key_code::lsuper;
+		case VK_RWIN:     return lak::key_code::rsuper;
+		case VK_APPS:     return lak::key_code::menu;
+		case VK_TAB:      return lak::key_code::tab;
+		case VK_LEFT:     return lak::key_code::left;
+		case VK_RIGHT:    return lak::key_code::right;
+		case VK_UP:       return lak::key_code::up;
+		case VK_DOWN:     return lak::key_code::down;
+		case VK_PRIOR:    return lak::key_code::page_up;
+		case VK_NEXT:     return lak::key_code::page_down;
+		case VK_HOME:     return lak::key_code::home;
+		case VK_END:      return lak::key_code::end;
+		case VK_INSERT:   return lak::key_code::insert;
+		case VK_DELETE:   return lak::key_code::del;
+		case VK_BACK:     return lak::key_code::backspace;
+		case VK_SPACE:    return lak::key_code::space;
+		case VK_RETURN:   return lak::key_code::enter;
+		case VK_ESCAPE:   return lak::key_code::escape;
+
+		default: return lak::key_code::none;
 	}
 }
 
@@ -251,8 +201,8 @@ void translate_event(const MSG &msg,
 		case WM_KEYDOWN:
 		{
 			uint32_t scancode = get_scancode(msg.lParam);
-			lak::key_code key = get_key_code(msg.wParam, scancode);
-			lak::mod_key mod  = get_mod_key_state(key, true);
+			lak::key_code key = get_key_code(msg.wParam, msg.lParam);
+			lak::mod_key mod  = get_mod_key_state(key);
 
 			*event = lak::event(lak::event_type::key_down,
 			                    window,
@@ -267,8 +217,8 @@ void translate_event(const MSG &msg,
 		case WM_KEYUP:
 		{
 			uint32_t scancode = get_scancode(msg.lParam);
-			lak::key_code key = get_key_code(msg.wParam, scancode);
-			lak::mod_key mod  = get_mod_key_state(key, true);
+			lak::key_code key = get_key_code(msg.wParam, msg.lParam);
+			lak::mod_key mod  = get_mod_key_state(key);
 
 			*event = lak::event(lak::event_type::key_up,
 			                    window,
@@ -506,30 +456,14 @@ bool handle_size_move_event(lak::window_handle *handle, const MSG &msg)
 				{
 					switch (msg.wParam & 0xF)
 					{
-						case 0x1:
-							handle->_side = handle->left;
-							break;
-						case 0x2:
-							handle->_side = handle->right;
-							break;
-						case 0x3:
-							handle->_side = handle->top;
-							break;
-						case 0x4:
-							handle->_side = handle->top | handle->left;
-							break;
-						case 0x5:
-							handle->_side = handle->top | handle->right;
-							break;
-						case 0x6:
-							handle->_side = handle->bottom;
-							break;
-						case 0x7:
-							handle->_side = handle->bottom | handle->left;
-							break;
-						case 0x8:
-							handle->_side = handle->bottom | handle->right;
-							break;
+						case 0x1: handle->_side = handle->left; break;
+						case 0x2: handle->_side = handle->right; break;
+						case 0x3: handle->_side = handle->top; break;
+						case 0x4: handle->_side = handle->top | handle->left; break;
+						case 0x5: handle->_side = handle->top | handle->right; break;
+						case 0x6: handle->_side = handle->bottom; break;
+						case 0x7: handle->_side = handle->bottom | handle->left; break;
+						case 0x8: handle->_side = handle->bottom | handle->right; break;
 						default:
 							handle->_side = 0;
 							FATAL("Invalid side");
@@ -580,8 +514,7 @@ bool handle_size_move_event(lak::window_handle *handle, const MSG &msg)
 		case WM_MOUSEHOVER:
 		case WM_NCMOUSEMOVE:
 		case WM_NCMOUSELEAVE:
-		case WM_NCMOUSEHOVER:
-			return handle_size_move(*handle);
+		case WM_NCMOUSEHOVER: return handle_size_move(*handle);
 	}
 
 	return false;

@@ -107,6 +107,7 @@ bool lak::bank<T>::empty()
 
 template<typename T>
 T *lak::bank<T>::create(const T &t)
+requires(lak::is_copy_constructible_v<T>)
 {
 	std::lock_guard lock(_mutex);
 	auto result = internal_create(t);
@@ -181,6 +182,7 @@ T *lak::bank<T>::find_if(FUNCTOR &&func)
 
 template<typename T>
 lak::unique_bank_ptr<T> lak::unique_bank_ptr<T>::create(const T &t)
+requires(lak::is_copy_constructible_v<T>)
 {
 	std::lock_guard lock(lak::bank<T>::_mutex);
 	return {lak::bank<T>::internal_create(t)};
@@ -379,6 +381,7 @@ void lak::shared_bank_ptr<T>::flush()
 
 template<typename T>
 lak::shared_bank_ptr<T> lak::shared_bank_ptr<T>::create(const T &t)
+requires(lak::is_copy_constructible_v<T>)
 {
 	std::lock_guard lock(lak::bank<T>::_mutex);
 	auto index = lak::bank<T>::internal_create(t);

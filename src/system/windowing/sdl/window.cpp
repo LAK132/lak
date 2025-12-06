@@ -239,8 +239,7 @@ lak::vec2l_t lak::window_drawable_size(const lak::window_handle *handle)
 		}
 		break;
 #endif
-		default:
-			FATAL("Invalid graphics mode (", handle->graphics_mode(), ")");
+		default: FATAL("Invalid graphics mode (", handle->graphics_mode(), ")");
 	}
 	return {0, 0};
 }
@@ -260,8 +259,7 @@ bool lak::set_active_window(const lak::window_handle *handle)
 	switch (handle->graphics_mode())
 	{
 #ifdef LAK_ENABLE_SOFTRENDER
-		case lak::graphics_mode::Software:
-			return true;
+		case lak::graphics_mode::Software: return true;
 #endif
 
 #ifdef LAK_ENABLE_OPENGL
@@ -270,8 +268,7 @@ bool lak::set_active_window(const lak::window_handle *handle)
 			                          handle->opengl_context().sdl_glcontext) == 0;
 #endif
 
-		default:
-			return false;
+		default: return false;
 	}
 }
 
@@ -295,8 +292,7 @@ bool lak::swap_window(lak::window_handle *handle)
 		}
 #endif
 
-		default:
-			return false;
+		default: return false;
 	}
 }
 

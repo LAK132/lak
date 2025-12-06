@@ -111,8 +111,6 @@ namespace lak
 	extern template size_t lak::bank<lak::window_handle>::internal_create<
 	  lak::window_handle>(lak::window_handle &&);
 	using const_window_handle_ref = const lak::window_handle &;
-	extern template size_t lak::bank<lak::window_handle>::internal_create<
-	  lak::const_window_handle_ref>(lak::const_window_handle_ref &&);
 	extern template struct lak::unique_bank_ptr<lak::window_handle>;
 	extern template struct lak::shared_bank_ptr<lak::window_handle>;
 	using window_handle_bank = lak::bank<lak::window_handle>;

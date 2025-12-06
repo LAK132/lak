@@ -55,51 +55,107 @@ void APIENTRY
 template<typename WINDOW_CLASS>
 lak::result<lak::strong_ref<LAK_BASIC_PROGRAM(window_instance<WINDOW_CLASS>)>,
             lak::u8string>
-LAK_BASIC_PROGRAM(create_window)()
+LAK_BASIC_PROGRAM(create_window)(lak::window &&wnd)
 {
-	ASSERT(LAK_BASIC_PROGRAM(platform_initialised));
+	RES_TRY_ASSIGN(
+	  auto result =,
+	  lak::strong_ref<LAK_BASIC_PROGRAM(window_instance<WINDOW_CLASS>)>::make(
+	    lak::move(wnd))
+	    .map_err([](auto) -> lak::u8string
+	             { return u8"Failed to create window instance"; }));
+
+	LAK_BASIC_PROGRAM(window_instances_bank).emplace_back(result);
+
+#ifdef LAK_BASIC_PROGRAM_IMGUI_IMPL
+	auto current_context = ImGui::GetCurrentContext();
+	DEFER(ImGui::SetCurrentContext(current_context));
+
+	result->imgui_context =
+	  ImGui::ImplCreateContext(result->window().graphics());
+	ImGui::ImplSetCurrentContext(result->imgui_context);
+	ImGui::ImplInit();
+	ImGui::ImplInitContext(result->imgui_context, result->window());
+
+	if (result->window().graphics() == lak::graphics_mode::Software)
+	{
+		ImGuiStyle &style      = ImGui::GetStyle();
+		style.AntiAliasedLines = false;
+		style.AntiAliasedFill  = false;
+		style.WindowRounding   = 0.0f;
+	}
+
+	ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+	ImGui::StyleColorsDark();
+	ImGui::GetStyle().WindowRounding = 0;
+
+	lak::init_file_modal(result->window().graphics());
+#endif
+
+	result->window().set_title(L"" APP_NAME);
+	result->window().set_size(LAK_BASIC_PROGRAM(window_start_size));
+
+	result->init();
+	return lak::move_ok(result);
+}
 
 #ifdef LAK_ENABLE_SOFTRENDER
-	auto make_software = [&]() -> lak::result<lak::window, lak::u8string>
-	{
-		return lak::window::make(LAK_BASIC_PROGRAM(window_software_settings))
-		  .and_then(
-		    [&](auto &&window) -> lak::result<lak::window, lak::u8string>
-		    {
-			    if (window.graphics() != lak::graphics_mode::Software)
-				    return lak::err_t<lak::u8string>{lak::streamify(
-				      "Expected Software graphics, got ", window.graphics())};
-			    return lak::move_ok(window);
-		    });
-	};
+template<typename WINDOW_CLASS>
+lak::result<lak::strong_ref<LAK_BASIC_PROGRAM(window_instance<WINDOW_CLASS>)>,
+            lak::u8string>
+LAK_BASIC_PROGRAM(create_window)(const lak::software_settings &settings)
+{
+	RES_TRY_ASSIGN(
+	  auto wnd =,
+	  lak::window::make(settings).and_then(
+	    [&](auto &&window) -> lak::result<lak::window, lak::u8string>
+	    {
+		    if (window.graphics() != lak::graphics_mode::Software)
+			    return lak::err_t<lak::u8string>{lak::streamify(
+			      "Expected Software graphics, got ", window.graphics())};
+		    return lak::move_ok(window);
+	    }));
+	return LAK_BASIC_PROGRAM(create_window<WINDOW_CLASS>)(lak::move(wnd));
+}
 #endif
 
 #ifdef LAK_ENABLE_OPENGL
-	auto make_opengl = [&]() -> lak::result<lak::window, lak::u8string>
-	{
-		return lak::window::make(LAK_BASIC_PROGRAM(window_opengl_settings))
-		  .and_then(
-		    [&](auto &&window) -> lak::result<lak::window, lak::u8string>
-		    {
-			    if (window.graphics() != lak::graphics_mode::OpenGL)
-				    return lak::err_t<lak::u8string>{lak::streamify(
-				      "Expected OpenGL graphics, got ", window.graphics())};
+template<typename WINDOW_CLASS>
+lak::result<lak::strong_ref<LAK_BASIC_PROGRAM(window_instance<WINDOW_CLASS>)>,
+            lak::u8string>
+LAK_BASIC_PROGRAM(create_window)(const lak::opengl_settings &settings)
+{
+	RES_TRY_ASSIGN(
+	  auto wnd =,
+	  lak::window::make(settings).and_then(
+	    [&](auto &&window) -> lak::result<lak::window, lak::u8string>
+	    {
+		    if (window.graphics() != lak::graphics_mode::OpenGL)
+			    return lak::err_t<lak::u8string>{lak::streamify(
+			      "Expected OpenGL graphics, got ", window.graphics())};
 
-			    glViewport(0, 0, window.drawable_size().x, window.drawable_size().y);
-			    glEnable(GL_DEPTH_TEST);
+		    glViewport(0, 0, window.drawable_size().x, window.drawable_size().y);
+		    glEnable(GL_DEPTH_TEST);
 
 #	ifndef NDEBUG
 #		ifndef LAK_OS_APPLE
-			    glEnable(GL_DEBUG_OUTPUT);
-			    glDebugMessageCallback(
-			      &LAK_BASIC_PROGRAM(opengl_debug_message_callback), 0);
+		    glEnable(GL_DEBUG_OUTPUT);
+		    glDebugMessageCallback(
+		      &LAK_BASIC_PROGRAM(opengl_debug_message_callback), 0);
 #		endif
 #	endif
 
-			    return lak::move_ok(window);
-		    });
-	};
+		    return lak::move_ok(window);
+	    }));
+	return LAK_BASIC_PROGRAM(create_window<WINDOW_CLASS>)(lak::move(wnd));
+}
 #endif
+
+template<typename WINDOW_CLASS>
+lak::result<lak::strong_ref<LAK_BASIC_PROGRAM(window_instance<WINDOW_CLASS>)>,
+            lak::u8string>
+LAK_BASIC_PROGRAM(create_window)()
+{
+	ASSERT(LAK_BASIC_PROGRAM(platform_initialised));
 
 #if !defined(LAK_ENABLE_SOFTRENDER)
 	if (LAK_BASIC_PROGRAM(window_force_software))
@@ -110,60 +166,26 @@ LAK_BASIC_PROGRAM(create_window)()
 
 	return
 #if !defined(LAK_ENABLE_OPENGL)
-	  make_software()
+	  LAK_BASIC_PROGRAM(create_window<WINDOW_CLASS>)(
+	    LAK_BASIC_PROGRAM(window_software_settings))
 #elif !defined(LAK_ENABLE_SOFTRENDER)
-	  make_opengl()
+	  LAK_BASIC_PROGRAM(create_window<WINDOW_CLASS>)(
+	    LAK_BASIC_PROGRAM(window_opengl_settings))
 #else
 	  (LAK_BASIC_PROGRAM(window_force_software)
-	     ? make_software()
-	     : make_opengl().or_else(
-	         [&](const lak::u8string &err)
-	         {
-		         WARNING("Failed to create an OpenGL window: ", err);
-		         WARNING("Attempting to create a Software window instead");
-		         return make_software();
-	         }))
+	     ? LAK_BASIC_PROGRAM(create_window<WINDOW_CLASS>)(
+	         LAK_BASIC_PROGRAM(window_software_settings))
+	     : LAK_BASIC_PROGRAM(create_window<WINDOW_CLASS>)(
+	         LAK_BASIC_PROGRAM(window_opengl_settings))
+	         .or_else(
+	           [&](const lak::u8string &err)
+	           {
+		           WARNING("Attempting to create a Software window instead");
+		           return LAK_BASIC_PROGRAM(create_window<WINDOW_CLASS>)(
+		             LAK_BASIC_PROGRAM(window_software_settings));
+	           }))
 #endif
-	    .map(
-	      [](lak::window &&wnd)
-	        -> lak::strong_ref<LAK_BASIC_PROGRAM(window_instance<WINDOW_CLASS>)>
-	      {
-		      auto result = lak::strong_ref<LAK_BASIC_PROGRAM(
-		        window_instance<WINDOW_CLASS>)>::make(lak::move(wnd))
-		                      .UNWRAP();
-		      LAK_BASIC_PROGRAM(window_instances_bank).emplace_back(result);
-
-#ifdef LAK_BASIC_PROGRAM_IMGUI_IMPL
-		      auto current_context = ImGui::GetCurrentContext();
-		      DEFER(ImGui::SetCurrentContext(current_context));
-
-		      result->imgui_context =
-		        ImGui::ImplCreateContext(result->window().graphics());
-		      ImGui::ImplSetCurrentContext(result->imgui_context);
-		      ImGui::ImplInit();
-		      ImGui::ImplInitContext(result->imgui_context, result->window());
-
-		      if (result->window().graphics() == lak::graphics_mode::Software)
-		      {
-			      ImGuiStyle &style      = ImGui::GetStyle();
-			      style.AntiAliasedLines = false;
-			      style.AntiAliasedFill  = false;
-			      style.WindowRounding   = 0.0f;
-		      }
-
-		      ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
-		      ImGui::StyleColorsDark();
-		      ImGui::GetStyle().WindowRounding = 0;
-
-		      lak::init_file_modal(result->window().graphics());
-#endif
-
-		      result->window().set_title(L"" APP_NAME);
-		      result->window().set_size(LAK_BASIC_PROGRAM(window_start_size));
-
-		      result->init();
-		      return result;
-	      });
+	    ;
 }
 
 void LAK_BASIC_PROGRAM(window_instance_base)::destroy()
@@ -226,75 +248,41 @@ LAK_BASIC_PROGRAM(opengl_debug_message_callback)(GLenum source,
 		case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR:
 			DEBUG("| Type: DEPRECATED BEHAVIOR");
 			break;
-		case GL_DEBUG_TYPE_ERROR:
-			DEBUG("| Type: ERROR");
-			break;
-		case GL_DEBUG_TYPE_MARKER:
-			DEBUG("| Type: MARKER");
-			break;
-		case GL_DEBUG_TYPE_OTHER:
-			DEBUG("| Type: OTHER");
-			break;
-		case GL_DEBUG_TYPE_PERFORMANCE:
-			DEBUG("| Type: PERFORMANCE");
-			break;
-		case GL_DEBUG_TYPE_POP_GROUP:
-			DEBUG("| Type: POP GROUP");
-			break;
-		case GL_DEBUG_TYPE_PORTABILITY:
-			DEBUG("| Type: PORTABILITY");
-			break;
-		case GL_DEBUG_TYPE_PUSH_GROUP:
-			DEBUG("| Type: PUSH GROUP");
-			break;
+		case GL_DEBUG_TYPE_ERROR:       DEBUG("| Type: ERROR"); break;
+		case GL_DEBUG_TYPE_MARKER:      DEBUG("| Type: MARKER"); break;
+		case GL_DEBUG_TYPE_OTHER:       DEBUG("| Type: OTHER"); break;
+		case GL_DEBUG_TYPE_PERFORMANCE: DEBUG("| Type: PERFORMANCE"); break;
+		case GL_DEBUG_TYPE_POP_GROUP:   DEBUG("| Type: POP GROUP"); break;
+		case GL_DEBUG_TYPE_PORTABILITY: DEBUG("| Type: PORTABILITY"); break;
+		case GL_DEBUG_TYPE_PUSH_GROUP:  DEBUG("| Type: PUSH GROUP"); break;
 		case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:
 			DEBUG("| Type: UNDEFINED BEHAVIOR");
 			break;
-		default:
-			DEBUG("| Type: ", type);
-			break;
+		default: DEBUG("| Type: ", type); break;
 	}
 	switch (severity)
 	{
-		case GL_DEBUG_SEVERITY_HIGH:
-			DEBUG("| Severity: HIGH");
-			break;
-		case GL_DEBUG_SEVERITY_MEDIUM:
-			DEBUG("| Severity: MEDIUM");
-			break;
-		case GL_DEBUG_SEVERITY_LOW:
-			DEBUG("| Severity: LOW");
-			break;
+		case GL_DEBUG_SEVERITY_HIGH:   DEBUG("| Severity: HIGH"); break;
+		case GL_DEBUG_SEVERITY_MEDIUM: DEBUG("| Severity: MEDIUM"); break;
+		case GL_DEBUG_SEVERITY_LOW:    DEBUG("| Severity: LOW"); break;
 		case GL_DEBUG_SEVERITY_NOTIFICATION:
 			DEBUG("| Severity: NOTIFICATION");
 			break;
-		default:
-			DEBUG("| Severity: ", severity);
-			break;
+		default: DEBUG("| Severity: ", severity); break;
 	}
 	switch (source)
 	{
-		case GL_DEBUG_SOURCE_API:
-			DEBUG("| Source: API");
-			break;
-		case GL_DEBUG_SOURCE_APPLICATION:
-			DEBUG("| Source: APPLICATION");
-			break;
-		case GL_DEBUG_SOURCE_OTHER:
-			DEBUG("| Source: OTHER");
-			break;
+		case GL_DEBUG_SOURCE_API:         DEBUG("| Source: API"); break;
+		case GL_DEBUG_SOURCE_APPLICATION: DEBUG("| Source: APPLICATION"); break;
+		case GL_DEBUG_SOURCE_OTHER:       DEBUG("| Source: OTHER"); break;
 		case GL_DEBUG_SOURCE_SHADER_COMPILER:
 			DEBUG("| Source: SHADER COMPILER");
 			break;
-		case GL_DEBUG_SOURCE_THIRD_PARTY:
-			DEBUG("| Source: THIRD PARTY");
-			break;
+		case GL_DEBUG_SOURCE_THIRD_PARTY: DEBUG("| Source: THIRD PARTY"); break;
 		case GL_DEBUG_SOURCE_WINDOW_SYSTEM:
 			DEBUG("| Source: WINDOW SYSTEM");
 			break;
-		default:
-			DEBUG("| Source: ", source);
-			break;
+		default: DEBUG("| Source: ", source); break;
 	}
 	DEBUG("| Message:\n", lak::string_view(message, length), "\n");
 }

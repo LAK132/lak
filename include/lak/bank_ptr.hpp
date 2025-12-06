@@ -40,7 +40,8 @@ namespace lak
 
 		static bool empty();
 
-		[[nodiscard]] static T *create(const T &t);
+		[[nodiscard]] static T *create(const T &t)
+		requires(lak::is_copy_constructible_v<T>);
 
 		[[nodiscard]] static T *create(T &&t);
 
@@ -76,7 +77,8 @@ namespace lak
 		using bank<T>::flush;
 		using bank<T>::for_each;
 
-		[[nodiscard]] static unique_bank_ptr create(const T &t);
+		[[nodiscard]] static unique_bank_ptr create(const T &t)
+		requires(lak::is_copy_constructible_v<T>);
 
 		[[nodiscard]] static unique_bank_ptr create(T &&t);
 
@@ -144,7 +146,8 @@ namespace lak
 
 		static void flush();
 
-		[[nodiscard]] static shared_bank_ptr create(const T &t);
+		[[nodiscard]] static shared_bank_ptr create(const T &t)
+		requires(lak::is_copy_constructible_v<T>);
 
 		[[nodiscard]] static shared_bank_ptr create(T &&t);
 

@@ -358,8 +358,7 @@ bool lak::set_active_window(const lak::window_handle *handle)
 	switch (handle->graphics_mode())
 	{
 #ifdef LAK_ENABLE_SOFTRENDER
-		case lak::graphics_mode::Software:
-			return true;
+		case lak::graphics_mode::Software: return true;
 #endif
 
 #ifdef LAK_ENABLE_OPENGL
