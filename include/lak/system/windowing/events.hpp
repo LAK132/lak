@@ -61,6 +61,7 @@ namespace lak
 	enum struct key_code : uint32_t
 	{
 		none = 0,
+
 		lshift,
 		rshift,
 		lctrl,
@@ -69,22 +70,72 @@ namespace lak
 		ralt,
 		lsuper,
 		rsuper,
-		menu,
-		tab,
+
 		left,
 		right,
 		up,
 		down,
-		page_up,
-		page_down,
+
+		del,
+		backspace,
+		tab,
 		home,
 		end,
 		insert,
-		del,
-		backspace,
-		space,
+		page_up,
+		page_down,
 		enter,
 		escape,
+
+		caps_lock,
+		scroll_lock,
+		num_lock,
+
+		space,
+		apostrophe,
+		comma,
+		minus,
+		plus,
+		equal,
+		period,
+		semicolon,
+		slash,
+		backslash,
+		oem102, // alt backslash
+		backtick,
+		open_bracket,
+		close_bracket,
+		// clang-format off
+		num_0, num_1, num_2, num_3, num_4, num_5, num_6, num_7, num_8, num_9,
+		// clang-format on
+		// clang-format off
+		let_A, let_B, let_C, let_D, let_E, let_F, let_G, let_H, let_I, let_J,
+		let_K, let_L, let_M, let_N, let_O, let_P, let_Q, let_R, let_S, let_T,
+		let_U, let_V, let_W, let_X, let_Y, let_Z,
+		// clang-format on
+
+		keypad_decimal,
+		keypad_divide,
+		keypad_multiply,
+		keypad_subtract,
+		keypad_add,
+		keypad_equal,
+		keypad_enter,
+		// clang-format off
+		keypad_0, keypad_1, keypad_2, keypad_3, keypad_4,
+		keypad_5, keypad_6, keypad_7, keypad_8, keypad_9,
+		// clang-format on
+
+		print_screen,
+		pause,
+		menu,
+		forward,
+		back,
+		// clang-format off
+		f1,  f2,  f3,  f4,  f5,  f6,  f7,  f8,  f9,  f10,
+		f11, f12, f13, f14, f15, f16, f17, f18, f19, f20,
+		f21, f22, f23, f24,
+		// clang-format on
 	};
 
 	enum struct mod_key : uint32_t

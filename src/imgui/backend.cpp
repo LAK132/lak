@@ -766,6 +766,136 @@ bool ImGui::ImplProcessEvent(ImplContext context, const lak::event &event)
 			const int scancode = event.key().native_scancode;
 			const bool down    = event.type == lak::event_type::key_down;
 
+			auto lak_to_imgui = [&event](lak::key_code key) -> ImGuiKey
+			{
+				switch (key)
+				{
+					case lak::key_code::tab:             return ImGuiKey_Tab;
+					case lak::key_code::left:            return ImGuiKey_LeftArrow;
+					case lak::key_code::right:           return ImGuiKey_RightArrow;
+					case lak::key_code::up:              return ImGuiKey_UpArrow;
+					case lak::key_code::down:            return ImGuiKey_DownArrow;
+					case lak::key_code::page_up:         return ImGuiKey_PageUp;
+					case lak::key_code::page_down:       return ImGuiKey_PageDown;
+					case lak::key_code::home:            return ImGuiKey_Home;
+					case lak::key_code::end:             return ImGuiKey_End;
+					case lak::key_code::insert:          return ImGuiKey_Insert;
+					case lak::key_code::del:             return ImGuiKey_Delete;
+					case lak::key_code::backspace:       return ImGuiKey_Backspace;
+					case lak::key_code::space:           return ImGuiKey_Space;
+					case lak::key_code::enter:           return ImGuiKey_Enter;
+					case lak::key_code::escape:          return ImGuiKey_Escape;
+					case lak::key_code::lctrl:           return ImGuiKey_LeftCtrl;
+					case lak::key_code::lshift:          return ImGuiKey_LeftShift;
+					case lak::key_code::lalt:            return ImGuiKey_LeftAlt;
+					case lak::key_code::lsuper:          return ImGuiKey_LeftSuper;
+					case lak::key_code::rctrl:           return ImGuiKey_RightCtrl;
+					case lak::key_code::rshift:          return ImGuiKey_RightShift;
+					case lak::key_code::ralt:            return ImGuiKey_RightAlt;
+					case lak::key_code::rsuper:          return ImGuiKey_RightSuper;
+					case lak::key_code::menu:            return ImGuiKey_Menu;
+					case lak::key_code::num_0:           return ImGuiKey_0;
+					case lak::key_code::num_1:           return ImGuiKey_1;
+					case lak::key_code::num_2:           return ImGuiKey_2;
+					case lak::key_code::num_3:           return ImGuiKey_3;
+					case lak::key_code::num_4:           return ImGuiKey_4;
+					case lak::key_code::num_5:           return ImGuiKey_5;
+					case lak::key_code::num_6:           return ImGuiKey_6;
+					case lak::key_code::num_7:           return ImGuiKey_7;
+					case lak::key_code::num_8:           return ImGuiKey_8;
+					case lak::key_code::num_9:           return ImGuiKey_9;
+					case lak::key_code::let_A:           return ImGuiKey_A;
+					case lak::key_code::let_B:           return ImGuiKey_B;
+					case lak::key_code::let_C:           return ImGuiKey_C;
+					case lak::key_code::let_D:           return ImGuiKey_D;
+					case lak::key_code::let_E:           return ImGuiKey_E;
+					case lak::key_code::let_F:           return ImGuiKey_F;
+					case lak::key_code::let_G:           return ImGuiKey_G;
+					case lak::key_code::let_H:           return ImGuiKey_H;
+					case lak::key_code::let_I:           return ImGuiKey_I;
+					case lak::key_code::let_J:           return ImGuiKey_J;
+					case lak::key_code::let_K:           return ImGuiKey_K;
+					case lak::key_code::let_L:           return ImGuiKey_L;
+					case lak::key_code::let_M:           return ImGuiKey_M;
+					case lak::key_code::let_N:           return ImGuiKey_N;
+					case lak::key_code::let_O:           return ImGuiKey_O;
+					case lak::key_code::let_P:           return ImGuiKey_P;
+					case lak::key_code::let_Q:           return ImGuiKey_Q;
+					case lak::key_code::let_R:           return ImGuiKey_R;
+					case lak::key_code::let_S:           return ImGuiKey_S;
+					case lak::key_code::let_T:           return ImGuiKey_T;
+					case lak::key_code::let_U:           return ImGuiKey_U;
+					case lak::key_code::let_V:           return ImGuiKey_V;
+					case lak::key_code::let_W:           return ImGuiKey_W;
+					case lak::key_code::let_X:           return ImGuiKey_X;
+					case lak::key_code::let_Y:           return ImGuiKey_Y;
+					case lak::key_code::let_Z:           return ImGuiKey_Z;
+					case lak::key_code::f1:              return ImGuiKey_F1;
+					case lak::key_code::f2:              return ImGuiKey_F2;
+					case lak::key_code::f3:              return ImGuiKey_F3;
+					case lak::key_code::f4:              return ImGuiKey_F4;
+					case lak::key_code::f5:              return ImGuiKey_F5;
+					case lak::key_code::f6:              return ImGuiKey_F6;
+					case lak::key_code::f7:              return ImGuiKey_F7;
+					case lak::key_code::f8:              return ImGuiKey_F8;
+					case lak::key_code::f9:              return ImGuiKey_F9;
+					case lak::key_code::f10:             return ImGuiKey_F10;
+					case lak::key_code::f11:             return ImGuiKey_F11;
+					case lak::key_code::f12:             return ImGuiKey_F12;
+					case lak::key_code::f13:             return ImGuiKey_F13;
+					case lak::key_code::f14:             return ImGuiKey_F14;
+					case lak::key_code::f15:             return ImGuiKey_F15;
+					case lak::key_code::f16:             return ImGuiKey_F16;
+					case lak::key_code::f17:             return ImGuiKey_F17;
+					case lak::key_code::f18:             return ImGuiKey_F18;
+					case lak::key_code::f19:             return ImGuiKey_F19;
+					case lak::key_code::f20:             return ImGuiKey_F20;
+					case lak::key_code::f21:             return ImGuiKey_F21;
+					case lak::key_code::f22:             return ImGuiKey_F22;
+					case lak::key_code::f23:             return ImGuiKey_F23;
+					case lak::key_code::f24:             return ImGuiKey_F24;
+					case lak::key_code::apostrophe:      return ImGuiKey_Apostrophe;
+					case lak::key_code::comma:           return ImGuiKey_Comma;
+					case lak::key_code::minus:           return ImGuiKey_Minus;
+					case lak::key_code::period:          return ImGuiKey_Period;
+					case lak::key_code::slash:           return ImGuiKey_Slash;
+					case lak::key_code::semicolon:       return ImGuiKey_Semicolon;
+					case lak::key_code::equal:           return ImGuiKey_Equal;
+					case lak::key_code::open_bracket:    return ImGuiKey_LeftBracket;
+					case lak::key_code::backslash:       return ImGuiKey_Backslash;
+					case lak::key_code::close_bracket:   return ImGuiKey_RightBracket;
+					case lak::key_code::backtick:        return ImGuiKey_GraveAccent;
+					case lak::key_code::caps_lock:       return ImGuiKey_CapsLock;
+					case lak::key_code::scroll_lock:     return ImGuiKey_ScrollLock;
+					case lak::key_code::num_lock:        return ImGuiKey_NumLock;
+					case lak::key_code::print_screen:    return ImGuiKey_PrintScreen;
+					case lak::key_code::pause:           return ImGuiKey_Pause;
+					case lak::key_code::keypad_0:        return ImGuiKey_Keypad0;
+					case lak::key_code::keypad_1:        return ImGuiKey_Keypad1;
+					case lak::key_code::keypad_2:        return ImGuiKey_Keypad2;
+					case lak::key_code::keypad_3:        return ImGuiKey_Keypad3;
+					case lak::key_code::keypad_4:        return ImGuiKey_Keypad4;
+					case lak::key_code::keypad_5:        return ImGuiKey_Keypad5;
+					case lak::key_code::keypad_6:        return ImGuiKey_Keypad6;
+					case lak::key_code::keypad_7:        return ImGuiKey_Keypad7;
+					case lak::key_code::keypad_8:        return ImGuiKey_Keypad8;
+					case lak::key_code::keypad_9:        return ImGuiKey_Keypad9;
+					case lak::key_code::keypad_decimal:  return ImGuiKey_KeypadDecimal;
+					case lak::key_code::keypad_divide:   return ImGuiKey_KeypadDivide;
+					case lak::key_code::keypad_multiply: return ImGuiKey_KeypadMultiply;
+					case lak::key_code::keypad_subtract: return ImGuiKey_KeypadSubtract;
+					case lak::key_code::keypad_add:      return ImGuiKey_KeypadAdd;
+					case lak::key_code::keypad_enter:    return ImGuiKey_KeypadEnter;
+					case lak::key_code::keypad_equal:    return ImGuiKey_KeypadEqual;
+					case lak::key_code::back:            return ImGuiKey_AppBack;
+					case lak::key_code::forward:         return ImGuiKey_AppForward;
+					case lak::key_code::oem102:          return ImGuiKey_Oem102;
+					default:                             break;
+				}
+
+				return ImGuiKey_None;
+			};
+
 			io.AddKeyEvent(ImGuiMod_Ctrl,
 			               (mod & lak::mod_key::ctrl) != lak::mod_key::none);
 			io.AddKeyEvent(ImGuiMod_Shift,
@@ -775,140 +905,9 @@ bool ImGui::ImplProcessEvent(ImplContext context, const lak::event &event)
 			io.AddKeyEvent(ImGuiMod_Super,
 			               (mod & lak::mod_key::super) != lak::mod_key::none);
 
-			switch (key)
-			{
-				case lak::key_code::lshift:
-					io.AddKeyEvent(ImGuiKey_LeftShift, down);
-					break;
-				case lak::key_code::rshift:
-					io.AddKeyEvent(ImGuiKey_RightShift, down);
-					break;
-				case lak::key_code::lctrl:
-					io.AddKeyEvent(ImGuiKey_LeftCtrl, down);
-					break;
-				case lak::key_code::rctrl:
-					io.AddKeyEvent(ImGuiKey_RightCtrl, down);
-					break;
-				case lak::key_code::lalt:
-					io.AddKeyEvent(ImGuiKey_LeftAlt, down);
-					break;
-				case lak::key_code::ralt:
-					io.AddKeyEvent(ImGuiKey_RightAlt, down);
-					break;
-				case lak::key_code::lsuper:
-					io.AddKeyEvent(ImGuiKey_LeftSuper, down);
-					break;
-				case lak::key_code::rsuper:
-					io.AddKeyEvent(ImGuiKey_RightSuper, down);
-					break;
-				case lak::key_code::menu:
-					io.AddKeyEvent(ImGuiKey_Menu, down);
-					break;
-				case lak::key_code::tab:
-					io.AddKeyEvent(ImGuiKey_Tab, down);
-					break;
-				case lak::key_code::left:
-					io.AddKeyEvent(ImGuiKey_LeftArrow, down);
-					break;
-				case lak::key_code::right:
-					io.AddKeyEvent(ImGuiKey_RightArrow, down);
-					break;
-				case lak::key_code::up:
-					io.AddKeyEvent(ImGuiKey_UpArrow, down);
-					break;
-				case lak::key_code::down:
-					io.AddKeyEvent(ImGuiKey_DownArrow, down);
-					break;
-				case lak::key_code::page_up:
-					io.AddKeyEvent(ImGuiKey_PageUp, down);
-					break;
-				case lak::key_code::page_down:
-					io.AddKeyEvent(ImGuiKey_PageDown, down);
-					break;
-				case lak::key_code::home:
-					io.AddKeyEvent(ImGuiKey_Home, down);
-					break;
-				case lak::key_code::end:
-					io.AddKeyEvent(ImGuiKey_End, down);
-					break;
-				case lak::key_code::insert:
-					io.AddKeyEvent(ImGuiKey_Insert, down);
-					break;
-				case lak::key_code::del:
-					io.AddKeyEvent(ImGuiKey_Delete, down);
-					break;
-				case lak::key_code::backspace:
-					io.AddKeyEvent(ImGuiKey_Backspace, down);
-					break;
-				case lak::key_code::space:
-					io.AddKeyEvent(ImGuiKey_Space, down);
-					break;
-				case lak::key_code::enter:
-					io.AddKeyEvent(ImGuiKey_Enter, down);
-					break;
-				case lak::key_code::escape:
-					io.AddKeyEvent(ImGuiKey_Escape, down);
-					break;
-				case lak::key_code::none:
-				default:
-					break;
-			}
+			if (auto imkey = lak_to_imgui(key); imkey != ImGuiKey_None)
+				io.AddKeyEvent(imkey, down);
 
-#if defined(LAK_USE_WINAPI)
-			switch (LOWORD(event._platform_event->msg.wParam))
-			{
-				case 'A':
-					io.AddKeyEvent(ImGuiKey_A, down);
-					break;
-				case 'C':
-					io.AddKeyEvent(ImGuiKey_C, down);
-					break;
-				case 'V':
-					io.AddKeyEvent(ImGuiKey_V, down);
-					break;
-				case 'X':
-					io.AddKeyEvent(ImGuiKey_X, down);
-					break;
-				case 'Y':
-					io.AddKeyEvent(ImGuiKey_Y, down);
-					break;
-				case 'Z':
-					io.AddKeyEvent(ImGuiKey_Z, down);
-					break;
-				default:
-					break;
-			}
-#elif defined(LAK_USE_XLIB)
-#	error "NYI"
-			io.BackendPlatformName = "imgui_impl_lak_xlib";
-#elif defined(LAK_USE_XCB)
-#	error "NYI"
-			io.BackendPlatformName = "imgui_impl_lak_xcb";
-#elif defined(LAK_USE_SDL)
-			switch (scancode)
-			{
-				case SDL_SCANCODE_A:
-					io.AddKeyEvent(ImGuiKey_A, down);
-					break;
-				case SDL_SCANCODE_C:
-					io.AddKeyEvent(ImGuiKey_C, down);
-					break;
-				case SDL_SCANCODE_V:
-					io.AddKeyEvent(ImGuiKey_V, down);
-					break;
-				case SDL_SCANCODE_X:
-					io.AddKeyEvent(ImGuiKey_X, down);
-					break;
-				case SDL_SCANCODE_Y:
-					io.AddKeyEvent(ImGuiKey_Y, down);
-					break;
-				case SDL_SCANCODE_Z:
-					io.AddKeyEvent(ImGuiKey_Z, down);
-					break;
-			}
-#else
-#	error "No implementation specified"
-#endif
 			return true;
 		}
 

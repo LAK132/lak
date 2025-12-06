@@ -68,24 +68,146 @@ lak::key_code get_key_code(WPARAM wParam, LPARAM lParam)
 		case VK_RMENU:    return lak::key_code::ralt;
 		case VK_LWIN:     return lak::key_code::lsuper;
 		case VK_RWIN:     return lak::key_code::rsuper;
-		case VK_APPS:     return lak::key_code::menu;
-		case VK_TAB:      return lak::key_code::tab;
-		case VK_LEFT:     return lak::key_code::left;
-		case VK_RIGHT:    return lak::key_code::right;
-		case VK_UP:       return lak::key_code::up;
-		case VK_DOWN:     return lak::key_code::down;
-		case VK_PRIOR:    return lak::key_code::page_up;
-		case VK_NEXT:     return lak::key_code::page_down;
-		case VK_HOME:     return lak::key_code::home;
-		case VK_END:      return lak::key_code::end;
-		case VK_INSERT:   return lak::key_code::insert;
-		case VK_DELETE:   return lak::key_code::del;
-		case VK_BACK:     return lak::key_code::backspace;
-		case VK_SPACE:    return lak::key_code::space;
-		case VK_RETURN:   return lak::key_code::enter;
-		case VK_ESCAPE:   return lak::key_code::escape;
 
-		default: return lak::key_code::none;
+		case VK_LEFT:  return lak::key_code::left;
+		case VK_RIGHT: return lak::key_code::right;
+		case VK_UP:    return lak::key_code::up;
+		case VK_DOWN:  return lak::key_code::down;
+
+		case VK_DELETE: return lak::key_code::del;
+		case VK_BACK:   return lak::key_code::backspace;
+		case VK_TAB:    return lak::key_code::tab;
+		case VK_HOME:   return lak::key_code::home;
+		case VK_END:    return lak::key_code::end;
+		case VK_INSERT: return lak::key_code::insert;
+		case VK_PRIOR:  return lak::key_code::page_up;
+		case VK_NEXT:   return lak::key_code::page_down;
+		case VK_RETURN:
+			return isExtended ? lak::key_code::keypad_enter : lak::key_code::enter;
+		case VK_ESCAPE: return lak::key_code::escape;
+
+		case VK_SPACE:      return lak::key_code::space;
+		// case VK_:           return lak::key_code::apostrophe;    // scancode
+		case VK_OEM_COMMA:  return lak::key_code::comma;
+		case VK_OEM_MINUS:  return lak::key_code::minus;
+		case VK_OEM_PLUS:   return lak::key_code::plus;
+		// case VK_:           return lak::key_code::equal;         // scancode
+		case VK_OEM_PERIOD: return lak::key_code::period;
+		// case VK_:           return lak::key_code::semicolon;     // scancode
+		// case VK_:           return lak::key_code::slash;         // scancode
+		// case VK_:           return lak::key_code::backslash;     // scancode
+		// case VK_:           return lak::key_code::oem102;        // scancode
+		// case VK_:           return lak::key_code::backtick;      // scancode
+		// case VK_:           return lak::key_code::open_bracket;  // scancode
+		// case VK_:           return lak::key_code::close_bracket; // scancode
+		case '0':           return lak::key_code::num_0;
+		case '1':           return lak::key_code::num_1;
+		case '2':           return lak::key_code::num_2;
+		case '3':           return lak::key_code::num_3;
+		case '4':           return lak::key_code::num_4;
+		case '5':           return lak::key_code::num_5;
+		case '6':           return lak::key_code::num_6;
+		case '7':           return lak::key_code::num_7;
+		case '8':           return lak::key_code::num_8;
+		case '9':           return lak::key_code::num_9;
+		case 'A':           return lak::key_code::let_A;
+		case 'B':           return lak::key_code::let_B;
+		case 'C':           return lak::key_code::let_C;
+		case 'D':           return lak::key_code::let_D;
+		case 'E':           return lak::key_code::let_E;
+		case 'F':           return lak::key_code::let_F;
+		case 'G':           return lak::key_code::let_G;
+		case 'H':           return lak::key_code::let_H;
+		case 'I':           return lak::key_code::let_I;
+		case 'J':           return lak::key_code::let_J;
+		case 'K':           return lak::key_code::let_K;
+		case 'L':           return lak::key_code::let_L;
+		case 'M':           return lak::key_code::let_M;
+		case 'N':           return lak::key_code::let_N;
+		case 'O':           return lak::key_code::let_O;
+		case 'P':           return lak::key_code::let_P;
+		case 'Q':           return lak::key_code::let_Q;
+		case 'R':           return lak::key_code::let_R;
+		case 'S':           return lak::key_code::let_S;
+		case 'T':           return lak::key_code::let_T;
+		case 'U':           return lak::key_code::let_U;
+		case 'V':           return lak::key_code::let_V;
+		case 'W':           return lak::key_code::let_W;
+		case 'X':           return lak::key_code::let_X;
+		case 'Y':           return lak::key_code::let_Y;
+		case 'Z':           return lak::key_code::let_Z;
+
+		case VK_DECIMAL:  return lak::key_code::keypad_decimal;
+		case VK_DIVIDE:   return lak::key_code::keypad_divide;
+		case VK_MULTIPLY: return lak::key_code::keypad_multiply;
+		case VK_SUBTRACT: return lak::key_code::keypad_subtract;
+		case VK_ADD:      return lak::key_code::keypad_add;
+		// case VK_:         return lak::key_code::keypad_equal;
+		case VK_NUMPAD0:  return lak::key_code::keypad_0;
+		case VK_NUMPAD1:  return lak::key_code::keypad_1;
+		case VK_NUMPAD2:  return lak::key_code::keypad_2;
+		case VK_NUMPAD3:  return lak::key_code::keypad_3;
+		case VK_NUMPAD4:  return lak::key_code::keypad_4;
+		case VK_NUMPAD5:  return lak::key_code::keypad_5;
+		case VK_NUMPAD6:  return lak::key_code::keypad_6;
+		case VK_NUMPAD7:  return lak::key_code::keypad_7;
+		case VK_NUMPAD8:  return lak::key_code::keypad_8;
+		case VK_NUMPAD9:  return lak::key_code::keypad_9;
+
+		case VK_SNAPSHOT:        return lak::key_code::print_screen;
+		case VK_PAUSE:           return lak::key_code::pause;
+		case VK_APPS:            return lak::key_code::menu;
+		case VK_BROWSER_BACK:    return lak::key_code::back;
+		case VK_BROWSER_FORWARD: return lak::key_code::forward;
+		case VK_F1:              return lak::key_code::f1;
+		case VK_F2:              return lak::key_code::f2;
+		case VK_F3:              return lak::key_code::f3;
+		case VK_F4:              return lak::key_code::f4;
+		case VK_F5:              return lak::key_code::f5;
+		case VK_F6:              return lak::key_code::f6;
+		case VK_F7:              return lak::key_code::f7;
+		case VK_F8:              return lak::key_code::f8;
+		case VK_F9:              return lak::key_code::f9;
+		case VK_F10:             return lak::key_code::f10;
+		case VK_F11:             return lak::key_code::f11;
+		case VK_F12:             return lak::key_code::f12;
+		case VK_F13:             return lak::key_code::f13;
+		case VK_F14:             return lak::key_code::f14;
+		case VK_F15:             return lak::key_code::f15;
+		case VK_F16:             return lak::key_code::f16;
+		case VK_F17:             return lak::key_code::f17;
+		case VK_F18:             return lak::key_code::f18;
+		case VK_F19:             return lak::key_code::f19;
+		case VK_F20:             return lak::key_code::f20;
+		case VK_F21:             return lak::key_code::f21;
+		case VK_F22:             return lak::key_code::f22;
+		case VK_F23:             return lak::key_code::f23;
+		case VK_F24:             return lak::key_code::f24;
+
+		default:
+			switch (scanCode)
+			{
+				// https://handmade.network/forums/t/2011-keyboard_inputs_-_scancodes,_raw_input,_text_input,_key_names
+				case 0x3A:   return lak::key_code::caps_lock;
+				case 0x46:   return lak::key_code::scroll_lock;
+				// :TODO: i don't have a num lock to verify...
+				case 0xE045: return lak::key_code::num_lock;
+
+				case 0x28: return lak::key_code::apostrophe;
+				case 0x33: return lak::key_code::comma;
+				case 0x0C: return lak::key_code::minus;
+				case 0x0D: return lak::key_code::equal;
+				case 0x34: return lak::key_code::period;
+				case 0x27: return lak::key_code::semicolon;
+				case 0x35: return lak::key_code::slash;
+				case 0x2B: return lak::key_code::backslash;
+				case 0x56: return lak::key_code::oem102;
+				case 0x29: return lak::key_code::backtick;
+				case 0x1A: return lak::key_code::open_bracket;
+				case 0x1B: return lak::key_code::close_bracket;
+
+				default: return lak::key_code::none;
+			}
 	}
 }
 
