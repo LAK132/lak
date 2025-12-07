@@ -1130,6 +1130,7 @@ ImTextureID ImplGLCreateTexture(ImGui::ImplContext context,
 	  .apply(GL_TEXTURE_MIN_FILTER, GL_LINEAR)
 	  .apply(GL_TEXTURE_MAG_FILTER, GL_NEAREST)
 	  .store_mode(GL_UNPACK_ROW_LENGTH, 0)
+	  .store_mode(GL_UNPACK_ALIGNMENT, 1)
 	  .build(0, GL_RGBA, lak::vec2i_t(size), 0, gl_colour, gl_channel, pixels);
 
 	return (ImTextureID)(uintptr_t)tex;
