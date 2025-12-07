@@ -1,5 +1,6 @@
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include "lak/imgui/widgets.hpp"
+#include "lak/imgui/backend.hpp"
 
 #include "lak/system/opengl/gl3w.hpp"
 #include "lak/system/opengl/state.hpp"
@@ -14,6 +15,94 @@
 #endif
 
 #include <imgui_internal.h>
+
+/* --- CreateTexture --- */
+
+ImTextureRef lak::CreateTexture(const lak::image<lak::vec4u8_t> &image)
+{
+	return ImGui::ImplCreateTexture(
+	  (ImGui::ImplContext)ImGui::GetIO().BackendPlatformUserData,
+	  image.data(),
+	  image.size(),
+	  ImGui::ImplTextureColourFormat::RGBA,
+	  ImGui::ImplTextureChannelFormat::U8);
+}
+
+ImTextureRef lak::CreateTexture(const lak::image<lak::vec3u8_t> &image)
+{
+	return ImGui::ImplCreateTexture(
+	  (ImGui::ImplContext)ImGui::GetIO().BackendPlatformUserData,
+	  image.data(),
+	  image.size(),
+	  ImGui::ImplTextureColourFormat::RGB,
+	  ImGui::ImplTextureChannelFormat::U8);
+}
+
+ImTextureRef lak::CreateTexture(const lak::image<lak::vec4u16_t> &image)
+{
+	return ImGui::ImplCreateTexture(
+	  (ImGui::ImplContext)ImGui::GetIO().BackendPlatformUserData,
+	  image.data(),
+	  image.size(),
+	  ImGui::ImplTextureColourFormat::RGBA,
+	  ImGui::ImplTextureChannelFormat::U16);
+}
+
+ImTextureRef lak::CreateTexture(const lak::image<lak::vec3u16_t> &image)
+{
+	return ImGui::ImplCreateTexture(
+	  (ImGui::ImplContext)ImGui::GetIO().BackendPlatformUserData,
+	  image.data(),
+	  image.size(),
+	  ImGui::ImplTextureColourFormat::RGB,
+	  ImGui::ImplTextureChannelFormat::U16);
+}
+
+ImTextureRef lak::CreateTexture(const lak::image<lak::vec4f_t> &image)
+{
+	return ImGui::ImplCreateTexture(
+	  (ImGui::ImplContext)ImGui::GetIO().BackendPlatformUserData,
+	  image.data(),
+	  image.size(),
+	  ImGui::ImplTextureColourFormat::RGBA,
+	  ImGui::ImplTextureChannelFormat::F32);
+}
+
+ImTextureRef lak::CreateTexture(const lak::image<lak::vec3f_t> &image)
+{
+	return ImGui::ImplCreateTexture(
+	  (ImGui::ImplContext)ImGui::GetIO().BackendPlatformUserData,
+	  image.data(),
+	  image.size(),
+	  ImGui::ImplTextureColourFormat::RGB,
+	  ImGui::ImplTextureChannelFormat::F32);
+}
+
+ImTextureRef lak::CreateTexture(const lak::image<float> &image)
+{
+	return ImGui::ImplCreateTexture(
+	  (ImGui::ImplContext)ImGui::GetIO().BackendPlatformUserData,
+	  image.data(),
+	  image.size(),
+	  ImGui::ImplTextureColourFormat::R,
+	  ImGui::ImplTextureChannelFormat::F32);
+}
+
+/* --- DestroyTexture --- */
+
+void lak::DestroyTexture(ImTextureRef tex)
+{
+	return ImGui::ImplDestroyTexture(
+	  (ImGui::ImplContext)ImGui::GetIO().BackendPlatformUserData, tex);
+}
+
+/* --- TextureSize --- */
+
+lak::vec2s_t lak::TextureSize(ImTextureRef tex)
+{
+	return ImGui::ImplTextureSize(
+	  (ImGui::ImplContext)ImGui::GetIO().BackendPlatformUserData, tex);
+}
 
 /* --- VertSplitter --- */
 

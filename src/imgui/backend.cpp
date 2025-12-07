@@ -442,15 +442,21 @@ void ImGui::ImplInitContext(ImplContext context, const lak::window &window)
 #	error "No implementation specified"
 #endif
 
+	ImGuiIO &io = ImGui::GetIO();
+
+	io.BackendPlatformUserData = context;
+
 	switch (context->mode)
 	{
 #ifdef LAK_ENABLE_SOFTRENDER
 		case lak::graphics_mode::Software:
+			io.BackendRendererUserData = context->sr_context;
 			ImplInitSRContext(context->sr_context, window);
 			break;
 #endif
 #ifdef LAK_ENABLE_OPENGL
 		case lak::graphics_mode::OpenGL:
+			io.BackendRendererUserData = context->gl_context;
 			ImplInitGLContext(context->gl_context, window);
 			break;
 #endif
@@ -937,6 +943,464 @@ bool ImGui::ImplProcessEvent(ImplContext context, const lak::event &event)
 	return false;
 }
 
+#ifdef LAK_ENABLE_SOFTRENDER
+ImTextureID ImplSRCreateTexture(ImGui::ImplContext context,
+                                const void *pixels,
+                                lak::vec2s_t size,
+                                ImGui::ImplTextureColourFormat colour,
+                                ImGui::ImplTextureChannelFormat channel)
+{
+	ASSERT(channel == ImGui::ImplTextureChannelFormat::U8);
+
+	auto compressor = lak::overloaded{
+	  [](lak::span<const uint16_t> val) -> lak::span<uint8_t>
+	  {
+		  auto result =
+		    lak::span<uint8_t>((uint8_t *)malloc(val.size()), val.size());
+		  for (size_t i = 0U; i < result.size(); ++i) result[i] = val[i] >> 8U;
+		  return result;
+	  },
+	  [](lak::span<const float> val) -> lak::span<uint8_t>
+	  {
+		  auto result =
+		    lak::span<uint8_t>((uint8_t *)malloc(val.size()), val.size());
+		  for (size_t i = 0U; i < result.size(); ++i)
+			  result[i] = uint8_t(std::min<uint64_t>(uint64_t(val[i] * 256), 255));
+		  return result;
+	  }};
+
+	texture_base_t *tex;
+	switch (colour)
+	{
+		case ImGui::ImplTextureColourFormat::RGBA:
+		{
+			auto t = new texture_color32_t;
+			switch (channel)
+			{
+				case ImGui::ImplTextureChannelFormat::U8:
+					t->copy(size.x, size.y, (const color32_t *)pixels);
+					break;
+				case ImGui::ImplTextureChannelFormat::U16:
+					t->init(size.x,
+					        size.y,
+					        (color32_t *)compressor(
+					          lak::span<const uint16_t>(lak::span<const void>(
+					            pixels, size.x * size.y * sizeof(uint16_t) * 4U)))
+					          .data());
+					break;
+				case ImGui::ImplTextureChannelFormat::F32:
+					t->init(size.x,
+					        size.y,
+					        (color32_t *)compressor(
+					          lak::span<const float>(lak::span<const void>(
+					            pixels, size.x * size.y * sizeof(float) * 4U)))
+					          .data());
+					break;
+			}
+			tex = t;
+		}
+		break;
+		case ImGui::ImplTextureColourFormat::RGB:
+		{
+			auto t = new texture_color24_t;
+			switch (channel)
+			{
+				case ImGui::ImplTextureChannelFormat::U8:
+					t->copy(size.x, size.y, (const color24_t *)pixels);
+					break;
+				case ImGui::ImplTextureChannelFormat::U16:
+					t->init(size.x,
+					        size.y,
+					        (color24_t *)compressor(
+					          lak::span<const uint16_t>(lak::span<const void>(
+					            pixels, size.x * size.y * sizeof(uint16_t) * 3U)))
+					          .data());
+					break;
+				case ImGui::ImplTextureChannelFormat::F32:
+					t->init(size.x,
+					        size.y,
+					        (color24_t *)compressor(
+					          lak::span<const float>(lak::span<const void>(
+					            pixels, size.x * size.y * sizeof(float) * 3U)))
+					          .data());
+					break;
+			}
+			tex = t;
+		}
+		break;
+		case ImGui::ImplTextureColourFormat::R:
+		{
+			auto t = new texture_value8_t;
+			switch (channel)
+			{
+				case ImGui::ImplTextureChannelFormat::U8:
+					t->copy(size.x, size.y, (const value8_t *)pixels);
+					break;
+				case ImGui::ImplTextureChannelFormat::U16:
+					t->init(size.x,
+					        size.y,
+					        (value8_t *)compressor(
+					          lak::span<const uint16_t>(lak::span<const void>(
+					            pixels, size.x * size.y * sizeof(uint16_t) * 1U)))
+					          .data());
+					break;
+				case ImGui::ImplTextureChannelFormat::F32:
+					t->init(size.x,
+					        size.y,
+					        (value8_t *)compressor(
+					          lak::span<const float>(lak::span<const void>(
+					            pixels, size.x * size.y * sizeof(float) * 1U)))
+					          .data());
+					break;
+			}
+			tex = t;
+		}
+		break;
+		case ImGui::ImplTextureColourFormat::A:
+		{
+			auto t = new texture_alpha8_t;
+			switch (channel)
+			{
+				case ImGui::ImplTextureChannelFormat::U8:
+					t->copy(size.x, size.y, (const alpha8_t *)pixels);
+					break;
+				case ImGui::ImplTextureChannelFormat::U16:
+					t->init(size.x,
+					        size.y,
+					        (alpha8_t *)compressor(
+					          lak::span<const uint16_t>(lak::span<const void>(
+					            pixels, size.x * size.y * sizeof(uint16_t) * 1U)))
+					          .data());
+					break;
+				case ImGui::ImplTextureChannelFormat::F32:
+					t->init(size.x,
+					        size.y,
+					        (alpha8_t *)compressor(
+					          lak::span<const float>(lak::span<const void>(
+					            pixels, size.x * size.y * sizeof(float) * 1U)))
+					          .data());
+					break;
+			}
+			tex = t;
+		}
+		break;
+		default: ASSERT_UNREACHABLE();
+	}
+
+	return (ImTextureID)tex;
+}
+#endif
+
+#ifdef LAK_ENABLE_OPENGL
+ImTextureID ImplGLCreateTexture(ImGui::ImplContext context,
+                                const void *pixels,
+                                lak::vec2s_t size,
+                                ImGui::ImplTextureColourFormat colour,
+                                ImGui::ImplTextureChannelFormat channel)
+{
+	auto tex = new lak::opengl::texture;
+
+	ASSERT(!!tex);
+
+	GLenum gl_colour;
+	switch (colour)
+	{
+		case ImGui::ImplTextureColourFormat::RGBA: gl_colour = GL_RGBA; break;
+		case ImGui::ImplTextureColourFormat::BGRA: gl_colour = GL_BGRA; break;
+		case ImGui::ImplTextureColourFormat::RGB:  gl_colour = GL_RGB; break;
+		case ImGui::ImplTextureColourFormat::R:    gl_colour = GL_RED; break;
+		default:                                   ASSERT_UNREACHABLE();
+	}
+
+	GLenum gl_channel;
+	switch (channel)
+	{
+		case ImGui::ImplTextureChannelFormat::U8:
+			gl_channel = GL_UNSIGNED_BYTE;
+			break;
+		case ImGui::ImplTextureChannelFormat::U16:
+			gl_channel = GL_UNSIGNED_SHORT;
+			break;
+		case ImGui::ImplTextureChannelFormat::F32: gl_channel = GL_FLOAT; break;
+		default:                                   ASSERT_UNREACHABLE();
+	}
+
+	tex->init(GL_TEXTURE_2D)
+	  .bind()
+	  .apply(GL_TEXTURE_MIN_FILTER, GL_LINEAR)
+	  .apply(GL_TEXTURE_MAG_FILTER, GL_NEAREST)
+	  .store_mode(GL_UNPACK_ROW_LENGTH, 0)
+	  .build(0, GL_RGBA, lak::vec2i_t(size), 0, gl_colour, gl_channel, pixels);
+
+	return (ImTextureID)(uintptr_t)tex;
+}
+#endif
+
+ImTextureRef ImGui::ImplCreateTexture(ImGui::ImplContext context,
+                                      const void *pixels,
+                                      lak::vec2s_t size,
+                                      ImGui::ImplTextureColourFormat colour,
+                                      ImGui::ImplTextureChannelFormat channel)
+{
+	ASSERT(context);
+	switch (context->mode)
+	{
+#ifdef LAK_ENABLE_SOFTRENDER
+		case lak::graphics_mode::Software:
+			return ImplSRCreateTexture(context, pixels, size, colour, channel);
+			break;
+#endif
+#ifdef LAK_ENABLE_OPENGL
+		case lak::graphics_mode::OpenGL:
+			return ImplGLCreateTexture(context, pixels, size, colour, channel);
+			break;
+#endif
+		default: FATAL("Invalid context mode"); break;
+	}
+}
+
+#ifdef LAK_ENABLE_SOFTRENDER
+ImTextureRef ImplSRUpdateTexture(ImGui::ImplContext context,
+                                 ImTextureID tex,
+                                 const void *pixels,
+                                 lak::vec2s_t size,
+                                 ImGui::ImplTextureColourFormat colour,
+                                 ImGui::ImplTextureChannelFormat channel,
+                                 lak::span<const ImTextureRect> updates)
+{
+	// :TODO: do this correctly
+
+	return ImplSRCreateTexture(context, pixels, size, colour, channel);
+}
+#endif
+
+#ifdef LAK_ENABLE_OPENGL
+ImTextureRef ImplGLUpdateTexture(ImGui::ImplContext context,
+                                 ImTextureID tex,
+                                 const void *pixels,
+                                 lak::vec2s_t size,
+                                 ImGui::ImplTextureColourFormat colour,
+                                 ImGui::ImplTextureChannelFormat channel,
+                                 lak::span<const ImTextureRect> updates)
+{
+	auto t = (lak::opengl::texture *)(uintptr_t)tex;
+
+	size_t pixel_stride;
+	GLenum gl_colour;
+	switch (colour)
+	{
+		case ImGui::ImplTextureColourFormat::RGBA:
+			gl_colour    = GL_RGBA;
+			pixel_stride = 4U;
+			break;
+		case ImGui::ImplTextureColourFormat::BGRA:
+			gl_colour    = GL_BGRA;
+			pixel_stride = 4U;
+			break;
+		case ImGui::ImplTextureColourFormat::RGB:
+			gl_colour    = GL_RGB;
+			pixel_stride = 3U;
+			break;
+		case ImGui::ImplTextureColourFormat::R:
+			gl_colour    = GL_RED;
+			pixel_stride = 1U;
+			break;
+		default: ASSERT_UNREACHABLE();
+	}
+
+	GLenum gl_channel;
+	switch (channel)
+	{
+		case ImGui::ImplTextureChannelFormat::U8:
+			gl_channel = GL_UNSIGNED_BYTE;
+			pixel_stride *= 1U;
+			break;
+		case ImGui::ImplTextureChannelFormat::U16:
+			gl_channel = GL_UNSIGNED_SHORT;
+			pixel_stride *= 2U;
+			break;
+		case ImGui::ImplTextureChannelFormat::F32:
+			gl_channel = GL_FLOAT;
+			pixel_stride *= 4U;
+			break;
+		default: ASSERT_UNREACHABLE();
+	}
+
+	auto byte_pixels = lak::span<const byte_t>(
+	  lak::span<const void>(pixels, size.x * size.y * pixel_stride));
+
+	t->bind().store_mode(GL_UNPACK_ROW_LENGTH, (GLint)size.x);
+	for (const ImTextureRect &r : updates)
+		t->rebuild(
+		  0,
+		  lak::vec2i_t{r.x, r.y},
+		  lak::vec2i_t{r.w, r.h},
+		  gl_colour,
+		  gl_channel,
+		  byte_pixels.subspan((r.x * pixel_stride) + (r.y * size.x * pixel_stride))
+		    .data());
+	t->store_mode(GL_UNPACK_ROW_LENGTH, 0);
+
+	return tex;
+}
+#endif
+
+ImTextureRef ImGui::ImplUpdateTexture(ImplContext context,
+                                      ImTextureRef tex,
+                                      const void *pixels,
+                                      lak::vec2s_t size,
+                                      ImplTextureColourFormat colour,
+                                      ImplTextureChannelFormat channel,
+                                      lak::span<const ImTextureRect> updates)
+{
+	ASSERT(context);
+	switch (context->mode)
+	{
+#ifdef LAK_ENABLE_SOFTRENDER
+		case lak::graphics_mode::Software:
+			return ImplSRUpdateTexture(
+			  context, tex.GetTexID(), pixels, size, colour, channel, updates);
+			break;
+#endif
+#ifdef LAK_ENABLE_OPENGL
+		case lak::graphics_mode::OpenGL:
+			return ImplGLUpdateTexture(
+			  context, tex.GetTexID(), pixels, size, colour, channel, updates);
+			break;
+#endif
+		default: FATAL("Invalid context mode"); break;
+	}
+}
+
+#ifdef LAK_ENABLE_SOFTRENDER
+void ImplSRDestroyTexture(ImGui::ImplContext context, ImTextureID tex)
+{
+	auto _t = (texture_base_t *)(uintptr_t)tex;
+	switch (_t->type)
+	{
+		case texture_type_t::ALPHA8:  delete (texture_alpha8_t *)_t; break;
+		case texture_type_t::VALUE8:  delete (texture_value8_t *)_t; break;
+		case texture_type_t::COLOR16: delete (texture_color16_t *)_t; break;
+		case texture_type_t::COLOR24: delete (texture_color24_t *)_t; break;
+		case texture_type_t::COLOR32: delete (texture_color32_t *)_t; break;
+		default:                      ASSERT_UNREACHABLE();
+	}
+}
+#endif
+
+#ifdef LAK_ENABLE_OPENGL
+void ImplGLDestroyTexture(ImGui::ImplContext context, ImTextureID tex)
+{
+	delete (lak::opengl::texture *)(uintptr_t)tex;
+}
+#endif
+
+void ImGui::ImplDestroyTexture(ImplContext context, ImTextureRef tex)
+{
+	ASSERT(context);
+	switch (context->mode)
+	{
+#ifdef LAK_ENABLE_SOFTRENDER
+		case lak::graphics_mode::Software:
+			ImplSRDestroyTexture(context, tex.GetTexID());
+			break;
+#endif
+#ifdef LAK_ENABLE_OPENGL
+		case lak::graphics_mode::OpenGL:
+			ImplGLDestroyTexture(context, tex.GetTexID());
+			break;
+#endif
+		default: FATAL("Invalid context mode"); break;
+	}
+}
+
+#ifdef LAK_ENABLE_SOFTRENDER
+lak::vec2s_t ImplSRTextureSize(ImGui::ImplContext context, ImTextureID tex)
+{
+	auto _t = (texture_base_t *)(uintptr_t)tex;
+	return {_t->w, _t->h};
+}
+#endif
+
+#ifdef LAK_ENABLE_OPENGL
+lak::vec2s_t ImplGLTextureSize(ImGui::ImplContext context, ImTextureID tex)
+{
+	return lak::vec2s_t(((lak::opengl::texture *)(uintptr_t)tex)->size());
+}
+#endif
+
+lak::vec2s_t ImGui::ImplTextureSize(ImplContext context, ImTextureRef tex)
+{
+	ASSERT(context);
+	switch (context->mode)
+	{
+#ifdef LAK_ENABLE_SOFTRENDER
+		case lak::graphics_mode::Software:
+			return ImplSRTextureSize(context, tex.GetTexID());
+			break;
+#endif
+#ifdef LAK_ENABLE_OPENGL
+		case lak::graphics_mode::OpenGL:
+			return ImplGLTextureSize(context, tex.GetTexID());
+			break;
+#endif
+		default: FATAL("Invalid context mode"); break;
+	}
+}
+
+void ImGui::ImplUpdateTexture(ImplContext context, ImTextureData *texture)
+{
+	ImGui::ImplTextureColourFormat colour;
+	ImGui::ImplTextureChannelFormat channel;
+
+	switch (texture->Format)
+	{
+		case ImTextureFormat_RGBA32:
+			colour  = ImGui::ImplTextureColourFormat::RGBA;
+			channel = ImGui::ImplTextureChannelFormat::U8;
+			break;
+		case ImTextureFormat_Alpha8:
+			colour  = ImGui::ImplTextureColourFormat::A;
+			channel = ImGui::ImplTextureChannelFormat::U8;
+			break;
+		default: ASSERT_UNREACHABLE();
+	}
+
+	if (texture->Status == ImTextureStatus_WantCreate)
+	{
+		texture->SetTexID(ImGui::ImplCreateTexture(
+		                    context,
+		                    texture->GetPixels(),
+		                    {size_t(texture->Width), size_t(texture->Height)},
+		                    colour,
+		                    channel)
+		                    .GetTexID());
+
+		texture->SetStatus(ImTextureStatus_OK);
+	}
+	else if (texture->Status == ImTextureStatus_WantUpdates)
+	{
+		texture->SetTexID(ImGui::ImplUpdateTexture(
+		                    context,
+		                    texture->GetTexRef(),
+		                    texture->GetPixels(),
+		                    {size_t(texture->Width), size_t(texture->Height)},
+		                    colour,
+		                    channel,
+		                    ImGui::ToSpan(texture->Updates))
+		                    .GetTexID());
+
+		texture->SetStatus(ImTextureStatus_OK);
+	}
+	else if (texture->Status == ImTextureStatus_WantDestroy &&
+	         texture->UnusedFrames > 0)
+	{
+		ImGui::ImplDestroyTexture(context, texture->GetTexRef());
+
+		texture->SetStatus(ImTextureStatus_Destroyed);
+	}
+}
+
 void ImGui::ImplRender(ImplContext context, const bool call_base_render)
 {
 	if (call_base_render) Render();
@@ -1027,55 +1491,10 @@ void ImplGLRender(ImGui::ImplContext context, ImDrawData *draw_data)
 #		endif
 #	endif
 
-	auto update_texture = [](ImTextureData *texture)
-	{
-		if (texture->Status == ImTextureStatus_WantCreate)
-		{
-			ASSERT(texture->Format == ImTextureFormat_RGBA32);
-
-			auto tex = new lak::opengl::texture;
-
-			tex->init(GL_TEXTURE_2D)
-			  .bind()
-			  .apply(GL_TEXTURE_MIN_FILTER, GL_LINEAR)
-			  .apply(GL_TEXTURE_MAG_FILTER, GL_NEAREST)
-			  .store_mode(GL_UNPACK_ROW_LENGTH, 0)
-			  .build(0,
-			         GL_RGBA,
-			         lak::vec2i_t{texture->Width, texture->Height},
-			         0,
-			         GL_RGBA,
-			         GL_UNSIGNED_BYTE,
-			         texture->GetPixels());
-
-			texture->SetTexID((ImTextureID)(uintptr_t)tex);
-			texture->SetStatus(ImTextureStatus_OK);
-		}
-		else if (texture->Status == ImTextureStatus_WantUpdates)
-		{
-			auto tex = (lak::opengl::texture *)(uintptr_t)texture->GetTexID();
-			tex->bind().store_mode(GL_UNPACK_ROW_LENGTH, texture->Width);
-			for (ImTextureRect &r : texture->Updates)
-				tex->rebuild(0,
-				             lak::vec2i_t{r.x, r.y},
-				             lak::vec2i_t{r.w, r.h},
-				             GL_RGBA,
-				             GL_UNSIGNED_BYTE,
-				             texture->GetPixelsAt(r.x, r.y));
-			tex->store_mode(GL_UNPACK_ROW_LENGTH, 0);
-			texture->SetStatus(ImTextureStatus_OK);
-		}
-		else if (texture->Status == ImTextureStatus_WantDestroy &&
-		         texture->UnusedFrames > 0)
-		{
-			delete (lak::opengl::texture *)(uintptr_t)texture->GetTexID();
-			texture->SetStatus(ImTextureStatus_Destroyed);
-		}
-	};
-
 	if (draw_data->Textures != nullptr)
 		for (ImTextureData *tex : *draw_data->Textures)
-			if (tex->Status != ImTextureStatus_OK) update_texture(tex);
+			if (tex->Status != ImTextureStatus_OK)
+				ImGui::ImplUpdateTexture(context, tex);
 
 	lak::opengl::call_checked(glGenVertexArrays, 1, &gl_context->vertex_array)
 	  .UNWRAP();

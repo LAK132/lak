@@ -39,6 +39,42 @@ namespace ImGui
 
 	bool ImplProcessEvent(ImplContext context, const lak::event &event);
 
+	enum struct ImplTextureColourFormat
+	{
+		RGBA,
+		BGRA,
+		RGB,
+		R,
+		A,
+	};
+
+	enum struct ImplTextureChannelFormat
+	{
+		U8,
+		U16,
+		F32,
+	};
+
+	ImTextureRef ImplCreateTexture(ImplContext context,
+	                               const void *pixels,
+	                               lak::vec2s_t size,
+	                               ImplTextureColourFormat colour,
+	                               ImplTextureChannelFormat channel);
+
+	ImTextureRef ImplUpdateTexture(ImplContext context,
+	                               ImTextureRef tex,
+	                               const void *pixels,
+	                               lak::vec2s_t size,
+	                               ImplTextureColourFormat colour,
+	                               ImplTextureChannelFormat channel,
+	                               lak::span<const ImTextureRect> updates);
+
+	void ImplDestroyTexture(ImplContext context, ImTextureRef tex);
+
+	lak::vec2s_t ImplTextureSize(ImplContext context, ImTextureRef tex);
+
+	void ImplUpdateTexture(ImplContext context, ImTextureData *texture);
+
 	void ImplRender(ImplContext context, const bool call_base_render = true);
 
 	void ImplRenderData(ImplContext context, ImDrawData *draw_data);

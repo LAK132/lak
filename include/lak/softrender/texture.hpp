@@ -127,7 +127,7 @@ struct texture_t : public texture_base_t
 		type     = TextureType<COLOR>();
 	}
 
-	inline void copy(size_t x, size_t y, COLOR *data)
+	inline void copy(size_t x, size_t y, const COLOR *data)
 	{
 		if (needFree && pixels != nullptr) free(pixels);
 		w        = x;

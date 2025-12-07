@@ -66,8 +66,7 @@ void ImGui_ImplSoftrender_RenderDrawData(ImDrawData *draw_data)
 			                       *reinterpret_cast<texture_color32_t *>(Screen));
 			break;
 
-		default:
-			return;
+		default: return;
 	}
 }
 
@@ -76,13 +75,12 @@ void ImGui_ImplSoftrender_DestroyTexture(ImTextureData *texture)
 	switch (texture->Format)
 	{
 		case ImTextureFormat_RGBA32:
-			delete (texture_color32_t *)(uintptr_t)texture->TexID;
+			delete (texture_color32_t *)(texture_base_t *)(uintptr_t)texture->TexID;
 			break;
 		case ImTextureFormat_Alpha8:
-			delete (texture_alpha8_t *)(uintptr_t)texture->TexID;
+			delete (texture_alpha8_t *)(texture_base_t *)(uintptr_t)texture->TexID;
 			break;
-		default:
-			ASSERT_UNREACHABLE();
+		default: ASSERT_UNREACHABLE();
 	}
 
 	texture->SetStatus(ImTextureStatus_Destroyed);
@@ -144,7 +142,6 @@ void ImGui_ImplSoftrender_UpdateTexture(ImTextureData *texture)
 		case ImTextureFormat_Alpha8:
 			_ImGui_ImplSoftrender_UpdateTexture<alpha8_t>(texture);
 			break;
-		default:
-			ASSERT_UNREACHABLE();
+		default: ASSERT_UNREACHABLE();
 	}
 }
