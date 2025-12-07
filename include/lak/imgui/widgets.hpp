@@ -20,7 +20,7 @@ namespace lak
 	ImTextureRef CreateTexture(const lak::image<lak::vec4f_t> &image);
 	ImTextureRef CreateTexture(const lak::image<lak::vec3f_t> &image);
 	ImTextureRef CreateTexture(const lak::image<float> &image);
-	void DestroyTexture(ImTextureRef tex);
+	void DestroyTexture(ImTextureRef &tex);
 	lak::vec2s_t TextureSize(ImTextureRef tex);
 
 	template<typename R, typename... T, typename... D>

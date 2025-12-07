@@ -90,10 +90,11 @@ ImTextureRef lak::CreateTexture(const lak::image<float> &image)
 
 /* --- DestroyTexture --- */
 
-void lak::DestroyTexture(ImTextureRef tex)
+void lak::DestroyTexture(ImTextureRef &tex)
 {
-	return ImGui::ImplDestroyTexture(
+	ImGui::ImplDestroyTexture(
 	  (ImGui::ImplContext)ImGui::GetIO().BackendPlatformUserData, tex);
+	tex = ImTextureID_Invalid;
 }
 
 /* --- TextureSize --- */
