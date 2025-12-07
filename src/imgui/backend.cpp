@@ -420,6 +420,12 @@ void ImGui::ImplInitContext(ImplContext context, const lak::window &window)
 	  LoadCursorW(NULL, IDC_SIZENWSE);
 	context->mouse_cursors[ImGuiMouseCursor_Hand].platform_handle =
 	  LoadCursorW(NULL, IDC_HAND);
+	context->mouse_cursors[ImGuiMouseCursor_Wait].platform_handle =
+	  LoadCursorW(NULL, IDC_WAIT);
+	context->mouse_cursors[ImGuiMouseCursor_Progress].platform_handle =
+	  LoadCursorW(NULL, IDC_APPSTARTING);
+	context->mouse_cursors[ImGuiMouseCursor_NotAllowed].platform_handle =
+	  LoadCursorW(NULL, IDC_NO);
 #elif defined(LAK_USE_XLIB)
 #	error "NYI"
 #elif defined(LAK_USE_XCB)
@@ -441,6 +447,12 @@ void ImGui::ImplInitContext(ImplContext context, const lak::window &window)
 	  SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_SIZENWSE);
 	context->mouse_cursors[ImGuiMouseCursor_Hand].platform_handle =
 	  SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_HAND);
+	context->mouse_cursors[ImGuiMouseCursor_Wait].platform_handle =
+	  SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_WAIT);
+	context->mouse_cursors[ImGuiMouseCursor_Progress].platform_handle =
+	  SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_WAITARROW);
+	context->mouse_cursors[ImGuiMouseCursor_NotAllowed].platform_handle =
+	  SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_NO);
 #else
 #	error "No implementation specified"
 #endif
