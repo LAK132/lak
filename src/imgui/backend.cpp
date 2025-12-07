@@ -184,6 +184,9 @@ void ImGui::ImplDestroyContext(ImplContext context)
 {
 	if (context != nullptr)
 	{
+		if (context->imgui_context != nullptr)
+			ImGui::DestroyContext(context->imgui_context);
+
 		if (context->vd_context != nullptr)
 		{
 			switch (context->mode)
@@ -566,14 +569,8 @@ void ImGui::ImplShutdownContext(ImplContext context)
 		default: FATAL("Invalid Context Mode"); break;
 	}
 
-	if (context->imgui_context != nullptr)
-	{
-		ImGui::DestroyContext(context->imgui_context);
-		context->imgui_context = nullptr;
-	}
-
-	std::free(context);
-	context = nullptr;
+	context->imgui_context->IO.BackendPlatformUserData = nullptr;
+	context->imgui_context->IO.BackendRendererUserData = nullptr;
 }
 
 void ImGui::ImplSetCurrentContext(ImplContext context)

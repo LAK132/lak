@@ -207,6 +207,7 @@ LAK_BASIC_PROGRAM(window_instance_base)::~LAK_BASIC_PROGRAM(
 		DEFER(ImGui::SetCurrentContext(ctx));
 		ImGui::ImplSetCurrentContext(imgui_context);
 		ImGui::ImplShutdownContext(imgui_context);
+		ImGui::ImplDestroyContext(imgui_context);
 	}
 #endif
 	// #ifdef LAK_ENABLE_OPENGL
