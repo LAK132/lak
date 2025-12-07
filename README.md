@@ -45,19 +45,30 @@ window (backend renderer determined by settings in `meson_options.txt`):
 struct my_window : virtual public LAK_BASIC_PROGRAM(window_api)
 {
 	my_window() : LAK_BASIC_PROGRAM(window_api)() {}
-	virtual ~my_window() {}
 
 	// store any member variables needed by this window here so they can be
 	// accessed during init/handle_event/loop
 
 	lak::optional<std::filesystem::path> dropfile;
 
+	ImTextureRef checker;
+
 	virtual void init() override final
 	{
 		// called once window has been set up
 
 		window().set_title(L"something other than " APP_NAME);
+
+		lak::image<lak::vec3u8_t> checker_img;
+		checker_img.resize(lak::vec2s_t{30U, 30U});
+		for (size_t y = 0U; y < checker_img.size().y; ++y)
+			for (size_t x = 0U; x < checker_img.size().x; ++x)
+				checker_img[{x, y}].r = checker_img[{x, y}].g = checker_img[{x, y}].b =
+				  (((x + y) & 1U) * 255U);
+		checker = lak::CreateTexture(checker_img);
 	}
+
+	virtual ~my_window() { lak::DestroyTexture(checker); }
 
 	virtual void handle_event(lak::event &event) override final
 	{
@@ -89,6 +100,8 @@ struct my_window : virtual public LAK_BASIC_PROGRAM(window_api)
 
 		if_let_some (auto &path, dropfile)
 			ImGui::Text("Dropped file: %s", path.generic_string().c_str());
+
+		ImGui::Image(checker, ImVec2(200, 200));
 	}
 };
 
