@@ -12,7 +12,7 @@ template<typename T, size_t S>
 	DEBUG(str);
 };
 
-BEGIN_TEST(rotate_left)
+BEGIN_TEST(span_rotate_left)
 {
 	lak::array<size_t, 13> arr{{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}};
 
@@ -67,7 +67,7 @@ BEGIN_TEST(rotate_left)
 }
 END_TEST()
 
-BEGIN_TEST(rotate_right)
+BEGIN_TEST(span_rotate_right)
 {
 	lak::array<size_t, 13> arr{{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}};
 
@@ -124,7 +124,7 @@ BEGIN_TEST(rotate_right)
 }
 END_TEST()
 
-BEGIN_TEST(shift_left)
+BEGIN_TEST(span_shift_left)
 {
 	lak::array<size_t, 13> src{{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}};
 	lak::array<size_t, 13> arr{{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}};
@@ -163,7 +163,7 @@ BEGIN_TEST(shift_left)
 }
 END_TEST()
 
-BEGIN_TEST(shift_right)
+BEGIN_TEST(span_shift_right)
 {
 	{
 		lak::array<uint32_t, 4> src{
