@@ -37,16 +37,28 @@ namespace lak
 		friend struct span;
 
 	public:
+		using value_type      = T;
+		using size_type       = size_t;
+		using difference_type = ptrdiff_t;
+		using reference       = T &;
+		using const_reference = const T &;
+		using pointer         = T *;
+		using const_pointer   = const T *;
+		using iterator        = T *;
+		using const_iterator  = const T *;
+
 		constexpr span()                        = default;
 		constexpr span(const span &)            = default;
 		constexpr span &operator=(const span &) = default;
 
 		template<lak::concepts::fixed_contiguous_range_of<T, SIZE> RANGE>
+		requires(!lak::is_span_v<lak::remove_cvref_t<RANGE>>)
 		inline constexpr span(RANGE &range) noexcept : _data(range.data())
 		{
 		}
 
 		template<lak::concepts::fixed_contiguous_range_of<T, SIZE> RANGE>
+		requires(!lak::is_span_v<lak::remove_cvref_t<RANGE>>)
 		inline constexpr span(const RANGE &range) noexcept : _data(range.data())
 		{
 		}
@@ -217,17 +229,29 @@ namespace lak
 		friend struct span;
 
 	public:
+		using value_type      = T;
+		using size_type       = size_t;
+		using difference_type = ptrdiff_t;
+		using reference       = T &;
+		using const_reference = const T &;
+		using pointer         = T *;
+		using const_pointer   = const T *;
+		using iterator        = T *;
+		using const_iterator  = const T *;
+
 		constexpr span()                        = default;
 		constexpr span(const span &)            = default;
 		constexpr span &operator=(const span &) = default;
 
 		template<lak::concepts::contiguous_range_of<T> RANGE>
+		requires(!lak::is_span_v<lak::remove_cvref_t<RANGE>>)
 		inline constexpr span(RANGE &range) noexcept
 		: _data(range.data()), _size(range.size())
 		{
 		}
 
 		template<lak::concepts::contiguous_range_of<T> RANGE>
+		requires(!lak::is_span_v<lak::remove_cvref_t<RANGE>>)
 		inline constexpr span(const RANGE &range) noexcept
 		: _data(range.data()), _size(range.size())
 		{

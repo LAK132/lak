@@ -33,6 +33,16 @@ namespace lak
 		lak::span<const CHAR> _value;
 
 	public:
+		using value_type      = const CHAR;
+		using size_type       = size_t;
+		using difference_type = ptrdiff_t;
+		using reference       = const CHAR &;
+		using const_reference = const CHAR &;
+		using pointer         = const CHAR *;
+		using const_pointer   = const CHAR *;
+		using iterator        = const CHAR *;
+		using const_iterator  = const CHAR *;
+
 		constexpr string_view()                               = default;
 		constexpr string_view(const string_view &)            = default;
 		constexpr string_view &operator=(const string_view &) = default;
