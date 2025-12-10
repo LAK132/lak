@@ -60,8 +60,8 @@ if target_machine.system() == 'windows'
 		],
 	)
 
-	libgphoto2wrap = static_library(
-		'libgphoto2wrap',
+	libgphoto2 = static_library(
+		'libgphoto2',
 		[
 			libgphoto2_dll_lib,
 			libgphoto2_port_dll_lib,

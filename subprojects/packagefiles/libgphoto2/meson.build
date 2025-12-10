@@ -49,7 +49,7 @@ endif
 subdir('lib')
 
 libgphoto2_dep = declare_dependency(
-	link_with: libgphoto2wrap,
+	link_with: libgphoto2,
 	include_directories: includes,
 	version: meson.project_version(),
 )
