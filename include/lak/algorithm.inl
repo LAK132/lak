@@ -71,6 +71,137 @@ lak::pair<ITER_A, ITER_B> lak::swap(ITER_A begin_a,
 	return {begin_a, begin_b};
 }
 
+/* --- pivot_swap --- */
+
+template<std::forward_iterator ITER>
+ITER lak::pivot_swap(ITER begin, ITER pivot, ITER end)
+{
+	auto after_pivot{lak::next(pivot)};
+
+	if constexpr (std::random_access_iterator<ITER>)
+	{
+		// TTTTTTTTTTTFFFFFFATTTTTTTFFFFFFFFFFFFF
+		//            ^~~~~~~~~~~~~~^ <- reverse
+
+		lak::reverse(begin, end);
+		return begin + (end - after_pivot);
+	}
+	else
+	{
+		// TTTTTTTTTTTFFFFFFATTTTTTTFFFFFFFFFFFFF
+		//            ^~~~~~^^~~~~~~^ <- swap
+
+		auto [sbegin, send] = lak::swap(begin, pivot, after_pivot, end);
+
+		if (sbegin != pivot)
+		{
+			// TTTTTTTTTTTFFFFFFATTTFFFFFFFFFFFFFFFFF
+			//            ^~~~~~^^~~^ <- swap
+			//
+			//                  v <- pivot
+			// TTTTTTTTTTTTTTFFFAFFFFFFFFFFFFFFFFFFFF
+			//               ^ <- sbegin
+			//
+			// TTTTTTTTTTTTTTFFFAFFFFFFFFFFFFFFFFFFFF
+			//               ^  ^ <- swap
+
+			lak::swap(*sbegin, *pivot);
+			return sbegin;
+		}
+		else if (send != end)
+		{
+			// TTTTTTTTTTTFFFFFFATTTTTTTTTFFFFFFFFFFF
+			//            ^~~~~~^^~~~~~~~~^ <- swap
+			//
+			//                         v <- send
+			// TTTTTTTTTTTTTTTTTAFFFFFFTTTFFFFFFFFFFF
+			//                  ^ <-pivot ^ <- end
+			//
+			// TTTTTTTTTTTTTTTTTAFFFFFFTTTFFFFFFFFFFF
+			//                  ^~~~~~~^~~^ <- swap
+			//
+			//                         v <- send
+			// TTTTTTTTTTTTTTTTTTTTFFFFAFFFFFFFFFFFFF
+			//                     ^ <- .first
+			//
+			// TTTTTTTTTTTTTTTTTTTTFFFFAFFFFFFFFFFFFF
+			//                     ^   ^ <- swap
+			//
+			// TTTTTTTTTTTTTTTTTTTTAFFFFFFFFFFFFFFFFF
+			//                     ^ <- result
+
+			auto result{lak::swap(pivot, send, send, end).first};
+			lak::swap(*send, *result);
+			return result;
+		}
+		else
+			return pivot;
+	}
+}
+
+/* --- stable_pivot_swap --- */
+
+template<std::forward_iterator ITER>
+ITER lak::stable_pivot_swap(ITER begin, ITER pivot, ITER end)
+{
+	if (begin == end || lak::next(begin) == end) return;
+
+	auto after_pivot{lak::next(pivot)};
+
+	auto [sbegin, send] = lak::swap(begin, pivot, after_pivot, end);
+
+	if constexpr (std::bidirectional_iterator<ITER>)
+	{
+		lak::reverse(sbegin, send);
+		pivot = sbegin + ((send - 1) - pivot);
+		lak::reverse(sbegin, pivot);
+		lak::reverse(pivot + 1, send);
+		return pivot;
+	}
+	else
+	{
+		if (sbegin != pivot)
+		{
+			//   begin -> v         v <- end
+			// TTTTTTTTTTTFFFFFFATTTFFFFFFFFFFFFFFFFF
+			//            ^~~~~~^^~~^ <- swap
+			//
+			//                   v <- after pivot
+			// TTTTTTTTTTTTTTFFFAFFFFFFFFFFFFFFFFFFFF
+			//     sbegin -> ^      ^ <- end
+			//
+			// TTTTTTTTTTTTTTFFFAFFFFFFFFFFFFFFFFFFFF
+			//               ^~~~~~~^ <- rotate left
+
+			lak::rotate_left(sbegin, pivot, end);
+			return sbegin;
+		}
+		else if (send != end)
+		{
+			//   begin -> v               v <- end
+			// TTTTTTTTTTTFFFFFFATTTTTTTTTFFFFFFFFFFF
+			//            ^~~~~~^^~~~~~~~~^ <- swap
+			//
+			//                         v <- send
+			// TTTTTTTTTTTTTTTTTAFFFFFFTTTFFFFFFFFFFF
+			//                  ^ <-pivot ^ <- end
+			//
+			// TTTTTTTTTTTTTTTTTAFFFFFFTTTFFFFFFFFFFF
+			//                  ^~~~~~~~~~^ <- rotate left
+			//
+			// TTTTTTTTTTTTTTTTTTTTAFFFFFFFFFFFFFFFFF
+			//                     ^ <- result
+
+			const auto pivot_to_send{lak::distance(pivot, send)};
+			const auto send_to_end{lak::distance(send, end)};
+			lak::rotate_right(pivot, pivot_to_send + send_to_end, send_to_end);
+			return lak::next(pivot, send_to_end);
+		}
+		else
+			return pivot;
+	}
+}
+
 /* --- count --- */
 
 template<std::forward_iterator ITER, typename T>
@@ -224,45 +355,131 @@ bool lak::is_permutation(ITER_A begin_a,
 /* --- rotate_left --- */
 
 template<std::forward_iterator ITER>
+void lak::rotate_left(
+  ITER begin,
+  typename std::iterator_traits<ITER>::difference_type end_offset,
+  size_t distance)
+{
+	//  rotate left 11
+	//
+	// v <- working_size = 26 -> v
+	// ABCDEFGHIJKLMNOPQRSTUVWXYZ
+	// ^ <- begin ^ <- target    ^ <- end
+	//
+	// distance = 11
+	// working_size = 26
+	//
+	// v <-   15   -> v            <- working_size - distance
+	// ABCDEFGHIJKLMNOPQRSTUVWXYZ    swap
+	// ^ <- 11 -> ^ <-   15   -> ^
+	//
+	//                v <- 11 -> v <- working_size
+	// LMNOPQRSTUVWXYZEFGHIJKABCD
+	//
+	// distance = slack(26, 11) = 7
+	// working_size = prev distance = 11
+	//
+	//                v 4 v        <- working_size - distance
+	// LMNOPQRSTUVWXYZEFGHIJKABCD    swap
+	//                ^  7   ^ 4 ^
+	//
+	//                    v  7   v <- working_size
+	// LMNOPQRSTUVWXYZABCDIJKEFGH
+	//
+	// distance = slack(11, 7) = 3
+	// working_size = prev distance = 7
+	//
+	//                    v 4 v    <- working_size - distance
+	// LMNOPQRSTUVWXYZABCDIJKEFGH    swap
+	//                    ^3 ^ 4 ^
+	//
+	//                        v  v <- working_size
+	// LMNOPQRSTUVWXYZABCDEFGHJKI
+	//
+	// distance = slack(7, 3) = 2
+	// working_size = prev distance = 3
+	//
+	//                        vv   <- working_size - distance
+	// LMNOPQRSTUVWXYZABCDEFGHJKI
+	//                          ^^
+	//
+	//                         v v <- working_size
+	// LMNOPQRSTUVWXYZABCDEFGHIKJ
+	//
+	// distance = slack(3, 2) = 1
+	// working_size = prev distance = 2
+	//
+	//                         vv  <- working_size - distance
+	// LMNOPQRSTUVWXYZABCDEFGHIKJ
+	//                          ^^
+	//
+	//                          vv <- working_size
+	// LMNOPQRSTUVWXYZABCDEFGHIJK
+	//
+	// distance = slack(2, 1) = 1
+	// working_size = prev distance = 1
+	//
+	//                          v  <- working_size - distance
+	// LMNOPQRSTUVWXYZABCDEFGHIJK
+	//
+	// distance = slack(1, 1) = 0
+
+	if (end_offset < 0) return;
+	size_t working_size = static_cast<size_t>(end_offset);
+	if (working_size == 0 || distance % working_size == 0) return;
+	distance %= working_size;
+
+	while (distance > 0 && working_size - distance > 0)
+	{
+		begin =
+		  lak::swap(begin, lak::next(begin, distance), working_size - distance)
+		    .first;
+		distance =
+		  lak::slack<size_t>(lak::exchange(working_size, distance), distance);
+	}
+}
+
+template<std::forward_iterator ITER>
 void lak::rotate_left(ITER begin, ITER end, size_t distance)
 {
-	const size_t data_size = lak::distance(begin, end);
-	if (data_size == 0 || distance % data_size == 0) return;
+	lak::rotate_left(begin, lak::distance(begin, end), distance);
+}
 
-	for (ITER iter_begin = begin; distance > 0;)
-	{
-		const size_t working_size = lak::distance(iter_begin, end);
-
-		ITER b = lak::next(iter_begin, distance);
-		for (size_t i = 0; i < working_size - distance; ++i, ++iter_begin, ++b)
-			lak::swap(*iter_begin, *b);
-
-		distance = lak::slack<size_t>(working_size, distance);
-	}
+template<std::forward_iterator ITER>
+void lak::rotate_left(ITER begin, ITER mid, ITER end)
+{
+	const size_t distance   = lak::distance(begin, mid);
+	const auto working_size = distance + lak::distance(mid, end);
+	lak::rotate_left(begin, working_size, distance);
 }
 
 /* --- rotate_right --- */
 
 template<std::forward_iterator ITER>
+void lak::rotate_right(
+  ITER begin,
+  typename std::iterator_traits<ITER>::difference_type end_offset,
+  size_t distance)
+{
+	lak::rotate_left(
+	  begin, end_offset, lak::slack<size_t>(distance, end_offset));
+}
+
+template<std::forward_iterator ITER>
 void lak::rotate_right(ITER begin, ITER end, size_t distance)
 {
-	const size_t data_size = lak::distance(begin, end);
-	if (data_size == 0 || distance % data_size == 0) return;
+	const size_t working_size = lak::distance(begin, end);
+	lak::rotate_left(
+	  begin, working_size, lak::slack<size_t>(distance, working_size));
+}
 
-	// change direction so we can use the forward_iterator friendly rotate_left
-	// algorithm
-	distance = lak::slack<size_t>(distance, data_size);
-
-	for (ITER iter_begin = begin; distance > 0;)
-	{
-		const size_t working_size = lak::distance(iter_begin, end);
-
-		ITER b = lak::next(iter_begin, distance);
-		for (size_t i = 0; i < working_size - distance; ++i, ++iter_begin, ++b)
-			lak::swap(*iter_begin, *b);
-
-		distance = lak::slack<size_t>(working_size, distance);
-	}
+template<std::forward_iterator ITER>
+void lak::rotate_right(ITER begin, ITER mid, ITER end)
+{
+	const size_t distance   = lak::distance(mid, end);
+	const auto working_size = distance + lak::distance(begin, mid);
+	lak::rotate_left(
+	  begin, working_size, lak::slack<size_t>(distance, working_size));
 }
 
 /* --- reverse --- */
@@ -505,73 +722,18 @@ ITER lak::binary_partition(ITER begin, ITER mid, ITER end, CMP compare)
 	// ^~~~~~~~~~~~~~~~~^ <- partition
 	//
 	// TTTTTTTTTTTFFFFFFATTTTTTTFFFFFFFFFFFFF
-	//            ^~~~~~~~~~~~~~^ <- reverse
+	//            ^~~~~~^~~~~~~~^ <- pivot swap
 	//
 	// TTTTTTTTTTTTTTTTTTAFFFFFFFFFFFFFFFFFFF
 	//                   ^ <- result
 
 	if (begin == end) return end;
 
-	auto after_mid{mid};
-	++after_mid;
-	auto left{lak::partition(
-	  begin, mid, [&](const auto &v) { return compare(v, *mid); })};
-	auto right{lak::partition(
-	  after_mid, end, [&](const auto &v) { return compare(v, *mid); })};
+	auto predicate = [&](const auto &v) { return compare(v, *mid); };
 
-	if constexpr (std::random_access_iterator<ITER>)
-	{
-		// TTTTTTTTTTTFFFFFFATTTTTTTFFFFFFFFFFFFF
-		//            ^~~~~~~~~~~~~~^ <- reverse
-
-		lak::reverse(left, right);
-		return left + (right - after_mid);
-	}
-	else
-	{
-		// TTTTTTTTTTTFFFFFFATTTTTTTFFFFFFFFFFFFF
-		//            ^~~~~~^^~~~~~~^ <- swap
-
-		auto [sleft, sright] = lak::swap(left, mid, after_mid, right);
-
-		if (sleft != mid)
-		{
-			// TTTTTTTTTTTFFFFFFATTTFFFFFFFFFFFFFFFFF
-			//            ^~~~~~^^~~^ <- swap
-			//
-			//                  v <- mid
-			// TTTTTTTTTTTTTTFFFAFFFFFFFFFFFFFFFFFFFF
-			//               ^ <- sleft
-			//
-			// TTTTTTTTTTTTTTFFFAFFFFFFFFFFFFFFFFFFFF
-			//               ^  ^ <- swap
-
-			lak::swap(*sleft, *mid);
-			return sleft;
-		}
-		else if (sright != right)
-		{
-			// TTTTTTTTTTTFFFFFFATTTTTTTTTFFFFFFFFFFF
-			//            ^~~~~~^^~~~~~~~~^ <- swap
-			//
-			//                         v <- sright
-			// TTTTTTTTTTTTTTTTTAFFFFFFTTTFFFFFFFFFFF
-			//                  ^ <- mid  ^ <- right
-			//
-			// TTTTTTTTTTTTTTTTTAFFFFFFTTTFFFFFFFFFFF
-			//                  ^~~~~~~^~~^ <- swap
-			//
-			//                         v <- sright
-			// TTTTTTTTTTTTTTTTTTTTFFFFAFFFFFFFFFFFFF
-			//                     ^ .first
-
-			auto result{lak::swap(mid, sright, sright, right).first};
-			lak::swap(*sright, *result);
-			return result;
-		}
-		else
-			return mid;
-	}
+	return lak::pivot_swap(lak::partition(begin, mid, predicate),
+	                       mid,
+	                       lak::partition(lak::next(mid), end, predicate));
 }
 
 /* --- mark_and_sweep_parition --- */
@@ -939,6 +1101,90 @@ void lak::heapsort(ITER begin, ITER end, CMP compare)
 
 	lak::make_heap(begin, end, compare);
 	lak::sort_heap(begin, end, compare);
+}
+
+/* --- partition_sort --- */
+
+template<std::forward_iterator ITER, typename CMP>
+ITER lak::partition_sort(ITER begin, ITER end, CMP compare)
+{
+	// XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+	// ^ <- cursor                           ^ <- end
+	//
+	// ATTTTFFFFFFTTTTTTTFFFFTTTTFFFFFTTTFFFF
+	//  ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^ <- partition
+	// ATTTTTTTTTTTTTTTTTTFFFFFFFFFFFFFFFFFFF
+	//  ^ <- cursor       ^ <- end
+	//
+	// ABFFFTTTFFFFFFFTTFF0000000000000000000
+	//   ^~~~~~~~~~~~~~~~^ <- partition
+	// ABTTTTTFFFFFFFFFFFF0000000000000000000
+	//   ^cur ^end
+	//
+	// ABCFFFF1111111111110000000000000000000
+	//    ^~~^ <- partition
+	// ABCFFFF1111111111110000000000000000000
+	//    ^ <- cursor = end
+	//
+	// ABC22221111111111110000000000000000000
+	//    ^ <- result
+
+	if (begin == end) return end;
+
+	auto cursor{begin};
+	auto iter{lak::next(begin)};
+
+	for (; cursor != end && iter != end; ++iter)
+	{
+		end = lak::partition(
+		  iter, end, [&](const auto &value) { return compare(value, *cursor); });
+
+		cursor = iter;
+	}
+
+	return end;
+}
+
+/* --- stable_partition_sort --- */
+
+template<std::forward_iterator ITER, typename CMP>
+ITER lak::stable_partition_sort(ITER begin, ITER end, CMP compare)
+{
+	// XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+	// ^ <- cursor                           ^ <- end
+	//
+	// ATTTTFFFFFFTTTTTTTFFFFTTTTFFFFFTTTFFFF
+	//  ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^ <- stable partition
+	// ATTTTTTTTTTTTTTTTTTFFFFFFFFFFFFFFFFFFF
+	//  ^ <- cursor       ^ <- end
+	//
+	// ABFFFTTTFFFFFFFTTFF0000000000000000000
+	//   ^~~~~~~~~~~~~~~~^ <- stable partition
+	// ABTTTTTFFFFFFFFFFFF0000000000000000000
+	//   ^cur ^end
+	//
+	// ABCFFFF1111111111110000000000000000000
+	//    ^~~^ <- stable partition
+	// ABCFFFF1111111111110000000000000000000
+	//    ^ <- cursor = end
+	//
+	// ABC22221111111111110000000000000000000
+	//    ^ <- result
+
+	if (begin == end) return end;
+
+	auto cursor{begin};
+	auto iter{lak::next(begin)};
+
+	for (; cursor != end && iter != end; ++iter)
+	{
+		end = lak::stable_partition(
+		  iter, end, [&](const auto &value) { return compare(value, *cursor); });
+
+		cursor = iter;
+	}
+
+	return end;
 }
 
 /* --- partial_order_sort --- */

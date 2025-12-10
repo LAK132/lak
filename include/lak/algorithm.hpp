@@ -48,6 +48,16 @@ namespace lak
 	                               ITER_B begin_b,
 	                               ITER_B end_b);
 
+	/* --- pivot_swap --- */
+
+	template<std::forward_iterator ITER>
+	ITER pivot_swap(ITER begin, ITER pivot, ITER end);
+
+	/* --- stable_pivot_swap --- */
+
+	template<std::forward_iterator ITER>
+	ITER stable_pivot_swap(ITER begin, ITER pivot, ITER end);
+
 	/* --- count --- */
 
 	template<std::forward_iterator ITER, typename T>
@@ -115,12 +125,32 @@ namespace lak
 	/* --- rotate_left --- */
 
 	template<std::forward_iterator ITER>
+	void rotate_left(
+	  ITER begin,
+	  typename std::iterator_traits<ITER>::difference_type end_offset,
+	  size_t distance = 1U);
+
+	template<std::forward_iterator ITER>
 	void rotate_left(ITER begin, ITER end, size_t distance = 1U);
+
+	// rotates mid to begin
+	template<std::forward_iterator ITER>
+	void rotate_left(ITER begin, ITER mid, ITER end);
 
 	/* --- rotate_right --- */
 
 	template<std::forward_iterator ITER>
+	void rotate_right(
+	  ITER begin,
+	  typename std::iterator_traits<ITER>::difference_type end_offset,
+	  size_t distance = 1U);
+
+	template<std::forward_iterator ITER>
 	void rotate_right(ITER begin, ITER end, size_t distance = 1U);
+
+	// rotates mid to end
+	template<std::forward_iterator ITER>
+	void rotate_right(ITER begin, ITER mid, ITER end);
 
 	/* --- reverse --- */
 
@@ -301,6 +331,22 @@ namespace lak
 
 	template<std::random_access_iterator ITER, typename CMP = lak::less<>>
 	void heapsort(ITER begin, ITER end, CMP compare = {});
+
+	/* --- partition_sort --- */
+
+	template<std::forward_iterator ITER, typename CMP = lak::less<>>
+	ITER partition_sort(ITER begin, ITER end, CMP compare = {});
+
+	/* --- stable_partition_sort --- */
+
+	// As a dedup algorithm:
+	// container.erase(lak::stable_partition_sort(container.begin(),
+	//                                            container.end(),
+	//                                            lak::not_equal_to{}),
+	//                 container.end())
+
+	template<std::forward_iterator ITER, typename CMP = lak::less<>>
+	ITER stable_partition_sort(ITER begin, ITER end, CMP compare = {});
 
 	/* --- partial_order_sort --- */
 

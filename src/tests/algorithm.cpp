@@ -4,6 +4,8 @@
 #include "lak/array.hpp"
 #include "lak/span_manip.hpp"
 
+#include "lak/string_literals/view.hpp"
+
 #include "iterator_wrappers.hpp"
 
 BEGIN_TEST(iterator_wrapper)
@@ -86,6 +88,18 @@ BEGIN_TEST(range_swap)
 }
 END_TEST()
 
+// BEGIN_TEST(pivot_swap)
+// {
+// 	return EXIT_SUCCESS;
+// }
+// END_TEST()
+
+// BEGIN_TEST(stable_pivot_swap)
+// {
+// 	return EXIT_SUCCESS;
+// }
+// END_TEST()
+
 // BEGIN_TEST(count)
 // {
 // 	return EXIT_SUCCESS;
@@ -136,11 +150,39 @@ BEGIN_TEST(is_permutation)
 }
 END_TEST()
 
-// BEGIN_TEST(rotate_left)
-// {
-// 	return EXIT_SUCCESS;
-// }
-// END_TEST()
+BEGIN_TEST(rotate_left)
+{
+	auto wrapped_test = []<typename WRAPPER>(WRAPPER &&)
+	{
+		using wrapper_t =
+		  typename WRAPPER::template type<typename lak::span<char>::iterator>;
+
+		char s[] = "ABCDEFGHIJKLMNOP";
+		lak::span<char, lak::dynamic_extent> str{s};
+		str = str.first(sizeof(s) - 1U);
+
+		lak::rotate_left(wrapper_t{str.begin()}, wrapper_t{str.end()}, 11);
+
+		ASSERT_ARRAY_EQUAL(lak::span(lak::astring_view(str)),
+		                   lak::span("LMNOPABCDEFGHIJK"_view));
+	};
+
+	{
+		SCOPED_CHECKPOINT("forward iterator");
+		wrapped_test(forward_iterator_wrapper<void>{});
+	}
+	{
+		SCOPED_CHECKPOINT("bidirectional iterator");
+		wrapped_test(bidirectional_iterator_wrapper<void>{});
+	}
+	{
+		SCOPED_CHECKPOINT("random access iterator");
+		wrapped_test(random_access_iterator_wrapper<void>{});
+	}
+
+	return EXIT_SUCCESS;
+}
+END_TEST()
 
 // BEGIN_TEST(rotate_right)
 // {
@@ -153,7 +195,7 @@ BEGIN_TEST(reverse)
 	auto wrapped_test = []<typename WRAPPER>(WRAPPER &&)
 	{
 		using wrapper_t =
-		  typename WRAPPER::template type<lak::array<intmax_t>::iterator>;
+		  typename WRAPPER::template type<typename lak::array<intmax_t>::iterator>;
 
 		{
 			auto source   = {1, 2, 3, 4, 5, 6};
@@ -206,7 +248,7 @@ BEGIN_TEST(partition)
 		lak::array<intmax_t> values{source.begin(), source.end()};
 
 		using wrapper_t =
-		  typename WRAPPER::template type<lak::array<intmax_t>::iterator>;
+		  typename WRAPPER::template type<typename lak::array<intmax_t>::iterator>;
 
 		auto mid = lak::partition(wrapper_t{values.begin()},
 		                          wrapper_t{values.end()},
@@ -272,7 +314,7 @@ BEGIN_TEST(binary_partition)
 		lak::array<intmax_t> values{source.begin(), source.end()};
 
 		using wrapper_t =
-		  typename WRAPPER::template type<lak::array<intmax_t>::iterator>;
+		  typename WRAPPER::template type<typename lak::array<intmax_t>::iterator>;
 
 		auto zero = lak::find(values.begin(), values.end(), 0);
 		ASSERT(zero != values.end());
@@ -314,6 +356,12 @@ BEGIN_TEST(binary_partition)
 	return EXIT_SUCCESS;
 }
 END_TEST()
+
+// BEGIN_TEST(mark_and_sweep_partition)
+// {
+// 	return EXIT_SUCCESS;
+// }
+// END_TEST()
 
 // BEGIN_TEST(merge)
 // {
@@ -461,6 +509,18 @@ BEGIN_TEST(heapsort)
 	return EXIT_SUCCESS;
 }
 END_TEST()
+
+// BEGIN_TEST(partition_sort)
+// {
+// 	return EXIT_SUCCESS;
+// }
+// END_TEST()
+
+// BEGIN_TEST(stable_parition_sort)
+// {
+// 	return EXIT_SUCCESS;
+// }
+// END_TEST()
 
 BEGIN_TEST(partial_order_sort)
 {
