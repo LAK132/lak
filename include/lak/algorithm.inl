@@ -76,6 +76,11 @@ lak::pair<ITER_A, ITER_B> lak::swap(ITER_A begin_a,
 template<std::forward_iterator ITER>
 ITER lak::pivot_swap(ITER begin, ITER pivot, ITER end)
 {
+	if (begin == pivot)
+		return end;
+	else if (pivot == end)
+		return begin;
+
 	auto after_pivot{lak::next(pivot)};
 
 	if constexpr (std::random_access_iterator<ITER>)
@@ -144,7 +149,10 @@ ITER lak::pivot_swap(ITER begin, ITER pivot, ITER end)
 template<std::forward_iterator ITER>
 ITER lak::stable_pivot_swap(ITER begin, ITER pivot, ITER end)
 {
-	if (begin == end || lak::next(begin) == end) return;
+	if (begin == pivot)
+		return end;
+	else if (pivot == end)
+		return begin;
 
 	auto after_pivot{lak::next(pivot)};
 
