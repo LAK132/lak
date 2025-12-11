@@ -1280,19 +1280,20 @@ ITER lak::lower_bound(ITER begin, ITER end, const U &value, CMP compare)
 {
 	auto diff{lak::distance(begin, end)};
 
-	for (ITER iter = begin; diff > 0;)
+	while (diff > 0U)
 	{
-		const auto step = diff / 2;
+		ITER iter       = begin;
+		const auto step = diff / 2U;
 		lak::advance(iter, step);
-		if (compare(*iter, value))
+		if (compare(*iter, value)) // *iter < value
 		{
 			// move the lower bound up
 			begin = lak::next(iter);
-			diff -= step + 1;
+			diff -= step + 1U;
 		}
-		else
+		else // *iter >= value
 			// move the upper bound down
-			diff = step;
+			diff /= 2U;
 	}
 
 	return begin;
@@ -1305,19 +1306,20 @@ ITER lak::upper_bound(ITER begin, ITER end, const U &value, CMP compare)
 {
 	auto diff{lak::distance(begin, end)};
 
-	for (ITER iter = begin; diff > 0;)
+	while (diff > 0U)
 	{
-		const auto step = diff / 2;
+		ITER iter       = begin;
+		const auto step = diff / 2U;
 		lak::advance(iter, step);
-		if (!compare(value, *iter))
+		if (!compare(value, *iter)) // value >= *iter
 		{
 			// move the lower bound up
 			begin = lak::next(iter);
-			diff -= step + 1;
+			diff -= step + 1U;
 		}
-		else
+		else // value < *iter
 			// move the upper bound down
-			diff = step;
+			diff /= 2U;
 	}
 
 	return begin;
