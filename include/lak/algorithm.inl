@@ -781,7 +781,11 @@ ITER lak::mark_and_sweep_parition(
 template<std::forward_iterator ITER, typename CMP>
 ITER lak::dedup(ITER begin, ITER end, CMP compare)
 {
-	while (begin != end) end = lak::partition(++begin, end, compare);
+	for (; begin != end; ++begin)
+		end =
+		  lak::partition(lak::next(begin),
+		                 end,
+		                 [&](const auto &rhs) { return !compare(*begin, rhs); });
 	return begin;
 }
 
@@ -790,7 +794,11 @@ ITER lak::dedup(ITER begin, ITER end, CMP compare)
 template<std::random_access_iterator ITER, typename CMP>
 ITER lak::stable_dedup(ITER begin, ITER end, CMP compare)
 {
-	while (begin != end) end = lak::stable_partition(++begin, end, compare);
+	for (; begin != end; ++begin)
+		end = lak::stable_partition(lak::next(begin),
+		                            end,
+		                            [&](const auto &rhs)
+		                            { return !compare(*begin, rhs); });
 	return begin;
 }
 
