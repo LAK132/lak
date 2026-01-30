@@ -1,0 +1,33 @@
+From dfc82f02288e4fc52ac5adde74ceef27e7308e69 Mon Sep 17 00:00:00 2001
+From: LAK132 <lakridesagain@gmail.com>
+Date: Sat, 31 Jan 2026 01:11:08 +1030
+Subject: [PATCH 2/2] Fix invalid linker argument in Vulkan-Loader
+
+---
+ External/VulkanLibraries/Vulkan-Loader.patch | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
+
+diff --git a/External/VulkanLibraries/Vulkan-Loader.patch b/External/VulkanLibraries/Vulkan-Loader.patch
+index c81f85c..e1d429b 100644
+--- a/External/VulkanLibraries/Vulkan-Loader.patch
++++ b/External/VulkanLibraries/Vulkan-Loader.patch
+@@ -40,3 +40,16 @@ index df7a0460c..3605cd196 100644
+                  value = match.group(1)
+              if assembler_type == "MASM":
+              # MASM uses hex values, decode them here
++diff --git a/CMakeLists.txt b/CMakeLists.txt
++index 52e33d1e1..45c0fc059 100644
++--- a/CMakeLists.txt
+++++ b/CMakeLists.txt
++@@ -204,7 +204,7 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC" OR (CMAKE_CXX_COMPILER_ID STREQUAL "Clan
++     target_compile_options(loader_common_options INTERFACE /GR- /guard:cf /wd4152 /wd4201)
++ 
++     # Enable control flow guard
++-    target_link_options(loader_common_options INTERFACE "LINKER:/guard:cf")
+++    target_link_options(loader_common_options INTERFACE "/guard:cf")
++ 
++     # Prevent <windows.h> from polluting the code. guards against things like MIN and MAX
++     target_compile_definitions(loader_common_options INTERFACE WIN32_LEAN_AND_MEAN)
+-- 
+2.43.0
+
