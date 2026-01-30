@@ -12,6 +12,7 @@
 uint32_t LAK_BASIC_PROGRAM(window_target_framerate) = 60;
 bool LAK_BASIC_PROGRAM(window_force_software)       = false;
 lak::vec2l_t LAK_BASIC_PROGRAM(window_start_size)   = {1200, 700};
+lak::cobalt_settings LAK_BASIC_PROGRAM(window_cobalt_settings);
 lak::opengl_settings LAK_BASIC_PROGRAM(window_opengl_settings);
 lak::software_settings LAK_BASIC_PROGRAM(window_software_settings);
 
@@ -148,6 +149,34 @@ LAK_BASIC_PROGRAM(create_window)(const lak::opengl_settings &settings)
 }
 #endif
 
+#ifdef LAK_ENABLE_COBALT
+template<typename WINDOW_CLASS>
+lak::result<lak::strong_ref<LAK_BASIC_PROGRAM(window_instance<WINDOW_CLASS>)>,
+            lak::u8string>
+LAK_BASIC_PROGRAM(create_window)(const lak::cobalt_settings &settings)
+{
+	RES_TRY_ASSIGN(
+	  auto wnd =,
+	  lak::window::make(settings).and_then(
+	    [&](auto &&window) -> lak::result<lak::window, lak::u8string>
+	    {
+		    if (window.graphics() != lak::graphics_mode::Cobalt)
+			    return lak::err_t<lak::u8string>{lak::streamify(
+			      "Expected Cobalt graphics, got ", window.graphics())};
+
+		    auto *fb = lak::cobalt_graphics_context(window.handle())
+		                 .UNWRAP()
+		                 .frame_buffer.get();
+		    fb->DefineViewportRegion({0, 0},
+		                             {uint32_t(window.drawable_size().x),
+		                              uint32_t(window.drawable_size().y)});
+
+		    return lak::move_ok(window);
+	    }));
+	return LAK_BASIC_PROGRAM(create_window<WINDOW_CLASS>)(lak::move(wnd));
+}
+#endif
+
 template<typename WINDOW_CLASS>
 lak::result<lak::strong_ref<LAK_BASIC_PROGRAM(window_instance<WINDOW_CLASS>)>,
             lak::u8string>
@@ -162,27 +191,40 @@ LAK_BASIC_PROGRAM(create_window)()
 		  "software rendering was not enabled");
 #endif
 
+	// backend priority: (forced software >) cobalt > opengl > software
 	return
-#if !defined(LAK_ENABLE_OPENGL)
+#if defined(LAK_ENABLE_COBALT) && !defined(LAK_ENABLE_SOFTRENDER)
 	  LAK_BASIC_PROGRAM(create_window<WINDOW_CLASS>)(
-	    LAK_BASIC_PROGRAM(window_software_settings))
-#elif !defined(LAK_ENABLE_SOFTRENDER)
+	    LAK_BASIC_PROGRAM(window_cobalt_settings))
+#elif defined(LAK_ENABLE_OPENGL) && !defined(LAK_ENABLE_SOFTRENDER)
 	  LAK_BASIC_PROGRAM(create_window<WINDOW_CLASS>)(
 	    LAK_BASIC_PROGRAM(window_opengl_settings))
+#elif !(defined(LAK_ENABLE_OPENGL) || defined(LAK_ENABLE_COBALT))
+	  LAK_BASIC_PROGRAM(create_window<WINDOW_CLASS>)(
+	    LAK_BASIC_PROGRAM(window_software_settings))
 #else
 	  (LAK_BASIC_PROGRAM(window_force_software)
 	     ? LAK_BASIC_PROGRAM(create_window<WINDOW_CLASS>)(
 	         LAK_BASIC_PROGRAM(window_software_settings))
-	     : LAK_BASIC_PROGRAM(create_window<WINDOW_CLASS>)(
-	         LAK_BASIC_PROGRAM(window_opengl_settings))
-	         .or_else(
-	           [&](const lak::u8string &err)
-	           {
-		           WARNING(err);
-		           WARNING("Attempting to create a Software window instead");
-		           return LAK_BASIC_PROGRAM(create_window<WINDOW_CLASS>)(
-		             LAK_BASIC_PROGRAM(window_software_settings));
-	           }))
+	     :
+#	ifdef LAK_ENABLE_COBALT
+	     LAK_BASIC_PROGRAM(create_window<WINDOW_CLASS>)(
+	       LAK_BASIC_PROGRAM(window_cobalt_settings))
+	       .if_err([](const lak::u8string &err)
+	               { WARNING("Failed to create a Cobalt window: ", err); })
+#	else
+	     LAK_BASIC_PROGRAM(create_window<WINDOW_CLASS>)(
+	       LAK_BASIC_PROGRAM(window_opengl_settings))
+	       .if_err([](const lak::u8string &err)
+	               { WARNING("Failed to create an OpenGL window: ", err); })
+#	endif
+	       .or_else(
+	         [&](const lak::u8string &err)
+	         {
+		         WARNING("Attempting to create a Software window instead");
+		         return LAK_BASIC_PROGRAM(create_window<WINDOW_CLASS>)(
+		           LAK_BASIC_PROGRAM(window_software_settings));
+	         }))
 #endif
 	    ;
 }
@@ -378,6 +420,34 @@ int LAK_BASIC_PROGRAM_MAIN(int argc, char **argv)
 				             inst.clear_colour.a);
 				glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT |
 				        GL_STENCIL_BUFFER_BIT);
+			}
+#endif
+
+#ifdef LAK_ENABLE_COBALT
+			if (window.graphics() == lak::graphics_mode::Cobalt)
+			{
+				const auto &cgx =
+				  lak::cobalt_graphics_context(window.handle()).UNWRAP();
+				auto *rd = cgx.renderer.get();
+				auto *fb = cgx.frame_buffer.get();
+				fb->DefineViewportRegion({0, 0},
+				                         {uint32_t(window.drawable_size().x),
+				                          uint32_t(window.drawable_size().y)});
+				fb->DefineScissorRegion({0, 0},
+				                        {uint32_t(window.drawable_size().x),
+				                         uint32_t(window.drawable_size().y)});
+				auto rp = lak::cobalt_create_render_pass(window.handle()).UNWRAP();
+				rp->SetAttachmentClearData(
+				  ::cobalt::graphics::IFrameBuffer::AttachmentType::Color,
+				  0,
+				  ::cobalt::graphics::V4Float32{inst.clear_colour.r,
+				                                inst.clear_colour.g,
+				                                inst.clear_colour.b,
+				                                inst.clear_colour.a});
+				rp->SetAttachmentClearData(
+				  ::cobalt::graphics::IFrameBuffer::AttachmentType::Depth,
+				  0,
+				  ::cobalt::graphics::V4Float32(1.0f, 1.0f, 1.0f, 1.0f));
 			}
 #endif
 

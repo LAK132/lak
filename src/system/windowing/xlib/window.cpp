@@ -20,18 +20,9 @@ lak::result<lak::window_handle *, lak::u8string> lak::create_window(
 }
 #endif
 
-#ifdef LAK_ENABLE_VULKAN
+#ifdef LAK_ENABLE_COBALT
 lak::result<lak::window_handle *, lak::u8string> lak::create_window(
-  const lak::vulkan_settings &s)
-{
-	(void)s;
-	return lak::err_t<lak::u8string>{u8"NYI"_str};
-}
-#endif
-
-#ifdef LAK_ENABLE_METAL
-lak::result<lak::window_handle *, lak::u8string> lak::create_window(
-  const lak::metal_settings &s)
+  const lak::cobalt_settings &s)
 {
 	(void)s;
 	return lak::err_t<lak::u8string>{u8"NYI"_str};
@@ -73,6 +64,7 @@ bool lak::set_window_size(lak::window_handle *w, lak::vec2l_t s)
 {
 	(void)w;
 	(void)s;
+	lak::window_handle_resize(w);
 	return false;
 }
 

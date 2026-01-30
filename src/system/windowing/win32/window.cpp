@@ -13,6 +13,7 @@
 #include "lak/image.hpp"
 #include "lak/result.hpp"
 
+#include "lak/string_literals/string.hpp"
 #include "lak/string_literals/view.hpp"
 
 #include "impl.hpp"
@@ -234,6 +235,100 @@ lak::result<lak::window_handle *, lak::u8string> lak::create_window(
 }
 #endif
 
+#ifdef LAK_ENABLE_COBALT
+lak::result<lak::window_handle *, lak::u8string> lak::create_window(
+  const lak::cobalt_settings &s)
+{
+	auto device =
+	  s.device ? s.device : s.device_enumerator->GetPreferredDevice();
+	if (!device)
+	{
+		return lak::err_t<lak::u8string>{
+		  lak::streamify("Failed to get preferred graphics device")};
+	}
+
+	auto renderer = device->CreateRenderer(s.features, s.options);
+
+	if (!renderer->Initialize(::cobalt::graphics::WindowSystemInfoWin32()))
+	{
+		return lak::err_t<lak::u8string>{
+		  lak::streamify("Failed to initialise cobalt renderer")};
+	}
+
+	auto handle = lak::unique_bank_ptr<lak::window_handle>::create();
+	ASSERT(handle);
+
+	DEFER(if (handle) lak::destroy_window(handle.release()));
+
+	DWORD style = WS_OVERLAPPEDWINDOW;
+
+	// CS_OWNDC means that each window has its own unique HDC that doesn't need
+	// to be released.
+	ASSERT((lak::_platform_instance->window_class.style & CS_OWNDC) != 0);
+
+	::cobalt::graphics::V2UInt32 window_size = {720, 480};
+
+	handle->_platform_handle = ::CreateWindowExW(
+	  0,                                                   /* styles */
+	  lak::_platform_instance->window_class.lpszClassName, /* class name */
+	  L"insert window name here",                          /* window name */
+	  style,                                               /* style */
+	  CW_USEDEFAULT,                                       /* x */
+	  CW_USEDEFAULT,                                       /* y */
+	  window_size.X(),                                     /* width */
+	  window_size.Y(),                                     /* height */
+	  nullptr,                                             /* parent */
+	  nullptr,                                             /* menu */
+	  lak::_platform_instance->handle,                     /* hInstance */
+	  handle.get()                                         /* user data */
+	);
+
+	if (!handle->_platform_handle)
+	{
+		return lak::err_t<lak::u8string>{
+		  lak::streamify("Failed to create window: "_view,
+		                 win32_error_string(L"CreateWindowExW"))};
+	}
+
+	handle->_device_context = ::GetDC(handle->_platform_handle);
+
+	if (!handle->_device_context)
+	{
+		return lak::err_t<lak::u8string>{
+		  lak::streamify("Failed to get window device context: "_view,
+		                 win32_error_string(L"GetDC"))};
+	}
+
+	auto &context = handle->gc.emplace<lak::cobalt_context>();
+	auto fb       = renderer->CreateFrameBuffer();
+	if (!fb)
+	{
+		return lak::err_t<lak::u8string>{
+		  lak::streamify("Failed to create framebuffer")};
+	}
+	const auto drawable = lak::window_drawable_size(handle.get());
+	RES_TRY(lak::cobalt::as_result(
+	          fb->BindWindow(::cobalt::graphics::WindowInfoWin32(
+	                           handle->_platform_handle,
+	                           lak::_platform_instance->handle,
+	                           {(uint32_t)drawable.x, (uint32_t)drawable.y}),
+	                         s.depth_mode,
+	                         s.colour_mode))
+	          .map_err([](auto &&) { return u8"Failed to bind window"_str; }));
+	context.platform_handle              = new lak::cobalt::graphics_context{};
+	context.platform_handle              = new lak::cobalt::graphics_context{};
+	context.platform_handle->api_family  = s.renderer_info.GetApiFamily();
+	context.platform_handle->api_version = s.renderer_info.GetTargetApiVersion();
+	context.platform_handle->vendor      = device->GetVendor();
+	context.platform_handle->frame_buffer = lak::move(fb);
+	context.platform_handle->renderer     = lak::move(renderer);
+
+	::ShowWindow(handle->_platform_handle, SW_SHOWNORMAL);
+
+	return lak::ok_t{handle.release()};
+}
+#endif
+
 bool lak::destroy_window(lak::window_handle *handle)
 {
 	ASSERT(handle);
@@ -268,6 +363,14 @@ bool lak::destroy_window(lak::window_handle *handle)
 		break;
 #endif
 
+#ifdef LAK_ENABLE_COBALT
+		case lak::graphics_mode::Cobalt:
+		{
+			handle->gc.template get<lak::cobalt_context>()->platform_handle.reset();
+		}
+		break;
+#endif
+
 		default:
 		{
 			ASSERT_UNREACHABLE();
@@ -296,6 +399,60 @@ lak::graphics_mode lak::window_graphics_mode(const lak::window_handle *w)
 bool lak::set_opengl_swap_interval(const lak::opengl_context &, int interval)
 {
 	return has_swap_control && wglSwapIntervalEXT(interval);
+}
+#endif
+
+/* --- Cobalt --- */
+
+#ifdef LAK_ENABLE_COBALT
+lak::result<const lak::cobalt::graphics_context &>
+lak::cobalt_graphics_context(const lak::window_handle *w)
+{
+	RES_TRY_ASSIGN(auto &ctx =,
+	               lak::result_from_pointer(w->gc.get<lak::cobalt_context>()));
+	return lak::ok_t<const lak::cobalt::graphics_context &>{
+	  *ctx.platform_handle};
+}
+
+::cobalt::graphics::IRenderPassNode *lak::cobalt_create_render_pass(
+  const lak::cobalt_context &c)
+{
+	c.platform_handle->owned_render_passes.reserve(
+	  c.platform_handle->owned_render_passes.size() + 1U);
+	c.platform_handle->render_passes.reserve(
+	  c.platform_handle->render_passes.size() + 1U);
+
+	auto p = c.platform_handle->renderer->CreateRenderPassNode();
+	p->BindFrameBuffer(c.platform_handle->frame_buffer.get());
+
+	c.platform_handle->owned_render_passes.push_back(lak::move(p));
+	auto res = c.platform_handle->owned_render_passes.back().get();
+	c.platform_handle->render_passes.push_back(res);
+
+	return res;
+}
+
+lak::result<::cobalt::graphics::IRenderPassNode *>
+lak::cobalt_create_render_pass(const lak::window_handle *w)
+{
+	RES_TRY_ASSIGN(auto &ctx =,
+	               lak::result_from_pointer(w->gc.get<lak::cobalt_context>()));
+	return lak::ok_t{lak::cobalt_create_render_pass(ctx)};
+}
+
+void lak::cobalt_append_render_pass(const lak::cobalt_context &c,
+                                    ::cobalt::graphics::IRenderPassNode *pass)
+{
+	c.platform_handle->render_passes.push_back(pass);
+}
+
+lak::result<lak::monostate> lak::cobalt_append_render_pass(
+  const lak::window_handle *w, ::cobalt::graphics::IRenderPassNode *pass)
+{
+	RES_TRY_ASSIGN(auto &ctx =,
+	               lak::result_from_pointer(w->gc.get<lak::cobalt_context>()));
+	lak::cobalt_append_render_pass(ctx, pass);
+	return lak::ok_t{};
 }
 #endif
 
@@ -334,13 +491,14 @@ lak::vec2l_t lak::window_drawable_size(const lak::window_handle *handle)
 bool lak::set_window_size(lak::window_handle *handle, lak::vec2l_t size)
 {
 	RECT rect;
-	return ::GetWindowRect(handle->_platform_handle, &rect) &&
-	       ::MoveWindow(handle->_platform_handle,
-	                    rect.left,
-	                    rect.top,
-	                    size.x,
-	                    size.y,
-	                    TRUE);
+	if (::GetWindowRect(handle->_platform_handle, &rect) &&
+	    ::MoveWindow(
+	      handle->_platform_handle, rect.left, rect.top, size.x, size.y, TRUE))
+	{
+		lak::window_handle_resize(handle);
+		return true;
+	}
+	return false;
 }
 
 bool lak::set_window_cursor_pos(const lak::window_handle *handle,
@@ -375,6 +533,13 @@ bool lak::set_active_window(const lak::window_handle *handle)
 				return true;
 		}
 #endif
+
+#ifdef LAK_ENABLE_COBALT
+		case lak::graphics_mode::Cobalt:
+		{
+			return true;
+		}
+#endif
 	}
 
 	return false;
@@ -404,9 +569,45 @@ bool lak::swap_window(lak::window_handle *handle)
 		}
 #endif
 
-		default:
-			return false;
+#ifdef LAK_ENABLE_COBALT
+		case lak::graphics_mode::Cobalt:
+		{
+			auto &ctx = handle->cobalt_context();
+			auto *rd  = ctx.platform_handle->renderer.get();
+			rd->SetRenderPasses(ctx.platform_handle->render_passes.data(),
+			                    ctx.platform_handle->render_passes.size());
+			rd->StartNewFrame();
+			rd->WaitForDrawComplete();
+			rd->RemoveAllRenderPasses();
+			ctx.platform_handle->render_passes.clear();
+			ctx.platform_handle->owned_render_passes.clear();
+			return true;
+		}
+#endif
+
+		default: return false;
 	}
+}
+
+void lak::window_handle_resize(const lak::window_handle *handle)
+{
+#ifdef LAK_ENABLE_SOFTRENDER
+	if (handle->graphics_mode() == lak::graphics_mode::Software)
+	{
+		auto actual = lak::window_drawable_size(handle);
+		handle->software_context().platform_handle.resize(lak::vec2s_t(actual));
+	}
+#endif
+
+#ifdef LAK_ENABLE_COBALT
+	if (handle->graphics_mode() == lak::graphics_mode::Cobalt)
+	{
+		auto actual = lak::window_drawable_size(handle);
+		handle->cobalt_context()
+		  .platform_handle->frame_buffer->NotifyWindowResized(
+		    {(uint32_t)actual.x, (uint32_t)actual.y});
+	}
+#endif
 }
 
 #include "../common/window.inl"

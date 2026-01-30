@@ -22,6 +22,16 @@ lak::result<lak::window_handle *, lak::u8string> lak::create_window(
 }
 #endif
 
+#ifdef LAK_ENABLE_COBALT
+lak::result<lak::window_handle *, lak::u8string> lak::create_window(
+  const lak::cobalt_settings &s)
+{
+	(void)s;
+	return lak::ok_t{
+	  lak::unique_bank_ptr<lak::window_handle>::create().release()};
+}
+#endif
+
 bool lak::destroy_window(lak::window_handle *w)
 {
 	lak::bank<lak::window_handle>::destroy(w);
@@ -57,6 +67,7 @@ bool lak::set_window_size(lak::window_handle *w, lak::vec2l_t s)
 {
 	(void)w;
 	(void)s;
+	lak::window_handle_resize(w);
 	return false;
 }
 

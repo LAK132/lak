@@ -13,6 +13,10 @@ if get_option('lak_enable_opengl')
 	]
 endif
 
+if get_option('lak_enable_cobalt')
+	_lakwindowing_dependencies += lakcobalt_dep
+endif
+
 lakwindowing_dependencies = declare_dependency(
 	dependencies: _lakwindowing_dependencies,
 )

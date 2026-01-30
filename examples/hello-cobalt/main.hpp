@@ -1,0 +1,8 @@
+#ifndef HELLO_COBALT_MAIN_HPP
+#define HELLO_COBALT_MAIN_HPP
+
+#define APP_NAME "Hello Cobalt"
+
+#define LAK_BASIC_PROGRAM_IMGUI_WINDOW_IMPL
+
+#endif

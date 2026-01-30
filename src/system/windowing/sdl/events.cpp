@@ -279,6 +279,7 @@ void translate_event(const SDL_Event &sdl_event,
 				case SDL_WINDOWEVENT_RESIZED:
 				case SDL_WINDOWEVENT_SIZE_CHANGED:
 				{
+					if (window) lak::window_handle_resize(window);
 					*event = lak::event(
 					  lak::event_type::window_changed,
 					  window,

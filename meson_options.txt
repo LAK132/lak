@@ -63,6 +63,42 @@ option('lak_enable_opengl',
 	yield: true,
 )
 
+option('lak_enable_cobalt',
+	type: 'boolean',
+	value: false,
+	yield: true,
+)
+
+option('lak_enable_cobalt_ogl3',
+	type: 'boolean',
+	value: false,
+	yield: true,
+)
+
+option('lak_enable_cobalt_ogl4',
+	type: 'boolean',
+	value: false,
+	yield: true,
+)
+
+option('lak_enable_cobalt_d3d11',
+	type: 'boolean',
+	value: false,
+	yield: true,
+)
+
+option('lak_enable_cobalt_d3d12',
+	type: 'boolean',
+	value: false,
+	yield: true,
+)
+
+option('lak_enable_cobalt_vk',
+	type: 'boolean',
+	value: false,
+	yield: true,
+)
+
 # llvm options
 
 option('lak_enable_llvm',

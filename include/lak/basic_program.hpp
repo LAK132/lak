@@ -44,6 +44,7 @@ void LAK_BASIC_PROGRAM(program_handle_event)(lak::event &event);
 extern uint32_t LAK_BASIC_PROGRAM(window_target_framerate);
 extern bool LAK_BASIC_PROGRAM(window_force_software);
 extern lak::vec2l_t LAK_BASIC_PROGRAM(window_start_size);
+extern lak::cobalt_settings LAK_BASIC_PROGRAM(window_cobalt_settings);
 extern lak::opengl_settings LAK_BASIC_PROGRAM(window_opengl_settings);
 extern lak::software_settings LAK_BASIC_PROGRAM(window_software_settings);
 
@@ -123,6 +124,13 @@ template<typename WINDOW_CLASS>
 lak::result<lak::strong_ref<LAK_BASIC_PROGRAM(window_instance<WINDOW_CLASS>)>,
             lak::u8string>
   LAK_BASIC_PROGRAM(create_window)(const lak::opengl_settings &);
+#endif
+
+#ifdef LAK_ENABLE_COBALT
+template<typename WINDOW_CLASS>
+lak::result<lak::strong_ref<LAK_BASIC_PROGRAM(window_instance<WINDOW_CLASS>)>,
+            lak::u8string>
+  LAK_BASIC_PROGRAM(create_window)(const lak::cobalt_settings &);
 #endif
 
 #endif

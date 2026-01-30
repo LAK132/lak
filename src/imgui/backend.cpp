@@ -12,10 +12,16 @@
 #include "lak/image.hpp"
 #include "lak/trace.hpp"
 
+#include "lak/string_literals/string.hpp"
+
 #ifdef LAK_ENABLE_OPENGL
 #	include "lak/system/opengl/shader.hpp"
 #	include "lak/system/opengl/state.hpp"
 #	include "lak/system/opengl/texture.hpp"
+#endif
+
+#ifdef LAK_ENABLE_COBALT
+#	include "lak/system/cobalt/math.hpp"
 #endif
 
 #include "lak/imgui/backend.hpp"
@@ -142,6 +148,57 @@ namespace ImGui
 #endif
 	} *ImplGLContext;
 
+	typedef struct _ImplCoContext
+	{
+#ifdef LAK_ENABLE_COBALT
+		struct renderable
+		{
+			struct renderable_state
+			{
+				::cobalt::graphics::IStateGroupNode::unique_ptr state_group_node;
+				::cobalt::graphics::IRenderableNode::unique_ptr renderable_node;
+			};
+			::cobalt::graphics::IVertexBuffer::unique_ptr vertex_buffer;
+			::cobalt::graphics::IIndexBuffer::unique_ptr index_buffer;
+			lak::array<renderable_state> state;
+		};
+
+		const lak::window_handle *window_handle;
+		::cobalt::graphics::IRenderer *renderer;
+		::cobalt::graphics::IFrameBuffer *frame_buffer;
+
+		::cobalt::graphics::IRenderPassNode::unique_ptr render_pass_node;
+		::cobalt::graphics::IShaderProgram::unique_ptr shader_program;
+		::cobalt::graphics::IProgramNode::unique_ptr program_node;
+		::cobalt::graphics::ITextureSampler2D::unique_ptr sampler;
+		lak::array<renderable> renderables;
+
+		void clear_renderables()
+		{
+			if (program_node) program_node->RemoveAllChildNodes();
+			for (auto &renderable : renderables)
+			{
+				for (auto &state : renderable.state)
+				{
+					if (state.state_group_node)
+						state.state_group_node->RemoveAllChildNodes();
+					state.state_group_node.reset();
+					state.renderable_node.reset();
+				}
+			}
+			renderables.clear();
+		}
+
+		::cobalt::graphics::StateValueId viewProj;
+		::cobalt::graphics::StateValueId scissor_min;
+		::cobalt::graphics::StateValueId scissor_max;
+		::cobalt::graphics::VertexAttributeId vPosition;
+		::cobalt::graphics::VertexAttributeId vUV;
+		::cobalt::graphics::VertexAttributeId vColour;
+		::cobalt::graphics::TextureId fTexture;
+#endif
+	} *ImplCoContext;
+
 	typedef struct _ImplContext
 	{
 		ImGuiContext *imgui_context;
@@ -154,6 +211,7 @@ namespace ImGui
 			void *vd_context;
 			ImplSRContext sr_context;
 			ImplGLContext gl_context;
+			ImplCoContext co_context;
 		};
 	} *ImplContext;
 }
@@ -172,6 +230,11 @@ ImGui::ImplContext ImGui::ImplCreateContext(lak::graphics_mode mode)
 #ifdef LAK_ENABLE_OPENGL
 		case lak::graphics_mode::OpenGL:
 			result->gl_context = new _ImplGLContext();
+			break;
+#endif
+#ifdef LAK_ENABLE_COBALT
+		case lak::graphics_mode::Cobalt:
+			result->co_context = new _ImplCoContext();
 			break;
 #endif
 		default: result->vd_context = nullptr; break;
@@ -196,6 +259,9 @@ void ImGui::ImplDestroyContext(ImplContext context)
 #endif
 #ifdef LAK_ENABLE_OPENGL
 				case lak::graphics_mode::OpenGL: delete context->gl_context; break;
+#endif
+#ifdef LAK_ENABLE_COBALT
+				case lak::graphics_mode::Cobalt: delete context->co_context; break;
 #endif
 				default: FATAL("Invalid graphics mode"); break;
 			}
@@ -266,6 +332,18 @@ inline void ImplUpdateDisplaySize(ImGui::ImplContext context,
 
 #ifdef LAK_ENABLE_OPENGL
 		case lak::graphics_mode::OpenGL:
+		{
+			auto drawable_size = lak::window_drawable_size(handle);
+			io.DisplayFramebufferScale.x =
+			  (window_size.x > 0) ? (drawable_size.x / (float)window_size.x) : 1.0f;
+			io.DisplayFramebufferScale.y =
+			  (window_size.y > 0) ? (drawable_size.y / (float)window_size.y) : 1.0f;
+		}
+		break;
+#endif
+
+#ifdef LAK_ENABLE_COBALT
+		case lak::graphics_mode::Cobalt:
 		{
 			auto drawable_size = lak::window_drawable_size(handle);
 			io.DisplayFramebufferScale.x =
@@ -401,6 +479,127 @@ void main()
 }
 #endif
 
+#ifdef LAK_ENABLE_COBALT
+void ImplInitCoContext(ImGui::ImplCoContext context, const lak::window &window)
+{
+	context->window_handle = window.handle();
+	const auto &cgx =
+	  lak::cobalt_graphics_context(context->window_handle).UNWRAP();
+	context->renderer     = cgx.renderer.get();
+	context->frame_buffer = cgx.frame_buffer.get();
+
+	context->render_pass_node = context->renderer->CreateRenderPassNode();
+	context->render_pass_node->BindFrameBuffer(context->frame_buffer);
+
+	auto vs_in  = R"(
+struct VSInput
+{
+	float2 position : position;
+	float2 texCoord : texCoord;
+	float4 color : color;
+};)"_str;
+	auto vs_out = R"(
+struct VSOutput
+{
+	float4 pos : SV_POSITION;
+	float2 uv : TEXCOORD0;
+	float4 colour : COLOR;
+	float2 clip_pos : TEXCOORD1;
+	float2 clip_range : TEXCOORD2;
+};)"_str;
+
+	auto vert_shader = vs_in + vs_out + R"(
+uniform row_major float4x4 view_proj;
+uniform float2 scissor_min;
+uniform float2 scissor_max;
+
+VSOutput main(VSInput IN)
+{
+	VSOutput OUT;
+
+	OUT.uv = IN.texCoord;
+	OUT.colour = IN.color;
+	OUT.pos = mul(view_proj, float4(IN.position, 0.0f, 1.0f));
+
+	float2 range = scissor_max - scissor_min;
+	float2 diff = (OUT.pos.xy / OUT.pos.w) - scissor_min;
+	OUT.clip_range = abs(range);
+	OUT.clip_pos = diff * sign(range);
+
+	return OUT;
+})"_str;
+
+	auto frag_shader = vs_out + R"(
+uniform Texture2D tex;
+uniform SamplerState tex_CombinedSampler;
+
+float4 main(VSOutput IN) : SV_TARGET
+{
+	if ((IN.clip_pos.x < 0) | (IN.clip_pos.x >= IN.clip_range.x) |
+	    (IN.clip_pos.y < 0) | (IN.clip_pos.y >= IN.clip_range.y))
+		discard;
+	float4 colour = tex.Sample(tex_CombinedSampler, IN.uv);
+	colour *= IN.colour;
+	return colour;
+})"_str;
+
+	context->shader_program = context->renderer->CreateShaderProgram();
+
+	context->shader_program->LoadShaderStage(
+	  ::cobalt::graphics::IShaderProgram::ShaderStage::Vertex,
+	  ::cobalt::graphics::IShaderProgram::CodeFormat::HLSL,
+	  reinterpret_cast<const uint8_t *>(vert_shader.c_str()),
+	  vert_shader.size());
+	context->shader_program->LoadShaderStage(
+	  ::cobalt::graphics::IShaderProgram::ShaderStage::Fragment,
+	  ::cobalt::graphics::IShaderProgram::CodeFormat::HLSL,
+	  reinterpret_cast<const uint8_t *>(frag_shader.c_str()),
+	  frag_shader.size());
+	lak::cobalt::as_result(context->shader_program->CompileProgram()).UNWRAP();
+
+	context->viewProj = context->shader_program->GetStateValueId("view_proj");
+	context->scissor_min =
+	  context->shader_program->GetStateValueId("scissor_min");
+	context->scissor_max =
+	  context->shader_program->GetStateValueId("scissor_max");
+	context->vPosition =
+	  context->shader_program->GetVertexAttributeId("position");
+	context->vUV     = context->shader_program->GetVertexAttributeId("texCoord");
+	context->vColour = context->shader_program->GetVertexAttributeId("color");
+	context->fTexture = context->shader_program->GetTextureId("tex");
+
+	ASSERT_NOT_EQUAL(context->viewProj, ::cobalt::graphics::StateValueId::Null);
+	ASSERT_NOT_EQUAL(context->scissor_min,
+	                 ::cobalt::graphics::StateValueId::Null);
+	ASSERT_NOT_EQUAL(context->scissor_max,
+	                 ::cobalt::graphics::StateValueId::Null);
+	ASSERT_NOT_EQUAL(context->vPosition,
+	                 ::cobalt::graphics::VertexAttributeId::Null);
+	ASSERT_NOT_EQUAL(context->vUV, ::cobalt::graphics::VertexAttributeId::Null);
+	ASSERT_NOT_EQUAL(context->vColour,
+	                 ::cobalt::graphics::VertexAttributeId::Null);
+	ASSERT_NOT_EQUAL(context->fTexture, ::cobalt::graphics::TextureId::Null);
+
+	context->program_node = context->renderer->CreateProgramNode();
+
+	context->program_node->BindShaderProgram(context->shader_program.get());
+
+	context->render_pass_node->AddChildNode(context->program_node.get());
+
+	context->sampler = context->renderer->CreateTextureSampler2D();
+
+	context->sampler->SetTextureFilterMode(
+	  ::cobalt::graphics::ITextureSampler::FilterMode::Linear,
+	  ::cobalt::graphics::ITextureSampler::FilterMode::Nearest);
+
+	ImGuiIO &io = ImGui::GetIO();
+
+	io.BackendRendererName = "imgui_impl_lak_cobalt";
+	io.BackendFlags |= ImGuiBackendFlags_RendererHasVtxOffset;
+	io.BackendFlags |= ImGuiBackendFlags_RendererHasTextures;
+}
+#endif
+
 void ImGui::ImplInitContext(ImplContext context, const lak::window &window)
 {
 #if defined(LAK_USE_WINAPI)
@@ -473,6 +672,11 @@ void ImGui::ImplInitContext(ImplContext context, const lak::window &window)
 		case lak::graphics_mode::OpenGL:
 			io.BackendRendererUserData = context->gl_context;
 			ImplInitGLContext(context->gl_context, window);
+			break;
+#endif
+#ifdef LAK_ENABLE_COBALT
+		case lak::graphics_mode::Cobalt:
+			ImplInitCoContext(context->co_context, window);
 			break;
 #endif
 		default: ASSERTF(false, "Invalid Context Mode"); break;
@@ -548,6 +752,25 @@ void ImplShutdownGLContext(ImGui::ImplGLContext context)
 }
 #endif
 
+#ifdef LAK_ENABLE_COBALT
+void ImplShutdownCoContext(ImGui::ImplCoContext context)
+{
+	context->renderer      = nullptr;
+	context->frame_buffer  = nullptr;
+	context->window_handle = nullptr;
+	context->render_pass_node.reset();
+	context->shader_program.reset();
+	context->program_node.reset();
+	context->sampler.reset();
+	context->clear_renderables();
+
+	for (ImTextureData *tex : ImGui::GetPlatformIO().Textures)
+		if (tex->RefCount == 1U)
+			delete (::cobalt::graphics::ITextureBuffer2D::unique_ptr *)(uintptr_t)
+			  tex->GetTexID();
+}
+#endif
+
 void ImGui::ImplShutdownContext(ImplContext context)
 {
 	for (auto &cursor : context->mouse_cursors)
@@ -576,6 +799,11 @@ void ImGui::ImplShutdownContext(ImplContext context)
 #ifdef LAK_ENABLE_OPENGL
 		case lak::graphics_mode::OpenGL:
 			ImplShutdownGLContext(context->gl_context);
+			break;
+#endif
+#ifdef LAK_ENABLE_COBALT
+		case lak::graphics_mode::Cobalt:
+			ImplShutdownCoContext(context->co_context);
 			break;
 #endif
 		default: FATAL("Invalid Context Mode"); break;
@@ -1696,6 +1924,291 @@ void ImplGLRender(ImGui::ImplContext context, ImDrawData *draw_data)
 }
 #endif
 
+#ifdef LAK_ENABLE_COBALT
+void ImplCoRender(ImGui::ImplContext ctx, ImDrawData *draw_data)
+{
+	ASSERT(draw_data != nullptr);
+	ASSERT(ctx->co_context != nullptr);
+
+	auto *context = ctx->co_context;
+
+	ImGuiIO &io = ImGui::GetIO();
+
+	lak::vec4f_t viewport;
+	viewport.x = draw_data->DisplayPos.x;
+	viewport.y = draw_data->DisplayPos.y;
+	viewport.z = draw_data->DisplaySize.x * io.DisplayFramebufferScale.x;
+	viewport.w = draw_data->DisplaySize.y * io.DisplayFramebufferScale.y;
+	if (viewport.z <= 0 || viewport.w <= 0) return;
+
+	draw_data->ScaleClipRects(io.DisplayFramebufferScale);
+
+	auto update_texture = [&context](ImTextureData *texture)
+	{
+		if (texture->Status == ImTextureStatus_WantCreate)
+		{
+			ASSERT(texture->Format == ImTextureFormat_RGBA32);
+
+			auto &tex = *(new ::cobalt::graphics::ITextureBuffer2D::unique_ptr);
+
+			tex = context->renderer->CreateTextureBuffer2D();
+
+			tex->SetTextureFormat(
+			  ::cobalt::graphics::ITextureBuffer::ImageFormat::RGBA,
+			  ::cobalt::graphics::ITextureBuffer::DataFormat::UNorm8);
+
+			tex->SetTextureDimensions(
+			  {uint32_t(texture->Width), uint32_t(texture->Height)});
+
+			lak::cobalt::as_result(
+			  tex->SetInitialData(
+			    reinterpret_cast<const ::cobalt::graphics::V4UNorm8 *>(
+			      texture->GetPixels()),
+			    texture->Width * texture->Height))
+			  .UNWRAP();
+
+			lak::cobalt::as_result(tex->AllocateMemory()).UNWRAP();
+
+			texture->SetTexID((ImTextureID)(uintptr_t)&tex);
+			texture->SetStatus(ImTextureStatus_OK);
+		}
+		else if (texture->Status == ImTextureStatus_WantUpdates)
+		{
+			auto &tex =
+			  *(::cobalt::graphics::ITextureBuffer2D::unique_ptr *)(uintptr_t)
+			     texture->GetTexID();
+
+			lak::array<::cobalt::graphics::V4UNorm8> repack_buffer;
+			for (ImTextureRect &r : texture->Updates)
+			{
+				repack_buffer.resize(r.w * r.h);
+				for (size_t y = 0U; y < r.h; ++y)
+					lak::memcpy(
+					  lak::span<byte_t>(lak::span(repack_buffer).subspan(r.w * y, r.w)),
+					  lak::span<const byte_t>(lak::span<const void>(
+					    texture->GetPixelsAt(r.x, r.y + y), r.w * sizeof(uint32_t))));
+
+				lak::cobalt::as_result(tex->QueueDataUpdate(repack_buffer.data(),
+				                                            repack_buffer.size(),
+				                                            0,
+				                                            {r.x, r.y},
+				                                            {r.w, r.h}))
+				  .UNWRAP();
+			}
+			texture->SetStatus(ImTextureStatus_OK);
+		}
+		else if (texture->Status == ImTextureStatus_WantDestroy &&
+		         texture->UnusedFrames > 0U)
+		{
+			delete (::cobalt::graphics::ITextureBuffer2D::unique_ptr *)(uintptr_t)
+			  texture->GetTexID();
+			texture->SetStatus(ImTextureStatus_Destroyed);
+		}
+	};
+
+	if (draw_data->Textures != nullptr)
+		for (ImTextureData *tex : *draw_data->Textures)
+			if (tex->Status != ImTextureStatus_OK) update_texture(tex);
+
+	const auto viewport_matrix = [&]()
+	{
+		const float &W = draw_data->DisplaySize.x;
+		const float &H = draw_data->DisplaySize.y;
+		// clang-format off
+		const glm::mat4x4 orthoProj = {
+			2.0f / W,  0.0f,      0.0f,  0.0f,
+			0.0f,      2.0f / -H, 0.0f,  0.0f,
+			0.0f,      0.0f,      1.0f,  0.0f,
+			-1.0,      1.0,       0.0f,  1.0f
+		};
+		// clang-format on
+		return orthoProj;
+	}();
+
+	context->clear_renderables();
+	context->renderables.resize(draw_data->CmdListsCount);
+
+	for (int n = 0; n < draw_data->CmdListsCount; ++n)
+	{
+		const ImDrawList *cmd_list = draw_data->CmdLists[n];
+		size_t idx_buffer_offset   = 0;
+
+		auto &renderable = context->renderables[n];
+
+		renderable.vertex_buffer = context->renderer->CreateVertexBuffer();
+		renderable.index_buffer  = context->renderer->CreateIndexBuffer();
+
+		::cobalt::graphics::VertexAttribute<::cobalt::graphics::V2Float32>
+		  vPosition(
+		    cmd_list->VtxBuffer.Size,
+		    ::cobalt::graphics::IVertexAttribute::PerformanceHint::WriteNever |
+		      ::cobalt::graphics::IVertexAttribute::PerformanceHint::ReadNever,
+		    ::cobalt::graphics::IVertexAttribute::PerformanceHint::WriteNever |
+		      ::cobalt::graphics::IVertexAttribute::PerformanceHint::ReadOften);
+		::cobalt::graphics::VertexAttribute<::cobalt::graphics::V2Float32> vUV(
+		  cmd_list->VtxBuffer.Size,
+		  ::cobalt::graphics::IVertexAttribute::PerformanceHint::WriteNever |
+		    ::cobalt::graphics::IVertexAttribute::PerformanceHint::ReadNever,
+		  ::cobalt::graphics::IVertexAttribute::PerformanceHint::WriteNever |
+		    ::cobalt::graphics::IVertexAttribute::PerformanceHint::ReadOften);
+		::cobalt::graphics::VertexAttribute<::cobalt::graphics::V4UNorm8> vColour(
+		  cmd_list->VtxBuffer.Size,
+		  ::cobalt::graphics::IVertexAttribute::PerformanceHint::WriteNever |
+		    ::cobalt::graphics::IVertexAttribute::PerformanceHint::ReadNever,
+		  ::cobalt::graphics::IVertexAttribute::PerformanceHint::WriteNever |
+		    ::cobalt::graphics::IVertexAttribute::PerformanceHint::ReadOften);
+
+		lak::cobalt::as_result(
+		  renderable.vertex_buffer->BindVertexAttributeManualLayout(
+		    vPosition, offsetof(ImDrawVert, pos), sizeof(ImDrawVert)))
+		  .UNWRAP();
+		lak::cobalt::as_result(
+		  renderable.vertex_buffer->BindVertexAttributeManualLayout(
+		    vUV, offsetof(ImDrawVert, uv), sizeof(ImDrawVert)))
+		  .UNWRAP();
+		lak::cobalt::as_result(
+		  renderable.vertex_buffer->BindVertexAttributeManualLayout(
+		    vColour, offsetof(ImDrawVert, col), sizeof(ImDrawVert)))
+		  .UNWRAP();
+
+		static_assert(sizeof(ImDrawIdx) == sizeof(uint16_t) ||
+		              sizeof(ImDrawIdx) == sizeof(uint32_t));
+		lak::conditional_t<
+		  sizeof(ImDrawIdx) == sizeof(uint16_t),
+		  ::cobalt::graphics::IndexAttribute<::cobalt::graphics::V1UInt16>,
+		  ::cobalt::graphics::IndexAttribute<::cobalt::graphics::V1UInt32>>
+		  vIndex(
+		    cmd_list->IdxBuffer.Size,
+		    ::cobalt::graphics::IIndexAttribute::PerformanceHint::WriteNever |
+		      ::cobalt::graphics::IIndexAttribute::PerformanceHint::ReadNever,
+		    ::cobalt::graphics::IIndexAttribute::PerformanceHint::WriteNever |
+		      ::cobalt::graphics::IIndexAttribute::PerformanceHint::ReadOften);
+
+		lak::cobalt::as_result(
+		  renderable.index_buffer->BindIndexAttributeManualLayout(
+		    vIndex, 0, sizeof(ImDrawIdx)))
+		  .UNWRAP();
+
+		lak::cobalt::as_result(
+		  renderable.vertex_buffer->SetRawInitialData(
+		    reinterpret_cast<const uint8_t *>(cmd_list->VtxBuffer.Data),
+		    cmd_list->VtxBuffer.Size * sizeof(ImDrawVert)))
+		  .UNWRAP();
+		lak::cobalt::as_result(
+		  renderable.index_buffer->SetRawInitialData(
+		    reinterpret_cast<const uint8_t *>(cmd_list->IdxBuffer.Data),
+		    cmd_list->IdxBuffer.Size * sizeof(ImDrawIdx)))
+		  .UNWRAP();
+
+		lak::cobalt::as_result(renderable.vertex_buffer->AllocateMemory())
+		  .UNWRAP();
+		lak::cobalt::as_result(renderable.index_buffer->AllocateMemory()).UNWRAP();
+
+		renderable.state.clear();
+		renderable.state.reserve(cmd_list->CmdBuffer.Size);
+
+		for (int cmd_i = 0; cmd_i < cmd_list->CmdBuffer.Size; ++cmd_i)
+		{
+			const ImDrawCmd &cmd = cmd_list->CmdBuffer[cmd_i];
+
+			if (cmd.UserCallback)
+			{
+				cmd.UserCallback(cmd_list, &cmd);
+			}
+			else
+			{
+				lak::vec4f_t clip;
+				clip.x = cmd.ClipRect.x - viewport.x;
+				clip.y = cmd.ClipRect.y - viewport.y;
+				clip.z = cmd.ClipRect.z - viewport.x;
+				clip.w = cmd.ClipRect.w - viewport.y;
+
+				if ((clip.x < viewport.z) & (clip.y < viewport.w) & (clip.z >= 0.0f) &
+				    (clip.w >= 0.0f))
+				{
+					auto &state = renderable.state.emplace_back();
+
+					state.state_group_node = context->renderer->CreateStateGroupNode();
+
+					state.state_group_node->SetPolygonFillMode(
+					  ::cobalt::graphics::IStateGroupNode::PolygonFillMode::Solid);
+					state.state_group_node->SetBlendEnabled(true);
+					state.state_group_node->SetPolygonCullMode(
+					  ::cobalt::graphics::IStateGroupNode::PolygonCullMode::None);
+					state.state_group_node->SetDepthTestEnabled(false);
+					state.state_group_node->SetDepthWriteEnabled(false);
+
+					state.state_group_node->SetBlendMode(
+					  ::cobalt::graphics::IStateGroupNode::BlendOperation::Add,
+					  ::cobalt::graphics::IStateGroupNode::BlendFactor::SourceAlpha,
+					  ::cobalt::graphics::IStateGroupNode::BlendFactor::
+					    OneMinusSourceAlpha,
+					  ::cobalt::graphics::IStateGroupNode::BlendOperation::Add,
+					  ::cobalt::graphics::IStateGroupNode::BlendFactor::SourceAlpha,
+					  ::cobalt::graphics::IStateGroupNode::BlendFactor::
+					    OneMinusSourceAlpha);
+
+					state.state_group_node->BindTextureWithCombinedSampler(
+					  context->fTexture,
+					  ((::cobalt::graphics::ITextureBuffer2D::unique_ptr *)(uintptr_t)
+					     cmd.GetTexID())
+					    ->get(),
+					  context->sampler.get());
+
+					state.state_group_node->SetStateValue(
+					  context->viewProj, lak::cobalt::from_glm(viewport_matrix));
+
+					state.state_group_node->SetStateValue(
+					  context->scissor_min,
+					  lak::cobalt::from_glm(glm::vec2(
+					    viewport_matrix * glm::vec4{clip.x, clip.y, 0.f, 1.f})));
+
+					state.state_group_node->SetStateValue(
+					  context->scissor_max,
+					  lak::cobalt::from_glm(glm::vec2(
+					    viewport_matrix * glm::vec4{clip.z, clip.w, 0.f, 1.f})));
+
+					state.renderable_node = context->renderer->CreateRenderableNode();
+
+					lak::cobalt::as_result(state.renderable_node->BindVertexAttribute(
+					                         vPosition, context->vPosition))
+					  .UNWRAP();
+					lak::cobalt::as_result(
+					  state.renderable_node->BindVertexAttribute(vUV, context->vUV))
+					  .UNWRAP();
+					lak::cobalt::as_result(state.renderable_node->BindVertexAttribute(
+					                         vColour, context->vColour))
+					  .UNWRAP();
+
+					lak::cobalt::as_result(
+					  state.renderable_node->BindIndexAttribute(vIndex))
+					  .UNWRAP();
+
+					lak::cobalt::as_result(
+					  state.renderable_node->SetPrimitiveMode(
+					    ::cobalt::graphics::IRenderableNode::PrimitiveMode::Triangles))
+					  .UNWRAP();
+
+					lak::cobalt::as_result(
+					  state.renderable_node->SetVertexCount(size_t(cmd.ElemCount),
+					                                        size_t(cmd.VtxOffset),
+					                                        size_t(cmd.IdxOffset)))
+					  .UNWRAP();
+
+					state.state_group_node->AddChildNode(state.renderable_node.get());
+
+					context->program_node->AddChildNode(state.state_group_node.get());
+				}
+			}
+		}
+	}
+
+	lak::cobalt_append_render_pass(context->window_handle,
+	                               context->render_pass_node.get())
+	  .UNWRAP();
+}
+#endif
+
 void ImGui::ImplRenderData(ImplContext context, ImDrawData *draw_data)
 {
 	ASSERT(context);
@@ -1707,6 +2220,9 @@ void ImGui::ImplRenderData(ImplContext context, ImDrawData *draw_data)
 #endif
 #ifdef LAK_ENABLE_OPENGL
 		case lak::graphics_mode::OpenGL: ImplGLRender(context, draw_data); break;
+#endif
+#ifdef LAK_ENABLE_COBALT
+		case lak::graphics_mode::Cobalt: ImplCoRender(context, draw_data); break;
 #endif
 		default: FATAL("Invalid context mode"); break;
 	}

@@ -23,9 +23,14 @@ namespace lak
 	{
 	};
 
+	struct cobalt_context
+	{
+	};
+
 	using graphics_context = lak::variant<std::monostate,
 	                                      lak::software_context,
-	                                      lak::opengl_context>;
+	                                      lak::opengl_context,
+	                                      lak::cobalt_context>;
 
 	struct window_handle
 	{
@@ -37,6 +42,7 @@ namespace lak
 			{
 				case 1:  return lak::graphics_mode::Software;
 				case 2:  return lak::graphics_mode::OpenGL;
+				case 3:  return lak::graphics_mode::Cobalt;
 				default: FATAL("Invalid graphics mode"); [[fallthrough]];
 				case 0:  return lak::graphics_mode::None;
 			}
@@ -52,6 +58,12 @@ namespace lak
 		{
 			ASSERT(gc.template holds<lak::opengl_context>());
 			return *gc.template get<lak::opengl_context>();
+		}
+
+		inline const lak::cobalt_context &cobalt_context() const
+		{
+			ASSERT(gc.template holds<lak::cobalt_context>());
+			return *gc.template get<lak::cobalt_context>();
 		}
 	};
 

@@ -69,6 +69,23 @@ lak::result<lak::window, lak::u8string> lak::window::make(
 }
 #endif
 
+#ifdef LAK_ENABLE_COBALT
+lak::result<lak::window, lak::u8string> lak::window::make(
+  const lak::cobalt_settings &s)
+{
+	if (auto maybe_handle{lak::create_window(s)}; maybe_handle.is_err())
+		return lak::err_t<lak::u8string>{
+		  lak::move(maybe_handle.unsafe_unwrap_err())};
+	else if (auto handle{
+	           lak::unique_bank_ptr<lak::window_handle>::from_raw_bank_ptr(
+	             maybe_handle.unsafe_unwrap())};
+	         !handle)
+		return lak::err_t<lak::u8string>{u8"Failed to create bank ptr"_str};
+	else
+		return lak::ok_t{lak::window(lak::move(handle))};
+}
+#endif
+
 lak::window::~window()
 {
 	if (handle()) lak::destroy_window(_handle.release());

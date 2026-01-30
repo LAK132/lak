@@ -548,14 +548,7 @@ bool handle_size_move(lak::window_handle &handle)
 		ASSERTF(::MoveWindow(handle._platform_handle, x, y, w, h, TRUE) != 0,
 		        lak::to_astring(win32_error_string(L"MoveWindow")));
 
-#ifdef LAK_ENABLE_SOFTRENDER
-		if (handle.graphics_mode() == lak::graphics_mode::Software)
-		{
-			// we need to resize the pixel buffer
-			// this is also touched in software create_window constructor
-			handle.software_context().platform_handle.resize({(size_t)w, (size_t)h});
-		}
-#endif
+		lak::window_handle_resize(&handle);
 
 		return true;
 	}

@@ -141,6 +141,30 @@ if get_option('lak_enable_opengl')
 	c_cpp_args += '-DLAK_ENABLE_OPENGL'
 endif
 
+if get_option('lak_enable_cobalt')
+	c_cpp_args += '-DLAK_ENABLE_COBALT'
+
+	if get_option('lak_enable_cobalt_ogl3')
+		c_cpp_args += '-DLAK_ENABLE_COBALT_OGL3'
+	endif
+
+	if get_option('lak_enable_cobalt_ogl4')
+		c_cpp_args += '-DLAK_ENABLE_COBALT_OGL4'
+	endif
+
+	if get_option('lak_enable_cobalt_d3d11')
+		c_cpp_args += '-DLAK_ENABLE_COBALT_D3D11'
+	endif
+
+	if get_option('lak_enable_cobalt_d3d12')
+		c_cpp_args += '-DLAK_ENABLE_COBALT_D3D12'
+	endif
+
+	if get_option('lak_enable_cobalt_vk')
+		c_cpp_args += '-DLAK_ENABLE_COBALT_VK'
+	endif
+endif
+
 if get_option('lak_run_windowing_tests')
 	c_cpp_args += '-DLAK_RUN_WINDOWING_TESTS'
 endif
@@ -191,6 +215,11 @@ if get_option('lak_enable_windowing')
 	if get_option('lak_enable_opengl')
 		subdir('src'/'system'/'opengl')
 		dependencies += lakopengl_dep
+	endif
+
+	if get_option('lak_enable_cobalt')
+		subdir('src'/'system'/'cobalt')
+		dependencies += lakcobalt_dep
 	endif
 
 	subdir('src'/'system'/'windowing')

@@ -76,6 +76,9 @@ struct my_window : virtual public LAK_BASIC_PROGRAM(window_api)
 			ImGui::Text("Dropped file: %s", path.generic_string().c_str());
 
 		ImGui::Image(checker, ImVec2(200, 200));
+
+		bool demo_open = true;
+		ImGui::ShowDemoWindow(&demo_open);
 	}
 };
 
@@ -103,9 +106,10 @@ lak::error_code<int> LAK_BASIC_PROGRAM(program_init)()
 	};
 
 	// try macros can be used thanks to the result type return value
-	RES_TRY_ASSIGN(
-	  my_window_ptr =,
-	  LAK_BASIC_PROGRAM(create_window<my_window>)().map_err(map_str_err));
+	RES_TRY_ASSIGN(my_window_ptr =,
+	               LAK_BASIC_PROGRAM(create_window<my_window>)(
+	                 LAK_BASIC_PROGRAM(window_opengl_settings))
+	                 .map_err(map_str_err));
 
 	// return lak::ok_t{}: continue onto program_loop
 	// return lak::err_t{int}: quit program with that exit code

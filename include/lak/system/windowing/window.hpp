@@ -50,6 +50,11 @@ int main()
 #include "lak/surface.hpp"
 #include "lak/vec.hpp"
 
+#ifdef LAK_ENABLE_COBALT
+#	include "lak/system/cobalt/context.hpp"
+#	include <Logging/Logging.pkg>
+#endif
+
 #include <ostream>
 
 namespace lak
@@ -59,21 +64,17 @@ namespace lak
 		None     = 0,
 		Software = 1,
 		OpenGL   = 2,
+		Cobalt   = 3,
 	};
 
 	inline std::ostream &operator<<(std::ostream &strm, lak::graphics_mode mode)
 	{
 		switch (mode)
 		{
-			case lak::graphics_mode::OpenGL:
-				strm << "OpenGL";
-				break;
-			case lak::graphics_mode::Software:
-				strm << "Software";
-				break;
-			default:
-				strm << "None";
-				break;
+			case lak::graphics_mode::OpenGL:   strm << "OpenGL"; break;
+			case lak::graphics_mode::Software: strm << "Software"; break;
+			case lak::graphics_mode::Cobalt:   strm << "Cobalt"; break;
+			default:                           strm << "None"; break;
 		}
 		return strm;
 	}
@@ -98,9 +99,29 @@ namespace lak
 		int minor            = 2;
 	};
 
+	struct cobalt_settings
+	{
+#ifdef LAK_ENABLE_COBALT
+		::cobalt::graphics::IFrameBuffer::WindowDepthStencilMode depth_mode =
+		  ::cobalt::graphics::IFrameBuffer::WindowDepthStencilMode::
+		    DepthUNorm24StencilUInt8;
+		::cobalt::graphics::IFrameBuffer::WindowColorSpaceMode colour_mode =
+		  ::cobalt::graphics::IFrameBuffer::WindowColorSpaceMode::Default;
+
+		::cobalt::graphics::RendererInfo renderer_info = {};
+		::cobalt::graphics::IGraphicsDeviceEnumerator::unique_ptr
+		  device_enumerator                                             = nullptr;
+		::cobalt::graphics::IGraphicsDevice *device                     = nullptr;
+		std::set<::cobalt::graphics::IGraphicsDevice::Feature> features = {};
+		std::set<::cobalt::graphics::IRenderer::Options> options        = {};
+#endif
+	};
+
 	struct software_context;
 
 	struct opengl_context;
+
+	struct cobalt_context;
 
 	struct window_handle;
 
@@ -125,6 +146,11 @@ namespace lak
 #ifdef LAK_ENABLE_OPENGL
 	lak::result<lak::window_handle *, lak::u8string> create_window(
 	  const lak::opengl_settings &s);
+#endif
+
+#ifdef LAK_ENABLE_COBALT
+	lak::result<lak::window_handle *, lak::u8string> create_window(
+	  const lak::cobalt_settings &s);
 #endif
 
 	bool destroy_window(lak::window_handle *w);
@@ -155,6 +181,21 @@ namespace lak
 	bool set_opengl_swap_interval(const lak::opengl_context &c, int interval);
 #endif
 
+#ifdef LAK_ENABLE_COBALT
+	lak::result<const lak::cobalt::graphics_context &> cobalt_graphics_context(
+	  const lak::window_handle *w);
+
+	::cobalt::graphics::IRenderPassNode *cobalt_create_render_pass(
+	  const lak::cobalt_context &c);
+	lak::result<::cobalt::graphics::IRenderPassNode *> cobalt_create_render_pass(
+	  const lak::window_handle *w);
+
+	void cobalt_append_render_pass(const lak::cobalt_context &c,
+	                               ::cobalt::graphics::IRenderPassNode *pass);
+	lak::result<lak::monostate> cobalt_append_render_pass(
+	  const lak::window_handle *w, ::cobalt::graphics::IRenderPassNode *pass);
+#endif
+
 	bool set_active_window(const lak::window_handle *w);
 
 	bool swap_window(lak::window_handle *w);
@@ -162,6 +203,8 @@ namespace lak
 	// Yield this thread until the target framerate is achieved.
 	uint64_t yield_frame(const uint64_t last_counter,
 	                     const uint32_t target_framerate);
+
+	void window_handle_resize(const lak::window_handle *w);
 
 	/* --- window wrapper class --- */
 
@@ -183,6 +226,11 @@ namespace lak
 #ifdef LAK_ENABLE_OPENGL
 		static lak::result<window, lak::u8string> make(
 		  const lak::opengl_settings &s);
+#endif
+
+#ifdef LAK_ENABLE_COBALT
+		static lak::result<window, lak::u8string> make(
+		  const lak::cobalt_settings &s);
 #endif
 
 		~window();

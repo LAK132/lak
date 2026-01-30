@@ -10,6 +10,10 @@ if get_option('lak_enable_opengl')
 	lakwindowing_compileargs += '-DLAK_ENABLE_OPENGL'
 endif
 
+if get_option('lak_enable_cobalt')
+	lakwindowing_compileargs += '-DLAK_ENABLE_COBALT'
+endif
+
 lakwindowing_dep = declare_dependency(
 	link_with: lakwindowing,
 	dependencies: lakwindowing_dependencies.partial_dependency(

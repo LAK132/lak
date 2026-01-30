@@ -146,6 +146,14 @@ bool lak::destroy_window(lak::window_handle *handle)
 		break;
 #endif
 
+#ifdef LAK_ENABLE_COBALT
+		case lak::graphics_mode::Cobalt:
+		{
+			handle->gc.template get<lak::cobalt_context>()->platform_handle.reset();
+		}
+		break;
+#endif
+
 		default:
 		{
 			ASSERT_UNREACHABLE();
@@ -251,6 +259,9 @@ bool lak::set_window_size(lak::window_handle *handle, lak::vec2l_t size)
 
 	SDL_SetWindowSize(
 	  handle->sdl_window, static_cast<int>(size.x), static_cast<int>(size.y));
+
+	lak::window_handle_resize(handle);
+
 	return true;
 }
 
