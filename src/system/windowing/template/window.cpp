@@ -104,4 +104,6 @@ bool lak::swap_window(lak::window_handle *w)
 	return false;
 }
 
+void lak::window_handle_resize(const lak::window_handle *w) { (void)w; }
+
 #include "../common/window.inl"
