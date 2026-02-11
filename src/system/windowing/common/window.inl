@@ -13,6 +13,25 @@ template size_t lak::bank<lak::window_handle>::internal_create<
 template struct lak::unique_bank_ptr<lak::window_handle>;
 template struct lak::shared_bank_ptr<lak::window_handle>;
 
+#ifdef LAK_ENABLE_COBALT
+lak::cobalt_settings lak::cobalt_settings::preferred_renderer_settings(
+  lak::cobalt::renderer_info_func info,
+  ::cobalt::logging::ILogger::unique_ptr log)
+{
+	lak::cobalt_settings result;
+
+	info(0, result.renderer_info);
+
+	result.device_enumerator =
+	  result.renderer_info.CreateGraphicsDeviceEnumerator(lak::move(log));
+	result.device_enumerator->EnumerateDevices();
+
+	result.device = result.device_enumerator->GetPreferredDevice();
+
+	return result;
+}
+#endif
+
 uint64_t lak::yield_frame(const uint64_t last_counter,
                           const uint32_t target_framerate)
 {

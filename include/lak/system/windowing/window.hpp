@@ -52,6 +52,8 @@ int main()
 
 #ifdef LAK_ENABLE_COBALT
 #	include "lak/system/cobalt/context.hpp"
+#	include "lak/system/cobalt/renderers.hpp"
+
 #	include <Logging/Logging.pkg>
 #endif
 
@@ -114,6 +116,10 @@ namespace lak
 		::cobalt::graphics::IGraphicsDevice *device                     = nullptr;
 		std::set<::cobalt::graphics::IGraphicsDevice::Feature> features = {};
 		std::set<::cobalt::graphics::IRenderer::Options> options        = {};
+
+		static cobalt_settings preferred_renderer_settings(
+		  lak::cobalt::renderer_info_func info,
+		  ::cobalt::logging::ILogger::unique_ptr);
 #endif
 	};
 
