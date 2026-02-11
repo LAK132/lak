@@ -1374,6 +1374,82 @@ ImTextureID ImplGLCreateTexture(ImGui::ImplContext context,
 }
 #endif
 
+#ifdef LAK_ENABLE_COBALT
+ImTextureID ImplCoCreateTexture(ImGui::ImplContext context,
+                                const void *pixels,
+                                lak::vec2s_t size,
+                                ImGui::ImplTextureColourFormat colour,
+                                ImGui::ImplTextureChannelFormat channel)
+{
+	auto &tex = *(new ::cobalt::graphics::ITextureBuffer2D::unique_ptr);
+
+	tex = context->co_context->renderer->CreateTextureBuffer2D();
+
+	size_t pixel_stride;
+	::cobalt::graphics::ITextureBuffer::ImageFormat imgf;
+	::cobalt::graphics::ITextureBuffer::SourceImageFormat simgf;
+	switch (colour)
+	{
+		case ImGui::ImplTextureColourFormat::RGBA:
+			imgf  = ::cobalt::graphics::ITextureBuffer::ImageFormat::RGBA;
+			simgf = ::cobalt::graphics::ITextureBuffer::SourceImageFormat::RGBA;
+			pixel_stride = 4U;
+			break;
+		case ImGui::ImplTextureColourFormat::BGRA:
+			imgf  = ::cobalt::graphics::ITextureBuffer::ImageFormat::BGRA;
+			simgf = ::cobalt::graphics::ITextureBuffer::SourceImageFormat::BGRA;
+			pixel_stride = 4U;
+			break;
+		case ImGui::ImplTextureColourFormat::RGB:
+			imgf  = ::cobalt::graphics::ITextureBuffer::ImageFormat::RGB;
+			simgf = ::cobalt::graphics::ITextureBuffer::SourceImageFormat::RGB;
+			pixel_stride = 3U;
+			break;
+		case ImGui::ImplTextureColourFormat::R:
+			imgf         = ::cobalt::graphics::ITextureBuffer::ImageFormat::R;
+			simgf        = ::cobalt::graphics::ITextureBuffer::SourceImageFormat::R;
+			pixel_stride = 1U;
+			break;
+		default: ASSERT_UNREACHABLE();
+	}
+
+	::cobalt::graphics::ITextureBuffer::DataFormat datf;
+	::cobalt::graphics::ITextureBuffer::SourceDataFormat sdatf;
+	switch (channel)
+	{
+		case ImGui::ImplTextureChannelFormat::U8:
+			datf  = ::cobalt::graphics::ITextureBuffer::DataFormat::UNorm8;
+			sdatf = ::cobalt::graphics::ITextureBuffer::SourceDataFormat::UNorm8;
+			pixel_stride *= 1U;
+			break;
+		case ImGui::ImplTextureChannelFormat::U16:
+			datf  = ::cobalt::graphics::ITextureBuffer::DataFormat::UNorm16;
+			sdatf = ::cobalt::graphics::ITextureBuffer::SourceDataFormat::UNorm16;
+			pixel_stride *= 2U;
+			break;
+		case ImGui::ImplTextureChannelFormat::F32:
+			datf  = ::cobalt::graphics::ITextureBuffer::DataFormat::Float32;
+			sdatf = ::cobalt::graphics::ITextureBuffer::SourceDataFormat::Float32;
+			pixel_stride *= 4U;
+			break;
+		default: ASSERT_UNREACHABLE();
+	}
+
+	tex->SetTextureFormat(imgf, datf);
+
+	tex->SetTextureDimensions({uint32_t(size.x), uint32_t(size.y)});
+
+	lak::cobalt::as_result(
+	  tex->SetInitialData(
+	    pixels, size.x * size.y * pixel_stride, simgf, sdatf, 0))
+	  .UNWRAP();
+
+	lak::cobalt::as_result(tex->AllocateMemory()).UNWRAP();
+
+	return (ImTextureID)(uintptr_t)&tex;
+}
+#endif
+
 ImTextureRef ImGui::ImplCreateTexture(ImGui::ImplContext context,
                                       const void *pixels,
                                       lak::vec2s_t size,
@@ -1391,6 +1467,11 @@ ImTextureRef ImGui::ImplCreateTexture(ImGui::ImplContext context,
 #ifdef LAK_ENABLE_OPENGL
 		case lak::graphics_mode::OpenGL:
 			return ImplGLCreateTexture(context, pixels, size, colour, channel);
+			break;
+#endif
+#ifdef LAK_ENABLE_COBALT
+		case lak::graphics_mode::Cobalt:
+			return ImplCoCreateTexture(context, pixels, size, colour, channel);
 			break;
 #endif
 		default: FATAL("Invalid context mode"); break;
@@ -1483,6 +1564,88 @@ ImTextureRef ImplGLUpdateTexture(ImGui::ImplContext context,
 }
 #endif
 
+#ifdef LAK_ENABLE_COBALT
+ImTextureRef ImplCoUpdateTexture(ImGui::ImplContext context,
+                                 ImTextureID tex,
+                                 const void *pixels,
+                                 lak::vec2s_t size,
+                                 ImGui::ImplTextureColourFormat colour,
+                                 ImGui::ImplTextureChannelFormat channel,
+                                 lak::span<const ImTextureRect> updates)
+{
+	auto &t =
+	  *(::cobalt::graphics::ITextureBuffer2D::unique_ptr *)(uintptr_t)tex;
+
+	size_t pixel_stride;
+	::cobalt::graphics::ITextureBuffer::SourceImageFormat imgf;
+	switch (colour)
+	{
+		case ImGui::ImplTextureColourFormat::RGBA:
+			imgf = ::cobalt::graphics::ITextureBuffer::SourceImageFormat::RGBA;
+			pixel_stride = 4U;
+			break;
+		case ImGui::ImplTextureColourFormat::BGRA:
+			imgf = ::cobalt::graphics::ITextureBuffer::SourceImageFormat::BGRA;
+			pixel_stride = 4U;
+			break;
+		case ImGui::ImplTextureColourFormat::RGB:
+			imgf = ::cobalt::graphics::ITextureBuffer::SourceImageFormat::RGB;
+			pixel_stride = 3U;
+			break;
+		case ImGui::ImplTextureColourFormat::R:
+			imgf         = ::cobalt::graphics::ITextureBuffer::SourceImageFormat::R;
+			pixel_stride = 1U;
+			break;
+		default: ASSERT_UNREACHABLE();
+	}
+
+	::cobalt::graphics::ITextureBuffer::SourceDataFormat datf;
+	switch (channel)
+	{
+		case ImGui::ImplTextureChannelFormat::U8:
+			datf = ::cobalt::graphics::ITextureBuffer::SourceDataFormat::UNorm8;
+			pixel_stride *= 1U;
+			break;
+		case ImGui::ImplTextureChannelFormat::U16:
+			datf = ::cobalt::graphics::ITextureBuffer::SourceDataFormat::UNorm16;
+			pixel_stride *= 2U;
+			break;
+		case ImGui::ImplTextureChannelFormat::F32:
+			datf = ::cobalt::graphics::ITextureBuffer::SourceDataFormat::Float32;
+			pixel_stride *= 4U;
+			break;
+		default: ASSERT_UNREACHABLE();
+	}
+
+	auto byte_pixels = lak::span<const byte_t>(
+	  lak::span<const void>(pixels, size.x * size.y * pixel_stride));
+
+	lak::array<byte_t> repack_buffer;
+	for (const ImTextureRect &r : updates)
+	{
+		repack_buffer.resize(r.w * r.h * pixel_stride);
+		for (size_t y = 0U; y < r.h; ++y)
+			lak::memcpy(
+			  lak::span(repack_buffer)
+			    .subspan(r.w * y * pixel_stride, r.w * pixel_stride),
+			  byte_pixels.subspan((r.x + ((r.y + y) * size.x)) * pixel_stride,
+			                      r.w * pixel_stride));
+
+		lak::cobalt::as_result(
+		  t->QueueDataUpdate((const void *)repack_buffer.data(),
+		                     repack_buffer.size(),
+		                     imgf,
+		                     datf,
+		                     0,
+		                     {r.x, r.y},
+		                     {r.w, r.h}))
+		  .UNWRAP();
+	}
+
+	return tex;
+}
+#endif
+
 ImTextureRef ImGui::ImplUpdateTexture(ImplContext context,
                                       ImTextureRef tex,
                                       const void *pixels,
@@ -1503,6 +1666,12 @@ ImTextureRef ImGui::ImplUpdateTexture(ImplContext context,
 #ifdef LAK_ENABLE_OPENGL
 		case lak::graphics_mode::OpenGL:
 			return ImplGLUpdateTexture(
+			  context, tex.GetTexID(), pixels, size, colour, channel, updates);
+			break;
+#endif
+#ifdef LAK_ENABLE_COBALT
+		case lak::graphics_mode::Cobalt:
+			return ImplCoUpdateTexture(
 			  context, tex.GetTexID(), pixels, size, colour, channel, updates);
 			break;
 #endif
@@ -1533,6 +1702,13 @@ void ImplGLDestroyTexture(ImGui::ImplContext context, ImTextureID tex)
 }
 #endif
 
+#ifdef LAK_ENABLE_COBALT
+void ImplCoDestroyTexture(ImGui::ImplContext context, ImTextureID tex)
+{
+	delete (::cobalt::graphics::ITextureBuffer2D::unique_ptr *)(uintptr_t)tex;
+}
+#endif
+
 void ImGui::ImplDestroyTexture(ImplContext context, ImTextureRef tex)
 {
 	ASSERT(context);
@@ -1546,6 +1722,11 @@ void ImGui::ImplDestroyTexture(ImplContext context, ImTextureRef tex)
 #ifdef LAK_ENABLE_OPENGL
 		case lak::graphics_mode::OpenGL:
 			ImplGLDestroyTexture(context, tex.GetTexID());
+			break;
+#endif
+#ifdef LAK_ENABLE_COBALT
+		case lak::graphics_mode::Cobalt:
+			ImplCoDestroyTexture(context, tex.GetTexID());
 			break;
 #endif
 		default: FATAL("Invalid context mode"); break;
@@ -1567,6 +1748,13 @@ lak::vec2s_t ImplGLTextureSize(ImGui::ImplContext context, ImTextureID tex)
 }
 #endif
 
+#ifdef LAK_ENABLE_COBALT
+lak::vec2s_t ImplCoTextureSize(ImGui::ImplContext context, ImTextureID tex)
+{
+	ASSERT_NYI();
+}
+#endif
+
 lak::vec2s_t ImGui::ImplTextureSize(ImplContext context, ImTextureRef tex)
 {
 	ASSERT(context);
@@ -1580,6 +1768,11 @@ lak::vec2s_t ImGui::ImplTextureSize(ImplContext context, ImTextureRef tex)
 #ifdef LAK_ENABLE_OPENGL
 		case lak::graphics_mode::OpenGL:
 			return ImplGLTextureSize(context, tex.GetTexID());
+			break;
+#endif
+#ifdef LAK_ENABLE_COBALT
+		case lak::graphics_mode::Cobalt:
+			return ImplCoTextureSize(context, tex.GetTexID());
 			break;
 #endif
 		default: FATAL("Invalid context mode"); break;
@@ -1943,72 +2136,10 @@ void ImplCoRender(ImGui::ImplContext ctx, ImDrawData *draw_data)
 
 	draw_data->ScaleClipRects(io.DisplayFramebufferScale);
 
-	auto update_texture = [&context](ImTextureData *texture)
-	{
-		if (texture->Status == ImTextureStatus_WantCreate)
-		{
-			ASSERT(texture->Format == ImTextureFormat_RGBA32);
-
-			auto &tex = *(new ::cobalt::graphics::ITextureBuffer2D::unique_ptr);
-
-			tex = context->renderer->CreateTextureBuffer2D();
-
-			tex->SetTextureFormat(
-			  ::cobalt::graphics::ITextureBuffer::ImageFormat::RGBA,
-			  ::cobalt::graphics::ITextureBuffer::DataFormat::UNorm8);
-
-			tex->SetTextureDimensions(
-			  {uint32_t(texture->Width), uint32_t(texture->Height)});
-
-			lak::cobalt::as_result(
-			  tex->SetInitialData(
-			    reinterpret_cast<const ::cobalt::graphics::V4UNorm8 *>(
-			      texture->GetPixels()),
-			    texture->Width * texture->Height))
-			  .UNWRAP();
-
-			lak::cobalt::as_result(tex->AllocateMemory()).UNWRAP();
-
-			texture->SetTexID((ImTextureID)(uintptr_t)&tex);
-			texture->SetStatus(ImTextureStatus_OK);
-		}
-		else if (texture->Status == ImTextureStatus_WantUpdates)
-		{
-			auto &tex =
-			  *(::cobalt::graphics::ITextureBuffer2D::unique_ptr *)(uintptr_t)
-			     texture->GetTexID();
-
-			lak::array<::cobalt::graphics::V4UNorm8> repack_buffer;
-			for (ImTextureRect &r : texture->Updates)
-			{
-				repack_buffer.resize(r.w * r.h);
-				for (size_t y = 0U; y < r.h; ++y)
-					lak::memcpy(
-					  lak::span<byte_t>(lak::span(repack_buffer).subspan(r.w * y, r.w)),
-					  lak::span<const byte_t>(lak::span<const void>(
-					    texture->GetPixelsAt(r.x, r.y + y), r.w * sizeof(uint32_t))));
-
-				lak::cobalt::as_result(tex->QueueDataUpdate(repack_buffer.data(),
-				                                            repack_buffer.size(),
-				                                            0,
-				                                            {r.x, r.y},
-				                                            {r.w, r.h}))
-				  .UNWRAP();
-			}
-			texture->SetStatus(ImTextureStatus_OK);
-		}
-		else if (texture->Status == ImTextureStatus_WantDestroy &&
-		         texture->UnusedFrames > 0U)
-		{
-			delete (::cobalt::graphics::ITextureBuffer2D::unique_ptr *)(uintptr_t)
-			  texture->GetTexID();
-			texture->SetStatus(ImTextureStatus_Destroyed);
-		}
-	};
-
 	if (draw_data->Textures != nullptr)
 		for (ImTextureData *tex : *draw_data->Textures)
-			if (tex->Status != ImTextureStatus_OK) update_texture(tex);
+			if (tex->Status != ImTextureStatus_OK)
+				ImGui::ImplUpdateTexture(ctx, tex);
 
 	const auto viewport_matrix = [&]()
 	{
