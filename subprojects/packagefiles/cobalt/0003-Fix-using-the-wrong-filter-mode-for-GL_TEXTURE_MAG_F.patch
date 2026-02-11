@@ -1,0 +1,25 @@
+From bd0f6752b3a3af6e62511901a5bdf5ca3da5ac51 Mon Sep 17 00:00:00 2001
+From: LAK132 <lakridesagain@gmail.com>
+Date: Thu, 12 Feb 2026 00:55:28 +1030
+Subject: [PATCH 3/3] Fix using the wrong filter mode for GL_TEXTURE_MAG_FILTER
+
+---
+ Renderers/OpenGLRenderer/OpenGLTextureSampler.inl | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/Renderers/OpenGLRenderer/OpenGLTextureSampler.inl b/Renderers/OpenGLRenderer/OpenGLTextureSampler.inl
+index d7e5225..fd1601a 100644
+--- a/Renderers/OpenGLRenderer/OpenGLTextureSampler.inl
++++ b/Renderers/OpenGLRenderer/OpenGLTextureSampler.inl
+@@ -118,7 +118,7 @@ void OpenGLTextureSampler<T>::BuildSamplerObject()
+ 
+ 	// Update the sampler parameters
+ 	GLenum filterModeShrink = GetFilterModeNative(_drawState.filterModeShrink, _drawState.mipmapMode);
+-	GLenum filterModeExpand = GetFilterModeNative(_drawState.filterModeShrink, T::MipmapMode::None);
++	GLenum filterModeExpand = GetFilterModeNative(_drawState.filterModeExpand, T::MipmapMode::None);
+ 	glSamplerParameteri(_samplerNo, GL_TEXTURE_MIN_FILTER, filterModeShrink);
+ 	glSamplerParameteri(_samplerNo, GL_TEXTURE_MAG_FILTER, filterModeExpand);
+ 	glSamplerParameterf(_samplerNo, GL_TEXTURE_MIN_LOD, _drawState.minLevel);
+-- 
+2.43.0
+
