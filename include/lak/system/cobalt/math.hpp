@@ -1,6 +1,8 @@
 #ifndef LAK_SYSTEM_COBALT_MATH_HPP
 #define LAK_SYSTEM_COBALT_MATH_HPP
 
+#include "lak/vec.hpp"
+
 #include <RendererInterface/RendererInterface.pkg>
 
 #include <glm/mat2x2.hpp>
@@ -14,6 +16,24 @@ namespace lak
 {
 	namespace cobalt
 	{
+		template<typename T>
+		inline ::cobalt::graphics::BasicVector<T, 2> from_lak(lak::vec2<T> v)
+		{
+			return {v.x, v.y};
+		}
+
+		template<typename T>
+		inline ::cobalt::graphics::BasicVector<T, 3> from_lak(lak::vec3<T> v)
+		{
+			return {v.x, v.y, v.z};
+		}
+
+		template<typename T>
+		inline ::cobalt::graphics::BasicVector<T, 4> from_lak(lak::vec4<T> v)
+		{
+			return {v.x, v.y, v.z, v.w};
+		}
+
 		inline ::cobalt::graphics::M4Float32 from_glm(glm::mat4x4 m)
 		{
 			::cobalt::graphics::M4Float32 result;

@@ -249,7 +249,8 @@ lak::result<lak::window_handle *, lak::u8string> lak::create_window(
 
 	auto renderer = device->CreateRenderer(s.features, s.options);
 
-	if (!renderer->Initialize(::cobalt::graphics::WindowSystemInfoWin32()))
+	if (auto window_system_info = lak::cobalt_window_system_info();
+	    !renderer->Initialize(*window_system_info))
 	{
 		return lak::err_t<lak::u8string>{
 		  lak::streamify("Failed to initialise cobalt renderer")};
@@ -306,16 +307,12 @@ lak::result<lak::window_handle *, lak::u8string> lak::create_window(
 		return lak::err_t<lak::u8string>{
 		  lak::streamify("Failed to create framebuffer")};
 	}
-	const auto drawable = lak::window_drawable_size(handle.get());
+
+	auto window_info = lak::cobalt_window_info(handle.get());
 	RES_TRY(lak::cobalt::as_result(
-	          fb->BindWindow(::cobalt::graphics::WindowInfoWin32(
-	                           handle->_platform_handle,
-	                           lak::_platform_instance->handle,
-	                           {(uint32_t)drawable.x, (uint32_t)drawable.y}),
-	                         s.depth_mode,
-	                         s.colour_mode))
+	          fb->BindWindow(*window_info, s.depth_mode, s.colour_mode))
 	          .map_err([](auto &&) { return u8"Failed to bind window"_str; }));
-	context.platform_handle              = new lak::cobalt::graphics_context{};
+
 	context.platform_handle              = new lak::cobalt::graphics_context{};
 	context.platform_handle->api_family  = s.renderer_info.GetApiFamily();
 	context.platform_handle->api_version = s.renderer_info.GetTargetApiVersion();
@@ -405,6 +402,27 @@ bool lak::set_opengl_swap_interval(const lak::opengl_context &, int interval)
 /* --- Cobalt --- */
 
 #ifdef LAK_ENABLE_COBALT
+lak::unique_ptr<::cobalt::graphics::IRenderer::WindowSystemInfoBase>
+lak::cobalt_window_system_info()
+{
+	return lak::unique_ptr<::cobalt::graphics::IRenderer::WindowSystemInfoBase>(
+	  new ::cobalt::graphics::WindowSystemInfoWin32(),
+	  [](auto *p)
+	  { delete static_cast<::cobalt::graphics::WindowSystemInfoWin32 *>(p); });
+}
+
+lak::unique_ptr<::cobalt::graphics::IFrameBuffer::WindowInfoBase>
+lak::cobalt_window_info(const lak::window_handle *w)
+{
+	return lak::unique_ptr<::cobalt::graphics::IFrameBuffer::WindowInfoBase>(
+	  new ::cobalt::graphics::WindowInfoWin32(
+	    w->_platform_handle,
+	    lak::_platform_instance->handle,
+	    lak::cobalt::from_lak(lak::vec2u32_t(lak::window_drawable_size(w)))),
+	  [](auto *p)
+	  { delete static_cast<::cobalt::graphics::WindowInfoWin32 *>(p); });
+}
+
 lak::result<const lak::cobalt::graphics_context &>
 lak::cobalt_graphics_context(const lak::window_handle *w)
 {

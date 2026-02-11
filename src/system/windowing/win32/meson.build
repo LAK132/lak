@@ -1,5 +1,6 @@
 _lakwindowing_dependencies = [
 	lakcore_dep,
+	glm_dep,
 ]
 
 if get_option('lak_enable_softrender')

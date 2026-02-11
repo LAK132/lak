@@ -2,6 +2,8 @@
 #	error SDL_MAIN_HANDLED must be defined globally
 #endif
 
+#include "lak/system/os.hpp"
+
 #include "lak/system/windowing/events.hpp"
 #include "lak/system/windowing/platform.hpp"
 #include "lak/system/windowing/window.hpp"
@@ -13,6 +15,23 @@
 
 #ifdef LAK_ENABLE_COBALT
 #	include "lak/system/cobalt/context.hpp"
+#	include "lak/system/cobalt/result.hpp"
+#	include "lak/system/cobalt/math.hpp"
+
+#	ifdef LAK_OS_WINDOWS
+#		include <RendererInterface/WindowInfoWin32.h>
+#		include <RendererInterface/WindowSystemInfoWin32.h>
+#	endif
+#	ifdef LAK_OS_LINUX
+#		include <RendererInterface/WindowInfoWayland.h>
+#		include <RendererInterface/WindowInfoXLib.h>
+#		include <RendererInterface/WindowSystemInfoWayland.h>
+#		include <RendererInterface/WindowSystemInfoXLib.h>
+#	endif
+#	ifdef LAK_OS_APPLE
+#		include <RendererInterface/WindowInfoAppKit.h>
+#		include <RendererInterface/WindowSystemInfoAppKit.h>
+#	endif
 #endif
 
 #ifdef None

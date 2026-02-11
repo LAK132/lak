@@ -2,10 +2,6 @@ if not get_option('lak_enable_windowing')
 	warning('hello-cobalt requires windowing')
 	subdir_done()
 endif
-if get_option('lak_backend') != 'win32'
-	warning('hello-cobalt requires the win32 backend')
-	subdir_done()
-endif
 if not get_option('lak_enable_cobalt')
 	warning('hello-cobalt requires cobalt')
 	subdir_done()

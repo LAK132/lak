@@ -12,7 +12,7 @@ cxx = meson.get_compiler('cpp')
 if cxx.get_id() == 'msvc'
 	version = 'c++latest'
 
-	c_cpp_args = [
+	add_project_arguments(
 		'-DUNICODE',
 		'-DWIN32_LEAN_AND_MEAN',
 		'-DNOMINMAX',
@@ -20,19 +20,19 @@ if cxx.get_id() == 'msvc'
 		'-wd4366',
 		'-wd4250',
 		'-Wv:18',
-	]
+		language: ['c', 'cpp'])
 
-	cpp_args = [
+	add_project_arguments(
 		'-Zc:__cplusplus',
 		'-Zc:rvalueCast',
 		'-Zc:wchar_t',
 		'-Zc:ternary',
 		'-Zc:preprocessor',
-	]
+		language: ['cpp'])
 
-	c_args = [
+	add_project_arguments(
 		'-W0',
-	]
+		language: ['c'])
 
 	system_libraries = [
 		'Winmm.lib',
@@ -40,12 +40,10 @@ if cxx.get_id() == 'msvc'
 		'Version.lib',
 		'Imm32.lib',
 	]
-
-	macro_test_args = c_cpp_args + cpp_args + ['-std:' + version]
 else
 	version = 'c++20'
 
-	c_cpp_args = [
+	add_project_arguments(
 		'-Wno-unknown-warning-option',
 		'-Wno-gnu-zero-variadic-macro-arguments',
 		'-Wno-language-extension-token',
@@ -62,15 +60,9 @@ else
 		'-Wfatal-errors',
 		'-Wno-psabi',
 		# '-mavx',
-	]
-
-	cpp_args = []
-
-	c_args = []
+		language: ['c', 'cpp'])
 
 	system_libraries = []
-
-	macro_test_args = c_cpp_args + cpp_args + ['-std=' + version]
 endif
 
 if get_option('debug')
@@ -116,74 +108,101 @@ else
 	override_options_werror = override_options
 endif
 
-c_cpp_args += [
+add_project_arguments(
 	'-D_CRT_SECURE_NO_WARNINGS',
-]
+	language: ['c', 'cpp'])
 
 if get_option('buildtype') != 'debug'
-	c_cpp_args += '-DNDEBUG'
+	add_project_arguments(
+		'-DNDEBUG',
+		language: ['c', 'cpp'])
 endif
 
 if get_option('lak_backend') == 'sdl'
-	c_cpp_args += [
+	add_project_arguments(
 		'-DLAK_USE_SDL',
 		'-DSDL_MAIN_HANDLED',
-	]
+		language: ['c', 'cpp'])
 elif get_option('lak_backend') == 'win32'
-	c_cpp_args += '-DLAK_USE_WINAPI'
+	add_project_arguments(
+		'-DLAK_USE_WINAPI',
+		language: ['c', 'cpp'])
+elif get_option('lak_backend') == 'xlib'
+	add_project_arguments(
+		'-DLAK_USE_XLIB',
+		language: ['c', 'cpp'])
+elif get_option('lak_backend') == 'xcb'
+	add_project_arguments(
+		'-DLAK_USE_XCB',
+		language: ['c', 'cpp'])
 endif
 
 if get_option('lak_enable_softrender')
-	c_cpp_args += '-DLAK_ENABLE_SOFTRENDER'
+	add_project_arguments(
+		'-DLAK_ENABLE_SOFTRENDER',
+		language: ['c', 'cpp'])
 endif
 
 if get_option('lak_enable_opengl')
-	c_cpp_args += '-DLAK_ENABLE_OPENGL'
+	add_project_arguments(
+		'-DLAK_ENABLE_OPENGL',
+		language: ['c', 'cpp'])
 endif
 
 if get_option('lak_enable_cobalt')
-	c_cpp_args += '-DLAK_ENABLE_COBALT'
+	add_project_arguments(
+		'-DLAK_ENABLE_COBALT',
+		language: ['c', 'cpp'])
 
 	if get_option('lak_enable_cobalt_ogl3')
-		c_cpp_args += '-DLAK_ENABLE_COBALT_OGL3'
+		add_project_arguments(
+			'-DLAK_ENABLE_COBALT_OGL3',
+			language: ['c', 'cpp'])
 	endif
 
 	if get_option('lak_enable_cobalt_ogl4')
-		c_cpp_args += '-DLAK_ENABLE_COBALT_OGL4'
+		add_project_arguments(
+			'-DLAK_ENABLE_COBALT_OGL4',
+			language: ['c', 'cpp'])
 	endif
 
 	if get_option('lak_enable_cobalt_d3d11')
-		c_cpp_args += '-DLAK_ENABLE_COBALT_D3D11'
+		add_project_arguments(
+			'-DLAK_ENABLE_COBALT_D3D11',
+			language: ['c', 'cpp'])
 	endif
 
 	if get_option('lak_enable_cobalt_d3d12')
-		c_cpp_args += '-DLAK_ENABLE_COBALT_D3D12'
+		add_project_arguments(
+			'-DLAK_ENABLE_COBALT_D3D12',
+			language: ['c', 'cpp'])
 	endif
 
 	if get_option('lak_enable_cobalt_vk')
-		c_cpp_args += '-DLAK_ENABLE_COBALT_VK'
+		add_project_arguments(
+			'-DLAK_ENABLE_COBALT_VK',
+			language: ['c', 'cpp'])
 	endif
 endif
 
 if get_option('lak_run_windowing_tests')
-	c_cpp_args += '-DLAK_RUN_WINDOWING_TESTS'
+	# even if building the windowing tests is enabled, we may not want to run
+	# them, particularly if the test machine is headless
+	add_project_arguments(
+		'-DLAK_RUN_WINDOWING_TESTS',
+		language: ['c', 'cpp'])
 endif
 
 if get_option('lak_use_native_file_dialog')
-	c_cpp_args += '-DLAK_USE_NATIVE_FILE_DIALOG'
+	add_project_arguments(
+		'-DLAK_USE_NATIVE_FILE_DIALOG',
+		language: ['c', 'cpp'])
 endif
 
 if get_option('lak_enable_windowing') or get_option('lak_enable_glm')
-	c_cpp_args += '-DLAK_ENABLE_GLM'
-endif
-
-add_project_arguments(c_cpp_args + cpp_args, language: ['cpp'])
-add_project_arguments(c_cpp_args + c_args, language: ['c'])
-
-cplusplus = cxx.get_define('__cplusplus', args: macro_test_args)
-
-if cxx.compute_int(cplusplus) < 202002
-	error('C++ version insufficient, expected 202002L got ' + cplusplus)
+	add_project_arguments(
+		'-DLAK_ENABLE_GLM',
+		language: ['c', 'cpp'])
 endif
 
 dependencies = []

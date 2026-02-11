@@ -120,6 +120,73 @@ lak::result<lak::window_handle *, lak::u8string> lak::create_window(
 }
 #endif
 
+#ifdef LAK_ENABLE_COBALT
+lak::result<lak::window_handle *, lak::u8string> lak::create_window(
+  const lak::cobalt_settings &settings)
+{
+	auto device = settings.device
+	                ? settings.device
+	                : settings.device_enumerator->GetPreferredDevice();
+	if (!device)
+	{
+		return lak::err_t<lak::u8string>{
+		  lak::streamify("Failed to get preferred graphics device")};
+	}
+
+	auto renderer = device->CreateRenderer(settings.features, settings.options);
+
+	if (auto info = lak::cobalt_window_system_info();
+	    !renderer->Initialize(*info))
+	{
+		return lak::err_t<lak::u8string>{
+		  lak::streamify("Failed to initialise cobalt renderer")};
+	}
+
+	auto handle = lak::unique_bank_ptr<lak::window_handle>::create();
+	ASSERT(handle);
+
+	DEFER(if (handle) lak::destroy_window(handle.release()););
+
+	ASSERT(SDL_SetHint(SDL_HINT_VIDEO_EXTERNAL_CONTEXT, "1"));
+
+	handle->sdl_window = SDL_CreateWindow("",
+	                                      SDL_WINDOWPOS_CENTERED,
+	                                      SDL_WINDOWPOS_CENTERED,
+	                                      720,
+	                                      480,
+	                                      SDL_WINDOW_RESIZABLE);
+
+	if (!handle->sdl_window)
+		return lak::err_t<lak::u8string>{u8"Failed to create window"_str};
+
+	auto &context = handle->gc.emplace<lak::cobalt_context>();
+	auto fb       = renderer->CreateFrameBuffer();
+	if (!fb)
+	{
+		return lak::err_t<lak::u8string>{
+		  lak::streamify("Failed to create framebuffer")};
+	}
+
+	auto window_info = lak::cobalt_window_info(handle.get());
+	RES_TRY(
+	  lak::cobalt::as_result(
+	    fb->BindWindow(*window_info, settings.depth_mode, settings.colour_mode))
+	    .map_err([](auto &&) { return u8"Failed to bind window"_str; }));
+
+	context.platform_handle             = new lak::cobalt::graphics_context{};
+	context.platform_handle->api_family = settings.renderer_info.GetApiFamily();
+	context.platform_handle->api_version =
+	  settings.renderer_info.GetTargetApiVersion();
+	context.platform_handle->vendor       = device->GetVendor();
+	context.platform_handle->frame_buffer = lak::move(fb);
+	context.platform_handle->renderer     = lak::move(renderer);
+
+	context.sdl_window = handle->sdl_window;
+
+	return lak::ok_t{handle.release()};
+}
+#endif
+
 bool lak::destroy_window(lak::window_handle *handle)
 {
 	ASSERT(handle);
@@ -169,17 +236,196 @@ bool lak::destroy_window(lak::window_handle *handle)
 	return true;
 }
 
-/* --- OpenGL --- */
+/* --- graphics control --- */
 
 lak::graphics_mode lak::window_graphics_mode(const lak::window_handle *w)
 {
 	return w->graphics_mode();
 }
 
+/* --- OpenGL --- */
+
 #ifdef LAK_ENABLE_OPENGL
 bool lak::set_opengl_swap_interval(const lak::opengl_context &, int interval)
 {
 	return SDL_GL_SetSwapInterval(interval) == 0;
+}
+#endif
+
+/* --- Cobalt --- */
+
+#ifdef LAK_ENABLE_COBALT
+lak::unique_ptr<::cobalt::graphics::IRenderer::WindowSystemInfoBase>
+lak::cobalt_window_system_info()
+{
+	auto driver = SDL_GetCurrentVideoDriver();
+
+#	ifdef LAK_OS_WINDOWS
+	if (std::strcmp(driver, "windows") == 0)
+	{
+		return lak::unique_ptr<
+		  ::cobalt::graphics::IRenderer::WindowSystemInfoBase>(
+		  new ::cobalt::graphics::WindowSystemInfoWin32(),
+		  [](auto *p)
+		  { delete static_cast<::cobalt::graphics::WindowSystemInfoWin32 *>(p); });
+	}
+	else
+#	endif
+
+#	ifdef LAK_OS_LINUX
+	  if (std::strcmp(driver, "x11") == 0)
+	{
+		return lak::unique_ptr<
+		  ::cobalt::graphics::IRenderer::WindowSystemInfoBase>(
+		  new ::cobalt::graphics::WindowSystemInfoXLib(),
+		  [](auto *p)
+		  { delete static_cast<::cobalt::graphics::WindowSystemInfoXLib *>(p); });
+	}
+	else if (std::strcmp(driver, "wayland") == 0)
+	{
+		return lak::unique_ptr<
+		  ::cobalt::graphics::IRenderer::WindowSystemInfoBase>(
+		  new ::cobalt::graphics::WindowSystemInfoWayland(),
+		  [](auto *p)
+		  {
+			  delete static_cast<::cobalt::graphics::WindowSystemInfoWayland *>(p);
+		  });
+	}
+	else
+#	endif
+
+#	ifdef LAK_OS_APPLE
+	  if (std::strcmp(driver, "cocoa") == 0)
+	{
+		return lak::unique_ptr<
+		  ::cobalt::graphics::IRenderer::WindowSystemInfoBase>(
+		  new ::cobalt::graphics::WindowSystemInfoAppKit(),
+		  [](auto *p)
+		  {
+			  delete static_cast<::cobalt::graphics::WindowSystemInfoAppKit *>(p);
+		  });
+	}
+	else
+#	endif
+
+	{
+		ASSERT_UNREACHABLE();
+		return {};
+	}
+}
+
+lak::unique_ptr<::cobalt::graphics::IFrameBuffer::WindowInfoBase>
+lak::cobalt_window_info(const lak::window_handle *w)
+{
+	SDL_SysWMinfo info;
+	SDL_VERSION(&info.version);
+	SDL_GetWindowWMInfo(w->sdl_window, &info);
+
+#	ifdef LAK_OS_WINDOWS
+	if (info.subsystem == SDL_SYSWM_WINDOWS)
+	{
+		return lak::unique_ptr<::cobalt::graphics::IFrameBuffer::WindowInfoBase>(
+		  new ::cobalt::graphics::WindowInfoWin32(
+		    info.info.win.window,
+		    info.info.win.hinstance,
+		    lak::cobalt::from_lak(lak::vec2u32_t(lak::window_drawable_size(w)))),
+		  [](auto *p)
+		  { delete static_cast<::cobalt::graphics::WindowInfoWin32 *>(p); });
+	}
+	else
+#	endif
+
+#	ifdef LAK_OS_LINUX
+	  if (info.subsystem == SDL_SYSWM_X11)
+	{
+		return lak::unique_ptr<::cobalt::graphics::IFrameBuffer::WindowInfoBase>(
+		  new ::cobalt::graphics::WindowInfoXLib(
+		    info.info.x11.display,
+		    info.info.x11.window,
+		    lak::cobalt::from_lak(lak::vec2u32_t(lak::window_drawable_size(w)))),
+		  [](auto *p)
+		  { delete static_cast<::cobalt::graphics::WindowInfoXLib *>(p); });
+	}
+	else if (info.subsystem == SDL_SYSWM_WAYLAND)
+	{
+		return lak::unique_ptr<::cobalt::graphics::IFrameBuffer::WindowInfoBase>(
+		  new ::cobalt::graphics::WindowInfoWayland(
+		    info.info.wayland.display,
+		    info.info.wayland.surface,
+		    lak::cobalt::from_lak(lak::vec2u32_t(lak::window_drawable_size(w)))),
+		  [](auto *p)
+		  { delete static_cast<::cobalt::graphics::WindowInfoWayland *>(p); });
+	}
+	else
+#	endif
+
+#	ifdef LAK_OS_APPLE
+	  if (info.subsystem == SDL_SYSWM_COCOA)
+	{
+		return lak::unique_ptr<::cobalt::graphics::IFrameBuffer::WindowInfoBase>(
+		  new ::cobalt::graphics::WindowInfoAppKit(
+		    info.info.cocoa.window->contentView,
+		    lak::cobalt::from_lak(lak::vec2u32_t(lak::window_drawable_size(w)))),
+		  [](auto *p)
+		  { delete static_cast<::cobalt::graphics::WindowInfoAppKit *>(p); });
+	}
+	else
+#	endif
+
+	{
+		ASSERT_UNREACHABLE();
+		return {};
+	}
+}
+
+lak::result<const lak::cobalt::graphics_context &>
+lak::cobalt_graphics_context(const lak::window_handle *w)
+{
+	RES_TRY_ASSIGN(auto &ctx =,
+	               lak::result_from_pointer(w->gc.get<lak::cobalt_context>()));
+	return lak::ok_t<const lak::cobalt::graphics_context &>{
+	  *ctx.platform_handle};
+}
+
+::cobalt::graphics::IRenderPassNode *lak::cobalt_create_render_pass(
+  const lak::cobalt_context &c)
+{
+	c.platform_handle->owned_render_passes.reserve(
+	  c.platform_handle->owned_render_passes.size() + 1U);
+	c.platform_handle->render_passes.reserve(
+	  c.platform_handle->render_passes.size() + 1U);
+
+	auto p = c.platform_handle->renderer->CreateRenderPassNode();
+	p->BindFrameBuffer(c.platform_handle->frame_buffer.get());
+
+	c.platform_handle->owned_render_passes.push_back(lak::move(p));
+	auto res = c.platform_handle->owned_render_passes.back().get();
+	c.platform_handle->render_passes.push_back(res);
+
+	return res;
+}
+
+lak::result<::cobalt::graphics::IRenderPassNode *>
+lak::cobalt_create_render_pass(const lak::window_handle *w)
+{
+	RES_TRY_ASSIGN(auto &ctx =,
+	               lak::result_from_pointer(w->gc.get<lak::cobalt_context>()));
+	return lak::ok_t{lak::cobalt_create_render_pass(ctx)};
+}
+
+void lak::cobalt_append_render_pass(const lak::cobalt_context &c,
+                                    ::cobalt::graphics::IRenderPassNode *pass)
+{
+	c.platform_handle->render_passes.push_back(pass);
+}
+
+lak::result<lak::monostate> lak::cobalt_append_render_pass(
+  const lak::window_handle *w, ::cobalt::graphics::IRenderPassNode *pass)
+{
+	RES_TRY_ASSIGN(auto &ctx =,
+	               lak::result_from_pointer(w->gc.get<lak::cobalt_context>()));
+	lak::cobalt_append_render_pass(ctx, pass);
+	return lak::ok_t{};
 }
 #endif
 
@@ -238,14 +484,8 @@ lak::vec2l_t lak::window_drawable_size(const lak::window_handle *handle)
 		}
 		break;
 #endif
-#ifdef LAK_ENABLE_VULKAN
-		case lak::graphics_mode::Vulkan:
-		{
-			int w, h;
-			SDL_Vulkan_GetDrawableSize(handle->sdl_window, &w, &h);
-			return {long(w), long(h)};
-		}
-		break;
+#ifdef LAK_ENABLE_COBALT
+		case lak::graphics_mode::Cobalt: return lak::window_size(handle); break;
 #endif
 		default: FATAL("Invalid graphics mode (", handle->graphics_mode(), ")");
 	}
@@ -279,6 +519,10 @@ bool lak::set_active_window(const lak::window_handle *handle)
 			                          handle->opengl_context().sdl_glcontext) == 0;
 #endif
 
+#ifdef LAK_ENABLE_COBALT
+		case lak::graphics_mode::Cobalt: return true;
+#endif
+
 		default: return false;
 	}
 }
@@ -303,8 +547,37 @@ bool lak::swap_window(lak::window_handle *handle)
 		}
 #endif
 
+#ifdef LAK_ENABLE_COBALT
+		case lak::graphics_mode::Cobalt:
+		{
+			auto &ctx = handle->cobalt_context();
+			auto *rd  = ctx.platform_handle->renderer.get();
+			rd->SetRenderPasses(ctx.platform_handle->render_passes.data(),
+			                    ctx.platform_handle->render_passes.size());
+			rd->StartNewFrame();
+			rd->WaitForDrawComplete();
+			rd->RemoveAllRenderPasses();
+			ctx.platform_handle->render_passes.clear();
+			ctx.platform_handle->owned_render_passes.clear();
+			return true;
+		}
+#endif
+
 		default: return false;
 	}
+}
+
+void lak::window_handle_resize(const lak::window_handle *handle)
+{
+#ifdef LAK_ENABLE_COBALT
+	if (handle->graphics_mode() == lak::graphics_mode::Cobalt)
+	{
+		auto actual = lak::window_drawable_size(handle);
+		handle->cobalt_context()
+		  .platform_handle->frame_buffer->NotifyWindowResized(
+		    {(uint32_t)actual.x, (uint32_t)actual.y});
+	}
+#endif
 }
 
 #include "../common/window.inl"

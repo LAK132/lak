@@ -182,6 +182,12 @@ namespace lak
 #endif
 
 #ifdef LAK_ENABLE_COBALT
+	lak::unique_ptr<::cobalt::graphics::IRenderer::WindowSystemInfoBase>
+	cobalt_window_system_info();
+
+	lak::unique_ptr<::cobalt::graphics::IFrameBuffer::WindowInfoBase>
+	cobalt_window_info(const lak::window_handle *w);
+
 	lak::result<const lak::cobalt::graphics_context &> cobalt_graphics_context(
 	  const lak::window_handle *w);
 

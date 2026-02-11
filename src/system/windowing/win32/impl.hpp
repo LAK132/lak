@@ -8,6 +8,7 @@
 #ifdef LAK_ENABLE_COBALT
 #	include "lak/system/cobalt/context.hpp"
 #	include "lak/system/cobalt/result.hpp"
+#	include "lak/system/cobalt/math.hpp"
 
 #	include <RendererInterface/WindowSystemInfoWin32.h>
 #	include <RendererInterface/WindowInfoWin32.h>

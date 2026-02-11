@@ -2,6 +2,7 @@ subproject('SDL2-2.32.10')
 
 _lakwindowing_dependencies = [
 	lakcore_dep,
+	glm_dep,
 	dependency('SDL2-2.32.10'),
 	dependency('dl', required: false),
 ]

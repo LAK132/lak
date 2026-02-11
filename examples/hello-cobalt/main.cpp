@@ -3,7 +3,6 @@
 #include <lak/system/cobalt/log_target.hpp>
 #include <lak/system/cobalt/renderers.hpp>
 
-#include <lak/system/win32/windows.hpp>
 #include <lak/system/windowing/window.hpp>
 
 #include <lak/string_literals/string.hpp>
