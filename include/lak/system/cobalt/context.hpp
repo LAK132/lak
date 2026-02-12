@@ -66,7 +66,7 @@ struct lak::format_traits<::cobalt::graphics::IRendererInfo::ApiVersion, CHAR>
 	static lak::string<CHAR> to_string(
 	  ::cobalt::graphics::IRendererInfo::ApiVersion version)
 	{
-		return lak::fmt<CHAR, "{}.{}">(version.major, version.minor);
+		return lak::fmt<CHAR, "{:d}.{:d}">(version.major, version.minor);
 	}
 };
 

@@ -222,27 +222,9 @@ struct hello_cobalt_window : virtual public LAK_BASIC_PROGRAM(window_api)
 		ASSERT_EQUAL(window().graphics(), lak::graphics_mode::Cobalt);
 		if_let_ok (auto t, hello_cobalt_triangle(window())) tri = lak::move(t);
 		context = &lak::cobalt_graphics_context(window().handle()).UNWRAP();
-		switch (context->api_family)
-		{
-			case ::cobalt::graphics::IRendererInfo::ApiFamily::OpenGL:
-				renderer_name = "OpenGL";
-				break;
-			case ::cobalt::graphics::IRendererInfo::ApiFamily::OpenGLES:
-				renderer_name = "OpenGLES";
-				break;
-			case ::cobalt::graphics::IRendererInfo::ApiFamily::Direct3D:
-				renderer_name = "Direct3D";
-				break;
-			case ::cobalt::graphics::IRendererInfo::ApiFamily::Metal:
-				renderer_name = "Metal";
-				break;
-			case ::cobalt::graphics::IRendererInfo::ApiFamily::Vulkan:
-				renderer_name = "Vulkan";
-				break;
-		}
 
-		renderer_name = lak::fmt<"{} {:d}.{:d}">(
-		  renderer_name, context->api_version.major, context->api_version.minor);
+		renderer_name =
+		  lak::fmt<"{} {}">(context->api_family, context->api_version);
 
 		window().set_title(
 		  (L"" APP_NAME " (" + lak::to_wstring(renderer_name) + L")").c_str());
