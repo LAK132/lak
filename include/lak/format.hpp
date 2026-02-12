@@ -172,7 +172,8 @@ namespace lak
 	template<typename CHAR, lak::aconst_string STR, typename... ARGS>
 	lak::string<CHAR> fmt(ARGS &&...args)
 	{
-		static_assert(((lak::concepts::formattable<ARGS, CHAR>) && ...));
+		static_assert(
+		  ((lak::concepts::formattable<lak::remove_cvref_t<ARGS>, CHAR>) && ...));
 		return lak::format<lak::format_string<lak::strconv<CHAR>(STR)>{}>(
 		  lak::forward<ARGS>(args)...);
 	};
