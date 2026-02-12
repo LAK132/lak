@@ -24,6 +24,25 @@ cobalt_opts.add_cmake_defines({
 
 cobalt_opts.set_install(false)
 
+cobalt_opts.set_install(true, target: 'ShaderSupport')
+cobalt_opts.set_install(true, target: 'TextureFormatConversion')
+if get_option('lak_enable_cobalt_ogl3')
+	cobalt_opts.set_install(true, target: 'OpenGL3Renderer')
+endif
+if get_option('lak_enable_cobalt_ogl4')
+	cobalt_opts.set_install(true, target: 'OpenGL4Renderer')
+endif
+if get_option('lak_enable_cobalt_d3d11')
+	cobalt_opts.set_install(true, target: 'Direct3D11Renderer')
+endif
+if get_option('lak_enable_cobalt_d3d12')
+	cobalt_opts.set_install(true, target: 'Direct3D12Renderer')
+	cobalt_opts.set_install(true, target: 'WinPixEventRuntime')
+endif
+if get_option('lak_enable_cobalt_vk')
+	cobalt_opts.set_install(true, target: 'VulkanRenderer')
+endif
+
 if target_machine.system() == 'windows'
 	cobalt_opts.append_link_args(
 		'/DEF:@0@'.format(cobalt_source_root/'External'/'Direct3D12Libraries'/'PixEvents'/'WinPixEventRuntime.def'),
@@ -41,10 +60,6 @@ _lakcobalt_srcs = [
 	'log_target.cpp',
 ]
 _lakcobalt_deps = []
-lakcobalt_dlls = [
-	'ShaderSupport',
-	'TextureFormatConversion',
-]
 
 cobalt_shader_support = cobalt_subprj.dependency('ShaderSupport')
 cobalt_texture_format_conversion = cobalt_subprj.dependency('TextureFormatConversion')
@@ -52,32 +67,26 @@ cobalt_texture_format_conversion = cobalt_subprj.dependency('TextureFormatConver
 if get_option('lak_enable_cobalt_ogl3')
 	_lakcobalt_srcs += 'opengl3.cpp'
 	_lakcobalt_deps += cobalt_subprj.dependency('OpenGL3Renderer')
-	lakcobalt_dlls += 'OpenGL3Renderer'
 endif
 
 if get_option('lak_enable_cobalt_ogl4')
 	_lakcobalt_srcs += 'opengl4.cpp'
 	_lakcobalt_deps += cobalt_subprj.dependency('OpenGL4Renderer')
-	lakcobalt_dlls += 'OpenGL4Renderer'
 endif
 
 if get_option('lak_enable_cobalt_d3d11')
 	_lakcobalt_srcs += 'direct3d11.cpp'
 	_lakcobalt_deps += cobalt_subprj.dependency('Direct3D11Renderer')
-	lakcobalt_dlls += 'Direct3D11Renderer'
 endif
 
 if get_option('lak_enable_cobalt_d3d12')
 	_lakcobalt_srcs += 'direct3d12.cpp'
 	_lakcobalt_deps += cobalt_subprj.dependency('Direct3D12Renderer')
-	lakcobalt_dlls += 'Direct3D12Renderer'
-	lakcobalt_dlls += 'WinPixEventRuntime'
 endif
 
 if get_option('lak_enable_cobalt_vk')
 	_lakcobalt_srcs += 'vulkan.cpp'
 	_lakcobalt_deps += cobalt_subprj.dependency('VulkanRenderer')
-	lakcobalt_dlls += 'VulkanRenderer'
 endif
 
 _lakcobalt_dep = declare_dependency(

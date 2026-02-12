@@ -55,29 +55,11 @@ hello_cobalt = files([
 	'main.cpp',
 ])
 
-hello_cobalt_dll_copy = []
-foreach dll : lakcobalt_dlls
-hello_cobalt_dll_copy += custom_target(
-	dll + '-copy',
-	depends: hello_cobalt_deps,
-	output: dll+'.dll',
-	command: [
-		import('python').find_installation('python3'),
-		meson.project_source_root()/'copy.py',
-		cobalt_build_root/(dll+'.dll'),
-		'@OUTPUT@',
-	]
-)
-endforeach
-
 executable(
 	'hello-cobalt',
 	hello_cobalt,
 	override_options: override_options,
 	dependencies: [
 		lak_dep,
-	],
-	link_depends: [
-		hello_cobalt_dll_copy,
 	],
 )
