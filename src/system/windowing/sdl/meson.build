@@ -21,6 +21,10 @@ endif
 
 lakwindowing_dependencies = declare_dependency(
 	dependencies: _lakwindowing_dependencies,
+	compile_args: [
+		'-DLAK_USE_SDL',
+		'-DSDL_MAIN_HANDLED',
+	],
 )
 
 lakwindowing = static_library(

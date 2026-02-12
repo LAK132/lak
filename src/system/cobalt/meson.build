@@ -64,6 +64,9 @@ _lakcobalt_srcs = [
 	'log_target.cpp',
 ]
 _lakcobalt_deps = []
+_lakcobalt_compile_args = [
+	'-DLAK_ENABLE_COBALT',
+]
 
 cobalt_shader_support = cobalt_subprj.dependency('ShaderSupport')
 cobalt_texture_format_conversion = cobalt_subprj.dependency('TextureFormatConversion')
@@ -71,26 +74,31 @@ cobalt_texture_format_conversion = cobalt_subprj.dependency('TextureFormatConver
 if get_option('lak_enable_cobalt_ogl3')
 	_lakcobalt_srcs += 'opengl3.cpp'
 	_lakcobalt_deps += cobalt_subprj.dependency('OpenGL3Renderer')
+	_lakcobalt_compile_args += '-DLAK_ENABLE_COBALT_OGL3'
 endif
 
 if get_option('lak_enable_cobalt_ogl4')
 	_lakcobalt_srcs += 'opengl4.cpp'
 	_lakcobalt_deps += cobalt_subprj.dependency('OpenGL4Renderer')
+	_lakcobalt_compile_args += '-DLAK_ENABLE_COBALT_OGL4'
 endif
 
 if get_option('lak_enable_cobalt_d3d11')
 	_lakcobalt_srcs += 'direct3d11.cpp'
 	_lakcobalt_deps += cobalt_subprj.dependency('Direct3D11Renderer')
+	_lakcobalt_compile_args += '-DLAK_ENABLE_COBALT_D3D11'
 endif
 
 if get_option('lak_enable_cobalt_d3d12')
 	_lakcobalt_srcs += 'direct3d12.cpp'
 	_lakcobalt_deps += cobalt_subprj.dependency('Direct3D12Renderer')
+	_lakcobalt_compile_args += '-DLAK_ENABLE_COBALT_D3D12'
 endif
 
 if get_option('lak_enable_cobalt_vk')
 	_lakcobalt_srcs += 'vulkan.cpp'
 	_lakcobalt_deps += cobalt_subprj.dependency('VulkanRenderer')
+	_lakcobalt_compile_args += '-DLAK_ENABLE_COBALT_VK'
 endif
 
 _lakcobalt_dep = declare_dependency(
@@ -112,5 +120,6 @@ lakcobalt = static_library(
 lakcobalt_dep = declare_dependency(
 	link_with: lakcobalt,
 	dependencies: _lakcobalt_dep.partial_dependency(includes: true),
+	compile_args: _lakcobalt_compile_args,
 )
 meson.override_dependency('lak-cobalt', lakcobalt_dep)

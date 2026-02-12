@@ -227,7 +227,8 @@ endif
 
 if get_option('lak_enable_windowing')
 	if get_option('lak_enable_softrender')
-		laksoftrender_dep = []
+		laksoftrender_dep = declare_dependency(
+			compile_args: '-DLAK_ENABLE_SOFTRENDER')
 		dependencies += laksoftrender_dep
 	endif
 

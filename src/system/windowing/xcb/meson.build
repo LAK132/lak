@@ -16,6 +16,7 @@ endif
 
 lakwindowing_dependencies = declare_dependency(
 	dependencies: _lakwindowing_dependencies,
+	compile_args: '-DLAK_USE_XCB',
 )
 
 lakwindowing = static_library(

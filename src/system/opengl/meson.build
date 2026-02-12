@@ -25,4 +25,5 @@ lakopengl = static_library(
 
 lakopengl_dep = declare_dependency(
 	link_with: lakopengl,
+	compile_args: '-DLAK_ENABLE_OPENGL',
 )
