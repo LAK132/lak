@@ -176,11 +176,11 @@ float4 main(VSOutput IN) : SV_Target
 	return lak::move_ok(state);
 }
 
-lak::result<lak::cobalt_settings, lak::u8string> get_renderer_settings(
-  lak::cobalt::renderer_info_func get_info,
-  ::cobalt::logging::ILogger::unique_ptr log)
+lak::result<lak::cobalt_renderer_settings, lak::u8string>
+get_renderer_settings(lak::cobalt::renderer_info_func get_info,
+                      ::cobalt::logging::ILogger::unique_ptr log)
 {
-	lak::cobalt_settings result;
+	lak::cobalt_renderer_settings result;
 
 	get_info(0, result.renderer_info);
 	log->Info("Renderer {0} [{1}]",
@@ -278,57 +278,58 @@ lak::error_code<int> LAK_BASIC_PROGRAM(program_preinit)(lak::span<char *>)
 lak::weak_ptr<LAK_BASIC_PROGRAM(window_instance<hello_cobalt_window>)>
   ogl3_wnd, ogl4_wnd, d3d11_wnd, d3d12_wnd, vk_wnd;
 
-::cobalt::logging::LogManager log_manager;
-
 lak::error_code<int> LAK_BASIC_PROGRAM(program_init)()
 {
 	LAK_BASIC_PROGRAM(window_start_size) = lak::vec2l_t{500, 500};
 
-	auto log = log_manager.GetLogger("");
-	{
-		auto log_target = lak::cobalt::log_target::create();
-		log_target->set_external(&lak::debugger);
-		log_manager.AddLogTarget(lak::move(log_target));
-	}
-
 #ifdef LAK_ENABLE_COBALT_OGL3
-	ogl3_wnd = LAK_BASIC_PROGRAM(create_window<hello_cobalt_window>)(
-	             get_renderer_settings(lak::cobalt::ogl3_get_renderer_info(),
-	                                   log->CloneLogger())
-	               .UNWRAP())
-	             .UNWRAP();
+	ogl3_wnd =
+	  LAK_BASIC_PROGRAM(create_window<hello_cobalt_window>)(
+	    LAK_BASIC_PROGRAM(window_cobalt_settings),
+	    get_renderer_settings(lak::cobalt::ogl3_get_renderer_info(),
+	                          lak::cobalt::log_manager.GetLogger("OpenGL3"))
+	      .UNWRAP())
+	    .UNWRAP();
 #endif
 
 #ifdef LAK_ENABLE_COBALT_OGL4
-	ogl4_wnd = LAK_BASIC_PROGRAM(create_window<hello_cobalt_window>)(
-	             get_renderer_settings(lak::cobalt::ogl4_get_renderer_info(),
-	                                   log->CloneLogger())
-	               .UNWRAP())
-	             .UNWRAP();
+	ogl4_wnd =
+	  LAK_BASIC_PROGRAM(create_window<hello_cobalt_window>)(
+	    LAK_BASIC_PROGRAM(window_cobalt_settings),
+	    get_renderer_settings(lak::cobalt::ogl4_get_renderer_info(),
+	                          lak::cobalt::log_manager.GetLogger("OpenGL4"))
+	      .UNWRAP())
+	    .UNWRAP();
 #endif
 
 #ifdef LAK_ENABLE_COBALT_D3D11
-	d3d11_wnd = LAK_BASIC_PROGRAM(create_window<hello_cobalt_window>)(
-	              get_renderer_settings(lak::cobalt::d3d11_get_renderer_info(),
-	                                    log->CloneLogger())
-	                .UNWRAP())
-	              .UNWRAP();
+	d3d11_wnd =
+	  LAK_BASIC_PROGRAM(create_window<hello_cobalt_window>)(
+	    LAK_BASIC_PROGRAM(window_cobalt_settings),
+	    get_renderer_settings(lak::cobalt::d3d11_get_renderer_info(),
+	                          lak::cobalt::log_manager.GetLogger("Direct3D11"))
+	      .UNWRAP())
+	    .UNWRAP();
 #endif
 
 #ifdef LAK_ENABLE_COBALT_D3D12
-	d3d12_wnd = LAK_BASIC_PROGRAM(create_window<hello_cobalt_window>)(
-	              get_renderer_settings(lak::cobalt::d3d12_get_renderer_info(),
-	                                    log->CloneLogger())
-	                .UNWRAP())
-	              .UNWRAP();
+	d3d12_wnd =
+	  LAK_BASIC_PROGRAM(create_window<hello_cobalt_window>)(
+	    LAK_BASIC_PROGRAM(window_cobalt_settings),
+	    get_renderer_settings(lak::cobalt::d3d12_get_renderer_info(),
+	                          lak::cobalt::log_manager.GetLogger("Direct3D12"))
+	      .UNWRAP())
+	    .UNWRAP();
 #endif
 
 #ifdef LAK_ENABLE_COBALT_VK
-	vk_wnd = LAK_BASIC_PROGRAM(create_window<hello_cobalt_window>)(
-	           get_renderer_settings(lak::cobalt::vk_get_renderer_info(),
-	                                 log->CloneLogger())
-	             .UNWRAP())
-	           .UNWRAP();
+	vk_wnd =
+	  LAK_BASIC_PROGRAM(create_window<hello_cobalt_window>)(
+	    LAK_BASIC_PROGRAM(window_cobalt_settings),
+	    get_renderer_settings(lak::cobalt::vk_get_renderer_info(),
+	                          lak::cobalt::log_manager.GetLogger("Vulkan"))
+	      .UNWRAP())
+	    .UNWRAP();
 #endif
 
 	return lak::ok_t{};
