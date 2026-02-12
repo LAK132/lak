@@ -1,9 +1,6 @@
 project(
 	'lak',
 	['c', 'cpp'],
-	default_options: [
-		'prefix=@0@'.format(meson.global_source_root()/'install'),
-	],
 	meson_version: '>=1.1.0',
 )
 
