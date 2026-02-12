@@ -14,11 +14,11 @@ template struct lak::unique_bank_ptr<lak::window_handle>;
 template struct lak::shared_bank_ptr<lak::window_handle>;
 
 #ifdef LAK_ENABLE_COBALT
-lak::cobalt_settings lak::cobalt_settings::preferred_renderer_settings(
+lak::cobalt_renderer_settings lak::cobalt_renderer_settings::preferred(
   lak::cobalt::renderer_info_func info,
   ::cobalt::logging::ILogger::unique_ptr log)
 {
-	lak::cobalt_settings result;
+	lak::cobalt_renderer_settings result;
 
 	info(0, result.renderer_info);
 
@@ -90,9 +90,9 @@ lak::result<lak::window, lak::u8string> lak::window::make(
 
 #ifdef LAK_ENABLE_COBALT
 lak::result<lak::window, lak::u8string> lak::window::make(
-  const lak::cobalt_settings &s)
+  const lak::cobalt_settings &s, const lak::cobalt_renderer_settings &r)
 {
-	if (auto maybe_handle{lak::create_window(s)}; maybe_handle.is_err())
+	if (auto maybe_handle{lak::create_window(s, r)}; maybe_handle.is_err())
 		return lak::err_t<lak::u8string>{
 		  lak::move(maybe_handle.unsafe_unwrap_err())};
 	else if (auto handle{

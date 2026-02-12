@@ -101,6 +101,22 @@ namespace lak
 		int minor            = 2;
 	};
 
+	struct cobalt_renderer_settings
+	{
+#ifdef LAK_ENABLE_COBALT
+		::cobalt::graphics::RendererInfo renderer_info = {};
+		::cobalt::graphics::IGraphicsDeviceEnumerator::unique_ptr
+		  device_enumerator                                             = nullptr;
+		::cobalt::graphics::IGraphicsDevice *device                     = nullptr;
+		std::set<::cobalt::graphics::IGraphicsDevice::Feature> features = {};
+		std::set<::cobalt::graphics::IRenderer::Options> options        = {};
+
+		static cobalt_renderer_settings preferred(
+		  lak::cobalt::renderer_info_func info,
+		  ::cobalt::logging::ILogger::unique_ptr log);
+#endif
+	};
+
 	struct cobalt_settings
 	{
 #ifdef LAK_ENABLE_COBALT
@@ -109,17 +125,6 @@ namespace lak
 		    DepthUNorm24StencilUInt8;
 		::cobalt::graphics::IFrameBuffer::WindowColorSpaceMode colour_mode =
 		  ::cobalt::graphics::IFrameBuffer::WindowColorSpaceMode::Default;
-
-		::cobalt::graphics::RendererInfo renderer_info = {};
-		::cobalt::graphics::IGraphicsDeviceEnumerator::unique_ptr
-		  device_enumerator                                             = nullptr;
-		::cobalt::graphics::IGraphicsDevice *device                     = nullptr;
-		std::set<::cobalt::graphics::IGraphicsDevice::Feature> features = {};
-		std::set<::cobalt::graphics::IRenderer::Options> options        = {};
-
-		static cobalt_settings preferred_renderer_settings(
-		  lak::cobalt::renderer_info_func info,
-		  ::cobalt::logging::ILogger::unique_ptr);
 #endif
 	};
 
@@ -156,7 +161,7 @@ namespace lak
 
 #ifdef LAK_ENABLE_COBALT
 	lak::result<lak::window_handle *, lak::u8string> create_window(
-	  const lak::cobalt_settings &s);
+	  const lak::cobalt_settings &s, const lak::cobalt_renderer_settings &r);
 #endif
 
 	bool destroy_window(lak::window_handle *w);
@@ -242,7 +247,7 @@ namespace lak
 
 #ifdef LAK_ENABLE_COBALT
 		static lak::result<window, lak::u8string> make(
-		  const lak::cobalt_settings &s);
+		  const lak::cobalt_settings &s, const lak::cobalt_renderer_settings &r);
 #endif
 
 		~window();

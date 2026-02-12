@@ -22,9 +22,10 @@ lak::result<lak::window_handle *, lak::u8string> lak::create_window(
 
 #ifdef LAK_ENABLE_COBALT
 lak::result<lak::window_handle *, lak::u8string> lak::create_window(
-  const lak::cobalt_settings &s)
+  const lak::cobalt_settings &s, const lak::cobalt_renderer_settings &r)
 {
 	(void)s;
+	(void)r;
 	return lak::err_t<lak::u8string>{u8"NYI"_str};
 }
 #endif

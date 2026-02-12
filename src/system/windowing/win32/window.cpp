@@ -237,17 +237,17 @@ lak::result<lak::window_handle *, lak::u8string> lak::create_window(
 
 #ifdef LAK_ENABLE_COBALT
 lak::result<lak::window_handle *, lak::u8string> lak::create_window(
-  const lak::cobalt_settings &s)
+  const lak::cobalt_settings &s, const lak::cobalt_renderer_settings &r)
 {
 	auto device =
-	  s.device ? s.device : s.device_enumerator->GetPreferredDevice();
+	  r.device ? r.device : r.device_enumerator->GetPreferredDevice();
 	if (!device)
 	{
 		return lak::err_t<lak::u8string>{
 		  lak::streamify("Failed to get preferred graphics device")};
 	}
 
-	auto renderer = device->CreateRenderer(s.features, s.options);
+	auto renderer = device->CreateRenderer(r.features, r.options);
 
 	if (auto window_system_info = lak::cobalt_window_system_info();
 	    !renderer->Initialize(*window_system_info))
@@ -314,8 +314,8 @@ lak::result<lak::window_handle *, lak::u8string> lak::create_window(
 	          .map_err([](auto &&) { return u8"Failed to bind window"_str; }));
 
 	context.platform_handle              = new lak::cobalt::graphics_context{};
-	context.platform_handle->api_family  = s.renderer_info.GetApiFamily();
-	context.platform_handle->api_version = s.renderer_info.GetTargetApiVersion();
+	context.platform_handle->api_family  = r.renderer_info.GetApiFamily();
+	context.platform_handle->api_version = r.renderer_info.GetTargetApiVersion();
 	context.platform_handle->vendor      = device->GetVendor();
 	context.platform_handle->frame_buffer = lak::move(fb);
 	context.platform_handle->renderer     = lak::move(renderer);

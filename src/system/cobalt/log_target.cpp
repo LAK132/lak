@@ -93,3 +93,13 @@ void lak::cobalt::log_target::LogMessage(
 		default: ASSERT_UNREACHABLE();
 	}
 }
+
+cobalt::logging::LogManager lak::cobalt::log_manager =
+  []() -> ::cobalt::logging::LogManager
+{
+	::cobalt::logging::LogManager result;
+	auto log_target = lak::cobalt::log_target::create();
+	log_target->set_external(&lak::debugger);
+	result.AddLogTarget(lak::move(log_target));
+	return result;
+}();

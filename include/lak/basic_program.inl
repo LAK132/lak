@@ -4,6 +4,10 @@
 #	include "lak/system/opengl/state.hpp"
 #endif
 
+#ifdef LAK_ENABLE_COBALT
+#	include "lak/system/cobalt/log_target.hpp"
+#endif
+
 #ifndef APP_NAME
 #	define APP_NAME "basic window"
 #endif
@@ -13,6 +17,8 @@ uint32_t LAK_BASIC_PROGRAM(window_target_framerate) = 60;
 bool LAK_BASIC_PROGRAM(window_force_software)       = false;
 lak::vec2l_t LAK_BASIC_PROGRAM(window_start_size)   = {1200, 700};
 lak::cobalt_settings LAK_BASIC_PROGRAM(window_cobalt_settings);
+lak::optional<lak::cobalt_renderer_settings> LAK_BASIC_PROGRAM(
+  window_cobalt_renderer_settings);
 lak::opengl_settings LAK_BASIC_PROGRAM(window_opengl_settings);
 lak::software_settings LAK_BASIC_PROGRAM(window_software_settings);
 
@@ -153,27 +159,128 @@ LAK_BASIC_PROGRAM(create_window)(const lak::opengl_settings &settings)
 template<typename WINDOW_CLASS>
 lak::result<lak::strong_ref<LAK_BASIC_PROGRAM(window_instance<WINDOW_CLASS>)>,
             lak::u8string>
-LAK_BASIC_PROGRAM(create_window)(const lak::cobalt_settings &settings)
+LAK_BASIC_PROGRAM(create_window)(const lak::cobalt_settings &settings,
+                                 const lak::cobalt_renderer_settings &renderer)
 {
 	RES_TRY_ASSIGN(
 	  auto wnd =,
-	  lak::window::make(settings).and_then(
-	    [&](auto &&window) -> lak::result<lak::window, lak::u8string>
-	    {
-		    if (window.graphics() != lak::graphics_mode::Cobalt)
-			    return lak::err_t<lak::u8string>{lak::streamify(
-			      "Expected Cobalt graphics, got ", window.graphics())};
+	  lak::window::make(settings, renderer)
+	    .and_then(
+	      [&](auto &&window) -> lak::result<lak::window, lak::u8string>
+	      {
+		      if (window.graphics() != lak::graphics_mode::Cobalt)
+			      return lak::err_t<lak::u8string>{lak::streamify(
+			        "Expected Cobalt graphics, got ", window.graphics())};
 
-		    auto *fb = lak::cobalt_graphics_context(window.handle())
-		                 .UNWRAP()
-		                 .frame_buffer.get();
-		    fb->DefineViewportRegion({0, 0},
-		                             {uint32_t(window.drawable_size().x),
-		                              uint32_t(window.drawable_size().y)});
+		      auto *fb = lak::cobalt_graphics_context(window.handle())
+		                   .UNWRAP()
+		                   .frame_buffer.get();
+		      fb->DefineViewportRegion({0, 0},
+		                               {uint32_t(window.drawable_size().x),
+		                                uint32_t(window.drawable_size().y)});
 
-		    return lak::move_ok(window);
-	    }));
+		      return lak::move_ok(window);
+	      }));
 	return LAK_BASIC_PROGRAM(create_window<WINDOW_CLASS>)(lak::move(wnd));
+}
+
+template<typename WINDOW_CLASS>
+lak::result<lak::strong_ref<LAK_BASIC_PROGRAM(window_instance<WINDOW_CLASS>)>,
+            lak::u8string>
+LAK_BASIC_PROGRAM(create_window)(const lak::cobalt_settings &settings)
+{
+	if (LAK_BASIC_PROGRAM(window_cobalt_renderer_settings))
+	{
+		return LAK_BASIC_PROGRAM(create_window<WINDOW_CLASS>)(
+		  settings, *LAK_BASIC_PROGRAM(window_cobalt_renderer_settings));
+	}
+	else
+	{
+		auto log = lak::cobalt::log_manager.GetLogger("");
+
+		lak::u8string errs;
+
+#	ifdef LAK_ENABLE_COBALT_VK
+		LAK_BASIC_PROGRAM(window_cobalt_renderer_settings) =
+		  lak::cobalt_renderer_settings::preferred(
+		    lak::cobalt::vk_get_renderer_info(), log->CloneLogger());
+
+		match_result(LAK_BASIC_PROGRAM(create_window<WINDOW_CLASS>)(
+		  settings, *LAK_BASIC_PROGRAM(window_cobalt_renderer_settings)))
+		{
+			match_let_ok(auto wnd, { return lak::move_ok(wnd); });
+			match_let_err(auto err, {
+				errs += err;
+				errs += u8"\n";
+			})
+		}
+#	endif
+#	ifdef LAK_ENABLE_COBALT_D3D12
+		LAK_BASIC_PROGRAM(window_cobalt_renderer_settings) =
+		  lak::cobalt_renderer_settings::preferred(
+		    lak::cobalt::d3d12_get_renderer_info(), log->CloneLogger());
+
+		match_result(LAK_BASIC_PROGRAM(create_window<WINDOW_CLASS>)(
+		  settings, *LAK_BASIC_PROGRAM(window_cobalt_renderer_settings)))
+		{
+			match_let_ok(auto wnd, { return lak::move_ok(wnd); });
+			match_let_err(auto err, {
+				errs += err;
+				errs += u8"\n";
+			})
+		}
+#	endif
+#	ifdef LAK_ENABLE_COBALT_D3D11
+		LAK_BASIC_PROGRAM(window_cobalt_renderer_settings) =
+		  lak::cobalt_renderer_settings::preferred(
+		    lak::cobalt::d3d11_get_renderer_info(), log->CloneLogger());
+
+		match_result(LAK_BASIC_PROGRAM(create_window<WINDOW_CLASS>)(
+		  settings, *LAK_BASIC_PROGRAM(window_cobalt_renderer_settings)))
+		{
+			match_let_ok(auto wnd, { return lak::move_ok(wnd); });
+			match_let_err(auto err, {
+				errs += err;
+				errs += u8"\n";
+			})
+		}
+#	endif
+#	ifdef LAK_ENABLE_COBALT_OGL4
+
+		LAK_BASIC_PROGRAM(window_cobalt_renderer_settings) =
+		  lak::cobalt_renderer_settings::preferred(
+		    lak::cobalt::ogl4_get_renderer_info(), log->CloneLogger());
+
+		match_result(LAK_BASIC_PROGRAM(create_window<WINDOW_CLASS>)(
+		  settings, *LAK_BASIC_PROGRAM(window_cobalt_renderer_settings)))
+		{
+			match_let_ok(auto wnd, { return lak::move_ok(wnd); });
+			match_let_err(auto err, {
+				errs += err;
+				errs += u8"\n";
+			})
+		}
+#	endif
+#	ifdef LAK_ENABLE_COBALT_OGL3
+		LAK_BASIC_PROGRAM(window_cobalt_renderer_settings) =
+		  lak::cobalt_renderer_settings::preferred(
+		    lak::cobalt::ogl3_get_renderer_info(), log->CloneLogger());
+
+		match_result(LAK_BASIC_PROGRAM(create_window<WINDOW_CLASS>)(
+		  settings, *LAK_BASIC_PROGRAM(window_cobalt_renderer_settings)))
+		{
+			match_let_ok(auto wnd, { return lak::move_ok(wnd); });
+			match_let_err(auto err, {
+				errs += err;
+				errs += u8"\n";
+			})
+		}
+#	endif
+
+		LAK_BASIC_PROGRAM(window_cobalt_renderer_settings).reset();
+
+		return lak::move_err(errs);
+	}
 }
 #endif
 

@@ -37,6 +37,8 @@ namespace lak
 			                        const char *message,
 			                        size_t message_length) override;
 		};
+
+		extern ::cobalt::logging::LogManager log_manager;
 	}
 }
 
