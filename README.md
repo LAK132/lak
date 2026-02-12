@@ -42,6 +42,10 @@ window (backend renderer determined by settings in `meson_options.txt`):
 
 #include <filesystem>
 
+#ifdef LAK_ENABLE_COBALT
+#	include <lak/system/cobalt/log_target.hpp>
+#endif
+
 struct my_window : virtual public LAK_BASIC_PROGRAM(window_api)
 {
 	my_window() : LAK_BASIC_PROGRAM(window_api)() {}
@@ -117,6 +121,10 @@ lak::error_code<int> LAK_BASIC_PROGRAM(program_preinit)(lak::span<char *> args)
 
 lak::weak_ptr<LAK_BASIC_PROGRAM(window_instance<my_window>)> my_window_ptr;
 
+#ifdef LAK_ENABLE_COBALT
+cobalt::logging::LogManager log_manager;
+#endif
+
 lak::error_code<int> LAK_BASIC_PROGRAM(program_init)()
 {
 	// called after program_preinit and once all platform initialisation is
@@ -128,10 +136,29 @@ lak::error_code<int> LAK_BASIC_PROGRAM(program_init)()
 		return EXIT_FAILURE;
 	};
 
+#ifdef LAK_ENABLE_COBALT
+	auto log = log_manager.GetLogger("");
+	{
+		auto log_target = lak::cobalt::log_target::create();
+		log_target->set_external(&lak::debugger);
+		log_manager.AddLogTarget(lak::move(log_target));
+	}
+
+	// cobalt requires some additional configuration
+	LAK_BASIC_PROGRAM(window_cobalt_settings) =
+	  lak::cobalt_settings::preferred_renderer_settings(
+	    lak::cobalt::ogl3_get_renderer_info(), lak::move(log));
+#endif
+
 	// try macros can be used thanks to the result type return value
 	RES_TRY_ASSIGN(
 	  my_window_ptr =,
 	  LAK_BASIC_PROGRAM(create_window<my_window>)().map_err(map_str_err));
+	// by not specifying a specific graphics settings struct, create_window will
+	// attempt to find the first working graphics backend (settings for each are
+	// pulled from the global LAK_BASIC_PROGRAM(window_*_settings) structs).
+
+	DEBUG_EXPR(my_window_ptr.get()->window().graphics());
 
 	// return lak::ok_t{}: continue onto program_loop
 	// return lak::err_t{int}: quit program with that exit code

@@ -113,8 +113,7 @@ lak::error_code<int> LAK_BASIC_PROGRAM(program_init)()
 		return EXIT_FAILURE;
 	};
 
-	// try macros can be used thanks to the result type return value
-#if defined(LAK_ENABLE_COBALT)
+#ifdef LAK_ENABLE_COBALT
 	auto log = log_manager.GetLogger("");
 	{
 		auto log_target = lak::cobalt::log_target::create();
@@ -122,20 +121,21 @@ lak::error_code<int> LAK_BASIC_PROGRAM(program_init)()
 		log_manager.AddLogTarget(lak::move(log_target));
 	}
 
+	// cobalt requires some additional configuration
 	LAK_BASIC_PROGRAM(window_cobalt_settings) =
 	  lak::cobalt_settings::preferred_renderer_settings(
 	    lak::cobalt::ogl3_get_renderer_info(), lak::move(log));
-
-	RES_TRY_ASSIGN(my_window_ptr =,
-	               LAK_BASIC_PROGRAM(create_window<my_window>)(
-	                 LAK_BASIC_PROGRAM(window_cobalt_settings))
-	                 .map_err(map_str_err));
-#elif defined(LAK_ENABLE_OPENGL)
-	RES_TRY_ASSIGN(my_window_ptr =,
-	               LAK_BASIC_PROGRAM(create_window<my_window>)(
-	                 LAK_BASIC_PROGRAM(window_opengl_settings))
-	                 .map_err(map_str_err));
 #endif
+
+	// try macros can be used thanks to the result type return value
+	RES_TRY_ASSIGN(
+	  my_window_ptr =,
+	  LAK_BASIC_PROGRAM(create_window<my_window>)().map_err(map_str_err));
+	// by not specifying a specific graphics settings struct, create_window will
+	// attempt to find the first working graphics backend (settings for each are
+	// pulled from the global LAK_BASIC_PROGRAM(window_*_settings) structs).
+
+	DEBUG_EXPR(my_window_ptr.get()->window().graphics());
 
 	// return lak::ok_t{}: continue onto program_loop
 	// return lak::err_t{int}: quit program with that exit code
