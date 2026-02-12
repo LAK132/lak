@@ -14,8 +14,12 @@ cobalt_opts.add_cmake_defines({
 	'COBALT_OPENGL_USE_EGL': 'ON',
 	# 'COBALT_ARCH': '',
 	# 'COBALT_ARCH_SHORT': '',
-	'COBALT_INSTALL_PREFIX': cobalt_build_root/'install',
 	'COBALT_EXTERNAL_ROOT': cobalt_source_root/'External',
+
+	'COBALT_INSTALL_PREFIX': get_option('prefix'),
+	'COBALT_SDK_BIN_DIR': get_option('prefix')/get_option('bindir'),
+	'COBALT_SDK_LIB_DIR': get_option('prefix')/get_option('libdir'),
+	'COBALT_SDK_INCLUDE_DIR': get_option('prefix')/get_option('includedir')/'Cobalt',
 
 	# Vulkan-Loader
 	'USE_MASM': 'OFF',

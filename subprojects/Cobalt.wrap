@@ -2,4 +2,4 @@
 url = https://github.com/CobaltRenderer/CobaltTest
 revision = 659f6a27815e53fc8a4ed51c91ca4992c1d89947
 depth = 1
-diff_files = Cobalt/0001-Fix-Cobalt-LoggingInterface-aliasing-Logging_Lib-ins.patch, Cobalt/0002-Fix-invalid-linker-argument-in-Vulkan-Loader.patch, Cobalt/0003-Fix-using-the-wrong-filter-mode-for-GL_TEXTURE_MAG_F.patch
+diff_files = Cobalt/0001-Fix-Cobalt-LoggingInterface-aliasing-Logging_Lib-ins.patch, Cobalt/0002-Fix-invalid-linker-argument-in-Vulkan-Loader.patch, Cobalt/0003-Fix-using-the-wrong-filter-mode-for-GL_TEXTURE_MAG_F.patch, 0004-Allow-overriding-install-dirs.patch

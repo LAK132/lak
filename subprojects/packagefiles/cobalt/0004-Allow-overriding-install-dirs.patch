@@ -1,0 +1,29 @@
+From 49cc1f2de3345402330c5eadbc87eda7d5514f2f Mon Sep 17 00:00:00 2001
+From: LAK132 <lakridesagain@gmail.com>
+Date: Thu, 12 Feb 2026 23:11:16 +1030
+Subject: [PATCH 4/4] Allow overriding install dirs
+
+---
+ CMakeLists.txt | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 137c785..bc746f9 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -66,9 +66,9 @@ message(STATUS "Detected target arch = ${COBALT_ARCH},${COBALT_ARCH_SHORT}")
+ set(COBALT_SCRIPTS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/Scripts")
+ set(COBALT_OUTPUT_ROOT "${CMAKE_INSTALL_PREFIX}")
+ set(COBALT_SDK_ROOT    "${COBALT_OUTPUT_ROOT}/SDK_$<CONFIG>")
+-set(COBALT_SDK_BIN_DIR "${COBALT_SDK_ROOT}/Bin/${COBALT_ARCH}")
+-set(COBALT_SDK_LIB_DIR "${COBALT_SDK_ROOT}/Lib/${COBALT_ARCH}")
+-set(COBALT_SDK_INCLUDE_DIR "${COBALT_SDK_ROOT}/Include/Cobalt")
++set(COBALT_SDK_BIN_DIR "${COBALT_SDK_ROOT}/Bin/${COBALT_ARCH}" CACHE PATH "bin dir")
++set(COBALT_SDK_LIB_DIR "${COBALT_SDK_ROOT}/Lib/${COBALT_ARCH}" CACHE PATH "lib dir")
++set(COBALT_SDK_INCLUDE_DIR "${COBALT_SDK_ROOT}/Include/Cobalt" CACHE PATH "include dir")
+ include(FileHelperFunctions)
+ 
+ # Define a helper variable to give us a platform-independent shell script extension variable
+-- 
+2.43.0
+
