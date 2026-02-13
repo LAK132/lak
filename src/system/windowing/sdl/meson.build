@@ -27,13 +27,19 @@ lakwindowing_dependencies = declare_dependency(
 	],
 )
 
+_lakwindowing = [
+	'events.cpp',
+	'platform.cpp',
+	'window.cpp',
+]
+
+if target_machine.system() == 'darwin'
+	_lakwindowing += 'window.mm'
+endif
+
 lakwindowing = static_library(
 	'lakwindowing',
-	[
-		'events.cpp',
-		'platform.cpp',
-		'window.cpp',
-	],
+	_lakwindowing,
 	override_options: override_options,
 	dependencies: lakwindowing_dependencies,
 )

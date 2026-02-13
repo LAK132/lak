@@ -1,6 +1,8 @@
 #include "lak/system/cobalt/renderers.hpp"
 
-extern "C" __declspec(dllimport) bool GetOpenGL3RendererInfo(
+#include "lak/system/compiler.hpp"
+
+extern "C" DLL_IMPORT bool GetOpenGL3RendererInfo(
   ::cobalt::graphics::IRendererInfo &);
 
 lak::cobalt::renderer_info_func lak::cobalt::ogl3_get_renderer_info()

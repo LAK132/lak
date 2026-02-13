@@ -1,7 +1,7 @@
 From 49cc1f2de3345402330c5eadbc87eda7d5514f2f Mon Sep 17 00:00:00 2001
 From: LAK132 <lakridesagain@gmail.com>
 Date: Thu, 12 Feb 2026 23:11:16 +1030
-Subject: [PATCH 4/4] Allow overriding install dirs
+Subject: [PATCH 4/5] Allow overriding install dirs
 
 ---
  CMakeLists.txt | 6 +++---

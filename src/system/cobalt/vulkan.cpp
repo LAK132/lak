@@ -1,6 +1,8 @@
 #include "lak/system/cobalt/renderers.hpp"
 
-extern "C" __declspec(dllimport) bool GetVulkanRendererInfo(
+#include "lak/system/compiler.hpp"
+
+extern "C" DLL_IMPORT bool GetVulkanRendererInfo(
   ::cobalt::graphics::IRendererInfo &);
 
 lak::cobalt::renderer_info_func lak::cobalt::vk_get_renderer_info()

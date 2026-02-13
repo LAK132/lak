@@ -1,0 +1,456 @@
+From 4f5f4bc3c539828c5357fd130cb1bc2066b431d3 Mon Sep 17 00:00:00 2001
+From: LAK132 <lakridesagain@gmail.com>
+Date: Fri, 13 Feb 2026 17:57:48 +1030
+Subject: [PATCH 5/5] Move AppKit specific ObjC++ code to its own .mm files
+
+---
+ Renderers/OpenGLRenderer/CMakeLists.txt       |  4 +-
+ .../OpenGLRenderer/OpenGLFrameBuffer.cpp      | 93 ++-----------------
+ Renderers/OpenGLRenderer/OpenGLFrameBuffer.h  |  7 ++
+ Renderers/OpenGLRenderer/OpenGLFrameBuffer.mm | 91 ++++++++++++++++++
+ Renderers/VulkanRenderer/CMakeLists.txt       |  6 +-
+ .../VulkanRenderer/VulkanFrameBuffer.cpp      | 39 +-------
+ Renderers/VulkanRenderer/VulkanFrameBuffer.h  |  6 ++
+ Renderers/VulkanRenderer/VulkanFrameBuffer.mm | 55 +++++++++++
+ 8 files changed, 175 insertions(+), 126 deletions(-)
+ create mode 100644 Renderers/OpenGLRenderer/OpenGLFrameBuffer.mm
+ create mode 100644 Renderers/VulkanRenderer/VulkanFrameBuffer.mm
+
+diff --git a/Renderers/OpenGLRenderer/CMakeLists.txt b/Renderers/OpenGLRenderer/CMakeLists.txt
+index 4d003f8..7e7d092 100644
+--- a/Renderers/OpenGLRenderer/CMakeLists.txt
++++ b/Renderers/OpenGLRenderer/CMakeLists.txt
+@@ -172,7 +172,9 @@ set(OpenGL4Renderer_HEADERS
+ 
+ # Override some files as objective C++ for Cocoa support on macos
+ if (APPLE)
+-    set_source_files_properties(OpenGLFrameBuffer.cpp PROPERTIES LANGUAGE OBJCXX)
++    set(OpenGL3Renderer_SOURCES
++        ${OpenGL3Renderer_SOURCES}
++        "OpenGLFrameBuffer.mm")
+ endif()
+ 
+ # Define our project targets
+diff --git a/Renderers/OpenGLRenderer/OpenGLFrameBuffer.cpp b/Renderers/OpenGLRenderer/OpenGLFrameBuffer.cpp
+index c4f1e98..bced8bf 100644
+--- a/Renderers/OpenGLRenderer/OpenGLFrameBuffer.cpp
++++ b/Renderers/OpenGLRenderer/OpenGLFrameBuffer.cpp
+@@ -309,55 +309,7 @@ SuccessToken OpenGLFrameBuffer::BindWindow(const WindowInfoBase& windowInfo, Win
+ #ifdef COBALT_RENDERER_APPKIT_SUPPORT
+ 	  if ((windowInfo.windowType == IFrameBuffer::WindowInfoBase::WindowType::AppKit) && (windowInfo.structureSizeInBytes == sizeof(WindowInfoAppKit)))
+ 	{
+-		// On macOS under AppKit, we need to create an NSOpenGLContext object to manage the connection between OpenGL
+-		// rendering and the NSView window surface. We also need to ensure that the NSOpenGLContext object is created on
+-		// the UI thread. To ensure this is the case, we need to create the rendering context and NSOpenGLContext object
+-		// here in the context of the calling thread.
+-		auto windowInfoResolved = reinterpret_cast<const WindowInfoAppKit*>(&windowInfo);
+-		_buildState.windowInfo = *windowInfoResolved;
+-		_buildState.windowSizeInPixels = windowInfoResolved->windowSizeInPixels;
+-
+-		// Select the pixel format for the target window
+-		if (!_renderer->SelectPixelFormat(colorSpaceMode, depthStencilMode, _buildState.pixelFormatInfoPending))
+-		{
+-			_log->Error("SelectPixelFormat failed when binding window");
+-			return false;
+-		}
+-
+-		// Retrieve a rendering context for our window, but don't make it current.
+-		if (!_renderer->RetrieveOrCreateRenderingContextForWindow((__bridge NSView*)windowInfoResolved->view, _buildState.pixelFormatInfoPending, _buildState.renderingContextPending, _buildState.renderingContextIndexPending, false))
+-		{
+-			_log->Error("RetrieveOrCreateRenderingContextForWindow failed when binding window");
+-			return false;
+-		}
+-
+-		// Create the NSOpenGLContext object to bind our rendering context to the target window surface. Note that this
+-		// critical step must be run on the UI thread.
+-		@autoreleasepool
+-		{
+-			NSOpenGLContext* ctx = [[NSOpenGLContext alloc] initWithCGLContextObj:_buildState.renderingContextPending];
+-			// Yes, setView was declared deprecated in favor of NSOpenGLView, but the entire OpenGL API was deprecated
+-			// shortly afterwards, so it's a moot point. We use NSOpenGLContext instead of the NSOpenGLView wrapper
+-			// because we want to keep context creation centralized and decoupled from the window system inside the
+-			// renderer.
+-#pragma clang diagnostic push
+-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+-			[ctx setView:(__bridge NSView*)windowInfoResolved->view];
+-#pragma clang diagnostic pop
+-			[ctx update];
+-
+-			// Store the NSOpenGLContext as the pending object to apply later, removing the existing pending object if
+-			// present.
+-			if (_buildState.nsOpenGLContextPending != nullptr)
+-			{
+-				@autoreleasepool
+-				{
+-					CFRelease(_buildState.nsOpenGLContextPending);
+-				}
+-				_buildState.nsOpenGLContextPending = nullptr;
+-			}
+-			_buildState.nsOpenGLContextPending = (void*)CFRetain((__bridge CFTypeRef)ctx);
+-		}
++		if (!AppKitBindWindow(windowInfo)) return false;
+ 	}
+ 	else
+ #endif
+@@ -433,23 +385,7 @@ SuccessToken OpenGLFrameBuffer::NotifyWindowResized(const V2UInt32& windowSizeIn
+ #ifdef COBALT_RENDERER_APPKIT_SUPPORT
+ 	if (std::holds_alternative<WindowInfoAppKit>(_buildState.windowInfo))
+ 	{
+-		auto* windowInfo = std::get_if<WindowInfoAppKit>(&_buildState.windowInfo);
+-		windowInfo->windowSizeInPixels = windowSizeInPixels;
+-		_buildState.windowSizeInPixels = windowSizeInPixels;
+-		std::scoped_lock<std::mutex> nsOpenGLContextLock(_nsOpenGLContextMigrationMutex);
+-		NSOpenGLContext* ctx = (__bridge NSOpenGLContext*)_buildState.nsOpenGLContextPending;
+-		if (ctx == nil)
+-		{
+-			ctx = (__bridge NSOpenGLContext*)_drawState.nsOpenGLContextPending;
+-		}
+-		if (ctx == nil)
+-		{
+-			ctx = (__bridge NSOpenGLContext*)_nsOpenGLContext;
+-		}
+-		if (ctx != nil)
+-		{
+-			[ctx update];
+-		}
++		AppKitNotifyWindowResize(windowSizeInPixels);
+ 	}
+ #endif
+ 	_buildState.viewportInvalid = true;
+@@ -1454,10 +1390,7 @@ void OpenGLFrameBuffer::CreateFrameBuffer(CGLContextObj mainRenderingContext)
+ 				{
+ 					// Note that in theory this should never occur, as this object is supposed to be removed during
+ 					// build state migration.
+-					@autoreleasepool
+-					{
+-						CFRelease(_nsOpenGLContext);
+-					}
++					AppKitReleaseGLContext(_nsOpenGLContext);
+ 					_nsOpenGLContext = nullptr;
+ 				}
+ 				_nsOpenGLContext = _drawState.nsOpenGLContextPending;
+@@ -1519,10 +1452,7 @@ void OpenGLFrameBuffer::DeleteFrameBuffer() noexcept
+ 		{
+ 			// Note that in theory this should never occur, as this object is supposed to be removed during build state
+ 			// migration.
+-			@autoreleasepool
+-			{
+-				CFRelease(_nsOpenGLContext);
+-			}
++			AppKitReleaseGLContext(_nsOpenGLContext);
+ 			_nsOpenGLContext = nullptr;
+ 		}
+ 		_renderingContext = nullptr;
+@@ -1603,10 +1533,7 @@ void OpenGLFrameBuffer::MigrateBuildStateToDrawState()
+ #elif defined(OPENGL_USE_PLATFORM_APPKIT)
+ 	if ((_drawState.nsOpenGLContextPending != nullptr) && (_buildState.nsOpenGLContextPending != nullptr))
+ 	{
+-		@autoreleasepool
+-		{
+-			CFRelease(_drawState.nsOpenGLContextPending);
+-		}
++		AppKitReleaseGLContext(_drawState.nsOpenGLContextPending);
+ 	}
+ #endif
+ 
+@@ -1661,10 +1588,7 @@ void OpenGLFrameBuffer::MigrateBuildStateToDrawState()
+ #elif defined(OPENGL_USE_PLATFORM_APPKIT)
+ 	if (_drawState.framebufferInvalid && (_nsOpenGLContext != nullptr))
+ 	{
+-		@autoreleasepool
+-		{
+-			CFRelease(_nsOpenGLContext);
+-		}
++		AppKitReleaseGLContext(_nsOpenGLContext);
+ 		_nsOpenGLContext = nullptr;
+ 	}
+ #endif
+@@ -1704,10 +1628,7 @@ void OpenGLFrameBuffer::ReleaseInvalidatedStateForNextFrame()
+ 	std::scoped_lock<std::mutex> nsOpenGLContextLock(_nsOpenGLContextMigrationMutex);
+ 	if (_buildState.framebufferInvalid && (_nsOpenGLContext != nullptr))
+ 	{
+-		@autoreleasepool
+-		{
+-			CFRelease(_nsOpenGLContext);
+-		}
++		AppKitReleaseGLContext(_nsOpenGLContext);
+ 		_nsOpenGLContext = nullptr;
+ 	}
+ #endif
+diff --git a/Renderers/OpenGLRenderer/OpenGLFrameBuffer.h b/Renderers/OpenGLRenderer/OpenGLFrameBuffer.h
+index f772556..f9c87b9 100644
+--- a/Renderers/OpenGLRenderer/OpenGLFrameBuffer.h
++++ b/Renderers/OpenGLRenderer/OpenGLFrameBuffer.h
+@@ -180,6 +180,13 @@ private:
+ 	// Build state methods
+ 	void FlagBuildStateModified();
+ 
++	// Objective C++ helpder functions
++#ifdef COBALT_RENDERER_APPKIT_SUPPORT
++	bool AppKitBindWindow(const WindowInfoBase& windowInfo, WindowDepthStencilMode depthStencilMode, WindowColorSpaceMode colorSpaceMode);
++	void AppKitNotifyWindowResize(const V2UInt32& windowSizeInPixels);
++	void AppKitReleaseGLContext(void* context);
++#endif
++
+ private:
+ 	cobalt::logging::ILogger* _log;
+ 	OpenGLRenderer* _renderer;
+diff --git a/Renderers/OpenGLRenderer/OpenGLFrameBuffer.mm b/Renderers/OpenGLRenderer/OpenGLFrameBuffer.mm
+new file mode 100644
+index 0000000..43bd221
+--- /dev/null
++++ b/Renderers/OpenGLRenderer/OpenGLFrameBuffer.mm
+@@ -0,0 +1,91 @@
++#include "OpenGLFrameBuffer.h"
++#include "OpenGLRenderer.h"
++#include "RendererInterface/PlatformBindings.pkg"
++
++namespace cobalt::graphics {
++#ifdef COBALT_RENDERER_APPKIT_SUPPORT
++bool OpenGLFrameBuffer::AppKitBindWindow(const WindowInfoBase& windowInfo, WindowDepthStencilMode depthStencilMode, WindowColorSpaceMode colorSpaceMode)
++{
++	// On macOS under AppKit, we need to create an NSOpenGLContext object to manage the connection between OpenGL
++	// rendering and the NSView window surface. We also need to ensure that the NSOpenGLContext object is created on
++	// the UI thread. To ensure this is the case, we need to create the rendering context and NSOpenGLContext object
++	// here in the context of the calling thread.
++	auto windowInfoResolved = reinterpret_cast<const WindowInfoAppKit*>(&windowInfo);
++	_buildState.windowInfo = *windowInfoResolved;
++	_buildState.windowSizeInPixels = windowInfoResolved->windowSizeInPixels;
++
++	// Select the pixel format for the target window
++	if (!_renderer->SelectPixelFormat(colorSpaceMode, depthStencilMode, _buildState.pixelFormatInfoPending))
++	{
++		_log->Error("SelectPixelFormat failed when binding window");
++		return false;
++	}
++
++	// Retrieve a rendering context for our window, but don't make it current.
++	if (!_renderer->RetrieveOrCreateRenderingContextForWindow((__bridge NSView*)windowInfoResolved->view, _buildState.pixelFormatInfoPending, _buildState.renderingContextPending, _buildState.renderingContextIndexPending, false))
++	{
++		_log->Error("RetrieveOrCreateRenderingContextForWindow failed when binding window");
++		return false;
++	}
++
++	// Create the NSOpenGLContext object to bind our rendering context to the target window surface. Note that this
++	// critical step must be run on the UI thread.
++	@autoreleasepool
++	{
++		NSOpenGLContext* ctx = [[NSOpenGLContext alloc] initWithCGLContextObj:_buildState.renderingContextPending];
++		// Yes, setView was declared deprecated in favor of NSOpenGLView, but the entire OpenGL API was deprecated
++		// shortly afterwards, so it's a moot point. We use NSOpenGLContext instead of the NSOpenGLView wrapper
++		// because we want to keep context creation centralized and decoupled from the window system inside the
++		// renderer.
++#pragma clang diagnostic push
++#pragma clang diagnostic ignored "-Wdeprecated-declarations"
++		[ctx setView:(__bridge NSView*)windowInfoResolved->view];
++#pragma clang diagnostic pop
++		[ctx update];
++
++		// Store the NSOpenGLContext as the pending object to apply later, removing the existing pending object if
++		// present.
++		if (_buildState.nsOpenGLContextPending != nullptr)
++		{
++			@autoreleasepool
++			{
++				CFRelease(_buildState.nsOpenGLContextPending);
++			}
++			_buildState.nsOpenGLContextPending = nullptr;
++		}
++		_buildState.nsOpenGLContextPending = (void*)CFRetain((__bridge CFTypeRef)ctx);
++	}
++
++	return true;
++}
++
++void OpenGLFrameBuffer::AppKitNotifyWindowResize(const V2UInt32& windowSizeInPixels)
++{
++	auto* windowInfo = std::get_if<WindowInfoAppKit>(&_buildState.windowInfo);
++	windowInfo->windowSizeInPixels = windowSizeInPixels;
++	_buildState.windowSizeInPixels = windowSizeInPixels;
++	std::scoped_lock<std::mutex> nsOpenGLContextLock(_nsOpenGLContextMigrationMutex);
++	NSOpenGLContext* ctx = (__bridge NSOpenGLContext*)_buildState.nsOpenGLContextPending;
++	if (ctx == nil)
++	{
++		ctx = (__bridge NSOpenGLContext*)_drawState.nsOpenGLContextPending;
++	}
++	if (ctx == nil)
++	{
++		ctx = (__bridge NSOpenGLContext*)_nsOpenGLContext;
++	}
++	if (ctx != nil)
++	{
++		[ctx update];
++	}
++}
++
++void OpenGLFrameBuffer::AppKitReleaseGLContext(void* context)
++{
++	@autoreleasepool
++	{
++		CFRelease(context);
++	}
++}
++#endif
++}
+diff --git a/Renderers/VulkanRenderer/CMakeLists.txt b/Renderers/VulkanRenderer/CMakeLists.txt
+index ced34a9..28ac567 100644
+--- a/Renderers/VulkanRenderer/CMakeLists.txt
++++ b/Renderers/VulkanRenderer/CMakeLists.txt
+@@ -94,7 +94,9 @@ set(VulkanRenderer_HEADERS
+ 
+ # Override some files as objective C++ for Cocoa support on macos
+ if (APPLE)
+-    set_source_files_properties(VulkanFrameBuffer.cpp PROPERTIES LANGUAGE OBJCXX)
++    set(VulkanRenderer_SOURCES
++        ${VulkanRenderer_SOURCES}
++        "VulkanFrameBuffer.mm")
+ endif()
+ 
+ # Define our project targets
+@@ -125,7 +127,7 @@ if(APPLE)
+ endif()
+ 
+ # Transfer required files to their output locations
+-cobalt_configure_sdk_install(VulkanRenderer)
++cobalt_configure_sdk_install(VulkanRenderer)
+ cobalt_install_sdk_headers("Renderers" "VulkanRendererFactory.h")
+ if(COBALT_BUILD_VULKAN_VALIDATION_LAYERS)
+     cobalt_install_generated_bin("${COBALT_EXTERNAL_VULKAN_LAYERS_OUTPUT_PATH}/${CMAKE_SHARED_LIBRARY_PREFIX}VkLayer_khronos_validation${CMAKE_SHARED_LIBRARY_SUFFIX}" "${COBALT_SDK_BIN_DIR}")
+diff --git a/Renderers/VulkanRenderer/VulkanFrameBuffer.cpp b/Renderers/VulkanRenderer/VulkanFrameBuffer.cpp
+index 82d605f..b29d3f9 100644
+--- a/Renderers/VulkanRenderer/VulkanFrameBuffer.cpp
++++ b/Renderers/VulkanRenderer/VulkanFrameBuffer.cpp
+@@ -275,32 +275,7 @@ SuccessToken VulkanFrameBuffer::BindWindow(const WindowInfoBase& windowInfo, Win
+ #ifdef COBALT_RENDERER_APPKIT_SUPPORT
+ 	  if ((windowInfo.windowType == IFrameBuffer::WindowInfoBase::WindowType::AppKit) && (windowInfo.structureSizeInBytes == sizeof(WindowInfoAppKit)))
+ 	{
+-		auto windowInfoResolved = reinterpret_cast<const WindowInfoAppKit*>(&windowInfo);
+-		_buildState.windowInfo = *windowInfoResolved;
+-		_buildState.windowSizeInPixels = windowInfoResolved->windowSizeInPixels;
+-
+-		// Allocate a new CAMetalLayer and associate it with the view if required. Note that we can reuse an existing
+-		// layer if one is present, as long as it's not being used. We can't safely detach it if it's in use anyway
+-		// though, so we're pushing that one back on the caller. Note that we do NOT need to keep a reference to the
+-		// layer itself to keep it alive, or handle cleanup. We can safely detatch from the layer, and reattach later
+-		// if we choose, and the layer remains owned and alive on the view. If the caller wants to clean up the layer
+-		// after we detach, we leave that to them. This avoids the very messy problem of trying to remove this
+-		// deterministically, when we can only detach/destroy the layer on the UI thread.
+-		auto view = (__bridge NSView*)windowInfoResolved->view;
+-		if ((view.wantsLayer != YES) || (view.layer == nil) || ![view.layer isKindOfClass:[CAMetalLayer class]])
+-		{
+-			// Create and bind a new CAMetalLayer object. Note that as per documentation, we need to set wantsLayer
+-			// after we call setLayer, not the other way around, as we want a layer-hosting view here. See the
+-			// following for more info:
+-			// https://developer.apple.com/documentation/appkit/nsview/wantslayer
+-			CAMetalLayer* metalLayer = [CAMetalLayer layer];
+-			NSSize viewSizeInFractionalPixels = [view convertSizeToBacking:view.bounds.size];
+-			CGSize viewSizeInPixels = CGSizeMake(floor(viewSizeInFractionalPixels.width), floor(viewSizeInFractionalPixels.height));
+-			metalLayer.drawableSize = viewSizeInPixels;
+-			metalLayer.contentsScale = view.window.backingScaleFactor;
+-			[view setLayer:metalLayer];
+-			view.wantsLayer = YES;
+-		}
++		AppKitBindWindow(windowInfo);
+ 	}
+ 	else
+ #endif
+@@ -1560,17 +1535,7 @@ bool VulkanFrameBuffer::CreateSurface(WindowColorSpaceMode windowColorSpaceMode)
+ #ifdef COBALT_RENDERER_APPKIT_SUPPORT
+ 	if (std::holds_alternative<WindowInfoAppKit>(_drawState.windowInfo))
+ 	{
+-		// This is safe to call on our render thread, off the UI thread.
+-		const auto* windowInfo = std::get_if<WindowInfoAppKit>(&_drawState.windowInfo);
+-		VkMetalSurfaceCreateInfoEXT surfaceInfo = {};
+-		surfaceInfo.sType = VK_STRUCTURE_TYPE_METAL_SURFACE_CREATE_INFO_EXT;
+-		surfaceInfo.pLayer = (CAMetalLayer*)((__bridge NSView*)windowInfo->view).layer;
+-		VkResult createSurfaceResult = vkCreateMetalSurfaceEXT(_renderer->GetInstance(), &surfaceInfo, nullptr, &_surface);
+-		if (createSurfaceResult != VK_SUCCESS)
+-		{
+-			_log->Error("Could not create surface - vkCreateMetalSurfaceEXT failed with error \"{0}\"", createSurfaceResult);
+-			return false;
+-		}
++		if (!AppKitCreateSurface()) return false;
+ 		createdSurface = true;
+ 	}
+ #endif
+diff --git a/Renderers/VulkanRenderer/VulkanFrameBuffer.h b/Renderers/VulkanRenderer/VulkanFrameBuffer.h
+index 655f72e..3432f20 100644
+--- a/Renderers/VulkanRenderer/VulkanFrameBuffer.h
++++ b/Renderers/VulkanRenderer/VulkanFrameBuffer.h
+@@ -178,6 +178,12 @@ private:
+ 	// Build state methods
+ 	void FlagBuildStateModified();
+ 
++	// Objective C++ helpder functions
++#ifdef COBALT_RENDERER_APPKIT_SUPPORT
++	void AppKitBindWindow(const WindowInfoBase& windowInfo);
++	bool AppKitCreateSurface();
++#endif
++
+ private:
+ 	cobalt::logging::ILogger* _log;
+ 	VulkanRenderer* _renderer;
+diff --git a/Renderers/VulkanRenderer/VulkanFrameBuffer.mm b/Renderers/VulkanRenderer/VulkanFrameBuffer.mm
+new file mode 100644
+index 0000000..f4e6d7c
+--- /dev/null
++++ b/Renderers/VulkanRenderer/VulkanFrameBuffer.mm
+@@ -0,0 +1,55 @@
++#include "VulkanFrameBuffer.h"
++#include "VulkanRenderer.h"
++#include "RendererInterface/PlatformBindings.pkg"
++
++#import <QuartzCore/CAMetalLayer.h>
++
++namespace cobalt::graphics {
++#ifdef COBALT_RENDERER_APPKIT_SUPPORT
++void VulkanFrameBuffer::AppKitBindWindow(const WindowInfoBase& windowInfo)
++{
++	auto windowInfoResolved = reinterpret_cast<const WindowInfoAppKit*>(&windowInfo);
++	_buildState.windowInfo = *windowInfoResolved;
++	_buildState.windowSizeInPixels = windowInfoResolved->windowSizeInPixels;
++
++	// Allocate a new CAMetalLayer and associate it with the view if required. Note that we can reuse an existing
++	// layer if one is present, as long as it's not being used. We can't safely detach it if it's in use anyway
++	// though, so we're pushing that one back on the caller. Note that we do NOT need to keep a reference to the
++	// layer itself to keep it alive, or handle cleanup. We can safely detatch from the layer, and reattach later
++	// if we choose, and the layer remains owned and alive on the view. If the caller wants to clean up the layer
++	// after we detach, we leave that to them. This avoids the very messy problem of trying to remove this
++	// deterministically, when we can only detach/destroy the layer on the UI thread.
++	auto view = (__bridge NSView*)windowInfoResolved->view;
++	if ((view.wantsLayer != YES) || (view.layer == nil) || ![view.layer isKindOfClass:[CAMetalLayer class]])
++	{
++		// Create and bind a new CAMetalLayer object. Note that as per documentation, we need to set wantsLayer
++		// after we call setLayer, not the other way around, as we want a layer-hosting view here. See the
++		// following for more info:
++		// https://developer.apple.com/documentation/appkit/nsview/wantslayer
++		CAMetalLayer* metalLayer = [CAMetalLayer layer];
++		NSSize viewSizeInFractionalPixels = [view convertSizeToBacking:view.bounds.size];
++		CGSize viewSizeInPixels = CGSizeMake(floor(viewSizeInFractionalPixels.width), floor(viewSizeInFractionalPixels.height));
++		metalLayer.drawableSize = viewSizeInPixels;
++		metalLayer.contentsScale = view.window.backingScaleFactor;
++		[view setLayer:metalLayer];
++		view.wantsLayer = YES;
++	}
++}
++
++bool VulkanFrameBuffer::AppKitCreateSurface()
++{
++	// This is safe to call on our render thread, off the UI thread.
++	const auto* windowInfo = std::get_if<WindowInfoAppKit>(&_drawState.windowInfo);
++	VkMetalSurfaceCreateInfoEXT surfaceInfo = {};
++	surfaceInfo.sType = VK_STRUCTURE_TYPE_METAL_SURFACE_CREATE_INFO_EXT;
++	surfaceInfo.pLayer = (CAMetalLayer*)((__bridge NSView*)windowInfo->view).layer;
++	VkResult createSurfaceResult = vkCreateMetalSurfaceEXT(_renderer->GetInstance(), &surfaceInfo, nullptr, &_surface);
++	if (createSurfaceResult != VK_SUCCESS)
++	{
++		_log->Error("Could not create surface - vkCreateMetalSurfaceEXT failed with error \"{0}\"", createSurfaceResult);
++		return false;
++	}
++	return true;
++}
++#endif
++}
+-- 
+2.43.0
+

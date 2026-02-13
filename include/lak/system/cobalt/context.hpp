@@ -1,8 +1,7 @@
 #ifndef LAK_SYSTEM_COBALT_CONTEXT_HPP
 #define LAK_SYSTEM_COBALT_CONTEXT_HPP
 
-#include "lak/system/windowing/window.hpp"
-
+#include "lak/array.hpp"
 #include "lak/format.hpp"
 
 #include <RendererInterface/RendererInterface.pkg>

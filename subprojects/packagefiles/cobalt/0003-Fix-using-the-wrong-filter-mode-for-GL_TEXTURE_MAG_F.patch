@@ -1,7 +1,7 @@
 From bd0f6752b3a3af6e62511901a5bdf5ca3da5ac51 Mon Sep 17 00:00:00 2001
 From: LAK132 <lakridesagain@gmail.com>
 Date: Thu, 12 Feb 2026 00:55:28 +1030
-Subject: [PATCH 3/4] Fix using the wrong filter mode for GL_TEXTURE_MAG_FILTER
+Subject: [PATCH 3/5] Fix using the wrong filter mode for GL_TEXTURE_MAG_FILTER
 
 ---
  Renderers/OpenGLRenderer/OpenGLTextureSampler.inl | 2 +-

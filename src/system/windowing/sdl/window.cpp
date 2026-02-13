@@ -316,6 +316,7 @@ lak::cobalt_window_system_info()
 	}
 }
 
+#	ifndef LAK_OS_APPLE
 lak::unique_ptr<::cobalt::graphics::IFrameBuffer::WindowInfoBase>
 lak::cobalt_window_info(const lak::window_handle *w)
 {
@@ -323,7 +324,7 @@ lak::cobalt_window_info(const lak::window_handle *w)
 	SDL_VERSION(&info.version);
 	SDL_GetWindowWMInfo(w->sdl_window, &info);
 
-#	ifdef LAK_OS_WINDOWS
+#		ifdef LAK_OS_WINDOWS
 	if (info.subsystem == SDL_SYSWM_WINDOWS)
 	{
 		return lak::unique_ptr<::cobalt::graphics::IFrameBuffer::WindowInfoBase>(
@@ -335,9 +336,9 @@ lak::cobalt_window_info(const lak::window_handle *w)
 		  { delete static_cast<::cobalt::graphics::WindowInfoWin32 *>(p); });
 	}
 	else
-#	endif
+#		endif
 
-#	ifdef LAK_OS_LINUX
+#		ifdef LAK_OS_LINUX
 	  if (info.subsystem == SDL_SYSWM_X11)
 	{
 		return lak::unique_ptr<::cobalt::graphics::IFrameBuffer::WindowInfoBase>(
@@ -359,26 +360,14 @@ lak::cobalt_window_info(const lak::window_handle *w)
 		  { delete static_cast<::cobalt::graphics::WindowInfoWayland *>(p); });
 	}
 	else
-#	endif
-
-#	ifdef LAK_OS_APPLE
-	  if (info.subsystem == SDL_SYSWM_COCOA)
-	{
-		return lak::unique_ptr<::cobalt::graphics::IFrameBuffer::WindowInfoBase>(
-		  new ::cobalt::graphics::WindowInfoAppKit(
-		    info.info.cocoa.window->contentView,
-		    lak::cobalt::from_lak(lak::vec2u32_t(lak::window_drawable_size(w)))),
-		  [](auto *p)
-		  { delete static_cast<::cobalt::graphics::WindowInfoAppKit *>(p); });
-	}
-	else
-#	endif
+#		endif
 
 	{
 		ASSERT_UNREACHABLE();
 		return {};
 	}
 }
+#	endif
 
 lak::result<const lak::cobalt::graphics_context &>
 lak::cobalt_graphics_context(const lak::window_handle *w)

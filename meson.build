@@ -1,6 +1,6 @@
 project(
 	'lak',
-	['c', 'cpp'],
+	['c', 'cpp', 'objcpp'],
 	meson_version: '>=1.1.0',
 )
 
@@ -57,7 +57,7 @@ else
 		'-Wfatal-errors',
 		'-Wno-psabi',
 		# '-mavx',
-		language: ['c', 'cpp'])
+		language: ['c', 'cpp', 'objcpp'])
 
 	system_libraries = []
 endif
@@ -107,19 +107,19 @@ endif
 
 add_project_arguments(
 	'-D_CRT_SECURE_NO_WARNINGS',
-	language: ['c', 'cpp'])
+	language: ['c', 'cpp', 'objcpp'])
 
 if get_option('buildtype') != 'debug'
 	add_project_arguments(
 		'-DNDEBUG',
-		language: ['c', 'cpp'])
+		language: ['c', 'cpp', 'objcpp'])
 endif
 
 if get_option('lak_backend') == 'sdl'
 	add_project_arguments(
 		'-DLAK_USE_SDL',
 		'-DSDL_MAIN_HANDLED',
-		language: ['c', 'cpp'])
+		language: ['c', 'cpp', 'objcpp'])
 elif get_option('lak_backend') == 'win32'
 	add_project_arguments(
 		'-DLAK_USE_WINAPI',
@@ -137,24 +137,24 @@ endif
 if get_option('lak_enable_softrender')
 	add_project_arguments(
 		'-DLAK_ENABLE_SOFTRENDER',
-		language: ['c', 'cpp'])
+		language: ['c', 'cpp', 'objcpp'])
 endif
 
 if get_option('lak_enable_opengl')
 	add_project_arguments(
 		'-DLAK_ENABLE_OPENGL',
-		language: ['c', 'cpp'])
+		language: ['c', 'cpp', 'objcpp'])
 endif
 
 if get_option('lak_enable_cobalt')
 	add_project_arguments(
 		'-DLAK_ENABLE_COBALT',
-		language: ['c', 'cpp'])
+		language: ['c', 'cpp', 'objcpp'])
 
 	if get_option('lak_enable_cobalt_ogl3')
 		add_project_arguments(
 			'-DLAK_ENABLE_COBALT_OGL3',
-			language: ['c', 'cpp'])
+			language: ['c', 'cpp', 'objcpp'])
 	endif
 
 	if get_option('lak_enable_cobalt_ogl4')
@@ -178,7 +178,7 @@ if get_option('lak_enable_cobalt')
 	if get_option('lak_enable_cobalt_vk')
 		add_project_arguments(
 			'-DLAK_ENABLE_COBALT_VK',
-			language: ['c', 'cpp'])
+			language: ['c', 'cpp', 'objcpp'])
 	endif
 endif
 
@@ -187,19 +187,19 @@ if get_option('lak_run_windowing_tests')
 	# them, particularly if the test machine is headless
 	add_project_arguments(
 		'-DLAK_RUN_WINDOWING_TESTS',
-		language: ['c', 'cpp'])
+		language: ['c', 'cpp', 'objcpp'])
 endif
 
 if get_option('lak_use_native_file_dialog')
 	add_project_arguments(
 		'-DLAK_USE_NATIVE_FILE_DIALOG',
-		language: ['c', 'cpp'])
+		language: ['c', 'cpp', 'objcpp'])
 endif
 
 if get_option('lak_enable_windowing') or get_option('lak_enable_glm')
 	add_project_arguments(
 		'-DLAK_ENABLE_GLM',
-		language: ['c', 'cpp'])
+		language: ['c', 'cpp', 'objcpp'])
 endif
 
 dependencies = []

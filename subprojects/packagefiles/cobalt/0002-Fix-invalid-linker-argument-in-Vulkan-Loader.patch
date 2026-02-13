@@ -1,7 +1,7 @@
 From 4955c3c0c56cd961826e8d99c7934cebd31c61ad Mon Sep 17 00:00:00 2001
 From: LAK132 <lakridesagain@gmail.com>
 Date: Sat, 31 Jan 2026 01:11:08 +1030
-Subject: [PATCH 2/4] Fix invalid linker argument in Vulkan-Loader
+Subject: [PATCH 2/5] Fix invalid linker argument in Vulkan-Loader
 
 ---
  External/VulkanLibraries/Vulkan-Loader.patch | 13 +++++++++++++

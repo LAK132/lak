@@ -47,6 +47,10 @@ if get_option('lak_enable_cobalt_vk')
 	cobalt_opts.set_install(true, target: 'VulkanRenderer')
 endif
 
+if target_machine.system() == 'darwin'
+	cobalt_opts.append_link_args('objcpp', '-Wno-builtin-macro-redefined')
+endif
+
 if target_machine.system() == 'windows'
 	cobalt_opts.append_link_args(
 		'/DEF:@0@'.format(cobalt_source_root/'External'/'Direct3D12Libraries'/'PixEvents'/'WinPixEventRuntime.def'),
@@ -77,19 +81,19 @@ if get_option('lak_enable_cobalt_ogl3')
 	_lakcobalt_compile_args += '-DLAK_ENABLE_COBALT_OGL3'
 endif
 
-if get_option('lak_enable_cobalt_ogl4')
+if get_option('lak_enable_cobalt_ogl4') and target_machine.system() != 'darwin'
 	_lakcobalt_srcs += 'opengl4.cpp'
 	_lakcobalt_deps += cobalt_subprj.dependency('OpenGL4Renderer')
 	_lakcobalt_compile_args += '-DLAK_ENABLE_COBALT_OGL4'
 endif
 
-if get_option('lak_enable_cobalt_d3d11')
+if get_option('lak_enable_cobalt_d3d11') and target_machine.system() == 'windows'
 	_lakcobalt_srcs += 'direct3d11.cpp'
 	_lakcobalt_deps += cobalt_subprj.dependency('Direct3D11Renderer')
 	_lakcobalt_compile_args += '-DLAK_ENABLE_COBALT_D3D11'
 endif
 
-if get_option('lak_enable_cobalt_d3d12')
+if get_option('lak_enable_cobalt_d3d12') and target_machine.system() == 'windows'
 	_lakcobalt_srcs += 'direct3d12.cpp'
 	_lakcobalt_deps += cobalt_subprj.dependency('Direct3D12Renderer')
 	_lakcobalt_compile_args += '-DLAK_ENABLE_COBALT_D3D12'

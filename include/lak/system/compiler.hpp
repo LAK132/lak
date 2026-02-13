@@ -114,9 +114,10 @@ static inline void lak_debug_break()
 #endif
 
 #if defined(LAK_COMPILER_EMSCRIPTEN)
-#	define force_inline      inline __attribute__((always_inline))
-#	define packed_struct     struct [[gnu::packed]]
-#	define DLL_EXPORT        [[gnu::dllexport]]
+#	define force_inline  inline __attribute__((always_inline))
+#	define packed_struct struct [[gnu::packed]]
+#	define DLL_EXPORT
+#	define DLL_IMPORT
 #	define LAK_UNREACHABLE() __builtin_unreachable()
 #	define TYPE_NAME(X)      [&]() -> lak::astring { return {typeid(X).name()}; }()
 #elif defined(LAK_COMPILER_CLANG) || defined(LAK_COMPILER_GNUC)
@@ -124,6 +125,7 @@ static inline void lak_debug_break()
 #	define force_inline  inline __attribute__((always_inline))
 #	define packed_struct struct [[gnu::packed]]
 #	define DLL_EXPORT    [[gnu::dllexport]]
+#	define DLL_IMPORT    [[gnu::dllimport]]
 #	if defined(__x86_64__)
 #		define LAK_ARCH_X86_64
 #	endif
@@ -155,6 +157,7 @@ static inline void lak_debug_break()
 #	define force_inline  inline __forceinline
 #	define packed_struct struct [[gnu::packed]]
 #	define DLL_EXPORT    __declspec(dllexport)
+#	define DLL_IMPORT    __declspec(dllimport)
 #	if defined(_M_X64) || defined(_M_AMD64)
 #		define LAK_ARCH_X86_64
 #	endif
