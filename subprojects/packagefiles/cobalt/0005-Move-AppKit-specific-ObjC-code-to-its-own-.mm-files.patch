@@ -1,4 +1,4 @@
-From 4f5f4bc3c539828c5357fd130cb1bc2066b431d3 Mon Sep 17 00:00:00 2001
+From 138c79bde0d27ccb40339b8444146f69ae202389 Mon Sep 17 00:00:00 2001
 From: LAK132 <lakridesagain@gmail.com>
 Date: Fri, 13 Feb 2026 17:57:48 +1030
 Subject: [PATCH 5/5] Move AppKit specific ObjC++ code to its own .mm files
@@ -32,7 +32,7 @@ index 4d003f8..7e7d092 100644
  
  # Define our project targets
 diff --git a/Renderers/OpenGLRenderer/OpenGLFrameBuffer.cpp b/Renderers/OpenGLRenderer/OpenGLFrameBuffer.cpp
-index c4f1e98..bced8bf 100644
+index c4f1e98..1dd2ac2 100644
 --- a/Renderers/OpenGLRenderer/OpenGLFrameBuffer.cpp
 +++ b/Renderers/OpenGLRenderer/OpenGLFrameBuffer.cpp
 @@ -309,55 +309,7 @@ SuccessToken OpenGLFrameBuffer::BindWindow(const WindowInfoBase& windowInfo, Win
@@ -88,7 +88,7 @@ index c4f1e98..bced8bf 100644
 -			}
 -			_buildState.nsOpenGLContextPending = (void*)CFRetain((__bridge CFTypeRef)ctx);
 -		}
-+		if (!AppKitBindWindow(windowInfo)) return false;
++		if (!AppKitBindWindow(windowInfo, depthStencilMode, colorSpaceMode)) return false;
  	}
  	else
  #endif
