@@ -62,6 +62,11 @@ if target_machine.system() == 'windows'
 	)
 endif
 
+if get_option('buildtype') != 'release'
+	cobalt_opts.append_compile_args('cpp', '-D_DEBUG')
+	cobalt_opts.append_compile_args('objcpp', '-D_DEBUG')
+endif
+
 cobalt_subprj = cmake.subproject('Cobalt', options: cobalt_opts)
 
 _lakcobalt_srcs = [

@@ -113,6 +113,11 @@ if get_option('buildtype') != 'debug'
 	add_project_arguments(
 		'-DNDEBUG',
 		language: ['c', 'cpp', 'objcpp'])
+elif get_option('buildtype') != 'release'
+	# needed for cobalt
+	add_project_arguments(
+		'-D_DEBUG',
+		language: ['c', 'cpp', 'objcpp'])
 endif
 
 if get_option('lak_backend') == 'sdl'
