@@ -200,12 +200,14 @@ bool lak::TreeNode(const char *fmt, ...)
 #ifdef LAK_USE_IMFILEDIALOG
 #	include <ImFileDialog.h>
 
+// :TODO: these need to be stored on a per-window basis so that textures can be
+// tracked with their corresponding graphics contexts (if a window is closed
+// while the file dialog is open it can cause issues with textures outliving
+// the context)
 lak::optional<ifd::FileDialog> _file_dialog;
-
 lak::array<ifd::TextureID> _textures_to_destroy;
-void (*_texture_destroyer)(ifd::TextureID) = nullptr;
 
-void lak::init_file_modal(lak::graphics_mode graphics)
+void lak::init_file_modal()
 {
 	lak::flush_file_modal();
 
@@ -214,89 +216,29 @@ void lak::init_file_modal(lak::graphics_mode graphics)
 	_file_dialog->DeleteTexture = [](ifd::TextureID tex)
 	{ _textures_to_destroy.push_back(tex); };
 
-#	ifdef LAK_ENABLE_SOFTRENDER
-	if (graphics == lak::graphics_mode::Software)
+	_file_dialog->CreateTexture =
+	  [](uint8_t *data, int w, int h, char fmt) -> ifd::TextureID
 	{
-		_file_dialog->CreateTexture =
-		  [](uint8_t *data, int w, int h, char fmt) -> ifd::TextureID
-		{
-			texture_color32_t *result = new texture_color32_t{};
-			result->init(w, h);
-			if (fmt == 0)
-			{
-				// BGRA8888
-				color32_t *pixels = (color32_t *)result->pixels;
-				for (size_t i = size_t(w * h); i-- > 0; ++pixels)
-				{
-					pixels->b = *(data++);
-					pixels->g = *(data++);
-					pixels->r = *(data++);
-					pixels->a = *(data++);
-				}
-			}
-			else
-			{
-				// RGBA8888
-				color32_t *pixels = (color32_t *)result->pixels;
-				for (size_t i = size_t(w * h); i-- > 0; ++pixels)
-				{
-					pixels->r = *(data++);
-					pixels->g = *(data++);
-					pixels->b = *(data++);
-					pixels->a = *(data++);
-				}
-			}
-			return (uintptr_t)result;
-		};
-
-		_texture_destroyer = [](ifd::TextureID tex)
-		{ delete (texture_color32_t *)tex; };
-	}
-	else
-#	endif
-#	ifdef LAK_ENABLE_OPENGL
-	  if (graphics == lak::graphics_mode::OpenGL)
-	{
-		_file_dialog->CreateTexture =
-		  [](uint8_t *data, int w, int h, char fmt) -> ifd::TextureID
-		{
-			auto tex = new lak::opengl::texture;
-
-			tex->init(GL_TEXTURE_2D)
-			  .bind()
-			  .apply(GL_TEXTURE_MIN_FILTER, GL_NEAREST)
-			  .apply(GL_TEXTURE_MAG_FILTER, GL_NEAREST)
-			  .apply(GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE)
-			  .apply(GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE)
-			  .store_mode(GL_UNPACK_ROW_LENGTH, 0)
-			  .build(0,
-			         GL_RGBA,
-			         lak::vec2i_t{w, h},
-			         0,
-			         (fmt == 0) ? GL_BGRA : GL_RGBA,
-			         GL_UNSIGNED_BYTE,
-			         data);
-			lak::opengl::call_checked(glGenerateMipmap, GL_TEXTURE_2D).UNWRAP();
-			lak::opengl::call_checked(glBindTexture, GL_TEXTURE_2D, 0).UNWRAP();
-
-			return (ifd::TextureID)(uintptr_t)tex;
-		};
-
-		_texture_destroyer = [](ifd::TextureID tex)
-		{ delete (lak::opengl::texture *)(uintptr_t)tex; };
-	}
-	else
-#	endif
-	{
-		ASSERT_UNREACHABLE();
-	}
+		ImTextureRef ref = ImGui::ImplCreateTexture(
+		  (ImGui::ImplContext)ImGui::GetIO().BackendPlatformUserData,
+		  data,
+		  {size_t(w), size_t(h)},
+		  fmt ? ImGui::ImplTextureColourFormat::RGBA
+		      : ImGui::ImplTextureColourFormat::BGRA,
+		  ImGui::ImplTextureChannelFormat::U8);
+		return (ifd::TextureID)ref.GetTexID();
+	};
 }
 
 void lak::flush_file_modal()
 {
 	if (_textures_to_destroy.empty()) return;
 
-	for (auto tex : _textures_to_destroy) _texture_destroyer(tex);
+	for (auto tex : _textures_to_destroy)
+	{
+		ImTextureRef ref{(ImTextureID)tex};
+		lak::DestroyTexture(ref);
+	}
 	_textures_to_destroy.clear();
 }
 #endif

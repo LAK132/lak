@@ -26,6 +26,8 @@ struct my_window : virtual public LAK_BASIC_PROGRAM(window_api)
 	// accessed during init/handle_event/loop
 
 	lak::optional<std::filesystem::path> dropfile;
+	lak::optional<std::filesystem::path> openfile;
+	lak::path_getter pgetter;
 
 	ImTextureRef checker;
 
@@ -71,6 +73,11 @@ struct my_window : virtual public LAK_BASIC_PROGRAM(window_api)
 		ImGui::Text("Drawable size: %lu x %lu",
 		            wnd.drawable_size().x,
 		            wnd.drawable_size().y);
+
+		if (ImGui::Button("Open file")) pgetter.open_file();
+		if_let_some (auto pget, pgetter()) openfile = lak::move(pget);
+		if_let_some (auto &path, openfile)
+			ImGui::Text("Opened file: %s", path.generic_string().c_str());
 
 		if_let_some (auto &path, dropfile)
 			ImGui::Text("Dropped file: %s", path.generic_string().c_str());

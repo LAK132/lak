@@ -109,7 +109,7 @@ namespace lak
 		VALID
 	};
 
-	void init_file_modal(lak::graphics_mode graphics);
+	void init_file_modal();
 	void flush_file_modal();
 
 	lak::error_code_result<lak::file_open_error> open_file_modal(

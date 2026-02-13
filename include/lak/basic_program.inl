@@ -95,7 +95,7 @@ LAK_BASIC_PROGRAM(create_window)(lak::window &&wnd)
 	ImGui::StyleColorsDark();
 	ImGui::GetStyle().WindowRounding = 0;
 
-	lak::init_file_modal(result->window().graphics());
+	lak::init_file_modal();
 #endif
 
 	result->window().set_title(L"" APP_NAME);
