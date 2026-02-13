@@ -162,19 +162,19 @@ if get_option('lak_enable_cobalt')
 			language: ['c', 'cpp', 'objcpp'])
 	endif
 
-	if get_option('lak_enable_cobalt_ogl4')
+	if get_option('lak_enable_cobalt_ogl4') and target_machine.system() != 'darwin'
 		add_project_arguments(
 			'-DLAK_ENABLE_COBALT_OGL4',
 			language: ['c', 'cpp'])
 	endif
 
-	if get_option('lak_enable_cobalt_d3d11')
+	if get_option('lak_enable_cobalt_d3d11') and target_machine.system() == 'windows'
 		add_project_arguments(
 			'-DLAK_ENABLE_COBALT_D3D11',
 			language: ['c', 'cpp'])
 	endif
 
-	if get_option('lak_enable_cobalt_d3d12')
+	if get_option('lak_enable_cobalt_d3d12') and target_machine.system() == 'windows'
 		add_project_arguments(
 			'-DLAK_ENABLE_COBALT_D3D12',
 			language: ['c', 'cpp'])
