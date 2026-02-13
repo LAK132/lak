@@ -1,5 +1,7 @@
 #include "main.hpp"
 
+#include <lak/array.hpp>
+
 #include <lak/system/cobalt/log_target.hpp>
 #include <lak/system/cobalt/renderers.hpp>
 
@@ -126,9 +128,9 @@ float4 main(VSOutput IN) : SV_Target
 	state.program_node->AddChildNode(state.state_group_node.get());
 
 	size_t vertex_count = 3;
-	std::vector<::cobalt::graphics::V3Float32> positions(
+	lak::array<::cobalt::graphics::V3Float32> positions(
 	  {{0.0f, 0.6f, 0.5f}, {-0.5f, -0.3f, 0.5f}, {0.5f, -0.3f, 0.5f}});
-	std::vector<::cobalt::graphics::V3Float32> colors(
+	lak::array<::cobalt::graphics::V3Float32> colors(
 	  {{1.0f, 0.0f, 0.0f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f, 1.0f}});
 
 	::cobalt::graphics::VertexAttribute<::cobalt::graphics::V3Float32>
