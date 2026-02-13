@@ -48,7 +48,7 @@ if get_option('lak_enable_cobalt_vk')
 endif
 
 if target_machine.system() == 'darwin'
-	cobalt_opts.append_link_args('objcpp', '-Wno-builtin-macro-redefined')
+	cobalt_opts.append_compile_args('objcpp', '-Wno-builtin-macro-redefined')
 endif
 
 if target_machine.system() == 'windows'

@@ -16,7 +16,7 @@ lak::cobalt_window_info(const lak::window_handle *w)
 	{
 		return lak::unique_ptr<::cobalt::graphics::IFrameBuffer::WindowInfoBase>(
 		  new ::cobalt::graphics::WindowInfoAppKit(
-		    info.info.cocoa.window->contentView,
+		    (__bridge void*)info.info.cocoa.window.contentView,
 		    lak::cobalt::from_lak(lak::vec2u32_t(lak::window_drawable_size(w)))),
 		  [](auto *p)
 		  { delete static_cast<::cobalt::graphics::WindowInfoAppKit *>(p); });
