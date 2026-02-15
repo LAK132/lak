@@ -6,6 +6,7 @@ subdir('dsl')
 laktestcore = static_library(
 	'laktestcore',
 	laktest_sources + [
+		'codegen'/'cpp.cpp',
 		'ebpf'/'assembler.cpp',
 		'ebpf'/'vm.cpp',
 		'structure'/'nbt.cpp',

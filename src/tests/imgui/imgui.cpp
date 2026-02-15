@@ -54,7 +54,7 @@ int imgui_compile_test()
 			ImGui::GetStyle().WindowRounding = 0;
 		}
 
-		lak::init_file_modal(w.graphics());
+		lak::init_file_modal();
 
 		uint32_t target_framerate = 30U;
 		uint64_t last_counter     = lak::performance_counter();

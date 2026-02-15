@@ -7,6 +7,7 @@ endif
 
 lakcore_inc = include_directories('..', '..'/'include')
 
+subdir('codegen')
 subdir('compression')
 subdir('dsl')
 subdir('ebpf')
@@ -16,6 +17,7 @@ subdir('system')
 lakcore = static_library(
 	'lakcore',
 	[
+		lakcore_codegen_files,
 		lakcore_compression_files,
 		lakcore_dsl_files,
 		lakcore_ebpf_files,
