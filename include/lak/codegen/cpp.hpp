@@ -8,6 +8,8 @@
 #include "lak/string_literals/view.hpp"
 #include "lak/variant.hpp"
 
+#include "lak/span_manip.hpp"
+
 namespace lak
 {
 	namespace codegen

@@ -246,7 +246,7 @@ void lak::flush_file_modal()
 #ifdef LAK_USE_WIN_NATIVE_FILE_DIALOG
 #	include "lak/system/win32/wrapper.hpp"
 
-void lak::init_file_modal(lak::graphics_mode) {}
+void lak::init_file_modal() {}
 void lak::flush_file_modal() {}
 
 lak::error_code_result<lak::file_open_error> open_file_dialog(

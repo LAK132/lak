@@ -1,8 +1,11 @@
 project(
 	'lak',
-	['c', 'cpp', 'objcpp'],
+	['c', 'cpp'],
 	meson_version: '>=1.1.0',
 )
+if target_machine.system() == 'darwin'
+	add_languages('objcpp', native: false, required: true)
+endif
 
 cxx = meson.get_compiler('cpp')
 
