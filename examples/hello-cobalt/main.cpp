@@ -5,6 +5,7 @@
 
 #include <lak/system/cobalt/log_target.hpp>
 #include <lak/system/cobalt/renderers.hpp>
+#include <lak/system/cobalt/result.hpp>
 
 #include <lak/system/windowing/window.hpp>
 
@@ -207,6 +208,131 @@ float4 main(VSOutput IN) : SV_Target
 	return lak::move_ok(state);
 }
 
+struct hello_cobalt_compute_state
+{
+	struct buffer_entry_out
+	{
+		::cobalt::graphics::V4UInt32 thread_id;
+		::cobalt::graphics::V4UInt32 check_value;
+	};
+
+	::cobalt::graphics::IRenderPassNode::unique_ptr render_pass_node;
+	::cobalt::graphics::IShaderProgram::unique_ptr shader_program;
+	::cobalt::graphics::IProgramNode::unique_ptr program_node;
+	::cobalt::graphics::IStateGroupNode::unique_ptr state_group_node;
+	::cobalt::graphics::IDataArray::unique_ptr data_array_output;
+	::cobalt::graphics::IDataArrayOutput::unique_ptr data_array_captured_output;
+
+	hello_cobalt_compute_state()                              = default;
+	hello_cobalt_compute_state(hello_cobalt_compute_state &&) = default;
+	hello_cobalt_compute_state &operator=(hello_cobalt_compute_state &&) =
+	  default;
+	hello_cobalt_compute_state(const hello_cobalt_compute_state &) = delete;
+	hello_cobalt_compute_state &operator=(const hello_cobalt_compute_state &) =
+	  delete;
+
+	~hello_cobalt_compute_state()
+	{
+		if (render_pass_node) render_pass_node->RemoveAllChildNodes();
+		if (program_node) program_node->RemoveAllChildNodes();
+		if (state_group_node) state_group_node->RemoveAllChildNodes();
+
+		render_pass_node.reset();
+		program_node.reset();
+		state_group_node.reset();
+
+		shader_program.reset();
+		data_array_output.reset();
+	}
+};
+
+lak::result<hello_cobalt_compute_state, lak::u8string> hello_cobalt_compute(
+  lak::window &wnd)
+{
+	const auto &cgx = lak::cobalt_graphics_context(wnd.handle()).UNWRAP();
+	auto *rd        = cgx.renderer.get();
+
+	hello_cobalt_compute_state state;
+
+	state.render_pass_node = rd->CreateRenderPassNode();
+
+	auto cs = R"(struct buffer_entry_out
+{
+	uint4 threadId;
+	uint4 checkValue;
+};
+
+RWStructuredBuffer<buffer_entry_out> buffer_data_out;
+
+[numthreads(1, 1, 1)]
+void main(uint3 threadId : SV_DispatchThreadID)
+{
+	uint counterValue = buffer_data_out.IncrementCounter();
+	buffer_data_out[counterValue].threadId =
+		uint4(threadId, threadId.x + threadId.y + threadId.z);
+	buffer_data_out[counterValue].checkValue = uint4(1, 2, 3, 4);
+})"_str;
+
+	const uint32_t thread_count = 50U;
+
+	state.shader_program = rd->CreateShaderProgram();
+
+	if (!state.shader_program->LoadShaderStage(
+	      ::cobalt::graphics::IShaderProgram::ShaderStage::Compute,
+	      ::cobalt::graphics::IShaderProgram::CodeFormat::HLSL,
+	      reinterpret_cast<const uint8_t *>(cs.c_str()),
+	      cs.size()))
+	{
+		ERROR("Loading compute shader stage failed");
+		return lak::err_t{u8"Loading compute shader stage failed"_str};
+	}
+
+	if (!state.shader_program->CompileProgram())
+	{
+		ERROR("Failed to compile shader");
+		return lak::err_t{u8"Failed to compile shader"_str};
+	}
+
+	state.program_node = rd->CreateProgramNode();
+
+	if (!state.program_node->BindShaderProgram(state.shader_program.get()))
+	{
+		ERROR("Failed to bind shader program");
+		return lak::err_t{u8"Failed to bind shader program"_str};
+	}
+
+	state.render_pass_node->AddChildNode(state.program_node.get());
+
+	state.state_group_node = rd->CreateStateGroupNode();
+
+	state.state_group_node->SetComputeTask(
+	  ::cobalt::graphics::V3UInt32(thread_count, 1, 1));
+
+	state.program_node->AddChildNode(state.state_group_node.get());
+
+	state.data_array_output = rd->CreateDataArray();
+
+	state.data_array_output->SetBufferLayout(
+	  sizeof(hello_cobalt_compute_state::buffer_entry_out), thread_count, true);
+
+	if (!state.data_array_output->AllocateMemory())
+	{
+		ERROR("Data array could not be allocated");
+		return lak::err_t{u8"Data array could not be allocated"_str};
+	}
+
+	state.data_array_captured_output = rd->CreateDataArrayOutput();
+
+	state.data_array_output->AddOutputCaptureTarget(
+	  state.data_array_captured_output.get());
+
+	state.state_group_node->BindResourceArray(
+	  state.shader_program->GetResourceArrayId("buffer_data_out"),
+	  state.data_array_output.get());
+
+	return lak::move_ok(state);
+}
+
 struct hello_cobalt_window : virtual public LAK_BASIC_PROGRAM(window_api)
 {
 	hello_cobalt_window() : LAK_BASIC_PROGRAM(window_api)() {}
@@ -218,6 +344,8 @@ struct hello_cobalt_window : virtual public LAK_BASIC_PROGRAM(window_api)
 
 	lak::astring renderer_name;
 	lak::optional<hello_cobalt_triangle_state> tri;
+	lak::optional<hello_cobalt_compute_state> comp;
+	lak::array<hello_cobalt_compute_state::buffer_entry_out> comp_data;
 
 	const lak::cobalt::graphics_context *context;
 
@@ -225,6 +353,7 @@ struct hello_cobalt_window : virtual public LAK_BASIC_PROGRAM(window_api)
 	{
 		ASSERT_EQUAL(window().graphics(), lak::graphics_mode::Cobalt);
 		if_let_ok (auto t, hello_cobalt_triangle(window())) tri = lak::move(t);
+		if_let_ok (auto c, hello_cobalt_compute(window())) comp = lak::move(c);
 		context = &lak::cobalt_graphics_context(window().handle()).UNWRAP();
 
 		renderer_name =
@@ -253,6 +382,43 @@ struct hello_cobalt_window : virtual public LAK_BASIC_PROGRAM(window_api)
 			lak::cobalt_append_render_pass(window().handle(),
 			                               tri->render_pass_node.get())
 			  .UNWRAP();
+		if (comp)
+		{
+			if (ImGui::Button("Compute"))
+				lak::cobalt_append_render_pass(window().handle(),
+				                               comp->render_pass_node.get());
+			if (comp->data_array_captured_output->HasCapturedCounterValue() &&
+			    comp->data_array_captured_output->HasCapturedOutput())
+			{
+				uint32_t counter_value = 0U;
+				lak::cobalt::as_result(
+				  comp->data_array_captured_output->ReadCounterValue(counter_value))
+				  .UNWRAP();
+				comp_data.resize(counter_value);
+				lak::cobalt::as_result(
+				  comp->data_array_captured_output->ReadBufferData(
+				    comp_data.data(), comp_data.size() * sizeof(comp_data[0])))
+				  .UNWRAP();
+			}
+			for (size_t i = 0; i < comp_data.size(); ++i)
+			{
+				LAK_TREE_NODE("%s", lak::fmt<"Entry {:d}">(i).c_str())
+				{
+					ImGui::Text(
+					  lak::fmt<"Check {:d} {:d} {:d} {:d}">(comp_data[i].check_value.X(),
+					                                        comp_data[i].check_value.Y(),
+					                                        comp_data[i].check_value.Z(),
+					                                        comp_data[i].check_value.W())
+					    .c_str());
+					ImGui::Text(
+					  lak::fmt<"ID {:d} {:d} {:d} {:d}">(comp_data[i].thread_id.X(),
+					                                     comp_data[i].thread_id.Y(),
+					                                     comp_data[i].thread_id.Z(),
+					                                     comp_data[i].thread_id.W())
+					    .c_str());
+				}
+			}
+		}
 	}
 };
 
