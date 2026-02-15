@@ -239,6 +239,7 @@ lak::result<lak::window_handle *, lak::u8string> lak::create_window(
 lak::result<lak::window_handle *, lak::u8string> lak::create_window(
   const lak::cobalt_settings &s, const lak::cobalt_renderer_settings &r)
 {
+	ASSERT((r.device) || (r.device_enumerator));
 	auto device =
 	  r.device ? r.device : r.device_enumerator->GetPreferredDevice();
 	if (!device)

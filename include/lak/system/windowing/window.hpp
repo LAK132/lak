@@ -106,14 +106,37 @@ namespace lak
 #ifdef LAK_ENABLE_COBALT
 		::cobalt::graphics::RendererInfo renderer_info = {};
 		::cobalt::graphics::IGraphicsDeviceEnumerator::unique_ptr
-		  device_enumerator                                             = nullptr;
-		::cobalt::graphics::IGraphicsDevice *device                     = nullptr;
-		std::set<::cobalt::graphics::IGraphicsDevice::Feature> features = {};
-		std::set<::cobalt::graphics::IRenderer::Options> options        = {};
+		  device_enumerator                         = nullptr;
+		::cobalt::graphics::IGraphicsDevice *device = nullptr;
+		using feature_set_t =
+		  std::set<::cobalt::graphics::IGraphicsDevice::Feature>;
+		feature_set_t features                                   = {};
+		std::set<::cobalt::graphics::IRenderer::Options> options = {};
 
-		static cobalt_renderer_settings preferred(
-		  lak::cobalt::renderer_info_func info,
-		  ::cobalt::logging::ILogger::unique_ptr log);
+		static lak::result<cobalt_renderer_settings> preferred(
+		  feature_set_t &&required_features = {});
+
+#	ifdef LAK_ENABLE_COBALT_OGL3
+		static lak::result<cobalt_renderer_settings> preferred_ogl3(
+		  feature_set_t &&required_features = {});
+#	endif
+#	ifdef LAK_ENABLE_COBALT_OGL4
+		static lak::result<cobalt_renderer_settings> preferred_ogl4(
+		  feature_set_t &&required_features = {});
+#	endif
+#	ifdef LAK_ENABLE_COBALT_D3D11
+		static lak::result<cobalt_renderer_settings> preferred_d3d11(
+		  feature_set_t &&required_features = {});
+#	endif
+#	ifdef LAK_ENABLE_COBALT_D3D12
+		static lak::result<cobalt_renderer_settings> preferred_d3d12(
+		  feature_set_t &&required_features = {});
+#	endif
+#	ifdef LAK_ENABLE_COBALT_VK
+		static lak::result<cobalt_renderer_settings> preferred_vk(
+		  feature_set_t &&required_features = {});
+#	endif
+
 #endif
 	};
 
