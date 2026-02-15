@@ -96,16 +96,24 @@ float4 main(VSOutput IN) : SV_Target
 
 	state.shader_program = rd->CreateShaderProgram();
 
-	state.shader_program->LoadShaderStage(
-	  ::cobalt::graphics::IShaderProgram::ShaderStage::Vertex,
-	  ::cobalt::graphics::IShaderProgram::CodeFormat::HLSL,
-	  reinterpret_cast<const uint8_t *>(vs.c_str()),
-	  vs.size());
-	state.shader_program->LoadShaderStage(
-	  ::cobalt::graphics::IShaderProgram::ShaderStage::Fragment,
-	  ::cobalt::graphics::IShaderProgram::CodeFormat::HLSL,
-	  reinterpret_cast<const uint8_t *>(fs.c_str()),
-	  fs.size());
+	if (!state.shader_program->LoadShaderStage(
+	      ::cobalt::graphics::IShaderProgram::ShaderStage::Vertex,
+	      ::cobalt::graphics::IShaderProgram::CodeFormat::HLSL,
+	      reinterpret_cast<const uint8_t *>(vs.c_str()),
+	      vs.size()))
+	{
+		ERROR("Loading vertex shader stage failed");
+		return lak::err_t{u8"Loading vertex shader stage failed"_str};
+	}
+	if (!state.shader_program->LoadShaderStage(
+	      ::cobalt::graphics::IShaderProgram::ShaderStage::Fragment,
+	      ::cobalt::graphics::IShaderProgram::CodeFormat::HLSL,
+	      reinterpret_cast<const uint8_t *>(fs.c_str()),
+	      fs.size()))
+	{
+		ERROR("Loading fragment shader stage failed");
+		return lak::err_t{u8"Loading fragment shader stage failed"_str};
+	}
 
 	if (!state.shader_program->CompileProgram())
 	{
@@ -115,7 +123,11 @@ float4 main(VSOutput IN) : SV_Target
 
 	state.program_node = rd->CreateProgramNode();
 
-	state.program_node->BindShaderProgram(state.shader_program.get());
+	if (!state.program_node->BindShaderProgram(state.shader_program.get()))
+	{
+		ERROR("Failed to bind shader program");
+		return lak::err_t{u8"Failed to bind shader program"_str};
+	}
 
 	state.render_pass_node->AddChildNode(state.program_node.get());
 
@@ -151,11 +163,27 @@ float4 main(VSOutput IN) : SV_Target
 
 	state.vertex_buffer = rd->CreateVertexBuffer();
 
-	state.vertex_buffer->BindVertexAttribute(positions_attribute);
-	state.vertex_buffer->BindVertexAttribute(colors_attribute);
+	if (!state.vertex_buffer->BindVertexAttribute(positions_attribute))
+	{
+		ERROR("Failed to bind vertex positions attribute");
+		return lak::err_t{u8"Failed to bind vertex positions attribute"_str};
+	}
+	if (!state.vertex_buffer->BindVertexAttribute(colors_attribute))
+	{
+		ERROR("Failed to bind vertex colours attribute");
+		return lak::err_t{u8"Failed to bind vertex colours attribute"_str};
+	}
 
-	positions_attribute.SetInitialData(positions.data(), positions.size());
-	colors_attribute.SetInitialData(colors.data(), colors.size());
+	if (!positions_attribute.SetInitialData(positions.data(), positions.size()))
+	{
+		ERROR("Failed to set initial positions data");
+		return lak::err_t{u8"Failed to set initial positions data"_str};
+	}
+	if (!colors_attribute.SetInitialData(colors.data(), colors.size()))
+	{
+		ERROR("Failed to set initial colours data");
+		return lak::err_t{u8"Failed to set initial colours data"_str};
+	}
 
 	if (!state.vertex_buffer->AllocateMemory())
 	{
