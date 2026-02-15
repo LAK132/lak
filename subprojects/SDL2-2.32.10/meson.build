@@ -30,7 +30,7 @@ sdl2_subprj = cmake.subproject(
 	'SDL2-@0@-cmake'.format(version_str),
 	options: sdl2_opts)
 
-if target_machine.system() == 'darwin'
+if host_machine.system() == 'darwin'
 	extra_deps = [
 		dependency('CoreVideo'),
 		dependency('Cocoa'),

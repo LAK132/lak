@@ -9,7 +9,7 @@ includes = include_directories('.', 'libgphoto2_port')
 
 cc = meson.get_compiler('c')
 
-if target_machine.system() == 'windows'
+if host_machine.system() == 'windows'
 	if build_machine.system() != 'windows'
 		error('cross compiling libgphoto2 is not supported')
 	endif

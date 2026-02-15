@@ -33,7 +33,7 @@ _lakwindowing = [
 	'window.cpp',
 ]
 
-if target_machine.system() == 'darwin'
+if host_machine.system() == 'darwin'
 	_lakwindowing += 'window.mm'
 endif
 

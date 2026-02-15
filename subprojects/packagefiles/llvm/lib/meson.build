@@ -1,6 +1,6 @@
-if target_machine.system() == 'windows'
+if host_machine.system() == 'windows'
 	shared_lib_suffix = '.lib'
-elif target_machine.system() == 'darwin'
+elif host_machine.system() == 'darwin'
 	shared_lib_suffix = '.dylib'
 else
 	shared_lib_suffix = '.so'

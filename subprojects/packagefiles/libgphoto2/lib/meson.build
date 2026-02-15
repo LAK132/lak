@@ -1,4 +1,4 @@
-if target_machine.system() == 'windows'
+if host_machine.system() == 'windows'
 	libgphoto2_msys = custom_target(
 		'build_libgphoto2',
 		input: ['win_build.sh', 'build.sh'],

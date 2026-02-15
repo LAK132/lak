@@ -9,7 +9,7 @@ project(
 	version: '0.9.31',
 )
 
-if target_machine.system() == 'windows'
+if host_machine.system() == 'windows'
 	add_project_arguments('-DNTSTATUS=LONG', language: 'c')
 endif
 

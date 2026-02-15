@@ -3,7 +3,7 @@ project(
 	['c', 'cpp'],
 	meson_version: '>=1.1.0',
 )
-if target_machine.system() == 'darwin'
+if host_machine.system() == 'darwin'
 	add_languages('objcpp', native: false, required: true)
 endif
 
@@ -165,19 +165,19 @@ if get_option('lak_enable_cobalt')
 			language: ['c', 'cpp', 'objcpp'])
 	endif
 
-	if get_option('lak_enable_cobalt_ogl4') and target_machine.system() != 'darwin'
+	if get_option('lak_enable_cobalt_ogl4') and host_machine.system() != 'darwin'
 		add_project_arguments(
 			'-DLAK_ENABLE_COBALT_OGL4',
 			language: ['c', 'cpp'])
 	endif
 
-	if get_option('lak_enable_cobalt_d3d11') and target_machine.system() == 'windows'
+	if get_option('lak_enable_cobalt_d3d11') and host_machine.system() == 'windows'
 		add_project_arguments(
 			'-DLAK_ENABLE_COBALT_D3D11',
 			language: ['c', 'cpp'])
 	endif
 
-	if get_option('lak_enable_cobalt_d3d12') and target_machine.system() == 'windows'
+	if get_option('lak_enable_cobalt_d3d12') and host_machine.system() == 'windows'
 		add_project_arguments(
 			'-DLAK_ENABLE_COBALT_D3D12',
 			language: ['c', 'cpp'])
@@ -312,7 +312,7 @@ if get_option('lak_enable_libgphoto2')
 		dependencies += laktestlibgphoto2_dep
 	endif
 
-	if target_machine.system() == 'windows'
+	if host_machine.system() == 'windows'
 		foreach dll : libgphoto2_subprj.get_variable('libgphoto2_dlls')
 			dlls += dll
 		endforeach
@@ -378,7 +378,7 @@ if get_option('lak_enable_stb')
 	endif
 endif
 
-if target_machine.system() == 'windows'
+if host_machine.system() == 'windows'
 	lakdlls_h = custom_target(
 		'configure-dlls',
 		depends: dll_depends,

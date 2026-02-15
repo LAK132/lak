@@ -68,7 +68,7 @@ libpng_build = custom_target(
 
 libpng_build_dir = libpng_build[0].full_path()/'..'
 
-if target_machine.system() == 'windows'
+if host_machine.system() == 'windows'
 	if get_option('buildtype') == 'debug'
 		lib_suffix = '_staticd.lib'
 	else

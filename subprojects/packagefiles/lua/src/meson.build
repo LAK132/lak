@@ -11,15 +11,15 @@ else
 	link_args = ['-lm']
 endif
 
-if target_machine.system() == 'cygwin'
+if host_machine.system() == 'cygwin'
 	c_args += [
 		# '-DLUA_BUILD_AS_DLL',
 	]
-elif target_machine.system() == 'windows'
+elif host_machine.system() == 'windows'
 	c_args += [
 		# '-DLUA_USE_WINDOWS', # defined automatically by luaconf.h
 	]
-elif target_machine.system() == 'linux'
+elif host_machine.system() == 'linux'
 	c_args += [
 		'-DLUA_USE_LINUX',
 	]
@@ -34,7 +34,7 @@ elif target_machine.system() == 'linux'
 			dependency('readline'),
 		]
 	endif
-elif target_machine.system() == 'darwin'
+elif host_machine.system() == 'darwin'
 	c_args += [
 		'-DLUA_USE_MACOSX',
 	]
@@ -46,7 +46,7 @@ elif target_machine.system() == 'darwin'
 			dependency('readline'),
 		]
 	endif
-elif target_machine.system() == 'sunos'
+elif host_machine.system() == 'sunos'
 	c_args += [
 		'-DLUA_USE_POSIX',
 		'-DLUA_USE_DLOPEN',
@@ -55,7 +55,7 @@ elif target_machine.system() == 'sunos'
 	lua_dependencies += [
 		dependency('dl'),
 	]
-elif target_machine.system() == 'freebsd' or target_machine.system() == 'openbsd' or target_machine.system() == 'netbsd'
+elif host_machine.system() == 'freebsd' or host_machine.system() == 'openbsd' or host_machine.system() == 'netbsd'
 	c_args += [
 		'-DLUA_USE_LINUX',
 		'-DLUA_USE_READLINE',
