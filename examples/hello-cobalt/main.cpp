@@ -399,6 +399,8 @@ struct hello_cobalt_window : virtual public LAK_BASIC_PROGRAM(window_api)
 				  comp->data_array_captured_output->ReadBufferData(
 				    comp_data.data(), comp_data.size() * sizeof(comp_data[0])))
 				  .UNWRAP();
+				DEBUG("Compute done");
+				comp->data_array_captured_output->ClearCapturedOutput();
 			}
 			for (size_t i = 0; i < comp_data.size(); ++i)
 			{
