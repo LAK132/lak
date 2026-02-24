@@ -1751,7 +1751,10 @@ lak::vec2s_t ImplGLTextureSize(ImGui::ImplContext context, ImTextureID tex)
 #ifdef LAK_ENABLE_COBALT
 lak::vec2s_t ImplCoTextureSize(ImGui::ImplContext context, ImTextureID tex)
 {
-	ASSERT_NYI();
+	::cobalt::graphics::V2UInt32 dims =
+	  (*(::cobalt::graphics::ITextureBuffer2D::unique_ptr *)(uintptr_t)tex)
+	    ->MipmapLevelDimensions(0);
+	return {size_t(dims.X()), size_t(dims.Y())};
 }
 #endif
 
