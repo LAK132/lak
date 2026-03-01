@@ -2185,7 +2185,9 @@ namespace lak
 			using value_type                   = lak::result_ok_type_t<RESULT>;
 		};
 
-		template<lak::dsl::concepts::parser auto par, auto func>
+		template<lak::dsl::concepts::parser auto par,
+		         lak::concepts::invocable<
+		           const typename decltype(par)::value_type &> auto func>
 		struct transform_t
 		{
 			static constexpr bool is_pure_match = false;
