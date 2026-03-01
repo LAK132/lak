@@ -4,7 +4,7 @@
 #include "lak/array.hpp"
 #include "lak/errno_result.hpp"
 #include "lak/error_code_result.hpp"
-#include "lak/string.hpp"
+#include "lak/string_view.hpp"
 
 #include <filesystem>
 #include <system_error>
@@ -54,11 +54,11 @@ namespace lak
 
 	bool save_file(const fs::path &path, lak::span<const byte_t> data);
 
-	bool save_file(const fs::path &path, const lak::astring &string);
-	bool save_file(const fs::path &path, const lak::wstring &string);
-	bool save_file(const fs::path &path, const lak::u8string &string);
-	bool save_file(const fs::path &path, const lak::u16string &string);
-	bool save_file(const fs::path &path, const lak::u32string &string);
+	bool save_file(const fs::path &path, lak::astring_view string);
+	bool save_file(const fs::path &path, lak::wstring_view string);
+	bool save_file(const fs::path &path, lak::u8string_view string);
+	bool save_file(const fs::path &path, lak::u16string_view string);
+	bool save_file(const fs::path &path, lak::u32string_view string);
 
 	fs::path exe_path();
 

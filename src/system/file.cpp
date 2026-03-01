@@ -137,34 +137,29 @@ bool lak::save_file(const lak::fs::path &path, lak::span<const byte_t> data)
 	return !file.fail();
 }
 
-bool lak::save_file(const lak::fs::path &path, const lak::astring &string)
+bool lak::save_file(const lak::fs::path &path, lak::astring_view string)
 {
-	return lak::save_file(
-	  path, lak::span<const byte_t>(lak::span(lak::string_view(string))));
+	return lak::save_file(path, lak::span<const byte_t>(lak::span(string)));
 }
 
-bool lak::save_file(const lak::fs::path &path, const lak::wstring &string)
+bool lak::save_file(const lak::fs::path &path, lak::wstring_view string)
 {
-	return lak::save_file(
-	  path, lak::span<const byte_t>(lak::span(lak::string_view(string))));
+	return lak::save_file(path, lak::span<const byte_t>(lak::span(string)));
 }
 
-bool lak::save_file(const lak::fs::path &path, const lak::u8string &string)
+bool lak::save_file(const lak::fs::path &path, lak::u8string_view string)
 {
-	return lak::save_file(
-	  path, lak::span<const byte_t>(lak::span(lak::string_view(string))));
+	return lak::save_file(path, lak::span<const byte_t>(lak::span(string)));
 }
 
-bool lak::save_file(const lak::fs::path &path, const lak::u16string &string)
+bool lak::save_file(const lak::fs::path &path, lak::u16string_view string)
 {
-	return lak::save_file(
-	  path, lak::span<const byte_t>(lak::span(lak::string_view(string))));
+	return lak::save_file(path, lak::span<const byte_t>(lak::span(string)));
 }
 
-bool lak::save_file(const lak::fs::path &path, const lak::u32string &string)
+bool lak::save_file(const lak::fs::path &path, lak::u32string_view string)
 {
-	return lak::save_file(
-	  path, lak::span<const byte_t>(lak::span(lak::string_view(string))));
+	return lak::save_file(path, lak::span<const byte_t>(lak::span(string)));
 }
 
 lak::fs::path lak::normalised(const lak::fs::path &path)
