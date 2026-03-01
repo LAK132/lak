@@ -42,6 +42,35 @@ namespace lak
 
 	template<typename...>
 	using void_t = void;
+
+	/* --- function_ptr_t --- */
+
+	struct function_ptr_t
+	{
+		template<typename R, typename... T>
+		using pointer = R (*)(T...);
+
+	private:
+		pointer<void, lak::incomplete> _ptr = nullptr;
+
+	public:
+		function_ptr_t()                                  = default;
+		function_ptr_t(const function_ptr_t &)            = default;
+		function_ptr_t &operator=(const function_ptr_t &) = default;
+		~function_ptr_t()                                 = default;
+
+		template<typename R, typename... T>
+		function_ptr_t(pointer<R, T...> f)
+		: _ptr(reinterpret_cast<pointer<void, lak::incomplete>>(f))
+		{
+		}
+
+		template<typename R, typename... T>
+		operator pointer<R, T...>()
+		{
+			return reinterpret_cast<pointer<R, T...>>(_ptr);
+		}
+	};
 }
 
 #include "lak/type_traits.hpp"
