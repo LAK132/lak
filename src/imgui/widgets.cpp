@@ -88,6 +88,15 @@ ImTextureRef lak::CreateTexture(const lak::image<float> &image)
 	  ImGui::ImplTextureChannelFormat::F32);
 }
 
+#ifdef LAK_ENABLE_COBALT
+::cobalt::graphics::ITextureBuffer2D *lak::GetCobaltTexture(ImTextureRef tex)
+{
+	return ((::cobalt::graphics::ITextureBuffer2D::unique_ptr *)(uintptr_t)
+	          tex.GetTexID())
+	  ->get();
+}
+#endif
+
 /* --- DestroyTexture --- */
 
 void lak::DestroyTexture(ImTextureRef &tex)

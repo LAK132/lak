@@ -7,6 +7,10 @@
 #include "lak/system/windowing/window.hpp"
 #include "lak/utility.hpp"
 
+#ifdef LAK_ENABLE_COBALT
+#	include <RendererInterface/RendererInterface.pkg>
+#endif
+
 #include <imgui.h>
 
 #include <thread>
@@ -22,6 +26,9 @@ namespace lak
 	ImTextureRef CreateTexture(const lak::image<float> &image);
 	void DestroyTexture(ImTextureRef &tex);
 	lak::vec2s_t TextureSize(ImTextureRef tex);
+#ifdef LAK_ENABLE_COBALT
+	::cobalt::graphics::ITextureBuffer2D *GetCobaltTexture(ImTextureRef tex);
+#endif
 
 	template<typename R, typename... T, typename... D>
 	bool AwaitPopup(const char *str_id,
