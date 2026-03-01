@@ -282,13 +282,22 @@ namespace lak
 			p->~T();
 	}
 
+	/* --- destructive_move --- */
+
+	template<typename T>
+	constexpr T destructive_move(T *src)
+	{
+		T result{lak::move(*src)};
+		lak::destroy_at(src);
+		return result;
+	}
+
 	/* --- destructive_move_construct --- */
 
 	template<typename T>
 	constexpr void destructive_move_construct(T *src, T *dst)
 	{
-		new (dst) T(lak::move(*src));
-		if constexpr (!std::is_trivially_destructible_v<T>) src->~T();
+		::new (dst) T(lak::destructive_move(src));
 	}
 
 	/* --- as_ptr --- */
