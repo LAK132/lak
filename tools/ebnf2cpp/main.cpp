@@ -121,7 +121,7 @@ int main(int argc, char **argv)
 						{
 							strm.push_template_call(u8"lak::dsl::sequence"_view);
 						}
-						if (capture_indices.size() == 1U)
+						else if (capture_indices.size() == 1U)
 						{
 							if (size_t i = capture_indices[0]; i == 0)
 								strm.push_template_call(u8"lak::dsl::capture_1st"_view);
@@ -129,7 +129,7 @@ int main(int argc, char **argv)
 								strm.push_template_call(u8"lak::dsl::capture_2nd"_view);
 							else
 								strm.push_template_call(u8"lak::dsl::capture_nth"_view)
-								  .write(lak::fmt<u8"{:d}">(i))
+								  .write(lak::fmt<u8"{:d}U">(i))
 								  .next_template_argument(false);
 						}
 						else
@@ -138,7 +138,7 @@ int main(int argc, char **argv)
 							strm.push_template_call(u8"lak::index_sequence"_view);
 							for (const auto &i : capture_indices)
 								strm.next_template_argument(false).write(
-								  lak::fmt<u8"{:d}">(i));
+								  lak::fmt<u8"{:d}U">(i));
 							strm.pop_template_call().next_template_argument(false);
 						}
 					}
