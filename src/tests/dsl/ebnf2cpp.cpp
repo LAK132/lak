@@ -25,10 +25,9 @@ BEGIN_TEST(ebnf2cpp)
 	{
 		static_assert(
 		  lak::is_same_v<
-		    decltype(lak::dsl::capture_sequence<
+		    decltype(lak::dsl::capture_2nd<
 		             lak::dsl::repeat_exact<lak::dsl::str_literal<u8"a">, 2U>,
-		             lak::dsl::capture<
-		               lak::dsl::repeat_exact<lak::dsl::str_literal<u8"b">, 2U>>,
+		             lak::dsl::repeat_exact<lak::dsl::str_literal<u8"b">, 2U>,
 		             lak::dsl::repeat_exact<lak::dsl::str_literal<u8"a">, 2U>>),
 		    decltype(ebnf_test::aabbaa)>);
 		auto str = u8"aabbaa"_view;
