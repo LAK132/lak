@@ -7,18 +7,35 @@
 #include <lak/string_view.hpp>
 #include <lak/system/file.hpp>
 
+#include <fstream>
+
 int main(int argc, char **argv)
 {
-	if (argc < 3) return EXIT_FAILURE;
+	if (argc < 4)
+	{
+		std::cerr
+		  << "Usage: enbf2cpp <input> <output> <header guard> [--asserts] {[namespaces] ...}";
+		return EXIT_FAILURE;
+	}
 
 	lak::debugger.live_output_enabled = true;
 	lak::debugger.live_errors_only    = true;
 
 	lak::fs::path source      = argv[1];
-	lak::astring header_guard = argv[2];
+	lak::fs::path dest        = argv[2];
+	lak::astring header_guard = argv[3];
+	argc -= 4;
+	argv += 4;
+	bool add_asserts = false;
+	if (argc >= 1 && argv[0] == "--asserts"_str)
+	{
+		add_asserts = true;
+		--argc;
+		++argv;
+	}
 	lak::array<lak::astring> namespaces;
 	lak::astring prefix;
-	for (int i = 3; i < argc; ++i)
+	for (int i = 0; i < argc; ++i)
 	{
 		namespaces.push_back(argv[i]);
 		prefix += argv[i];
@@ -26,9 +43,6 @@ int main(int argc, char **argv)
 	}
 
 	auto src = lak::read_file(source).UNWRAP();
-
-	std::cerr << "input:\n"
-	          << lak::u8string_view(lak::span<char8_t>(lak::span(src))) << "\n";
 
 	auto grammar =
 	  lak::dsl::ebnf
@@ -43,13 +57,14 @@ int main(int argc, char **argv)
 	  .write_newline()
 	  .write_newline()
 	  .write_include_ang(u8"lak/dsl/dsl.hpp"_view)
-	  .write_include_ang(u8"lak/dsl/utility.hpp"_view)
-	  .write_newline();
+	  .write_include_ang(u8"lak/dsl/utility.hpp"_view);
 
+	lak::u8string full_namespace;
 	for (const auto &ns : namespaces)
-		strm.push_namespace(lak::strconv<char8_t>(ns));
-
-	std::cerr << "\noutput:\n";
+	{
+		full_namespace += lak::fmt<u8"{}::">(ns);
+		strm.write_indent_newline().push_namespace(lak::strconv<char8_t>(ns));
+	}
 
 	for (const auto &rule : grammar.rules)
 	{
@@ -58,8 +73,6 @@ int main(int argc, char **argv)
 		if (rule.transform) strm.push_template_call(u8"lak::dsl::transform"_view);
 
 		lak::array<lak::pair<lak::dsl::ebnf_rule_value, size_t>> stack;
-
-		auto indent_str = [&]() { return lak::astring(stack.size(), '\t'); };
 
 		stack.push_back({grammar.rule_values[rule.definition], 0});
 
@@ -94,17 +107,40 @@ int main(int argc, char **argv)
 					{
 						if (strm.template is_scope<decltype(strm)::template_call_scope>())
 							strm.next_template_argument(true);
-						bool contains_captures = false;
-						for (size_t i = 0U; !contains_captures &&
-						                    i < grammar.concatenations[val.index].size();
+						lak::array<size_t> capture_indices;
+						for (size_t i = 0U; i < grammar.concatenations[val.index].size();
 						     ++i)
+						{
 							if (grammar
 							      .rule_values[grammar.concatenations[val.index].begin + i]
 							      .type == capture)
-								contains_captures = true;
-						strm.push_template_call(contains_captures
-						                          ? u8"lak::dsl::capture_sequence"_view
-						                          : u8"lak::dsl::sequence"_view);
+								capture_indices.push_back(i);
+						}
+
+						if (capture_indices.empty())
+						{
+							strm.push_template_call(u8"lak::dsl::sequence"_view);
+						}
+						if (capture_indices.size() == 1U)
+						{
+							if (size_t i = capture_indices[0]; i == 0)
+								strm.push_template_call(u8"lak::dsl::capture_1st"_view);
+							else if (i == 1)
+								strm.push_template_call(u8"lak::dsl::capture_2nd"_view);
+							else
+								strm.push_template_call(u8"lak::dsl::capture_nth"_view)
+								  .write(lak::fmt<u8"{:d}">(i))
+								  .next_template_argument(false);
+						}
+						else
+						{
+							strm.push_template_call(u8"lak::dsl::capture_nths"_view);
+							strm.push_template_call(u8"lak::index_sequence"_view);
+							for (const auto &i : capture_indices)
+								strm.next_template_argument(false).write(
+								  lak::fmt<u8"{:d}">(i));
+							strm.pop_template_call().next_template_argument(false);
+						}
 					}
 					if (index >= grammar.concatenations[val.index].size())
 					{
@@ -238,21 +274,13 @@ int main(int argc, char **argv)
 				break;
 
 				case capture:
-					if (index == 0U)
-					{
-						if (strm.template is_scope<decltype(strm)::template_call_scope>())
-							strm.next_template_argument(true);
-						strm.push_template_call(u8"lak::dsl::capture"_view);
-						++index;
-						stack.push_back(
-						  {grammar.rule_values[grammar.captures[val.index].index], 0U});
-					}
-					else
-					{
-						strm.pop_template_call();
-						stack.pop_back();
-					}
-					break;
+				{
+					lak::dsl::ebnf_rule_value v =
+					  grammar.rule_values[grammar.captures[val.index].index];
+					stack.pop_back();
+					stack.push_back({v, 0U});
+				}
+				break;
 
 				case special:
 					if (strm.template is_scope<decltype(strm)::template_call_scope>())
@@ -331,6 +359,20 @@ int main(int argc, char **argv)
 		}
 
 		strm.pop_declaration().write_newline();
+
+		if (add_asserts)
+		{
+			strm.write_indent_newline()
+			  .push_function_call(u8"static_assert"_view)
+			  .push_template_call(u8"lak::dsl::concepts::parser"_view)
+			  .push_function_call(u8"decltype"_view)
+			  .write(full_namespace + lak::u8string(rule.name))
+			  .pop_function_call()
+			  .pop_template_call()
+			  .pop_function_call()
+			  .write(';')
+			  .write_newline();
+		}
 	}
 
 	for (const auto &ns : namespaces)
@@ -344,7 +386,11 @@ int main(int argc, char **argv)
 	ASSERT(strm.scopes.empty());
 	ASSERT(strm.preproc_scopes.empty());
 
-	std::cout << lak::strconv<char, char8_t>(strm);
+	if (!lak::save_file(dest, strm))
+	{
+		std::cerr << "Failed to save file " << dest;
+		return EXIT_FAILURE;
+	}
 
 	return EXIT_SUCCESS;
 }
