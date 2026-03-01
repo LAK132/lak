@@ -275,9 +275,10 @@ namespace lak
 
 			using _par_value_type = typename decltype(par)::value_type;
 
-			using value_type = lak::conditional_t<is_pure_match,
-			                                      lak::u8string_view,
-			                                      lak::optional<_par_value_type>>;
+			using value_type =
+			  lak::conditional_t<lak::dsl::concepts::substring_parser<decltype(par)>,
+			                     lak::u8string_view,
+			                     lak::optional<_par_value_type>>;
 
 			lak::dsl::result<value_type> parse(lak::u8string_view str) const
 			requires(!is_pure_match)
@@ -978,7 +979,7 @@ namespace lak
 			static_assert(N <= sizeof...(parsers));
 
 			static constexpr bool is_pure_match =
-			  lak::nth_type_t<N, decltype(par), decltype(parsers)...>::is_pure_match;
+			  N == 0U && sizeof...(parsers) == 0U && decltype(par)::is_pure_match;
 			using value_type = typename lak::
 			  nth_type_t<N, decltype(par), decltype(parsers)...>::value_type;
 

@@ -26,6 +26,11 @@ namespace lak
 			};
 
 			template<typename T>
+			concept substring_parser =
+			  lak::dsl::concepts::parser<T> &&
+			  lak::is_same_v<typename T::value_type, lak::u8string_view>;
+
+			template<typename T>
 			concept pure_match_parser =
 			  lak::dsl::concepts::parser<T> && T::is_pure_match;
 		}
