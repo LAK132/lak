@@ -8,17 +8,25 @@
 
 #include <cstdlib>
 
+size_t lak::align_ptr_offset(byte_t *ptr, size_t align)
+{
+	return lak::align_ptr_offset(reinterpret_cast<uintptr_t>(ptr), align);
+}
+
+size_t lak::align_ptr_offset(uintptr_t ptr, size_t align)
+{
+	if (align <= 1U) return 0U;
+	return (align - size_t(ptr % align)) % align; // slack
+}
+
 byte_t *lak::align_ptr(byte_t *ptr, size_t align)
 {
-	return reinterpret_cast<byte_t *>(
-	  lak::align_ptr(reinterpret_cast<uintptr_t>(ptr), align));
+	return ptr + lak::align_ptr_offset(ptr, align);
 }
 
 uintptr_t lak::align_ptr(uintptr_t ptr, size_t align)
 {
-	if (align <= 1) return ptr;
-	uintptr_t offset = ptr % align;
-	return ptr + (offset == 0 ? 0 : align - offset);
+	return ptr + lak::align_ptr_offset(ptr, align);
 }
 
 void lak::memmove(byte_t *dst, const byte_t *src, size_t count)

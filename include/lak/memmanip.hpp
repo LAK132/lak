@@ -16,6 +16,9 @@
 
 namespace lak
 {
+	size_t align_ptr_offset(byte_t *ptr, size_t align);
+	size_t align_ptr_offset(uintptr_t ptr, size_t align);
+
 	byte_t *align_ptr(byte_t *ptr, size_t align);
 	uintptr_t align_ptr(uintptr_t ptr, size_t align);
 
