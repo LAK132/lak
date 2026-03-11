@@ -10,19 +10,19 @@ namespace lak
 	// lak::fmt<u8"format {} string">(132) -> lak::u8string
 
 	template<typename T, typename CHAR>
-	struct format_traits
-	{
-		// dynamic:
-		// struct format_args
-		// {
-		// };
-		// static consteval format_args parse_args(lak::string_view<CHAR> args);
-		// static constexpr lak::string<CHAR> to_string(const format_args &fmt,
-		//                                              const T &value);
+	struct format_traits;
+	// {
+	// 	dynamic:
+	// 	struct format_args
+	// 	{
+	// 	};
+	// 	static consteval format_args parse_args(lak::string_view<CHAR> args);
+	// 	static constexpr lak::string<CHAR> to_string(const format_args &fmt,
+	// 	                                             const T &value);
 
-		// static:
-		// static constexpr lak::string<CHAR> to_string(const T &value);
-	};
+	// 	static:
+	// 	static constexpr lak::string<CHAR> to_string(const T &value);
+	// };
 
 	static_assert(
 	  lak::is_same_v<lak::const_string<char8_t, 1U>::char_type, char8_t>);
