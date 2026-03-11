@@ -34,6 +34,9 @@ struct lak::format_traits<T, CHAR>
 		return lak::fmt<CHAR, "{:#0X}">(static_cast<uintmax_t>(value));
 	}
 };
+static_assert(lak::concepts::static_formattable<lak::numeric_base, char8_t>);
+static_assert(!lak::concepts::dynamic_formattable<lak::numeric_base, char8_t>);
+static_assert(lak::concepts::formattable<lak::numeric_base, char8_t>);
 
 template<typename T, typename CHAR>
 requires((lak::is_array_v<T> || lak::is_pointer_v<T>) &&
