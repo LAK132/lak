@@ -171,7 +171,7 @@ struct lak::format_traits<T, CHAR>
 
 		switch (args[0])
 		{
-			case CHAR('b'): result.base = lak::numeric_base::bin; break;
+			// case CHAR('b'): result.base = lak::numeric_base::bin; break;
 			case CHAR('o'): result.base = lak::numeric_base::oct; break;
 			case CHAR('d'): result.base = lak::numeric_base::dec; break;
 			case CHAR('X'): result.uppercase = true; [[fallthrough]];
@@ -192,6 +192,7 @@ struct lak::format_traits<T, CHAR>
 			case lak::numeric_base::dec: strm << std::dec; break;
 			case lak::numeric_base::hex: strm << std::hex; break;
 			case lak::numeric_base::oct: strm << std::oct; break;
+			case lak::numeric_base::bin: /* strm << std::bin; */ break;
 			default:                     break;
 		}
 		strm << std::noshowbase;
@@ -293,7 +294,7 @@ struct lak::format_traits<T, CHAR>
 
 		switch (args[0])
 		{
-			case CHAR('b'): result.base = lak::numeric_base::bin; break;
+			// case CHAR('b'): result.base = lak::numeric_base::bin; break;
 			case CHAR('o'): result.base = lak::numeric_base::oct; break;
 			case CHAR('d'): result.base = lak::numeric_base::dec; break;
 			case CHAR('X'): result.uppercase = true; [[fallthrough]];
@@ -314,6 +315,7 @@ struct lak::format_traits<T, CHAR>
 			case lak::numeric_base::dec: strm << std::dec; break;
 			case lak::numeric_base::hex: strm << std::hex; break;
 			case lak::numeric_base::oct: strm << std::oct; break;
+			case lak::numeric_base::bin: /* strm << std::bin; */ break;
 			default:                     break;
 		}
 		strm << std::noshowbase;
@@ -467,6 +469,7 @@ struct lak::format_traits<T, CHAR>
 			case lak::numeric_base::dec: strm << std::dec; break;
 			case lak::numeric_base::hex: strm << std::hex; break;
 			case lak::numeric_base::oct: strm << std::oct; break;
+			case lak::numeric_base::bin: /* strm << std::bin; */ break;
 			default:                     break;
 		}
 		strm << std::noshowbase;
