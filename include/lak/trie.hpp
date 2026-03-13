@@ -21,7 +21,7 @@ namespace lak
 		std::vector<char32_t> _map;
 		std::vector<trie> _nodes;
 
-		template<typename U, typename CHAR>
+		template<typename U, typename C>
 		friend struct format_traits;
 
 	public:
