@@ -1,12 +1,12 @@
 #ifndef LAK_TRIE_HPP
 #define LAK_TRIE_HPP
 
+#include "lak/format.hpp"
 #include "lak/span.hpp"
 #include "lak/string.hpp"
 #include "lak/string_view.hpp"
 
 #include <optional>
-#include <ostream>
 #include <tuple>
 #include <vector>
 
@@ -20,6 +20,9 @@ namespace lak
 		std::optional<T> _value;
 		std::vector<char32_t> _map;
 		std::vector<trie> _nodes;
+
+		template<typename T, typename CHAR>
+		friend struct format_traits;
 
 	public:
 		trie() = default;
@@ -80,11 +83,14 @@ namespace lak
 		  trie *node, lak::string_view<CHAR> key);
 
 		lak::u8string to_string() const;
+	};
 
-		inline friend std::ostream &operator<<(std::ostream &strm,
-		                                       const lak::trie<CHAR, T> &trie)
+	template<typename C, typename T, typename CHAR>
+	struct format_traits<lak::trie<C, T>, CHAR>
+	{
+		static constexpr lak::string<CHAR> to_string(const lak::trie<C, T> &val)
 		{
-			return strm << lak::as_astring(trie.to_string());
+			return lak::strconv<CHAR>(val.to_string());
 		}
 	};
 

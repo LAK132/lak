@@ -54,7 +54,7 @@ namespace lak
 	{
 		// :TODO: make array handle uninitialised better so this hack isn't
 		// necessary.
-		ABORTF("Attempted to move an unmovable uninitialised<T>");
+		ABORTF_S(u8"Attempted to move an unmovable uninitialised<T>");
 	}
 }
 

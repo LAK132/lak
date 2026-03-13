@@ -111,38 +111,57 @@
 #	define DEBUG_EXPR(...)
 #else
 #	define DEBUG(...)                                                          \
-		lak::debugger.std_out(TO_U8STRING(DEBUG_DEBUG_LINE_FILE),                 \
+		lak::debugger.std_out(u8"" DEBUG_DEBUG_LINE_FILE,                         \
 		                      lak::streamify(__VA_ARGS__, "\n"));
 #	define DEBUG_EXPR(...)                                                     \
-		lak::debugger.std_out(TO_U8STRING(DEBUG_DEBUG_LINE_FILE),                 \
+		lak::debugger.std_out(u8"" DEBUG_DEBUG_LINE_FILE,                         \
 		                      lak::streamify(DEBUG_EXPR_EX(__VA_ARGS__), "\n"));
 #endif
 
 #undef CHECKPOINT
+#undef SCOPED_CHECKPOINT_S
+#undef FUNCTION_CHECKPOINT_S
+#undef MEMBER_FUNCTION_CHECKPOINT_S
 #undef SCOPED_CHECKPOINT
 #undef FUNCTION_CHECKPOINT
 #undef MEMBER_FUNCTION_CHECKPOINT
 #if defined(NOLOG)
 #	define CHECKPOINT()
+#	define SCOPED_CHECKPOINT_S(...)
+#	define FUNCTION_CHECKPOINT_S(...)
+#	define MEMBER_FUNCTION_CHECKPOINT_S(...)
 #	define SCOPED_CHECKPOINT(...)
 #	define FUNCTION_CHECKPOINT(...)
 #	define MEMBER_FUNCTION_CHECKPOINT(...)
 #else
 #	define CHECKPOINT()                                                        \
-		lak::debugger.std_out(TO_U8STRING(DEBUG_CHECKPOINT_LINE_FILE),            \
-		                      lak::to_u8string("\n"));
+		lak::debugger.std_out(u8"" DEBUG_CHECKPOINT_LINE_FILE, u8"\n");
+
+#	define SCOPED_CHECKPOINT_S(...)                                            \
+		lak::debugger_t::scoped_indenter UNIQUIFY(SCOPED_INDENTOR_)(              \
+		  __VA_OPT__(lak::u8string(__VA_ARGS__) + u8" ")                          \
+		    LAK_TRACE_MODIFIER(LINE_TRACE_STR));
+#	define FUNCTION_CHECKPOINT_S(...)                                          \
+		SCOPED_CHECKPOINT_S(                                                      \
+		  lak::to_u8string(__func__) +                                            \
+		  u8"(" __VA_OPT__(+lak::u8string(__VA_ARGS__) +) u8")")
+#	define MEMBER_FUNCTION_CHECKPOINT_S(...)                                   \
+		SCOPED_CHECKPOINT_S(                                                      \
+		  lak::to_u8string(TYPE_NAME(*this)) + u8"::" +                           \
+		  lak::to_u8string(__func__) +                                            \
+		  u8"(" __VA_OPT__(+lak::u8string(__VA_ARGS__) +) u8")")
+
 #	define SCOPED_CHECKPOINT(...)                                              \
-		lak::scoped_indenter UNIQUIFY(SCOPED_INDENTOR_)(lak::streamify(           \
-		  __VA_ARGS__ __VA_OPT__(, " ") LAK_TRACE_MODIFIER(LINE_TRACE_STR)));
+		SCOPED_CHECKPOINT_S(__VA_OPT__(lak::streamify(__VA_ARGS__)));
 #	define FUNCTION_CHECKPOINT(...)                                            \
-		SCOPED_CHECKPOINT(__func__, "(" __VA_OPT__(, ) __VA_ARGS__, ")")
+		FUNCTION_CHECKPOINT_S(__VA_OPT__(lak::streamify(__VA_ARGS__)));
 #	define MEMBER_FUNCTION_CHECKPOINT(...)                                     \
-		SCOPED_CHECKPOINT(                                                        \
-		  TYPE_NAME(*this), "::", __func__, "(" __VA_OPT__(, ) __VA_ARGS__, ")")
+		MEMBER_FUNCTION_CHECKPOINT_S(__VA_OPT__(lak::streamify(__VA_ARGS__)));
 #endif
 
 #undef ABORT
 #undef ABORTF
+#undef ABORTF_S
 #undef NOISY_ABORT
 #define ABORT()                                                               \
 	do                                                                          \
@@ -155,6 +174,13 @@
 		lak::debugger.std_err(u8"", lak::streamify(__VA_ARGS__, "\n"));           \
 		ABORT();                                                                  \
 	} while (false)
+#define ABORTF_S(...)                                                         \
+	do                                                                          \
+	{                                                                           \
+		lak::debugger.std_err(u8"",                                               \
+		                      __VA_OPT__(lak::u8string(__VA_ARGS__) +) u8"\n");   \
+		ABORT();                                                                  \
+	} while (false)
 #define NOISY_ABORT()                                                         \
 	do                                                                          \
 	{                                                                           \
@@ -163,21 +189,33 @@
 		ABORT();                                                                  \
 	} while (false)
 
+#undef WARNING_S
+#undef ERROR_S
+#undef FATAL_S
 #undef WARNING
 #undef ERROR
 #undef FATAL
 #if defined(NOLOG)
+#	define WARNING_S(...)
+#	define ERROR_S(...)
+#	define FATAL_S(...) ABORT()
 #	define WARNING(...)
 #	define ERROR(...)
 #	define FATAL(...) ABORT()
 #else
-#	define WARNING(...)                                                        \
-		lak::debugger.std_err(TO_U8STRING(DEBUG_WARNING_LINE_FILE),               \
-		                      lak::streamify(__VA_ARGS__, "\n"));
-#	define ERROR(...)                                                          \
-		lak::debugger.std_err(TO_U8STRING(DEBUG_ERROR_LINE_FILE),                 \
-		                      lak::streamify(__VA_ARGS__, "\n"));
-#	define FATAL(...) ABORTF(TO_U8STRING(DEBUG_FATAL_LINE_FILE), __VA_ARGS__)
+#	define WARNING_S(...)                                                      \
+		lak::debugger.std_err(u8"" DEBUG_WARNING_LINE_FILE,                       \
+		                      __VA_OPT__(lak::u8string(__VA_ARGS__) +) u8"\n")
+#	define ERROR_S(...)                                                        \
+		lak::debugger.std_err(u8"" DEBUG_ERROR_LINE_FILE,                         \
+		                      __VA_OPT__(lak::u8string(__VA_ARGS__) +) u8"\n")
+#	define FATAL_S(...)                                                        \
+		ABORTF_S(                                                                 \
+		  u8"" DEBUG_FATAL_LINE_FILE __VA_OPT__(+lak::u8string(__VA_ARGS__)))
+
+#	define WARNING(...) WARNING_S(__VA_OPT__(lak::streamify(__VA_ARGS__)))
+#	define ERROR(...)   ERROR_S(__VA_OPT__(lak::streamify(__VA_ARGS__)))
+#	define FATAL(...)   FATAL_S(__VA_OPT__(lak::streamify(__VA_ARGS__)))
 #endif
 
 #undef ASSERT
@@ -203,18 +241,18 @@
 	{                                                                           \
 		if (!(__VA_ARGS__)) [[unlikely]]                                          \
 		{                                                                         \
-			FATAL("Assertion '" DEBUG_STRINGIFY_EXPR(__VA_ARGS__) "' failed");      \
+			FATAL_S(u8"Assertion '" DEBUG_STRINGIFY_EXPR(__VA_ARGS__) "' failed");  \
 		}                                                                         \
 	} while (false)
 #define ASSERT_NYI()                                                          \
 	do                                                                          \
 	{                                                                           \
-		FATAL("Behaviour not yet implemented");                                   \
+		FATAL_S(u8"Behaviour not yet implemented");                               \
 	} while (false)
 #define ASSERT_UNREACHABLE()                                                  \
 	do                                                                          \
 	{                                                                           \
-		FATAL("Unreachable code reached");                                        \
+		FATAL_S(u8"Unreachable code reached");                                    \
 	} while (false)
 #define ASSERT_EQUAL(X, Y)                                                    \
 	do                                                                          \
@@ -461,4 +499,15 @@
 		}                                                                         \
 	} while (false)
 
-#include "lak/debug.inl"
+#include "lak/debugger.hpp"
+
+#ifdef LAK_DEBUG_FORWARD_ONLY
+#	undef LAK_DEBUG_FORWARD_ONLY
+#else
+#	ifndef LAK_DEBUG_HPP_IMPL
+#		define LAK_DEBUG_HPP_IMPL
+#		include "lak/strcast.hpp"
+#		include "lak/streamify.hpp"
+#		include "lak/functional.hpp"
+#	endif
+#endif

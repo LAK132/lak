@@ -1,6 +1,7 @@
 #ifndef LAK_LMDB_HPP
 #define LAK_LMDB_HPP
 
+#include "lak/format.hpp"
 #include "lak/result.hpp"
 #include "lak/string_view.hpp"
 
@@ -18,12 +19,6 @@ namespace lak
 			int value;
 
 			lak::astring to_string() const;
-
-			inline friend std::ostream &operator<<(std::ostream &strm,
-			                                       const lak::lmdb::error &err)
-			{
-				return strm << err.to_string();
-			}
 		};
 
 		template<typename T = lak::monostate>
@@ -251,6 +246,15 @@ namespace lak
 			explicit operator bool() const;
 		};
 	}
+
+	template<typename CHAR>
+	struct format_traits<lak::lmdb::error, CHAR>
+	{
+		static constexpr lak::string<CHAR> to_string(const lak::lmdb::error &val)
+		{
+			return lak::strconv<CHAR>(val.to_string());
+		}
+	};
 }
 
 #endif

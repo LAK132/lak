@@ -5,7 +5,7 @@
 BEGIN_TEST(format)
 {
 	{
-		constexpr auto fmt = "asdf"_fmt;
+		constexpr auto fmt = lak::format_string<"asdf">{};
 		ASSERT_EQUAL(fmt.specifiers.size(), 0U);
 		ASSERT_EQUAL(fmt.prefixes.size(), fmt.specifiers.size() + 1U);
 		ASSERT_EQUAL(fmt.prefixes_buffer().size(), 4U);
@@ -14,7 +14,7 @@ BEGIN_TEST(format)
 		ASSERT_EQUAL(fmt.specifiers_buffer(), ""_view);
 	}
 	{
-		constexpr auto fmt = "{}"_fmt;
+		constexpr auto fmt = lak::format_string<"{}">{};
 		ASSERT_EQUAL(fmt.specifiers.size(), 1U);
 		ASSERT_EQUAL(fmt.prefixes.size(), fmt.specifiers.size() + 1U);
 		ASSERT_EQUAL(fmt.specifiers[0].first, 0U);
@@ -24,7 +24,26 @@ BEGIN_TEST(format)
 		ASSERT_EQUAL(fmt.specifiers_buffer(), ""_view);
 	}
 	{
-		constexpr auto fmt = "{1}"_fmt;
+		constexpr auto fmt = lak::format_string<"{{}}">{};
+		ASSERT_EQUAL(fmt.specifiers.size(), 0U);
+		ASSERT_EQUAL(fmt.prefixes.size(), fmt.specifiers.size() + 1U);
+		ASSERT_EQUAL(fmt.prefixes_buffer().size(), 2U);
+		ASSERT_EQUAL(fmt.specifiers_buffer().size(), 0U);
+		ASSERT_EQUAL(fmt.prefixes_buffer(), "{}"_view);
+		ASSERT_EQUAL(fmt.specifiers_buffer(), ""_view);
+	}
+	{
+		constexpr auto fmt = lak::format_string<"{{{}}}">{};
+		ASSERT_EQUAL(fmt.specifiers.size(), 1U);
+		ASSERT_EQUAL(fmt.prefixes.size(), fmt.specifiers.size() + 1U);
+		ASSERT_EQUAL(fmt.specifiers[0].first, 0U);
+		ASSERT_EQUAL(fmt.prefixes_buffer().size(), 2U);
+		ASSERT_EQUAL(fmt.specifiers_buffer().size(), 0U);
+		ASSERT_EQUAL(fmt.prefixes_buffer(), "{}"_view);
+		ASSERT_EQUAL(fmt.specifiers_buffer(), ""_view);
+	}
+	{
+		constexpr auto fmt = lak::format_string<"{1}">{};
 		ASSERT_EQUAL(fmt.specifiers.size(), 1U);
 		ASSERT_EQUAL(fmt.prefixes.size(), fmt.specifiers.size() + 1U);
 		ASSERT_EQUAL(fmt.specifiers[0].first, 1U);
@@ -34,7 +53,7 @@ BEGIN_TEST(format)
 		ASSERT_EQUAL(fmt.specifiers_buffer(), ""_view);
 	}
 	{
-		constexpr auto fmt = "{:}"_fmt;
+		constexpr auto fmt = lak::format_string<"{:}">{};
 		ASSERT_EQUAL(fmt.specifiers.size(), 1U);
 		ASSERT_EQUAL(fmt.prefixes.size(), fmt.specifiers.size() + 1U);
 		ASSERT_EQUAL(fmt.specifiers[0].first, 0U);
@@ -44,7 +63,7 @@ BEGIN_TEST(format)
 		ASSERT_EQUAL(fmt.specifiers_buffer(), ""_view);
 	}
 	{
-		constexpr auto fmt = "{:asdf}"_fmt;
+		constexpr auto fmt = lak::format_string<"{:asdf}">{};
 		ASSERT_EQUAL(fmt.specifiers.size(), 1U);
 		ASSERT_EQUAL(fmt.prefixes.size(), fmt.specifiers.size() + 1U);
 		ASSERT_EQUAL(fmt.specifiers[0].first, 0U);
@@ -54,7 +73,18 @@ BEGIN_TEST(format)
 		ASSERT_EQUAL(fmt.specifiers_buffer(), "asdf"_view);
 	}
 	{
-		constexpr auto fmt = "123{4:hello}asdf"_fmt;
+		constexpr auto fmt = lak::format_string<"{{{:asdf}{:hello}}}">{};
+		ASSERT_EQUAL(fmt.specifiers.size(), 2U);
+		ASSERT_EQUAL(fmt.prefixes.size(), fmt.specifiers.size() + 1U);
+		ASSERT_EQUAL(fmt.specifiers[0].first, 0U);
+		ASSERT_EQUAL(fmt.specifiers[1].first, 1U);
+		ASSERT_EQUAL(fmt.prefixes_buffer().size(), 2U);
+		ASSERT_EQUAL(fmt.specifiers_buffer().size(), 9U);
+		ASSERT_EQUAL(fmt.prefixes_buffer(), "{}"_view);
+		ASSERT_EQUAL(fmt.specifiers_buffer(), "asdfhello"_view);
+	}
+	{
+		constexpr auto fmt = lak::format_string<"123{4:hello}asdf">{};
 		ASSERT_EQUAL(fmt.specifiers.size(), 1U);
 		ASSERT_EQUAL(fmt.prefixes.size(), fmt.specifiers.size() + 1U);
 		ASSERT_EQUAL(fmt.specifiers[0].first, 4U);
@@ -64,7 +94,7 @@ BEGIN_TEST(format)
 		ASSERT_EQUAL(fmt.specifiers_buffer(), "hello"_view);
 	}
 	{
-		constexpr auto fmt = "1{1}2{2}3{3}4"_fmt;
+		constexpr auto fmt = lak::format_string<"1{1}2{2}3{3}4">{};
 		ASSERT_EQUAL(fmt.specifiers.size(), 3U);
 		ASSERT_EQUAL(fmt.prefixes.size(), fmt.specifiers.size() + 1U);
 		ASSERT_EQUAL(fmt.specifiers[0].first, 1U);
@@ -76,7 +106,7 @@ BEGIN_TEST(format)
 		ASSERT_EQUAL(fmt.specifiers_buffer(), ""_view);
 	}
 	{
-		constexpr auto fmt = "LAK{}{2}{}!"_fmt;
+		constexpr auto fmt = lak::format_string<"LAK{}{2}{}!">{};
 		ASSERT_EQUAL(fmt.specifiers.size(), 3U);
 		ASSERT_EQUAL(fmt.prefixes.size(), fmt.specifiers.size() + 1U);
 		ASSERT_EQUAL(fmt.specifiers[0].first, 0U);
@@ -93,6 +123,8 @@ BEGIN_TEST(format)
 	ASSERT_EQUAL(lak::fmt<"hello {}!">("world"), "hello world!"_view);
 
 	ASSERT_EQUAL(lak::fmt<"{:#0.4X}">(0x132U), "0x0132"_view);
+
+	DEBUG_EXPR(lak::fmt<"{0}, {0:+#08.4}, {0:+#08.4d}">(-.01));
 
 	return 0;
 }

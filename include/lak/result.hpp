@@ -390,6 +390,10 @@ lak::result<T2, E> operator&(lak::result<T1, E> a, lak::result<T2, E> b);
 #		include "lak/defer.hpp"
 #		include "lak/index_set.hpp"
 
+#		define LAK_STREAMIFY_FORWARD_ONLY
+#		include "lak/streamify.hpp"
+#		include "lak/format.hpp"
+
 namespace lak
 {
 	/* --- result --- */
@@ -791,11 +795,15 @@ namespace lak
 				{
 					if constexpr (lak::is_same_v<SUBERR, lak::monostate>)
 					{
-						ABORTF(error_str);
+						ABORTF_S(lak::to_u8string(error_str));
 					}
 					else if constexpr (lak::concepts::streamable<SUBERR>)
 					{
 						ABORTF(error_str, ": ", err);
+					}
+					else if constexpr (lak::concepts::formattable<SUBERR, char8_t>)
+					{
+						ABORTF(error_str, ": ", lak::fmt<u8"{}">(err));
 					}
 					else
 					{
@@ -820,11 +828,15 @@ namespace lak
 				{
 					if constexpr (lak::is_same_v<SUBERR, lak::monostate>)
 					{
-						ABORTF(error_str);
+						ABORTF_S(lak::to_u8string(error_str));
 					}
 					else if constexpr (lak::concepts::streamable<SUBERR>)
 					{
 						ABORTF(error_str, ": ", err);
+					}
+					else if constexpr (lak::concepts::formattable<SUBERR, char8_t>)
+					{
+						ABORTF(error_str, ": ", lak::fmt<u8"{}">(err));
 					}
 					else
 					{
@@ -849,11 +861,15 @@ namespace lak
 				{
 					if constexpr (lak::is_same_v<SUBERR, lak::monostate>)
 					{
-						ABORTF(error_str);
+						ABORTF_S(lak::to_u8string(error_str));
 					}
 					else if constexpr (lak::concepts::streamable<SUBERR>)
 					{
 						ABORTF(error_str, ": ", err);
+					}
+					else if constexpr (lak::concepts::formattable<SUBERR, char8_t>)
+					{
+						ABORTF(error_str, ": ", lak::fmt<u8"{}">(err));
 					}
 					else
 					{
@@ -874,21 +890,21 @@ namespace lak
 		template<typename STR>
 		err_reference expect_err(const STR &error_str) &
 		{
-			if (is_ok()) ABORTF(error_str /*, ": ", get_ok()*/);
+			if (is_ok()) ABORTF_S(lak::to_u8string(error_str) /*, ": ", get_ok()*/);
 			return get_err();
 		}
 
 		template<typename STR>
 		err_const_reference expect_err(const STR &error_str) const &
 		{
-			if (is_ok()) ABORTF(error_str /*, ": ", get_ok()*/);
+			if (is_ok()) ABORTF_S(lak::to_u8string(error_str) /*, ": ", get_ok()*/);
 			return get_err();
 		}
 
 		template<typename STR>
 		ERR expect_err(const STR &error_str) &&
 		{
-			if (is_ok()) ABORTF(error_str /*, ": ", get_ok()*/);
+			if (is_ok()) ABORTF_S(lak::to_u8string(error_str) /*, ": ", get_ok()*/);
 			return forward_err();
 		}
 

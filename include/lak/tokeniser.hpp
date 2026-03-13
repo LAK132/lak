@@ -2,11 +2,10 @@
 #define LAK_TOKENISER_HPP
 
 #include "lak/array.hpp"
+#include "lak/format.hpp"
 #include "lak/span.hpp"
 #include "lak/string.hpp"
 #include "lak/string_view.hpp"
-
-#include <ostream>
 
 namespace lak
 {
@@ -23,28 +22,56 @@ namespace lak
 
 		bool operator==(const codepoint_position &other) const;
 		bool operator!=(const codepoint_position &other) const;
+	};
 
-		inline friend std::ostream &operator<<(std::ostream &strm,
-		                                       const lak::codepoint_position &pos)
+	template<typename CHAR>
+	struct format_traits<lak::codepoint_position, CHAR>
+	{
+		using format_args = typename lak::format_traits<size_t, CHAR>::format_args;
+
+		static consteval format_args parse_args(lak::string_view<CHAR> args)
 		{
-			return strm << std::dec << "{line: " << pos.line
-			            << ", column: " << pos.column << "}";
+			return lak::format_traits<size_t, CHAR>::parse_args(args);
+		}
+
+		static constexpr lak::string<CHAR> to_string(
+		  const format_args &args, const lak::codepoint_position &val)
+		{
+			return lak::fmt<CHAR, "{{line: {}, column: {}}}">(
+			  lak::format_traits<size_t, CHAR>::to_string(args, val.line),
+			  lak::format_traits<size_t, CHAR>::to_string(args, val.column));
 		}
 	};
 
 	struct token_position
 	{
-		codepoint_position begin = {};
-		codepoint_position end   = {};
+		lak::codepoint_position begin = {};
+		lak::codepoint_position end   = {};
 
 		bool operator==(const token_position &other) const;
 		bool operator!=(const token_position &other) const;
+	};
 
-		inline friend std::ostream &operator<<(std::ostream &strm,
-		                                       const lak::token_position &pos)
+	template<typename CHAR>
+	struct format_traits<lak::token_position, CHAR>
+	{
+		using format_args =
+		  typename lak::format_traits<lak::codepoint_position, CHAR>::format_args;
+
+		static consteval format_args parse_args(lak::string_view<CHAR> args)
 		{
-			return strm << std::dec << "{begin: " << pos.begin
-			            << ", end: " << pos.end << "}";
+			return lak::format_traits<lak::codepoint_position, CHAR>::parse_args(
+			  args);
+		}
+
+		static constexpr lak::string<CHAR> to_string(
+		  const format_args &args, const lak::token_position &val)
+		{
+			return lak::fmt<CHAR, "{{begin: {}, end: {}}}">(
+			  lak::format_traits<lak::codepoint_position, CHAR>::to_string(
+			    args, val.begin),
+			  lak::format_traits<lak::codepoint_position, CHAR>::to_string(args,
+			                                                               val.end));
 		}
 	};
 
@@ -62,12 +89,25 @@ namespace lak
 
 		template<size_t I>
 		inline const auto &get() const;
+	};
 
-		inline friend std::ostream &operator<<(std::ostream &strm,
-		                                       const lak::token<CHAR> &token)
+	template<typename C, typename CHAR>
+	struct format_traits<lak::token<C>, CHAR>
+	{
+		using format_args =
+		  typename lak::format_traits<lak::token_position, CHAR>::format_args;
+
+		static consteval format_args parse_args(lak::string_view<CHAR> args)
 		{
-			return strm << std::dec << "{source: " << token.source
-			            << ", position: " << token.position << "}";
+			return lak::format_traits<lak::token_position, CHAR>::parse_args(args);
+		}
+
+		static constexpr lak::string<CHAR> to_string(const format_args &args,
+		                                             const lak::token<C> &val)
+		{
+			return lak::fmt<CHAR, "{{source: {}, position: {}}}">(
+			  val.source,
+			  lak::format_traits<size_t, CHAR>::to_string(args, val.position));
 		}
 	};
 

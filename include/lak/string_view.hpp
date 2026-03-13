@@ -68,6 +68,16 @@ namespace lak
 		{
 		}
 
+		template<typename CONTAINER>
+		explicit constexpr string_view(const CONTAINER &container)
+		requires requires() {
+			{ container.data() } -> lak::concepts::one_of<CHAR *, const CHAR *>;
+			{ container.size() } -> lak::concepts::same_as<size_t>;
+		}
+		: _value(container.data(), container.size())
+		{
+		}
+
 		constexpr static string_view from_c_str(const CHAR *str);
 
 		constexpr const CHAR &operator[](size_t index) const

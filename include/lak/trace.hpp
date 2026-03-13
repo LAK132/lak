@@ -2,10 +2,10 @@
 #define LAK_TRACE_HPP
 
 #include "lak/debug.hpp"
+#include "lak/format.hpp"
 #include "lak/result.hpp"
 #include "lak/unicode.hpp"
 
-#include <ostream>
 #include <version>
 #ifdef __cpp_lib_source_location
 #	include <source_location>
@@ -45,20 +45,30 @@ namespace lak
 
 		inline lak::u8string line_string() const
 		{
-			return TO_U8STRING(location.file_name()
-			                   << ":" << std::dec << location.line() << ":"
-			                   << location.column());
+			return lak::fmt<u8"{}:{:d}:{:d}">(
+			  lak::astring_view::from_c_str(location.file_name()),
+			  location.line(),
+			  location.column());
 		}
 
-		inline lak::u8string to_string() const { return TO_U8STRING(*this); }
-
-		friend inline std::ostream &operator<<(std::ostream &strm,
-		                                       const lak::trace &tr)
+		inline lak::u8string to_string() const
 		{
-			strm << LAK_BRIGHT_BLACK "(" << lak::as_astring(tr.line_string())
-			     << ")" LAK_SGR_RESET ": " << tr.location.function_name();
-			if (!tr.message.empty()) strm << ":\n\t" << tr.message;
-			return strm;
+			if (message.empty())
+				return lak::fmt<u8"" LAK_BRIGHT_BLACK "({})" LAK_SGR_RESET ": {}">(
+				  line_string(), location.function_name());
+			else
+				return lak::fmt<u8"" LAK_BRIGHT_BLACK "({})" LAK_SGR_RESET
+				                ": {}:\n\t{}">(
+				  line_string(), location.function_name(), message);
+		}
+	};
+
+	template<typename CHAR>
+	struct format_traits<lak::trace, CHAR>
+	{
+		static constexpr lak::string<CHAR> to_string(const lak::trace &val)
+		{
+			return lak::strconv<CHAR>(val.to_string());
 		}
 	};
 
@@ -94,14 +104,20 @@ namespace lak
 		inline auto begin() const { return traces.rbegin(); }
 		inline auto end() const { return traces.rend(); }
 
-		inline lak::u8string to_string() const { return TO_U8STRING(*this); }
-
-		friend inline std::ostream &operator<<(std::ostream &strm,
-		                                       const lak::stack_trace &tr)
+		inline lak::u8string to_string() const
 		{
-			strm << tr.message;
-			for (const auto &trace : tr) strm << "\nat " << trace;
-			return strm;
+			lak::u8string result = message;
+			for (const auto &trace : traces) result += lak::fmt<u8"\nat {}">(trace);
+			return result;
+		}
+	};
+
+	template<typename CHAR>
+	struct format_traits<lak::stack_trace, CHAR>
+	{
+		static constexpr lak::string<CHAR> to_string(const lak::stack_trace &val)
+		{
+			return lak::strconv<CHAR>(val.to_string());
 		}
 	};
 

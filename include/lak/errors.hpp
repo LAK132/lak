@@ -1,7 +1,7 @@
 #ifndef LAK_ERRORS_HPP
 #define LAK_ERRORS_HPP
 
-#include "lak/string.hpp"
+#include "lak/format.hpp"
 
 namespace lak
 {
@@ -9,26 +9,32 @@ namespace lak
 	{
 		struct out_of_data
 		{
-			inline lak::astring to_string() const { return "out of data"; }
-
-			inline friend std::ostream &operator<<(std::ostream &strm,
-			                                       const out_of_data &err)
-			{
-				return strm << err.to_string();
-			}
 		};
 
 		struct value_out_of_range
 		{
-			inline lak::astring to_string() const { return "value out of range"; }
-
-			inline friend std::ostream &operator<<(std::ostream &strm,
-			                                       const value_out_of_range &err)
-			{
-				return strm << err.to_string();
-			}
 		};
 	}
+
+	template<typename CHAR>
+	struct format_traits<lak::err::out_of_data, CHAR>
+	{
+		static constexpr lak::string<CHAR> to_string(const lak::err::out_of_data &)
+		{
+			return lak::strconv<CHAR>("out of data"_view);
+		}
+	};
+
+	template<typename CHAR>
+	struct format_traits<lak::err::value_out_of_range, CHAR>
+	{
+		static constexpr lak::string<CHAR> to_string(
+		  const lak::err::value_out_of_range &)
+		{
+			return lak::strconv<CHAR>("value out of range"_view);
+		}
+	};
+
 }
 
 #endif

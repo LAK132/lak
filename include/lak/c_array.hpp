@@ -1,9 +1,9 @@
 #ifndef LAK_C_ARRAY_HPP
 #define LAK_C_ARRAY_HPP
 
-#include "lak/system/compiler.hpp"
+#include "lak/stdint.hpp"
 
-#include <cstddef>
+#include "lak/system/compiler.hpp"
 
 namespace lak
 {

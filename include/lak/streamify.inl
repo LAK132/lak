@@ -10,6 +10,8 @@
 #define LAK_VISIT_FORWARD_ONLY
 #include "lak/visit.hpp"
 
+#include "lak/format.hpp"
+
 #include <ios>
 #include <ostream>
 #include <sstream>
@@ -33,12 +35,21 @@ lak::u8string lak::spaced_streamify(const lak::u8string &space,
 	return result;
 }
 
+static_assert((lak::concepts::formattable<int, char8_t>));
+static_assert((lak::concepts::formattable<int, char>));
+
 namespace
 {
-	template<lak::concepts::streamable T>
+	template<typename T>
 	void streamable_streamer(std::ostream &strm, const T &arg)
 	{
-		strm << arg;
+		static_assert((lak::concepts::streamable<T>) ||
+		              (lak::concepts::formattable<T, char>));
+
+		if constexpr (lak::concepts::formattable<T, char>)
+			strm << lak::fmt<"{}">(arg);
+		else if constexpr (lak::concepts::streamable<T>)
+			strm << arg;
 	}
 
 	template<typename T>
@@ -50,19 +61,19 @@ namespace
 		{
 			strm << (arg ? "true" : "false");
 		}
-		else if constexpr (std::is_enum_v<T> && lak::is_streamable_v<T>)
+		else if constexpr (std::is_enum_v<T>)
 		{
-			::streamable_streamer(strm, arg);
+			if constexpr (lak::is_streamable_v<T>)
+				::streamable_streamer(strm, arg);
+			else
+				strm << lak::fmt<"{}">(arg);
 		}
-		else if constexpr ((std::is_integral_v<T> && !std::is_same_v<T, char>) ||
-		                   std::is_enum_v<T>)
+		else if constexpr (std::is_integral_v<T> && !std::is_same_v<T, char>)
 		{
 			if constexpr (std::is_unsigned_v<T>)
-				strm << "0x" << static_cast<uintmax_t>(arg);
-			else if (static_cast<intmax_t>(arg) < intmax_t(0))
-				strm << "-0x" << static_cast<uintmax_t>(-static_cast<intmax_t>(arg));
+				strm << lak::fmt<"{:X}">(static_cast<uintmax_t>(arg));
 			else
-				strm << "0x" << static_cast<uintmax_t>(arg);
+				strm << lak::fmt<"{:X}">(static_cast<intmax_t>(arg));
 		}
 		else if constexpr (std::is_null_pointer_v<T>)
 		{

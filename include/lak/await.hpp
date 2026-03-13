@@ -2,6 +2,7 @@
 #define LAK_AWAIT_HPP
 
 #include "lak/debug.hpp"
+#include "lak/format.hpp"
 #include "lak/result.hpp"
 
 #include <atomic>
@@ -16,8 +17,24 @@ namespace lak
 		failed  = 1
 	};
 
+	template<typename CHAR>
+	struct format_traits<lak::await_error, CHAR>
+	{
+		static constexpr lak::string<CHAR> to_string(const lak::await_error &err)
+		{
+			switch (err)
+			{
+				case lak::await_error::running:
+					return lak::strconv<CHAR>("await running"_view);
+				case lak::await_error::failed:
+					return lak::strconv<CHAR>("await failed"_view);
+				default: ASSERT_NYI(); return {};
+			}
+		}
+	};
+
 	template<typename T>
-	using await_result = lak::result<T, await_error>;
+	using await_result = lak::result<T, lak::await_error>;
 
 	template<typename T>
 	struct await
@@ -25,7 +42,7 @@ namespace lak
 	private:
 		std::thread _thread;
 		std::atomic_bool _finished   = false;
-		lak::await_result<T> _result = lak::err_t{await_error::failed};
+		lak::await_result<T> _result = lak::err_t{lak::await_error::failed};
 
 	public:
 		await() = default;
@@ -55,12 +72,12 @@ namespace lak
             catch (const std::exception &e)
             {
               ERROR("Uncaught Exception: ", e.what());
-              result = lak::err_t<await_error>{await_error::failed};
+              result = lak::err_t<lak::await_error>{lak::await_error::failed};
             }
             catch (...)
             {
               ERROR("Uncaught Exception");
-              result = lak::err_t<await_error>{await_error::failed};
+              result = lak::err_t<lak::await_error>{lak::await_error::failed};
             }
             finished = true;
           },
@@ -74,33 +91,15 @@ namespace lak
 				_thread.join();
 				_finished = false;
 				if (_result.is_err())
-					ASSERT_EQUAL(_result.unwrap_err(), await_error::failed);
+					ASSERT_EQUAL(_result.unwrap_err(), lak::await_error::failed);
 				return _result;
 			}
 			else
 			{
-				return lak::err_t{await_error::running};
+				return lak::err_t{lak::await_error::running};
 			}
 		}
 	};
-}
-
-inline std::ostream &operator<<(std::ostream &strm,
-                                const lak::await_error &err)
-{
-	switch (err)
-	{
-		case lak::await_error::running:
-			strm << "await running";
-			break;
-		case lak::await_error::failed:
-			strm << "await failed";
-			break;
-		default:
-			ASSERT_NYI();
-			break;
-	}
-	return strm;
 }
 
 #endif

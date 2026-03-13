@@ -3,7 +3,7 @@
 
 #include "lak/stdint.hpp"
 
-#include <ostream>
+#include <limits>
 
 namespace lak
 {
@@ -15,24 +15,6 @@ namespace lak
 			invalid_base,
 			out_of_bounds,
 		};
-
-		inline std::ostream &operator<<(std::ostream &strm,
-		                                const lak::err::string_to_numeric &err)
-		{
-			switch (err)
-			{
-				case lak::err::string_to_numeric::invalid_string:
-					strm << "invalid string";
-					break;
-				case lak::err::string_to_numeric::invalid_base:
-					strm << "invalid base";
-					break;
-				case lak::err::string_to_numeric::out_of_bounds:
-					strm << "invalid base";
-					break;
-			}
-			return strm;
-		}
 	}
 
 	enum struct numeric_base : uint8_t
@@ -44,12 +26,39 @@ namespace lak
 	};
 }
 
+#ifndef LAK_DEBUG_FORWARD_ONLY
+#	define LAK_DEBUG_FORWARD_ONLY
+#endif
+#include "lak/debug.hpp"
+
+#include "lak/format_traits.hpp"
 #include "lak/result.hpp"
+#include "lak/strconv.hpp"
+#include "lak/string_literals/view.hpp"
 #include "lak/string_view.hpp"
 #include "lak/wide_math.hpp"
 
 namespace lak
 {
+	template<typename CHAR>
+	struct format_traits<lak::err::string_to_numeric, CHAR>
+	{
+		static constexpr lak::string<CHAR> to_string(
+		  const lak::err::string_to_numeric &err)
+		{
+			switch (err)
+			{
+				case lak::err::string_to_numeric::invalid_string:
+					return lak::strconv<CHAR>("invalid string"_view);
+				case lak::err::string_to_numeric::invalid_base:
+					return lak::strconv<CHAR>("invalid base"_view);
+				case lak::err::string_to_numeric::out_of_bounds:
+					return lak::strconv<CHAR>("invalid base"_view);
+				default: ASSERT_UNREACHABLE(); break;
+			}
+		}
+	};
+
 	lak::u8string_view uintmax_max_bin_str();
 	lak::u8string_view uintmax_max_oct_str();
 	lak::u8string_view uintmax_max_dec_str();
@@ -142,9 +151,6 @@ namespace lak
 	                             uintmax_t B,
 	                             uintmax_t C); // A - (B + (~C + 1))
 	lak::uintmax2_t mul_uintmax2(uintmax_t A, uintmax_t B);
-
-	std::ostream &operator<<(std::ostream &strm,
-	                         lak::err::string_to_numeric err);
 }
 
 #endif

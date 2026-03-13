@@ -1,14 +1,12 @@
-#include "lak/format.hpp"
-
 #include "lak/numeric.hpp"
 #include "lak/stdint.hpp"
 #include "lak/strconv.hpp"
 
-#include "lak/string_literals/format.hpp"
 #include "lak/string_literals/view.hpp"
 
 #include "lak/string_view.hpp"
 
+#include <cmath>
 #include <system_error>
 
 template<typename T, typename CHAR>
@@ -106,6 +104,9 @@ struct lak::format_traits<lak::string_view<T>, CHAR>
 		return lak::strconv<CHAR>(value);
 	}
 };
+static_assert(lak::concepts::static_formattable<lak::u8string_view, char>);
+static_assert(
+  lak::concepts::static_formattable<lak::u16string_view, char32_t>);
 static_assert(lak::concepts::static_formattable<lak::u8string_view, char8_t>);
 static_assert(
   !lak::concepts::dynamic_formattable<lak::u8string_view, char8_t>);
@@ -170,23 +171,12 @@ struct lak::format_traits<T, CHAR>
 
 		switch (args[0])
 		{
-			case CHAR('b'):
-				result.base = lak::numeric_base::bin;
-				break;
-			case CHAR('o'):
-				result.base = lak::numeric_base::oct;
-				break;
-			case CHAR('d'):
-				result.base = lak::numeric_base::dec;
-				break;
-			case CHAR('X'):
-				result.uppercase = true;
-				[[fallthrough]];
-			case CHAR('x'):
-				result.base = lak::numeric_base::hex;
-				break;
-			default:
-				throw "invalid base";
+			case CHAR('b'): result.base = lak::numeric_base::bin; break;
+			case CHAR('o'): result.base = lak::numeric_base::oct; break;
+			case CHAR('d'): result.base = lak::numeric_base::dec; break;
+			case CHAR('X'): result.uppercase = true; [[fallthrough]];
+			case CHAR('x'): result.base = lak::numeric_base::hex; break;
+			default:        throw "invalid base";
 		}
 		args = args.substr(1U);
 
@@ -199,17 +189,10 @@ struct lak::format_traits<T, CHAR>
 		std::stringstream strm;
 		switch (args.base)
 		{
-			case lak::numeric_base::dec:
-				strm << std::dec;
-				break;
-			case lak::numeric_base::hex:
-				strm << std::hex;
-				break;
-			case lak::numeric_base::oct:
-				strm << std::oct;
-				break;
-			default:
-				break;
+			case lak::numeric_base::dec: strm << std::dec; break;
+			case lak::numeric_base::hex: strm << std::hex; break;
+			case lak::numeric_base::oct: strm << std::oct; break;
+			default:                     break;
 		}
 		strm << std::noshowbase;
 		if (args.uppercase) strm << std::uppercase;
@@ -218,26 +201,20 @@ struct lak::format_traits<T, CHAR>
 		{
 			switch (args.base)
 			{
-				case lak::numeric_base::dec:
-					break;
-				case lak::numeric_base::hex:
-					strm << "0x";
-					break;
-				case lak::numeric_base::oct:
-					strm << "0";
-					break;
-				case lak::numeric_base::bin:
-					strm << "0b";
-					break;
+				case lak::numeric_base::dec: break;
+				case lak::numeric_base::hex: strm << "0x"; break;
+				case lak::numeric_base::oct: strm << "0"; break;
+				case lak::numeric_base::bin: strm << "0b"; break;
 			}
 		}
 
 		strm << std::setfill(args.fill) << std::setw(args.precision)
 		     << static_cast<uintmax_t>(value);
 
-		return lak::strconv<CHAR>(strm.str());
+		return lak::strconv<CHAR>(lak::string_view<char>(strm.view()));
 	}
 };
+static_assert(lak::concepts::dynamic_formattable<unsigned int, char>);
 static_assert(lak::concepts::dynamic_formattable<unsigned int, char8_t>);
 static_assert(!lak::concepts::static_formattable<unsigned int, char8_t>);
 static_assert(lak::concepts::formattable<unsigned int, char8_t>);
@@ -254,7 +231,7 @@ struct lak::format_traits<T, CHAR>
 		char fill           = ' ';   // '0'
 		size_t precision    = 1U;    // .ddd
 
-		// [bBodxX]
+		// [bodxX]
 		lak::numeric_base base = lak::numeric_base::dec;
 		bool uppercase         = false;
 	};
@@ -316,26 +293,12 @@ struct lak::format_traits<T, CHAR>
 
 		switch (args[0])
 		{
-			case CHAR('B'):
-				result.uppercase = true;
-				[[fallthrough]];
-			case CHAR('b'):
-				result.base = lak::numeric_base::bin;
-				break;
-			case CHAR('o'):
-				result.base = lak::numeric_base::oct;
-				break;
-			case CHAR('d'):
-				result.base = lak::numeric_base::dec;
-				break;
-			case CHAR('X'):
-				result.uppercase = true;
-				[[fallthrough]];
-			case CHAR('x'):
-				result.base = lak::numeric_base::hex;
-				break;
-			default:
-				throw "invalid base";
+			case CHAR('b'): result.base = lak::numeric_base::bin; break;
+			case CHAR('o'): result.base = lak::numeric_base::oct; break;
+			case CHAR('d'): result.base = lak::numeric_base::dec; break;
+			case CHAR('X'): result.uppercase = true; [[fallthrough]];
+			case CHAR('x'): result.base = lak::numeric_base::hex; break;
+			default:        throw "invalid base";
 		}
 		args = args.substr(1U);
 
@@ -348,46 +311,29 @@ struct lak::format_traits<T, CHAR>
 		std::stringstream strm;
 		switch (args.base)
 		{
-			case lak::numeric_base::dec:
-				strm << std::dec;
-				break;
-			case lak::numeric_base::hex:
-				strm << std::hex;
-				break;
-			case lak::numeric_base::oct:
-				strm << std::oct;
-				break;
-			default:
-				break;
+			case lak::numeric_base::dec: strm << std::dec; break;
+			case lak::numeric_base::hex: strm << std::hex; break;
+			case lak::numeric_base::oct: strm << std::oct; break;
+			default:                     break;
 		}
 		strm << std::noshowbase;
 		if (args.uppercase) strm << std::uppercase;
 
-		if constexpr (std::is_signed_v<T>)
-		{
-			if (static_cast<intmax_t>(value) < intmax_t(0))
-				strm << "-";
-			else if (args.force_sign)
-				strm << "+";
-			else if (args.sign_pad)
-				strm << " ";
-		}
+		if (static_cast<intmax_t>(value) < intmax_t(0))
+			strm << "-";
+		else if (args.force_sign)
+			strm << "+";
+		else if (args.sign_pad)
+			strm << " ";
 
 		if (args.show_base)
 		{
 			switch (args.base)
 			{
-				case lak::numeric_base::dec:
-					break;
-				case lak::numeric_base::hex:
-					strm << "0x";
-					break;
-				case lak::numeric_base::oct:
-					strm << "0";
-					break;
-				case lak::numeric_base::bin:
-					strm << "0b";
-					break;
+				case lak::numeric_base::dec: break;
+				case lak::numeric_base::hex: strm << "0x"; break;
+				case lak::numeric_base::oct: strm << "0"; break;
+				case lak::numeric_base::bin: strm << "0b"; break;
 			}
 		}
 
@@ -398,12 +344,168 @@ struct lak::format_traits<T, CHAR>
 		else
 			strm << static_cast<uintmax_t>(value);
 
-		return lak::strconv<CHAR>(strm.str());
+		return lak::strconv<CHAR>(lak::string_view<char>(strm.view()));
 	}
 };
+static_assert(lak::concepts::dynamic_formattable<signed int, char>);
 static_assert(lak::concepts::dynamic_formattable<signed int, char8_t>);
+static_assert(lak::concepts::dynamic_formattable<signed int, char16_t>);
+static_assert(lak::concepts::dynamic_formattable<signed int, char32_t>);
+static_assert(lak::concepts::dynamic_formattable<signed int, wchar_t>);
+static_assert(lak::concepts::dynamic_formattable<int, char8_t>);
+static_assert(lak::concepts::dynamic_formattable<int, char>);
 static_assert(!lak::concepts::static_formattable<signed int, char8_t>);
 static_assert(lak::concepts::formattable<signed int, char8_t>);
+
+template<lak::concepts::one_of<LAK_ALL_STD_FLOATS> T, typename CHAR>
+struct lak::format_traits<T, CHAR>
+{
+	struct format_args
+	{
+		bool left_justified = false; // '-'
+		bool force_sign     = false; // '+'
+		bool sign_pad       = false; // ' '
+		bool show_base      = false; // '#'
+		char fill           = ' ';   // '0'
+		size_t min_width    = 1U;    // ddd
+		size_t precision    = 6U;    // .ddd
+
+		// [bodxX]
+		lak::numeric_base base = lak::numeric_base::dec;
+		bool uppercase         = false;
+	};
+
+	static consteval format_args parse_args(lak::string_view<CHAR> args)
+	{
+		format_args result;
+		if (args.empty()) return result;
+
+		if (args[0] == CHAR('-'))
+		{
+			throw "NYI";
+			result.left_justified = true;
+			args                  = args.substr(1U);
+			if (args.empty()) return result;
+		}
+
+		if (args[0] == CHAR('+'))
+		{
+			result.force_sign = true;
+			args              = args.substr(1U);
+			if (args.empty()) return result;
+		}
+		else if (args[0] == CHAR(' '))
+		{
+			result.sign_pad = true;
+			args            = args.substr(1U);
+			if (args.empty()) return result;
+		}
+
+		if (args[0] == CHAR('#'))
+		{
+			result.show_base = true;
+			args             = args.substr(1U);
+			if (args.empty()) return result;
+		}
+
+		if (args[0] == CHAR('0'))
+		{
+			if (result.left_justified) throw "invalid argument combination";
+			result.fill = '0';
+			args        = args.substr(1U);
+			if (args.empty()) return result;
+		}
+
+		if (args[0] >= CHAR('1') && args[0] <= CHAR('9'))
+		{
+			result.min_width = 0U;
+			args             = args.substr(1U);
+			if (args.empty()) return result;
+			while (args[0] >= CHAR('0') && args[0] <= CHAR('9'))
+			{
+				result.min_width *= 10U;
+				result.min_width += args[0] - CHAR('0');
+				args = args.substr(1U);
+				if (args.empty()) return result;
+			}
+		}
+
+		if (args[0] == CHAR('.'))
+		{
+			result.precision = 0U;
+			args             = args.substr(1U);
+			if (args.empty()) return result;
+			while (args[0] >= CHAR('0') && args[0] <= CHAR('9'))
+			{
+				result.precision *= 10U;
+				result.precision += args[0] - CHAR('0');
+				args = args.substr(1U);
+				if (args.empty()) return result;
+			}
+		}
+
+		switch (args[0])
+		{
+			// case CHAR('b'): result.base = lak::numeric_base::bin; break;
+			// case CHAR('o'): result.base = lak::numeric_base::oct; break;
+			case CHAR('d'): result.base = lak::numeric_base::dec; break;
+			// case CHAR('X'): result.uppercase = true; [[fallthrough]];
+			// case CHAR('x'): result.base = lak::numeric_base::hex; break;
+			default:        throw "invalid base";
+		}
+		args = args.substr(1U);
+
+		if (!args.empty()) throw "invalid format arguments";
+		return result;
+	}
+
+	static lak::string<CHAR> to_string(const format_args &args, const T &value)
+	{
+		std::stringstream strm;
+		switch (args.base)
+		{
+			case lak::numeric_base::dec: strm << std::dec; break;
+			case lak::numeric_base::hex: strm << std::hex; break;
+			case lak::numeric_base::oct: strm << std::oct; break;
+			default:                     break;
+		}
+		strm << std::noshowbase;
+		if (args.uppercase) strm << std::uppercase;
+
+		if (static_cast<intmax_t>(value) < intmax_t(0))
+			strm << "-";
+		else if (args.force_sign)
+			strm << "+";
+		else if (args.sign_pad)
+			strm << " ";
+
+		if (args.show_base)
+		{
+			switch (args.base)
+			{
+				case lak::numeric_base::dec: break;
+				case lak::numeric_base::hex: strm << "0x"; break;
+				case lak::numeric_base::oct: strm << "0"; break;
+				case lak::numeric_base::bin: strm << "0b"; break;
+			}
+		}
+
+		strm << std::setfill(args.fill) << std::setw(args.min_width)
+		     << std::setprecision(args.precision)
+		     << (std::signbit(value) ? -value : value);
+
+		return lak::strconv<CHAR>(lak::string_view<char>(strm.view()));
+	}
+};
+static_assert(lak::concepts::dynamic_formattable<float, char>);
+static_assert(lak::concepts::dynamic_formattable<float, char8_t>);
+static_assert(lak::concepts::dynamic_formattable<float, char16_t>);
+static_assert(lak::concepts::dynamic_formattable<float, char32_t>);
+static_assert(lak::concepts::dynamic_formattable<float, wchar_t>);
+static_assert(lak::concepts::dynamic_formattable<double, char8_t>);
+static_assert(lak::concepts::dynamic_formattable<double, char>);
+static_assert(!lak::concepts::static_formattable<long double, char8_t>);
+static_assert(lak::concepts::formattable<long double, char8_t>);
 
 template<lak::concepts::one_of<LAK_ALL_CHARS> T, typename CHAR>
 struct lak::format_traits<T, CHAR>

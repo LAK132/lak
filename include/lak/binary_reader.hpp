@@ -8,6 +8,7 @@
 #	include "lak/result.hpp"
 #	include "lak/span.hpp"
 #	include "lak/stdint.hpp"
+#	include "lak/format.hpp"
 
 #	include "lak/debug.hpp"
 
@@ -224,11 +225,6 @@ namespace lak
 
 		struct string_too_long_error
 		{
-			inline friend std::ostream &operator<<(std::ostream &strm,
-			                                       string_too_long_error)
-			{
-				return strm << "string too long";
-			}
 		};
 
 		template<typename CHAR, lak::endian E = lak::endian::little>
@@ -286,6 +282,16 @@ namespace lak
 		LAK_FOREACH_INTEGER(BINARY_READER_MEMBERS)
 		LAK_FOREACH_FLOAT(BINARY_READER_MEMBERS)
 #	undef BINARY_READER_MEMBERS
+	};
+
+	template<typename CHAR>
+	struct format_traits<lak::binary_reader::string_too_long_error, CHAR>
+	{
+		static constexpr lak::string<CHAR> to_string(
+		  const lak::binary_reader::string_too_long_error &)
+		{
+			return lak::strconv<CHAR>("string too long"_view);
+		}
 	};
 }
 

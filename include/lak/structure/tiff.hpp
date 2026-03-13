@@ -3,6 +3,7 @@
 
 #include "lak/binary_reader.hpp"
 #include "lak/binary_writer.hpp"
+#include "lak/format.hpp"
 #include "lak/math.hpp"
 #include "lak/memory.hpp"
 #include "lak/span.hpp"
@@ -38,31 +39,16 @@ namespace lak
 			uint32_t numerator;
 			uint32_t denominator;
 		};
-		inline std::ostream &operator<<(std::ostream &strm,
-		                                const lak::tiff::urational &rational)
-		{
-			return strm << rational.numerator << "/" << rational.denominator;
-		}
 
 		struct rational
 		{
 			int32_t numerator;
 			int32_t denominator;
 		};
-		inline std::ostream &operator<<(std::ostream &strm,
-		                                const lak::tiff::rational &rational)
-		{
-			return strm << rational.numerator << "/" << rational.denominator;
-		}
 
 		enum struct _offset : uint32_t
 		{
 		};
-		inline std::ostream &operator<<(std::ostream &strm,
-		                                const lak::tiff::_offset &off)
-		{
-			return strm << static_cast<uint32_t>(off);
-		}
 
 #define LAK_FOREACH_TIFF_TYPE(MACRO, ...)                                     \
 	MACRO(1, Byte, uint8_t, __VA_ARGS__)                                        \
@@ -100,38 +86,100 @@ namespace lak
 			LAK_FOREACH_TIFF_TAG_VALUE(LAK_TIFF_TAG_NAME)
 #undef LAK_TIFF_TAG_NAME
 		};
+	}
 
-		inline std::ostream &operator<<(std::ostream &strm,
-		                                const lak::tiff::tag_type &tag)
+	template<typename CHAR>
+	struct format_traits<lak::tiff::urational, CHAR>
+	{
+		using format_args =
+		  typename lak::format_traits<uint32_t, CHAR>::format_args;
+
+		static consteval format_args parse_args(lak::string_view<CHAR> str)
+		{
+			return lak::format_traits<uint32_t, CHAR>::parse_args(str);
+		}
+
+		static constexpr lak::string<CHAR> to_string(
+		  const format_args &args, const lak::tiff::urational &val)
+		{
+			return lak::fmt<CHAR, "{}/{}">(
+			  lak::format_traits<uint32_t, CHAR>::to_string(args, val.numerator),
+			  lak::format_traits<uint32_t, CHAR>::to_string(args, val.denominator));
+		}
+	};
+
+	template<typename CHAR>
+	struct format_traits<lak::tiff::rational, CHAR>
+	{
+		using format_args =
+		  typename lak::format_traits<int32_t, CHAR>::format_args;
+
+		static consteval format_args parse_args(lak::string_view<CHAR> str)
+		{
+			return lak::format_traits<int32_t, CHAR>::parse_args(str);
+		}
+
+		static constexpr lak::string<CHAR> to_string(
+		  const format_args &args, const lak::tiff::rational &val)
+		{
+			return lak::fmt<CHAR, "{}/{}">(
+			  lak::format_traits<int32_t, CHAR>::to_string(args, val.numerator),
+			  lak::format_traits<int32_t, CHAR>::to_string(args, val.denominator));
+		}
+	};
+
+	template<typename CHAR>
+	struct format_traits<lak::tiff::_offset, CHAR>
+	{
+		using format_args =
+		  typename lak::format_traits<uint32_t, CHAR>::format_args;
+
+		static consteval format_args parse_args(lak::string_view<CHAR> str)
+		{
+			return lak::format_traits<uint32_t, CHAR>::parse_args(str);
+		}
+
+		static constexpr lak::string<CHAR> to_string(const format_args &args,
+		                                             const lak::tiff::_offset &val)
+		{
+			return lak::format_traits<uint32_t, CHAR>::to_string(
+			  args, static_cast<uint32_t>(val));
+		}
+	};
+
+	template<typename CHAR>
+	struct format_traits<lak::tiff::tag_type, CHAR>
+	{
+		static constexpr lak::string<CHAR> to_string(
+		  const lak::tiff::tag_type &tag)
 		{
 			switch (tag)
 			{
 #define LAK_TIFF_TAG_TYPE(VAL, NAME, ...)                                     \
-	case lak::tiff::tag_type::NAME:                                             \
-		strm << #NAME;                                                            \
-		break;
+	case lak::tiff::tag_type::NAME: return lak::strconv<CHAR>(#NAME ""_view);
 				LAK_FOREACH_TIFF_TYPE(LAK_TIFF_TAG_TYPE)
 #undef LAK_TIFF_TAG_TYPE
 			}
-			return strm;
+			return {};
 		}
+	};
 
-		inline std::ostream &operator<<(std::ostream &strm,
-		                                const lak::tiff::tag_name &tag)
+	template<typename CHAR>
+	struct format_traits<lak::tiff::tag_name, CHAR>
+	{
+		static constexpr lak::string<CHAR> to_string(
+		  const lak::tiff::tag_name &tag)
 		{
 			switch (tag)
 			{
 #define LAK_TIFF_TAG_NAME(VAL, NAME, ...)                                     \
-	case lak::tiff::tag_name::NAME:                                             \
-		strm << #NAME;                                                            \
-		break;
+	case lak::tiff::tag_name::NAME: return lak::strconv<CHAR>(#NAME ""_view);
 				LAK_FOREACH_TIFF_TAG_VALUE(LAK_TIFF_TAG_NAME)
 #undef LAK_TIFF_TAG_NAME
 			}
-			return strm;
+			return {};
 		}
-
-	}
+	};
 }
 
 LAK_FIXED_STRUCT_BYTES_TRAITS(lak::tiff::urational,

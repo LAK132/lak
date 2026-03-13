@@ -1,28 +1,17 @@
+#include "lak/streamify_traits.hpp"
+
 #ifndef LAK_STREAMIFY_HPP
-#define LAK_STREAMIFY_HPP
+#	define LAK_STREAMIFY_HPP
 
-#include "lak/string.hpp"
+#	include "lak/string.hpp"
 
-#ifndef LAK_SPAN_FORWARD_ONLY
-#	define LAK_SPAN_FORWARD_ONLY
-#endif
-#include "lak/span.hpp"
+#	ifndef LAK_SPAN_FORWARD_ONLY
+#		define LAK_SPAN_FORWARD_ONLY
+#	endif
+#	include "lak/span.hpp"
 
 namespace lak
 {
-	namespace concepts
-	{
-		template<typename T>
-		concept streamable = requires(T thing) {
-			{
-				std::declval<std::ostream &>() << thing
-			} -> lak::concepts::same_as<std::ostream &>;
-		};
-	}
-
-	template<typename T>
-	constexpr bool is_streamable_v = lak::concepts::streamable<T>;
-
 	template<typename ARG, typename... ARGS>
 	lak::u8string spaced_streamify(const lak::u8string &space,
 	                               const ARG &arg,
@@ -36,6 +25,13 @@ namespace lak
 	lak::u8string streamify(const ARGS &...args);
 }
 
-#include "lak/streamify.inl"
+#endif
 
+#ifdef LAK_STREAMIFY_FORWARD_ONLY
+#	undef LAK_STREAMIFY_FORWARD_ONLY
+#else
+#	ifndef LAK_STREAMIFY_HPP_IMPL
+#		define LAK_STREAMIFY_HPP_IMPL
+#		include "lak/streamify.inl"
+#	endif
 #endif

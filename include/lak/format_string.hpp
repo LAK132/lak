@@ -30,7 +30,8 @@ namespace lak
 			}
 			else if (const_str[i] == CHAR('}'))
 			{
-				if (i + 1U < const_str.size() && const_str[i + 1U] == CHAR('}'))
+				if (!in_specifier && i + 1U < const_str.size() &&
+				    const_str[i + 1U] == CHAR('}'))
 				{
 					++i;
 					continue;
@@ -103,7 +104,8 @@ namespace lak
 			}
 			else if (const_str[i] == CHAR('}'))
 			{
-				if (i + 1U < const_str.size() && const_str[i + 1U] == CHAR('}'))
+				if (!in_specifier && i + 1U < const_str.size() &&
+				    const_str[i + 1U] == CHAR('}'))
 				{
 					++i;
 					continue;
@@ -180,7 +182,8 @@ namespace lak
 			}
 			else if (const_str[i] == CHAR('}'))
 			{
-				if (i + 1U < const_str.size() && const_str[i + 1U] == CHAR('}'))
+				if (!in_specifier && i + 1U < const_str.size() &&
+				    const_str[i + 1U] == CHAR('}'))
 				{
 					++i;
 					continue;
@@ -197,22 +200,39 @@ namespace lak
 	template<lak::const_string const_str, size_t begin, size_t count>
 	consteval size_t format_specifier_deduped_size()
 	{
-		using CHAR    = typename decltype(const_str)::char_type;
-		size_t result = 0U;
-		size_t end    = begin + count;
+		using CHAR        = typename decltype(const_str)::char_type;
+		size_t result     = 0U;
+		size_t end        = begin + count;
+		bool in_specifier = false;
 		for (size_t i = begin; i < begin + count; ++i)
 		{
-			if (const_str[i] == CHAR('{') && i + 1U < end &&
-			    i + 1U < const_str.size() && const_str[i + 1U] == CHAR('{'))
+			if (const_str[i] == CHAR('{'))
 			{
-				++i;
-				++result;
+				if (in_specifier) throw "unexpected '{'";
+				if (i + 1U < end && i + 1U < const_str.size() &&
+				    const_str[i + 1U] == CHAR('{'))
+				{
+					++i;
+					++result;
+				}
+				else
+				{
+					in_specifier = true;
+				}
 			}
-			else if (const_str[i] == CHAR('}') && i + 1U < end &&
-			         i + 1U < const_str.size() && const_str[i + 1U] == CHAR('}'))
+			else if (const_str[i] == CHAR('}'))
 			{
-				++i;
-				++result;
+				if (!in_specifier && i + 1U < end && i + 1U < const_str.size() &&
+				    const_str[i + 1U] == CHAR('}'))
+				{
+					++i;
+					++result;
+				}
+				else
+				{
+					if (!in_specifier) throw "unexpected '}'";
+					in_specifier = false;
+				}
 			}
 		}
 		return count - result;
@@ -226,21 +246,37 @@ namespace lak
 		lak::c_array<CHAR,
 		             lak::format_specifier_deduped_size<const_str, begin, count>()>
 		  result;
-		size_t offset = begin;
-		size_t end    = begin + count;
+		size_t offset     = begin;
+		size_t end        = begin + count;
+		bool in_specifier = false;
 		for (size_t i = 0; i < result.size(); ++i)
 		{
-			if (const_str[i + offset] == CHAR('{') && (i + offset) + 1U < end &&
-			    (i + offset) + 1U < const_str.size() &&
-			    const_str[(i + offset) + 1U] == CHAR('{'))
+			if (const_str[i + offset] == CHAR('{'))
 			{
-				++offset;
+				if (in_specifier) throw "unexpected '{'";
+				if ((i + offset) + 1U < end && (i + offset) + 1U < const_str.size() &&
+				    const_str[(i + offset) + 1U] == CHAR('{'))
+				{
+					++offset;
+				}
+				else
+				{
+					in_specifier = true;
+				}
 			}
-			else if (const_str[i + offset] == CHAR('}') && (i + offset) + 1U < end &&
-			         (i + offset) + 1U < const_str.size() &&
-			         const_str[(i + offset) + 1U] == CHAR('}'))
+			else if (const_str[i + offset] == CHAR('}'))
 			{
-				++offset;
+				if (!in_specifier && (i + offset) + 1U < end &&
+				    (i + offset) + 1U < const_str.size() &&
+				    const_str[(i + offset) + 1U] == CHAR('}'))
+				{
+					++offset;
+				}
+				else
+				{
+					if (!in_specifier) throw "unexpected '}'";
+					in_specifier = false;
+				}
 			}
 			result[i] = const_str[i + offset];
 		}
@@ -386,11 +422,7 @@ namespace lak
 		static constexpr lak::pair<size_t, lak::string_view<char_type>> specifier(
 		  size_t index)
 		{
-			if (!std::is_constant_evaluated())
-			{
-				ASSERT_LESS(index, specifiers.size());
-			}
-			else if (index >= specifiers.size())
+			if (std::is_constant_evaluated() && index >= specifiers.size())
 				throw "index out of range";
 			const auto spec = specifiers[index];
 			return lak::pair(
@@ -400,11 +432,7 @@ namespace lak
 
 		static constexpr lak::string_view<char_type> prefix(size_t index)
 		{
-			if (!std::is_constant_evaluated())
-			{
-				ASSERT_LESS(index, prefixes.size());
-			}
-			else if (index >= prefixes.size())
+			if (std::is_constant_evaluated() && index >= prefixes.size())
 				throw "index out of range";
 			const auto spec = prefixes[index];
 			return prefixes_buffer().substr(spec.first, spec.second);

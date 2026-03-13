@@ -1,14 +1,14 @@
-#ifndef LAK_DEBUG_INL
-#	define LAK_DEBUG_INL
+#ifndef LAK_DEBUGGER_HPP
+#define LAK_DEBUGGER_HPP
 
-#	include "lak/string.hpp"
-#	include "lak/system/os.hpp"
+#include "lak/string.hpp"
+#include "lak/system/os.hpp"
 
-#	include <cstdlib>
-#	include <filesystem>
-#	include <iostream>
-#	include <mutex>
-#	include <sstream>
+#include <cstdlib>
+#include <filesystem>
+#include <iostream>
+#include <mutex>
+#include <sstream>
 
 namespace lak
 {
@@ -17,13 +17,13 @@ namespace lak
 
 	struct debugger_t
 	{
-#	ifndef LAK_DEBUG_STREAM_CHAR
-#		ifdef LAK_OS_APPLE
-#			define LAK_DEBUG_STREAM_CHAR char
-#		else
-#			define LAK_DEBUG_STREAM_CHAR char8_t
-#		endif
+#ifndef LAK_DEBUG_STREAM_CHAR
+#	ifdef LAK_OS_APPLE
+#		define LAK_DEBUG_STREAM_CHAR char
+#	else
+#		define LAK_DEBUG_STREAM_CHAR char8_t
 #	endif
+#endif
 		std::basic_stringstream<LAK_DEBUG_STREAM_CHAR> stream;
 
 		void std_out(const lak::u8string &line_info, const lak::astring &str);
@@ -58,37 +58,20 @@ namespace lak
 		bool live_output_enabled = true;
 		bool live_errors_only    = false;
 		bool line_info_enabled   = true;
+
+		struct scoped_indenter
+		{
+			scoped_indenter(const lak::u8string &name);
+
+			~scoped_indenter();
+
+			static lak::astring str();
+			static lak::wstring wstr();
+			static lak::u8string u8str();
+		};
 	};
-
-	struct scoped_indenter
-	{
-		scoped_indenter(const lak::u8string &name);
-
-		~scoped_indenter();
-
-		static lak::astring str();
-		static lak::wstring wstr();
-		static lak::u8string u8str();
-	};
-
-	[[maybe_unused]] static thread_local size_t debug_indent = 0U;
 
 	extern debugger_t debugger;
 }
 
-#	include "lak/strcast.hpp"
-
-#	include "lak/streamify.hpp"
-
-#endif
-
-#ifdef LAK_DEBUG_FORWARD_ONLY
-#	undef LAK_DEBUG_FORWARD_ONLY
-#else
-#	ifndef LAK_DEBUG_INL_IMPL
-#		define LAK_DEBUG_INL_IMPL
-
-#		include "lak/functional.hpp"
-
-#	endif
 #endif

@@ -1,78 +1,26 @@
-#ifndef LAK_FORMAT_HPP
-#define LAK_FORMAT_HPP
+#include "lak/streamify.hpp"
 
-#include "lak/format_string.hpp"
-#include "lak/string.hpp"
+#ifndef LAK_FORMAT_HPP
+#	define LAK_FORMAT_HPP
+
+#	include "lak/format_traits.hpp"
+
+#	include "lak/format_string.hpp"
 
 namespace lak
 {
 	// lak::fmt<"format {} string">(132) -> lak::astring
 	// lak::fmt<u8"format {} string">(132) -> lak::u8string
-
-	template<typename T, typename CHAR>
-	struct format_traits;
-	// {
-	// 	dynamic:
-	// 	struct format_args
-	// 	{
-	// 	};
-	// 	static consteval format_args parse_args(lak::string_view<CHAR> args);
-	// 	static constexpr lak::string<CHAR> to_string(const format_args &fmt,
-	// 	                                             const T &value);
-
-	// 	static:
-	// 	static constexpr lak::string<CHAR> to_string(const T &value);
-	// };
+	// lak::fmt<U"{:d}, {0:#x}">(132) -> U"132, 0x84"
 
 	static_assert(
 	  lak::is_same_v<lak::const_string<char8_t, 1U>::char_type, char8_t>);
 
-	namespace concepts
-	{
-		template<typename T, typename CHAR>
-		concept dynamic_formattable = requires(T obj) {
-			typename lak::format_traits<T, CHAR>::format_args;
-			{
-				lak::format_traits<T, CHAR>::parse_args(
-				  lak::declval<lak::string_view<CHAR>>())
-			} -> lak::concepts::same_as<
-			  typename lak::format_traits<T, CHAR>::format_args>;
-			{
-				lak::format_traits<T, CHAR>::to_string(
-				  lak::declval<
-				    const typename lak::format_traits<T, CHAR>::format_args &>(),
-				  lak::declval<const T &>())
-			} -> lak::concepts::same_as<lak::string<CHAR>>;
-		};
-
-		template<typename T, typename CHAR>
-		concept static_formattable = requires(T obj) {
-			{
-				lak::format_traits<T, CHAR>::to_string(lak::declval<const T &>())
-			} -> lak::concepts::same_as<lak::string<CHAR>>;
-		};
-
-		template<typename T, typename CHAR>
-		concept formattable = lak::concepts::dynamic_formattable<T, CHAR> ||
-		                      lak::concepts::static_formattable<T, CHAR>;
-	}
-
 	template<lak::format_string FMT, typename T, size_t I>
-	requires(
-	  lak::concepts::static_formattable<T, typename decltype(FMT)::char_type> &&
-	  !lak::concepts::dynamic_formattable<T, typename decltype(FMT)::char_type>)
-	static consteval auto _get_format_args(lak::size_type<I>)
-	{
-		return lak::monostate{};
-	}
-
-	template<lak::format_string FMT, typename T, size_t I>
-	requires(
-	  lak::concepts::dynamic_formattable<T, typename decltype(FMT)::char_type>)
 	static consteval auto _get_format_args(lak::size_type<I>)
 	{
 		using char_type = typename decltype(FMT)::char_type;
-		return lak::format_traits<T, char_type>::parse_args(
+		return lak::parse_format_args<T, char_type>(
 		  decltype(FMT)::specifier(I).second);
 	}
 
@@ -145,7 +93,7 @@ namespace lak
 			result += fmt_type::prefix(i + 1U);
 		}
 		return result;
-	};
+	}
 
 	template<lak::const_string STR, typename... ARGS>
 	auto fmt(ARGS &&...args)
@@ -155,19 +103,20 @@ namespace lak
 		  ((lak::concepts::formattable<lak::remove_cvref_t<ARGS>, CHAR>) && ...));
 		constexpr lak::format_string<STR> fmt;
 		return lak::format<fmt>(lak::forward<ARGS>(args)...);
-	};
+	}
 
-#define LAK_FORMAT(CHAR, PREFIX, ...)                                         \
-	template<lak::PREFIX##const_string STR, typename... ARGS>                   \
-	lak::string<CHAR> PREFIX##fmt(ARGS &&...args)                               \
-	{                                                                           \
-		static_assert((                                                           \
-		  (lak::concepts::formattable<lak::remove_cvref_t<ARGS>, CHAR>) && ...)); \
-		return lak::format<lak::format_string<STR>{}>(                            \
-		  lak::forward<ARGS>(args)...);                                           \
-	};
+#	define LAK_FORMAT(CHAR, PREFIX, ...)                                       \
+		template<lak::PREFIX##const_string STR, typename... ARGS>                 \
+		lak::string<CHAR> PREFIX##fmt(ARGS &&...args)                             \
+		{                                                                         \
+			static_assert(                                                          \
+			  ((lak::concepts::formattable<lak::remove_cvref_t<ARGS>, CHAR>) &&     \
+			   ...));                                                               \
+			return lak::format<lak::format_string<STR>{}>(                          \
+			  lak::forward<ARGS>(args)...);                                         \
+		};
 	LAK_FOREACH_CHAR(LAK_FORMAT)
-#undef LAK_FORMAT
+#	undef LAK_FORMAT
 
 	template<typename CHAR, lak::aconst_string STR, typename... ARGS>
 	lak::string<CHAR> fmt(ARGS &&...args)
@@ -176,9 +125,9 @@ namespace lak
 		  ((lak::concepts::formattable<lak::remove_cvref_t<ARGS>, CHAR>) && ...));
 		return lak::format<lak::format_string<lak::strconv<CHAR>(STR)>{}>(
 		  lak::forward<ARGS>(args)...);
-	};
+	}
 }
 
-#include "lak/format.inl"
+#	include "lak/format.inl"
 
 #endif

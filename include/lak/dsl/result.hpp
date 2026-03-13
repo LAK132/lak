@@ -1,12 +1,11 @@
 #ifndef LAK_DSL_RESULT_HPP
 #define LAK_DSL_RESULT_HPP
 
+#include "lak/format.hpp"
 #include "lak/result.hpp"
 #include "lak/string_view.hpp"
 
 #include "lak/string_literals/string.hpp"
-
-#include <ostream>
 
 namespace lak
 {
@@ -22,12 +21,6 @@ namespace lak
 				{
 					return u8"parse error" +
 					       (message.empty() ? u8""_str : u8": " + message);
-				}
-
-				inline friend std::ostream &operator<<(std::ostream &strm,
-				                                       const lak::dsl::err::parse &err)
-				{
-					return strm << lak::u8string_view(err.to_string());
 				}
 			};
 		}
@@ -78,6 +71,16 @@ namespace lak
 		using result =
 		  lak::result<lak::dsl::parse_result<T>, lak::dsl::err::parse>;
 	}
+
+	template<typename CHAR>
+	struct format_traits<lak::dsl::err::parse, CHAR>
+	{
+		static constexpr lak::string<CHAR> to_string(
+		  const lak::dsl::err::parse &val)
+		{
+			return lak::strconv<CHAR>(val.to_string());
+		}
+	};
 }
 
 #endif

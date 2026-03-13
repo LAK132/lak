@@ -3,6 +3,7 @@
 
 #include "lak/binary_reader.hpp"
 #include "lak/binary_writer.hpp"
+#include "lak/format.hpp"
 #include "lak/span.hpp"
 #include "lak/stdint.hpp"
 #include "lak/type_pack.hpp"
@@ -18,9 +19,12 @@ namespace lak
 		struct named_tag;
 		struct TAG_List;
 
-		struct invalid_type_error
+		namespace err
 		{
-		};
+			struct invalid_type
+			{
+			};
+		}
 	}
 }
 
@@ -83,23 +87,6 @@ namespace lak
 		{
 			using value_type = T;
 			value_type value;
-
-			inline friend std::ostream &operator<<(std::ostream &strm,
-			                                       const lak::nbt::pod_tag<T> &tag)
-			{
-				if constexpr (lak::is_same_v<T, lak::nbt::TAG_Byte::value_type>)
-					return strm << std::dec << intmax_t(tag.value) << "b";
-				else if constexpr (lak::is_same_v<T, lak::nbt::TAG_Short::value_type>)
-					return strm << std::dec << intmax_t(tag.value) << "s";
-				else if constexpr (lak::is_same_v<T, lak::nbt::TAG_Int::value_type>)
-					return strm << std::dec << intmax_t(tag.value);
-				else if constexpr (lak::is_same_v<T, lak::nbt::TAG_Long::value_type>)
-					return strm << std::dec << intmax_t(tag.value) << "l";
-				else if constexpr (lak::is_same_v<T, lak::nbt::TAG_Float::value_type>)
-					return strm << std::dec << tag.value << "f";
-				else if constexpr (lak::is_same_v<T, lak::nbt::TAG_Double::value_type>)
-					return strm << std::dec << tag.value << "d";
-			}
 		};
 	}
 }
@@ -156,40 +143,11 @@ namespace lak
 				RES_TRY(strm.template write<E>(lak::span(value)));
 				return lak::ok_t{};
 			}
-
-			inline friend std::ostream &operator<<(std::ostream &strm,
-			                                       const lak::nbt::array_tag<T> &tag)
-			{
-				if constexpr (lak::is_same_v<T, lak::nbt::TAG_Byte::value_type>)
-					strm << "[B;";
-				else if constexpr (lak::is_same_v<T, lak::nbt::TAG_Int::value_type>)
-					strm << "[I;";
-				else if constexpr (lak::is_same_v<T, lak::nbt::TAG_Long::value_type>)
-					strm << "[L;";
-
-				return strm << lak::as_astring(lak::accumulate(
-				                 lak::span(tag.value),
-				                 u8""_str,
-				                 [](const lak::u8string &str, T val)
-				                 {
-					                 lak::nbt::pod_tag<T> v{.value = val};
-					                 return str.empty()
-					                          ? lak::streamify(v)
-					                          : lak::spaced_streamify(u8","_str, str, v);
-				                 }))
-				            << "]";
-			}
 		};
 
 		struct TAG_End
 		{
 			lak::array<byte_t, 0> _value;
-
-			inline friend std::ostream &operator<<(std::ostream &strm,
-			                                       const lak::nbt::TAG_End &)
-			{
-				return strm;
-			}
 		};
 	}
 }
@@ -230,12 +188,6 @@ namespace lak
 				}));
 				RES_TRY(strm.template write<E>(lak::span(value)));
 				return lak::ok_t{};
-			}
-
-			inline friend std::ostream &operator<<(std::ostream &strm,
-			                                       const lak::nbt::TAG_String &tag)
-			{
-				return strm << "\'" << lak::as_astring(tag.value) << "\'";
 			}
 		};
 
@@ -280,23 +232,6 @@ namespace lak
 				RES_TRY(strm.template write<E>(lak::nbt::tag_type::End));
 				return lak::ok_t{};
 			}
-
-			inline friend std::ostream &operator<<(std::ostream &strm,
-			                                       const lak::nbt::TAG_Compound &tag)
-			{
-				return strm << "{"
-				            << lak::as_astring(lak::accumulate(
-				                 lak::span(tag.value),
-				                 u8""_str,
-				                 [](const lak::u8string &str,
-				                    const lak::nbt::named_tag &val)
-				                 {
-					                 return str.empty() ? lak::streamify(val)
-					                                    : lak::spaced_streamify(
-					                                        u8","_str, str, val);
-				                 }))
-				            << "}";
-			}
 		};
 
 		using tag_types_pack =
@@ -337,7 +272,7 @@ namespace lak
 			}
 
 			template<lak::endian E>
-			lak::error_codes<lak::err::out_of_data, lak::nbt::invalid_type_error>
+			lak::error_codes<lak::err::out_of_data, lak::nbt::err::invalid_type>
 			read(lak::binary_reader &strm)
 			{
 				RES_TRY_ASSIGN(auto type =,
@@ -355,8 +290,7 @@ namespace lak
 	break;
 					LAK_FOREACH_NBT_TYPE(LAK_NBT_READER_VISIT)
 #undef LAK_NBT_READER_VISIT
-					default:
-						return lak::err_t<lak::nbt::invalid_type_error>{};
+					default: return lak::err_t<lak::nbt::err::invalid_type>{};
 				}
 
 				return lak::ok_t{};
@@ -390,26 +324,6 @@ namespace lak
 				  { return strm.template write<E>(lak::span(arr)); }));
 				return lak::ok_t{};
 			}
-
-			inline friend std::ostream &operator<<(std::ostream &strm,
-			                                       const lak::nbt::TAG_List &tag)
-			{
-				return strm << "["
-				            << lak::as_astring(tag.value.visit(
-				                 []<typename T>(const lak::array<T> &arr)
-				                 {
-					                 return lak::accumulate(
-					                   lak::span(arr),
-					                   u8""_str,
-					                   [](const lak::u8string &str, const T &val)
-					                   {
-						                   return str.empty() ? lak::streamify(val)
-						                                      : lak::spaced_streamify(
-						                                          u8","_str, str, val);
-					                   });
-				                 }))
-				            << "]";
-			}
 		};
 
 		struct tag_payload
@@ -439,13 +353,6 @@ namespace lak
 				return value.visit([&]<typename T>(const T &val)
 				                   { return strm.template write<E>(val); });
 			}
-
-			inline friend std::ostream &operator<<(
-			  std::ostream &strm, const lak::nbt::tag_payload &payload)
-			{
-				payload.value.visit([&]<typename T>(const T &val) { strm << val; });
-				return strm;
-			}
 		};
 
 		struct named_tag
@@ -455,7 +362,7 @@ namespace lak
 			inline lak::nbt::tag_type type() const { return payload.type(); }
 
 			template<lak::endian E>
-			lak::error_codes<lak::err::out_of_data, lak::nbt::invalid_type_error>
+			lak::error_codes<lak::err::out_of_data, lak::nbt::err::invalid_type>
 			read(lak::binary_reader &strm)
 			{
 				RES_TRY_ASSIGN(lak::nbt::tag_type type =,
@@ -471,8 +378,7 @@ namespace lak
 	break;
 					LAK_FOREACH_NBT_TYPE(LAK_NBT_READER_VISIT)
 #undef LAK_NBT_READER_VISIT
-					default:
-						return lak::err_t{};
+					default: return lak::err_t{};
 				}
 				return lak::ok_t{};
 			}
@@ -493,12 +399,6 @@ namespace lak
 				RES_TRY(name.template write<E>(strm));
 				RES_TRY(payload.template write<E>(strm));
 				return lak::ok_t{};
-			}
-
-			inline friend std::ostream &operator<<(std::ostream &strm,
-			                                       const lak::nbt::named_tag &tag)
-			{
-				return strm << lak::as_astring(tag.name.value) << ":" << tag.payload;
 			}
 		};
 
@@ -636,6 +536,139 @@ namespace lak
 			};
 		}
 	}
+
+	template<typename CHAR>
+	struct format_traits<lak::nbt::err::invalid_type, CHAR>
+	{
+		static constexpr lak::string<CHAR> to_string(
+		  const lak::nbt::err::invalid_type &)
+		{
+			return lak::strconv<CHAR>("invalid type"_view);
+		}
+	};
+
+	template<typename T, typename CHAR>
+	struct format_traits<lak::nbt::pod_tag<T>, CHAR>
+	{
+		static constexpr lak::string<CHAR> to_string(
+		  const lak::nbt::pod_tag<T> &val)
+		{
+			if constexpr (lak::is_same_v<T, lak::nbt::TAG_Byte::value_type>)
+				return lak::fmt<CHAR, "{:d}b">(intmax_t(val.value));
+			else if constexpr (lak::is_same_v<T, lak::nbt::TAG_Short::value_type>)
+				return lak::fmt<CHAR, "{:d}s">(intmax_t(val.value));
+			else if constexpr (lak::is_same_v<T, lak::nbt::TAG_Int::value_type>)
+				return lak::fmt<CHAR, "{:d}">(intmax_t(val.value));
+			else if constexpr (lak::is_same_v<T, lak::nbt::TAG_Long::value_type>)
+				return lak::fmt<CHAR, "{:d}l">(intmax_t(val.value));
+			else if constexpr (lak::is_same_v<T, lak::nbt::TAG_Float::value_type>)
+				return lak::fmt<CHAR, "{:d}f">(val.value);
+			else if constexpr (lak::is_same_v<T, lak::nbt::TAG_Double::value_type>)
+				return lak::fmt<CHAR, "{:d}d">(val.value);
+		}
+	};
+
+	template<typename T, typename CHAR>
+	struct format_traits<lak::nbt::array_tag<T>, CHAR>
+	{
+		static constexpr lak::string<CHAR> to_string(
+		  const lak::nbt::array_tag<T> &val)
+		{
+			auto contents = lak::strconv<CHAR>(
+			  lak::accumulate(lak::span(val.value),
+			                  lak::string<CHAR>{},
+			                  [](const lak::string<CHAR> &str, T val)
+			                  {
+				                  lak::nbt::pod_tag<T> v{.value = val};
+				                  return str.empty() ? lak::fmt<CHAR, "{}">(v)
+				                                     : lak::fmt<CHAR, "{},{}">(str, v);
+			                  }));
+
+			if constexpr (lak::is_same_v<T, lak::nbt::TAG_Byte::value_type>)
+				return lak::fmt<CHAR, "[B;{}]">(contents);
+			else if constexpr (lak::is_same_v<T, lak::nbt::TAG_Int::value_type>)
+				return lak::fmt<CHAR, "[I;{}]">(contents);
+			else if constexpr (lak::is_same_v<T, lak::nbt::TAG_Long::value_type>)
+				return lak::fmt<CHAR, "[L;{}]">(contents);
+		}
+	};
+
+	template<typename CHAR>
+	struct format_traits<lak::nbt::TAG_End, CHAR>
+	{
+		static constexpr lak::string<CHAR> to_string(const lak::nbt::TAG_End &)
+		{
+			return {};
+		}
+	};
+
+	template<typename CHAR>
+	struct format_traits<lak::nbt::TAG_String, CHAR>
+	{
+		static constexpr lak::string<CHAR> to_string(
+		  const lak::nbt::TAG_String &val)
+		{
+			return lak::fmt<CHAR, "'{}'">(val.value);
+		}
+	};
+
+	template<typename CHAR>
+	struct format_traits<lak::nbt::TAG_Compound, CHAR>
+	{
+		static constexpr lak::string<CHAR> to_string(
+		  const lak::nbt::TAG_Compound &val)
+		{
+			return lak::fmt<CHAR, "{{{}}}">(lak::accumulate(
+			  lak::span(val.value),
+			  lak::string<CHAR>{},
+			  [](const lak::string<CHAR> &str, const lak::nbt::named_tag &val)
+			  {
+				  return str.empty() ? lak::fmt<CHAR, "{}">(val)
+				                     : lak::fmt<CHAR, "{},{}">(str, val);
+			  }));
+		}
+	};
+
+	template<typename CHAR>
+	struct format_traits<lak::nbt::TAG_List, CHAR>
+	{
+		static constexpr lak::string<CHAR> to_string(const lak::nbt::TAG_List &val)
+		{
+			return lak::fmt<CHAR, "[{}]">(val.value.visit(
+			  []<typename T>(const lak::array<T> &arr)
+			  {
+				  return lak::accumulate(
+				    lak::span(arr),
+				    lak::string<CHAR>{},
+				    [](const lak::string<CHAR> &str, const T &val)
+				    {
+					    return str.empty() ? lak::fmt<CHAR, "{}">(val)
+					                       : lak::fmt<CHAR, "{},{}">(str, val);
+				    });
+			  }));
+		}
+	};
+
+	template<typename CHAR>
+	struct format_traits<lak::nbt::tag_payload, CHAR>
+	{
+		static constexpr lak::string<CHAR> to_string(
+		  const lak::nbt::tag_payload &val)
+		{
+			return val.value.visit([]<typename T>(const T &val)
+			                       { return lak::fmt<CHAR, "{}">(val); });
+		}
+	};
+
+	template<typename CHAR>
+	struct format_traits<lak::nbt::named_tag, CHAR>
+	{
+		static constexpr lak::string<CHAR> to_string(
+		  const lak::nbt::named_tag &val)
+		{
+			return lak::fmt<CHAR, "{}:{}">(val.name.value, val.payload);
+		}
+	};
 }
 
 static_assert(

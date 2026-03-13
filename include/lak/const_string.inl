@@ -33,15 +33,10 @@ lak::const_string<CHAR, N>::operator=(const const_string &other)
 }
 
 template<typename CHAR, size_t N>
-inline constexpr lak::const_string<CHAR, N>::const_string(
+inline consteval lak::const_string<CHAR, N>::const_string(
   const CHAR (&str)[N + 1])
 {
-	if (!std::is_constant_evaluated())
-	{
-		ASSERT_EQUAL(str[N], CHAR(0));
-	}
-	else if (str[N] != CHAR(0))
-		throw "expected null terminator";
+	if (str[N] != CHAR(0)) throw "expected null terminator";
 	for (size_t i = 0; i < N; ++i) _value[i] = str[i];
 }
 
@@ -77,7 +72,7 @@ inline constexpr uint32_t lak::const_string<CHAR, N>::crc32() const
 }
 
 template<typename CHAR, size_t N>
-constexpr lak::const_string<CHAR, N> lak::strconv(
+consteval lak::const_string<CHAR, N> lak::strconv(
   const lak::aconst_string<N> &str)
 {
 	CHAR result[N + 1];

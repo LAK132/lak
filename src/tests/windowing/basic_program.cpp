@@ -7,6 +7,8 @@
 
 #include "lak/string_literals/view.hpp"
 
+#include "lak/debug.hpp"
+
 struct lak_test_basic_window : virtual public lak_test_basic_window_api
 {
 	lak_test_basic_window() : lak_test_basic_window_api() {}

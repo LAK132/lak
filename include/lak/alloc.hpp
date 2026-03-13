@@ -1,19 +1,23 @@
 #ifndef LAK_ALLOC_HPP
 #define LAK_ALLOC_HPP
 
+#include "lak/format.hpp"
 #include "lak/result.hpp"
 #include "lak/span.hpp"
-
-#include <ostream>
+#include "lak/string_literals/view.hpp"
 
 namespace lak
 {
 	struct bad_alloc
 	{
-		inline friend std::ostream &operator<<(std::ostream &strm,
-		                                       const lak::bad_alloc &)
+	};
+
+	template<typename CHAR>
+	struct format_traits<lak::bad_alloc, CHAR>
+	{
+		static constexpr lak::string<CHAR> to_string(const lak::bad_alloc &)
 		{
-			return strm << "bad alloc";
+			return lak::strconv<CHAR>("bad alloc"_view);
 		}
 	};
 

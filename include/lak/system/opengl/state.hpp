@@ -6,6 +6,7 @@
 #include "lak/system/compiler.hpp"
 
 #include "lak/debug.hpp"
+#include "lak/format.hpp"
 #include "lak/result.hpp"
 #include "lak/type_traits.hpp"
 
@@ -21,47 +22,36 @@ namespace lak
 		{
 			switch (error)
 			{
-				case GL_NO_ERROR:
-					return "GL_NO_ERROR"_view;
-				case GL_INVALID_ENUM:
-					return "GL_INVALID_ENUM"_view;
-				case GL_INVALID_VALUE:
-					return "GL_INVALID_VALUE"_view;
-				case GL_INVALID_OPERATION:
-					return "GL_INVALID_OPERATION"_view;
+				case GL_NO_ERROR:          return "GL_NO_ERROR"_view;
+				case GL_INVALID_ENUM:      return "GL_INVALID_ENUM"_view;
+				case GL_INVALID_VALUE:     return "GL_INVALID_VALUE"_view;
+				case GL_INVALID_OPERATION: return "GL_INVALID_OPERATION"_view;
 				case GL_INVALID_FRAMEBUFFER_OPERATION:
 					return "GL_INVALID_FRAMEBUFFER_OPERATION"_view;
-				case GL_OUT_OF_MEMORY:
-					return "GL_OUT_OF_MEMORY"_view;
-				case GL_STACK_UNDERFLOW:
-					return "GL_STACK_UNDERFLOW"_view;
-				case GL_STACK_OVERFLOW:
-					return "GL_STACK_OVERFLOW"_view;
+				case GL_OUT_OF_MEMORY:   return "GL_OUT_OF_MEMORY"_view;
+				case GL_STACK_UNDERFLOW: return "GL_STACK_UNDERFLOW"_view;
+				case GL_STACK_OVERFLOW:  return "GL_STACK_OVERFLOW"_view;
 			}
 			return "unknown error code"_view;
 		}
 
-		struct error_code_error
+		namespace err
 		{
-			GLenum value;
-
-			inline lak::astring to_string() const
+			struct error_code
 			{
-				return lak::to_astring(
-				  lak::streamify(lak::opengl::error_name(value), " (", value, ")"));
-			}
+				GLenum value;
 
-			friend inline std::ostream &operator<<(
-			  std::ostream &strm, const lak::opengl::error_code_error &err)
-			{
-				return strm << err.to_string();
-			}
-		};
+				inline lak::astring to_string() const
+				{
+					return lak::fmt<"{} ({})">(lak::opengl::error_name(value), value);
+				}
+			};
+		}
 
 		// ensure glGetError is cleared before calling these
 
 		template<typename T = lak::monostate>
-		using result = lak::result<T, lak::opengl::error_code_error>;
+		using result = lak::result<T, lak::opengl::err::error_code>;
 
 		inline lak::opengl::result<> get_error()
 		{
@@ -69,7 +59,7 @@ namespace lak
 			if (err == GL_NO_ERROR)
 				return lak::ok_t{};
 			else
-				return lak::err_t{lak::opengl::error_code_error{err}};
+				return lak::err_t{lak::opengl::err::error_code{err}};
 		}
 
 		force_inline lak::opengl::result<> enable_if(GLenum target, bool enable)
@@ -269,6 +259,16 @@ namespace lak
 			}
 		}
 	}
+
+	template<typename CHAR>
+	struct format_traits<lak::opengl::err::error_code, CHAR>
+	{
+		static constexpr lak::string<CHAR> to_string(
+		  const lak::opengl::err::error_code &err)
+		{
+			return lak::strconv<CHAR>(err.to_string());
+		}
+	};
 }
 
 #endif

@@ -17,7 +17,7 @@ int lak::run_tests(lak::u8string_view tests)
 {
 	auto run_test = [](const lak::u8string &test, int (*func)()) -> int
 	{
-		lak::scoped_indenter indent(u8"testing " + test);
+		lak::debugger_t::scoped_indenter indent(u8"testing " + test);
 		const int result = func();
 		if (result == 0)
 			lak::debugger.std_out(u8"", u8"" LAK_GREEN "PASSED" LAK_SGR_RESET "\n");

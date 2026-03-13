@@ -54,7 +54,7 @@ lak::opengl::result<lak::opengl::shader> lak::opengl::shader::create(
 		ERROR("Shader failed to compile");
 		ERROR(msg.data());
 
-		return lak::err_t{lak::opengl::error_code_error{GL_NO_ERROR}};
+		return lak::err_t{lak::opengl::err::error_code{GL_NO_ERROR}};
 	}
 
 	return lak::move_ok(shdr);
@@ -200,7 +200,7 @@ lak::opengl::result<const lak::opengl::program &> lak::opengl::program::use()
   const
 {
 	if (_program == 0)
-		return lak::err_t{lak::opengl::error_code_error{GL_NO_ERROR}};
+		return lak::err_t{lak::opengl::err::error_code{GL_NO_ERROR}};
 
 	lak::opengl::get_error().discard();
 
@@ -802,8 +802,7 @@ const lak::opengl::program &lak::opengl::program::set_uniform(
 			                          (GLuint *)data.data())
 			  .UNWRAP();
 			break;
-		default:
-			FATAL("Unsupported type ", info.type);
+		default: FATAL("Unsupported type ", info.type);
 	}
 	return *this;
 }

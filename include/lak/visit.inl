@@ -3,6 +3,7 @@
 #include "lak/system/compiler.hpp"
 
 #include "lak/concepts.hpp"
+#include "lak/functional.hpp"
 #include "lak/index_set.hpp"
 #include "lak/optional.hpp"
 #include "lak/overloaded.hpp"

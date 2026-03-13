@@ -4,11 +4,12 @@
 #include "lak/array.hpp"
 #include "lak/compare.hpp"
 #include "lak/defer.hpp"
+#include "lak/format.hpp"
 #include "lak/result.hpp"
 #include "lak/span.hpp"
 #include "lak/stdint.hpp"
 
-#include <iostream>
+#include <sstream>
 
 namespace lak
 {
@@ -57,6 +58,9 @@ namespace lak
 		void mul(lak::span<const value_type> value);
 
 		lak::result<uintmax_t> to_uintmax_ignore_sign() const;
+
+		template<typename T, typename CHAR>
+		friend struct format_traits;
 
 	public:
 		bigint()                                    = default;
@@ -340,27 +344,72 @@ namespace lak
 
 		lak::bigint operator-() const &;
 		lak::bigint operator-() &&;
+	};
 
-		friend std::ostream &operator<<(std::ostream &strm, const lak::bigint &val)
+	template<typename CHAR>
+	struct format_traits<lak::bigint, CHAR>
+	{
+		using format_args =
+		  typename lak::format_traits<int32_t, CHAR>::format_args;
+
+		static consteval format_args parse_args(lak::string_view<CHAR> args)
 		{
-			const auto old_width = strm.width();
-			DEFER(strm.width(old_width));
-			const auto old_base = strm.flags(std::ostream::basefield);
-			DEFER(strm.setf(old_base, std::ostream::basefield));
+			return lak::format_traits<int32_t, CHAR>::parse_args(args);
+		}
 
-			strm << (val.is_negative() ? '-' : '+');
-			strm << std::hex << std::setfill('0');
+		static constexpr lak::string<CHAR> to_string(const format_args &args,
+		                                             const lak::bigint &val)
+		{
+			std::stringstream strm;
+			const auto base = lak::numeric_base::hex;
+			switch (base)
+			{
+				case lak::numeric_base::dec: strm << std::dec; break;
+				case lak::numeric_base::hex: strm << std::hex; break;
+				case lak::numeric_base::oct: strm << std::oct; break;
+				default:                     break;
+			}
+			strm << std::noshowbase;
+			if (args.uppercase) strm << std::uppercase;
+
+			if (val.is_negative())
+				strm << "-";
+			else if (args.force_sign)
+				strm << "+";
+			else if (args.sign_pad)
+				strm << " ";
+
+			if (args.show_base)
+			{
+				switch (base)
+				{
+					case lak::numeric_base::dec: break;
+					case lak::numeric_base::hex: strm << "0x"; break;
+					case lak::numeric_base::oct: strm << "0"; break;
+					case lak::numeric_base::bin: strm << "0b"; break;
+				}
+			}
+
+			strm << std::setfill(args.fill);
+
+			using value_type = lak::bigint::value_type;
 
 			if (val._data.empty())
-				strm << value_type(0);
+				strm << std::setw(args.precision) << value_type(0);
 			else
-				for (size_t i = val._data.size(); i-- > 0U;)
+			{
+				strm << std::setw(args.precision -
+				                  std::min<size_t>(args.precision,
+				                                   sizeof(value_type) * 2U *
+				                                     (val._data.size() - 1U)))
+				     << val._data.back() << std::setfill('0');
+				for (size_t i = val._data.size() - 1U; i-- > 0U;)
 				{
-					strm << std::setw(sizeof(value_type) * 2U) << val._data[i];
-					if (i != 0U) strm << '\'';
+					strm << '\'' << std::setw(sizeof(value_type) * 2U) << val._data[i];
 				}
+			}
 
-			return strm;
+			return lak::strconv<CHAR>(lak::astring_view(strm.view()));
 		}
 	};
 }

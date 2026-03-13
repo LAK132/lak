@@ -5,6 +5,9 @@
 
 #include "lak/functional.hpp"
 
+#ifndef LAK_DEBUG_FORWARD_ONLY
+#	define LAK_DEBUG_FORWARD_ONLY
+#endif
 #include "lak/debug.hpp"
 
 template<typename TO, typename FROM>
@@ -14,7 +17,7 @@ size_t lak::converted_string_length(lak::string_view<FROM> str)
 	while (str.size() > 0)
 	{
 		auto char_len = lak::character_length(str);
-		ASSERT_NOT_EQUAL(char_len, 0);
+		ASSERT(char_len != 0);
 		result += lak::codepoint_length<TO>(lak::codepoint(str));
 		str = str.substr(char_len);
 	}

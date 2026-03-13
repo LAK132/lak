@@ -3,33 +3,32 @@ Typical usage for an OpenGL program:
 
 int main()
 {
-  lak::core_init();
+  lak::platform_init();
+  DEFER(lak::platform_quit());
 
-  lak::window window(...);
-
-  window.init_opengl(...);
-
-  uint32_t framerate = 60;
-
-  auto last_counter = lak::performance_counter();
-
-  // main loop
-  while(...)
   {
-    // event handlers
+    lak::window window = lak::window::make(lak::opengl_settings{...}).UNWRAP();
 
-    // update code
+    uint32_t framerate = 60;
 
-    // draw code
+    auto last_counter = lak::performance_counter();
 
-    window.swap();
+    // main loop
+    while(...)
+    {
+      // event handlers
 
-    last_counter = lak::yield_frame(last_counter, framerate);
+      // update code
+
+      // draw code
+
+      window.swap();
+
+      last_counter = lak::yield_frame(last_counter, framerate);
+    }
+
+    // window closes when it window object is destroyed
   }
-
-  window.close();
-
-  lak::core_quit();
 }
 */
 
@@ -42,11 +41,13 @@ int main()
 #include "lak/system/profile.hpp"
 
 #include "lak/bank_ptr.hpp"
+#include "lak/format.hpp"
 #include "lak/image.hpp"
 #include "lak/memmanip.hpp"
 #include "lak/result.hpp"
 #include "lak/streamify.hpp"
 #include "lak/string.hpp"
+#include "lak/string_literals/view.hpp"
 #include "lak/surface.hpp"
 #include "lak/vec.hpp"
 
@@ -69,19 +70,24 @@ namespace lak
 		Cobalt   = 3,
 	};
 
-	inline std::ostream &operator<<(std::ostream &strm, lak::graphics_mode mode)
+	template<typename CHAR>
+	struct format_traits<lak::graphics_mode, CHAR>
 	{
-		switch (mode)
+		static constexpr lak::string<CHAR> to_string(
+		  const lak::graphics_mode &mode)
 		{
-			case lak::graphics_mode::OpenGL:   strm << "OpenGL"; break;
-			case lak::graphics_mode::Software: strm << "Software"; break;
-			case lak::graphics_mode::Cobalt:   strm << "Cobalt"; break;
-			default:                           strm << "None"; break;
+			switch (mode)
+			{
+				case lak::graphics_mode::OpenGL:
+					return lak::strconv<CHAR>("OpenGL"_view);
+				case lak::graphics_mode::Software:
+					return lak::strconv<CHAR>("Software"_view);
+				case lak::graphics_mode::Cobalt:
+					return lak::strconv<CHAR>("Cobalt"_view);
+				default: return lak::strconv<CHAR>("None"_view);
+			}
 		}
-		return strm;
-	}
-
-	static_assert(lak::is_streamable_v<lak::graphics_mode>);
+	};
 
 	struct software_settings
 	{

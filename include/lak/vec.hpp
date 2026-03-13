@@ -18,11 +18,11 @@
 #endif
 
 #include "lak/binary_reader.hpp"
+#include "lak/format.hpp"
 #include "lak/stdint.hpp"
 
 #include <cstddef>
 #include <cstdint>
-#include <iostream>
 #include <tuple>
 
 namespace lak
@@ -1223,24 +1223,92 @@ bool operator!=(const lak::vec4<T> &lhs, const lak::vec4<T> &rhs)
 	return !(lhs == rhs);
 }
 
-template<typename T>
-std::ostream &operator<<(std::ostream &strm, const lak::vec2<T> &rhs)
+template<typename T, typename CHAR>
+struct lak::format_traits<lak::vec2<T>, CHAR>
 {
-	return strm << "(" << rhs.x << " " << rhs.y << ")";
-}
+	static_assert(lak::concepts::formattable<T>);
 
-template<typename T>
-std::ostream &operator<<(std::ostream &strm, const lak::vec3<T> &rhs)
-{
-	return strm << "(" << rhs.x << " " << rhs.y << " " << rhs.z << ")";
-}
+	using format_args = lak::format_args_t<T, CHAR>;
 
-template<typename T>
-std::ostream &operator<<(std::ostream &strm, const lak::vec4<T> &rhs)
+	static consteval format_args parse_args(lak::string_view<CHAR> fmt)
+	{
+		return lak::parse_format_args<T>(fmt);
+	}
+
+	static constexpr lak::string<CHAR> to_string(const format_args &args,
+	                                             const lak::vec2<T> &val)
+	requires(lak::concepts::dynamic_formattable<T, CHAR>)
+	{
+		return lak::fmt<CHAR, "({} {})">(
+		  lak::format_traits<T, CHAR>::to_string(args, val.x),
+		  lak::format_traits<T, CHAR>::to_string(args, val.y));
+	}
+
+	static constexpr lak::string<CHAR> to_string(const lak::vec2<T> &val)
+	requires(!lak::concepts::dynamic_formattable<T, CHAR>)
+	{
+		return lak::fmt<CHAR, "({} {})">(val.x, val.y);
+	}
+};
+
+template<typename T, typename CHAR>
+struct lak::format_traits<lak::vec3<T>, CHAR>
 {
-	return strm << "(" << rhs.x << " " << rhs.y << " " << rhs.z << " " << rhs.w
-	            << ")";
-}
+	static_assert(lak::concepts::formattable<T>);
+
+	using format_args = lak::format_args_t<T, CHAR>;
+
+	static consteval format_args parse_args(lak::string_view<CHAR> fmt)
+	{
+		return lak::parse_format_args<T>(fmt);
+	}
+
+	static constexpr lak::string<CHAR> to_string(const format_args &args,
+	                                             const lak::vec3<T> &val)
+	requires(lak::concepts::dynamic_formattable<T, CHAR>)
+	{
+		return lak::fmt<CHAR, "({} {} {})">(
+		  lak::format_traits<T, CHAR>::to_string(args, val.x),
+		  lak::format_traits<T, CHAR>::to_string(args, val.y),
+		  lak::format_traits<T, CHAR>::to_string(args, val.z));
+	}
+
+	static constexpr lak::string<CHAR> to_string(const lak::vec3<T> &val)
+	requires(!lak::concepts::dynamic_formattable<T, CHAR>)
+	{
+		return lak::fmt<CHAR, "({} {} {})">(val.x, val.y, val.z);
+	}
+};
+
+template<typename T, typename CHAR>
+struct lak::format_traits<lak::vec4<T>, CHAR>
+{
+	static_assert(lak::concepts::formattable<T>);
+
+	using format_args = lak::format_args_t<T, CHAR>;
+
+	static consteval format_args parse_args(lak::string_view<CHAR> fmt)
+	{
+		return lak::parse_format_args<T>(fmt);
+	}
+
+	static constexpr lak::string<CHAR> to_string(const format_args &args,
+	                                             const lak::vec4<T> &val)
+	requires(lak::concepts::dynamic_formattable<T, CHAR>)
+	{
+		return lak::fmt<CHAR, "({} {} {} {})">(
+		  lak::format_traits<T, CHAR>::to_string(args, val.x),
+		  lak::format_traits<T, CHAR>::to_string(args, val.y),
+		  lak::format_traits<T, CHAR>::to_string(args, val.z),
+		  lak::format_traits<T, CHAR>::to_string(args, val.w));
+	}
+
+	static constexpr lak::string<CHAR> to_string(const lak::vec4<T> &val)
+	requires(!lak::concepts::dynamic_formattable<T, CHAR>)
+	{
+		return lak::fmt<CHAR, "({} {} {} {})">(val.x, val.y, val.z, val.w);
+	}
+};
 
 LAK_FIXED_TEMPLATE_STRUCT_BYTES_TRAITS(typename T,
                                        lak::vec2<T>,

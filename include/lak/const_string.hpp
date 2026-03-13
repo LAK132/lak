@@ -20,7 +20,7 @@ namespace lak
 		const_string()               = delete;
 		inline constexpr const_string(const const_string &other);
 		inline constexpr const_string &operator=(const const_string &other);
-		inline constexpr const_string(const CHAR (&str)[N + 1]);
+		inline consteval const_string(const CHAR (&str)[N + 1]);
 		inline constexpr CHAR &operator[](size_t index) { return _value[index]; }
 		inline constexpr const CHAR &operator[](size_t index) const
 		{
@@ -56,7 +56,7 @@ namespace lak
 	template<size_t N>                                                          \
 	struct PREFIX##const_string : public lak::const_string<CHAR, N>             \
 	{                                                                           \
-		inline constexpr PREFIX##const_string(const CHAR (&str)[N + 1])           \
+		inline consteval PREFIX##const_string(const CHAR (&str)[N + 1])           \
 		: lak::const_string<CHAR, N>(str)                                         \
 		{                                                                         \
 		}                                                                         \
@@ -109,7 +109,7 @@ namespace lak
 #undef LAK_BASIC_CONST_STRING
 
 	template<typename CHAR, size_t N>
-	constexpr lak::const_string<CHAR, N> strconv(
+	consteval lak::const_string<CHAR, N> strconv(
 	  const lak::aconst_string<N> &str);
 }
 
