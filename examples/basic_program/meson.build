@@ -15,5 +15,6 @@ executable(
 	override_options: override_options,
 	dependencies: [
 		lak_dep,
+		implot_dep,
 	],
 )

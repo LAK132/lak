@@ -16,6 +16,8 @@
 
 #include <lak/optional.hpp>
 
+#include <implot.h>
+
 #include <filesystem>
 
 struct my_window : virtual public LAK_BASIC_PROGRAM(window_api)
@@ -31,6 +33,8 @@ struct my_window : virtual public LAK_BASIC_PROGRAM(window_api)
 
 	ImTextureRef checker;
 
+	ImPlotContext *implot_ctx = nullptr;
+
 	virtual void init() override final
 	{
 		// called once window has been set up
@@ -44,9 +48,15 @@ struct my_window : virtual public LAK_BASIC_PROGRAM(window_api)
 				checker_img[{x, y}].r = checker_img[{x, y}].g = checker_img[{x, y}].b =
 				  (((x + y) & 1U) * 255U);
 		checker = lak::CreateTexture(checker_img);
+
+		implot_ctx = ImPlot::CreateContext();
 	}
 
-	virtual ~my_window() { lak::DestroyTexture(checker); }
+	virtual ~my_window()
+	{
+		lak::DestroyTexture(checker);
+		if (implot_ctx) ImPlot::DestroyContext(implot_ctx);
+	}
 
 	virtual void handle_event(lak::event &event) override final
 	{
@@ -64,6 +74,8 @@ struct my_window : virtual public LAK_BASIC_PROGRAM(window_api)
 	virtual void loop(uint64_t counter_delta) override final
 	{
 		// called once every frame
+
+		ImPlot::SetCurrentContext(implot_ctx);
 
 		ImGui::Text("Frame time: %01.2fms",
 		            ((float)counter_delta * 1000U) / lak::performance_frequency());
@@ -83,6 +95,9 @@ struct my_window : virtual public LAK_BASIC_PROGRAM(window_api)
 			ImGui::Text("Dropped file: %s", path.generic_string().c_str());
 
 		ImGui::Image(checker, ImVec2(200, 200));
+
+		bool implot_demo_open = true;
+		ImPlot::ShowDemoWindow(&implot_demo_open);
 
 		bool demo_open = true;
 		ImGui::ShowDemoWindow(&demo_open);

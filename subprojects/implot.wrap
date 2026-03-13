@@ -1,0 +1,8 @@
+[wrap-git]
+url = https://github.com/epezent/implot
+revision = v0.17
+depth = 1
+patch_directory = implot
+
+[provide]
+dependency_names = implot, implot-0.17.0

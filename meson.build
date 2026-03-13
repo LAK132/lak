@@ -263,6 +263,7 @@ if get_option('lak_enable_imgui')
 	imgui_color_text_edit_dep = dependency('ImGuiColorTextEdit')
 	imgui_file_dialog_dep = dependency('ImFileDialog')
 	imgui_memory_editor_dep = dependency('imgui_memory_editor')
+	implot_dep = dependency('implot')
 	dependencies += imgui_dep
 
 	if get_option('lak_enable_windowing')
