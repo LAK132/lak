@@ -41,7 +41,7 @@ if cxx.get_id() == 'msvc'
 		'Imm32.lib',
 	]
 else
-	version = 'c++20'
+	version = 'c++23'
 
 	add_project_arguments(
 		'-Wno-unknown-warning-option',
