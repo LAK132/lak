@@ -122,8 +122,8 @@ namespace lak
 		   -lak::dsl::dec_digit) |
 		  lak::dsl::parsed_dec_uint<UINT>;
 
-		template<lak::dsl::concepts::pure_match_parser auto frac_separator,
-		         lak::dsl::concepts::pure_match_parser auto exp_separator>
+		template<lak::dsl::concepts::substring_parser auto frac_separator,
+		         lak::dsl::concepts::substring_parser auto exp_separator>
 		inline constexpr auto dec_float =
 		  lak::dsl::capture<lak::dsl::signed_dec_number> +
 		  lak::dsl::capture<lak::dsl::conditional<frac_separator,
@@ -134,8 +134,8 @@ namespace lak
 		                                          lak::dsl::top>>;
 
 		template<typename FLOAT,
-		         lak::dsl::concepts::pure_match_parser auto frac_separator,
-		         lak::dsl::concepts::pure_match_parser auto exp_separator>
+		         lak::dsl::concepts::substring_parser auto frac_separator,
+		         lak::dsl::concepts::substring_parser auto exp_separator>
 		inline constexpr auto parsed_dec_float = lak::dsl::transform<
 		  lak::dsl::dec_float<frac_separator, exp_separator>,
 		  [](const lak::tuple<lak::u8string_view,
