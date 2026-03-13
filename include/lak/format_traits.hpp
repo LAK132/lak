@@ -12,7 +12,7 @@
 namespace lak
 {
 	template<typename T, typename CHAR>
-	// struct format_traits
+	struct format_traits;
 	// {
 	// 	dynamic:
 	// 	struct format_args
