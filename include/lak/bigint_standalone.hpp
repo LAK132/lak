@@ -13,7 +13,7 @@
 #undef LAK_BIGINT_STANDALONE_IMPL
 
 #include "../../src/bigint.cpp"
-#include "../../src/debug.cpp"
+#include "../../src/debugger.cpp"
 #include "../../src/memmanip.cpp"
 #include "../../src/strconv.cpp"
 #include "../../src/string_view.cpp"
