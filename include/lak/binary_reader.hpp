@@ -186,8 +186,9 @@ namespace lak
 			    [&](lak::pair<lak::array<T>, lak::span<const byte_t>> &&v)
 			      -> lak::array<T>
 			    {
-				    ASSERT_LESS_OR_EQUAL(v.second.size(), this->_data.size());
-				    this->_cursor = this->_data.size() - v.second.size();
+				    ASSERT(lak::ptr_in_range(
+				      v.second.data(), this->_data.data(), this->_data.size()));
+				    this->_cursor = v.second.data() - this->_data.data();
 				    return lak::move(v.first);
 			    });
 		}

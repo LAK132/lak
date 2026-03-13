@@ -150,9 +150,41 @@ namespace lak
 			lak::array<byte_t, 0> _value;
 		};
 	}
-}
 
-LAK_FIXED_STRUCT_BYTES_TRAITS(lak::nbt::TAG_End, &lak::nbt::TAG_End::_value)
+	template<lak::endian E>
+	struct bytes_traits<lak::nbt::TAG_End, E>
+	{
+		using value_type = lak::nbt::TAG_End;
+		using error_type = lak::err::out_of_data;
+
+		static constexpr bool const_size = true;
+		static constexpr size_t size     = 0U;
+
+		static size_t dynamic_size(const value_type &) { return 0U; }
+
+		static void from_bytes(lak::span<const byte_t, size>, value_type &)
+		requires(const_size)
+		{
+		}
+
+		static lak::result<lak::span<const byte_t>, error_type> from_bytes(
+		  lak::span<const byte_t> bytes, value_type &)
+		{
+			return lak::ok_t{bytes};
+		}
+
+		static void to_bytes(lak::span<byte_t, size>, const value_type &)
+		requires(const_size)
+		{
+		}
+
+		static lak::result<lak::span<byte_t>, error_type> to_bytes(
+		  lak::span<byte_t> bytes, const value_type &)
+		{
+			return lak::ok_t{bytes};
+		}
+	};
+}
 
 namespace lak
 {
@@ -197,7 +229,8 @@ namespace lak
 			value_type value;
 
 			template<lak::endian E>
-			lak::error_code<lak::err::out_of_data> read(lak::binary_reader &strm)
+			lak::error_codes<lak::err::out_of_data, lak::nbt::err::invalid_type>
+			read(lak::binary_reader &strm)
 			{
 				for (;;)
 				{
@@ -378,7 +411,7 @@ namespace lak
 	break;
 					LAK_FOREACH_NBT_TYPE(LAK_NBT_READER_VISIT)
 #undef LAK_NBT_READER_VISIT
-					default: return lak::err_t{};
+					default: return lak::err_t<lak::nbt::err::invalid_type>{};
 				}
 				return lak::ok_t{};
 			}
@@ -544,6 +577,22 @@ namespace lak
 		  const lak::nbt::err::invalid_type &)
 		{
 			return lak::strconv<CHAR>("invalid type"_view);
+		}
+	};
+
+	template<typename CHAR>
+	struct format_traits<lak::nbt::tag_type, CHAR>
+	{
+		static constexpr lak::string<CHAR> to_string(const lak::nbt::tag_type &val)
+		{
+			switch (val)
+			{
+#define LAK_NBT_ENUM(VAL, NAME, ...)                                          \
+	case lak::nbt::tag_type::NAME: return lak::strconv<CHAR>(#NAME ""_view);
+				LAK_FOREACH_NBT_TYPE(LAK_NBT_ENUM)
+#undef LAK_NBT_ENUM
+			}
+			return lak::fmt<CHAR, "invalid type ({})">(static_cast<uint8_t>(val));
 		}
 	};
 

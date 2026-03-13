@@ -199,12 +199,13 @@ lak::array_from_bytes(lak::span<const byte_t> bytes, size_t count)
 {
 	lak::pair<lak::array<T>, lak::span<const byte_t>> result;
 	result.first.reserve(count);
+	result.second = bytes;
 
 	for (size_t i = 0U; i < count; ++i)
 	{
-		RES_TRY_ASSIGN(bytes =,
+		RES_TRY_ASSIGN(result.second =,
 		               lak::from_bytes_traits<T, E>::from_bytes(
-		                 bytes, result.first.emplace_back()));
+		                 result.second, result.first.emplace_back()));
 	}
 
 	return lak::move_ok(result);

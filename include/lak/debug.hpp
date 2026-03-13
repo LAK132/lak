@@ -139,8 +139,8 @@
 
 #	define SCOPED_CHECKPOINT_S(...)                                            \
 		lak::debugger_t::scoped_indenter UNIQUIFY(SCOPED_INDENTOR_)(              \
-		  __VA_OPT__(lak::u8string(__VA_ARGS__) + u8" ")                          \
-		    LAK_TRACE_MODIFIER(LINE_TRACE_STR));
+		  __VA_OPT__(lak::u8string(__VA_ARGS__) +                                 \
+		             u8" " +) u8"" LAK_TRACE_MODIFIER(LINE_TRACE_STR));
 #	define FUNCTION_CHECKPOINT_S(...)                                          \
 		SCOPED_CHECKPOINT_S(                                                      \
 		  lak::to_u8string(__func__) +                                            \
