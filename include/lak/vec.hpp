@@ -1226,7 +1226,7 @@ bool operator!=(const lak::vec4<T> &lhs, const lak::vec4<T> &rhs)
 template<typename T, typename CHAR>
 struct lak::format_traits<lak::vec2<T>, CHAR>
 {
-	static_assert(lak::concepts::formattable<T>);
+	static_assert(lak::concepts::formattable<T, CHAR>);
 
 	using format_args = lak::format_args_t<T, CHAR>;
 
@@ -1254,7 +1254,7 @@ struct lak::format_traits<lak::vec2<T>, CHAR>
 template<typename T, typename CHAR>
 struct lak::format_traits<lak::vec3<T>, CHAR>
 {
-	static_assert(lak::concepts::formattable<T>);
+	static_assert(lak::concepts::formattable<T, CHAR>);
 
 	using format_args = lak::format_args_t<T, CHAR>;
 
@@ -1283,7 +1283,7 @@ struct lak::format_traits<lak::vec3<T>, CHAR>
 template<typename T, typename CHAR>
 struct lak::format_traits<lak::vec4<T>, CHAR>
 {
-	static_assert(lak::concepts::formattable<T>);
+	static_assert(lak::concepts::formattable<T, CHAR>);
 
 	using format_args = lak::format_args_t<T, CHAR>;
 
