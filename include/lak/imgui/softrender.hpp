@@ -175,7 +175,10 @@ void renderDrawLists(ImDrawData *drawData, texture_t<SCREEN> &screen)
 		for (int cmdi = 0; cmdi < cmdList->CmdBuffer.Size; cmdi++)
 		{
 			const ImDrawCmd &pcmd = cmdList->CmdBuffer[cmdi];
-			if (pcmd.UserCallback)
+			if (pcmd.UserCallback == ImDrawCallback_ResetRenderState)
+			{
+			}
+			else if (pcmd.UserCallback)
 			{
 				pcmd.UserCallback(cmdList, &pcmd);
 			}

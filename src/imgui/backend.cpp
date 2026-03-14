@@ -2054,10 +2054,13 @@ void ImplGLRender(ImGui::ImplContext context, ImDrawData *draw_data)
 		for (int cmdI = 0; cmdI < cmdList->CmdBuffer.Size; ++cmdI)
 		{
 			const ImDrawCmd &pcmd = cmdList->CmdBuffer[cmdI];
-			if (pcmd.UserCallback)
+			if (pcmd.UserCallback == ImDrawCallback_ResetRenderState)
+			{
+				set_state();
+			}
+			else if (pcmd.UserCallback)
 			{
 				pcmd.UserCallback(cmdList, &pcmd);
-				set_state(); // reset state in case user changed anything
 			}
 			else if (!using_scissor_test)
 			{
@@ -2245,7 +2248,10 @@ void ImplCoRender(ImGui::ImplContext ctx, ImDrawData *draw_data)
 		{
 			const ImDrawCmd &cmd = cmd_list->CmdBuffer[cmd_i];
 
-			if (cmd.UserCallback)
+			if (cmd.UserCallback == ImDrawCallback_ResetRenderState)
+			{
+			}
+			else if (cmd.UserCallback)
 			{
 				cmd.UserCallback(cmd_list, &cmd);
 			}
