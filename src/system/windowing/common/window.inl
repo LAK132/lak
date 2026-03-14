@@ -148,6 +148,80 @@ lak::cobalt_renderer_settings::preferred_vk(feature_set_t &&required_features)
 }
 #	endif
 
+lak::result<const lak::cobalt::graphics_context &>
+lak::cobalt_graphics_context(const lak::window_handle *w)
+{
+	RES_TRY_ASSIGN(auto &ctx =,
+	               lak::result_from_pointer(w->gc.get<lak::cobalt_context>()));
+	return lak::ok_t<const lak::cobalt::graphics_context &>{
+	  *ctx.platform_handle};
+}
+
+::cobalt::graphics::IRenderPassNode *lak::cobalt_create_render_pass(
+  const lak::cobalt_context &c)
+{
+	c.platform_handle->owned_render_passes.reserve(
+	  c.platform_handle->owned_render_passes.size() + 1U);
+	c.platform_handle->render_passes.reserve(
+	  c.platform_handle->render_passes.size() + 1U);
+
+	auto p = c.platform_handle->renderer->CreateRenderPassNode();
+	p->BindFrameBuffer(c.platform_handle->frame_buffer.get());
+
+	auto res =
+	  c.platform_handle->owned_render_passes.push_back(lak::move(p)).get();
+	c.platform_handle->render_passes.push_back(res);
+
+	return res;
+}
+
+lak::result<::cobalt::graphics::IRenderPassNode *>
+lak::cobalt_create_render_pass(const lak::window_handle *w)
+{
+	RES_TRY_ASSIGN(auto &ctx =,
+	               lak::result_from_pointer(w->gc.get<lak::cobalt_context>()));
+	return lak::ok_t{lak::cobalt_create_render_pass(ctx)};
+}
+
+void lak::cobalt_append_render_pass(const lak::cobalt_context &c,
+                                    ::cobalt::graphics::IRenderPassNode *pass)
+{
+	c.platform_handle->render_passes.push_back(pass);
+}
+
+void lak::cobalt_append_render_pass(
+  const lak::cobalt_context &c,
+  ::cobalt::graphics::IRenderPassNode::unique_ptr &&pass)
+{
+	c.platform_handle->owned_render_passes.reserve(
+	  c.platform_handle->owned_render_passes.size() + 1U);
+	c.platform_handle->render_passes.reserve(
+	  c.platform_handle->render_passes.size() + 1U);
+
+	auto p =
+	  c.platform_handle->owned_render_passes.push_back(lak::move(pass)).get();
+	c.platform_handle->render_passes.push_back(p);
+}
+
+lak::result<lak::monostate> lak::cobalt_append_render_pass(
+  const lak::window_handle *w, ::cobalt::graphics::IRenderPassNode *pass)
+{
+	RES_TRY_ASSIGN(auto &ctx =,
+	               lak::result_from_pointer(w->gc.get<lak::cobalt_context>()));
+	lak::cobalt_append_render_pass(ctx, pass);
+	return lak::ok_t{};
+}
+
+lak::result<lak::monostate> lak::cobalt_append_render_pass(
+  const lak::window_handle *w,
+  ::cobalt::graphics::IRenderPassNode::unique_ptr &&pass)
+{
+	RES_TRY_ASSIGN(auto &ctx =,
+	               lak::result_from_pointer(w->gc.get<lak::cobalt_context>()));
+	lak::cobalt_append_render_pass(ctx, lak::move(pass));
+	return lak::ok_t{};
+}
+
 #endif
 
 uint64_t lak::yield_frame(const uint64_t last_counter,

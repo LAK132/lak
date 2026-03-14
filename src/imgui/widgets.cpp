@@ -2,9 +2,11 @@
 #include "lak/imgui/widgets.hpp"
 #include "lak/imgui/backend.hpp"
 
-#include "lak/system/opengl/gl3w.hpp"
-#include "lak/system/opengl/state.hpp"
-#include "lak/system/opengl/texture.hpp"
+#ifdef LAK_ENABLE_OPENGL
+#	include "lak/system/opengl/gl3w.hpp"
+#	include "lak/system/opengl/state.hpp"
+#	include "lak/system/opengl/texture.hpp"
+#endif
 
 #include "lak/system/file.hpp"
 
