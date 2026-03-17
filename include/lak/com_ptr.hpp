@@ -21,11 +21,7 @@ namespace lak
 			return T::ctor(lak::forward<ARGS>(args)...);
 		}
 
-		template<typename... ARGS>
-		inline static void dtor(handle_type handle)
-		{
-			return T::dtor(handle);
-		}
+		inline static void dtor(handle_type handle) { return T::dtor(handle); }
 	};
 
 	template<typename T>
@@ -106,17 +102,12 @@ namespace lak
 			return T::ctor(lak::forward<ARGS>(args)...);
 		}
 
-		template<typename... ARGS>
 		inline static handle_type ref(handle_type handle)
 		{
 			return T::ref(handle);
 		}
 
-		template<typename... ARGS>
-		inline static void unref(handle_type handle)
-		{
-			return T::unref(handle);
-		}
+		inline static void unref(handle_type handle) { return T::unref(handle); }
 	};
 
 	// usage:
@@ -159,14 +150,12 @@ namespace lak
 			       { return {lak::exchange(rc, nullptr), handle}; });
 		}
 
-		template<typename... ARGS>
 		inline static handle_type ref(handle_type handle)
 		{
 			++*handle.ref_count;
 			return handle;
 		}
 
-		template<typename... ARGS>
 		inline static void unref(handle_type handle)
 		{
 			if (!--*handle.ref_count)
