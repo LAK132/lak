@@ -121,23 +121,17 @@ struct lak::unique_com_ptr_traits<com_ptr_ref_count_test>
 	}
 };
 
-template<>
-struct lak::shared_com_ptr_traits<com_ptr_ref_count_test>
-: public lak::ref_count_unique_com_ptr_traits_impl<com_ptr_ref_count_test>
-{
-};
-
-BEGIN_TEST(shared_unique_com_ptr)
+BEGIN_TEST(ref_count_com_ptr)
 {
 	int value = 0;
 	{
-		auto ptr{lak::shared_com_ptr<com_ptr_ref_count_test>::create(&value)};
+		auto ptr{lak::ref_count_com_ptr<com_ptr_ref_count_test>::create(&value)};
 		ASSERT_EQUAL(value, 1);
 	}
 	ASSERT_EQUAL(value, 0);
 
 	{
-		auto ptr1{lak::shared_com_ptr<com_ptr_ref_count_test>::create(&value)};
+		auto ptr1{lak::ref_count_com_ptr<com_ptr_ref_count_test>::create(&value)};
 		ASSERT_EQUAL(value, 1);
 		{
 			auto ptr2{ptr1};

@@ -24,39 +24,38 @@ namespace lak
 		inline static void dtor(handle_type handle) { return T::dtor(handle); }
 	};
 
-	template<typename T>
-	struct unique_com_ptr
+	template<typename T, typename TRAITS>
+	struct basic_unique_com_ptr
 	{
-		using handle_type  = typename lak::unique_com_ptr_traits<T>::handle_type;
-		using exposed_type = typename lak::unique_com_ptr_traits<T>::exposed_type;
+		using handle_type  = typename TRAITS::handle_type;
+		using exposed_type = typename TRAITS::exposed_type;
 
-		unique_com_ptr() = default;
+		basic_unique_com_ptr() = default;
 
-		unique_com_ptr(unique_com_ptr &&other)
+		basic_unique_com_ptr(basic_unique_com_ptr &&other)
 		: _handle(lak::exchange(other._handle, nullptr))
 		{
 		}
 
-		unique_com_ptr &operator=(unique_com_ptr &&other)
+		basic_unique_com_ptr &operator=(basic_unique_com_ptr &&other)
 		{
 			lak::swap(_handle, other._handle);
 			return *this;
 		}
 
-		~unique_com_ptr() { reset(); }
+		~basic_unique_com_ptr() { reset(); }
 
 		template<typename... ARGS>
 		static auto create(ARGS &&...args)
 		{
 			return lak::unwrap_if_infallible(
-			  lak::unique_com_ptr_traits<T>::ctor(lak::forward<ARGS>(args)...)
-			    .map(&creator));
+			  TRAITS::ctor(lak::forward<ARGS>(args)...).map(&creator));
 		}
 
 		template<typename... ARGS>
 		auto emplace(ARGS &&...args)
 		{
-			return lak::unique_com_ptr_traits<T>::ctor(lak::forward<ARGS>(args)...)
+			return TRAITS::ctor(lak::forward<ARGS>(args)...)
 			  .map(
 			    [&](handle_type handle)
 			    {
@@ -68,7 +67,7 @@ namespace lak
 		void reset() { reset(nullptr); }
 		void reset(handle_type handle)
 		{
-			if (_handle) lak::unique_com_ptr_traits<T>::dtor(_handle);
+			if (_handle) TRAITS::dtor(_handle);
 			_handle = handle;
 		}
 		handle_type release() { return lak::exchange(_handle, nullptr); }
@@ -78,15 +77,19 @@ namespace lak
 		exposed_type get() const { return _handle; }
 
 	private:
-		unique_com_ptr(handle_type handle) : _handle(handle) {}
+		basic_unique_com_ptr(handle_type handle) : _handle(handle) {}
 
-		static unique_com_ptr creator(handle_type handle)
+		static basic_unique_com_ptr creator(handle_type handle)
 		{
-			return unique_com_ptr(handle);
+			return basic_unique_com_ptr(handle);
 		}
 
 		handle_type _handle = nullptr;
 	};
+
+	template<typename T>
+	using unique_com_ptr =
+	  lak::basic_unique_com_ptr<T, lak::unique_com_ptr_traits<T>>;
 
 	/* --- shared_com_ptr --- */
 
@@ -110,23 +113,14 @@ namespace lak
 		inline static void unref(handle_type handle) { return T::unref(handle); }
 	};
 
-	// usage:
-	// template<>
-	// struct lak::unique_com_ptr<my_type>
-	// {
-	// 	// implement as usual
-	// };
-	// template<>
-	// struct lak::shared_com_ptr_traits<my_type>
-	// : public lak::ref_count_unique_com_ptr_traits_impl<my_type> {};
-	template<typename T>
-	struct ref_count_unique_com_ptr_traits_impl
+	template<typename TRAITS>
+	struct ref_count_com_ptr_adapter
 	{
-		using exposed_type = typename lak::unique_com_ptr_traits<T>::exposed_type;
+		using exposed_type   = typename TRAITS::exposed_type;
 		using ref_count_type = lak::reference_count<size_t>;
 		struct handle_type
 		{
-			using value_type = typename lak::unique_com_ptr_traits<T>::handle_type;
+			using value_type = typename TRAITS::handle_type;
 
 			ref_count_type *ref_count;
 			value_type handle;
@@ -145,7 +139,7 @@ namespace lak
 		{
 			auto rc = new ref_count_type(1U);
 			DEFER(if (rc) delete rc);
-			return lak::unique_com_ptr_traits<T>::ctor(lak::forward<ARGS>(args)...)
+			return TRAITS::ctor(lak::forward<ARGS>(args)...)
 			  .map([&](typename handle_type::value_type handle) -> handle_type
 			       { return {lak::exchange(rc, nullptr), handle}; });
 		}
@@ -161,55 +155,54 @@ namespace lak
 			if (!--*handle.ref_count)
 			{
 				delete handle.ref_count;
-				return lak::unique_com_ptr_traits<T>::dtor(handle.handle);
+				return TRAITS::dtor(handle.handle);
 			}
 		}
 	};
 
-	template<typename T>
-	struct shared_com_ptr
+	template<typename T, typename TRAITS>
+	struct basic_shared_com_ptr
 	{
-		using handle_type  = typename lak::shared_com_ptr_traits<T>::handle_type;
-		using exposed_type = typename lak::shared_com_ptr_traits<T>::exposed_type;
+		using handle_type  = typename TRAITS::handle_type;
+		using exposed_type = typename TRAITS::exposed_type;
 
-		shared_com_ptr() = default;
+		basic_shared_com_ptr() = default;
 
-		shared_com_ptr(shared_com_ptr &&other)
+		basic_shared_com_ptr(basic_shared_com_ptr &&other)
 		: _handle(lak::exchange(other._handle, nullptr))
 		{
 		}
 
-		shared_com_ptr(const shared_com_ptr &other)
-		: _handle(lak::shared_com_ptr_traits<T>::ref(other._handle))
+		basic_shared_com_ptr(const basic_shared_com_ptr &other)
+		: _handle(TRAITS::ref(other._handle))
 		{
 		}
 
-		shared_com_ptr &operator=(shared_com_ptr &&other)
+		basic_shared_com_ptr &operator=(basic_shared_com_ptr &&other)
 		{
 			lak::swap(_handle, other._handle);
 			return *this;
 		}
 
-		shared_com_ptr &operator=(const shared_com_ptr &other)
+		basic_shared_com_ptr &operator=(const basic_shared_com_ptr &other)
 		{
-			reset(lak::shared_com_ptr_traits<T>::ref(other._handle));
+			reset(TRAITS::ref(other._handle));
 			return *this;
 		}
 
-		~shared_com_ptr() { reset(); }
+		~basic_shared_com_ptr() { reset(); }
 
 		template<typename... ARGS>
 		static auto create(ARGS &&...args)
 		{
 			return lak::unwrap_if_infallible(
-			  lak::shared_com_ptr_traits<T>::ctor(lak::forward<ARGS>(args)...)
-			    .map(&creator));
+			  TRAITS::ctor(lak::forward<ARGS>(args)...).map(&creator));
 		}
 
 		template<typename... ARGS>
 		auto emplace(ARGS &&...args)
 		{
-			return lak::shared_com_ptr_traits<T>::ctor(lak::forward<ARGS>(args)...)
+			return TRAITS::ctor(lak::forward<ARGS>(args)...)
 			  .map(
 			    [&](handle_type handle)
 			    {
@@ -225,21 +218,30 @@ namespace lak
 		exposed_type get() const { return _handle; }
 
 	private:
-		shared_com_ptr(handle_type handle) : _handle(handle) {}
+		basic_shared_com_ptr(handle_type handle) : _handle(handle) {}
 
-		static shared_com_ptr creator(handle_type handle)
+		static basic_shared_com_ptr creator(handle_type handle)
 		{
-			return shared_com_ptr(handle);
+			return basic_shared_com_ptr(handle);
 		}
 
 		void reset(handle_type handle)
 		{
-			if (_handle) lak::shared_com_ptr_traits<T>::unref(_handle);
+			if (_handle) TRAITS::unref(_handle);
 			_handle = handle;
 		}
 
 		handle_type _handle = nullptr;
 	};
+
+	template<typename T>
+	using shared_com_ptr =
+	  lak::basic_shared_com_ptr<T, lak::shared_com_ptr_traits<T>>;
+
+	template<typename T>
+	using ref_count_com_ptr = lak::basic_shared_com_ptr<
+	  T,
+	  lak::ref_count_com_ptr_adapter<lak::unique_com_ptr_traits<T>>>;
 }
 
 #endif
