@@ -15,6 +15,7 @@
                                  // main.cpp or equivalent)
 
 #include <lak/optional.hpp>
+#include <lak/string_literals/string.hpp>
 
 #include <implot.h>
 
@@ -104,10 +105,28 @@ struct my_window : virtual public LAK_BASIC_PROGRAM(window_api)
 	}
 };
 
+lak::graphics_mode forced_graphics_mode = lak::graphics_mode::None;
+
 // lak::error_code<int> -> lak::result<lak::monostate, int>
 lak::error_code<int> LAK_BASIC_PROGRAM(program_preinit)(lak::span<char *> args)
 {
 	// called at program startup
+
+	if (args.size() >= 2U)
+	{
+		if (args[1] == "--software"_str)
+		{
+			forced_graphics_mode = lak::graphics_mode::Software;
+		}
+		else if (args[1] == "--opengl"_str)
+		{
+			forced_graphics_mode = lak::graphics_mode::OpenGL;
+		}
+		else if (args[1] == "--cobalt"_str)
+		{
+			forced_graphics_mode = lak::graphics_mode::Cobalt;
+		}
+	}
 
 	// return lak::ok_t{}: continue onto program_init
 	// return lak::err_t{int}: quit program with that exit code
@@ -127,13 +146,55 @@ lak::error_code<int> LAK_BASIC_PROGRAM(program_init)()
 		return EXIT_FAILURE;
 	};
 
-	// try macros can be used thanks to the result type return value
-	RES_TRY_ASSIGN(
-	  my_window_ptr =,
-	  LAK_BASIC_PROGRAM(create_window<my_window>)().map_err(map_str_err));
-	// by not specifying a specific graphics settings struct, create_window will
-	// attempt to find the first working graphics backend (settings for each are
-	// pulled from the global LAK_BASIC_PROGRAM(window_*_settings) structs).
+	switch (forced_graphics_mode)
+	{
+		case lak::graphics_mode::None:
+		{
+			// try macros can be used thanks to the result type return value
+			RES_TRY_ASSIGN(
+			  my_window_ptr =,
+			  LAK_BASIC_PROGRAM(create_window<my_window>)().map_err(map_str_err));
+			// by not specifying a specific graphics settings struct, create_window
+			// will attempt to find the first working graphics backend (settings for
+			// each are pulled from the global LAK_BASIC_PROGRAM(window_*_settings)
+			// structs).
+		}
+		break;
+#ifdef LAK_ENABLE_SOFTRENDER
+		case lak::graphics_mode::Software:
+		{
+			RES_TRY_ASSIGN(my_window_ptr =,
+			               LAK_BASIC_PROGRAM(create_window<my_window>)(
+			                 LAK_BASIC_PROGRAM(window_software_settings))
+			                 .map_err(map_str_err));
+		}
+		break;
+#endif
+#ifdef LAK_ENABLE_OPENGL
+		case lak::graphics_mode::OpenGL:
+		{
+			RES_TRY_ASSIGN(my_window_ptr =,
+			               LAK_BASIC_PROGRAM(create_window<my_window>)(
+			                 LAK_BASIC_PROGRAM(window_opengl_settings))
+			                 .map_err(map_str_err));
+		}
+		break;
+#endif
+#ifdef LAK_ENABLE_COBALT
+		case lak::graphics_mode::Cobalt:
+		{
+			RES_TRY_ASSIGN(my_window_ptr =,
+			               LAK_BASIC_PROGRAM(create_window<my_window>)(
+			                 LAK_BASIC_PROGRAM(window_cobalt_settings))
+			                 .map_err(map_str_err));
+		}
+		break;
+#endif
+		default:
+			ERROR(
+			  lak::fmt<u8"Graphics mode {} not available">(forced_graphics_mode));
+			return lak::err_t{EXIT_FAILURE};
+	}
 
 	DEBUG_EXPR(my_window_ptr.get()->window().graphics());
 
