@@ -64,6 +64,10 @@ namespace ImGui
 #	error "No software render colour bit depth specified"
 #endif
 	};
+
+	struct _ImplSRViewport
+	{
+	};
 }
 
 inline void ImplUpdateDisplaySize(ImGui::ImplSRContext context,
@@ -353,6 +357,92 @@ lak::vec2s_t ImplSRTextureSize(ImGui::ImplContext context, ImTextureID tex)
 {
 	auto _t = (texture_base_t *)(uintptr_t)tex;
 	return {_t->w, _t->h};
+}
+
+void ImplSRCreateViewport(ImGui::ImplContext context,
+                          ImGui::ImplViewport viewport)
+{
+	viewport->sr_viewport = new ImGui::_ImplSRViewport();
+}
+
+void ImplSRDestroyViewport(ImGui::ImplContext context,
+                           ImGui::ImplViewport viewport)
+{
+	if (!viewport) return;
+
+	ImplSRDestroyTexture(context, viewport->output.GetTexID());
+
+	if (!viewport->sr_viewport) return;
+
+	delete viewport->sr_viewport;
+}
+
+ImGui::ImplSRViewportDetails ImplSRBeginViewport(ImGui::ImplContext context,
+                                                 ImGui::ImplViewport viewport,
+                                                 lak::vec2s_t size)
+{
+	auto id = viewport->output.GetTexID();
+
+	bool rebuild = false;
+
+	if (id == ImTextureID_Invalid)
+	{
+		rebuild = true;
+	}
+	else if (auto *tex = (texture_base_t *)(uintptr_t)id;
+	         tex->w != size.x || tex->h != size.y)
+	{
+		rebuild = true;
+	}
+
+	if (rebuild)
+	{
+		if (id != ImTextureID_Invalid) ImplSRDestroyTexture(context, id);
+
+		switch (viewport->colour)
+		{
+			case ImGui::ImplTextureColourFormat::A:
+			{
+				auto t = new texture_alpha8_t;
+				t->init(size.x, size.y);
+				viewport->output = (ImTextureID)(uintptr_t)(texture_base_t *)t;
+			}
+			break;
+			case ImGui::ImplTextureColourFormat::R:
+			{
+				auto t = new texture_value8_t;
+				t->init(size.x, size.y);
+				viewport->output = (ImTextureID)(uintptr_t)(texture_base_t *)t;
+			}
+			break;
+			case ImGui::ImplTextureColourFormat::RGB:
+			{
+				auto t = new texture_color24_t;
+				t->init(size.x, size.y);
+				viewport->output = (ImTextureID)(uintptr_t)(texture_base_t *)t;
+			}
+			break;
+			case ImGui::ImplTextureColourFormat::RGBA:
+			{
+				auto t = new texture_color32_t;
+				t->init(size.x, size.y);
+				viewport->output = (ImTextureID)(uintptr_t)(texture_base_t *)t;
+			}
+			break;
+			default: ASSERT_UNREACHABLE();
+		}
+
+		id = viewport->output.GetTexID();
+	}
+
+	return {
+	  .framebuffer = (texture_base_t *)(uintptr_t)id,
+	};
+}
+
+void ImplSREndViewport(ImGui::ImplContext, ImGui::ImplViewport)
+{
+	//
 }
 
 void ImplSRRender(ImGui::ImplContext context, ImDrawData *draw_data)

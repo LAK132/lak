@@ -10,6 +10,14 @@
 
 #include <imgui.h>
 
+#ifdef LAK_ENABLE_SOFTRENDER
+#	include "lak/softrender/texture.hpp"
+#endif
+
+#ifdef LAK_ENABLE_COBALT
+#	include <RendererInterface/RendererInterface.pkg>
+#endif
+
 namespace ImGui
 {
 	struct _ImplContext;
@@ -61,6 +69,10 @@ namespace ImGui
 	                               ImplTextureColourFormat colour,
 	                               ImplTextureChannelFormat channel);
 
+#ifdef LAK_ENABLE_COBALT
+	::cobalt::graphics::ITextureBuffer2D *ImplGetCobaltTexture(ImTextureRef tex);
+#endif
+
 	ImTextureRef ImplUpdateTexture(ImplContext context,
 	                               ImTextureRef tex,
 	                               const void *pixels,
@@ -74,6 +86,57 @@ namespace ImGui
 	lak::vec2s_t ImplTextureSize(ImplContext context, ImTextureRef tex);
 
 	void ImplUpdateTexture(ImplContext context, ImTextureData *texture);
+
+	struct _ImplViewport;
+	using ImplViewport = _ImplViewport *;
+
+	ImplViewport ImplCreateViewport(ImplContext context,
+	                                ImGui::ImplTextureColourFormat colour,
+	                                ImGui::ImplTextureChannelFormat channel);
+
+	void ImplDestroyViewport(ImplContext context, ImplViewport viewport);
+
+	struct ImplSRViewportDetails
+	{
+#ifdef LAK_ENABLE_SOFTRENDER
+		texture_base_t *framebuffer;
+#endif
+	};
+	struct ImplGLViewportDetails
+	{
+#ifdef LAK_ENABLE_OPENGL
+#endif
+	};
+	struct ImplCoViewportDetails
+	{
+#ifdef LAK_ENABLE_COBALT
+		::cobalt::graphics::IRenderer *renderer;
+		::cobalt::graphics::IFrameBuffer *framebuffer;
+		lak::array<::cobalt::graphics::IRenderPassNode::unique_ptr> *passes;
+
+		inline void clear_passes() const { passes->clear(); }
+		inline ::cobalt::graphics::IRenderPassNode *append_pass() const
+		{
+			passes->reserve(passes->size() + 1U);
+			auto result = passes->push_back(renderer->CreateRenderPassNode()).get();
+			result->BindFrameBuffer(framebuffer);
+			return result;
+		}
+#endif
+	};
+
+	using ImplViewportDetails = lak::variant<ImplSRViewportDetails,
+	                                         ImplGLViewportDetails,
+	                                         ImplCoViewportDetails>;
+
+	ImplViewportDetails ImplBeginViewport(
+	  ImplContext context,
+	  ImplViewport viewport,
+	  const ImVec2 &size,
+	  bool *clicked          = nullptr,
+	  ImGuiButtonFlags flags = ImGuiButtonFlags_None);
+
+	void ImplEndViewport(ImplContext context, ImplViewport viewport);
 
 	void ImplRender(ImplContext context, const bool call_base_render = true);
 

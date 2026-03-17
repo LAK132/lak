@@ -52,6 +52,13 @@ namespace ImGui
 		::cobalt::graphics::VertexAttributeId vColour;
 		::cobalt::graphics::TextureId fTexture;
 	};
+
+	struct _ImplCoViewport
+	{
+		::cobalt::graphics::IFrameBuffer::unique_ptr fb;
+		::cobalt::graphics::ITextureBuffer2D::unique_ptr db;
+		lak::array<::cobalt::graphics::IRenderPassNode::unique_ptr> ps;
+	};
 }
 
 void ImplInitCoContext(ImGui::ImplCoContext context, const lak::window &window)
@@ -265,6 +272,14 @@ ImTextureID ImplCoCreateTexture(ImGui::ImplContext context,
 	return (ImTextureID)(uintptr_t)&tex;
 }
 
+::cobalt::graphics::ITextureBuffer2D *ImGui::ImplGetCobaltTexture(
+  ImTextureRef tex)
+{
+	return ((::cobalt::graphics::ITextureBuffer2D::unique_ptr *)(uintptr_t)
+	          tex.GetTexID())
+	  ->get();
+}
+
 ImTextureRef ImplCoUpdateTexture(ImGui::ImplContext context,
                                  ImTextureID tex,
                                  const void *pixels,
@@ -356,6 +371,143 @@ lak::vec2s_t ImplCoTextureSize(ImGui::ImplContext context, ImTextureID tex)
 	  (*(::cobalt::graphics::ITextureBuffer2D::unique_ptr *)(uintptr_t)tex)
 	    ->MipmapLevelDimensions(0);
 	return {size_t(dims.X()), size_t(dims.Y())};
+}
+
+void ImplCoCreateViewport(ImGui::ImplContext context,
+                          ImGui::ImplViewport viewport)
+{
+	viewport->co_viewport = new ImGui::_ImplCoViewport();
+
+	viewport->co_viewport->fb =
+	  context->co_context->renderer->CreateFrameBuffer();
+
+	auto &tx = *(new ::cobalt::graphics::ITextureBuffer2D::unique_ptr);
+	tx       = context->co_context->renderer->CreateTextureBuffer2D();
+	tx->SetUsageFlags(
+	  ::cobalt::graphics::ITextureBuffer::UsageFlags::ShaderInput |
+	  ::cobalt::graphics::ITextureBuffer::UsageFlags::FrameBufferOutput);
+	::cobalt::graphics::ITextureBuffer::ImageFormat imgf =
+	  ::cobalt::graphics::ITextureBuffer::ImageFormat::RGBA;
+	::cobalt::graphics::ITextureBuffer::DataFormat datf =
+	  ::cobalt::graphics::ITextureBuffer::DataFormat::UNorm8;
+	switch (viewport->colour)
+	{
+		case ImGui::ImplTextureColourFormat::RGBA:
+			imgf = ::cobalt::graphics::ITextureBuffer::ImageFormat::RGBA;
+			break;
+		case ImGui::ImplTextureColourFormat::BGRA:
+			imgf = ::cobalt::graphics::ITextureBuffer::ImageFormat::BGRA;
+			break;
+		case ImGui::ImplTextureColourFormat::RGB:
+			imgf = ::cobalt::graphics::ITextureBuffer::ImageFormat::RGB;
+			break;
+		case ImGui::ImplTextureColourFormat::R:
+			imgf = ::cobalt::graphics::ITextureBuffer::ImageFormat::R;
+			break;
+		default: ASSERT_UNREACHABLE();
+	}
+	switch (viewport->channel)
+	{
+		case ImGui::ImplTextureChannelFormat::U8:
+			datf = ::cobalt::graphics::ITextureBuffer::DataFormat::UNorm8;
+			break;
+		case ImGui::ImplTextureChannelFormat::U16:
+			datf = ::cobalt::graphics::ITextureBuffer::DataFormat::UNorm16;
+			break;
+		case ImGui::ImplTextureChannelFormat::F32:
+			datf = ::cobalt::graphics::ITextureBuffer::DataFormat::Float32;
+			break;
+		default: ASSERT_UNREACHABLE();
+	}
+	tx->SetTextureFormat(imgf, datf);
+	viewport->output = (ImTextureID)(uintptr_t)&tx;
+
+	lak::cobalt::as_result(
+	  viewport->co_viewport->fb->BindTexture(
+	    tx.get(), ::cobalt::graphics::IFrameBuffer::AttachmentType::Color))
+	  .UNWRAP();
+
+	viewport->co_viewport->db =
+	  context->co_context->renderer->CreateTextureBuffer2D();
+	viewport->co_viewport->db->SetUsageFlags(
+	  ::cobalt::graphics::ITextureBuffer::UsageFlags::FrameBufferOutput);
+	viewport->co_viewport->db->SetTextureFormat(
+	  ::cobalt::graphics::ITextureBuffer::ImageFormat::Depth,
+	  ::cobalt::graphics::ITextureBuffer::DataFormat::DepthFloat32);
+
+	lak::cobalt::as_result(
+	  viewport->co_viewport->fb->BindTexture(
+	    viewport->co_viewport->db.get(),
+	    ::cobalt::graphics::IFrameBuffer::AttachmentType::Depth))
+	  .UNWRAP();
+}
+
+void ImplCoDestroyViewport(ImGui::ImplContext context,
+                           ImGui::ImplViewport viewport)
+{
+	if (!viewport) return;
+
+	ImplCoDestroyTexture(context, viewport->output.GetTexID());
+
+	if (!viewport->co_viewport) return;
+
+	ImplCoDestroyTexture(context, viewport->output.GetTexID());
+	viewport->co_viewport->fb.reset();
+
+	delete viewport->co_viewport;
+}
+
+ImGui::ImplCoViewportDetails ImplCoBeginViewport(ImGui::ImplContext context,
+                                                 ImGui::ImplViewport viewport,
+                                                 lak::vec2s_t size)
+{
+	auto id = viewport->output.GetTexID();
+
+	if (id == ImTextureID_Invalid)
+	{
+		viewport->output = ImplCoCreateTexture(
+		  context, nullptr, size, viewport->colour, viewport->channel);
+		id = viewport->output.GetTexID();
+	}
+	else
+	{
+		auto *tex =
+		  ((::cobalt::graphics::ITextureBuffer2D::unique_ptr *)id)->get();
+		if (tex->MipmapLevelCount() < 1U ||
+		    tex->MipmapLevelDimensions(0) !=
+		      ::cobalt::graphics::V2UInt32(uint32_t(size.x), uint32_t(size.y)))
+		{
+			viewport->co_viewport->db->SetTextureDimensions(
+			  {uint32_t(size.x), uint32_t(size.y)});
+			lak::cobalt::as_result(viewport->co_viewport->db->AllocateMemory())
+			  .UNWRAP();
+			tex->SetTextureDimensions({uint32_t(size.x), uint32_t(size.y)});
+			lak::cobalt::as_result(tex->AllocateMemory()).UNWRAP();
+		}
+	}
+
+	viewport->co_viewport->fb->DefineViewportRegion(
+	  {0, 0}, {uint32_t(size.x), uint32_t(size.y)});
+	viewport->co_viewport->fb->DefineScissorRegion(
+	  {0, 0}, {uint32_t(size.x), uint32_t(size.y)});
+
+	return {
+	  .renderer    = context->co_context->renderer,
+	  .framebuffer = viewport->co_viewport->fb.get(),
+	  .passes      = &viewport->co_viewport->ps,
+	};
+}
+
+void ImplCoEndViewport(ImGui::ImplContext context,
+                       ImGui::ImplViewport viewport)
+{
+	auto *rd = context->co_context->renderer;
+	auto &ps = viewport->co_viewport->ps;
+	rd->SetRenderPasses(ps.data(), ps.size());
+	rd->StartNewFrame();
+	rd->WaitForDrawComplete();
+	rd->WaitForOutputCaptureComplete(); // :TODO: needed?
+	rd->RemoveAllRenderPasses();
 }
 
 void ImplCoRender(ImGui::ImplContext ctx, ImDrawData *draw_data)

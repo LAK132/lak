@@ -36,6 +36,8 @@ struct my_window : virtual public LAK_BASIC_PROGRAM(window_api)
 
 	ImPlotContext *implot_ctx = nullptr;
 
+	lak::ImViewport viewport = nullptr;
+
 	virtual void init() override final
 	{
 		// called once window has been set up
@@ -51,12 +53,16 @@ struct my_window : virtual public LAK_BASIC_PROGRAM(window_api)
 		checker = lak::CreateTexture(checker_img);
 
 		implot_ctx = ImPlot::CreateContext();
+
+		viewport = lak::CreateViewport(ImGui::ImplTextureColourFormat::RGBA,
+		                               ImGui::ImplTextureChannelFormat::U8);
 	}
 
 	virtual ~my_window()
 	{
 		lak::DestroyTexture(checker);
 		if (implot_ctx) ImPlot::DestroyContext(implot_ctx);
+		if (viewport) lak::DestroyViewport(viewport);
 	}
 
 	virtual void handle_event(lak::event &event) override final
@@ -96,6 +102,63 @@ struct my_window : virtual public LAK_BASIC_PROGRAM(window_api)
 			ImGui::Text("Dropped file: %s", path.generic_string().c_str());
 
 		ImGui::Image(checker, ImVec2(200, 200));
+
+		{
+			lak::vec4f_t clear_colour{0.5f, 0.3125f, 0.3125f, 1.0f};
+
+			bool viewport_clicked = false;
+			auto vp =
+			  lak::BeginViewport(viewport, ImVec2(200, 200), &viewport_clicked);
+
+			vp.visit(lak::overloaded{
+			  [&](const lak::ImSRViewportDetails &vpd)
+			  {
+				  (void)vpd;
+#ifdef LAK_ENABLE_SOFTRENDER
+				  ASSERT_EQUAL(vpd.framebuffer->type, texture_type_t::COLOR32);
+				  auto *fb = (texture_color32_t *)vpd.framebuffer;
+				  color32_t cc{uint8_t(clear_colour.r * 255),
+				               uint8_t(clear_colour.g * 255),
+				               uint8_t(clear_colour.b * 255),
+				               uint8_t(clear_colour.a * 255)};
+				  for (size_t y = 0; y < fb->h; ++y)
+					  for (size_t x = 0; x < fb->w; ++x) fb->at(x, y) = cc;
+#endif
+			  },
+			  [&](const lak::ImGLViewportDetails &vpd)
+			  {
+				  (void)vpd;
+#ifdef LAK_ENABLE_OPENGL
+				  glClearColor(
+				    clear_colour.r, clear_colour.g, clear_colour.b, clear_colour.a);
+				  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+#endif
+			  },
+			  [&](const lak::ImCoViewportDetails &vpd)
+			  {
+				  (void)vpd;
+#ifdef LAK_ENABLE_COBALT
+				  vpd.clear_passes();
+				  auto clear_pass = vpd.append_pass();
+				  clear_pass->SetAttachmentClearData(
+				    ::cobalt::graphics::IFrameBuffer::AttachmentType::Color,
+				    0,
+				    ::cobalt::graphics::V4Float32{
+				      clear_colour.r, clear_colour.g, clear_colour.b, clear_colour.a});
+				  clear_pass->SetAttachmentClearData(
+				    ::cobalt::graphics::IFrameBuffer::AttachmentType::Depth,
+				    0,
+				    ::cobalt::graphics::V4Float32{1.f, 1.f, 1.f, 1.f});
+#endif
+			  },
+			});
+
+			lak::EndViewport(viewport);
+			if (viewport_clicked)
+			{
+				DEBUG("Viewport clicked!");
+			}
+		}
 
 		bool implot_demo_open = true;
 		ImPlot::ShowDemoWindow(&implot_demo_open);

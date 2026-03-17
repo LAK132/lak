@@ -816,6 +816,130 @@ void ImGui::ImplUpdateTexture(ImplContext context, ImTextureData *texture)
 	}
 }
 
+ImGui::ImplViewport ImGui::ImplCreateViewport(
+  ImGui::ImplContext context,
+  ImGui::ImplTextureColourFormat colour,
+  ImGui::ImplTextureChannelFormat channel)
+{
+	ImplViewport result = new _ImplViewport();
+	result->colour      = colour;
+	result->channel     = channel;
+	switch (context->mode)
+	{
+#ifdef LAK_ENABLE_SOFTRENDER
+		case lak::graphics_mode::Software:
+			ImplSRCreateViewport(context, result);
+			break;
+#endif
+#ifdef LAK_ENABLE_OPENGL
+		case lak::graphics_mode::OpenGL:
+			ImplGLCreateViewport(context, result);
+			break;
+#endif
+#ifdef LAK_ENABLE_COBALT
+		case lak::graphics_mode::Cobalt:
+			ImplCoCreateViewport(context, result);
+			break;
+#endif
+		default:
+			ASSERT_UNREACHABLE();
+			result->vd_viewport = nullptr;
+			break;
+	}
+	return result;
+}
+
+void ImGui::ImplDestroyViewport(ImGui::ImplContext context,
+                                ImGui::ImplViewport viewport)
+{
+	if (!viewport) return;
+	switch (context->mode)
+	{
+#ifdef LAK_ENABLE_SOFTRENDER
+		case lak::graphics_mode::Software:
+			ImplSRDestroyViewport(context, viewport);
+			break;
+#endif
+#ifdef LAK_ENABLE_OPENGL
+		case lak::graphics_mode::OpenGL:
+			ImplGLDestroyViewport(context, viewport);
+			break;
+#endif
+#ifdef LAK_ENABLE_COBALT
+		case lak::graphics_mode::Cobalt:
+			ImplCoDestroyViewport(context, viewport);
+			break;
+#endif
+	}
+	delete viewport;
+}
+
+ImGui::ImplViewportDetails ImGui::ImplBeginViewport(
+  ImGui::ImplContext context,
+  ImGui::ImplViewport viewport,
+  const ImVec2 &size,
+  bool *clicked,
+  ImGuiButtonFlags flags)
+{
+	lak::optional<ImGui::ImplViewportDetails> result;
+
+	switch (context->mode)
+	{
+#ifdef LAK_ENABLE_SOFTRENDER
+		case lak::graphics_mode::Software:
+			result = ImplSRBeginViewport(
+			  context, viewport, lak::vec2s_t(size_t(size.x), size_t(size.y)));
+			break;
+#endif
+#ifdef LAK_ENABLE_OPENGL
+		case lak::graphics_mode::OpenGL:
+			result = ImplGLBeginViewport(
+			  context, viewport, lak::vec2s_t(size_t(size.x), size_t(size.y)));
+			break;
+#endif
+#ifdef LAK_ENABLE_COBALT
+		case lak::graphics_mode::Cobalt:
+			result = ImplCoBeginViewport(
+			  context, viewport, lak::vec2s_t(size_t(size.x), size_t(size.y)));
+			break;
+#endif
+		default: ASSERT_UNREACHABLE();
+	}
+
+	ImGui::PushID(viewport);
+	auto cur = ImGui::GetCursorScreenPos();
+	ImGui::GetWindowDrawList()->AddImage(viewport->output, cur, cur + size);
+	bool c = ImGui::InvisibleButton("viewport", size, flags);
+	ImGui::PopID();
+	if (clicked) *clicked = c;
+
+	return *result;
+}
+
+void ImGui::ImplEndViewport(ImGui::ImplContext context,
+                            ImGui::ImplViewport viewport)
+{
+	switch (context->mode)
+	{
+#ifdef LAK_ENABLE_SOFTRENDER
+		case lak::graphics_mode::Software:
+			ImplSREndViewport(context, viewport);
+			break;
+#endif
+#ifdef LAK_ENABLE_OPENGL
+		case lak::graphics_mode::OpenGL:
+			ImplGLEndViewport(context, viewport);
+			break;
+#endif
+#ifdef LAK_ENABLE_COBALT
+		case lak::graphics_mode::Cobalt:
+			ImplCoEndViewport(context, viewport);
+			break;
+#endif
+		default: return;
+	}
+}
+
 void ImGui::ImplRender(ImplContext context, const bool call_base_render)
 {
 	if (call_base_render) Render();

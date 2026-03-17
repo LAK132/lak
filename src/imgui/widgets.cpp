@@ -90,14 +90,39 @@ ImTextureRef lak::CreateTexture(const lak::image<float> &image)
 	  ImGui::ImplTextureChannelFormat::F32);
 }
 
-#ifdef LAK_ENABLE_COBALT
-::cobalt::graphics::ITextureBuffer2D *lak::GetCobaltTexture(ImTextureRef tex)
+lak::ImViewport lak::CreateViewport(lak::ImTextureColourFormat colour,
+                                    lak::ImTextureChannelFormat channel)
 {
-	return ((::cobalt::graphics::ITextureBuffer2D::unique_ptr *)(uintptr_t)
-	          tex.GetTexID())
-	  ->get();
+	return ImGui::ImplCreateViewport(
+	  (ImGui::ImplContext)ImGui::GetIO().BackendPlatformUserData,
+	  colour,
+	  channel);
 }
-#endif
+
+void lak::DestroyViewport(ImViewport viewport)
+{
+	ImGui::ImplDestroyViewport(
+	  (ImGui::ImplContext)ImGui::GetIO().BackendPlatformUserData, viewport);
+}
+
+lak::ImViewportDetails lak::BeginViewport(ImViewport viewport,
+                                          const ImVec2 &size,
+                                          bool *clicked,
+                                          ImGuiButtonFlags flags)
+{
+	return ImGui::ImplBeginViewport(
+	  (ImGui::ImplContext)ImGui::GetIO().BackendPlatformUserData,
+	  viewport,
+	  size,
+	  clicked,
+	  flags);
+}
+
+void lak::EndViewport(ImViewport viewport)
+{
+	ImGui::ImplEndViewport(
+	  (ImGui::ImplContext)ImGui::GetIO().BackendPlatformUserData, viewport);
+}
 
 /* --- DestroyTexture --- */
 

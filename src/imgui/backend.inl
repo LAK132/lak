@@ -70,6 +70,29 @@ namespace ImGui
 			ImplCoContext co_context;
 		};
 	};
+
+	struct _ImplSRViewport;
+	using ImplSRViewport = _ImplSRViewport *;
+
+	struct _ImplGLViewport;
+	using ImplGLViewport = _ImplGLViewport *;
+
+	struct _ImplCoViewport;
+	using ImplCoViewport = _ImplCoViewport *;
+
+	struct _ImplViewport
+	{
+		ImTextureRef output;
+		ImGui::ImplTextureColourFormat colour;
+		ImGui::ImplTextureChannelFormat channel;
+		union
+		{
+			void *vd_viewport;
+			ImplSRViewport sr_viewport;
+			ImplGLViewport gl_viewport;
+			ImplCoViewport co_viewport;
+		};
+	};
 }
 
 #endif

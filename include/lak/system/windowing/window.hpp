@@ -238,8 +238,14 @@ namespace lak
 
 	void cobalt_append_render_pass(const lak::cobalt_context &c,
 	                               ::cobalt::graphics::IRenderPassNode *pass);
+	void cobalt_append_render_pass(
+	  const lak::cobalt_context &c,
+	  ::cobalt::graphics::IRenderPassNode::unique_ptr &&pass);
 	lak::result<lak::monostate> cobalt_append_render_pass(
 	  const lak::window_handle *w, ::cobalt::graphics::IRenderPassNode *pass);
+	lak::result<lak::monostate> cobalt_append_render_pass(
+	  const lak::window_handle *w,
+	  ::cobalt::graphics::IRenderPassNode::unique_ptr &&pass);
 #endif
 
 	bool set_active_window(const lak::window_handle *w);

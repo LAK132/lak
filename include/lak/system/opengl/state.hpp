@@ -5,14 +5,13 @@
 
 #include "lak/system/compiler.hpp"
 
+#include "lak/array.hpp"
 #include "lak/debug.hpp"
 #include "lak/format.hpp"
 #include "lak/result.hpp"
 #include "lak/type_traits.hpp"
 
 #include "lak/string_literals/view.hpp"
-
-#include <array>
 
 namespace lak
 {
@@ -99,7 +98,7 @@ namespace lak
 			}
 			else
 			{
-				std::array<GLboolean, S> result;
+				lak::array<GLboolean, S> result;
 				return lak::opengl::call_checked(glGetBooleanv, target, result.data())
 				  .replace(result);
 			}
@@ -116,7 +115,7 @@ namespace lak
 			}
 			else
 			{
-				std::array<GLint, S> result;
+				lak::array<GLint, S> result;
 				return lak::opengl::call_checked(glGetIntegerv, target, result.data())
 				  .replace(result);
 			}
@@ -134,7 +133,7 @@ namespace lak
 			}
 			else
 			{
-				std::array<GLuint, S> result;
+				lak::array<GLuint, S> result;
 				return lak::opengl::call_checked(
 				         glGetIntegerv, target, (GLint *)result.data())
 				  .replace(result);
@@ -153,7 +152,7 @@ namespace lak
 			}
 			else
 			{
-				std::array<GLenum, S> result;
+				lak::array<GLenum, S> result;
 				return lak::opengl::call_checked(
 				         glGetIntegerv, target, (GLint *)result.data())
 				  .replace(result);
@@ -171,7 +170,7 @@ namespace lak
 			}
 			else
 			{
-				std::array<GLint64, S> result;
+				lak::array<GLint64, S> result;
 				return lak::opengl::call_checked(
 				         glGetInteger64v, target, result.data())
 				  .replace(result);
@@ -190,7 +189,7 @@ namespace lak
 			}
 			else
 			{
-				std::array<GLuint64, S> result;
+				lak::array<GLuint64, S> result;
 				return lak::opengl::call_checked(
 				         glGetInteger64v, target, (GLint64 *)result.data())
 				  .replace(result);
@@ -208,7 +207,7 @@ namespace lak
 			}
 			else
 			{
-				std::array<GLfloat, S> result;
+				lak::array<GLfloat, S> result;
 				return lak::opengl::call_checked(glGetFloatv, target, result.data())
 				  .replace(result);
 			}
@@ -225,7 +224,7 @@ namespace lak
 			}
 			else
 			{
-				std::array<GLdouble, S> result;
+				lak::array<GLdouble, S> result;
 				return lak::opengl::call_checked(glGetDoublev, target, result.data())
 				  .replace(result);
 			}

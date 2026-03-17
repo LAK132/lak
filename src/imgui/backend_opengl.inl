@@ -29,6 +29,17 @@ namespace ImGui
 		GLuint vertex_array;
 		lak::opengl::program shader;
 	};
+
+	struct _ImplGLViewport
+	{
+		GLuint fb;
+		GLuint rb;
+		GLuint old_dfb;
+		GLuint old_rfb;
+		GLuint old_rb;
+		lak::array<GLint, 4U> old_vp;
+		lak::array<GLint, 4U> old_sc;
+	};
 }
 
 void ImplInitGLContext(ImGui::ImplGLContext context, const lak::window &)
@@ -212,6 +223,144 @@ void ImplGLDestroyTexture(ImGui::ImplContext context, ImTextureID tex)
 lak::vec2s_t ImplGLTextureSize(ImGui::ImplContext context, ImTextureID tex)
 {
 	return lak::vec2s_t(((lak::opengl::texture *)(uintptr_t)tex)->size());
+}
+
+void ImplGLCreateViewport(ImGui::ImplContext context,
+                          ImGui::ImplViewport viewport)
+{
+	viewport->gl_viewport = new ImGui::_ImplGLViewport();
+
+	lak::opengl::call_checked(glGenFramebuffers, 1, &viewport->gl_viewport->fb)
+	  .UNWRAP();
+	lak::opengl::call_checked(glGenRenderbuffers, 1, &viewport->gl_viewport->rb)
+	  .UNWRAP();
+}
+
+void ImplGLDestroyViewport(ImGui::ImplContext context,
+                           ImGui::ImplViewport viewport)
+{
+	if (!viewport) return;
+
+	ImplGLDestroyTexture(context, viewport->output.GetTexID());
+
+	if (!viewport->gl_viewport) return;
+
+	lak::opengl::call_checked(
+	  glDeleteFramebuffers, 1, &viewport->gl_viewport->fb)
+	  .UNWRAP();
+	lak::opengl::call_checked(
+	  glDeleteRenderbuffers, 1, &viewport->gl_viewport->rb)
+	  .UNWRAP();
+
+	delete viewport->gl_viewport;
+}
+
+ImGui::ImplGLViewportDetails ImplGLBeginViewport(ImGui::ImplContext context,
+                                                 ImGui::ImplViewport viewport,
+                                                 lak::vec2s_t size)
+{
+	auto id = viewport->output.GetTexID();
+
+	viewport->gl_viewport->old_dfb =
+	  lak::opengl::get_int<1U>(GL_DRAW_FRAMEBUFFER_BINDING).UNWRAP();
+	viewport->gl_viewport->old_rfb =
+	  lak::opengl::get_int<1U>(GL_READ_FRAMEBUFFER_BINDING).UNWRAP();
+	viewport->gl_viewport->old_rb =
+	  lak::opengl::get_int<1U>(GL_RENDERBUFFER_BINDING).UNWRAP();
+	viewport->gl_viewport->old_vp =
+	  lak::opengl::get_int<4U>(GL_VIEWPORT).UNWRAP();
+	viewport->gl_viewport->old_sc =
+	  lak::opengl::get_int<4U>(GL_SCISSOR_BOX).UNWRAP();
+
+	if (id == ImTextureID_Invalid)
+	{
+		viewport->output = ImplGLCreateTexture(
+		  context, nullptr, size, viewport->colour, viewport->channel);
+		id = viewport->output.GetTexID();
+	}
+	else
+	{
+		auto *tex = (lak::opengl::texture *)(uintptr_t)id;
+
+		GLenum gl_colour;
+		switch (viewport->colour)
+		{
+			case ImGui::ImplTextureColourFormat::RGBA: gl_colour = GL_RGBA; break;
+			case ImGui::ImplTextureColourFormat::BGRA: gl_colour = GL_BGRA; break;
+			case ImGui::ImplTextureColourFormat::RGB:  gl_colour = GL_RGB; break;
+			case ImGui::ImplTextureColourFormat::R:    gl_colour = GL_RED; break;
+			default:                                   ASSERT_UNREACHABLE();
+		}
+
+		GLenum gl_channel;
+		switch (viewport->channel)
+		{
+			case ImGui::ImplTextureChannelFormat::U8:
+				gl_channel = GL_UNSIGNED_BYTE;
+				break;
+			case ImGui::ImplTextureChannelFormat::U16:
+				gl_channel = GL_UNSIGNED_SHORT;
+				break;
+			case ImGui::ImplTextureChannelFormat::F32: gl_channel = GL_FLOAT; break;
+			default:                                   ASSERT_UNREACHABLE();
+		}
+
+		tex->bind().build(
+		  0, GL_RGBA, lak::vec2i_t(size), 0, gl_colour, gl_channel, nullptr);
+	}
+
+	auto *tex = (lak::opengl::texture *)(uintptr_t)id;
+
+	lak::opengl::call_checked(
+	  glBindFramebuffer, GL_FRAMEBUFFER, viewport->gl_viewport->fb)
+	  .UNWRAP();
+
+	lak::opengl::call_checked(
+	  glBindRenderbuffer, GL_RENDERBUFFER, viewport->gl_viewport->rb)
+	  .UNWRAP();
+	lak::opengl::call_checked(glRenderbufferStorage,
+	                          GL_RENDERBUFFER,
+	                          GL_DEPTH24_STENCIL8,
+	                          GLsizei(size.x),
+	                          GLsizei(size.y))
+	  .UNWRAP();
+
+	lak::opengl::call_checked(glFramebufferTexture2D,
+	                          GL_FRAMEBUFFER,
+	                          GL_COLOR_ATTACHMENT0,
+	                          GL_TEXTURE_2D,
+	                          tex->get(),
+	                          0)
+	  .UNWRAP();
+	lak::opengl::call_checked(glFramebufferRenderbuffer,
+	                          GL_FRAMEBUFFER,
+	                          GL_DEPTH_STENCIL_ATTACHMENT,
+	                          GL_RENDERBUFFER,
+	                          viewport->gl_viewport->rb);
+
+	ASSERT_EQUAL(glCheckFramebufferStatus(GL_FRAMEBUFFER),
+	             GL_FRAMEBUFFER_COMPLETE);
+
+	glViewport(0, 0, GLsizei(size.x), GLsizei(size.y));
+	glScissor(0, 0, GLsizei(size.x), GLsizei(size.y));
+
+	return {};
+}
+
+void ImplGLEndViewport(ImGui::ImplContext, ImGui::ImplViewport viewport)
+{
+	GLuint dfb = viewport->gl_viewport->old_dfb;
+	GLuint rfb = viewport->gl_viewport->old_rfb;
+	GLuint rb  = viewport->gl_viewport->old_rb;
+	auto &vp   = viewport->gl_viewport->old_vp;
+	auto &sc   = viewport->gl_viewport->old_sc;
+	lak::opengl::call_checked(glBindFramebuffer, GL_DRAW_FRAMEBUFFER, dfb)
+	  .UNWRAP();
+	lak::opengl::call_checked(glBindFramebuffer, GL_READ_FRAMEBUFFER, rfb)
+	  .UNWRAP();
+	lak::opengl::call_checked(glBindRenderbuffer, GL_RENDERBUFFER, rb).UNWRAP();
+	glViewport(vp[0], vp[1], vp[2], vp[3]);
+	glScissor(sc[0], sc[1], sc[2], sc[3]);
 }
 
 void ImplGLRender(ImGui::ImplContext context, ImDrawData *draw_data)

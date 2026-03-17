@@ -7,6 +7,8 @@
 #include "lak/system/windowing/window.hpp"
 #include "lak/utility.hpp"
 
+#include "lak/imgui/backend.hpp"
+
 #ifdef LAK_ENABLE_COBALT
 #	include <RendererInterface/RendererInterface.pkg>
 #endif
@@ -26,9 +28,24 @@ namespace lak
 	ImTextureRef CreateTexture(const lak::image<float> &image);
 	void DestroyTexture(ImTextureRef &tex);
 	lak::vec2s_t TextureSize(ImTextureRef tex);
-#ifdef LAK_ENABLE_COBALT
-	::cobalt::graphics::ITextureBuffer2D *GetCobaltTexture(ImTextureRef tex);
-#endif
+
+	using ImViewport             = ImGui::ImplViewport;
+	using ImViewportDetails      = ImGui::ImplViewportDetails;
+	using ImSRViewportDetails    = ImGui::ImplSRViewportDetails;
+	using ImGLViewportDetails    = ImGui::ImplGLViewportDetails;
+	using ImCoViewportDetails    = ImGui::ImplCoViewportDetails;
+	using ImTextureColourFormat  = ImGui::ImplTextureColourFormat;
+	using ImTextureChannelFormat = ImGui::ImplTextureChannelFormat;
+
+	ImViewport CreateViewport(lak::ImTextureColourFormat colour,
+	                          lak::ImTextureChannelFormat channel);
+	void DestroyViewport(ImViewport viewport);
+	ImViewportDetails BeginViewport(
+	  ImViewport viewport,
+	  const ImVec2 &size,
+	  bool *clicked          = nullptr,
+	  ImGuiButtonFlags flags = ImGuiButtonFlags_None);
+	void EndViewport(ImViewport viewport);
 
 	template<typename R, typename... T, typename... D>
 	bool AwaitPopup(const char *str_id,
