@@ -1,6 +1,7 @@
 #ifndef LAK_COM_PTR_HPP
 #define LAK_COM_PTR_HPP
 
+#include "lak/reference_count.hpp"
 #include "lak/result.hpp"
 #include "lak/utility.hpp"
 
@@ -115,6 +116,64 @@ namespace lak
 		inline static void unref(handle_type handle)
 		{
 			return T::unref(handle);
+		}
+	};
+
+	// usage:
+	// template<>
+	// struct lak::unique_com_ptr<my_type>
+	// {
+	// 	// implement as usual
+	// };
+	// template<>
+	// struct lak::shared_com_ptr_traits<my_type>
+	// : public lak::ref_count_unique_com_ptr_traits_impl<my_type> {};
+	template<typename T>
+	struct ref_count_unique_com_ptr_traits_impl
+	{
+		using exposed_type = typename lak::unique_com_ptr_traits<T>::exposed_type;
+		using ref_count_type = lak::reference_count<size_t>;
+		struct handle_type
+		{
+			using value_type = typename lak::unique_com_ptr_traits<T>::handle_type;
+
+			ref_count_type *ref_count;
+			value_type handle;
+
+			handle_type() : ref_count(nullptr), handle(nullptr) {}
+			handle_type(nullptr_t) : handle_type() {}
+			handle_type(ref_count_type *rc, value_type h) : ref_count(rc), handle(h)
+			{
+			}
+
+			operator value_type() const { return handle; }
+		};
+
+		template<typename... ARGS>
+		inline static auto ctor(ARGS &&...args)
+		{
+			auto rc = new ref_count_type(1U);
+			DEFER(if (rc) delete rc);
+			return lak::unique_com_ptr_traits<T>::ctor(lak::forward<ARGS>(args)...)
+			  .map([&](typename handle_type::value_type handle) -> handle_type
+			       { return {lak::exchange(rc, nullptr), handle}; });
+		}
+
+		template<typename... ARGS>
+		inline static handle_type ref(handle_type handle)
+		{
+			++*handle.ref_count;
+			return handle;
+		}
+
+		template<typename... ARGS>
+		inline static void unref(handle_type handle)
+		{
+			if (!--*handle.ref_count)
+			{
+				delete handle.ref_count;
+				return lak::unique_com_ptr_traits<T>::dtor(handle.handle);
+			}
 		}
 	};
 
