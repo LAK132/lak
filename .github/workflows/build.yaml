@@ -17,7 +17,7 @@ jobs:
         setup-options:
           - -Dlak_enable_examples=true -Dlak_enable_windowing=true -Dlak_enable_glm=true -Dlak_enable_imgui=true
         target:
-          - basic_program nbt-view
+          - basic_program nbt-view template
         exclude:
           - os: windows-2022
             arch: arm64
