@@ -343,6 +343,9 @@ namespace lak
 		reference push_back(const T &t)
 		requires lak::array_type_is_copyable<T>;
 		reference push_back(T &&t);
+		template<typename ITER>
+		requires lak::array_type_is_copyable<T>
+		lak::span<T> push_back(ITER &&begin, ITER &&end);
 
 		void pop_back();
 		T popped_back();
@@ -352,6 +355,12 @@ namespace lak
 		iterator insert(const_iterator before, T &&value);
 		iterator insert(const_iterator before, std::initializer_list<T> list)
 		requires lak::array_type_is_copyable<T>;
+		template<typename ITER>
+		requires lak::array_type_is_copyable<T>
+		lak::span<T> insert(const_iterator before, ITER &&begin, ITER &&end);
+		lak::span<T> insert(const_iterator before, const array &other)
+		requires lak::array_type_is_copyable<T>;
+		lak::span<T> insert(const_iterator before, array &&other);
 
 		iterator erase(const_iterator first, const_iterator last);
 

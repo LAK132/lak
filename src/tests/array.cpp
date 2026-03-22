@@ -142,6 +142,35 @@ BEGIN_TEST(array)
 }
 END_TEST()
 
+BEGIN_TEST(array_append_many)
+{
+	lak::array<size_t> a1;
+	lak::array<size_t> a2;
+	a2.insert(a2.end(), {0U, 1U, 2U, 3U});
+
+	a1.insert(a1.end(), a2);
+	a1.push_back(a2.begin(), a2.end());
+	a1.insert(a1.end(), a2);
+	a1.push_back(a2.begin(), a2.end());
+
+	ASSERT_EQUAL(a1.size(), a2.size() * 4U);
+	for (size_t i = 0; i < a1.size(); ++i) ASSERT_EQUAL(a1[i], (i % a2.size()));
+
+	a1.insert(a1.begin() + 2U, lak::move(a2));
+	ASSERT(a2.empty());
+	ASSERT_EQUAL(a1[0U], 0U);
+	ASSERT_EQUAL(a1[1U], 1U);
+	ASSERT_EQUAL(a1[2U], 0U);
+	ASSERT_EQUAL(a1[3U], 1U);
+	ASSERT_EQUAL(a1[4U], 2U);
+	ASSERT_EQUAL(a1[5U], 3U);
+	ASSERT_EQUAL(a1[6U], 2U);
+	ASSERT_EQUAL(a1[7U], 3U);
+
+	return 0;
+}
+END_TEST()
+
 BEGIN_TEST(array_insert)
 {
 	lak::array<uint8_t> arr = one_page_array<uint8_t>(10U);

@@ -325,13 +325,7 @@ template<typename ITER>
 requires lak::array_type_is_copyable<T>
 lak::array<T, lak::dynamic_extent>::array(ITER &&begin, ITER &&end)
 {
-	_data.resize(end - begin);
-#if defined(LAK_COMPILER_CLANG) && defined(LAK_OS_APPLE)
-	if constexpr (!lak::concepts::copy_constructible<T>)
-		ASSERT_UNREACHABLE();
-	else
-#endif
-		for (size_t i = 0; begin != end; ++begin, ++i) new (data() + i) T(*begin);
+	push_back(begin, end);
 }
 
 template<typename T>
@@ -491,6 +485,22 @@ lak::array<T, lak::dynamic_extent>::push_back(T &&t)
 }
 
 template<typename T>
+template<typename ITER>
+requires lak::array_type_is_copyable<T>
+lak::span<T> lak::array<T, lak::dynamic_extent>::push_back(ITER &&b, ITER &&e)
+{
+	const size_t sz = size();
+	grow_impl(sz + lak::distance(b, e));
+#if defined(LAK_COMPILER_CLANG) && defined(LAK_OS_APPLE)
+	if constexpr (!lak::concepts::copy_constructible<T>)
+		ASSERT_UNREACHABLE();
+	else
+#endif
+		for (auto p = data() + sz; b != e; ++b, ++p) new (p) T(*b);
+	return lak::span<T>(data() + sz, end());
+}
+
+template<typename T>
 void lak::array<T, lak::dynamic_extent>::pop_back()
 {
 	ASSERT_GREATER(size(), 0U);
@@ -569,6 +579,55 @@ requires lak::array_type_is_copyable<T>
 			new (it++) T(value);
 
 	return data() + index;
+}
+
+template<typename T>
+template<typename ITER>
+requires lak::array_type_is_copyable<T>
+lak::span<T> lak::array<T, lak::dynamic_extent>::insert(const_iterator before,
+                                                        ITER &&b,
+                                                        ITER &&e)
+{
+	ASSERT_GREATER_OR_EQUAL(before, cbegin());
+	ASSERT_LESS_OR_EQUAL(before, cend());
+
+	const size_t sz    = lak::distance(b, e);
+	const size_t index = before - data();
+
+	right_shift(sz, index);
+
+#if defined(LAK_COMPILER_CLANG) && defined(LAK_OS_APPLE)
+	if constexpr (!lak::concepts::copy_constructible<T>)
+		ASSERT_UNREACHABLE();
+	else
+#endif
+		for (auto p = data() + index; b != e; ++b, ++p) new (p) T(*b);
+	return lak::span<T>(data() + index, sz);
+}
+
+template<typename T>
+lak::span<T> lak::array<T, lak::dynamic_extent>::insert(const_iterator before,
+                                                        const array &other)
+requires lak::array_type_is_copyable<T>
+{
+	return push_back(other.begin(), other.end());
+}
+
+template<typename T>
+lak::span<T> lak::array<T, lak::dynamic_extent>::insert(const_iterator before,
+                                                        array &&other)
+{
+	ASSERT_GREATER_OR_EQUAL(before, cbegin());
+	ASSERT_LESS_OR_EQUAL(before, cend());
+
+	const size_t sz    = other.size();
+	const size_t index = before - data();
+
+	right_shift(other.size(), index);
+
+	for (auto p = data() + index; auto &o : other) new (p++) T(lak::move(o));
+	other.clear();
+	return lak::span<T>(data() + index, sz);
 }
 
 template<typename T>
