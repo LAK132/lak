@@ -1,0 +1,34 @@
+From 623d806caff1e58e78bbde3fe81ea1b40478ef99 Mon Sep 17 00:00:00 2001
+From: LAK132 <lakridesagain@gmail.com>
+Date: Tue, 24 Mar 2026 16:09:28 +1030
+Subject: [PATCH] Remove setup of SDL3
+
+---
+ External/GeneralUtilityLibraries/CMakeLists.txt | 14 --------------
+ 1 file changed, 14 deletions(-)
+
+diff --git a/External/GeneralUtilityLibraries/CMakeLists.txt b/External/GeneralUtilityLibraries/CMakeLists.txt
+index b9f85d5..539e944 100644
+--- a/External/GeneralUtilityLibraries/CMakeLists.txt
++++ b/External/GeneralUtilityLibraries/CMakeLists.txt
+@@ -38,17 +38,3 @@ FetchContent_Declare(libpngPackage
+ FetchContent_MakeAvailable(libpngPackage)
+ set_project_virtual_folder(png_static "External/libpng")
+ set_project_virtual_folder(png_genfiles "External/libpng")
+-
+-# SDL3
+-set(SDL_STATIC ON CACHE BOOL "" FORCE)
+-set(SDL_SHARED OFF CACHE BOOL "" FORCE)
+-set(SDL_TESTS OFF CACHE BOOL "" FORCE)
+-set(SDL_TEST_LIBRARY OFF CACHE BOOL "" FORCE)
+-FetchContent_Declare(libsdl3Package
+-    GIT_REPOSITORY "https://github.com/libsdl-org/SDL.git"
+-    GIT_TAG "release-3.4.0"
+-    SOURCE_DIR "${COBALT_EXTERNAL_ROOT}/sdl3"
+-)
+-FetchContent_MakeAvailable(libsdl3Package)
+-set_project_virtual_folder(SDL_uclibc "External/SDL3")
+-set_project_virtual_folder(SDL3-static "External/SDL3")
+-- 
+2.53.0
+

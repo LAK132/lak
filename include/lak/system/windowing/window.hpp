@@ -223,7 +223,7 @@ namespace lak
 
 #ifdef LAK_ENABLE_COBALT
 	lak::unique_ptr<::cobalt::graphics::IRenderer::WindowSystemInfoBase>
-	cobalt_window_system_info();
+	cobalt_window_system_info(const lak::window_handle *w);
 
 	lak::unique_ptr<::cobalt::graphics::IFrameBuffer::WindowInfoBase>
 	cobalt_window_info(const lak::window_handle *w);

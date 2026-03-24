@@ -62,6 +62,22 @@ else
 		# '-mavx',
 		language: ['c', 'cpp', 'objcpp'])
 
+	if cxx.get_id() == 'gcc'
+		if cxx.has_link_argument('-Wl,-lstdc++_libbacktrace')
+			# GCC <14
+			add_project_link_arguments(
+				'-Wl,-lstdc++_libbacktrace',
+				language: ['cpp'])
+		elif cxx.has_link_argument('-Wl,-lstdc++exp')
+			# GCC >=14
+			add_project_link_arguments(
+				'-Wl,-lstdc++exp',
+				language: ['cpp'])
+		else
+			warning('Unable to determine backtrace library link argument')
+		endif
+	endif
+
 	system_libraries = []
 endif
 

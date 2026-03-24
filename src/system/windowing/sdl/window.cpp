@@ -31,14 +31,16 @@ lak::result<lak::window_handle *, lak::u8string> lak::create_window(
 	                                      SDL_WINDOW_RESIZABLE);
 
 	if (!handle->sdl_window)
-		return lak::err_t<lak::u8string>{u8"Failed to create window"_str};
+		return lak::err_t<lak::u8string>{
+		  lak::fmt<u8"Failed to create window ({})">(SDL_GetError())};
 
 	auto &context = handle->gc.emplace<lak::software_context>();
 
 	context.sdl_surface = SDL_GetWindowSurface(handle->sdl_window);
 
 	if (!context.sdl_surface)
-		return lak::err_t<lak::u8string>{u8"Failed to get window surface"_str};
+		return lak::err_t<lak::u8string>{
+		  lak::fmt<u8"Failed to get window surface ({})">(SDL_GetError())};
 
 	context.sdl_window = handle->sdl_window;
 
@@ -68,7 +70,8 @@ lak::result<lak::window_handle *, lak::u8string> lak::create_window(
 	                   SDL_WINDOW_RESIZABLE | SDL_WINDOW_OPENGL);
 
 	if (!handle->sdl_window)
-		return lak::err_t<lak::u8string>{u8"Failed to create window"_str};
+		return lak::err_t<lak::u8string>{
+		  lak::fmt<u8"Failed to create window ({})">(SDL_GetError())};
 
 	auto &context = handle->gc.emplace<lak::opengl_context>();
 
@@ -135,16 +138,6 @@ lak::result<lak::window_handle *, lak::u8string> lak::create_window(
 		  lak::streamify("Failed to get preferred graphics device")};
 	}
 
-	auto renderer =
-	  device->CreateRenderer(rsettings.features, rsettings.options);
-
-	if (auto info = lak::cobalt_window_system_info();
-	    !renderer->Initialize(*info))
-	{
-		return lak::err_t<lak::u8string>{
-		  lak::streamify("Failed to initialise cobalt renderer")};
-	}
-
 	auto handle = lak::unique_bank_ptr<lak::window_handle>::create();
 	ASSERT(handle);
 
@@ -159,8 +152,19 @@ lak::result<lak::window_handle *, lak::u8string> lak::create_window(
 	                                      480,
 	                                      SDL_WINDOW_RESIZABLE);
 
+	auto renderer =
+	  device->CreateRenderer(rsettings.features, rsettings.options);
+
 	if (!handle->sdl_window)
-		return lak::err_t<lak::u8string>{u8"Failed to create window"_str};
+		return lak::err_t<lak::u8string>{
+		  lak::fmt<u8"Failed to create window ({})">(SDL_GetError())};
+
+	if (auto info = lak::cobalt_window_system_info(handle.get());
+	    !renderer->Initialize(*info))
+	{
+		return lak::err_t<lak::u8string>{
+		  lak::streamify("Failed to initialise cobalt renderer")};
+	}
 
 	auto &context = handle->gc.emplace<lak::cobalt_context>();
 	auto fb       = renderer->CreateFrameBuffer();
@@ -259,9 +263,18 @@ bool lak::set_opengl_swap_interval(const lak::opengl_context &, int interval)
 
 #ifdef LAK_ENABLE_COBALT
 lak::unique_ptr<::cobalt::graphics::IRenderer::WindowSystemInfoBase>
-lak::cobalt_window_system_info()
+lak::cobalt_window_system_info(const lak::window_handle *w)
 {
 	auto driver = SDL_GetCurrentVideoDriver();
+#	ifdef LAK_OS_LINUX
+	SDL_SysWMinfo info;
+	SDL_VERSION(&info.version);
+	if (SDL_GetWindowWMInfo(w->sdl_window, &info) != SDL_TRUE)
+	{
+		ERROR(SDL_GetError());
+		ASSERT_UNREACHABLE();
+	}
+#	endif
 
 #	ifdef LAK_OS_WINDOWS
 	if (std::strcmp(driver, "windows") == 0)
@@ -276,25 +289,30 @@ lak::cobalt_window_system_info()
 #	endif
 
 #	ifdef LAK_OS_LINUX
+#		ifdef SDL_VIDEO_DRIVER_X11
 	  if (std::strcmp(driver, "x11") == 0)
 	{
 		return lak::unique_ptr<
 		  ::cobalt::graphics::IRenderer::WindowSystemInfoBase>(
-		  new ::cobalt::graphics::WindowSystemInfoXLib(),
+		  new ::cobalt::graphics::WindowSystemInfoXLib(info.info.x11.display),
 		  [](auto *p)
 		  { delete static_cast<::cobalt::graphics::WindowSystemInfoXLib *>(p); });
 	}
-	else if (std::strcmp(driver, "wayland") == 0)
+	else
+#		endif
+#		ifdef SDL_VIDEO_DRIVER_WAYLAND
+	  if (std::strcmp(driver, "wayland") == 0)
 	{
 		return lak::unique_ptr<
 		  ::cobalt::graphics::IRenderer::WindowSystemInfoBase>(
-		  new ::cobalt::graphics::WindowSystemInfoWayland(),
+		  new ::cobalt::graphics::WindowSystemInfoWayland(info.info.wl.display),
 		  [](auto *p)
 		  {
 			  delete static_cast<::cobalt::graphics::WindowSystemInfoWayland *>(p);
 		  });
 	}
 	else
+#		endif
 #	endif
 
 #	ifdef LAK_OS_APPLE
@@ -323,7 +341,11 @@ lak::cobalt_window_info(const lak::window_handle *w)
 {
 	SDL_SysWMinfo info;
 	SDL_VERSION(&info.version);
-	SDL_GetWindowWMInfo(w->sdl_window, &info);
+	if (SDL_GetWindowWMInfo(w->sdl_window, &info) != SDL_TRUE)
+	{
+		ERROR(SDL_GetError());
+		ASSERT_UNREACHABLE();
+	}
 
 #		ifdef LAK_OS_WINDOWS
 	if (info.subsystem == SDL_SYSWM_WINDOWS)
@@ -340,6 +362,7 @@ lak::cobalt_window_info(const lak::window_handle *w)
 #		endif
 
 #		ifdef LAK_OS_LINUX
+#			ifdef SDL_VIDEO_DRIVER_X11
 	  if (info.subsystem == SDL_SYSWM_X11)
 	{
 		return lak::unique_ptr<::cobalt::graphics::IFrameBuffer::WindowInfoBase>(
@@ -350,17 +373,21 @@ lak::cobalt_window_info(const lak::window_handle *w)
 		  [](auto *p)
 		  { delete static_cast<::cobalt::graphics::WindowInfoXLib *>(p); });
 	}
-	else if (info.subsystem == SDL_SYSWM_WAYLAND)
+	else
+#			endif
+#			ifdef SDL_VIDEO_DRIVER_WAYLAND
+	  if (info.subsystem == SDL_SYSWM_WAYLAND)
 	{
 		return lak::unique_ptr<::cobalt::graphics::IFrameBuffer::WindowInfoBase>(
 		  new ::cobalt::graphics::WindowInfoWayland(
-		    info.info.wayland.display,
-		    info.info.wayland.surface,
+		    info.info.wl.display,
+		    info.info.wl.surface,
 		    lak::cobalt::from_lak(lak::vec2u32_t(lak::window_drawable_size(w)))),
 		  [](auto *p)
 		  { delete static_cast<::cobalt::graphics::WindowInfoWayland *>(p); });
 	}
 	else
+#			endif
 #		endif
 
 	{

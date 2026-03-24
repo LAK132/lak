@@ -20,11 +20,36 @@ cobalt_opts.add_cmake_defines({
 	'COBALT_SDK_BIN_DIR': get_option('prefix')/get_option('bindir'),
 	'COBALT_SDK_LIB_DIR': get_option('prefix')/get_option('libdir'),
 	'COBALT_SDK_INCLUDE_DIR': get_option('prefix')/get_option('includedir')/'Cobalt',
+})
 
-	# Vulkan-Loader
+# Vulkan-Loader
+cobalt_opts.add_cmake_defines({
 	'USE_MASM': 'OFF',
 	'ENABLE_WERROR': 'OFF',
 })
+
+if host_machine.system() == 'linux'
+	cobalt_opts.add_cmake_defines({'BUILD_WSI_XLIB_SUPPORT': 'ON'})
+	cobalt_opts.add_cmake_defines({'BUILD_WSI_XCB_SUPPORT': 'ON'})
+	cobalt_opts.add_cmake_defines({'BUILD_WSI_WAYLAND_SUPPORT': 'ON'})
+else
+	cobalt_opts.add_cmake_defines({'BUILD_WSI_XLIB_SUPPORT': 'OFF'})
+	cobalt_opts.add_cmake_defines({'BUILD_WSI_XCB_SUPPORT': 'OFF'})
+	cobalt_opts.add_cmake_defines({'BUILD_WSI_WAYLAND_SUPPORT': 'OFF'})
+endif
+
+vk_support_directfb = false
+vk_support_qnx = false
+if vk_support_directfb
+	cobalt_opts.add_cmake_defines({'BUILD_WSI_DIRECTFB_SUPPORT': 'ON'})
+else
+	cobalt_opts.add_cmake_defines({'BUILD_WSI_DIRECTFB_SUPPORT': 'OFF'})
+endif
+if vk_support_qnx
+	cobalt_opts.add_cmake_defines({'BUILD_WSI_QNX_SUPPORT': 'ON'})
+else
+	cobalt_opts.add_cmake_defines({'BUILD_WSI_QNX_SUPPORT': 'OFF'})
+endif
 
 cobalt_opts.set_install(false)
 

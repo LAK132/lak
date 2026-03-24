@@ -1,0 +1,26 @@
+From c64542de38fe55f805e6584ac020a08fc11e5d08 Mon Sep 17 00:00:00 2001
+From: LAK132 <lakridesagain@gmail.com>
+Date: Mon, 23 Mar 2026 11:19:00 +1030
+Subject: [PATCH] gnupatch shipped with nixos cannot handle differing line
+ endings, even with --ignore-whitespace. Use git instead
+
+---
+ mesonbuild/wrap/wrap.py | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/mesonbuild/wrap/wrap.py b/mesonbuild/wrap/wrap.py
+index fc5c637af..86db87363 100644
+--- a/mesonbuild/wrap/wrap.py
++++ b/mesonbuild/wrap/wrap.py
+@@ -74,7 +74,7 @@ if mesonlib.is_windows():
+         _exclude_paths.append(os.path.dirname(_patch.get_path()))
+     PATCH = _patch.get_path() if _patch.found() else None
+ else:
+-    PATCH = shutil.which('patch')
++    PATCH = None
+ 
+ 
+ truststore_message = '''
+-- 
+2.53.0
+

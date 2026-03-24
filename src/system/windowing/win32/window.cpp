@@ -404,7 +404,7 @@ bool lak::set_opengl_swap_interval(const lak::opengl_context &, int interval)
 
 #ifdef LAK_ENABLE_COBALT
 lak::unique_ptr<::cobalt::graphics::IRenderer::WindowSystemInfoBase>
-lak::cobalt_window_system_info()
+lak::cobalt_window_system_info(const lak::window_handle *)
 {
 	return lak::unique_ptr<::cobalt::graphics::IRenderer::WindowSystemInfoBase>(
 	  new ::cobalt::graphics::WindowSystemInfoWin32(),

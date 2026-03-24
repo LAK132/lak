@@ -16,9 +16,15 @@ case $1 in
     meson setup build --vsenv $@ || exit 1
   ;;
 
+  auto)
+    shift
+    meson setup build $@ || exit 1
+  ;;
+
   *)
     echo "./setup.sh [compiler] <setup args>"
     echo "examples:"
+    echo "./setup.sh auto # let meson automatically find the compiler"
     echo "./setup.sh msvc"
     echo "./setup.sh msvc --buildtype release"
     echo "./setup.sh gcc --buildtype debug"

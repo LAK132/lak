@@ -386,7 +386,8 @@ struct hello_cobalt_window : virtual public LAK_BASIC_PROGRAM(window_api)
 		{
 			if (ImGui::Button("Compute"))
 				lak::cobalt_append_render_pass(window().handle(),
-				                               comp->render_pass_node.get());
+				                               comp->render_pass_node.get())
+				  .UNWRAP();
 			if (comp->data_array_captured_output->HasCapturedCounterValue() &&
 			    comp->data_array_captured_output->HasCapturedOutput())
 			{
@@ -407,12 +408,14 @@ struct hello_cobalt_window : virtual public LAK_BASIC_PROGRAM(window_api)
 				LAK_TREE_NODE("%s", lak::fmt<"Entry {:d}">(i).c_str())
 				{
 					ImGui::Text(
+					  "%s",
 					  lak::fmt<"Check {:d} {:d} {:d} {:d}">(comp_data[i].check_value.X(),
 					                                        comp_data[i].check_value.Y(),
 					                                        comp_data[i].check_value.Z(),
 					                                        comp_data[i].check_value.W())
 					    .c_str());
 					ImGui::Text(
+					  "%s",
 					  lak::fmt<"ID {:d} {:d} {:d} {:d}">(comp_data[i].thread_id.X(),
 					                                     comp_data[i].thread_id.Y(),
 					                                     comp_data[i].thread_id.Z(),
