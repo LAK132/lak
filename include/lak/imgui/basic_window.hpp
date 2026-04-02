@@ -35,15 +35,19 @@ namespace lak
 
 			lak::VertSplitter(_left_size, _right_size, content_size.x);
 
-			ImGui::BeginChild(
-			  "Left", {_left_size, -1}, true, ImGuiWindowFlags_NoSavedSettings);
+			ImGui::BeginChild("Left",
+			                  {_left_size, -1},
+			                  ImGuiChildFlags_Borders,
+			                  ImGuiWindowFlags_NoSavedSettings);
 			static_cast<DERIVED *>(this)->left_region(frame_time);
 			ImGui::EndChild();
 
 			ImGui::SameLine();
 
-			ImGui::BeginChild(
-			  "Right", {_right_size, -1}, true, ImGuiWindowFlags_NoSavedSettings);
+			ImGui::BeginChild("Right",
+			                  {_right_size, -1},
+			                  ImGuiChildFlags_Borders,
+			                  ImGuiWindowFlags_NoSavedSettings);
 			static_cast<DERIVED *>(this)->right_region(frame_time);
 			ImGui::EndChild();
 		}

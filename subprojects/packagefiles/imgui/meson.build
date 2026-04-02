@@ -8,6 +8,7 @@ project(
 
 includes = include_directories(
 	'.',
+	'misc'/'cpp',
 )
 
 imgui = static_library(

@@ -451,7 +451,6 @@ void ImplCoDestroyViewport(ImGui::ImplContext context,
 
 	if (!viewport->co_viewport) return;
 
-	ImplCoDestroyTexture(context, viewport->output.GetTexID());
 	viewport->co_viewport->fb.reset();
 
 	delete viewport->co_viewport;

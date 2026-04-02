@@ -57,6 +57,27 @@ namespace lak
 		}
 
 		template<typename... T, typename... ARGS>
+		lak::error_code_result<HANDLE> invoke_null_handle_err(
+		  HANDLE(__stdcall *f)(T...), ARGS &&...args)
+		{
+			if (HANDLE result = f(lak::forward<ARGS>(args)...); result != NULL)
+				return lak::ok_t{result};
+			else
+				return lak::err_t{lak::winapi::last_win32_error()};
+		}
+
+		template<typename... T, typename... ARGS>
+		lak::error_code_result<HANDLE> invoke_invalid_handle_err(
+		  HANDLE(__stdcall *f)(T...), ARGS &&...args)
+		{
+			if (HANDLE result = f(lak::forward<ARGS>(args)...);
+			    result != INVALID_HANDLE_VALUE)
+				return lak::ok_t{result};
+			else
+				return lak::err_t{lak::winapi::last_win32_error()};
+		}
+
+		template<typename... T, typename... ARGS>
 		lak::error_code_result<> invoke_false_err(BOOL(__stdcall *f)(T...),
 		                                          ARGS &&...args)
 		{

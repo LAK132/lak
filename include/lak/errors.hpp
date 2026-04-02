@@ -1,7 +1,9 @@
 #ifndef LAK_ERRORS_HPP
 #define LAK_ERRORS_HPP
 
-#include "lak/format.hpp"
+#include "lak/format_traits.hpp"
+#include "lak/strconv.hpp"
+#include "lak/string_literals/view.hpp"
 
 namespace lak
 {
@@ -34,7 +36,6 @@ namespace lak
 			return lak::strconv<CHAR>("value out of range"_view);
 		}
 	};
-
 }
 
 #endif

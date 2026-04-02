@@ -11,6 +11,7 @@
 #include <fcntl.h>
 #include <string.h>
 #include <sys/mman.h>
+#include <sys/stat.h>
 #include <unistd.h>
 
 namespace lak
@@ -26,6 +27,15 @@ namespace lak
 			if (int result = ::open(path, oflag, lak::forward<ARGS>(args)...);
 			    result != -1)
 				return lak::ok_t{result};
+			else
+				return lak::err_t{lak::errno_error::last_error()};
+		}
+
+		lak::posix::result<stat> fstat(int fd)
+		{
+			stat s;
+			if (int r = ::fstat(fd, &s); r != -1)
+				return lak::ok_t{s};
 			else
 				return lak::err_t{lak::errno_error::last_error()};
 		}

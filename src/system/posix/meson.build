@@ -1,6 +1,7 @@
 lakcore_system_posix = static_library(
 	'lakcore_system_posix',
 	[
+		'file.cpp',
 		'page_memory.cpp',
 	],
 	override_options: override_options_w3,

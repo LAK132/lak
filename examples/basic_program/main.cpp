@@ -17,6 +17,8 @@
 #include <lak/optional.hpp>
 #include <lak/string_literals/string.hpp>
 
+#include <lak/system/file.hpp>
+
 #include <implot.h>
 
 #include <filesystem>
@@ -30,6 +32,7 @@ struct my_window : virtual public LAK_BASIC_PROGRAM(window_api)
 
 	lak::optional<std::filesystem::path> dropfile;
 	lak::optional<std::filesystem::path> openfile;
+	lak::optional<size_t> openfile_size;
 	lak::path_getter pgetter;
 
 	ImTextureRef checker;
@@ -94,9 +97,37 @@ struct my_window : virtual public LAK_BASIC_PROGRAM(window_api)
 		            wnd.drawable_size().y);
 
 		if (ImGui::Button("Open file")) pgetter.open_file();
-		if_let_some (auto pget, pgetter()) openfile = lak::move(pget);
+		if_let_some (auto pget, pgetter())
+		{
+			openfile      = lak::move(pget);
+			openfile_size = lak::nullopt;
+		}
 		if_let_some (auto &path, openfile)
+		{
 			ImGui::Text("Opened file: %s", path.generic_string().c_str());
+			ImGui::SameLine();
+			if (ImGui::Button("Load (map)"))
+			{
+				if_let_ok (auto f, lak::map_file(path).IF_ERR())
+				{
+					DEBUG_EXPR(f.data.size());
+					openfile_size = f.data.size();
+				}
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("Load (read)"))
+			{
+				if_let_ok (auto f, lak::read_file(path).IF_ERR())
+				{
+					DEBUG_EXPR(f.size());
+					openfile_size = f.size();
+				}
+			}
+		}
+		if_let_some (size_t size, openfile_size)
+		{
+			ImGui::Text("%s", lak::fmt<"Opened file size: {}">(size).c_str());
+		}
 
 		if_let_some (auto &path, dropfile)
 			ImGui::Text("Dropped file: %s", path.generic_string().c_str());

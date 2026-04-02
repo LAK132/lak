@@ -52,6 +52,30 @@ namespace lak
 
 	lak::errno_result<lak::array<byte_t>> read_file(const fs::path &path);
 
+	struct mapped_file_impl;
+	struct mapped_file
+	{
+		mapped_file_impl *_impl = nullptr;
+		lak::span<const byte_t> data;
+		mapped_file()                    = default;
+		mapped_file(const mapped_file &) = delete;
+		mapped_file(mapped_file &&other)
+		: _impl(lak::exchange(other._impl, nullptr)),
+		  data(lak::exchange(other.data, {}))
+		{
+		}
+		mapped_file &operator=(const mapped_file &) = delete;
+		mapped_file &operator=(mapped_file &&other)
+		{
+			lak::swap(_impl, other._impl);
+			lak::swap(data, other.data);
+			return *this;
+		}
+		~mapped_file();
+		operator lak::span<const byte_t>() const { return data; }
+	};
+	lak::error_code_result<lak::mapped_file> map_file(const fs::path &path);
+
 	bool save_file(const fs::path &path, lak::span<const byte_t> data);
 
 	bool save_file(const fs::path &path, lak::astring_view string);
