@@ -29,7 +29,7 @@ lak::mapped_file::~mapped_file()
 	}
 }
 
-std::error_code errno_to_errc(const lak::errno_error& err)
+std::error_code errno_to_errc(const lak::errno_error &err)
 {
 	return std::error_code{err.value, std::generic_category()};
 }
@@ -41,18 +41,17 @@ lak::error_code_result<lak::mapped_file> lak::map_file(const fs::path &path)
 		if (impl) delete impl;
 	});
 
-	RES_TRY_ASSIGN(impl->fd =,
-	               lak::posix::open(path.native().c_str(), O_RDONLY)
-		               .map_err(errno_to_errc));
+	RES_TRY_ASSIGN(
+	  impl->fd =,
+	  lak::posix::open(path.native().c_str(), O_RDONLY).map_err(errno_to_errc));
 	RES_TRY_ASSIGN(struct stat s =,
-	               lak::posix::fstat(impl->fd)
-		               .map_err(errno_to_errc));
+	               lak::posix::fstat(impl->fd).map_err(errno_to_errc));
 	size_t size = s.st_size;
 	RES_TRY_ASSIGN(
 	  auto ptr =,
 	  lak::posix::mmap(
 	    nullptr, size, PROT_READ, MAP_PRIVATE | MAP_NORESERVE, impl->fd, 0)
-		  .map_err(errno_to_errc));
+	    .map_err(errno_to_errc));
 	impl->map = lak::span<void>(ptr, size);
 
 	lak::mapped_file result;

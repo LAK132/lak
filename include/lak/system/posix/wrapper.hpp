@@ -42,7 +42,9 @@ namespace lak
 
 		lak::posix::result<int> munmap(void *address, size_t length);
 
-		lak::posix::result<int> mprotect(void *address, size_t length, int protect);
+		lak::posix::result<int> mprotect(void *address,
+		                                 size_t length,
+		                                 int protect);
 
 		lak::posix::result<int> madvise(void *address, size_t length, int advise);
 	}

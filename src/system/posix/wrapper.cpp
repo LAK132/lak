@@ -10,15 +10,15 @@ lak::posix::result<struct stat> lak::posix::fstat(int fd)
 }
 
 lak::posix::result<void *> lak::posix::mmap(void *address,
-																size_t length,
-																int protect,
-																int flags,
-																int file_descriptor,
-																off_t offset)
+                                            size_t length,
+                                            int protect,
+                                            int flags,
+                                            int file_descriptor,
+                                            off_t offset)
 {
 	if (void *result =
-				::mmap(address, length, protect, flags, file_descriptor, offset);
-			result != MAP_FAILED)
+	      ::mmap(address, length, protect, flags, file_descriptor, offset);
+	    result != MAP_FAILED)
 		return lak::ok_t{result};
 	else
 		return lak::err_t{lak::errno_error::last_error()};
@@ -32,7 +32,9 @@ lak::posix::result<int> lak::posix::munmap(void *address, size_t length)
 		return lak::err_t{lak::errno_error::last_error()};
 }
 
-lak::posix::result<int> lak::posix::mprotect(void *address, size_t length, int protect)
+lak::posix::result<int> lak::posix::mprotect(void *address,
+                                             size_t length,
+                                             int protect)
 {
 	if (int result = ::mprotect(address, length, protect); result != -1)
 		return lak::ok_t{result};
@@ -40,7 +42,9 @@ lak::posix::result<int> lak::posix::mprotect(void *address, size_t length, int p
 		return lak::err_t{lak::errno_error::last_error()};
 }
 
-lak::posix::result<int> lak::posix::madvise(void *address, size_t length, int advise)
+lak::posix::result<int> lak::posix::madvise(void *address,
+                                            size_t length,
+                                            int advise)
 {
 	if (int result = ::madvise(address, length, advise); result != -1)
 		return lak::ok_t{result};
