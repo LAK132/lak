@@ -3,6 +3,8 @@
 #include "lak/system/os.hpp"
 #include "lak/system/posix/wrapper.hpp"
 
+#include <system_error>
+
 namespace lak
 {
 	struct mapped_file_impl
@@ -27,6 +29,11 @@ lak::mapped_file::~mapped_file()
 	}
 }
 
+std::error_code errno_to_errc(const lak::errno_error& err)
+{
+	return std::error_code{err.value, std::generic_category()};
+}
+
 lak::error_code_result<lak::mapped_file> lak::map_file(const fs::path &path)
 {
 	auto impl = new lak::mapped_file_impl;
@@ -35,13 +42,17 @@ lak::error_code_result<lak::mapped_file> lak::map_file(const fs::path &path)
 	});
 
 	RES_TRY_ASSIGN(impl->fd =,
-	               lak::posix::open(path.native().c_str(), O_RDONLY));
-	RES_TRY_ASSIGN(stat s =, lak::posix::fstat(impl->fd));
+	               lak::posix::open(path.native().c_str(), O_RDONLY)
+		               .map_err(errno_to_errc));
+	RES_TRY_ASSIGN(struct stat s =,
+	               lak::posix::fstat(impl->fd)
+		               .map_err(errno_to_errc));
 	size_t size = s.st_size;
 	RES_TRY_ASSIGN(
 	  auto ptr =,
 	  lak::posix::mmap(
-	    nullptr, 0, PROT_READ, MAP_PRIVATE | MAP_NORESERVE, impl->fd, size));
+	    nullptr, size, PROT_READ, MAP_PRIVATE | MAP_NORESERVE, impl->fd, 0)
+		  .map_err(errno_to_errc));
 	impl->map = lak::span<void>(ptr, size);
 
 	lak::mapped_file result;
