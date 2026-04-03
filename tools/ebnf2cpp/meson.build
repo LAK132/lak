@@ -9,6 +9,6 @@ lak_ebnf2cpp = executable(
 )
 ebnf2cpp = generator(
 	lak_ebnf2cpp,
-	output: '@BASENAME@.hpp',
+	output: '@BASENAME@.ebnf.hpp',
 	arguments: ['@INPUT@', '@OUTPUT@', '@EXTRA_ARGS@'],
 )

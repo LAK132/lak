@@ -2,7 +2,7 @@
 
 #include "lak/string_literals/view.hpp"
 
-#include "ebnf2cpp_test.hpp"
+#include "ebnf2cpp.ebnf.hpp"
 
 BEGIN_TEST(ebnf2cpp)
 {

@@ -235,6 +235,9 @@ dependencies += lakcore_dep
 
 subdir('tools')
 
+subdir('src'/'file')
+dependencies += lakfile_dep
+
 if get_option('lak_enable_tests')
 	subdir('src'/'tests')
 	dependencies += laktestcore_dep
