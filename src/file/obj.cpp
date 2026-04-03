@@ -13,8 +13,8 @@ lak::dsl::result<lak::dsl::obj_t::value_type> lak::dsl::obj_t::parse(
 
 	lak::dsl::reader strm{str};
 
-	lak::optional<lak::obj::group> working_group;
-	lak::optional<lak::obj::object> working_object;
+	lak::optional<lak::obj::group> working_group   = lak::obj::group{};
+	lak::optional<lak::obj::object> working_object = lak::obj::object{};
 
 	auto pop_working_group = [&]()
 	{
