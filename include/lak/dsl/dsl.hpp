@@ -469,6 +469,9 @@ namespace lak
 		inline constexpr lak::dsl::repeat_t<par, count> repeat_at_least;
 
 		template<lak::dsl::concepts::parser auto par, size_t count>
+		inline constexpr lak::dsl::repeat_t<par, 0U, count> repeat_up_to;
+
+		template<lak::dsl::concepts::parser auto par, size_t count>
 		inline constexpr lak::dsl::repeat_t<par, count, count> repeat_exact;
 
 		template<lak::dsl::concepts::parser auto par, size_t min, size_t max>
@@ -2079,8 +2082,9 @@ namespace lak
 				const char32_t c = lak::codepoint(str);
 				if (c < begin || c > end)
 					return lak::err_t{lak::dsl::err::parse{
-					  .message = lak::streamify(
-					    "expected '", begin, "'<=c<='", end, "' got '", c, "'")}};
+					  .message =
+					    lak::fmt<u8"expected '{:A}' <= c <= '{:A}', got c = '{:A}'">(
+					      begin, end, c)}};
 				return lak::ok_t{lak::dsl::parse_result<value_type>{
 				  .consumed  = str.first(clen),
 				  .remaining = str.substr(clen),

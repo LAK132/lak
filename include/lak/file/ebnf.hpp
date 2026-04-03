@@ -54,6 +54,11 @@ namespace lak
 			size_t except_rule;
 		};
 
+		struct negative_lookahead_sequence
+		{
+			size_t index;
+		};
+
 		struct positive_lookahead_sequence
 		{
 			size_t index;
@@ -89,6 +94,7 @@ namespace lak
 				capture,
 				special,
 				exception,
+				negative_lookahead,
 				positive_lookahead,
 				transform,
 			} type;
@@ -119,6 +125,7 @@ namespace lak
 			lak::array<lak::ebnf::capture_sequence> captures;
 
 			lak::array<lak::ebnf::exception_sequence> exceptions;
+			lak::array<lak::ebnf::negative_lookahead_sequence> negative_lookaheads;
 			lak::array<lak::ebnf::positive_lookahead_sequence> positive_lookaheads;
 
 			lak::array<lak::ebnf::rule_value> rule_values;

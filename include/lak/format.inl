@@ -1,3 +1,4 @@
+#include "lak/char_utils.hpp"
 #include "lak/numeric.hpp"
 #include "lak/stdint.hpp"
 #include "lak/strconv.hpp"
@@ -513,13 +514,51 @@ static_assert(lak::concepts::formattable<long double, char8_t>);
 template<lak::concepts::one_of<LAK_ALL_CHARS> T, typename CHAR>
 struct lak::format_traits<T, CHAR>
 {
-	static lak::string<CHAR> to_string(const T &value)
+	enum struct format_args
 	{
-		return lak::strconv<CHAR>(lak::string_view(&value, 1U));
+		always_character,     // C
+		always_hex,           // H
+		ascii_printable_only, // A
+	};
+
+	static consteval format_args parse_args(lak::string_view<CHAR> args)
+	{
+		if (args.empty()) return format_args::always_character;
+		if (args.size() != 1) throw "invalid format arguments";
+		if (args[0] == CHAR('C')) return format_args::always_character;
+		if (args[0] == CHAR('H')) return format_args::always_hex;
+		if (args[0] == CHAR('A')) return format_args::ascii_printable_only;
+		throw "invalid format arguments";
+	}
+
+	static lak::string<CHAR> to_string(const format_args &args, const T &value)
+	{
+		switch (args)
+		{
+			case format_args::ascii_printable_only:
+				if (lak::is_ascii_printable(char32_t(value)))
+				{
+					default:
+					case format_args::always_character:
+						return lak::strconv<CHAR>(lak::string_view(&value, 1U));
+				}
+				else
+				{
+					case format_args::always_hex:
+						if constexpr (sizeof(T) == 1U)
+							return lak::fmt<CHAR, "\\x{:.2X}">(uintmax_t(value));
+						else if constexpr (sizeof(T) == 2U)
+							return lak::fmt<CHAR, "\\x{:.4X}">(uintmax_t(value));
+						else if constexpr (sizeof(T) == 4U)
+							return lak::fmt<CHAR, "\\x{:.8X}">(uintmax_t(value));
+						else
+							return lak::fmt<CHAR, "\\x{:X}">(uintmax_t(value));
+				}
+		}
 	}
 };
-static_assert(lak::concepts::static_formattable<wchar_t, char8_t>);
-static_assert(!lak::concepts::dynamic_formattable<wchar_t, char8_t>);
+static_assert(!lak::concepts::static_formattable<wchar_t, char8_t>);
+static_assert(lak::concepts::dynamic_formattable<wchar_t, char8_t>);
 static_assert(lak::concepts::formattable<wchar_t, char8_t>);
 
 template<typename CHAR>
