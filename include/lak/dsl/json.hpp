@@ -4,6 +4,7 @@
 #include "lak/array.hpp"
 #include "lak/dsl/dsl.hpp"
 #include "lak/dsl/utility.hpp"
+#include "lak/format.hpp"
 #include "lak/result.hpp"
 #include "lak/string_view.hpp"
 
@@ -24,12 +25,21 @@ namespace lak
 			size_t index;
 		};
 
+		namespace err
+		{
+			struct json_unexpected_type
+			{
+				lak::dsl::json_value::value_type expected;
+				lak::dsl::json_value::value_type got;
+			};
+		}
+
 		struct json_array
 		{
 			size_t begin;
 			size_t end;
 
-			size_t size() const { return end - begin; }
+			inline size_t size() const { return end - begin; }
 		};
 
 		struct json_object
@@ -37,11 +47,16 @@ namespace lak
 			size_t begin;
 			size_t end;
 
-			size_t size() const { return end - begin; }
+			inline size_t size() const { return end - begin; }
 		};
+
+		struct json_value_proxy;
+		struct json_array_proxy;
+		struct json_object_proxy;
 
 		struct json_block
 		{
+			lak::array<char8_t> _internal;
 			lak::array<lak::u8string_view> tokens;
 			lak::array<lak::u8string_view> strings;
 			lak::array<lak::u8string_view> numbers;
@@ -49,296 +64,169 @@ namespace lak
 			lak::array<json_array> arrays;   // indexes into values
 			lak::array<json_object> objects; // indexes into values (interlaced kvs)
 
-			// if not empty, root is values.front()
+			void intern(); // reallocate views internally to the json_block
+
+			json_value_proxy root() const;
 		};
 
-		struct json_t
+		struct json_token_proxy : public lak::u8string_view
+		{
+		};
+		struct json_string_proxy : public lak::u8string_view
+		{
+		};
+		struct json_number_proxy : public lak::u8string_view
+		{
+		};
+
+		struct json_array_proxy
+		{
+			const json_block &block;
+			json_array array;
+
+			inline size_t size() const { return array.size(); }
+
+			json_value_proxy operator[](size_t index) const;
+		};
+
+		struct json_object_proxy
+		{
+			const json_block &block;
+			json_object object;
+
+			inline size_t size() const { return object.size() / 2U; }
+
+			lak::pair<lak::u8string_view, json_value_proxy> operator[](
+			  size_t index) const;
+
+			json_value_proxy operator[](lak::u8string_view key) const;
+		};
+
+		struct json_value_proxy
+		{
+			template<typename T>
+			using result_type = lak::result<T, lak::dsl::err::json_unexpected_type>;
+			template<typename T>
+			using num_result_type =
+			  lak::result<T,
+			              lak::variant<lak::dsl::err::json_unexpected_type,
+			                           lak::err::string_to_numeric>>;
+
+			const json_block &block;
+			json_value value;
+
+			bool is_none() const;
+			bool is_token() const;
+			bool is_string() const;
+			bool is_number() const;
+			bool is_array() const;
+			bool is_object() const;
+
+			result_type<lak::u8string_view> token() const;
+			result_type<lak::u8string_view> string() const;
+			result_type<lak::u8string_view> number_str() const;
+			result_type<json_array_proxy> array() const;
+			result_type<json_object_proxy> object() const;
+
+			template<typename NUM>
+			num_result_type<NUM> number() const
+			{
+				return number_str().and_then(
+				  [](lak::u8string_view num) -> num_result_type<NUM>
+				  {
+					  if constexpr (!std::numeric_limits<NUM>::is_integer)
+					  {
+						  constexpr auto num_parser =
+						    lak::dsl::dec_float<lak::dsl::char_literal<U'.'>,
+						                        lak::dsl::one_of_chars_str<U"eE">>;
+						  auto [intp, fracp, expp] = num_parser.parse(num).UNWRAP();
+						  RES_TRY_ASSIGN(double v =,
+						                 lak::dec_string_to_double(intp, fracp, expp));
+						  if (v > std::numeric_limits<NUM>::max() ||
+						      v < std::numeric_limits<NUM>::lowest())
+							  return lak::err_t{lak::err::string_to_numeric::out_of_bounds};
+						  else
+							  return lak::ok_t{static_cast<NUM>(v)};
+					  }
+					  else
+					  {
+						  RES_TRY_ASSIGN(
+						    NUM result =,
+						    lak::string_to_int<NUM>(num, lak::numeric_base::dec));
+						  return lak::ok_t{result};
+					  }
+				  });
+			}
+
+			inline auto visit(auto &&func) const
+			{
+				switch (value.type)
+				{
+					case json_value::value_type::token:
+						return func(json_token_proxy{block.tokens[value.index]});
+					case json_value::value_type::string:
+						return func(json_string_proxy{block.strings[value.index]});
+					case json_value::value_type::number:
+						return func(json_number_proxy{block.numbers[value.index]});
+					case json_value::value_type::array:
+						return func(json_array_proxy{.block = block,
+						                             .array = block.arrays[value.index]});
+					case json_value::value_type::object:
+						return func(json_object_proxy{
+						  .block = block, .object = block.objects[value.index]});
+					default: ASSERT_UNREACHABLE();
+				}
+			}
+
+			inline explicit operator bool() const { return !is_none(); }
+		};
+
+		struct json_parser
 		{
 			static constexpr bool is_pure_match = false;
 
 			using value_type = json_block;
 
-			lak::dsl::result<value_type> parse(lak::u8string_view str) const
-			{
-				lak::u8string_view rem = str;
-
-				json_block result;
-
-				auto move_str =
-				  [&](const lak::dsl::parse_result<lak::u8string_view> &res)
-				{ rem = res.remaining; };
-
-				constexpr auto lbrace        = lak::dsl::char_literal<U'{'>;
-				constexpr auto rbrace        = lak::dsl::char_literal<U'}'>;
-				constexpr auto lbracket      = lak::dsl::char_literal<U'['>;
-				constexpr auto rbracket      = lak::dsl::char_literal<U']'>;
-				constexpr auto colon         = lak::dsl::char_literal<U':'>;
-				constexpr auto comma         = lak::dsl::char_literal<U','>;
-				constexpr auto whitespace    = lak::dsl::one_of_chars_str<U" \r\n\t">;
-				constexpr auto number_parser = lak::dsl::as_pure<
-				  lak::dsl::dec_float<lak::dsl::char_literal<U'.'>,
-				                      lak::dsl::one_of_chars_str<U"eE">>>;
-				constexpr auto escaped_string_character =
-				  lak::dsl::str_literal<u8"\\\""> | lak::dsl::str_literal<u8"\\\\"> |
-				  lak::dsl::str_literal<u8"\\/"> | lak::dsl::str_literal<u8"\\b"> |
-				  lak::dsl::str_literal<u8"\\f"> | lak::dsl::str_literal<u8"\\n"> |
-				  lak::dsl::str_literal<u8"\\r"> | lak::dsl::str_literal<u8"\\t"> |
-				  (lak::dsl::str_literal<u8"\\u"> +
-				   (lak::dsl::repeat_exact<lak::dsl::hex_digit, 4>));
-				constexpr auto string_parser =
-				  lak::dsl::char_literal<U'"'> +
-				  *(escaped_string_character |
-				    !lak::dsl::char_literal<U'"'>)+lak::dsl::char_literal<U'"'>;
-				constexpr auto token_parser = lak::dsl::str_literal<u8"true"> |
-				                              lak::dsl::str_literal<u8"false"> |
-				                              lak::dsl::str_literal<u8"null">;
-
-				RES_TRY((*whitespace).parse(rem).if_ok(move_str));
-
-				if (rem.empty())
-					return lak::ok_t<lak::dsl::parse_result<value_type>>{{
-					  .consumed  = str.substr(str.size() - rem.size()),
-					  .remaining = rem,
-					  .value     = {},
-					}};
-
-				struct working_data
-				{
-					enum struct value_type
-					{
-						array,
-						object,
-						kvpair
-					} type;
-
-					size_t begin;
-					size_t size;
-				};
-
-				lak::array<json_value> working_values;
-				lak::array<working_data> working_tree;
-
-				auto pop_values = [&](size_t count) -> size_t
-				{
-					size_t begin = result.values.size();
-					result.values.reserve(result.values.size() + count);
-					for (size_t i = working_values.size() - count;
-					     i < working_values.size();
-					     ++i)
-						result.values.push_back(working_values[i]);
-					working_values.resize(working_values.size() - count);
-					return begin;
-				};
-
-				auto pop_kvpair =
-				  [&](bool allow_empty) -> lak::error_code<lak::dsl::err::parse>
-				{
-					if (working_tree.back().size == 2U)
-					{
-						working_tree.pop_back();
-						working_tree.back().size += 2U;
-					}
-					else if (allow_empty && working_tree.back().size == 0U)
-						working_tree.pop_back();
-					else if (working_tree.back().size == 1U)
-						return lak::err_t{
-						  lak::dsl::err::parse{.message = u8"expected kvpair value"}};
-					else
-						return lak::err_t{
-						  lak::dsl::err::parse{.message = u8"invalid kvpair length"}};
-
-					return lak::ok_t{};
-				};
-
-				// this will be replaced with the last value in the working values once
-				// parsing is complete
-				result.values.emplace_back();
-
-				do
-				{
-					RES_TRY((*whitespace).parse(rem).if_ok(move_str));
-
-					if (rem.empty())
-						return lak::err_t{
-						  lak::dsl::err::parse{.message = u8"out of data"}};
-
-					if (lbrace.parse(rem).if_ok(move_str).is_ok())
-					{
-						working_tree.push_back({
-						  .type  = working_data::value_type::object,
-						  .begin = working_values.size(),
-						  .size  = 0U,
-						});
-						working_tree.push_back({
-						  .type  = working_data::value_type::kvpair,
-						  .begin = working_values.size(),
-						  .size  = 0U,
-						});
-					}
-					else if (colon.parse(rem).if_ok(move_str).is_ok())
-					{
-						if (working_tree.back().type != working_data::value_type::kvpair)
-							return lak::err_t{
-							  lak::dsl::err::parse{.message = u8"unexpected ':'"}};
-
-						if (working_tree.back().begin + 1U > working_values.size())
-							return lak::err_t{lak::dsl::err::parse{
-							  .message = u8"expected kvpair key, got ':'"}};
-
-						if (working_tree.back().size >= 1U)
-							return lak::err_t{lak::dsl::err::parse{
-							  .message = u8"expected kvpair value, got ':'"}};
-
-						++working_tree.back().size;
-					}
-					else if (comma.parse(rem).if_ok(move_str).is_ok())
-					{
-						if (working_tree.back().type == working_data::value_type::array)
-						{
-							if (working_tree.back().begin + working_tree.back().size >=
-							    working_values.size())
-								return lak::err_t{lak::dsl::err::parse{
-								  .message = u8"expected array value, got ','"}};
-
-							++working_tree.back().size;
-						}
-						else if (working_tree.back().type ==
-						         working_data::value_type::kvpair)
-						{
-							if (working_tree.back().size == 0U)
-								return lak::err_t{lak::dsl::err::parse{
-								  .message = u8"expected kvpair key, got ','"}};
-
-							if (working_tree.back().begin + 2U > working_values.size())
-								return lak::err_t{lak::dsl::err::parse{
-								  .message = u8"expected kvpair value, got ','"}};
-
-							++working_tree.back().size;
-
-							RES_TRY(pop_kvpair(false));
-
-							working_tree.push_back({
-							  .type  = working_data::value_type::kvpair,
-							  .begin = working_values.size(),
-							  .size  = 0U,
-							});
-						}
-						else
-							return lak::err_t{
-							  lak::dsl::err::parse{.message = u8"unexpected ','"}};
-					}
-					else if (rbrace.parse(rem).if_ok(move_str).is_ok())
-					{
-						if (working_tree.back().type != working_data::value_type::kvpair ||
-						    working_tree.back().size >= 2U)
-							return lak::err_t{
-							  lak::dsl::err::parse{.message = u8"unexpected '}'"}};
-
-						if (working_tree.back().size == 1U)
-						{
-							if (working_tree.back().begin + 2U != working_values.size())
-								return lak::err_t{lak::dsl::err::parse{
-								  .message = u8"expected kvpair value, got ','"}};
-							else
-								++working_tree.back().size;
-						}
-
-						RES_TRY(pop_kvpair(true));
-
-						if (working_tree.back().type != working_data::value_type::object)
-							return lak::err_t{
-							  lak::dsl::err::parse{.message = u8"unexpected '}'"}};
-
-						size_t begin = pop_values(working_tree.back().size);
-						working_values.push_back({
-						  .type  = json_value::value_type::object,
-						  .index = result.objects.size(),
-						});
-						result.objects.push_back({
-						  .begin = begin,
-						  .end   = begin + working_tree.back().size,
-						});
-						working_tree.pop_back();
-					}
-					else if (lbracket.parse(rem).if_ok(move_str).is_ok())
-					{
-						working_tree.push_back({
-						  .type  = working_data::value_type::array,
-						  .begin = working_values.size(),
-						  .size  = 0U,
-						});
-					}
-					else if (rbracket.parse(rem).if_ok(move_str).is_ok())
-					{
-						if (working_tree.back().type != working_data::value_type::array)
-							return lak::err_t{
-							  lak::dsl::err::parse{.message = u8"unexpected ']'"}};
-
-						if (working_tree.back().begin + working_tree.back().size + 1U ==
-						    working_values.size())
-							++working_tree.back().size;
-
-						size_t begin = pop_values(working_tree.back().size);
-						working_values.push_back({
-						  .type  = json_value::value_type::array,
-						  .index = result.arrays.size(),
-						});
-						result.arrays.push_back({
-						  .begin = begin,
-						  .end   = begin + working_tree.back().size,
-						});
-						working_tree.pop_back();
-					}
-					else if_let_ok (auto tok, token_parser.parse(rem).if_ok(move_str))
-					{
-						working_values.push_back({
-						  .type  = json_value::value_type::token,
-						  .index = result.tokens.size(),
-						});
-						result.tokens.push_back(tok.value);
-					}
-					else if_let_ok (auto num, number_parser.parse(rem).if_ok(move_str))
-					{
-						working_values.push_back({
-						  .type  = json_value::value_type::number,
-						  .index = result.numbers.size(),
-						});
-						result.numbers.push_back(num.value);
-					}
-					else if_let_ok (auto str, string_parser.parse(rem).if_ok(move_str))
-					{
-						working_values.push_back({
-						  .type  = json_value::value_type::string,
-						  .index = result.strings.size(),
-						});
-						result.strings.push_back(str.value);
-					}
-					else
-						return lak::err_t{
-						  lak::dsl::err::parse{.message = u8"unexpected data"}};
-				} while (!working_tree.empty());
-
-				if (working_values.size() == 0U)
-					return lak::err_t{
-					  lak::dsl::err::parse{.message = u8"missing root value"}};
-				else if (working_values.size() > 1U)
-					return lak::err_t{
-					  lak::dsl::err::parse{.message = u8"unused working values"}};
-
-				result.values.front() = working_values.back();
-
-				return lak::ok_t<lak::dsl::parse_result<value_type>>{{
-				  .consumed  = str.substr(str.size() - rem.size()),
-				  .remaining = rem,
-				  .value     = lak::move(result),
-				}};
-			}
+			lak::dsl::result<value_type> parse(lak::u8string_view str) const;
 		};
 
-		inline constexpr json_t json;
+		inline constexpr json_parser json;
 
-		static_assert(lak::dsl::concepts::parser<json_t>);
+		static_assert(lak::dsl::concepts::parser<json_parser>);
 	}
+
+	template<typename CHAR>
+	struct format_traits<lak::dsl::json_value::value_type, CHAR>
+	{
+		static constexpr lak::string<CHAR> to_string(
+		  const lak::dsl::json_value::value_type &type)
+		{
+			switch (type)
+			{
+				case lak::dsl::json_value::value_type::token:
+					return lak::strconv<CHAR>("token"_view);
+				case lak::dsl::json_value::value_type::string:
+					return lak::strconv<CHAR>("string"_view);
+				case lak::dsl::json_value::value_type::number:
+					return lak::strconv<CHAR>("number"_view);
+				case lak::dsl::json_value::value_type::array:
+					return lak::strconv<CHAR>("array"_view);
+				case lak::dsl::json_value::value_type::object:
+					return lak::strconv<CHAR>("object"_view);
+				default: return lak::fmt<CHAR, "{:#0X}">(static_cast<uintmax_t>(type));
+			}
+		}
+	};
+
+	template<typename CHAR>
+	struct format_traits<lak::dsl::err::json_unexpected_type, CHAR>
+	{
+		static constexpr lak::string<CHAR> to_string(
+		  const lak::dsl::err::json_unexpected_type &err)
+		{
+			return lak::fmt<CHAR, "expected {0}, got {1}">(err.expected, err.got);
+		}
+	};
 }
 
 #endif

@@ -92,6 +92,16 @@ BEGIN_TEST(json)
 		ASSERT_EQUAL(res.values.size(), 9U);
 		ASSERT_EQUAL(res.arrays.size(), 1U);
 		ASSERT_EQUAL(res.objects.size(), 2U);
+
+		res.intern();
+
+		auto root = res.root().object().UNWRAP();
+		auto arr  = root[u8"hello"_view].array().UNWRAP();
+		ASSERT_EQUAL(arr[0U].string().UNWRAP(), u8"world"_view);
+		ASSERT_EQUAL(arr[1U].string().UNWRAP(), u8"!"_view);
+		auto obj = root[u8"meow"_view].object().UNWRAP();
+		auto tok = obj[u8"0"_view].token().UNWRAP();
+		ASSERT_EQUAL(tok, u8"null"_view);
 	}
 	return 0;
 }
