@@ -134,26 +134,76 @@ namespace lak
 			}
 		};
 
+		struct group
+		{
+			lak::u8string name;
+			size_t face_offset = 0U;
+			size_t face_count  = 0U;
+			size_t line_offset = 0U;
+			size_t line_count  = 0U;
+
+			void visit(lak::span<const lak::obj::face> faces, auto &&func) const
+			{
+				for (const auto &f : faces.subspan(face_offset, face_count)) func(f);
+			}
+
+			void visit(lak::span<const lak::obj::line> lines, auto &&func) const
+			{
+				for (const auto &l : lines.subspan(line_offset, line_count)) func(l);
+			}
+		};
+
+		struct object
+		{
+			lak::u8string name;
+			size_t offset = 0U;
+			size_t count  = 0U;
+
+			void visit(lak::span<const lak::obj::group> groups, auto &&func) const
+			{
+				for (const auto &g : groups.subspan(offset, count)) func(g);
+			}
+		};
+
+		enum struct smooth_shading
+		{
+			on,
+			off,
+		};
+
 		struct obj
 		{
 			lak::array<lak::obj::vertex_coord> vertex_coords;
 			lak::array<lak::obj::texture_coord> texture_coords;
 			lak::array<lak::obj::vertex_normal> vertex_normals;
+
 			lak::array<lak::obj::face_coord> face_coords;
 			lak::array<lak::obj::face> faces;
+
 			lak::array<lak::obj::line_coord> line_coords;
 			lak::array<lak::obj::line> lines;
 
-			template<lak::endian E>
-			lak::error_codes<lak::err::out_of_data,
-			                 lak::err::value_out_of_range,
-			                 lak::err::string_to_numeric,
-			                 lak::dsl::err::parse>
-			read(lak::binary_reader &strm);
+			lak::array<lak::obj::group> groups;
+
+			lak::array<lak::obj::object> objects;
 		};
 	}
-}
 
-#include "obj.inl"
+	namespace dsl
+	{
+		struct obj_t
+		{
+			static constexpr bool is_pure_match = false;
+
+			using value_type = lak::obj::obj;
+
+			lak::dsl::result<value_type> parse(lak::u8string_view str) const;
+		};
+
+		inline constexpr obj_t obj;
+
+		static_assert(lak::dsl::concepts::parser<obj_t>);
+	}
+}
 
 #endif

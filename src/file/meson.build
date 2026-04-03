@@ -2,6 +2,9 @@ lakfile = static_library(
 	'lakfile',
 	[
 		'json.cpp',
+		'obj.cpp',
+		ebnf2cpp.process('obj.ebnf', extra_args: [
+			'LAK_OBJ_EBNF_HPP', 'lak', 'obj_parse']),
 		'pnm.cpp',
 	],
 	override_options: override_options,

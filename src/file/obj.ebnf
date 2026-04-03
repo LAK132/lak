@@ -1,0 +1,82 @@
+nlws = {?lak::dsl::ascii_whitespace?|?lak::dsl::pound_line_comment?};
+ws = {?lak::dsl::ascii_nonnewline_whitespace?};
+rws = ?lak::dsl::ascii_nonnewline_whitespace?,ws;
+
+index = ws,<?lak::dsl::parsed_dec_uint<size_t>?>,-?lak::dsl::ascii_numeric?;
+
+number = ws,<?lak::dsl::parsed_dec_float<double,lak::dsl::char_literal<U'.'>,lak::dsl::bottom>?>,-(?lak::dsl::ascii_numeric?|".");
+
+name = ?lak::dsl::until<lak::dsl::one_of_chars_str<U"\r\n">|lak::dsl::eof>?;
+
+vertex_coord = number,number,number,[number]
+$[](const lak::tuple<double, double, double, lak::optional<double>> &value)
+{
+	auto [x, y, z, w] = value;
+	return lak::obj::vertex_coord{.x = x, .y = y, .z = z, .w = w ? *w : 1.0};
+}$;
+
+texture_coord = number,[number,[number]]
+$[](const lak::tuple<double, lak::optional<lak::tuple<double, lak::optional<double>>>> &value)
+{
+	auto [u, vw] = value;
+	if (vw)
+	{
+		auto [v, w] = *vw;
+		return lak::obj::texture_coord{.u = u, .v = v, .w = w ? *w : 0.0};
+	}
+	return lak::obj::texture_coord{.u = u};
+}$;
+
+vertex_normal = number,number,number
+$[](const lak::tuple<double, double, double> &value)
+{
+	auto [x, y, z] = value;
+	return lak::obj::vertex_normal{.x = x, .y = y, .z = z};
+}$;
+
+polyface_coord = index,["/",ws,+(("/",ws,index)|index),<[index],["/",ws,<index>]>]
+$[](const lak::tuple<size_t, lak::optional<lak::tuple<lak::optional<size_t>,lak::optional<size_t>>>> &value)
+{
+	auto [v, vtvn] = value;
+	if (vtvn)
+	{
+		auto [vt, vn] = *vtvn;
+		return lak::obj::face_coord{
+			.v = v - 1U,
+			.vt = vt ? (*vt) - 1U : lak::dynamic_extent,
+			.vn = vn ? (*vn) - 1U : lak::dynamic_extent,
+		};
+	}
+	else return lak::obj::face_coord{.v = v - 1U};
+}$;
+
+polyface = 3*[polyface_coord];
+
+polyline_coord = index
+$[](size_t v) { return lak::obj::line_coord{.v = v - 1U}; }$;
+
+polyline = 2*[polyline_coord];
+
+object = name
+$[](lak::u8string_view name) { return lak::obj::object{.name = name}; }$;
+
+group = name
+$[](lak::u8string_view name) { return lak::obj::group{.name = name}; }$;
+
+smooth_on = "1" $[](const auto&) { return lak::obj::smooth_shading::on; }$;
+smooth_off = "off" $[](const auto&) { return lak::obj::smooth_shading::off; }$;
+smooth = smooth_on|smooth_off;
+
+entry =
+	("v",rws)->vertex_coord|
+	("vt",rws)->texture_coord|
+	("vn",rws)->vertex_normal|
+	("f",rws)->polyface|
+	("l",rws)->polyline|
+	("o",rws)->object|
+	("g",rws)->group|
+	("s",rws)->smooth
+;
+(*("vp",rws)->vertex_pspace|*)
+(*("mtllib",rws)->mtllib|*)
+(*("usemtl",rws)->usemtl|*)
