@@ -6,8 +6,8 @@
 
 #include <lak/basic_program.inl>
 
+#include <lak/file/nbt.hpp>
 #include <lak/optional.hpp>
-#include <lak/structure/nbt.hpp>
 #include <lak/system/file.hpp>
 
 #include <filesystem>

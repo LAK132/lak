@@ -1,5 +1,5 @@
-#ifndef LAK_STRUCTURE_PNM_HPP
-#define LAK_STRUCTURE_PNM_HPP
+#ifndef LAK_FILE_PNM_HPP
+#define LAK_FILE_PNM_HPP
 
 /*
 P1: PBM ASCII bitmap (b&w)

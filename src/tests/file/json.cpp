@@ -1,6 +1,6 @@
 #include "lak/test.hpp"
 
-#include "lak/dsl/json.hpp"
+#include "lak/file/json.hpp"
 
 #include "lak/string_literals/view.hpp"
 

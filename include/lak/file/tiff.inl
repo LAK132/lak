@@ -1,4 +1,4 @@
-#include "lak/structure/tiff.hpp"
+#include "lak/file/tiff.hpp"
 
 #include "lak/string_literals/magic.hpp"
 
@@ -133,8 +133,7 @@ lak::tiff::result<> lak::tiff::ifd_tag::read(lak::binary_reader &strm)
 	break;
 		LAK_FOREACH_TIFF_TYPE(LAK_TIFF_TAG_READ)
 #undef LAK_TIFF_TAG_READ
-		default:
-			ASSERT_UNREACHABLE();
+		default: ASSERT_UNREACHABLE();
 	}
 
 	return lak::ok_t{};
@@ -214,23 +213,12 @@ lak::tiff::result<> lak::tiff::image_file_directory::read(
 
 		switch (t.id)
 		{
-			case lak::tiff::tag_name::StripOffsets:
-				strip_offsets = t;
-				break;
-			case lak::tiff::tag_name::RowsPerStrip:
-				rows_per_strip = t;
-				break;
-			case lak::tiff::tag_name::StripByteCounts:
-				strip_byte_counts = t;
-				break;
-			case lak::tiff::tag_name::SubIFDs:
-				subifd_tag = t;
-				break;
-			case lak::tiff::tag_name::ExifOffset:
-				exif_tag = t;
-				break;
-			default:
-				break;
+			case lak::tiff::tag_name::StripOffsets:    strip_offsets = t; break;
+			case lak::tiff::tag_name::RowsPerStrip:    rows_per_strip = t; break;
+			case lak::tiff::tag_name::StripByteCounts: strip_byte_counts = t; break;
+			case lak::tiff::tag_name::SubIFDs:         subifd_tag = t; break;
+			case lak::tiff::tag_name::ExifOffset:      exif_tag = t; break;
+			default:                                   break;
 		}
 	}
 

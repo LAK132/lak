@@ -9,9 +9,8 @@ lakcore_inc = include_directories('..', '..'/'include')
 
 subdir('codegen')
 subdir('compression')
-subdir('dsl')
 subdir('ebpf')
-subdir('structure')
+subdir('file')
 subdir('system')
 
 lakcore = static_library(
@@ -19,9 +18,8 @@ lakcore = static_library(
 	[
 		lakcore_codegen_files,
 		lakcore_compression_files,
-		lakcore_dsl_files,
 		lakcore_ebpf_files,
-		lakcore_structure_files,
+		lakcore_file_files,
 		'bigint.cpp',
 		'alloc.cpp',
 		'debugger.cpp',

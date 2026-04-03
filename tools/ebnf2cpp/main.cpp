@@ -1,7 +1,7 @@
 #include <lak/array.hpp>
 #include <lak/codegen/cpp.hpp>
 #include <lak/debug.hpp>
-#include <lak/dsl/ebnf.hpp>
+#include <lak/file/ebnf.hpp>
 #include <lak/format.hpp>
 #include <lak/span.hpp>
 #include <lak/string_view.hpp>
@@ -72,7 +72,7 @@ int main(int argc, char **argv)
 		  .write_indent_newline();
 		if (rule.transform) strm.push_template_call(u8"lak::dsl::transform"_view);
 
-		lak::array<lak::pair<lak::dsl::ebnf_rule_value, size_t>> stack;
+		lak::array<lak::pair<lak::ebnf::rule_value, size_t>> stack;
 
 		stack.push_back({grammar.rule_values[rule.definition], 0});
 
@@ -81,7 +81,7 @@ int main(int argc, char **argv)
 			auto &[val, index] = stack.back();
 			switch (val.type)
 			{
-				using enum lak::dsl::ebnf_rule_value::value_type;
+				using enum lak::ebnf::rule_value::value_type;
 
 				case string:
 				{
@@ -266,7 +266,7 @@ int main(int argc, char **argv)
 
 				case grouping:
 				{
-					lak::dsl::ebnf_rule_value v =
+					lak::ebnf::rule_value v =
 					  grammar.rule_values[grammar.groupings[val.index].index];
 					stack.pop_back();
 					stack.push_back({v, 0U});
@@ -275,7 +275,7 @@ int main(int argc, char **argv)
 
 				case capture:
 				{
-					lak::dsl::ebnf_rule_value v =
+					lak::ebnf::rule_value v =
 					  grammar.rule_values[grammar.captures[val.index].index];
 					stack.pop_back();
 					stack.push_back({v, 0U});

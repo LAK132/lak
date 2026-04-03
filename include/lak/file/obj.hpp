@@ -1,5 +1,5 @@
-#ifndef LAK_STRUCTURE_OBJ_HPP
-#define LAK_STRUCTURE_OBJ_HPP
+#ifndef LAK_FILE_OBJ_HPP
+#define LAK_FILE_OBJ_HPP
 
 #include "lak/array.hpp"
 #include "lak/binary_reader.hpp"

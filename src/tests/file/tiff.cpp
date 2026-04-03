@@ -1,6 +1,6 @@
 #include "lak/test.hpp"
 
-#include "lak/structure/tiff.hpp"
+#include "lak/file/tiff.hpp"
 
 #include "lak/string_literals/magic.hpp"
 

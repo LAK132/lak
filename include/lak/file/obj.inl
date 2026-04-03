@@ -1,4 +1,4 @@
-#include "lak/structure/obj.hpp"
+#include "lak/file/obj.hpp"
 
 #include "lak/dsl/binary_reader.hpp"
 #include "lak/dsl/utility.hpp"

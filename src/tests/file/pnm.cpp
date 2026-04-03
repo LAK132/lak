@@ -1,6 +1,6 @@
 #include "lak/test.hpp"
 
-#include "lak/structure/pnm.hpp"
+#include "lak/file/pnm.hpp"
 
 #include "lak/system/file.hpp"
 

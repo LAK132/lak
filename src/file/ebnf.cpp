@@ -1,4 +1,4 @@
-#include "lak/dsl/ebnf.hpp"
+#include "lak/file/ebnf.hpp"
 
 static constexpr auto ws =
   lak::dsl::ascii_whitespace | lak::dsl::simple_bounded_str<u8"(*", u8"*)">;
@@ -36,7 +36,7 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 {
 	lak::u8string_view rem = str;
 
-	ebnf_block result;
+	lak::ebnf::block result;
 
 	auto move_str = [&]<typename T>(const lak::dsl::parse_result<T> &res)
 	{ rem = res.remaining; };
@@ -74,7 +74,7 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 		size_t size;
 	};
 
-	lak::array<ebnf_rule_value> working_values;
+	lak::array<lak::ebnf::rule_value> working_values;
 	lak::array<working_data> working_tree;
 
 	auto pop_values = [&](size_t count) -> size_t
@@ -95,7 +95,7 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 
 		const size_t index = pop_values(1U);
 		working_values.push_back({
-		  .type  = lak::dsl::ebnf_rule_value::value_type::repetition,
+		  .type  = lak::ebnf::rule_value::value_type::repetition,
 		  .index = result.repetitions.size(),
 		});
 		result.repetitions.push_back({
@@ -116,7 +116,7 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 
 		const size_t index = pop_values(1U);
 		working_values.push_back({
-		  .type  = lak::dsl::ebnf_rule_value::value_type::positive_lookahead,
+		  .type  = lak::ebnf::rule_value::value_type::positive_lookahead,
 		  .index = result.positive_lookaheads.size(),
 		});
 		result.positive_lookaheads.push_back({
@@ -164,7 +164,7 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 
 		const size_t begin = pop_values(2U);
 		working_values.push_back({
-		  .type  = lak::dsl::ebnf_rule_value::value_type::exception,
+		  .type  = lak::ebnf::rule_value::value_type::exception,
 		  .index = result.exceptions.size(),
 		});
 		result.exceptions.push_back({
@@ -183,7 +183,7 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 		// abuse .index to hold subvalue indices until it can be patched in
 		// pop_altern
 		working_values.push_back({
-		  .type  = lak::dsl::ebnf_rule_value::value_type::match_case,
+		  .type  = lak::ebnf::rule_value::value_type::match_case,
 		  .index = pop_values(2U),
 		});
 		return pop_tree();
@@ -198,28 +198,24 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 		// subsequences of match cases should be treated as if they were grouped
 
 		auto first_match_case_subsequence =
-		  [](lak::span<lak::dsl::ebnf_rule_value> values)
-		  -> lak::span<lak::dsl::ebnf_rule_value>
+		  [](lak::span<lak::ebnf::rule_value> values)
+		  -> lak::span<lak::ebnf::rule_value>
 		{
 			auto first_match_case = lak::find_if(
 			  values.begin(),
 			  values.end(),
-			  [](const lak::dsl::ebnf_rule_value &v)
-			  {
-				  return v.type == lak::dsl::ebnf_rule_value::value_type::match_case;
-			  });
+			  [](const lak::ebnf::rule_value &v)
+			  { return v.type == lak::ebnf::rule_value::value_type::match_case; });
 			if (first_match_case == values.end()) return {};
 			auto first_non_match_case = lak::find_if(
 			  first_match_case,
 			  values.end(),
-			  [](const lak::dsl::ebnf_rule_value &v)
-			  {
-				  return v.type != lak::dsl::ebnf_rule_value::value_type::match_case;
-			  });
+			  [](const lak::ebnf::rule_value &v)
+			  { return v.type != lak::ebnf::rule_value::value_type::match_case; });
 			return lak::span(first_match_case, first_non_match_case);
 		};
 
-		for (lak::span<lak::dsl::ebnf_rule_value> match_subseq;
+		for (lak::span<lak::ebnf::rule_value> match_subseq;
 		     !(match_subseq = first_match_case_subsequence(
 		         lak::span(working_values).last(working_tree.back().size)))
 		        .empty();)
@@ -249,7 +245,7 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 			working_values.insert(
 			  working_values.begin() + ret_idx,
 			  {
-			    .type  = lak::dsl::ebnf_rule_value::value_type::match_sequence,
+			    .type  = lak::ebnf::rule_value::value_type::match_sequence,
 			    .index = result.match_sequences.size(),
 			  });
 			result.match_sequences.push_back({
@@ -261,7 +257,7 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 		const size_t sz = working_tree.back().size;
 
 		if (sz == 1U && working_values.back().type ==
-		                  lak::dsl::ebnf_rule_value::value_type::match_sequence)
+		                  lak::ebnf::rule_value::value_type::match_sequence)
 			return pop_tree();
 
 		if (sz < 2U)
@@ -270,7 +266,7 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 
 		const size_t begin = pop_values(sz);
 		working_values.push_back({
-		  .type  = lak::dsl::ebnf_rule_value::value_type::alternation,
+		  .type  = lak::ebnf::rule_value::value_type::alternation,
 		  .index = result.alternations.size(),
 		});
 		result.alternations.push_back({
@@ -294,7 +290,7 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 
 		const size_t begin = pop_values(sz);
 		working_values.push_back({
-		  .type  = lak::dsl::ebnf_rule_value::value_type::concatenation,
+		  .type  = lak::ebnf::rule_value::value_type::concatenation,
 		  .index = result.concatenations.size(),
 		});
 		result.concatenations.push_back({
@@ -326,7 +322,7 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 		{
 			RES_TRY(trailing_punct.parse(rem));
 			working_values.push_back({
-			  .type  = lak::dsl::ebnf_rule_value::value_type::rule,
+			  .type  = lak::ebnf::rule_value::value_type::rule,
 			  .index = result.identifiers.size(),
 			});
 			result.identifiers.push_back(iden.value);
@@ -336,7 +332,7 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 		{
 			RES_TRY(trailing_punct.parse(rem));
 			working_values.push_back({
-			  .type  = lak::dsl::ebnf_rule_value::value_type::string,
+			  .type  = lak::ebnf::rule_value::value_type::string,
 			  .index = result.strings.size(),
 			});
 			result.strings.push_back(str.value);
@@ -346,7 +342,7 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 		{
 			RES_TRY(trailing_punct.parse(rem));
 			working_values.push_back({
-			  .type  = lak::dsl::ebnf_rule_value::value_type::special,
+			  .type  = lak::ebnf::rule_value::value_type::special,
 			  .index = result.specials.size(),
 			});
 			result.specials.push_back(spec.value);
@@ -410,7 +406,7 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 
 			const size_t index = pop_values(1U);
 			working_values.push_back({
-			  .type  = lak::dsl::ebnf_rule_value::value_type::optional,
+			  .type  = lak::ebnf::rule_value::value_type::optional,
 			  .index = result.optionals.size(),
 			});
 			result.optionals.push_back({
@@ -468,7 +464,7 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 
 			const size_t index = pop_values(1U);
 			working_values.push_back({
-			  .type  = lak::dsl::ebnf_rule_value::value_type::repetition,
+			  .type  = lak::ebnf::rule_value::value_type::repetition,
 			  .index = result.repetitions.size(),
 			});
 			result.repetitions.push_back({
@@ -527,7 +523,7 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 
 			const size_t index = pop_values(1U);
 			working_values.push_back({
-			  .type  = lak::dsl::ebnf_rule_value::value_type::grouping,
+			  .type  = lak::ebnf::rule_value::value_type::grouping,
 			  .index = result.groupings.size(),
 			});
 			result.groupings.push_back({
@@ -585,7 +581,7 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 
 			const size_t index = pop_values(1U);
 			working_values.push_back({
-			  .type  = lak::dsl::ebnf_rule_value::value_type::capture,
+			  .type  = lak::ebnf::rule_value::value_type::capture,
 			  .index = result.captures.size(),
 			});
 			result.captures.push_back({
@@ -784,7 +780,7 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 				  .message = u8"unexpected overlong transformed rule"}};
 
 			working_values.push_back({
-			  .type  = lak::dsl::ebnf_rule_value::value_type::transform,
+			  .type  = lak::ebnf::rule_value::value_type::transform,
 			  .index = result.transforms.size(),
 			});
 			result.transforms.push_back(trans.value);
@@ -833,7 +829,7 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 			if (working_tree.back().size != 1U &&
 			    !(working_tree.back().size == 2U &&
 			      working_values.back().type ==
-			        ebnf_rule_value::value_type::transform))
+			        lak::ebnf::rule_value::value_type::transform))
 				return lak::err_t{
 				  lak::dsl::err::parse{.message = u8"unexpected overlong rule"}};
 

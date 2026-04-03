@@ -1,6 +1,6 @@
 #include "lak/test.hpp"
 
-#include "lak/structure/obj.hpp"
+#include "lak/file/obj.hpp"
 
 #include "lak/string_literals/span.hpp"
 

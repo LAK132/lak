@@ -1,5 +1,5 @@
-#ifndef LAK_STRUCTURE_NBT_HPP
-#define LAK_STRUCTURE_NBT_HPP
+#ifndef LAK_FILE_NBT_HPP
+#define LAK_FILE_NBT_HPP
 
 #include "lak/binary_reader.hpp"
 #include "lak/binary_writer.hpp"

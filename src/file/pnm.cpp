@@ -1,4 +1,4 @@
-#include "lak/structure/pnm.hpp"
+#include "lak/file/pnm.hpp"
 
 #include "lak/bit_reader.hpp"
 #include "lak/overloaded.hpp"
@@ -561,8 +561,7 @@ lak::pnm::pnm::_read(::lak::binary_reader &strm)
 			}
 			break;
 
-			default:
-				ASSERT_UNREACHABLE();
+			default: ASSERT_UNREACHABLE();
 		}
 	}
 	else
@@ -614,8 +613,7 @@ lak::pnm::pnm::_read(::lak::binary_reader &strm)
 				}
 				break;
 
-				default:
-					ASSERT_UNREACHABLE();
+				default: ASSERT_UNREACHABLE();
 			}
 		}
 		else if (type == pnm_type::P1 || type == pnm_type::P4)
@@ -635,9 +633,7 @@ lak::pnm::pnm::_read(::lak::binary_reader &strm)
 
 			switch (type)
 			{
-				case pnm_type::P2:
-					ascii_encoded = true;
-					[[fallthrough]];
+				case pnm_type::P2: ascii_encoded = true; [[fallthrough]];
 				case pnm_type::P5:
 				{
 					if (max_value <= UINT8_MAX)
@@ -655,9 +651,7 @@ lak::pnm::pnm::_read(::lak::binary_reader &strm)
 				}
 				break;
 
-				case pnm_type::P3:
-					ascii_encoded = true;
-					[[fallthrough]];
+				case pnm_type::P3: ascii_encoded = true; [[fallthrough]];
 				case pnm_type::P6:
 				{
 					if (max_value <= UINT8_MAX)
@@ -675,8 +669,7 @@ lak::pnm::pnm::_read(::lak::binary_reader &strm)
 				}
 				break;
 
-				default:
-					ASSERT_UNREACHABLE();
+				default: ASSERT_UNREACHABLE();
 			}
 		}
 

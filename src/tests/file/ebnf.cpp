@@ -1,6 +1,6 @@
 #include "lak/test.hpp"
 
-#include "lak/dsl/ebnf.hpp"
+#include "lak/file/ebnf.hpp"
 
 #include "lak/string_literals/view.hpp"
 
@@ -74,23 +74,23 @@ BEGIN_TEST(ebnf)
 		ASSERT_EQUAL(res.rules[0U].name, u8"rule1"_view);
 
 		ASSERT_EQUAL(res.rule_values[res.rules[0U].definition].type,
-		             lak::dsl::ebnf_rule_value::value_type::alternation);
+		             lak::ebnf::rule_value::value_type::alternation);
 
 		ASSERT_EQUAL(res.rule_values[res.alternations[0U].begin].type,
-		             lak::dsl::ebnf_rule_value::value_type::rule);
+		             lak::ebnf::rule_value::value_type::rule);
 		ASSERT_EQUAL(res.rule_values[res.alternations[0U].begin + 1U].type,
-		             lak::dsl::ebnf_rule_value::value_type::grouping);
+		             lak::ebnf::rule_value::value_type::grouping);
 
 		ASSERT_EQUAL(res.rule_values[res.groupings[0U].index].type,
-		             lak::dsl::ebnf_rule_value::value_type::concatenation);
+		             lak::ebnf::rule_value::value_type::concatenation);
 
 		ASSERT_EQUAL(res.rule_values[res.concatenations[0U].begin].type,
-		             lak::dsl::ebnf_rule_value::value_type::string);
+		             lak::ebnf::rule_value::value_type::string);
 		ASSERT_EQUAL(res.rule_values[res.concatenations[0U].begin + 1U].type,
-		             lak::dsl::ebnf_rule_value::value_type::repetition);
+		             lak::ebnf::rule_value::value_type::repetition);
 
 		ASSERT_EQUAL(res.rule_values[res.repetitions[0U].index].type,
-		             lak::dsl::ebnf_rule_value::value_type::string);
+		             lak::ebnf::rule_value::value_type::string);
 	}
 
 	{
@@ -187,16 +187,16 @@ BEGIN_TEST(ebnf)
 		ASSERT_EQUAL(res.rules[0U].name, u8"rule1"_view);
 
 		ASSERT_EQUAL(res.rule_values[res.rules[0U].definition].type,
-		             lak::dsl::ebnf_rule_value::value_type::concatenation);
+		             lak::ebnf::rule_value::value_type::concatenation);
 
 		ASSERT_EQUAL(res.rule_values[res.concatenations[0U].begin].type,
-		             lak::dsl::ebnf_rule_value::value_type::rule);
+		             lak::ebnf::rule_value::value_type::rule);
 		ASSERT_EQUAL(res.rule_values[res.concatenations[0U].begin + 1U].type,
-		             lak::dsl::ebnf_rule_value::value_type::capture);
+		             lak::ebnf::rule_value::value_type::capture);
 		ASSERT_EQUAL(res.rule_values[res.captures[0U].index].type,
-		             lak::dsl::ebnf_rule_value::value_type::rule);
+		             lak::ebnf::rule_value::value_type::rule);
 		ASSERT_EQUAL(res.rule_values[res.concatenations[0U].begin + 2U].type,
-		             lak::dsl::ebnf_rule_value::value_type::rule);
+		             lak::ebnf::rule_value::value_type::rule);
 	}
 
 	{

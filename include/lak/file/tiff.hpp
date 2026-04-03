@@ -1,5 +1,5 @@
-#ifndef LAK_STRUCTURE_TIFF_HPP
-#define LAK_STRUCTURE_TIFF_HPP
+#ifndef LAK_FILE_TIFF_HPP
+#define LAK_FILE_TIFF_HPP
 
 #include "lak/binary_reader.hpp"
 #include "lak/binary_writer.hpp"
@@ -12,7 +12,7 @@
 #include "lak/utility.hpp"
 #include "lak/variant.hpp"
 
-#include "lak/structure/tiff_tags.inl"
+#include "lak/file/tiff_tags.inl"
 
 namespace lak
 {
@@ -373,6 +373,6 @@ namespace lak
 	}
 }
 
-#include "lak/structure/tiff.inl"
+#include "lak/file/tiff.inl"
 
 #endif

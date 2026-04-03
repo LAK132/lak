@@ -1,6 +1,6 @@
 #include "lak/test.hpp"
 
-#include "lak/structure/nbt.hpp"
+#include "lak/file/nbt.hpp"
 
 #include "lak/compression/deflate.hpp"
 

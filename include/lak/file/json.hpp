@@ -1,5 +1,5 @@
-#ifndef LAK_DSL_JSON_HPP
-#define LAK_DSL_JSON_HPP
+#ifndef LAK_FILE_JSON_HPP
+#define LAK_FILE_JSON_HPP
 
 #include "lak/array.hpp"
 #include "lak/dsl/dsl.hpp"
@@ -10,9 +10,9 @@
 
 namespace lak
 {
-	namespace dsl
+	namespace json
 	{
-		struct json_value
+		struct value
 		{
 			enum struct value_type
 			{
@@ -27,14 +27,14 @@ namespace lak
 
 		namespace err
 		{
-			struct json_unexpected_type
+			struct unexpected_type
 			{
-				lak::dsl::json_value::value_type expected;
-				lak::dsl::json_value::value_type got;
+				lak::json::value::value_type expected;
+				lak::json::value::value_type got;
 			};
 		}
 
-		struct json_array
+		struct array
 		{
 			size_t begin;
 			size_t end;
@@ -42,7 +42,7 @@ namespace lak
 			inline size_t size() const { return end - begin; }
 		};
 
-		struct json_object
+		struct object
 		{
 			size_t begin;
 			size_t end;
@@ -50,70 +50,76 @@ namespace lak
 			inline size_t size() const { return end - begin; }
 		};
 
-		struct json_value_proxy;
-		struct json_array_proxy;
-		struct json_object_proxy;
+		struct value_proxy;
+		struct array_proxy;
+		struct object_proxy;
 
-		struct json_block
+		struct block
 		{
 			lak::array<char8_t> _internal;
 			lak::array<lak::u8string_view> tokens;
 			lak::array<lak::u8string_view> strings;
 			lak::array<lak::u8string_view> numbers;
-			lak::array<json_value> values;   // indexes into tokens/strings/numbers
-			lak::array<json_array> arrays;   // indexes into values
-			lak::array<json_object> objects; // indexes into values (interlaced kvs)
 
-			void intern(); // reallocate views internally to the json_block
+			// indexes into tokens/strings/numbers
+			lak::array<lak::json::value> values;
 
-			json_value_proxy root() const;
+			// indexes into values
+			lak::array<lak::json::array> arrays;
+
+			// indexes into values (interlaced kvs)
+			lak::array<lak::json::object> objects;
+
+			void intern(); // reallocate views internally to the block
+
+			lak::json::value_proxy root() const;
 		};
 
-		struct json_token_proxy : public lak::u8string_view
+		struct token_proxy : public lak::u8string_view
 		{
 		};
-		struct json_string_proxy : public lak::u8string_view
+		struct string_proxy : public lak::u8string_view
 		{
 		};
-		struct json_number_proxy : public lak::u8string_view
+		struct number_proxy : public lak::u8string_view
 		{
 		};
 
-		struct json_array_proxy
+		struct array_proxy
 		{
-			const json_block &block;
-			json_array array;
+			const lak::json::block &block;
+			lak::json::array array;
 
 			inline size_t size() const { return array.size(); }
 
-			json_value_proxy operator[](size_t index) const;
+			lak::json::value_proxy operator[](size_t index) const;
 		};
 
-		struct json_object_proxy
+		struct object_proxy
 		{
-			const json_block &block;
-			json_object object;
+			const lak::json::block &block;
+			lak::json::object object;
 
 			inline size_t size() const { return object.size() / 2U; }
 
-			lak::pair<lak::u8string_view, json_value_proxy> operator[](
+			lak::pair<lak::u8string_view, lak::json::value_proxy> operator[](
 			  size_t index) const;
 
-			json_value_proxy operator[](lak::u8string_view key) const;
+			lak::json::value_proxy operator[](lak::u8string_view key) const;
 		};
 
-		struct json_value_proxy
+		struct value_proxy
 		{
 			template<typename T>
-			using result_type = lak::result<T, lak::dsl::err::json_unexpected_type>;
+			using result_type = lak::result<T, lak::json::err::unexpected_type>;
 			template<typename T>
 			using num_result_type =
 			  lak::result<T,
-			              lak::variant<lak::dsl::err::json_unexpected_type,
+			              lak::variant<lak::json::err::unexpected_type,
 			                           lak::err::string_to_numeric>>;
 
-			const json_block &block;
-			json_value value;
+			const lak::json::block &block;
+			lak::json::value value;
 
 			bool is_none() const;
 			bool is_token() const;
@@ -125,8 +131,8 @@ namespace lak
 			result_type<lak::u8string_view> token() const;
 			result_type<lak::u8string_view> string() const;
 			result_type<lak::u8string_view> number_str() const;
-			result_type<json_array_proxy> array() const;
-			result_type<json_object_proxy> object() const;
+			result_type<lak::json::array_proxy> array() const;
+			result_type<lak::json::object_proxy> object() const;
 
 			template<typename NUM>
 			num_result_type<NUM> number() const
@@ -162,17 +168,17 @@ namespace lak
 			{
 				switch (value.type)
 				{
-					case json_value::value_type::token:
-						return func(json_token_proxy{block.tokens[value.index]});
-					case json_value::value_type::string:
-						return func(json_string_proxy{block.strings[value.index]});
-					case json_value::value_type::number:
-						return func(json_number_proxy{block.numbers[value.index]});
-					case json_value::value_type::array:
-						return func(json_array_proxy{.block = block,
-						                             .array = block.arrays[value.index]});
-					case json_value::value_type::object:
-						return func(json_object_proxy{
+					case lak::json::value::value_type::token:
+						return func(lak::json::token_proxy{block.tokens[value.index]});
+					case lak::json::value::value_type::string:
+						return func(lak::json::string_proxy{block.strings[value.index]});
+					case lak::json::value::value_type::number:
+						return func(lak::json::number_proxy{block.numbers[value.index]});
+					case lak::json::value::value_type::array:
+						return func(lak::json::array_proxy{
+						  .block = block, .array = block.arrays[value.index]});
+					case lak::json::value::value_type::object:
+						return func(lak::json::object_proxy{
 						  .block = block, .object = block.objects[value.index]});
 					default: ASSERT_UNREACHABLE();
 				}
@@ -180,38 +186,41 @@ namespace lak
 
 			inline explicit operator bool() const { return !is_none(); }
 		};
+	}
 
-		struct json_parser
+	namespace dsl
+	{
+		struct json_t
 		{
 			static constexpr bool is_pure_match = false;
 
-			using value_type = json_block;
+			using value_type = lak::json::block;
 
 			lak::dsl::result<value_type> parse(lak::u8string_view str) const;
 		};
 
-		inline constexpr json_parser json;
+		inline constexpr json_t json;
 
-		static_assert(lak::dsl::concepts::parser<json_parser>);
+		static_assert(lak::dsl::concepts::parser<json_t>);
 	}
 
 	template<typename CHAR>
-	struct format_traits<lak::dsl::json_value::value_type, CHAR>
+	struct format_traits<lak::json::value::value_type, CHAR>
 	{
 		static constexpr lak::string<CHAR> to_string(
-		  const lak::dsl::json_value::value_type &type)
+		  const lak::json::value::value_type &type)
 		{
 			switch (type)
 			{
-				case lak::dsl::json_value::value_type::token:
+				case lak::json::value::value_type::token:
 					return lak::strconv<CHAR>("token"_view);
-				case lak::dsl::json_value::value_type::string:
+				case lak::json::value::value_type::string:
 					return lak::strconv<CHAR>("string"_view);
-				case lak::dsl::json_value::value_type::number:
+				case lak::json::value::value_type::number:
 					return lak::strconv<CHAR>("number"_view);
-				case lak::dsl::json_value::value_type::array:
+				case lak::json::value::value_type::array:
 					return lak::strconv<CHAR>("array"_view);
-				case lak::dsl::json_value::value_type::object:
+				case lak::json::value::value_type::object:
 					return lak::strconv<CHAR>("object"_view);
 				default: return lak::fmt<CHAR, "{:#0X}">(static_cast<uintmax_t>(type));
 			}
@@ -219,10 +228,10 @@ namespace lak
 	};
 
 	template<typename CHAR>
-	struct format_traits<lak::dsl::err::json_unexpected_type, CHAR>
+	struct format_traits<lak::json::err::unexpected_type, CHAR>
 	{
 		static constexpr lak::string<CHAR> to_string(
-		  const lak::dsl::err::json_unexpected_type &err)
+		  const lak::json::err::unexpected_type &err)
 		{
 			return lak::fmt<CHAR, "expected {0}, got {1}">(err.expected, err.got);
 		}
