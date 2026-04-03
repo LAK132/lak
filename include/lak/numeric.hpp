@@ -80,6 +80,39 @@ namespace lak
 	  lak::u8string_view integer,
 	  lak::numeric_base base = lak::numeric_base::dec);
 
+	template<typename INTEGER>
+	lak::result<INTEGER, lak::err::string_to_numeric> string_to_int(
+	  lak::u8string_view integer,
+	  lak::numeric_base base = lak::numeric_base::dec)
+	{
+		static_assert(std::numeric_limits<INTEGER>::is_integer);
+		if constexpr (std::numeric_limits<INTEGER>::is_signed)
+		{
+			return lak::string_to_intmax(integer, base)
+			  .and_then(
+			    [](intmax_t value)
+			      -> lak::result<INTEGER, lak::err::string_to_numeric>
+			    {
+				    if (value < std::numeric_limits<INTEGER>::lowest() ||
+				        value > std::numeric_limits<INTEGER>::max())
+					    return lak::err_t{lak::err::string_to_numeric::out_of_bounds};
+				    return lak::ok_t{static_cast<INTEGER>(value)};
+			    });
+		}
+		else
+		{
+			return lak::string_to_uintmax(integer, base)
+			  .and_then(
+			    [](uintmax_t value)
+			      -> lak::result<INTEGER, lak::err::string_to_numeric>
+			    {
+				    if (value > std::numeric_limits<INTEGER>::max())
+					    return lak::err_t{lak::err::string_to_numeric::out_of_bounds};
+				    return lak::ok_t{static_cast<INTEGER>(value)};
+			    });
+		}
+	}
+
 	// bin:
 	// i: [+-]?[0-1]+
 	// f: [0-1]*
