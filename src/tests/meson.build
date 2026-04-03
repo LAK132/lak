@@ -28,7 +28,6 @@ laktestcore = static_library(
 		'format.cpp',
 		'functional.cpp',
 		'integer_range.cpp',
-		'json.cpp',
 		'macro_utils.cpp',
 		'memory.cpp',
 		'numeric.cpp',

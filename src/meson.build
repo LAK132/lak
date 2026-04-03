@@ -25,7 +25,6 @@ lakcore = static_library(
 		'bigint.cpp',
 		'alloc.cpp',
 		'debugger.cpp',
-		'json.cpp',
 		'math.cpp',
 		'memmanip.cpp',
 		'numeric.cpp',
