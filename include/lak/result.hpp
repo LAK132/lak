@@ -3,6 +3,10 @@
 
 #	include "lak/utility.hpp"
 #	include "lak/type_traits.hpp"
+#	include "lak/macro_utils.hpp"
+#	include "lak/concepts.hpp"
+#	include "lak/optional.hpp"
+#	include "lak/defer.hpp"
 
 #	define LAK_VARIANT_FORWARD_ONLY
 #	include "lak/variant.hpp"
@@ -379,20 +383,8 @@ lak::result<T2, E> operator&(lak::result<T1, E> a, lak::result<T2, E> b);
 #	ifndef LAK_RESULT_HPP_IMPL
 #		define LAK_RESULT_HPP_IMPL
 
-#		define LAK_DEBUG_FORWARD_ONLY
-#		include "lak/debug.hpp"
-
-#		include "lak/concepts.hpp"
-#		include "lak/macro_utils.hpp"
-#		include "lak/optional.hpp"
-#		include "lak/type_traits.hpp"
 #		include "lak/variant.hpp"
-#		include "lak/defer.hpp"
 #		include "lak/index_set.hpp"
-
-#		define LAK_STREAMIFY_FORWARD_ONLY
-#		include "lak/streamify.hpp"
-#		include "lak/format.hpp"
 
 namespace lak
 {
@@ -787,126 +779,24 @@ namespace lak
 		/* --- expect --- */
 
 		template<typename STR>
-		ok_reference expect(const STR &error_str) &
-		{
-			if (is_err())
-			{
-				auto print_err_func = [&]<typename SUBERR>(const SUBERR &err)
-				{
-					if constexpr (lak::is_same_v<SUBERR, lak::monostate>)
-					{
-						ABORTF_S(lak::to_u8string(error_str));
-					}
-					else if constexpr (lak::concepts::streamable<SUBERR>)
-					{
-						ABORTF(error_str, ": ", err);
-					}
-					else if constexpr (lak::concepts::formattable<SUBERR, char8_t>)
-					{
-						ABORTF(error_str, ": ", lak::fmt<u8"{}">(err));
-					}
-					else
-					{
-						ABORTF(error_str, ": ", TYPE_NAME(err));
-					}
-				};
-
-				if constexpr (lak::is_variant_v<ERR>)
-					get_err().visit(print_err_func);
-				else
-					print_err_func(get_err());
-			}
-			return get_ok();
-		}
+		ok_reference expect(const STR &error_str) &;
 
 		template<typename STR>
-		ok_const_reference expect(const STR &error_str) const &
-		{
-			if (is_err())
-			{
-				auto print_err_func = [&]<typename SUBERR>(const SUBERR &err)
-				{
-					if constexpr (lak::is_same_v<SUBERR, lak::monostate>)
-					{
-						ABORTF_S(lak::to_u8string(error_str));
-					}
-					else if constexpr (lak::concepts::streamable<SUBERR>)
-					{
-						ABORTF(error_str, ": ", err);
-					}
-					else if constexpr (lak::concepts::formattable<SUBERR, char8_t>)
-					{
-						ABORTF(error_str, ": ", lak::fmt<u8"{}">(err));
-					}
-					else
-					{
-						ABORTF(error_str, ": ", TYPE_NAME(err));
-					}
-				};
-
-				if constexpr (lak::is_variant_v<ERR>)
-					get_err().visit(print_err_func);
-				else
-					print_err_func(get_err());
-			}
-			return get_ok();
-		}
+		ok_const_reference expect(const STR &error_str) const &;
 
 		template<typename STR>
-		OK expect(const STR &error_str) &&
-		{
-			if (is_err())
-			{
-				auto print_err_func = [&]<typename SUBERR>(const SUBERR &err)
-				{
-					if constexpr (lak::is_same_v<SUBERR, lak::monostate>)
-					{
-						ABORTF_S(lak::to_u8string(error_str));
-					}
-					else if constexpr (lak::concepts::streamable<SUBERR>)
-					{
-						ABORTF(error_str, ": ", err);
-					}
-					else if constexpr (lak::concepts::formattable<SUBERR, char8_t>)
-					{
-						ABORTF(error_str, ": ", lak::fmt<u8"{}">(err));
-					}
-					else
-					{
-						ABORTF(error_str, ": ", TYPE_NAME(err));
-					}
-				};
-
-				if constexpr (lak::is_variant_v<ERR>)
-					get_err().visit(print_err_func);
-				else
-					print_err_func(get_err());
-			}
-			return forward_ok();
-		}
+		OK expect(const STR &error_str) &&;
 
 		/* --- expect_err --- */
 
 		template<typename STR>
-		err_reference expect_err(const STR &error_str) &
-		{
-			if (is_ok()) ABORTF_S(lak::to_u8string(error_str) /*, ": ", get_ok()*/);
-			return get_err();
-		}
+		err_reference expect_err(const STR &error_str) &;
 
 		template<typename STR>
-		err_const_reference expect_err(const STR &error_str) const &
-		{
-			if (is_ok()) ABORTF_S(lak::to_u8string(error_str) /*, ": ", get_ok()*/);
-			return get_err();
-		}
+		err_const_reference expect_err(const STR &error_str) const &;
 
 		template<typename STR>
-		ERR expect_err(const STR &error_str) &&
-		{
-			if (is_ok()) ABORTF_S(lak::to_u8string(error_str) /*, ": ", get_ok()*/);
-			return forward_err();
-		}
+		ERR expect_err(const STR &error_str) &&;
 
 		/* --- unwrap --- */
 
@@ -1596,6 +1486,8 @@ lak::result<T2, E> operator&(lak::result<T1, E> a, lak::result<T2, E> b)
 {
 	return a.is_err() ? lak::result<T2, E>::make_err(a.unsafe_unwrap_err()) : b;
 }
+
+#include "lak/result.inl"
 
 #	endif
 #endif

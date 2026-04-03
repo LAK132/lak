@@ -1,7 +1,5 @@
 #include "lak/variant.hpp"
 
-#include "lak/debug.hpp"
-
 #include "lak/utility.hpp"
 #include "lak/visit.hpp"
 

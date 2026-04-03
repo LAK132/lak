@@ -610,7 +610,7 @@ lak::span<T> lak::array<T, lak::dynamic_extent>::insert(const_iterator before,
                                                         const array &other)
 requires lak::array_type_is_copyable<T>
 {
-	return push_back(other.begin(), other.end());
+	return insert(before, other.begin(), other.end());
 }
 
 template<typename T>

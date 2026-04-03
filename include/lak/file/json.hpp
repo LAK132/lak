@@ -145,7 +145,7 @@ namespace lak
 						  constexpr auto num_parser =
 						    lak::dsl::dec_float<lak::dsl::char_literal<U'.'>,
 						                        lak::dsl::one_of_chars_str<U"eE">>;
-						  auto [intp, fracp, expp] = num_parser.parse(num).UNWRAP();
+						  auto [intp, fracp, expp] = num_parser.parse(num).UNWRAP().value;
 						  RES_TRY_ASSIGN(double v =,
 						                 lak::dec_string_to_double(intp, fracp, expp));
 						  if (v > std::numeric_limits<NUM>::max() ||

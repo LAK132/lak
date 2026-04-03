@@ -319,6 +319,10 @@ inline auto lak::span<T, lak::dynamic_extent>::to_string() const
 // Requires strcast, streamify
 
 #include "lak/strcast.hpp"
+
+#ifndef LAK_STREAMIFY_FORWARD_ONLY
+#define LAK_STREAMIFY_FORWARD_ONLY
+#endif
 #include "lak/streamify.hpp"
 
 /* --- lak::span<T, SIZE> --- */
@@ -352,8 +356,12 @@ inline auto lak::span<T, lak::dynamic_extent>::stringify() const
 ///////////////////////////////////////////////////////////////////////////////
 // Requires debug, strconv
 
+#ifndef LAK_DEBUG_FORWARD_ONLY
+#define LAK_DEBUG_FORWARD_ONLY
+#endif
 #include "lak/debug.hpp"
 #include "lak/strconv.hpp"
+#include "lak/functional.hpp"
 
 /* --- lak::span<T, SIZE> --- */
 

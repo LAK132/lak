@@ -3,6 +3,9 @@
 #include "lak/result.hpp"
 #include "lak/span.hpp"
 
+// needed here to fix missing symbol issues
+#include "lak/streamify.hpp"
+
 size_t lak::round_to_page_multiple(size_t size, size_t *page_size_out)
 {
 	const size_t page_size = lak::page_size();

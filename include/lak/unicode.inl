@@ -1,6 +1,5 @@
 #include "lak/strcast.hpp"
 #include "lak/strconv.hpp"
-#include "lak/streamify.hpp"
 #include "lak/string_view.hpp"
 
 #include "lak/functional.hpp"

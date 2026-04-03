@@ -47,7 +47,13 @@ namespace lak
 	};
 
 	static_assert(lak::is_default_constructible_v<lak::uninitialised<int>>);
+}
 
+#define LAK_DEBUG_FORWARD_ONLY
+#include "lak/debug.hpp"
+
+namespace lak
+{
 	template<typename T>
 	constexpr void destructive_move_construct(lak::uninitialised<T> *,
 	                                          lak::uninitialised<T> *)
