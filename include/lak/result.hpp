@@ -1487,7 +1487,7 @@ lak::result<T2, E> operator&(lak::result<T1, E> a, lak::result<T2, E> b)
 	return a.is_err() ? lak::result<T2, E>::make_err(a.unsafe_unwrap_err()) : b;
 }
 
-#include "lak/result.inl"
+#		include "lak/result.inl"
 
 #	endif
 #endif

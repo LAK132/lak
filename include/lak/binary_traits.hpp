@@ -27,21 +27,21 @@ namespace lak
 		static constexpr size_t size     = lak::dynamic_extent;
 		static_assert((size != lak::dynamic_extent) == const_size);
 
-		static size_t dynamic_size(const T &) = delete;
+		static size_t dynamic_size(const value_type &) = delete;
 
-		static void from_bytes(lak::span<const byte_t, size> bytes, T &value)
-		requires(const_size)
-		= delete;
+		static void from_bytes(
+		  lak::span<const byte_t, size> bytes, value_type &value)
+		requires(const_size) = delete;
 
 		static lak::result<lak::span<const byte_t>, error_type> from_bytes(
-		  lak::span<const byte_t> bytes, T &value) = delete;
+		  lak::span<const byte_t> bytes, value_type &value) = delete;
 
-		static void to_bytes(lak::span<byte_t, size> bytes, const T &value)
-		requires(const_size)
-		= delete;
+		static void to_bytes(
+		  lak::span<byte_t, size> bytes, const value_type &value)
+		requires(const_size) = delete;
 
 		static lak::result<lak::span<byte_t>, error_type> to_bytes(
-		  lak::span<byte_t> bytes, const T &value) = delete;
+		  lak::span<byte_t> bytes, const value_type &value) = delete;
 		*/
 	};
 

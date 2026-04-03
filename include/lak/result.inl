@@ -6,7 +6,8 @@
 
 template<typename OK, typename ERR>
 template<typename STR>
-lak::result<OK, ERR>::ok_reference lak::result<OK, ERR>::expect(const STR &error_str) &
+lak::result<OK, ERR>::ok_reference lak::result<OK, ERR>::expect(
+  const STR &error_str) &
 {
 	if (is_err())
 	{
@@ -40,7 +41,8 @@ lak::result<OK, ERR>::ok_reference lak::result<OK, ERR>::expect(const STR &error
 
 template<typename OK, typename ERR>
 template<typename STR>
-lak::result<OK, ERR>::ok_const_reference lak::result<OK, ERR>::expect(const STR &error_str) const &
+lak::result<OK, ERR>::ok_const_reference lak::result<OK, ERR>::expect(
+  const STR &error_str) const &
 {
 	if (is_err())
 	{
@@ -108,7 +110,8 @@ OK lak::result<OK, ERR>::expect(const STR &error_str) &&
 
 template<typename OK, typename ERR>
 template<typename STR>
-lak::result<OK, ERR>::err_reference lak::result<OK, ERR>::expect_err(const STR &error_str) &
+lak::result<OK, ERR>::err_reference lak::result<OK, ERR>::expect_err(
+  const STR &error_str) &
 {
 	if (is_ok()) ABORTF_S(lak::to_u8string(error_str) /*, ": ", get_ok()*/);
 	return get_err();
@@ -116,7 +119,8 @@ lak::result<OK, ERR>::err_reference lak::result<OK, ERR>::expect_err(const STR &
 
 template<typename OK, typename ERR>
 template<typename STR>
-lak::result<OK, ERR>::err_const_reference lak::result<OK, ERR>::expect_err(const STR &error_str) const &
+lak::result<OK, ERR>::err_const_reference lak::result<OK, ERR>::expect_err(
+  const STR &error_str) const &
 {
 	if (is_ok()) ABORTF_S(lak::to_u8string(error_str) /*, ": ", get_ok()*/);
 	return get_err();

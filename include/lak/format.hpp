@@ -131,10 +131,10 @@ namespace lak
 #endif
 
 #ifdef LAK_FORMAT_FORWARD_ONLY
-#undef LAK_FORMAT_FORWARD_ONLY
+#	undef LAK_FORMAT_FORWARD_ONLY
 #else
-#ifndef LAK_FORMAT_HPP_IMPL
-#define LAK_FORMAT_HPP_IMPL
-#	include "lak/format.inl"
-#endif
+#	ifndef LAK_FORMAT_HPP_IMPL
+#		define LAK_FORMAT_HPP_IMPL
+#		include "lak/format.inl"
+#	endif
 #endif
