@@ -476,7 +476,7 @@ struct lak::format_traits<T, CHAR>
 		strm << std::noshowbase;
 		if (args.uppercase) strm << std::uppercase;
 
-		if (static_cast<intmax_t>(value) < intmax_t(0))
+		if (std::signbit(value))
 			strm << "-";
 		else if (args.force_sign)
 			strm << "+";
@@ -545,14 +545,14 @@ struct lak::format_traits<T, CHAR>
 				else
 				{
 					case format_args::always_hex:
-						if constexpr (sizeof(T) == 1U)
-							return lak::fmt<CHAR, "\\x{:.2X}">(uintmax_t(value));
-						else if constexpr (sizeof(T) == 2U)
-							return lak::fmt<CHAR, "\\x{:.4X}">(uintmax_t(value));
-						else if constexpr (sizeof(T) == 4U)
-							return lak::fmt<CHAR, "\\x{:.8X}">(uintmax_t(value));
+						if constexpr (sizeof(T) == sizeof(char8_t))
+							return lak::fmt<CHAR, "\\x{:0.2X}">(uintmax_t(value));
+						else if constexpr (sizeof(T) == sizeof(char16_t))
+							return lak::fmt<CHAR, "\\x{:0.4X}">(uintmax_t(value));
+						else if constexpr (sizeof(T) == sizeof(char32_t))
+							return lak::fmt<CHAR, "\\x{:0.8X}">(uintmax_t(value));
 						else
-							return lak::fmt<CHAR, "\\x{:X}">(uintmax_t(value));
+							return lak::fmt<CHAR, "\\x{:0X}">(uintmax_t(value));
 				}
 		}
 	}

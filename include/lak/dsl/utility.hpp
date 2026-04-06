@@ -11,6 +11,8 @@ namespace lak
 	namespace dsl
 	{
 		inline constexpr auto newline = lak::dsl::char_literal<U'\n'>;
+		inline constexpr auto eol     = lak::dsl::one_of_chars_str<U"\r\n">;
+		inline constexpr auto eolf    = lak::dsl::eol | lak::dsl::eof;
 		inline constexpr auto ascii_whitespace =
 		  lak::dsl::one_of_chars_str<lak::char_utils_impl::ascii_spaces32>;
 		inline constexpr auto ascii_nonnewline_whitespace =

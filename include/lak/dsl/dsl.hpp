@@ -1827,12 +1827,9 @@ namespace lak
 					}};
 				else
 					return lak::err_t{lak::dsl::err::parse{
-					  .message =
-					    lak::streamify("expected '",
-					                   lak::u8string(_comp_str),
-					                   "' got '",
-					                   str.first(std::min(str.size(), _comp_str.size())),
-					                   "'")}};
+					  .message = lak::fmt<u8"expected '{}' got '{}'">(
+					    lak::u8string(_comp_str),
+					    str.first(std::min(str.size(), _comp_str.size())))}};
 			}
 		};
 
@@ -1884,12 +1881,9 @@ namespace lak
 					}};
 				else
 					return lak::err_t{lak::dsl::err::parse{
-					  .message =
-					    lak::streamify("expected !'",
-					                   lak::u8string(_comp_str),
-					                   "' got '",
-					                   str.first(std::min(str.size(), _comp_str.size())),
-					                   "'")}};
+					  .message = lak::fmt<u8"expected !'{}' got '{}'">(
+					    lak::u8string(_comp_str),
+					    str.first(std::min(str.size(), _comp_str.size())))}};
 			}
 		};
 
@@ -1949,18 +1943,8 @@ namespace lak
 				const char32_t c = lak::codepoint(str);
 				if (c != chr)
 				{
-					lak::codepoint_buffer_t<char8_t> buffers[2];
 					return lak::err_t{lak::dsl::err::parse{
-					  .message = lak::streamify(
-					    "expected '",
-					    lak::is_ascii_printable(chr)
-					      ? lak::u8string_view(lak::from_codepoint(buffers[0], chr))
-					      : lak::u8string_view(lak::streamify(chr)),
-					    "' got '",
-					    lak::is_ascii_printable(c)
-					      ? lak::u8string_view(lak::from_codepoint(buffers[1], c))
-					      : lak::u8string_view(lak::streamify(c)),
-					    "'")}};
+					  .message = lak::fmt<u8"expected '{:A}' got '{:A}'">(chr, c)}};
 				}
 				return lak::ok_t{lak::dsl::parse_result<value_type>{
 				  .consumed  = str.first(clen),
@@ -2018,7 +2002,7 @@ namespace lak
 				const char32_t c = lak::codepoint(str);
 				if (c == chr)
 					return lak::err_t{lak::dsl::err::parse{
-					  .message = lak::streamify("expected !'", chr, "' got '", c, "'")}};
+					  .message = lak::fmt<u8"expected !'{:A}' got '{:A}'">(chr, c)}};
 				return lak::ok_t{lak::dsl::parse_result<value_type>{
 				  .consumed  = str.first(clen),
 				  .remaining = str.substr(clen),
@@ -2189,15 +2173,15 @@ namespace lak
 			using value_type                   = lak::result_ok_type_t<RESULT>;
 		};
 
-		template<lak::dsl::concepts::parser auto par,
-		         lak::concepts::invocable<
-		           const typename decltype(par)::value_type &> auto func>
+		template<
+		  lak::dsl::concepts::parser auto par,
+		  lak::concepts::invocable<typename decltype(par)::value_type> auto func>
 		struct transform_t
 		{
 			static constexpr bool is_pure_match = false;
 			using _par_value_type               = typename decltype(par)::value_type;
 			using _func_result =
-			  lak::invoke_result_t<decltype(func), const _par_value_type &>;
+			  lak::invoke_result_t<decltype(func), _par_value_type>;
 			static constexpr bool _can_flatten =
 			  _transform_t<_func_result>::_can_flatten;
 			using value_type = typename _transform_t<_func_result>::value_type;
@@ -2227,12 +2211,12 @@ namespace lak
 			requires(!_can_flatten)
 			{
 				return par.parse(str).map(
-				  []<typename T>(const lak::dsl::parse_result<T> &res)
+				  []<typename T>(lak::dsl::parse_result<T> &&res)
 				  {
 					  return lak::dsl::parse_result<value_type>{
 					    .consumed  = res.consumed,
 					    .remaining = res.remaining,
-					    .value     = func(res.value),
+					    .value     = func(lak::forward<T>(res.value)),
 					  };
 				  });
 			}
