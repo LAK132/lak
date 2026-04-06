@@ -148,7 +148,7 @@ template<typename T, size_t SIZE>
 lak::array<T, SIZE>::array(std::initializer_list<T> list)
 requires lak::array_type_is_copyable<T>
 {
-	ASSERT_EQUAL(list.size(), SIZE);
+	BOUNDS_ASSERT_EQUAL(list.size(), SIZE);
 #if defined(LAK_COMPILER_CLANG) && defined(LAK_OS_APPLE)
 	if constexpr (!lak::concepts::copy_constructible<T>)
 		ASSERT_UNREACHABLE();
@@ -160,14 +160,14 @@ requires lak::array_type_is_copyable<T>
 template<typename T, size_t SIZE>
 T &lak::array<T, SIZE>::at(size_t index)
 {
-	ASSERT_GREATER(SIZE, index);
+	BOUNDS_ASSERT_GREATER(SIZE, index);
 	return _data[index];
 }
 
 template<typename T, size_t SIZE>
 const T &lak::array<T, SIZE>::at(size_t index) const
 {
-	ASSERT_GREATER(SIZE, index);
+	BOUNDS_ASSERT_GREATER(SIZE, index);
 	return _data[index];
 }
 
@@ -246,7 +246,7 @@ void lak::array<T, lak::dynamic_extent>::shrink_impl(size_t new_size)
 {
 	if constexpr (!std::is_trivially_destructible_v<T>)
 		for (T *it : lak::pointer_range(begin() + new_size, end())) it->~T();
-	if (_data.resize(new_size)) ASSERT_UNREACHABLE();
+	if (_data.resize(new_size)) BOUNDS_ASSERT_UNREACHABLE();
 }
 
 template<typename T>
@@ -433,20 +433,20 @@ lak::array<T, lak::dynamic_extent>::push_front(T &&t)
 template<typename T>
 void lak::array<T, lak::dynamic_extent>::pop_front()
 {
-	ASSERT_GREATER(size(), 0U);
+	BOUNDS_ASSERT_GREATER(size(), 0U);
 	lak::shift_left(lak::span(_data), 1U);
 	if constexpr (!std::is_trivially_destructible_v<T>) back().~T();
-	if (_data.resize(size() - 1U)) ASSERT_UNREACHABLE();
+	if (_data.resize(size() - 1U)) BOUNDS_ASSERT_UNREACHABLE();
 }
 
 template<typename T>
 T lak::array<T, lak::dynamic_extent>::popped_front()
 {
-	ASSERT_GREATER(size(), 0U);
+	BOUNDS_ASSERT_GREATER(size(), 0U);
 	T result = lak::move(front());
 	lak::shift_left(lak::span(_data), 1U);
 	if constexpr (!std::is_trivially_destructible_v<T>) back().~T();
-	if (_data.resize(size() - 1U)) ASSERT_UNREACHABLE();
+	if (_data.resize(size() - 1U)) BOUNDS_ASSERT_UNREACHABLE();
 	return result;
 }
 
@@ -503,18 +503,18 @@ lak::span<T> lak::array<T, lak::dynamic_extent>::push_back(ITER &&b, ITER &&e)
 template<typename T>
 void lak::array<T, lak::dynamic_extent>::pop_back()
 {
-	ASSERT_GREATER(size(), 0U);
+	BOUNDS_ASSERT_GREATER(size(), 0U);
 	if constexpr (!std::is_trivially_destructible_v<T>) back().~T();
-	if (_data.resize(size() - 1U)) ASSERT_UNREACHABLE();
+	if (_data.resize(size() - 1U)) BOUNDS_ASSERT_UNREACHABLE();
 }
 
 template<typename T>
 T lak::array<T, lak::dynamic_extent>::popped_back()
 {
-	ASSERT_GREATER(size(), 0U);
+	BOUNDS_ASSERT_GREATER(size(), 0U);
 	T result = lak::move(back());
 	if constexpr (!std::is_trivially_destructible_v<T>) back().~T();
-	if (_data.resize(size() - 1U)) ASSERT_UNREACHABLE();
+	if (_data.resize(size() - 1U)) BOUNDS_ASSERT_UNREACHABLE();
 	return result;
 }
 
@@ -524,8 +524,8 @@ lak::array<T, lak::dynamic_extent>::insert(const_iterator before,
                                            const T &value)
 requires lak::array_type_is_copyable<T>
 {
-	ASSERT_GREATER_OR_EQUAL(before, cbegin());
-	ASSERT_LESS_OR_EQUAL(before, cend());
+	BOUNDS_ASSERT_GREATER_OR_EQUAL(before, cbegin());
+	BOUNDS_ASSERT_LESS_OR_EQUAL(before, cend());
 
 	const size_t index = before - data();
 
@@ -545,8 +545,8 @@ template<typename T>
 typename lak::array<T, lak::dynamic_extent>::iterator
 lak::array<T, lak::dynamic_extent>::insert(const_iterator before, T &&value)
 {
-	ASSERT_GREATER_OR_EQUAL(before, cbegin());
-	ASSERT_LESS_OR_EQUAL(before, cend());
+	BOUNDS_ASSERT_GREATER_OR_EQUAL(before, cbegin());
+	BOUNDS_ASSERT_LESS_OR_EQUAL(before, cend());
 
 	const size_t index = before - data();
 
@@ -563,8 +563,8 @@ lak::array<T, lak::dynamic_extent>::insert(const_iterator before,
                                            std::initializer_list<T> values)
 requires lak::array_type_is_copyable<T>
 {
-	ASSERT_GREATER_OR_EQUAL(before, cbegin());
-	ASSERT_LESS_OR_EQUAL(before, cend());
+	BOUNDS_ASSERT_GREATER_OR_EQUAL(before, cbegin());
+	BOUNDS_ASSERT_LESS_OR_EQUAL(before, cend());
 
 	const size_t index = before - data();
 
@@ -588,8 +588,8 @@ lak::span<T> lak::array<T, lak::dynamic_extent>::insert(const_iterator before,
                                                         ITER &&b,
                                                         ITER &&e)
 {
-	ASSERT_GREATER_OR_EQUAL(before, cbegin());
-	ASSERT_LESS_OR_EQUAL(before, cend());
+	BOUNDS_ASSERT_GREATER_OR_EQUAL(before, cbegin());
+	BOUNDS_ASSERT_LESS_OR_EQUAL(before, cend());
 
 	const size_t sz    = lak::distance(b, e);
 	const size_t index = before - data();
@@ -617,8 +617,8 @@ template<typename T>
 lak::span<T> lak::array<T, lak::dynamic_extent>::insert(const_iterator before,
                                                         array &&other)
 {
-	ASSERT_GREATER_OR_EQUAL(before, cbegin());
-	ASSERT_LESS_OR_EQUAL(before, cend());
+	BOUNDS_ASSERT_GREATER_OR_EQUAL(before, cbegin());
+	BOUNDS_ASSERT_LESS_OR_EQUAL(before, cend());
 
 	const size_t sz    = other.size();
 	const size_t index = before - data();
@@ -635,22 +635,22 @@ typename lak::array<T, lak::dynamic_extent>::iterator
 lak::array<T, lak::dynamic_extent>::erase(const_iterator first,
                                           const_iterator last)
 {
-	ASSERT_GREATER_OR_EQUAL(first, cbegin());
-	ASSERT_LESS_OR_EQUAL(first, cend());
-	ASSERT_GREATER_OR_EQUAL(last, cbegin());
-	ASSERT_LESS_OR_EQUAL(last, cend());
+	BOUNDS_ASSERT_GREATER_OR_EQUAL(first, cbegin());
+	BOUNDS_ASSERT_LESS_OR_EQUAL(first, cend());
+	BOUNDS_ASSERT_GREATER_OR_EQUAL(last, cbegin());
+	BOUNDS_ASSERT_LESS_OR_EQUAL(last, cend());
 
 	const size_t index  = first - cbegin();
 	const size_t length = last - first;
 
-	ASSERT_LESS_OR_EQUAL(index + length, size());
+	BOUNDS_ASSERT_LESS_OR_EQUAL(index + length, size());
 
 	if (length == 0) return begin() + index;
 
 	lak::destructive_shift_left(lak::split(lak::span(_data), first).second,
 	                            length);
 
-	if (_data.resize(_data.size() - length)) ASSERT_UNREACHABLE();
+	if (_data.resize(_data.size() - length)) BOUNDS_ASSERT_UNREACHABLE();
 
 	return begin() + index;
 }
@@ -719,14 +719,14 @@ requires lak::array_type_is_copyable<T>
 template<typename T, size_t MAX_SIZE>
 T &lak::stack_array<T, MAX_SIZE>::at(size_t index)
 {
-	ASSERT_LESS(index, _size);
+	BOUNDS_ASSERT_LESS(index, _size);
 	return _data[index];
 }
 
 template<typename T, size_t MAX_SIZE>
 const T &lak::stack_array<T, MAX_SIZE>::at(size_t index) const
 {
-	ASSERT_LESS(index, _size);
+	BOUNDS_ASSERT_LESS(index, _size);
 	return _data[index];
 }
 
@@ -746,28 +746,28 @@ constexpr const T &lak::stack_array<T, MAX_SIZE>::operator[](
 template<typename T, size_t MAX_SIZE>
 constexpr T &lak::stack_array<T, MAX_SIZE>::front()
 {
-	ASSERT(!empty());
+	BOUNDS_ASSERT(!empty());
 	return _data[0U];
 }
 
 template<typename T, size_t MAX_SIZE>
 constexpr const T &lak::stack_array<T, MAX_SIZE>::front() const
 {
-	ASSERT(!empty());
+	BOUNDS_ASSERT(!empty());
 	return _data[0U];
 }
 
 template<typename T, size_t MAX_SIZE>
 constexpr T &lak::stack_array<T, MAX_SIZE>::back()
 {
-	ASSERT(!empty());
+	BOUNDS_ASSERT(!empty());
 	return _data[_size - 1U];
 }
 
 template<typename T, size_t MAX_SIZE>
 constexpr const T &lak::stack_array<T, MAX_SIZE>::back() const
 {
-	ASSERT(!empty());
+	BOUNDS_ASSERT(!empty());
 	return _data[_size - 1U];
 }
 
@@ -775,7 +775,7 @@ template<typename T, size_t MAX_SIZE>
 T &lak::stack_array<T, MAX_SIZE>::push_back(const T &t)
 requires lak::array_type_is_copyable<T>
 {
-	ASSERT_LESS(_size, MAX_SIZE);
+	BOUNDS_ASSERT_LESS(_size, MAX_SIZE);
 #if defined(LAK_COMPILER_CLANG) && defined(LAK_OS_APPLE)
 	if constexpr (!lak::concepts::copy_constructible<T>)
 		ASSERT_UNREACHABLE();
@@ -788,7 +788,7 @@ requires lak::array_type_is_copyable<T>
 template<typename T, size_t MAX_SIZE>
 T &lak::stack_array<T, MAX_SIZE>::push_back(T &&t)
 {
-	ASSERT_LESS(_size, MAX_SIZE);
+	BOUNDS_ASSERT_LESS(_size, MAX_SIZE);
 	_data[_size] = lak::move(t);
 	return _data[_size++];
 }
@@ -796,14 +796,14 @@ T &lak::stack_array<T, MAX_SIZE>::push_back(T &&t)
 template<typename T, size_t MAX_SIZE>
 void lak::stack_array<T, MAX_SIZE>::pop_back()
 {
-	ASSERT(!empty());
+	BOUNDS_ASSERT(!empty());
 	--_size;
 }
 
 template<typename T, size_t MAX_SIZE>
 T lak::stack_array<T, MAX_SIZE>::popped_back()
 {
-	ASSERT(!empty());
+	BOUNDS_ASSERT(!empty());
 	T result = lak::move(back());
 	--_size;
 	return result;

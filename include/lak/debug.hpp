@@ -499,6 +499,34 @@
 		}                                                                         \
 	} while (false)
 
+#undef BOUNDS_ASSERT
+#undef BOUNDS_ASSERT_EQUAL
+#undef BOUNDS_ASSERT_NOT_EQUAL
+#undef BOUNDS_ASSERT_LESS
+#undef BOUNDS_ASSERT_LESS_OR_EQUAL
+#undef BOUNDS_ASSERT_GREATER
+#undef BOUNDS_ASSERT_GREATER_OR_EQUAL
+#undef BOUNDS_ASSERT_UNREACHABLE
+#ifndef ASSERT_NO_BOUNDS_CHECKS
+#	define BOUNDS_ASSERT(X)                     ASSERT(X)
+#	define BOUNDS_ASSERT_EQUAL(X, Y)            ASSERT_EQUAL(X, Y)
+#	define BOUNDS_ASSERT_NOT_EQUAL(X, Y)        ASSERT_NOT_EQUAL(X, Y)
+#	define BOUNDS_ASSERT_LESS(X, Y)             ASSERT_LESS(X, Y)
+#	define BOUNDS_ASSERT_LESS_OR_EQUAL(X, Y)    ASSERT_LESS_OR_EQUAL(X, Y)
+#	define BOUNDS_ASSERT_GREATER(X, Y)          ASSERT_GREATER(X, Y)
+#	define BOUNDS_ASSERT_GREATER_OR_EQUAL(X, Y) ASSERT_GREATER_OR_EQUAL(X, Y)
+#	define BOUNDS_ASSERT_UNREACHABLE()          ASSERT_UNREACHABLE()
+#else
+#	define BOUNDS_ASSERT(X)
+#	define BOUNDS_ASSERT_EQUAL(X, Y)
+#	define BOUNDS_ASSERT_NOT_EQUAL(X, Y)
+#	define BOUNDS_ASSERT_LESS(X, Y)
+#	define BOUNDS_ASSERT_LESS_OR_EQUAL(X, Y)
+#	define BOUNDS_ASSERT_GREATER(X, Y)
+#	define BOUNDS_ASSERT_GREATER_OR_EQUAL(X, Y)
+#	define BOUNDS_ASSERT_UNREACHABLE()
+#endif
+
 #include "lak/debugger.hpp"
 
 #ifdef LAK_DEBUG_FORWARD_ONLY

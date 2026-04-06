@@ -368,7 +368,7 @@ inline auto lak::span<T, lak::dynamic_extent>::stringify() const
 template<typename T, size_t SIZE>
 inline constexpr T &lak::span<T, SIZE>::operator[](size_t index) const noexcept
 {
-	ASSERT_LESS_OR_EQUAL(index, SIZE);
+	BOUNDS_ASSERT_LESS_OR_EQUAL(index, SIZE);
 	return _data[index];
 }
 
@@ -376,7 +376,7 @@ template<typename T, size_t SIZE>
 template<size_t offset, size_t count>
 inline constexpr lak::span<T, count> lak::span<T, SIZE>::subspan() const
 {
-	ASSERT_LESS_OR_EQUAL(offset + count, size());
+	BOUNDS_ASSERT_LESS_OR_EQUAL(offset + count, size());
 	if constexpr (count == lak::dynamic_extent)
 		return lak::span<T, count>{begin() + offset, count};
 	else
@@ -389,12 +389,12 @@ inline constexpr lak::span<T, lak::dynamic_extent> lak::span<T, SIZE>::subspan(
 {
 	if (count == lak::dynamic_extent)
 	{
-		ASSERT_LESS_OR_EQUAL(offset, size());
+		BOUNDS_ASSERT_LESS_OR_EQUAL(offset, size());
 		return lak::span<T>{begin() + offset, size() - offset};
 	}
 	else
 	{
-		ASSERT_LESS_OR_EQUAL(offset + count, size());
+		BOUNDS_ASSERT_LESS_OR_EQUAL(offset + count, size());
 		return lak::span<T>{begin() + offset, count};
 	}
 }
@@ -403,7 +403,7 @@ template<typename T, size_t SIZE>
 inline constexpr lak::span<T, lak::dynamic_extent> lak::span<T, SIZE>::first(
   size_t count) const
 {
-	ASSERT_LESS_OR_EQUAL(count, size());
+	BOUNDS_ASSERT_LESS_OR_EQUAL(count, size());
 	return lak::span<T>{begin(), count};
 }
 
@@ -411,7 +411,7 @@ template<typename T, size_t SIZE>
 inline constexpr lak::span<T, lak::dynamic_extent> lak::span<T, SIZE>::last(
   size_t count) const
 {
-	ASSERT_LESS_OR_EQUAL(count, size());
+	BOUNDS_ASSERT_LESS_OR_EQUAL(count, size());
 	return lak::span<T>{begin() + (size() - count), count};
 }
 
@@ -422,14 +422,14 @@ inline constexpr lak::span<T, lak::dynamic_extent>::span(T *begin,
                                                          T *end) noexcept
 : _data(begin), _size(static_cast<size_t>(end - begin))
 {
-	ASSERT_LESS_OR_EQUAL(begin, end);
+	BOUNDS_ASSERT_LESS_OR_EQUAL(begin, end);
 }
 
 template<typename T>
 inline constexpr T &lak::span<T, lak::dynamic_extent>::operator[](
   size_t index) const noexcept
 {
-	ASSERT_LESS(index, size());
+	BOUNDS_ASSERT_LESS(index, size());
 	return _data[index];
 }
 
@@ -438,7 +438,7 @@ template<size_t offset, size_t count>
 inline constexpr lak::span<T, count>
 lak::span<T, lak::dynamic_extent>::subspan() const
 {
-	ASSERT_LESS_OR_EQUAL(offset + count, size());
+	BOUNDS_ASSERT_LESS_OR_EQUAL(offset + count, size());
 	if constexpr (count == lak::dynamic_extent)
 		return lak::span<T, count>{begin() + offset, count};
 	else
@@ -451,12 +451,12 @@ lak::span<T, lak::dynamic_extent>::subspan(size_t offset, size_t count) const
 {
 	if (count == lak::dynamic_extent)
 	{
-		ASSERT_LESS_OR_EQUAL(offset, size());
+		BOUNDS_ASSERT_LESS_OR_EQUAL(offset, size());
 		return lak::span<T>{begin() + offset, size() - offset};
 	}
 	else
 	{
-		ASSERT_LESS_OR_EQUAL(offset + count, size());
+		BOUNDS_ASSERT_LESS_OR_EQUAL(offset + count, size());
 		return lak::span<T>{begin() + offset, count};
 	}
 }
@@ -466,7 +466,7 @@ template<size_t count>
 inline constexpr lak::span<T, count> lak::span<T, lak::dynamic_extent>::first()
   const
 {
-	ASSERT_LESS_OR_EQUAL(count, size());
+	BOUNDS_ASSERT_LESS_OR_EQUAL(count, size());
 	return lak::span<T, count>::from_ptr(begin());
 }
 
@@ -474,7 +474,7 @@ template<typename T>
 inline constexpr lak::span<T, lak::dynamic_extent>
 lak::span<T, lak::dynamic_extent>::first(size_t count) const
 {
-	ASSERT_LESS_OR_EQUAL(count, size());
+	BOUNDS_ASSERT_LESS_OR_EQUAL(count, size());
 	return lak::span<T>{begin(), count};
 }
 
@@ -483,7 +483,7 @@ template<size_t count>
 inline constexpr lak::span<T, count> lak::span<T, lak::dynamic_extent>::last()
   const
 {
-	ASSERT_LESS_OR_EQUAL(count, size());
+	BOUNDS_ASSERT_LESS_OR_EQUAL(count, size());
 	return lak::span<T, count>::from_ptr(begin() + (size() - count));
 }
 
@@ -491,6 +491,6 @@ template<typename T>
 inline constexpr lak::span<T, lak::dynamic_extent>
 lak::span<T, lak::dynamic_extent>::last(size_t count) const
 {
-	ASSERT_LESS_OR_EQUAL(count, size());
+	BOUNDS_ASSERT_LESS_OR_EQUAL(count, size());
 	return lak::span<T>{begin() + (size() - count), count};
 }

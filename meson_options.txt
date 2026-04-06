@@ -12,6 +12,17 @@ option('lak_enable_examples',
 	yield: true,
 )
 
+option('lak_bounds_checks',
+	type: 'combo',
+	choices: [
+		'always',
+		'never',
+		'debug',
+	],
+	value: 'debug',
+	yield: true,
+)
+
 # windowing options
 
 option('lak_enable_windowing',

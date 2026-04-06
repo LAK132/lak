@@ -124,6 +124,12 @@ else
 	override_options_werror = override_options
 endif
 
+if get_option('lak_bounds_checks') == 'never' or (get_option('lak_bounds_checks') == 'debug' and not get_option('debug'))
+	add_project_arguments(
+		'-DLAK_NO_BOUNDS_CHECKS',
+		language: ['c', 'cpp', 'objcpp'])
+endif
+
 add_project_arguments(
 	'-D_CRT_SECURE_NO_WARNINGS',
 	language: ['c', 'cpp', 'objcpp'])

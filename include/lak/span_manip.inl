@@ -249,8 +249,8 @@ U lak::accumulate(lak::span<T> data, U init, BIN_OP func)
 template<typename T>
 lak::pair<lak::span<T>, lak::span<T>> lak::split(lak::span<T> s, T *at)
 {
-	ASSERT_GREATER_OR_EQUAL(at, s.begin());
-	ASSERT_LESS_OR_EQUAL(at, s.end());
+	BOUNDS_ASSERT_GREATER_OR_EQUAL(at, s.begin());
+	BOUNDS_ASSERT_LESS_OR_EQUAL(at, s.end());
 	const size_t index = at - s.begin();
 	return lak::split(s, index);
 }
@@ -259,8 +259,8 @@ template<typename T>
 requires(!lak::is_const_v<T>)
 lak::pair<lak::span<T>, lak::span<T>> lak::split(lak::span<T> s, const T *at)
 {
-	ASSERT_GREATER_OR_EQUAL(at, s.begin());
-	ASSERT_LESS_OR_EQUAL(at, s.end());
+	BOUNDS_ASSERT_GREATER_OR_EQUAL(at, s.begin());
+	BOUNDS_ASSERT_LESS_OR_EQUAL(at, s.end());
 	const size_t index = at - s.begin();
 	return lak::split(s, index);
 }
@@ -268,7 +268,7 @@ lak::pair<lak::span<T>, lak::span<T>> lak::split(lak::span<T> s, const T *at)
 template<typename T>
 lak::pair<lak::span<T>, lak::span<T>> lak::split(lak::span<T> s, size_t at)
 {
-	ASSERT_LESS_OR_EQUAL(at, s.size());
+	BOUNDS_ASSERT_LESS_OR_EQUAL(at, s.size());
 	return {lak::span(s.begin(), s.begin() + at),
 	        lak::span(s.begin() + at, s.end())};
 }
