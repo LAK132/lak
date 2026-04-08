@@ -7,6 +7,7 @@
 #include "lak/math.hpp"
 #include "lak/ptr_intrin.hpp"
 #include "lak/span.hpp"
+#include "lak/thread.hpp"
 #include "lak/tuple.hpp"
 #include "lak/utility.hpp"
 
@@ -232,10 +233,10 @@ T lak::accumulate(ITER begin, ITER end, T init, OP op)
 template<typename INPUT, typename OUTPUT>
 void lak::threaded(auto thread_func, auto control_func, size_t thread_count)
 {
-	// try and make jthread dependent on the template arguments
+	// try and make thread dependent on the template arguments
 	using thread_type =
-	  lak::nth_type_t<lak::is_same_v<INPUT, std::jthread> ? 1U : 0U,
-	                  std::jthread,
+	  lak::nth_type_t<lak::is_same_v<INPUT, lak::thread> ? 1U : 0U,
+	                  lak::thread,
 	                  INPUT>;
 
 	if constexpr (lak::is_void_v<INPUT> && lak::is_void_v<OUTPUT>)
