@@ -5,6 +5,7 @@
 #include "lak/uninitialised.hpp"
 
 #include <atomic>
+#include <condition_variable>
 #include <mutex>
 #include <thread>
 
@@ -126,7 +127,7 @@ namespace lak
 		template<typename... ARGS>
 		bool try_emplace(ARGS &&...args)
 		{
-			if (stopped()) return lak::nullopt;
+			if (stopped()) return false;
 			std::unique_lock lock{_mutex};
 			for (;; lock.unlock())
 			{

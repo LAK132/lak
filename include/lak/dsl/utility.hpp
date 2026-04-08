@@ -41,8 +41,7 @@ namespace lak
 			                        !std::numeric_limits<UINT>::is_signed);
 			                      return lak::string_to_int<UINT>(num, BASE).map_err(
 			                        [](lak::err::string_to_numeric err)
-			                          -> lak::dsl::err::parse
-			                        { return {.info = err}; });
+			                          -> lak::dsl::err::parse { return err; });
 		                      }>;
 
 		inline constexpr auto bin_digit  = lak::dsl::char_range<U'0', U'1'>;
@@ -78,7 +77,7 @@ namespace lak
 			                               num, lak::numeric_base::dec)
 			                        .map_err([](lak::err::string_to_numeric err)
 			                                   -> lak::dsl::err::parse
-			                                 { return {.info = err}; });
+			                                 { return err; });
 		                      }>;
 
 		inline constexpr auto hex_digit = lak::dsl::char_range<U'0', U'9'> |
@@ -118,28 +117,25 @@ namespace lak
 		template<typename FLOAT,
 		         lak::dsl::concepts::substring_parser auto frac_separator,
 		         lak::dsl::concepts::substring_parser auto exp_separator>
-		inline constexpr auto parsed_dec_float =
-		  lak::dsl::transform<lak::dsl::dec_float<frac_separator, exp_separator>,
-		                      [](const lak::tuple<lak::u8string_view,
-		                                          lak::u8string_view,
-		                                          lak::u8string_view> &result)
-		                      {
-			                      return result.apply(lak::dec_string_to_double)
-			                        .map_err([&](lak::err::string_to_numeric err)
-			                                   -> lak::dsl::err::parse
-			                                 { return {.info = err}; })
-			                        .and_then(
-			                          [](double v)
-			                            -> lak::result<FLOAT, lak::dsl::err::parse>
-			                          {
-				                          if (v > std::numeric_limits<FLOAT>::max() ||
-				                              v < std::numeric_limits<FLOAT>::lowest())
-					                          return lak::err_t{lak::dsl::err::parse{
-					                            .info = lak::err::value_out_of_range{}}};
-				                          else
-					                          return lak::ok_t{FLOAT(v)};
-			                          });
-		                      }>;
+		inline constexpr auto parsed_dec_float = lak::dsl::transform<
+		  lak::dsl::dec_float<frac_separator, exp_separator>,
+		  [](const lak::tuple<lak::u8string_view,
+		                      lak::u8string_view,
+		                      lak::u8string_view> &result)
+		  {
+			  return result.apply(lak::dec_string_to_double)
+			    .map_err([&](lak::err::string_to_numeric err) -> lak::dsl::err::parse
+			             { return {err}; })
+			    .and_then(
+			      [](double v) -> lak::result<FLOAT, lak::dsl::err::parse>
+			      {
+				      if (v > std::numeric_limits<FLOAT>::max() ||
+				          v < std::numeric_limits<FLOAT>::lowest())
+					      return lak::err_t{lak::err::value_out_of_range{}};
+				      else
+					      return lak::ok_t{FLOAT(v)};
+			      });
+		  }>;
 
 		template<char32_t chr>
 		inline constexpr auto until_char =

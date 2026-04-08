@@ -488,10 +488,7 @@ namespace lak
 		static_assert(lak::is_member_pointer_v<decltype(P)>);
 #		endif
 
-		constexpr inline auto operator()(const T &lhs, const T &rhs) const
-		{
-			return lak::plus<>{}(lhs.*(P), rhs.*(P));
-		}
+		constexpr inline auto operator()(const T &lhs, const T &rhs) const;
 
 		template<typename U>
 		constexpr inline auto operator()(const T &lhs, const U &rhs) const
@@ -537,10 +534,7 @@ namespace lak
 		static_assert(lak::is_member_pointer_v<decltype(P)>);
 #		endif
 
-		constexpr inline auto operator()(const T &lhs, const T &rhs) const
-		{
-			return lak::minus<>{}(lhs.*(P), rhs.*(P));
-		}
+		constexpr inline auto operator()(const T &lhs, const T &rhs) const;
 
 		template<typename U>
 		constexpr inline auto operator()(const T &lhs, const U &rhs) const
@@ -586,10 +580,7 @@ namespace lak
 		static_assert(lak::is_member_pointer_v<decltype(P)>);
 #		endif
 
-		constexpr inline auto operator()(const T &lhs, const T &rhs) const
-		{
-			return lak::multiplies<>{}(lhs.*(P), rhs.*(P));
-		}
+		constexpr inline auto operator()(const T &lhs, const T &rhs) const;
 
 		template<typename U>
 		constexpr inline auto operator()(const T &lhs, const U &rhs) const
@@ -635,10 +626,7 @@ namespace lak
 		static_assert(lak::is_member_pointer_v<decltype(P)>);
 #		endif
 
-		constexpr inline auto operator()(const T &lhs, const T &rhs) const
-		{
-			return lak::divides<>{}(lhs.*(P), rhs.*(P));
-		}
+		constexpr inline auto operator()(const T &lhs, const T &rhs) const;
 
 		template<typename U>
 		constexpr inline auto operator()(const T &lhs, const U &rhs) const

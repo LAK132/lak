@@ -396,6 +396,19 @@ constexpr inline bool lak::greater_equal<T *>::operator()(const T *lhs,
 	return lak::ptr_compare(lhs, rhs) != lak::strong_ordering::less;
 }
 
+/* --- plus<T, P> --- */
+
+#ifdef LAK_CAN_USE_CONCEPT_AUTO
+template<typename T, lak::concepts::member_pointer auto P>
+#else
+template<typename T, auto P>
+#endif
+constexpr force_inline auto lak::plus<T, P>::operator()(const T &lhs,
+                                                        const T &rhs) const
+{
+	return lak::plus<>{}(lhs.*(P), rhs.*(P));
+}
+
 /* --- plus<void> --- */
 
 template<typename T>
@@ -419,6 +432,19 @@ constexpr inline auto lak::plus<T>::operator()(const T &lhs,
                                                const T &rhs) const
 {
 	return lhs + rhs;
+}
+
+/* --- minus<T, P> --- */
+
+#ifdef LAK_CAN_USE_CONCEPT_AUTO
+template<typename T, lak::concepts::member_pointer auto P>
+#else
+template<typename T, auto P>
+#endif
+constexpr force_inline auto lak::minus<T, P>::operator()(const T &lhs,
+                                                         const T &rhs) const
+{
+	return lak::minus<>{}(lhs.*(P), rhs.*(P));
 }
 
 /* --- minus<void> --- */
@@ -446,6 +472,19 @@ constexpr inline auto lak::minus<T>::operator()(const T &lhs,
 	return lhs - rhs;
 }
 
+/* --- multiplies<T, P> --- */
+
+#ifdef LAK_CAN_USE_CONCEPT_AUTO
+template<typename T, lak::concepts::member_pointer auto P>
+#else
+template<typename T, auto P>
+#endif
+constexpr force_inline auto lak::multiplies<T, P>::operator()(
+  const T &lhs, const T &rhs) const
+{
+	return lak::multiplies<>{}(lhs.*(P), rhs.*(P));
+}
+
 /* --- multiplies<void> --- */
 
 template<typename T>
@@ -470,6 +509,19 @@ constexpr inline auto lak::multiplies<T>::operator()(const T &lhs,
                                                      const T &rhs) const
 {
 	return lhs * rhs;
+}
+
+/* --- divides<T, P> --- */
+
+#ifdef LAK_CAN_USE_CONCEPT_AUTO
+template<typename T, lak::concepts::member_pointer auto P>
+#else
+template<typename T, auto P>
+#endif
+constexpr force_inline auto lak::divides<T, P>::operator()(const T &lhs,
+                                                           const T &rhs) const
+{
+	return lak::divides<>{}(lhs.*(P), rhs.*(P));
 }
 
 /* --- divides<void> --- */

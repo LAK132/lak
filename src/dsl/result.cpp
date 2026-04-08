@@ -1,16 +1,10 @@
 #include "lak/dsl/result.hpp"
 
-lak::dsl::err::multi::multi() = default;
+#include "lak/utility.hpp"
 
-lak::dsl::err::multi::multi(multi &&) = default;
+template struct lak::array<lak::dsl::err::parse, lak::dynamic_extent>;
 
-lak::dsl::err::multi::multi(const multi &) = default;
+template struct lak::dsl::parse_result<lak::u8string_view>;
 
-lak::dsl::err::multi &lak::dsl::err::multi::operator=(multi &&) = default;
-
-lak::dsl::err::multi &lak::dsl::err::multi::operator=(const multi &) = default;
-
-lak::dsl::err::multi::multi(lak::array<lak::dsl::err::parse> &&errs)
-: errors(lak::move(errs))
-{
-}
+template struct lak::result<lak::dsl::parse_result<lak::u8string_view>,
+                            lak::dsl::err::parse>;

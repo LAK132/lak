@@ -115,9 +115,7 @@ namespace lak
 				{
 					RES_TRY((*whitespace_parser).parse(rem).if_ok(move_str));
 
-					if (rem.empty())
-						return lak::err_t{
-						  lak::dsl::err::parse{.info = lak::err::out_of_data{}}};
+					if (rem.empty()) return lak::err_t{lak::err::out_of_data{}};
 
 					if (lparen.parse(rem).if_ok(move_str).is_ok())
 					{

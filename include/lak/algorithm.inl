@@ -10,6 +10,11 @@
 #include "lak/tuple.hpp"
 #include "lak/utility.hpp"
 
+#ifndef LAK_ARRAY_FORWARD_ONLY
+#	define LAK_ARRAY_FORWARD_ONLY
+#endif
+#include "lak/array.hpp"
+
 #include <ranges>
 #include <set>
 #include <thread>
@@ -227,9 +232,15 @@ T lak::accumulate(ITER begin, ITER end, T init, OP op)
 template<typename INPUT, typename OUTPUT>
 void lak::threaded(auto thread_func, auto control_func, size_t thread_count)
 {
+	// try and make jthread dependent on the template arguments
+	using thread_type =
+	  lak::nth_type_t<lak::is_same_v<INPUT, std::jthread> ? 1U : 0U,
+	                  std::jthread,
+	                  INPUT>;
+
 	if constexpr (lak::is_void_v<INPUT> && lak::is_void_v<OUTPUT>)
 	{
-		lak::array<std::jthread> threads;
+		lak::array<thread_type, lak::dynamic_extent> threads;
 		threads.reserve(thread_count);
 
 		for (size_t tid = 0U; tid < thread_count; ++tid)
@@ -239,10 +250,11 @@ void lak::threaded(auto thread_func, auto control_func, size_t thread_count)
 	}
 	else if constexpr (lak::is_void_v<INPUT>)
 	{
-		lak::array<lak::atomic_optional<OUTPUT>> thread_outputs;
+		lak::array<lak::atomic_optional<OUTPUT>, lak::dynamic_extent>
+		  thread_outputs;
 		thread_outputs.resize(thread_count);
 
-		lak::array<std::jthread> threads;
+		lak::array<thread_type, lak::dynamic_extent> threads;
 		threads.reserve(thread_count);
 
 		for (size_t tid = 0U; tid < thread_count; ++tid)
@@ -253,10 +265,10 @@ void lak::threaded(auto thread_func, auto control_func, size_t thread_count)
 	}
 	else if constexpr (lak::is_void_v<OUTPUT>)
 	{
-		lak::array<lak::atomic_optional<INPUT>> thread_inputs;
+		lak::array<lak::atomic_optional<INPUT>, lak::dynamic_extent> thread_inputs;
 		thread_inputs.resize(thread_count);
 
-		lak::array<std::jthread> threads;
+		lak::array<thread_type, lak::dynamic_extent> threads;
 		threads.reserve(thread_count);
 
 		for (size_t tid = 0U; tid < thread_count; ++tid)
@@ -269,12 +281,13 @@ void lak::threaded(auto thread_func, auto control_func, size_t thread_count)
 	}
 	else
 	{
-		lak::array<lak::atomic_optional<INPUT>> thread_inputs;
+		lak::array<lak::atomic_optional<INPUT>, lak::dynamic_extent> thread_inputs;
 		thread_inputs.resize(thread_count);
-		lak::array<lak::atomic_optional<OUTPUT>> thread_outputs;
+		lak::array<lak::atomic_optional<OUTPUT>, lak::dynamic_extent>
+		  thread_outputs;
 		thread_outputs.resize(thread_count);
 
-		lak::array<std::jthread> threads;
+		lak::array<thread_type, lak::dynamic_extent> threads;
 		threads.reserve(thread_count);
 
 		for (size_t tid = 0U; tid < thread_count; ++tid)

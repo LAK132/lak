@@ -60,17 +60,36 @@ namespace lak
 			};
 
 			struct parse;
+		}
+	}
 
+	template<>
+	struct is_move_constructible<lak::dsl::err::parse> : lak::true_type
+	{
+	};
+	template<>
+	struct is_copy_constructible<lak::dsl::err::parse> : lak::true_type
+	{
+	};
+	extern template struct array<lak::dsl::err::parse, lak::dynamic_extent>;
+
+	namespace dsl
+	{
+		namespace err
+		{
 			struct multi
 			{
 				lak::array<lak::dsl::err::parse> errors;
 
-				multi();
-				multi(const multi &);
-				multi(multi &&);
-				multi &operator=(multi &&);
-				multi &operator=(const multi &);
-				multi(lak::array<lak::dsl::err::parse> &&errs);
+				multi()                         = default;
+				multi(const multi &)            = default;
+				multi(multi &&)                 = default;
+				multi &operator=(multi &&)      = default;
+				multi &operator=(const multi &) = default;
+				multi(lak::array<lak::dsl::err::parse> &&errs)
+				: errors(lak::move(errs))
+				{
+				}
 
 				inline lak::u8string to_string() const;
 			};
@@ -93,7 +112,8 @@ namespace lak
 
 			struct parse
 			{
-				lak::variant<lak::u8string,
+				lak::variant<lak::monostate,
+				             lak::u8string,
 				             lak::err::out_of_data,
 				             lak::err::invalid_character_length,
 				             lak::err::string_to_numeric,
@@ -105,6 +125,17 @@ namespace lak
 				             lak::dsl::err::unexpected_str,
 				             lak::dsl::err::multi>
 				  info;
+
+				parse()                         = default;
+				parse(parse &&)                 = default;
+				parse(const parse &)            = default;
+				parse &operator=(parse &&)      = default;
+				parse &operator=(const parse &) = default;
+				template<typename T>
+				requires(decltype(info)::has_type<lak::remove_cvref_t<T>>)
+				parse(T &&t) : info(lak::forward<T>(t))
+				{
+				}
 
 				inline lak::u8string to_string() const
 				{
@@ -169,7 +200,12 @@ namespace lak
 		requires(!lak::is_void_v<T>)
 		using result =
 		  lak::result<lak::dsl::parse_result<T>, lak::dsl::err::parse>;
+
+		extern template struct parse_result<lak::u8string_view>;
 	}
+
+	extern template struct result<lak::dsl::parse_result<lak::u8string_view>,
+	                              lak::dsl::err::parse>;
 
 	template<typename CHAR>
 	struct format_traits<lak::dsl::err::parse, CHAR>

@@ -258,11 +258,9 @@ lak::dsl::result<lak::dsl::json_t::value_type> lak::dsl::json_t::parse(
 		else if (allow_empty && working_tree.back().size == 0U)
 			working_tree.pop_back();
 		else if (working_tree.back().size == 1U)
-			return lak::err_t{
-			  lak::dsl::err::parse{.info = u8"expected kvpair value"_str}};
+			return lak::err_t{u8"expected kvpair value"_str};
 		else
-			return lak::err_t{
-			  lak::dsl::err::parse{.info = u8"invalid kvpair length"_str}};
+			return lak::err_t{u8"invalid kvpair length"_str};
 
 		return lak::ok_t{};
 	};
@@ -275,8 +273,7 @@ lak::dsl::result<lak::dsl::json_t::value_type> lak::dsl::json_t::parse(
 	{
 		RES_TRY((*whitespace).parse(rem).if_ok(move_str));
 
-		if (rem.empty())
-			return lak::err_t{lak::dsl::err::parse{.info = u8"out of data"_str}};
+		if (rem.empty()) return lak::err_t{u8"out of data"_str};
 
 		if (lbrace.parse(rem).if_ok(move_str).is_ok())
 		{
@@ -294,16 +291,13 @@ lak::dsl::result<lak::dsl::json_t::value_type> lak::dsl::json_t::parse(
 		else if (colon.parse(rem).if_ok(move_str).is_ok())
 		{
 			if (working_tree.back().type != working_data::value_type::kvpair)
-				return lak::err_t{
-				  lak::dsl::err::parse{.info = u8"unexpected ':'"_str}};
+				return lak::err_t{u8"unexpected ':'"_str};
 
 			if (working_tree.back().begin + 1U > working_values.size())
-				return lak::err_t{
-				  lak::dsl::err::parse{.info = u8"expected kvpair key, got ':'"_str}};
+				return lak::err_t{u8"expected kvpair key, got ':'"_str};
 
 			if (working_tree.back().size >= 1U)
-				return lak::err_t{lak::dsl::err::parse{
-				  .info = u8"expected kvpair value, got ':'"_str}};
+				return lak::err_t{u8"expected kvpair value, got ':'"_str};
 
 			++working_tree.back().size;
 		}
@@ -313,20 +307,17 @@ lak::dsl::result<lak::dsl::json_t::value_type> lak::dsl::json_t::parse(
 			{
 				if (working_tree.back().begin + working_tree.back().size >=
 				    working_values.size())
-					return lak::err_t{lak::dsl::err::parse{
-					  .info = u8"expected array value, got ','"_str}};
+					return lak::err_t{u8"expected array value, got ','"_str};
 
 				++working_tree.back().size;
 			}
 			else if (working_tree.back().type == working_data::value_type::kvpair)
 			{
 				if (working_tree.back().size == 0U)
-					return lak::err_t{lak::dsl::err::parse{
-					  .info = u8"expected kvpair key, got ','"_str}};
+					return lak::err_t{u8"expected kvpair key, got ','"_str};
 
 				if (working_tree.back().begin + 2U > working_values.size())
-					return lak::err_t{lak::dsl::err::parse{
-					  .info = u8"expected kvpair value, got ','"_str}};
+					return lak::err_t{u8"expected kvpair value, got ','"_str};
 
 				++working_tree.back().size;
 
@@ -339,21 +330,18 @@ lak::dsl::result<lak::dsl::json_t::value_type> lak::dsl::json_t::parse(
 				});
 			}
 			else
-				return lak::err_t{
-				  lak::dsl::err::parse{.info = u8"unexpected ','"_str}};
+				return lak::err_t{u8"unexpected ','"_str};
 		}
 		else if (rbrace.parse(rem).if_ok(move_str).is_ok())
 		{
 			if (working_tree.back().type != working_data::value_type::kvpair ||
 			    working_tree.back().size >= 2U)
-				return lak::err_t{
-				  lak::dsl::err::parse{.info = u8"unexpected '}'"_str}};
+				return lak::err_t{u8"unexpected '}'"_str};
 
 			if (working_tree.back().size == 1U)
 			{
 				if (working_tree.back().begin + 2U != working_values.size())
-					return lak::err_t{lak::dsl::err::parse{
-					  .info = u8"expected kvpair value, got ','"_str}};
+					return lak::err_t{u8"expected kvpair value, got ','"_str};
 				else
 					++working_tree.back().size;
 			}
@@ -361,8 +349,7 @@ lak::dsl::result<lak::dsl::json_t::value_type> lak::dsl::json_t::parse(
 			RES_TRY(pop_kvpair(true));
 
 			if (working_tree.back().type != working_data::value_type::object)
-				return lak::err_t{
-				  lak::dsl::err::parse{.info = u8"unexpected '}'"_str}};
+				return lak::err_t{u8"unexpected '}'"_str};
 
 			size_t begin = pop_values(working_tree.back().size);
 			working_values.push_back({
@@ -386,8 +373,7 @@ lak::dsl::result<lak::dsl::json_t::value_type> lak::dsl::json_t::parse(
 		else if (rbracket.parse(rem).if_ok(move_str).is_ok())
 		{
 			if (working_tree.back().type != working_data::value_type::array)
-				return lak::err_t{
-				  lak::dsl::err::parse{.info = u8"unexpected ']'"_str}};
+				return lak::err_t{u8"unexpected ']'"_str};
 
 			if (working_tree.back().begin + working_tree.back().size + 1U ==
 			    working_values.size())
@@ -429,15 +415,13 @@ lak::dsl::result<lak::dsl::json_t::value_type> lak::dsl::json_t::parse(
 			result.strings.push_back(str.value);
 		}
 		else
-			return lak::err_t{lak::dsl::err::parse{.info = u8"unexpected data"_str}};
+			return lak::err_t{u8"unexpected data"_str};
 	} while (!working_tree.empty());
 
 	if (working_values.size() == 0U)
-		return lak::err_t{
-		  lak::dsl::err::parse{.info = u8"missing root value"_str}};
+		return lak::err_t{u8"missing root value"_str};
 	else if (working_values.size() > 1U)
-		return lak::err_t{
-		  lak::dsl::err::parse{.info = u8"unused working values"_str}};
+		return lak::err_t{u8"unused working values"_str};
 
 	result.values.front() = working_values.back();
 

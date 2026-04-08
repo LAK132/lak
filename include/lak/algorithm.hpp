@@ -13,6 +13,7 @@
 
 #include <concepts>
 #include <iterator>
+#include <thread>
 
 namespace lak
 {

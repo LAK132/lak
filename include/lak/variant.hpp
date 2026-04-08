@@ -216,6 +216,9 @@ namespace lak
 		using value_type = lak::nth_type_t<I, T...>;
 
 		template<typename U>
+		static constexpr bool has_type = lak::concepts::one_of<U, T...>;
+
+		template<typename U>
 		static constexpr size_t index_of = lak::index_of_element_v<U, T...>;
 
 		template<typename... U>
@@ -414,6 +417,9 @@ namespace lak
 
 		template<size_t I>
 		using value_type = lak::nth_type_t<I, variant<T...>, U...>;
+
+		template<typename V>
+		static constexpr bool has_type = lak::concepts::one_of<V, T..., U...>;
 
 		template<typename V>
 		static constexpr size_t index_of =

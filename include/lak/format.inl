@@ -2,6 +2,7 @@
 #include "lak/numeric.hpp"
 #include "lak/stdint.hpp"
 #include "lak/strconv.hpp"
+#include "lak/utility.hpp"
 
 #include "lak/string_literals/view.hpp"
 
@@ -22,6 +23,12 @@ struct lak::format_traits<T, CHAR>
 	{
 		return lak::strconv<CHAR>(value.to_string());
 	}
+};
+
+template<typename CHAR>
+struct lak::format_traits<lak::monostate, CHAR>
+{
+	static lak::string<CHAR> to_string(const lak::monostate &) { return {}; }
 };
 
 template<typename T, typename CHAR>
