@@ -401,7 +401,8 @@ ITER_OUT lak::transform(ITER_IN begin,
                         auto trans_func,
                         ITER_INS... begins)
 {
-	return lak::transform(lak::execution::seq, begin, end, trans_func);
+	return lak::transform(
+	  lak::execution::seq, begin, end, out, trans_func, begins...);
 }
 
 template<lak::execution::concepts::policy POLICY,
