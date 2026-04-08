@@ -100,6 +100,255 @@ END_TEST()
 // }
 // END_TEST()
 
+BEGIN_TEST(accumulate)
+{
+	lak::array<int> i = {0, 1, 2, 3};
+	int j             = lak::accumulate(i.begin(), i.end(), 10);
+	ASSERT_EQUAL(j, 16);
+	return EXIT_SUCCESS;
+}
+END_TEST()
+
+BEGIN_TEST(for_each)
+{
+	lak::array<int> i = {0, 1, 2, 3};
+	{
+		int j = 0;
+		lak::for_each(
+		  lak::execution::seq, i.begin(), i.end(), [&](int k) { j += k; });
+		ASSERT_EQUAL(j, 6);
+	}
+	{
+		int j = 0;
+		lak::for_each(
+		  lak::execution::unseq, i.begin(), i.end(), [&](int k) { j += k; });
+		ASSERT_EQUAL(j, 6);
+	}
+	{
+		std::atomic<int> j = 0;
+		lak::for_each(
+		  lak::execution::par, i.begin(), i.end(), [&](int k) { j += k; });
+		ASSERT_EQUAL(j.load(), 6);
+	}
+	{
+		std::atomic<int> j = 0;
+		lak::for_each(
+		  lak::execution::par_unseq, i.begin(), i.end(), [&](int k) { j += k; });
+		ASSERT_EQUAL(j.load(), 6);
+	}
+	i.resize(std::thread::hardware_concurrency() * 2U);
+	{
+		int j = 0;
+		lak::for_each(
+		  lak::execution::seq, i.begin(), i.end(), [&](int k) { j += k; });
+		ASSERT_EQUAL(j, lak::accumulate(i.begin(), i.end(), 0));
+	}
+	{
+		int j = 0;
+		lak::for_each(
+		  lak::execution::unseq, i.begin(), i.end(), [&](int k) { j += k; });
+		ASSERT_EQUAL(j, lak::accumulate(i.begin(), i.end(), 0));
+	}
+	{
+		std::atomic<int> j = 0;
+		lak::for_each(
+		  lak::execution::par, i.begin(), i.end(), [&](int k) { j += k; });
+		ASSERT_EQUAL(j.load(), lak::accumulate(i.begin(), i.end(), 0));
+	}
+	{
+		std::atomic<int> j = 0;
+		lak::for_each(
+		  lak::execution::par_unseq, i.begin(), i.end(), [&](int k) { j += k; });
+		ASSERT_EQUAL(j.load(), lak::accumulate(i.begin(), i.end(), 0));
+	}
+	return EXIT_SUCCESS;
+}
+END_TEST()
+
+BEGIN_TEST(transform)
+{
+	lak::array<int> i = {0, 1, 2, 3};
+	{
+		lak::array<int> j;
+		j.resize(i.size());
+		ASSERT(lak::transform(lak::execution::seq,
+		                      i.begin(),
+		                      i.end(),
+		                      j.begin(),
+		                      [](int k) -> int { return k * 2; }) == j.end());
+		for (size_t k = 0U; k < i.size(); ++k) ASSERT_EQUAL(i[k] * 2, j[k]);
+	}
+	{
+		lak::array<int> j;
+		j.resize(i.size());
+		ASSERT(lak::transform(lak::execution::unseq,
+		                      i.begin(),
+		                      i.end(),
+		                      j.begin(),
+		                      [](int k) -> int { return k * 2; }) == j.end());
+		ASSERT_EQUAL(lak::accumulate(i.begin(), i.end(), 0) * 2,
+		             lak::accumulate(j.begin(), j.end(), 0));
+	}
+	{
+		lak::array<int> j;
+		j.resize(i.size());
+		ASSERT(lak::transform(lak::execution::par,
+		                      i.begin(),
+		                      i.end(),
+		                      j.begin(),
+		                      [](int k) -> int { return k * 2; }) == j.end());
+		for (size_t k = 0U; k < i.size(); ++k) ASSERT_EQUAL(i[k] * 2, j[k]);
+	}
+	{
+		lak::array<int> j;
+		j.resize(i.size());
+		ASSERT(lak::transform(lak::execution::par_unseq,
+		                      i.begin(),
+		                      i.end(),
+		                      j.begin(),
+		                      [](int k) -> int { return k * 2; }) == j.end());
+		ASSERT_EQUAL(lak::accumulate(i.begin(), i.end(), 0) * 2,
+		             lak::accumulate(j.begin(), j.end(), 0));
+	}
+	i.resize(std::thread::hardware_concurrency() * 2U);
+	{
+		lak::array<int> j;
+		j.resize(i.size());
+		ASSERT(lak::transform(lak::execution::seq,
+		                      i.begin(),
+		                      i.end(),
+		                      j.begin(),
+		                      [](int k) -> int { return k * 2; }) == j.end());
+		for (size_t k = 0U; k < i.size(); ++k) ASSERT_EQUAL(i[k] * 2, j[k]);
+	}
+	{
+		lak::array<int> j;
+		j.resize(i.size());
+		ASSERT(lak::transform(lak::execution::unseq,
+		                      i.begin(),
+		                      i.end(),
+		                      j.begin(),
+		                      [](int k) -> int { return k * 2; }) == j.end());
+		ASSERT_EQUAL(lak::accumulate(i.begin(), i.end(), 0) * 2,
+		             lak::accumulate(j.begin(), j.end(), 0));
+	}
+	{
+		lak::array<int> j;
+		j.resize(i.size());
+		ASSERT(lak::transform(lak::execution::par,
+		                      i.begin(),
+		                      i.end(),
+		                      j.begin(),
+		                      [](int k) -> int { return k * 2; }) == j.end());
+		for (size_t k = 0U; k < i.size(); ++k) ASSERT_EQUAL(i[k] * 2, j[k]);
+	}
+	{
+		lak::array<int> j;
+		j.resize(i.size());
+		ASSERT(lak::transform(lak::execution::par_unseq,
+		                      i.begin(),
+		                      i.end(),
+		                      j.begin(),
+		                      [](int k) -> int { return k * 2; }) == j.end());
+		ASSERT_EQUAL(lak::accumulate(i.begin(), i.end(), 0) * 2,
+		             lak::accumulate(j.begin(), j.end(), 0));
+	}
+
+	return EXIT_SUCCESS;
+}
+END_TEST()
+
+BEGIN_TEST(transform_reduce)
+{
+	lak::array<int> i = {0, 1, 2, 3};
+	{
+		int j = lak::transform_reduce(
+		  lak::execution::seq,
+		  i.begin(),
+		  i.end(),
+		  10,
+		  [](int a, int b) -> int { return a + b; },
+		  [](int k) -> int { return k * 2; });
+		ASSERT_EQUAL(j, 22);
+	}
+	{
+		int j = lak::transform_reduce(
+		  lak::execution::unseq,
+		  i.begin(),
+		  i.end(),
+		  10,
+		  [](int a, int b) -> int { return a + b; },
+		  [](int k) -> int { return k * 2; });
+		ASSERT_EQUAL(j, 22);
+	}
+	{
+		int j = lak::transform_reduce(
+		  lak::execution::par,
+		  i.begin(),
+		  i.end(),
+		  10,
+		  [](int a, int b) -> int { return a + b; },
+		  [](int k) -> int { return k * 2; });
+		ASSERT_EQUAL(j, 22);
+	}
+	{
+		int j = lak::transform_reduce(
+		  lak::execution::par_unseq,
+		  i.begin(),
+		  i.end(),
+		  10,
+		  [](int a, int b) -> int { return a + b; },
+		  [](int k) -> int { return k * 2; });
+		ASSERT_EQUAL(j, 22);
+	}
+
+	i.resize((std::thread::hardware_concurrency() * 2U) + 3U);
+	for (size_t k = 0U; k < i.size(); ++k) i[k] = int(k);
+	int expected = 10 + (lak::accumulate(i.begin(), i.end(), 0) * 2);
+	{
+		int j = lak::transform_reduce(
+		  lak::execution::seq,
+		  i.begin(),
+		  i.end(),
+		  10,
+		  [](int a, int b) -> int { return a + b; },
+		  [](int k) -> int { return k * 2; });
+		ASSERT_EQUAL(j, expected);
+	}
+	{
+		int j = lak::transform_reduce(
+		  lak::execution::unseq,
+		  i.begin(),
+		  i.end(),
+		  10,
+		  [](int a, int b) -> int { return a + b; },
+		  [](int k) -> int { return k * 2; });
+		ASSERT_EQUAL(j, expected);
+	}
+	{
+		int j = lak::transform_reduce(
+		  lak::execution::par,
+		  i.begin(),
+		  i.end(),
+		  10,
+		  [](int a, int b) -> int { return a + b; },
+		  [](int k) -> int { return k * 2; });
+		ASSERT_EQUAL(j, expected);
+	}
+	{
+		int j = lak::transform_reduce(
+		  lak::execution::par_unseq,
+		  i.begin(),
+		  i.end(),
+		  10,
+		  [](int a, int b) -> int { return a + b; },
+		  [](int k) -> int { return k * 2; });
+		ASSERT_EQUAL(j, expected);
+	}
+	return EXIT_SUCCESS;
+}
+END_TEST()
+
 // BEGIN_TEST(count)
 // {
 // 	return EXIT_SUCCESS;

@@ -44,6 +44,8 @@ namespace lak
 		value_type &value() { return _value; }
 
 		const value_type &value() const { return _value; }
+
+		value_type release() { return lak::destructive_move(&_value); }
 	};
 
 	static_assert(lak::is_default_constructible_v<lak::uninitialised<int>>);

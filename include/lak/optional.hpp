@@ -317,6 +317,27 @@ namespace lak
 	{
 		return {t};
 	}
+
+	void while_some(auto cond, auto func)
+	{
+		while (
+		  cond()
+		    .map(
+		      [&](typename lak::remove_cvref_t<decltype(cond())>::value_type &&t)
+		      {
+			      func(lak::move(t));
+			      return lak::monostate{};
+		      })
+		    .has_value());
+	}
+
+// if_let_some (auto ok, optional) { ok; }
+// else { }
+#define if_let_some(VALUE, ...)                                               \
+	if (auto &&UNIQUIFY(OPTIONAL_){lak::ref_or_move((__VA_ARGS__))};            \
+	    UNIQUIFY(OPTIONAL_).has_value())                                        \
+		do_with (VALUE{lak::forward<decltype(*UNIQUIFY(OPTIONAL_))>(              \
+		           *UNIQUIFY(OPTIONAL_))})
 }
 
 #endif

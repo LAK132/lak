@@ -117,7 +117,7 @@ namespace lak
 
 					if (rem.empty())
 						return lak::err_t{
-						  lak::dsl::err::parse{.message = u8"out of data"}};
+						  lak::dsl::err::parse{.info = lak::err::out_of_data{}}};
 
 					if (lparen.parse(rem).if_ok(move_str).is_ok())
 					{

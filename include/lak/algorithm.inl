@@ -1,5 +1,6 @@
 #include "lak/algorithm.hpp"
 
+#include "lak/atomic_optional.hpp"
 #include "lak/concepts.hpp"
 #include "lak/functional.hpp"
 #include "lak/integer_range.hpp"
@@ -9,7 +10,9 @@
 #include "lak/tuple.hpp"
 #include "lak/utility.hpp"
 
+#include <ranges>
 #include <set>
+#include <thread>
 #include <vector>
 
 /* --- move --- */
@@ -208,6 +211,478 @@ ITER lak::stable_pivot_swap(ITER begin, ITER pivot, ITER end)
 		else
 			return pivot;
 	}
+}
+
+/* --- accumulate --- */
+
+template<std::input_iterator ITER, typename T, typename OP>
+T lak::accumulate(ITER begin, ITER end, T init, OP op)
+{
+	for (; begin != end; ++begin) init = op(lak::move(init), *begin);
+	return init;
+}
+
+/* --- threaded --- */
+
+template<typename INPUT, typename OUTPUT>
+void lak::threaded(auto thread_func, auto control_func, size_t thread_count)
+{
+	if constexpr (lak::is_void_v<INPUT> && lak::is_void_v<OUTPUT>)
+	{
+		lak::array<std::jthread> threads;
+		threads.reserve(thread_count);
+
+		for (size_t tid = 0U; tid < thread_count; ++tid)
+			threads.emplace_back([&thread_func, id = tid] { thread_func(id); });
+
+		control_func();
+	}
+	else if constexpr (lak::is_void_v<INPUT>)
+	{
+		lak::array<lak::atomic_optional<OUTPUT>> thread_outputs;
+		thread_outputs.resize(thread_count);
+
+		lak::array<std::jthread> threads;
+		threads.reserve(thread_count);
+
+		for (size_t tid = 0U; tid < thread_count; ++tid)
+			threads.emplace_back([&thread_func, &thread_outputs, id = tid]
+			                     { thread_func(id, lak::span(thread_outputs)); });
+
+		control_func(lak::span(thread_outputs));
+	}
+	else if constexpr (lak::is_void_v<OUTPUT>)
+	{
+		lak::array<lak::atomic_optional<INPUT>> thread_inputs;
+		thread_inputs.resize(thread_count);
+
+		lak::array<std::jthread> threads;
+		threads.reserve(thread_count);
+
+		for (size_t tid = 0U; tid < thread_count; ++tid)
+			threads.emplace_back([&thread_func, &thread_inputs, id = tid]
+			                     { thread_func(id, lak::span(thread_inputs)); });
+
+		control_func(lak::span(thread_inputs));
+
+		for (auto &in : thread_inputs) in.stop();
+	}
+	else
+	{
+		lak::array<lak::atomic_optional<INPUT>> thread_inputs;
+		thread_inputs.resize(thread_count);
+		lak::array<lak::atomic_optional<OUTPUT>> thread_outputs;
+		thread_outputs.resize(thread_count);
+
+		lak::array<std::jthread> threads;
+		threads.reserve(thread_count);
+
+		for (size_t tid = 0U; tid < thread_count; ++tid)
+			threads.emplace_back(
+			  [&thread_func, &thread_inputs, &thread_outputs, id = tid]
+			  {
+				  thread_func(id, lak::span(thread_inputs), lak::span(thread_outputs));
+			  });
+
+		control_func(lak::span(thread_inputs), lak::span(thread_outputs));
+
+		for (auto &in : thread_inputs) in.stop();
+	}
+}
+
+/* --- for_each --- */
+
+template<std::input_iterator ITER, typename END, std::input_iterator... ITERS>
+void lak::for_each(ITER begin, END end, auto func, ITERS... begins)
+{
+	lak::for_each(lak::execution::seq, begin, end, func, begins...);
+}
+
+template<lak::execution::concepts::policy POLICY,
+         std::input_iterator ITER,
+         typename END,
+         std::input_iterator... ITERS>
+void lak::for_each(
+  const POLICY &, ITER begin, END end, auto func, ITERS... begins)
+{
+	if (begin == end) return;
+
+	if constexpr (lak::execution::concepts::parallel<POLICY>)
+	{
+		const size_t thread_count = [&]() -> size_t
+		{
+			if constexpr (std::random_access_iterator<ITER>)
+				return std::max<size_t>(
+				  0U,
+				  std::min<size_t>(size_t(lak::distance(begin, end)),
+				                   std::thread::hardware_concurrency()));
+			else
+				return std::thread::hardware_concurrency();
+		}();
+
+		if constexpr (std::random_access_iterator<ITER> &&
+		              ((std::random_access_iterator<ITERS>) && ...))
+		{
+			const size_t dist = size_t(lak::distance(begin, end));
+
+			std::atomic_size_t work_index = 0U;
+			std::atomic_bool done         = false;
+
+			lak::threaded(
+			  [&, dist](size_t)
+			  {
+				  for (size_t ind = work_index.fetch_add(1U); !done && ind < dist;
+				       ind        = work_index.fetch_add(1U))
+				  {
+					  func(begin[ind], begins[ind]...);
+				  }
+				  done = true;
+			  },
+			  [] {},
+			  thread_count);
+		}
+		else
+		{
+			using input_type =
+			  lak::tuple<std::iter_value_t<ITER>, std::iter_value_t<ITERS>...>;
+
+			lak::threaded<input_type>(
+			  [&](size_t id,
+			      lak::span<lak::atomic_optional<input_type>> thread_inputs)
+			  {
+				  auto &input = thread_inputs[id];
+				  lak::while_some([&] { return input.try_release(); },
+				                  [&](input_type &&in) { lak::move(in).apply(func); });
+			  },
+			  [&](lak::span<lak::atomic_optional<input_type>> thread_inputs)
+			  {
+				  while (begin != end)
+				  {
+					  for (auto &in : thread_inputs)
+					  {
+						  if (in.has_value()) continue;
+						  in.emplace(*begin, *begins...);
+						  ++begin;
+						  ((++begins), ...);
+						  break;
+					  }
+				  }
+			  });
+		}
+	}
+	else
+	{
+		for (size_t i = 0U; begin != end; ++begin, ++i) func(*begin);
+	}
+}
+
+/* --- trasnsform --- */
+
+template<std::input_iterator ITER_IN,
+         typename ITER_OUT,
+         std::input_iterator... ITER_INS>
+ITER_OUT lak::transform(ITER_IN begin,
+                        ITER_IN end,
+                        ITER_OUT out,
+                        auto trans_func,
+                        ITER_INS... begins)
+{
+	return lak::transform(lak::execution::seq, begin, end, trans_func);
+}
+
+template<lak::execution::concepts::policy POLICY,
+         std::input_iterator ITER_IN,
+         typename ITER_OUT,
+         std::input_iterator... ITER_INS>
+ITER_OUT lak::transform(const POLICY &,
+                        ITER_IN begin,
+                        ITER_IN end,
+                        ITER_OUT out,
+                        auto trans_func,
+                        ITER_INS... begins)
+{
+	if (begin == end) return out;
+
+	static_assert(std::output_iterator<ITER_OUT, decltype(trans_func(*begin))>);
+
+	if constexpr (lak::execution::concepts::parallel<POLICY> &&
+	              std::forward_iterator<ITER_OUT>)
+	{
+		if constexpr (std::random_access_iterator<ITER_OUT>)
+		{
+			std::atomic<std::iter_difference_t<ITER_OUT>> out_count = 0U;
+
+			lak::for_each(
+			  POLICY{},
+			  begin,
+			  end,
+			  [&]<typename T, typename... U>(T &&t, size_t i, U &&...u)
+			  {
+				  out[i] = trans_func(lak::forward<T>(t), lak::forward<U>(u)...);
+				  ++out_count;
+			  },
+			  std::views::iota(size_t(0U)).begin(),
+			  begins...);
+
+			lak::advance(out, out_count);
+		}
+		else if constexpr (std::random_access_iterator<ITER_IN> &&
+		                   ((std::random_access_iterator<ITER_INS>) && ...))
+		{
+			const size_t dist = size_t(lak::distance(begin, end));
+
+			const size_t thread_count = std::max<size_t>(
+			  1U, std::min<size_t>(dist, std::thread::hardware_concurrency()));
+
+			using output_type = decltype(trans_func(*begin, *begins...));
+
+			lak::threaded<void, output_type>(
+			  [&](size_t id,
+			      lak::span<lak::atomic_optional<output_type>> thread_outputs)
+			  {
+				  const size_t stride = thread_outputs.size();
+				  auto &output        = thread_outputs[id];
+				  for (size_t i = id; i < dist; i += stride)
+					  output.emplace(trans_func(begin[i], begins[i]...));
+			  },
+			  [&](lak::span<lak::atomic_optional<output_type>> thread_outputs)
+			  {
+				  for (size_t i = 0U; i < dist; ++i)
+				  {
+					  *out = thread_outputs[i % thread_outputs.size()].release();
+					  ++out;
+				  }
+			  },
+			  thread_count);
+		}
+		else
+		{
+			const size_t thread_count = std::thread::hardware_concurrency();
+
+			using input_type =
+			  lak::tuple<std::iter_value_t<ITER_IN>, std::iter_value_t<ITER_INS>...>;
+			using output_type = decltype(trans_func(*begin, *begins...));
+
+			lak::threaded<input_type, output_type>(
+			  [&](size_t id,
+			      lak::span<lak::atomic_optional<input_type>> thread_inputs,
+			      lak::span<lak::atomic_optional<output_type>> thread_outputs)
+			  {
+				  auto &input  = thread_inputs[id];
+				  auto &output = thread_outputs[id];
+				  lak::while_some(
+				    [&] { return input.try_release(); },
+				    [&](input_type &&in)
+				    { output.emplace(lak::move(in).apply(trans_func)); });
+			  },
+			  [&](lak::span<lak::atomic_optional<input_type>> thread_inputs,
+			      lak::span<lak::atomic_optional<output_type>> thread_outputs)
+			  {
+				  // preload inputs
+				  for (size_t i = 0U; i < thread_count;)
+				  {
+					  thread_inputs[i].emplace(*begin, *begins...);
+					  ++begin;
+					  ++i;
+					  if (begin == end)
+					  {
+						  // early termination
+						  for (size_t o = 0U; o < i; ++o)
+						  {
+							  *out = thread_outputs[o].release();
+							  ++out;
+						  }
+						  return;
+					  }
+				  }
+
+				  // run threads
+				  size_t index = 0U;
+				  while (begin != end)
+				  {
+					  *out = thread_outputs[index].release();
+					  ++out;
+					  thread_inputs[index].emplace(*begin, *begins...);
+					  ++begin;
+					  ++index;
+					  index %= thread_count;
+				  }
+
+				  // finish outputs
+				  for (size_t o = 0U; o < thread_count; ++o)
+				  {
+					  *out = thread_outputs[(o + index) % thread_count].release();
+					  ++out;
+				  }
+			  },
+			  thread_count);
+		}
+	}
+	else
+	{
+		for (; begin != end; ++begin, ((++begins), ...), ++out)
+			*out = trans_func(*begin, *begins...);
+	}
+
+	return out;
+}
+
+/* --- transform_reduce --- */
+
+template<typename T,
+         std::input_iterator ITER_IN,
+         std::input_iterator... ITER_INS>
+T lak::transform_reduce(ITER_IN begin,
+                        ITER_IN end,
+                        T init,
+                        auto binary_reduce,
+                        auto trans_func,
+                        ITER_INS... begins)
+{
+	return lak::transform_reduce(lak::execution::seq,
+	                             begin,
+	                             end,
+	                             init,
+	                             binary_reduce,
+	                             trans_func,
+	                             begins...);
+}
+
+template<typename T,
+         lak::execution::concepts::policy POLICY,
+         std::input_iterator ITER_IN,
+         std::input_iterator... ITER_INS>
+T lak::transform_reduce(const POLICY &,
+                        ITER_IN begin,
+                        ITER_IN end,
+                        T init,
+                        auto binary_reduce,
+                        auto trans_func,
+                        ITER_INS... begins)
+{
+	if (begin == end) return init;
+
+	if constexpr (lak::execution::concepts::parallel<POLICY>)
+	{
+		std::mutex write_mutex;
+
+		if constexpr (lak::execution::concepts::unsequenced<POLICY> &&
+		              std::random_access_iterator<ITER_IN> &&
+		              (std::random_access_iterator<ITER_INS> && ...))
+		{
+			const size_t dist = size_t(lak::distance(begin, end));
+			const size_t stride =
+			  std::max<size_t>(1U, dist / std::thread::hardware_concurrency());
+			const size_t thread_count =
+			  (dist / stride) + ((dist % stride) ? 1U : 0U);
+
+			ASSERT_LESS((thread_count - 1U) * stride, dist);
+			ASSERT_GREATER_OR_EQUAL(thread_count * stride, dist);
+
+			lak::threaded<void, T>(
+			  [&](size_t i, lak::span<lak::atomic_optional<T>> thread_outputs)
+			  {
+				  size_t start       = i * stride;
+				  size_t range_start = start + 1U;
+				  size_t stop =
+				    start + std::min<size_t>(size_t(lak::distance(begin + start, end)),
+				                             stride);
+
+				  BOUNDS_ASSERT_GREATER_OR_EQUAL(stop, range_start);
+
+				  thread_outputs[i].emplace(lak::transform_reduce<T>(
+				    lak::execution::unseq,
+				    lak::next(begin, range_start),
+				    lak::next(begin, stop),
+				    trans_func(*lak::next(begin, start), *lak::next(begins, start)...),
+				    binary_reduce,
+				    trans_func,
+				    lak::next(begins, range_start)...));
+			  },
+			  [&](lak::span<lak::atomic_optional<T>> thread_outputs)
+			  {
+				  init =
+				    lak::transform_reduce<T>(lak::execution::unseq,
+				                             thread_outputs.begin(),
+				                             thread_outputs.end(),
+				                             lak::move(init),
+				                             binary_reduce,
+				                             [](lak::atomic_optional<T> &result) -> T
+				                             { return result.release(); });
+			  },
+			  thread_count);
+		}
+		else
+		{
+			const size_t thread_count = std::thread::hardware_concurrency();
+
+			using input_type =
+			  lak::tuple<std::iter_value_t<ITER_IN>, std::iter_value_t<ITER_INS>...>;
+			using output_type = decltype(trans_func(*begin, *begins...));
+
+			lak::threaded<input_type, output_type>(
+			  [&](size_t id,
+			      lak::span<lak::atomic_optional<input_type>> thread_inputs,
+			      lak::span<lak::atomic_optional<output_type>> thread_outputs)
+			  {
+				  auto &input  = thread_inputs[id];
+				  auto &output = thread_outputs[id];
+				  lak::while_some(
+				    [&] { return input.try_release(); },
+				    [&](input_type &&in)
+				    { output.emplace(lak::move(in).apply(trans_func)); });
+			  },
+			  [&](lak::span<lak::atomic_optional<input_type>> thread_inputs,
+			      lak::span<lak::atomic_optional<output_type>> thread_outputs)
+			  {
+				  // preload inputs
+				  for (size_t i = 0U; i < thread_count;)
+				  {
+					  thread_inputs[i].emplace(*begin, *begins...);
+					  ++begin;
+					  ++i;
+					  if (begin == end)
+					  {
+						  // early termination
+						  for (size_t o = 0U; o < i; ++o)
+						  {
+							  init =
+							    binary_reduce(lak::move(init), thread_outputs[o].release());
+						  }
+						  return;
+					  }
+				  }
+
+				  // run threads
+				  size_t index = 0U;
+				  while (begin != end)
+				  {
+					  init =
+					    binary_reduce(lak::move(init), thread_outputs[index].release());
+					  thread_inputs[index].emplace(*begin, *begins...);
+					  ++begin;
+					  ++index;
+					  index %= thread_count;
+				  }
+
+				  // finish outputs
+				  for (size_t o = 0U; o < thread_count; ++o)
+				  {
+					  init = binary_reduce(
+					    lak::move(init),
+					    thread_outputs[(o + index) % thread_count].release());
+				  }
+			  },
+			  thread_count);
+		}
+	}
+	else
+	{
+		for (; begin != end; ++begin, ((++begins), ...))
+			init = binary_reduce(lak::move(init), trans_func(*begin, *begins...));
+	}
+
+	return init;
 }
 
 /* --- count --- */

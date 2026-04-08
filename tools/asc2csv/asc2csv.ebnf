@@ -1,0 +1,6 @@
+ws = {?lak::dsl::one_of_chars<U' ',U'\t'>?};
+digit = ?lak::dsl::dec_digit?;
+number = ws,<["-"],digit,{digit},".",digit,{digit}>;
+vector = 3*number;
+point = 2*vector;
+line = <point>,ws,["\r"],?lak::dsl::eol?;

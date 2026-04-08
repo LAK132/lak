@@ -237,9 +237,10 @@ dll_depends = []
 dlls = []
 
 subdir('src')
+
 dependencies += lakcore_dep
 
-subdir('tools')
+subdir('tools'/'ebnf2cpp')
 
 subdir('src'/'file')
 dependencies += lakfile_dep
@@ -428,6 +429,8 @@ lak_dep = declare_dependency(
 	link_args: system_libraries,
 	sources: lakdlls_h,
 )
+
+subdir('tools')
 
 if get_option('lak_enable_examples')
 	subdir('examples')

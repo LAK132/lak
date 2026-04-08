@@ -101,24 +101,24 @@ namespace lak
 					}
 					if (!jump)
 						return lak::err_t{
-						  lak::dsl::err::parse{.message = u8"label not found"}};
+						  lak::dsl::err::parse{.info = u8"label not found"_str}};
 
 					if (inst.offset == UINT16_MAX)
 						if (*jump > INT16_MAX || *jump < INT16_MIN)
 							return lak::err_t{
-							  lak::dsl::err::parse{.message = u8"jump out of range"}};
+							  lak::dsl::err::parse{.info = u8"jump out of range"_str}};
 						else
 							inst.offset = static_cast<uint16_t>(static_cast<int16_t>(*jump));
 					else if (inst.immediate == UINT32_MAX)
 						if (*jump > INT32_MAX || *jump < INT32_MIN)
 							return lak::err_t{
-							  lak::dsl::err::parse{.message = u8"jump out of range"}};
+							  lak::dsl::err::parse{.info = u8"jump out of range"_str}};
 						else
 							inst.immediate =
 							  static_cast<uint32_t>(static_cast<int32_t>(*jump));
 					else
 						return lak::err_t{
-						  lak::dsl::err::parse{.message = u8"bad jump patch"}};
+						  lak::dsl::err::parse{.info = u8"bad jump patch"_str}};
 
 					result[index] = inst;
 				}

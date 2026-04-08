@@ -291,12 +291,13 @@ BEGIN_TEST(dsl)
 		  lak::dsl::match<lak::dsl::bottom, lak::dsl::top>>;
 		static_assert(!lak::dsl::concepts::pure_match_parser<
 		              lak::remove_cvref_t<decltype(match1)>>);
-		ASSERT_NOT_EQUAL(match1.parse(str).UNWRAP_ERR().message, u8"bottom"_view);
+		ASSERT(
+		  !match1.parse(str).UNWRAP_ERR().info.holds<lak::dsl::err::bottom>());
 
 		auto match2 = match1 | lak::dsl::match<lak::dsl::top, lak::dsl::bottom>;
 		static_assert(!lak::dsl::concepts::pure_match_parser<
 		              lak::remove_cvref_t<decltype(match2)>>);
-		ASSERT_EQUAL(match2.parse(str).UNWRAP_ERR().message, u8"bottom"_view);
+		ASSERT(match2.parse(str).UNWRAP_ERR().info.holds<lak::dsl::err::bottom>());
 
 		auto match3 =
 		  lak::dsl::match_sequence<lak::dsl::match<lak::dsl::top, lak::dsl::top>>;

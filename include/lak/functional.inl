@@ -395,3 +395,104 @@ constexpr inline bool lak::greater_equal<T *>::operator()(const T *lhs,
 {
 	return lak::ptr_compare(lhs, rhs) != lak::strong_ordering::less;
 }
+
+/* --- plus<void> --- */
+
+template<typename T>
+constexpr auto lak::plus<void>::operator()(const T &lhs, const T &rhs) const
+{
+	return lak::plus<T>{}(lhs, rhs);
+}
+
+template<class T, class U>
+requires(!lak::is_same_v<T, U>)
+constexpr auto lak::plus<void>::operator()(T &&lhs, U &&rhs) const
+  -> decltype(lak::forward<T>(lhs) + lak::forward<U>(rhs))
+{
+	return lak::forward<T>(lhs) + lak::forward<U>(rhs);
+}
+
+/* --- plus<T> --- */
+
+template<typename T>
+constexpr inline auto lak::plus<T>::operator()(const T &lhs,
+                                               const T &rhs) const
+{
+	return lhs + rhs;
+}
+
+/* --- minus<void> --- */
+
+template<typename T>
+constexpr auto lak::minus<void>::operator()(const T &lhs, const T &rhs) const
+{
+	return lak::minus<T>{}(lhs, rhs);
+}
+
+template<class T, class U>
+requires(!lak::is_same_v<T, U>)
+constexpr auto lak::minus<void>::operator()(T &&lhs, U &&rhs) const
+  -> decltype(lak::forward<T>(lhs) - lak::forward<U>(rhs))
+{
+	return lak::forward<T>(lhs) - lak::forward<U>(rhs);
+}
+
+/* --- minus<T> --- */
+
+template<typename T>
+constexpr inline auto lak::minus<T>::operator()(const T &lhs,
+                                                const T &rhs) const
+{
+	return lhs - rhs;
+}
+
+/* --- multiplies<void> --- */
+
+template<typename T>
+constexpr auto lak::multiplies<void>::operator()(const T &lhs,
+                                                 const T &rhs) const
+{
+	return lak::multiplies<T>{}(lhs, rhs);
+}
+
+template<class T, class U>
+requires(!lak::is_same_v<T, U>)
+constexpr auto lak::multiplies<void>::operator()(T &&lhs, U &&rhs) const
+  -> decltype(lak::forward<T>(lhs) * lak::forward<U>(rhs))
+{
+	return lak::forward<T>(lhs) * lak::forward<U>(rhs);
+}
+
+/* --- multiplies<T> --- */
+
+template<typename T>
+constexpr inline auto lak::multiplies<T>::operator()(const T &lhs,
+                                                     const T &rhs) const
+{
+	return lhs * rhs;
+}
+
+/* --- divides<void> --- */
+
+template<typename T>
+constexpr auto lak::divides<void>::operator()(const T &lhs, const T &rhs) const
+{
+	return lak::divides<T>{}(lhs, rhs);
+}
+
+template<class T, class U>
+requires(!lak::is_same_v<T, U>)
+constexpr auto lak::divides<void>::operator()(T &&lhs, U &&rhs) const
+  -> decltype(lak::forward<T>(lhs) / lak::forward<U>(rhs))
+{
+	return lak::forward<T>(lhs) / lak::forward<U>(rhs);
+}
+
+/* --- divides<T> --- */
+
+template<typename T>
+constexpr inline auto lak::divides<T>::operator()(const T &lhs,
+                                                  const T &rhs) const
+{
+	return lhs / rhs;
+}

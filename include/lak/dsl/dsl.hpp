@@ -26,7 +26,8 @@ namespace lak
 			using value_type                    = lak::u8string_view;
 			lak::dsl::result<value_type> parse(lak::u8string_view) const
 			{
-				return lak::err_t{lak::dsl::err::parse{.message = u8"bottom"}};
+				return lak::err_t{
+				  lak::dsl::err::parse{.info = lak::dsl::err::bottom{}}};
 			}
 		};
 
@@ -41,7 +42,8 @@ namespace lak
 			using value_type                    = T;
 			lak::dsl::result<value_type> parse(lak::u8string_view) const
 			{
-				return lak::err_t{lak::dsl::err::parse{.message = u8"dummy"}};
+				return lak::err_t{
+				  lak::dsl::err::parse{.info = lak::dsl::err::dummy{}}};
 			}
 		};
 
@@ -87,7 +89,7 @@ namespace lak
 					}};
 				else
 					return lak::err_t{
-					  lak::dsl::err::parse{.message = u8"expected end of file"}};
+					  lak::dsl::err::parse{.info = lak::dsl::err::eof{}}};
 			}
 		};
 
@@ -150,7 +152,7 @@ namespace lak
 				    .if_err([&](const lak::dsl::err::parse &err)
 				            { result = lak::err_t{err}; })
 				    .if_ok(
-				      [&]<typename T>(lak::dsl::parse_result<T> &&res)
+				      [&]<typename T>(lak::dsl::parse_result<T> &res)
 				      {
 					      result.unsafe_unwrap().remaining = res.remaining;
 					      result.unsafe_unwrap().value.template get<I>() =
@@ -180,7 +182,7 @@ namespace lak
 				((parsers.parse(result.unsafe_unwrap().remaining)
 				    .if_err([&](const lak::dsl::err::parse &err)
 				            { result = lak::err_t{err}; })
-				    .if_ok([&]<typename T>(lak::dsl::parse_result<T> &&res)
+				    .if_ok([&]<typename T>(lak::dsl::parse_result<T> &res)
 				           { result.unsafe_unwrap().remaining = res.remaining; })
 				    .is_ok()) &&
 				 ...);
@@ -391,10 +393,14 @@ namespace lak
 		struct repeat_t
 		{
 			static constexpr bool is_pure_match = decltype(par)::is_pure_match;
-			using value_type =
-			  lak::conditional_t<is_pure_match,
-			                     lak::u8string_view,
-			                     lak::array<typename decltype(par)::value_type>>;
+			static constexpr bool is_repeat_exact =
+			  min == max && max != lak::dynamic_extent;
+			using value_type = lak::conditional_t<
+			  is_pure_match,
+			  lak::u8string_view,
+			  lak::conditional_t<is_repeat_exact,
+			                     lak::array<typename decltype(par)::value_type, max>,
+			                     lak::array<typename decltype(par)::value_type>>>;
 
 			lak::dsl::result<value_type> parse(lak::u8string_view str) const
 			requires(!is_pure_match)
@@ -406,24 +412,25 @@ namespace lak
 				    .value     = {},
 				  };
 
-				lak::u8string err_msg;
+				lak::dsl::err::parse out_err;
 				size_t count = 0;
 				while (count < max &&
 				       par.parse(result.remaining)
 				         .if_ok(
-				           [&]<typename T>(lak::dsl::parse_result<T> &&res)
+				           [&]<typename T>(lak::dsl::parse_result<T> &res)
 				           {
 					           result.remaining = res.remaining;
-					           result.value.push_back(lak::forward<T>(res.value));
+					           if constexpr (is_repeat_exact)
+						           result.value[count] = lak::forward<T>(res.value);
+					           else
+						           result.value.push_back(lak::forward<T>(res.value));
 				           })
-				         .if_err([&](const lak::dsl::err::parse &err)
-				                 { err_msg = err.message; })
+				         .if_err([&](lak::dsl::err::parse &err)
+				                 { out_err = lak::move(err); })
 				         .is_ok())
 					++count;
 
-				if (count < min)
-					return lak::err_t{
-					  lak::dsl::err::parse{.message = lak::move(err_msg)}};
+				if (count < min) return lak::move_err(out_err);
 
 				result.consumed = str.first(str.size() - result.remaining.size());
 
@@ -440,20 +447,18 @@ namespace lak
 				    .value     = {},
 				  };
 
-				lak::u8string err_msg;
+				lak::dsl::err::parse out_err;
 				size_t count = 0;
 				while (count < max &&
 				       par.parse(result.remaining)
-				         .if_ok([&]<typename T>(lak::dsl::parse_result<T> &&res)
+				         .if_ok([&]<typename T>(lak::dsl::parse_result<T> &res)
 				                { result.remaining = res.remaining; })
-				         .if_err([&](const lak::dsl::err::parse &err)
-				                 { err_msg = err.message; })
+				         .if_err([&](lak::dsl::err::parse &err)
+				                 { out_err = lak::move(err); })
 				         .is_ok())
 					++count;
 
-				if (count < min)
-					return lak::err_t{
-					  lak::dsl::err::parse{.message = lak::move(err_msg)}};
+				if (count < min) return lak::move_err(out_err);
 
 				result.value = result.consumed =
 				  str.first(str.size() - result.remaining.size());
@@ -531,28 +536,64 @@ namespace lak
 		         lak::dsl::concepts::parser auto par>
 		struct match_t
 		{
-			static constexpr bool is_pure_match =
+			static constexpr bool result_is_pure_match =
 			  lak::dsl::concepts::pure_match_parser<
 			    lak::remove_cvref_t<decltype(par)>>;
-			using value_type = typename decltype(par)::value_type;
+			using result_value_type = typename decltype(par)::value_type;
 
-			lak::optional<lak::dsl::result<value_type>> parse(
-			  lak::u8string_view str) const
+			static constexpr bool is_pure_match = false;
+			using value_type = lak::dsl::result<result_value_type>;
+
+			lak::dsl::result<value_type> parse(lak::u8string_view str) const
 			{
-				auto rem = str;
-
-				if (condition.parse(rem)
-				      .if_ok([&](auto res) { rem = res.remaining; })
-				      .is_err())
-					return lak::nullopt;
-
-				return lak::some_t{par.parse(rem)};
+				return condition.parse(str).map(
+				  [&](lak::dsl::parse_result<lak::u8string_view> &&cond_res)
+				    -> lak::dsl::parse_result<value_type>
+				  {
+					  return {
+					    .consumed  = cond_res.consumed,
+					    .remaining = cond_res.remaining,
+					    .value     = par.parse(cond_res.remaining)
+					               .if_ok(
+					                 [&]<typename T>(lak::dsl::parse_result<T> &res)
+					                 {
+						                 if constexpr (result_is_pure_match)
+						                 {
+							                 res.value = res.consumed =
+							                   str.first(str.size() - res.remaining.size());
+						                 }
+						                 else
+						                 {
+							                 BOUNDS_ASSERT(
+							                   lak::ptr_in_range(res.consumed.begin(),
+							                                     cond_res.consumed.begin(),
+							                                     res.consumed.end()));
+							                 res.consumed =
+							                   lak::u8string_view(cond_res.consumed.begin(),
+							                                      res.consumed.end());
+						                 }
+					                 }),
+					  };
+				  });
 			}
 		};
 
 		template<lak::dsl::concepts::pure_match_parser auto condition,
 		         lak::dsl::concepts::parser auto par>
 		inline constexpr lak::dsl::match_t<condition, par> match;
+
+		static_assert(
+		  lak::is_same_v<
+		    lak::dsl::result<int>,
+		    typename lak::dsl::match_t<lak::dsl::top,
+		                               lak::dsl::dummy_impure<int>>::value_type>);
+
+		static_assert(!lak::dsl::concepts::pure_match_parser<
+		              lak::dsl::match_t<lak::dsl::top, lak::dsl::top>>);
+
+		static_assert(
+		  lak::dsl::concepts::parser<
+		    lak::dsl::match_t<lak::dsl::top, lak::dsl::dummy_impure<int>>>);
 
 		/* --- is_match --- */
 
@@ -579,19 +620,19 @@ namespace lak
 		struct match_sequence_t
 		{
 			static constexpr bool is_pure_match =
-			  ((decltype(cases)::is_pure_match) && ...);
+			  ((decltype(cases)::result_is_pure_match) && ...);
 			static constexpr bool _is_same_value_types =
-			  lak::are_all_same_v<typename decltype(cases)::value_type...>;
+			  lak::are_all_same_v<typename decltype(cases)::result_value_type...>;
 			using value_type = lak::conditional_t<
 			  is_pure_match,
 			  lak::u8string_view,
 			  lak::conditional_t<
 			    _is_same_value_types,
-			    lak::nth_type_t<0U, typename decltype(cases)::value_type...>,
+			    lak::nth_type_t<0U, typename decltype(cases)::result_value_type...>,
 			    lak::create_from_pack_t<
 			      lak::variant,
 			      lak::make_unique_pack_t<
-			        typename decltype(cases)::value_type...>>>>;
+			        typename decltype(cases)::result_value_type...>>>>;
 
 			lak::dsl::result<value_type> parse(lak::u8string_view str) const
 			requires(!_is_same_value_types)
@@ -602,11 +643,13 @@ namespace lak
 				// err: condition passed, parser didn't (return err)
 				// ok: condition and parser passed (return ok)
 
-				(((result = cases.parse(str).map(
-				     []<typename T>(
-				       lak::dsl::result<T> &&res) -> lak::dsl::result<value_type>
+				lak::array<lak::dsl::err::parse, sizeof...(cases)> errs;
+				size_t err_index = 0U;
+				(((cases.parse(str).map(
+				     []<typename T>(lak::dsl::parse_result<lak::dsl::result<T>> &&res)
+				       -> lak::dsl::result<value_type>
 				     {
-					     return lak::move(res).map(
+					     return lak::move(res.value).map(
 					       [](lak::dsl::parse_result<T> &&res)
 					         -> lak::dsl::parse_result<value_type>
 					       {
@@ -617,13 +660,21 @@ namespace lak
 						       };
 					       });
 				     }))
-				    .has_value()) ||
+				    .if_err([&](lak::dsl::err::parse &err)
+				            { errs[err_index++] = lak::move(err); })
+				    .if_ok([&](lak::dsl::result<value_type> &res)
+				           { result = lak::move(res); })
+				    .is_ok()) ||
 				 ...);
 
-				if (!result.has_value())
-					return lak::err_t{lak::dsl::err::parse{.message = u8"match failed"}};
-				else
-					return lak::move(*result);
+				if_let_some (auto &res, result) return lak::move(res);
+
+				lak::array<lak::dsl::err::parse> multi;
+				multi.reserve(err_index);
+				for (size_t i = 0U; i < err_index; ++i)
+					multi.push_back(lak::move(errs[i]));
+				return lak::err_t{lak::dsl::err::parse{
+				  .info = lak::dsl::err::multi(lak::move(multi))}};
 			}
 
 			lak::dsl::result<value_type> parse(lak::u8string_view str) const
@@ -635,12 +686,25 @@ namespace lak
 				// err: condition passed, parser didn't (return err)
 				// ok: condition and parser passed (return ok)
 
-				(((result = cases.parse(str)).has_value()) || ...);
+				lak::array<lak::dsl::err::parse, sizeof...(cases)> errs;
+				size_t err_index = 0U;
+				((cases.parse(str)
+				    .if_err([&](lak::dsl::err::parse &err)
+				            { errs[err_index++] = lak::move(err); })
+				    .if_ok(
+				      [&](lak::dsl::parse_result<lak::dsl::result<value_type>> &res)
+				      { result = lak::move(res.value); })
+				    .is_ok()) ||
+				 ...);
 
-				if (!result.has_value())
-					return lak::err_t{lak::dsl::err::parse{.message = u8"match failed"}};
-				else
-					return lak::move(*result);
+				if_let_some (auto &res, result) return lak::move(res);
+
+				lak::array<lak::dsl::err::parse> multi;
+				multi.reserve(err_index);
+				for (size_t i = 0U; i < err_index; ++i)
+					multi.push_back(lak::move(errs[i]));
+				return lak::err_t{lak::dsl::err::parse{
+				  .info = lak::dsl::err::multi(lak::move(multi))}};
 			}
 		};
 
@@ -721,7 +785,8 @@ namespace lak
 				lak::dsl::result<value_type> result =
 				  lak::dsl::result<value_type>::make_err({});
 
-				lak::u8string err_msg;
+				lak::array<lak::dsl::err::parse, sizeof...(parsers)> errs;
+				size_t err_index = 0U;
 				(((result = parsers.parse(str).map(
 				     [&]<typename T>(lak::dsl::parse_result<T> &&res)
 				       -> lak::dsl::parse_result<value_type>
@@ -732,18 +797,20 @@ namespace lak
 					       .value     = value_type(lak::forward<T>(res.value)),
 					     };
 				     }))
-				    .if_err(
-				      [&](const lak::dsl::err::parse &err)
-				      {
-					      if (err_msg.empty())
-						      err_msg = u8"(" + err.message + u8")";
-					      else
-						      err_msg += u8" or (" + err.message + u8")";
-				      })
+				    .if_err([&](lak::dsl::err::parse &err)
+				            { errs[err_index++] = lak::move(err); })
 				    .is_ok()) ||
 				 ...);
 
-				if_let_err (auto &err, result) err.message = lak::move(err_msg);
+				if_let_err (auto &err, result)
+				{
+					lak::array<lak::dsl::err::parse> multi;
+					multi.reserve(err_index);
+					for (size_t i = 0U; i < err_index; ++i)
+						multi.push_back(lak::move(errs[i]));
+					err = lak::dsl::err::parse{.info =
+					                             lak::dsl::err::multi(lak::move(multi))};
+				}
 
 				return result;
 			}
@@ -754,20 +821,23 @@ namespace lak
 				lak::dsl::result<value_type> result =
 				  lak::dsl::result<value_type>::make_err({});
 
-				lak::u8string err_msg;
+				lak::array<lak::dsl::err::parse, sizeof...(parsers)> errs;
+				size_t err_index = 0U;
 				(((result = parsers.parse(str))
-				    .if_err(
-				      [&](const lak::dsl::err::parse &err)
-				      {
-					      if (err_msg.empty())
-						      err_msg = u8"(" + err.message + u8")";
-					      else
-						      err_msg += u8" or (" + err.message + u8")";
-				      })
+				    .if_err([&](lak::dsl::err::parse &err)
+				            { errs[err_index++] = lak::move(err); })
 				    .is_ok()) ||
 				 ...);
 
-				if_let_err (auto &err, result) err.message = lak::move(err_msg);
+				if_let_err (auto &err, result)
+				{
+					lak::array<lak::dsl::err::parse> multi;
+					multi.reserve(err_index);
+					for (size_t i = 0U; i < err_index; ++i)
+						multi.push_back(lak::move(errs[i]));
+					err = lak::dsl::err::parse{.info =
+					                             lak::dsl::err::multi(lak::move(multi))};
+				}
 
 				return result;
 			}
@@ -1652,7 +1722,8 @@ namespace lak
 					}
 				}
 
-				return lak::err_t<lak::dsl::err::parse>{{.message = u8"out of data"}};
+				return lak::err_t<lak::dsl::err::parse>{
+				  {.info = lak::err::out_of_data{}}};
 			}
 		};
 
@@ -1827,9 +1898,9 @@ namespace lak
 					}};
 				else
 					return lak::err_t{lak::dsl::err::parse{
-					  .message = lak::fmt<u8"expected '{}' got '{}'">(
-					    lak::u8string(_comp_str),
-					    str.first(std::min(str.size(), _comp_str.size())))}};
+					  .info = lak::dsl::err::unexpected_str{
+					    .expected = lak::u8string_view(_comp_str),
+					    .got      = str.first(std::min(str.size(), _comp_str.size()))}}};
 			}
 		};
 
@@ -1881,9 +1952,10 @@ namespace lak
 					}};
 				else
 					return lak::err_t{lak::dsl::err::parse{
-					  .message = lak::fmt<u8"expected !'{}' got '{}'">(
-					    lak::u8string(_comp_str),
-					    str.first(std::min(str.size(), _comp_str.size())))}};
+					  .info = lak::dsl::err::unexpected_str{
+					    .expected = lak::u8string_view(_comp_str),
+					    .got      = str.first(std::min(str.size(), _comp_str.size())),
+					    .negative = true}}};
 			}
 		};
 
@@ -1935,16 +2007,18 @@ namespace lak
 			lak::dsl::result<lak::u8string_view> parse(lak::u8string_view str) const
 			{
 				if (str.empty())
-					return lak::err_t{lak::dsl::err::parse{.message = u8"out of data"}};
+					return lak::err_t{
+					  lak::dsl::err::parse{.info = lak::err::out_of_data{}}};
 				const uint8_t clen = lak::character_length(str);
 				if (clen < 1 || clen > 4)
 					return lak::err_t{lak::dsl::err::parse{
-					  .message = u8"invalid unicode character length"}};
+					  .info = lak::err::invalid_character_length{}}};
 				const char32_t c = lak::codepoint(str);
 				if (c != chr)
 				{
 					return lak::err_t{lak::dsl::err::parse{
-					  .message = lak::fmt<u8"expected '{:A}' got '{:A}'">(chr, c)}};
+					  .info = lak::dsl::err::unexpected_char{
+					    .expected_min = chr, .expected_max = chr, .got = c}}};
 				}
 				return lak::ok_t{lak::dsl::parse_result<value_type>{
 				  .consumed  = str.first(clen),
@@ -1994,15 +2068,19 @@ namespace lak
 			lak::dsl::result<lak::u8string_view> parse(lak::u8string_view str) const
 			{
 				if (str.empty())
-					return lak::err_t{lak::dsl::err::parse{.message = u8"out of data"}};
+					return lak::err_t{
+					  lak::dsl::err::parse{.info = lak::err::out_of_data{}}};
 				const uint8_t clen = lak::character_length(str);
 				if (clen < 1 || clen > 4)
 					return lak::err_t{lak::dsl::err::parse{
-					  .message = u8"invalid unicode character length"}};
+					  .info = lak::err::invalid_character_length{}}};
 				const char32_t c = lak::codepoint(str);
 				if (c == chr)
 					return lak::err_t{lak::dsl::err::parse{
-					  .message = lak::fmt<u8"expected !'{:A}' got '{:A}'">(chr, c)}};
+					  .info = lak::dsl::err::unexpected_char{.expected_min = chr,
+					                                         .expected_max = chr,
+					                                         .got          = c,
+					                                         .negative     = true}}};
 				return lak::ok_t{lak::dsl::parse_result<value_type>{
 				  .consumed  = str.first(clen),
 				  .remaining = str.substr(clen),
@@ -2058,17 +2136,17 @@ namespace lak
 			lak::dsl::result<lak::u8string_view> parse(lak::u8string_view str) const
 			{
 				if (str.empty())
-					return lak::err_t{lak::dsl::err::parse{.message = u8"out of data"}};
+					return lak::err_t{
+					  lak::dsl::err::parse{.info = lak::err::out_of_data{}}};
 				const uint8_t clen = lak::character_length(str);
 				if (clen < 1 || clen > 4)
 					return lak::err_t{lak::dsl::err::parse{
-					  .message = u8"invalid unicode character length"}};
+					  .info = lak::err::invalid_character_length{}}};
 				const char32_t c = lak::codepoint(str);
 				if (c < begin || c > end)
 					return lak::err_t{lak::dsl::err::parse{
-					  .message =
-					    lak::fmt<u8"expected '{:A}' <= c <= '{:A}', got c = '{:A}'">(
-					      begin, end, c)}};
+					  .info = lak::dsl::err::unexpected_char{
+					    .expected_min = begin, .expected_max = end, .got = c}}};
 				return lak::ok_t{lak::dsl::parse_result<value_type>{
 				  .consumed  = str.first(clen),
 				  .remaining = str.substr(clen),
@@ -2273,34 +2351,36 @@ namespace lak
 				                                           parsers>)::value_type>...>
 				  values;
 
-				lak::u8string err_msg;
+				lak::array<lak::dsl::err::parse, sizeof...(parsers)> errs;
+				size_t err_index = 0U;
 				while (
 				  ((values.template get<I>().has_value()
 				      ? false
 				      : (lak::dsl::remove_optional<parsers>.parse(result.remaining)
 				           .if_ok(
-				             [&]<typename T>(lak::dsl::parse_result<T> &&res)
+				             [&]<typename T>(lak::dsl::parse_result<T> &res)
 				             {
 					             result.remaining         = res.remaining;
 					             values.template get<I>() = lak::forward<T>(res.value);
 				             })
 				           .if_err(
-				             [&](const lak::dsl::err::parse &err)
-				             {
-					             if (err_msg.empty())
-						             err_msg = err.message;
-					             else
-						             err_msg += u8" or " + err.message;
-				             })
+				             [&](lak::dsl::err::parse &err)
+				             { errs[err_index++] = lak::move(err); })
 				           .is_ok())) ||
 				   ...))
-					err_msg.clear();
+					err_index = 0U;
 
 				if (!((lak::dsl::is_optional_v<decltype(parsers)> ||
 				       values.template get<I>().has_value()) &&
 				      ...))
-					return lak::err_t{
-					  lak::dsl::err::parse{.message = lak::move(err_msg)}};
+				{
+					lak::array<lak::dsl::err::parse> multi;
+					multi.reserve(err_index);
+					for (size_t i = 0U; i < err_index; ++i)
+						multi.push_back(lak::move(errs[i]));
+					return lak::err_t{lak::dsl::err::parse{
+					  .info = lak::dsl::err::multi(lak::move(multi))}};
+				}
 
 				result.consumed = str.first(str.size() - result.remaining.size());
 
@@ -2340,29 +2420,30 @@ namespace lak
 				  .value     = {},
 				};
 
-				lak::u8string err_msg;
+				lak::array<lak::dsl::err::parse, sizeof...(parsers)> errs;
+				size_t err_index = 0U;
 				while (
 				  ((succeeded[I]
 				      ? false
 				      : (succeeded[I] =
 				           parsers.parse(result.remaining)
-				             .if_ok([&]<typename T>(lak::dsl::parse_result<T> &&res)
+				             .if_ok([&]<typename T>(lak::dsl::parse_result<T> &res)
 				                    { result.remaining = res.remaining; })
-				             .if_err(
-				               [&](const lak::dsl::err::parse &err)
-				               {
-					               if (err_msg.empty())
-						               err_msg = err.message;
-					               else
-						               err_msg += u8" or " + err.message;
-				               })
+				             .if_err([&](lak::dsl::err::parse &err)
+				                     { errs[err_index++] = lak::move(err); })
 				             .is_ok())) ||
 				   ...))
-					err_msg.clear();
+					err_index = 0U;
 
 				if (!((succeeded[I]) && ...))
-					return lak::err_t{
-					  lak::dsl::err::parse{.message = lak::move(err_msg)}};
+				{
+					lak::array<lak::dsl::err::parse> multi;
+					multi.reserve(err_index);
+					for (size_t i = 0U; i < err_index; ++i)
+						multi.push_back(lak::move(errs[i]));
+					return lak::err_t{lak::dsl::err::parse{
+					  .info = lak::dsl::err::multi(lak::move(multi))}};
+				}
 
 				result.value = result.consumed =
 				  str.first(str.size() - result.remaining.size());

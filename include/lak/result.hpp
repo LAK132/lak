@@ -153,6 +153,10 @@ namespace lak
 	template<typename OK, typename ERR>
 	auto unwrap_if_insuccible(lak::result<OK, ERR> &&result);
 
+	/* --- while_ok --- */
+
+	auto while_ok(auto cond, auto func);
+
 	/* --- typedefs --- */
 
 	template<typename OK, typename... ERR>
@@ -202,14 +206,6 @@ namespace lak
 			do_with (VALUE{                                                         \
 			           lak::forward<decltype(UNIQUIFY(RESULT_))>(UNIQUIFY(RESULT_)) \
 			             .unsafe_unwrap()})
-
-// if_let_some (auto ok, result) { ok; }
-// else { }
-#	define if_let_some(VALUE, ...)                                             \
-		if (auto &&UNIQUIFY(RESULT_){lak::ref_or_move((__VA_ARGS__))};            \
-		    UNIQUIFY(RESULT_).has_value())                                        \
-			do_with (VALUE{lak::forward<decltype(*UNIQUIFY(RESULT_))>(              \
-			           *UNIQUIFY(RESULT_))})
 
 // if_let_err (auto err, result) { err; }
 // else { }
@@ -1063,7 +1059,7 @@ namespace lak
 		template<typename FUNCTOR>
 		result &&if_ok(FUNCTOR &&functor) &&
 		{
-			if (is_ok()) functor(forward_ok());
+			if (is_ok()) functor(get_ok());
 			return lak::move(*this);
 		}
 
@@ -1086,7 +1082,7 @@ namespace lak
 		template<typename FUNCTOR>
 		result &&if_err(FUNCTOR &&functor) &&
 		{
-			if (is_err()) functor(forward_err());
+			if (is_err()) functor(get_err());
 			return lak::move(*this);
 		}
 
@@ -1449,6 +1445,23 @@ namespace lak
 			return lak::move(result).unsafe_unwrap_err();
 		else
 			return result;
+	}
+
+	/* --- while_ok --- */
+
+	auto while_ok(auto cond, auto func)
+	{
+		for (;;)
+		{
+			auto res = cond().map(
+			  [&]<typename T>(
+			    typename lak::remove_cvref_t<decltype(cond())>::ok_type &&t)
+			  {
+				  func(lak::move(t));
+				  return lak::monostate{};
+			  });
+			if (res.is_err()) return lak::move(res).unsafe_unwrap_err();
+		}
 	}
 
 	/* --- variant get --- */

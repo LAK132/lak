@@ -9,6 +9,8 @@
 #define LAK_SPAN_FORWARD_ONLY
 #include "lak/span.hpp"
 
+#include "lak/execution.hpp"
+
 #include <concepts>
 #include <iterator>
 
@@ -57,6 +59,79 @@ namespace lak
 
 	template<std::forward_iterator ITER>
 	ITER stable_pivot_swap(ITER begin, ITER pivot, ITER end);
+
+	/* --- accumulate --- */
+
+	// init = op(move(init), *iter)
+	template<std::input_iterator ITER, typename T, typename OP = lak::plus<>>
+	T accumulate(ITER begin, ITER end, T init, OP op = {});
+
+	/* --- threaded --- */
+
+	template<typename INPUT = void, typename OUTPUT = void>
+	void threaded(auto thread_func,
+	              auto control_func,
+	              size_t thread_count = std::thread::hardware_concurrency());
+
+	/* --- for_each --- */
+
+	template<std::input_iterator ITER,
+	         typename END,
+	         std::input_iterator... ITERS>
+	void for_each(ITER begin, END end, auto func, ITERS... begins);
+
+	template<lak::execution::concepts::policy POLICY,
+	         std::input_iterator ITER,
+	         typename END,
+	         std::input_iterator... ITERS>
+	void for_each(
+	  const POLICY &, ITER begin, END end, auto func, ITERS... begins);
+
+	/* --- transform --- */
+
+	template<std::input_iterator ITER_IN,
+	         typename ITER_OUT,
+	         std::input_iterator... ITER_INS>
+	ITER_OUT transform(ITER_IN begin,
+	                   ITER_IN end,
+	                   ITER_OUT out,
+	                   auto trans_func,
+	                   ITER_INS... begins);
+
+	template<lak::execution::concepts::policy POLICY,
+	         std::input_iterator ITER_IN,
+	         typename ITER_OUT,
+	         std::input_iterator... ITER_INS>
+	ITER_OUT transform(const POLICY &,
+	                   ITER_IN begin,
+	                   ITER_IN end,
+	                   ITER_OUT out,
+	                   auto trans_func,
+	                   ITER_INS... begins);
+
+	/* --- transform_reduce --- */
+
+	template<typename T,
+	         std::input_iterator ITER_IN,
+	         std::input_iterator... ITER_INS>
+	T transform_reduce(ITER_IN begin,
+	                   ITER_IN end,
+	                   T init,
+	                   auto binary_reduce,
+	                   auto trans_func,
+	                   ITER_INS... begins);
+
+	template<typename T,
+	         lak::execution::concepts::policy POLICY,
+	         std::input_iterator ITER_IN,
+	         std::input_iterator... ITER_INS>
+	T transform_reduce(const POLICY &,
+	                   ITER_IN begin,
+	                   ITER_IN end,
+	                   T init,
+	                   auto binary_reduce,
+	                   auto trans_func,
+	                   ITER_INS... begins);
 
 	/* --- count --- */
 

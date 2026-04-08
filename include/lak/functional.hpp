@@ -73,6 +73,43 @@ namespace lak
 	template<typename T = void, auto... P>
 #	endif
 	struct greater_equal;
+
+	/* --- plus --- */
+
+#	ifdef LAK_CAN_USE_CONCEPT_AUTO
+	template<typename T = void, lak::concepts::member_pointer auto... P>
+#	else
+	template<typename T = void, auto... P>
+#	endif
+	struct plus;
+
+	/* --- minus --- */
+
+#	ifdef LAK_CAN_USE_CONCEPT_AUTO
+	template<typename T = void, lak::concepts::member_pointer auto... P>
+#	else
+	template<typename T = void, auto... P>
+#	endif
+	struct minus;
+
+	/* --- multiplies --- */
+
+#	ifdef LAK_CAN_USE_CONCEPT_AUTO
+	template<typename T = void, lak::concepts::member_pointer auto... P>
+#	else
+	template<typename T = void, auto... P>
+#	endif
+	struct multiplies;
+
+	/* --- divides --- */
+
+#	ifdef LAK_CAN_USE_CONCEPT_AUTO
+	template<typename T = void, lak::concepts::member_pointer auto... P>
+#	else
+	template<typename T = void, auto... P>
+#	endif
+	struct divides;
+
 }
 
 #endif
@@ -436,6 +473,202 @@ namespace lak
 	struct greater_equal<T *>
 	{
 		constexpr inline bool operator()(const T *lhs, const T *rhs) const;
+	};
+
+	/* --- plus --- */
+
+#		ifdef LAK_CAN_USE_CONCEPT_AUTO
+	template<typename T, lak::concepts::member_pointer auto P>
+#		else
+	template<typename T, auto P>
+#		endif
+	struct plus<T, P>
+	{
+#		ifndef LAK_CAN_USE_CONCEPT_AUTO
+		static_assert(lak::is_member_pointer_v<decltype(P)>);
+#		endif
+
+		constexpr inline auto operator()(const T &lhs, const T &rhs) const
+		{
+			return lak::plus<>{}(lhs.*(P), rhs.*(P));
+		}
+
+		template<typename U>
+		constexpr inline auto operator()(const T &lhs, const U &rhs) const
+		{
+			return lak::plus<U>{}(lhs.*(P), rhs);
+		}
+
+		template<typename U>
+		constexpr inline auto operator()(const U &lhs, const T &rhs) const
+		{
+			return lak::plus<U>{}(lhs, rhs.*(P));
+		}
+	};
+
+	template<>
+	struct plus<void>
+	{
+		template<typename T>
+		constexpr auto operator()(const T &lhs, const T &rhs) const;
+
+		template<typename T, typename U>
+		requires(!lak::is_same_v<T, U>)
+		constexpr auto operator()(T &&lhs, U &&rhs) const
+		  -> decltype(lak::forward<T>(lhs) + lak::forward<U>(rhs));
+	};
+
+	template<typename T>
+	struct plus<T>
+	{
+		constexpr inline auto operator()(const T &lhs, const T &rhs) const;
+	};
+
+	/* --- minus --- */
+
+#		ifdef LAK_CAN_USE_CONCEPT_AUTO
+	template<typename T, lak::concepts::member_pointer auto P>
+#		else
+	template<typename T, auto P>
+#		endif
+	struct minus<T, P>
+	{
+#		ifndef LAK_CAN_USE_CONCEPT_AUTO
+		static_assert(lak::is_member_pointer_v<decltype(P)>);
+#		endif
+
+		constexpr inline auto operator()(const T &lhs, const T &rhs) const
+		{
+			return lak::minus<>{}(lhs.*(P), rhs.*(P));
+		}
+
+		template<typename U>
+		constexpr inline auto operator()(const T &lhs, const U &rhs) const
+		{
+			return lak::minus<U>{}(lhs.*(P), rhs);
+		}
+
+		template<typename U>
+		constexpr inline auto operator()(const U &lhs, const T &rhs) const
+		{
+			return lak::minus<U>{}(lhs, rhs.*(P));
+		}
+	};
+
+	template<>
+	struct minus<void>
+	{
+		template<typename T>
+		constexpr auto operator()(const T &lhs, const T &rhs) const;
+
+		template<typename T, typename U>
+		requires(!lak::is_same_v<T, U>)
+		constexpr auto operator()(T &&lhs, U &&rhs) const
+		  -> decltype(lak::forward<T>(lhs) - lak::forward<U>(rhs));
+	};
+
+	template<typename T>
+	struct minus<T>
+	{
+		constexpr inline auto operator()(const T &lhs, const T &rhs) const;
+	};
+
+	/* --- multiplies --- */
+
+#		ifdef LAK_CAN_USE_CONCEPT_AUTO
+	template<typename T, lak::concepts::member_pointer auto P>
+#		else
+	template<typename T, auto P>
+#		endif
+	struct multiplies<T, P>
+	{
+#		ifndef LAK_CAN_USE_CONCEPT_AUTO
+		static_assert(lak::is_member_pointer_v<decltype(P)>);
+#		endif
+
+		constexpr inline auto operator()(const T &lhs, const T &rhs) const
+		{
+			return lak::multiplies<>{}(lhs.*(P), rhs.*(P));
+		}
+
+		template<typename U>
+		constexpr inline auto operator()(const T &lhs, const U &rhs) const
+		{
+			return lak::multiplies<U>{}(lhs.*(P), rhs);
+		}
+
+		template<typename U>
+		constexpr inline auto operator()(const U &lhs, const T &rhs) const
+		{
+			return lak::multiplies<U>{}(lhs, rhs.*(P));
+		}
+	};
+
+	template<>
+	struct multiplies<void>
+	{
+		template<typename T>
+		constexpr auto operator()(const T &lhs, const T &rhs) const;
+
+		template<typename T, typename U>
+		requires(!lak::is_same_v<T, U>)
+		constexpr auto operator()(T &&lhs, U &&rhs) const
+		  -> decltype(lak::forward<T>(lhs) * lak::forward<U>(rhs));
+	};
+
+	template<typename T>
+	struct multiplies<T>
+	{
+		constexpr inline auto operator()(const T &lhs, const T &rhs) const;
+	};
+
+	/* --- divides --- */
+
+#		ifdef LAK_CAN_USE_CONCEPT_AUTO
+	template<typename T, lak::concepts::member_pointer auto P>
+#		else
+	template<typename T, auto P>
+#		endif
+	struct divides<T, P>
+	{
+#		ifndef LAK_CAN_USE_CONCEPT_AUTO
+		static_assert(lak::is_member_pointer_v<decltype(P)>);
+#		endif
+
+		constexpr inline auto operator()(const T &lhs, const T &rhs) const
+		{
+			return lak::divides<>{}(lhs.*(P), rhs.*(P));
+		}
+
+		template<typename U>
+		constexpr inline auto operator()(const T &lhs, const U &rhs) const
+		{
+			return lak::divides<U>{}(lhs.*(P), rhs);
+		}
+
+		template<typename U>
+		constexpr inline auto operator()(const U &lhs, const T &rhs) const
+		{
+			return lak::divides<U>{}(lhs, rhs.*(P));
+		}
+	};
+
+	template<>
+	struct divides<void>
+	{
+		template<typename T>
+		constexpr auto operator()(const T &lhs, const T &rhs) const;
+
+		template<typename T, typename U>
+		requires(!lak::is_same_v<T, U>)
+		constexpr auto operator()(T &&lhs, U &&rhs) const
+		  -> decltype(lak::forward<T>(lhs) / lak::forward<U>(rhs));
+	};
+
+	template<typename T>
+	struct divides<T>
+	{
+		constexpr inline auto operator()(const T &lhs, const T &rhs) const;
 	};
 }
 

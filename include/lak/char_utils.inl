@@ -105,6 +105,15 @@ namespace lak
 		  u8'\0',
 		};
 
+		constexpr char8_t ascii_nonnewline_spaces[] = {
+		  u8'\x09', // tab
+		  u8'\x0B', // line tab
+		  u8'\x0C', // form feed
+		  u8'\x0D', // carriage return
+		  u8'\x20', // space
+		  u8'\0',
+		};
+
 		constexpr char32_t ascii_spaces32[] = {
 		  U'\x09', // tab
 		  U'\x0A', // line feed
@@ -115,9 +124,46 @@ namespace lak
 		  U'\0',
 		};
 
+		constexpr char32_t ascii_nonnewline_spaces32[] = {
+		  U'\x09', // tab
+		  U'\x0B', // line tab
+		  U'\x0C', // form feed
+		  U'\x0D', // carriage return
+		  U'\x20', // space
+		  U'\0',
+		};
+
 		constexpr char32_t spaces[25 + 1] = {
 		  U'\u0009', // tab
 		  U'\u000A', // line feed
+		  U'\u000B', // line tab
+		  U'\u000C', // form feed
+		  U'\u000D', // carriage return
+		  U'\u0020', // space
+		  U'\u0085', // next line
+		  U'\u00A0', // no-break space
+		  U'\u1680', // ogham space mark
+		  U'\u2000', // en quad
+		  U'\u2001', // em quad
+		  U'\u2002', // en space
+		  U'\u2003', // em space
+		  U'\u2004', // three-per-em space
+		  U'\u2005', // four-per-em space
+		  U'\u2006', // six-per-em space
+		  U'\u2007', // figure space
+		  U'\u2008', // punctuation space
+		  U'\u2009', // thin space
+		  U'\u200A', // hair space
+		  U'\u2028', // line separator
+		  U'\u2029', // paragraph separator
+		  U'\u202F', // narrow no-break space
+		  U'\u205F', // medium mathematical space
+		  U'\u3000', // ideographic space
+		  U'\0',
+		};
+
+		constexpr char32_t nonnewline_spaces[24 + 1] = {
+		  U'\u0009', // tab
 		  U'\u000B', // line tab
 		  U'\u000C', // form feed
 		  U'\u000D', // carriage return

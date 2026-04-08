@@ -1,6 +1,8 @@
 #ifndef LAK_DSL_RESULT_HPP
 #define LAK_DSL_RESULT_HPP
 
+#include "lak/array.hpp"
+#include "lak/errors.hpp"
 #include "lak/format.hpp"
 #include "lak/result.hpp"
 #include "lak/string_view.hpp"
@@ -13,16 +15,113 @@ namespace lak
 	{
 		namespace err
 		{
-			struct parse
+			struct unexpected_char
 			{
-				::lak::u8string message;
+				char32_t expected_min;
+				char32_t expected_max;
+				char32_t got;
+				bool negative = false;
 
-				inline ::lak::u8string to_string() const
+				inline lak::u8string to_string() const
 				{
-					return u8"parse error" +
-					       (message.empty() ? u8""_str : u8": " + message);
+					if (expected_min == expected_max)
+					{
+						if (negative)
+							return lak::fmt<u8"unexpected '{:A}'">(got);
+						else
+							return lak::fmt<u8"expected '{:A}', got '{:A}'">(expected_min,
+							                                                 got);
+					}
+					else
+					{
+						if (negative)
+							return lak::fmt<u8"unexpected '{:A}' (!'{:A}'..'{:A}')">(
+							  got, expected_min, expected_max);
+						else
+							return lak::fmt<u8"expected '{:A}'..'{:A}', got '{:A}'">(
+							  expected_min, expected_max, got);
+					}
 				}
 			};
+
+			struct unexpected_str
+			{
+				lak::u8string_view expected;
+				lak::u8string_view got;
+				bool negative = false;
+
+				inline lak::u8string to_string() const
+				{
+					if (negative)
+						return lak::fmt<u8"unexpected '{}'">(expected);
+					else
+						return lak::fmt<u8"expected '{}', got '{}'">(expected, got);
+				}
+			};
+
+			struct parse;
+
+			struct multi
+			{
+				lak::array<lak::dsl::err::parse> errors;
+
+				multi();
+				multi(const multi &);
+				multi(multi &&);
+				multi &operator=(multi &&);
+				multi &operator=(const multi &);
+				multi(lak::array<lak::dsl::err::parse> &&errs);
+
+				inline lak::u8string to_string() const;
+			};
+
+			struct bottom
+			{
+				inline lak::u8string to_string() const { return u8"bottom"_str; }
+			};
+			struct dummy
+			{
+				inline lak::u8string to_string() const { return u8"dummy"_str; }
+			};
+			struct eof
+			{
+				inline lak::u8string to_string() const
+				{
+					return u8"expected end of file"_str;
+				}
+			};
+
+			struct parse
+			{
+				lak::variant<lak::u8string,
+				             lak::err::out_of_data,
+				             lak::err::invalid_character_length,
+				             lak::err::string_to_numeric,
+				             lak::err::value_out_of_range,
+				             lak::dsl::err::bottom,
+				             lak::dsl::err::dummy,
+				             lak::dsl::err::eof,
+				             lak::dsl::err::unexpected_char,
+				             lak::dsl::err::unexpected_str,
+				             lak::dsl::err::multi>
+				  info;
+
+				inline lak::u8string to_string() const
+				{
+					lak::u8string str = u8"parse error: "_str;
+					info.visit([&](const auto &err) { str += lak::fmt<u8"{}">(err); });
+					return str;
+				}
+			};
+
+			inline lak::u8string multi::to_string() const
+			{
+				if (errors.empty()) return {};
+				lak::u8string err = u8"(" + errors[0].to_string() + u8")";
+				for (const auto &e : lak::span(errors).subspan(1U))
+					err += u8" or (" + e.to_string() + u8")";
+				return err;
+			}
 		}
 
 		template<typename T>

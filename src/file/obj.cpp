@@ -107,12 +107,12 @@ lak::dsl::result<lak::dsl::obj_t::value_type> lak::dsl::obj_t::parse(
 		     f.vt >= result.texture_coords.size()) ||
 		    (f.vn != lak::dynamic_extent && f.vn >= result.vertex_normals.size()))
 			return lak::err_t<lak::dsl::err::parse>{
-			  {.message = u8"facet coord out of range"}};
+			  {.info = u8"facet coord out of range"_str}};
 
 	for (const auto &l : result.line_coords)
 		if (l.v >= result.vertex_coords.size())
 			return lak::err_t<lak::dsl::err::parse>{
-			  {.message = u8"line coord out of range"}};
+			  {.info = u8"line coord out of range"_str}};
 
 	return lak::ok_t<lak::dsl::parse_result<lak::obj::obj>>{{
 	  .consumed  = strm.consumed(),
