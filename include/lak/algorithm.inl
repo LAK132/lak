@@ -390,7 +390,7 @@ void lak::for_each(
 	}
 }
 
-/* --- trasnsform --- */
+/* --- transform --- */
 
 template<std::input_iterator ITER_IN,
          typename ITER_OUT,
