@@ -71,9 +71,9 @@ namespace
 		else if constexpr (std::is_integral_v<T> && !std::is_same_v<T, char>)
 		{
 			if constexpr (std::is_unsigned_v<T>)
-				strm << lak::fmt<"{:X}">(static_cast<uintmax_t>(arg));
+				strm << lak::fmt<"{:#X}">(static_cast<uintmax_t>(arg));
 			else
-				strm << lak::fmt<"{:X}">(static_cast<intmax_t>(arg));
+				strm << lak::fmt<"{:#X}">(static_cast<intmax_t>(arg));
 		}
 		else if constexpr (std::is_null_pointer_v<T>)
 		{
