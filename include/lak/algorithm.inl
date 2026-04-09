@@ -370,8 +370,7 @@ void lak::threaded_subrange(
 {
 	if (begin == end) return;
 
-	using diff_type  = std::iter_difference_t<ITER>;
-	using input_type = std::iter_value_t<ITER>;
+	using diff_type = std::iter_difference_t<ITER>;
 
 	const diff_type dist = lak::distance(begin, end);
 
