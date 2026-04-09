@@ -1844,9 +1844,9 @@ namespace lak
 	struct _common_reference2_impl
 	{
 		template<typename U2>
-		using tq = typename lak::_basic_common_reference<T>::type<U2>;
+		using tq = typename lak::_basic_common_reference<T>::template type<U2>;
 		template<typename T2>
-		using uq = typename lak::_basic_common_reference<U>::type<T2>;
+		using uq = typename lak::_basic_common_reference<U>::template type<T2>;
 		template<typename T2, typename U2>
 		using type = typename lak::basic_common_reference<lak::remove_cvref_t<T2>,
 		                                                  lak::remove_cvref_t<U2>,
@@ -1857,7 +1857,7 @@ namespace lak
 	template<typename T, typename U>
 	requires(lak::_common_reference2_impl<T, U>::value)
 	struct _common_reference2
-	: lak::type_identity<typename lak::_common_reference2_impl<T, U>::type<T, U>>
+	: lak::type_identity<typename lak::_common_reference2_impl<T, U>::template type<T, U>>
 	{
 	};
 	template<typename T, typename U>
