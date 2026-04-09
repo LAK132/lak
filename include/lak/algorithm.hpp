@@ -20,20 +20,17 @@ namespace lak
 	/* --- move --- */
 
 	template<std::input_iterator IN_ITER,
-	         std::output_iterator<
-	           typename std::iterator_traits<IN_ITER>::value_type> OUT_ITER>
+	         std::output_iterator<std::iter_value_t<IN_ITER>> OUT_ITER>
 	OUT_ITER move(IN_ITER begin, IN_ITER end, OUT_ITER output);
 
 	/* --- copy --- */
 
 	template<std::input_iterator IN_ITER,
-	         std::output_iterator<
-	           typename std::iterator_traits<IN_ITER>::value_type> OUT_ITER>
+	         std::output_iterator<std::iter_value_t<IN_ITER>> OUT_ITER>
 	OUT_ITER copy(IN_ITER begin, IN_ITER end, OUT_ITER output);
 
 	template<std::input_iterator IN_ITER,
-	         std::output_iterator<
-	           typename std::iterator_traits<IN_ITER>::value_type> OUT_ITER>
+	         std::output_iterator<std::iter_value_t<IN_ITER>> OUT_ITER>
 	requires std::equality_comparable<OUT_ITER>
 	OUT_ITER copy(IN_ITER begin,
 	              IN_ITER end,
@@ -43,7 +40,9 @@ namespace lak
 	/* --- swap --- */
 
 	template<std::forward_iterator ITER_A, std::forward_iterator ITER_B>
-	lak::pair<ITER_A, ITER_B> swap(ITER_A begin_a, ITER_B begin_b, size_t count);
+	lak::pair<ITER_A, ITER_B> swap(ITER_A begin_a,
+	                               ITER_B begin_b,
+	                               std::iter_difference_t<ITER_A> count);
 
 	template<std::forward_iterator ITER_A, std::forward_iterator ITER_B>
 	lak::pair<ITER_A, ITER_B> swap(ITER_A begin_a,
@@ -61,18 +60,33 @@ namespace lak
 	template<std::forward_iterator ITER>
 	ITER stable_pivot_swap(ITER begin, ITER pivot, ITER end);
 
-	/* --- accumulate --- */
-
-	// init = op(move(init), *iter)
-	template<std::input_iterator ITER, typename T, typename OP = lak::plus<>>
-	T accumulate(ITER begin, ITER end, T init, OP op = {});
-
 	/* --- threaded --- */
 
 	template<typename INPUT = void, typename OUTPUT = void>
 	void threaded(auto thread_func,
 	              auto control_func,
 	              size_t thread_count = std::thread::hardware_concurrency());
+
+	/* --- threaded_pipeline --- */
+
+	template<typename INPUT, typename OUTPUT>
+	void threaded_pipeline(
+	  auto input_generator,
+	  auto thread_func,
+	  auto output_reduce,
+	  size_t thread_count = std::thread::hardware_concurrency());
+
+	/* --- threaded_subrange --- */
+
+	template<typename INPUT  = void,
+	         typename OUTPUT = void,
+	         std::random_access_iterator ITER,
+	         std::random_access_iterator... ITERS>
+	void threaded_subrange(ITER begin,
+	                       ITER end,
+	                       auto thread_func,
+	                       auto control_func,
+	                       ITERS... begins);
 
 	/* --- for_each --- */
 
@@ -110,6 +124,24 @@ namespace lak
 	                   auto trans_func,
 	                   ITER_INS... begins);
 
+	/* --- accumulate --- */
+
+	// init = op(move(init), *iter)
+	template<typename T, std::input_iterator ITER, typename OP = lak::plus<>>
+	T accumulate(ITER begin, ITER end, T init, OP op = {});
+
+	/* --- reduce --- */
+
+	template<typename T, std::input_iterator ITER, typename OP = lak::plus<>>
+	T reduce(ITER begin, ITER end, T init, OP binary_reduce = {});
+
+	template<typename T,
+	         lak::execution::concepts::policy POLICY,
+	         std::input_iterator ITER,
+	         typename OP = lak::plus<>>
+	T reduce(
+	  const POLICY &, ITER begin, ITER end, T init, OP binary_reduce = {});
+
 	/* --- transform_reduce --- */
 
 	template<typename T,
@@ -137,25 +169,22 @@ namespace lak
 	/* --- count --- */
 
 	template<std::forward_iterator ITER, typename T>
-	size_t count(ITER begin, ITER end, const T &value);
+	std::iter_difference_t<ITER> count(ITER begin, ITER end, const T &value);
 
 	/* --- distance --- */
 
 	template<std::input_iterator ITER>
-	typename std::iterator_traits<ITER>::difference_type distance(ITER begin,
-	                                                              ITER end);
+	std::iter_difference_t<ITER> distance(ITER begin, ITER end);
 
 	/* --- advance --- */
 
 	template<std::input_iterator ITER>
-	void advance(ITER &it,
-	             typename std::iterator_traits<ITER>::difference_type offset);
+	void advance(ITER &it, std::iter_difference_t<ITER> offset);
 
 	/* --- next --- */
 
 	template<std::input_iterator ITER>
-	ITER next(ITER it,
-	          typename std::iterator_traits<ITER>::difference_type offset = 1);
+	ITER next(ITER it, std::iter_difference_t<ITER> offset = 1);
 
 	/* --- find --- */
 
@@ -201,13 +230,14 @@ namespace lak
 	/* --- rotate_left --- */
 
 	template<std::forward_iterator ITER>
-	void rotate_left(
-	  ITER begin,
-	  typename std::iterator_traits<ITER>::difference_type end_offset,
-	  size_t distance = 1U);
+	void rotate_left(ITER begin,
+	                 std::iter_difference_t<ITER> end_offset,
+	                 std::iter_difference_t<ITER> distance = 1);
 
 	template<std::forward_iterator ITER>
-	void rotate_left(ITER begin, ITER end, size_t distance = 1U);
+	void rotate_left(ITER begin,
+	                 ITER end,
+	                 std::iter_difference_t<ITER> distance = 1);
 
 	// rotates mid to begin
 	template<std::forward_iterator ITER>
@@ -216,13 +246,14 @@ namespace lak
 	/* --- rotate_right --- */
 
 	template<std::forward_iterator ITER>
-	void rotate_right(
-	  ITER begin,
-	  typename std::iterator_traits<ITER>::difference_type end_offset,
-	  size_t distance = 1U);
+	void rotate_right(ITER begin,
+	                  std::iter_difference_t<ITER> end_offset,
+	                  std::iter_difference_t<ITER> distance = 1U);
 
 	template<std::forward_iterator ITER>
-	void rotate_right(ITER begin, ITER end, size_t distance = 1U);
+	void rotate_right(ITER begin,
+	                  ITER end,
+	                  std::iter_difference_t<ITER> distance = 1U);
 
 	// rotates mid to end
 	template<std::forward_iterator ITER>
@@ -299,11 +330,8 @@ namespace lak
 	         std::forward_iterator ITER_B,
 	         typename ITER_OUT,
 	         typename CMP = lak::less<>>
-	requires(
-	  std::output_iterator<typename std::iterator_traits<ITER_A>::value_type,
-	                       ITER_OUT> &&
-	  std::output_iterator<typename std::iterator_traits<ITER_B>::value_type,
-	                       ITER_OUT>)
+	requires(std::output_iterator<std::iter_value_t<ITER_A>, ITER_OUT> &&
+	         std::output_iterator<std::iter_value_t<ITER_B>, ITER_OUT>)
 	ITER_OUT merge(ITER_A begin_a,
 	               ITER_A end_a,
 	               ITER_B begin_b,
@@ -313,28 +341,32 @@ namespace lak
 
 	/* --- binary_tree_is_left_child --- */
 
-	constexpr inline bool binary_tree_is_left_child(size_t child);
+	template<typename DIFF = size_t>
+	constexpr inline bool binary_tree_is_left_child(DIFF child);
 
 	template<std::random_access_iterator ITER>
 	bool binary_tree_is_left_child(ITER root, ITER child);
 
 	/* --- binary_tree_left_child --- */
 
-	constexpr inline size_t binary_tree_left_child(size_t parent);
+	template<typename DIFF = size_t>
+	constexpr inline DIFF binary_tree_left_child(DIFF parent);
 
 	template<std::random_access_iterator ITER>
 	ITER binary_tree_left_child(ITER root, ITER parent);
 
 	/* --- binary_tree_right_child --- */
 
-	constexpr inline size_t binary_tree_right_child(size_t parent);
+	template<typename DIFF = size_t>
+	constexpr inline DIFF binary_tree_right_child(DIFF parent);
 
 	template<std::random_access_iterator ITER>
 	ITER binary_tree_right_child(ITER root, ITER parent);
 
 	/* --- binary_tree_parent --- */
 
-	constexpr inline size_t binary_tree_parent(size_t child);
+	template<typename DIFF = size_t>
+	constexpr inline DIFF binary_tree_parent(DIFF child);
 
 	template<std::random_access_iterator ITER>
 	ITER binary_tree_parent(ITER root, ITER child);

@@ -105,6 +105,184 @@ namespace lak
 		template<typename T>
 		concept copy_constructible = lak::is_copy_constructible_v<T>;
 
+		/* --- move_constructible --- */
+
+		template<typename T>
+		concept move_constructible = lak::is_move_constructible_v<T>;
+
+		/* --- swappable --- */
+
+		template<typename T>
+		concept swappable = requires(T &a, T &b) { lak::swap(a, b); };
+
+		/* --- convertible_to --- */
+
+		template<typename FROM, typename TO>
+		concept convertible_to = lak::is_convertible_v<FROM, TO> && requires {
+			static_cast<TO>(lak::declval<FROM>());
+		};
+
+		static_assert(lak::concepts::convertible_to<int, int>);
+		static_assert(lak::concepts::convertible_to<int &, int>);
+		static_assert(lak::concepts::convertible_to<int &&, int>);
+		static_assert(!lak::concepts::convertible_to<int *, int>);
+		static_assert(!lak::concepts::convertible_to<int[], int>);
+		static_assert(lak::concepts::convertible_to<const int, int>);
+		static_assert(lak::concepts::convertible_to<const int &, int>);
+		static_assert(lak::concepts::convertible_to<const int &&, int>);
+		static_assert(!lak::concepts::convertible_to<const int *, int>);
+		static_assert(!lak::concepts::convertible_to<const int[], int>);
+		static_assert(!lak::concepts::convertible_to<int, int &>);
+		static_assert(lak::concepts::convertible_to<int &, int &>);
+		static_assert(!lak::concepts::convertible_to<int &&, int &>);
+		static_assert(!lak::concepts::convertible_to<int *, int &>);
+		static_assert(!lak::concepts::convertible_to<int[], int &>);
+		static_assert(!lak::concepts::convertible_to<const int, int &>);
+		static_assert(!lak::concepts::convertible_to<const int &, int &>);
+		static_assert(!lak::concepts::convertible_to<const int &&, int &>);
+		static_assert(!lak::concepts::convertible_to<const int *, int &>);
+		static_assert(!lak::concepts::convertible_to<const int[], int &>);
+		static_assert(lak::concepts::convertible_to<int, const int &>);
+		static_assert(lak::concepts::convertible_to<int &, const int &>);
+		static_assert(lak::concepts::convertible_to<int &&, const int &>);
+		static_assert(!lak::concepts::convertible_to<int *, const int &>);
+		static_assert(!lak::concepts::convertible_to<int[], const int &>);
+		static_assert(lak::concepts::convertible_to<const int, const int &>);
+		static_assert(lak::concepts::convertible_to<const int &, const int &>);
+		static_assert(lak::concepts::convertible_to<const int &&, const int &>);
+		static_assert(!lak::concepts::convertible_to<const int *, const int &>);
+		static_assert(!lak::concepts::convertible_to<const int[], const int &>);
+		static_assert(lak::concepts::convertible_to<int, int &&>);
+		static_assert(lak::concepts::convertible_to<int &, int &&>);
+		static_assert(lak::concepts::convertible_to<int &&, int &&>);
+		static_assert(!lak::concepts::convertible_to<int *, int &&>);
+		static_assert(!lak::concepts::convertible_to<int[], int &&>);
+		static_assert(!lak::concepts::convertible_to<const int, int &&>);
+		static_assert(!lak::concepts::convertible_to<const int &, int &&>);
+		static_assert(!lak::concepts::convertible_to<const int &&, int &&>);
+		static_assert(!lak::concepts::convertible_to<const int *, int &&>);
+		static_assert(!lak::concepts::convertible_to<const int[], int &&>);
+		static_assert(!lak::concepts::convertible_to<int, int *>);
+		static_assert(!lak::concepts::convertible_to<int &, int *>);
+		static_assert(!lak::concepts::convertible_to<int &&, int *>);
+		static_assert(lak::concepts::convertible_to<int *, int *>);
+		static_assert(lak::concepts::convertible_to<int[], int *>);
+		static_assert(!lak::concepts::convertible_to<const int, int *>);
+		static_assert(!lak::concepts::convertible_to<const int &, int *>);
+		static_assert(!lak::concepts::convertible_to<const int &&, int *>);
+		static_assert(!lak::concepts::convertible_to<const int *, int *>);
+		static_assert(!lak::concepts::convertible_to<const int[], int *>);
+		static_assert(!lak::concepts::convertible_to<int, const int *>);
+		static_assert(!lak::concepts::convertible_to<int &, const int *>);
+		static_assert(!lak::concepts::convertible_to<int &&, const int *>);
+		static_assert(lak::concepts::convertible_to<int *, const int *>);
+		static_assert(lak::concepts::convertible_to<int[], const int *>);
+		static_assert(!lak::concepts::convertible_to<const int, const int *>);
+		static_assert(!lak::concepts::convertible_to<const int &, const int *>);
+		static_assert(!lak::concepts::convertible_to<const int &&, const int *>);
+		static_assert(lak::concepts::convertible_to<const int *, const int *>);
+		static_assert(lak::concepts::convertible_to<const int[], const int *>);
+		static_assert(!lak::concepts::convertible_to<int, int[]>);
+		static_assert(!lak::concepts::convertible_to<int &, int[]>);
+		static_assert(!lak::concepts::convertible_to<int &&, int[]>);
+		static_assert(!lak::concepts::convertible_to<int *, int[]>);
+		static_assert(!lak::concepts::convertible_to<int[], int[]>);
+		static_assert(!lak::concepts::convertible_to<const int, int[]>);
+		static_assert(!lak::concepts::convertible_to<const int &, int[]>);
+		static_assert(!lak::concepts::convertible_to<const int &&, int[]>);
+		static_assert(!lak::concepts::convertible_to<const int *, int[]>);
+		static_assert(!lak::concepts::convertible_to<const int[], int[]>);
+		static_assert(!lak::concepts::convertible_to<int, const int[]>);
+		static_assert(!lak::concepts::convertible_to<int &, const int[]>);
+		static_assert(!lak::concepts::convertible_to<int &&, const int[]>);
+		static_assert(!lak::concepts::convertible_to<int *, const int[]>);
+		static_assert(!lak::concepts::convertible_to<int[], const int[]>);
+		static_assert(!lak::concepts::convertible_to<const int, const int[]>);
+		static_assert(!lak::concepts::convertible_to<const int &, const int[]>);
+		static_assert(!lak::concepts::convertible_to<const int &&, const int[]>);
+		static_assert(!lak::concepts::convertible_to<const int *, const int[]>);
+		static_assert(!lak::concepts::convertible_to<const int[], const int[]>);
+
+		/* --- common_reference_with --- */
+
+		template<typename T, typename U>
+		concept common_reference_with =
+		  lak::is_same_v<lak::common_reference_t<T, U>,
+		                 lak::common_reference_t<U, T>> &&
+		  lak::concepts::convertible_to<T, lak::common_reference_t<T, U>> &&
+		  lak::concepts::convertible_to<U, lak::common_reference_t<T, U>>;
+
+		static_assert(lak::concepts::common_reference_with<int, int>);
+		static_assert(lak::concepts::common_reference_with<int &, int>);
+		static_assert(lak::concepts::common_reference_with<const int &, int>);
+		static_assert(
+		  lak::concepts::common_reference_with<const volatile int &, int>);
+		static_assert(lak::concepts::common_reference_with<int &&, int>);
+		static_assert(lak::concepts::common_reference_with<int, int &>);
+		static_assert(lak::concepts::common_reference_with<int &, int &>);
+		static_assert(lak::concepts::common_reference_with<const int &, int &>);
+		static_assert(
+		  lak::concepts::common_reference_with<const volatile int &, int &>);
+		static_assert(lak::concepts::common_reference_with<int &&, int &>);
+		static_assert(lak::concepts::common_reference_with<int, const int &>);
+		static_assert(lak::concepts::common_reference_with<int &, const int &>);
+		static_assert(
+		  lak::concepts::common_reference_with<const int &, const int &>);
+		static_assert(
+		  lak::concepts::common_reference_with<const volatile int &, const int &>);
+		static_assert(lak::concepts::common_reference_with<int &&, const int &>);
+		static_assert(
+		  lak::concepts::common_reference_with<int, const volatile int &>);
+		static_assert(
+		  lak::concepts::common_reference_with<int &, const volatile int &>);
+		static_assert(
+		  lak::concepts::common_reference_with<const int &, const volatile int &>);
+		static_assert(lak::concepts::common_reference_with<const volatile int &,
+		                                                   const volatile int &>);
+		static_assert(
+		  !lak::concepts::common_reference_with<int &&, const volatile int &>);
+		static_assert(lak::concepts::common_reference_with<int, int &&>);
+		static_assert(lak::concepts::common_reference_with<int &, int &&>);
+		static_assert(lak::concepts::common_reference_with<const int &, int &&>);
+		static_assert(
+		  !lak::concepts::common_reference_with<const volatile int &, int &&>);
+		static_assert(!lak::concepts::common_reference_with<int &&, int &&>);
+
+		/* --- assignable_from --- */
+
+		template<typename LHS, typename RHS>
+		concept assignable_from = lak::concepts::lvalue_reference<LHS> &&
+		                          lak::concepts::common_reference_with<
+		                            const lak::remove_reference_t<LHS> &,
+		                            const lak::remove_reference_t<RHS> &> &&
+		                          requires(LHS lhs, RHS &&rhs) {
+			                          {
+				                          lhs = lak::forward<RHS>(rhs)
+			                          } -> lak::concepts::same_as<LHS>;
+		                          };
+
+		static_assert(lak::concepts::assignable_from<int &, int>);
+		static_assert(!lak::concepts::assignable_from<int, int>);
+		static_assert(!lak::concepts::assignable_from<int &&, int>);
+
+		/* --- movable --- */
+
+		template<typename T>
+		concept movable =
+		  lak::is_object_v<T> && lak::concepts::move_constructible<T> &&
+		  lak::concepts::assignable_from<T &, T> && lak::concepts::swappable<T>;
+
+		static_assert(lak::concepts::movable<int>);
+		static_assert(lak::concepts::movable<int *>);
+		static_assert(!lak::concepts::movable<int *const>);
+		static_assert(!lak::concepts::movable<int &>);
+		static_assert(!lak::concepts::movable<int &&>);
+		static_assert(!lak::concepts::movable<const int>);
+		static_assert(lak::concepts::movable<const int *>);
+		static_assert(!lak::concepts::movable<const int *const>);
+		static_assert(!lak::concepts::movable<const int &>);
+		static_assert(!lak::concepts::movable<const int &&>);
+
 		/* --- static_castable --- */
 
 		template<typename FROM, typename TO>

@@ -24,8 +24,7 @@
 /* --- move --- */
 
 template<std::input_iterator IN_ITER,
-         std::output_iterator<
-           typename std::iterator_traits<IN_ITER>::value_type> OUT_ITER>
+         std::output_iterator<std::iter_value_t<IN_ITER>> OUT_ITER>
 OUT_ITER lak::move(IN_ITER begin, IN_ITER end, OUT_ITER output)
 {
 	for (; begin != end; ++begin, ++output) *output = lak::move(*begin);
@@ -35,8 +34,7 @@ OUT_ITER lak::move(IN_ITER begin, IN_ITER end, OUT_ITER output)
 /* --- copy --- */
 
 template<std::input_iterator IN_ITER,
-         std::output_iterator<
-           typename std::iterator_traits<IN_ITER>::value_type> OUT_ITER>
+         std::output_iterator<std::iter_value_t<IN_ITER>> OUT_ITER>
 OUT_ITER lak::copy(IN_ITER begin, IN_ITER end, OUT_ITER output)
 {
 	for (; begin != end; ++begin, ++output) *output = *begin;
@@ -44,8 +42,7 @@ OUT_ITER lak::copy(IN_ITER begin, IN_ITER end, OUT_ITER output)
 }
 
 template<std::input_iterator IN_ITER,
-         std::output_iterator<
-           typename std::iterator_traits<IN_ITER>::value_type> OUT_ITER>
+         std::output_iterator<std::iter_value_t<IN_ITER>> OUT_ITER>
 requires std::equality_comparable<OUT_ITER>
 OUT_ITER lak::copy(IN_ITER begin,
                    IN_ITER end,
@@ -62,9 +59,10 @@ OUT_ITER lak::copy(IN_ITER begin,
 template<std::forward_iterator ITER_A, std::forward_iterator ITER_B>
 lak::pair<ITER_A, ITER_B> lak::swap(ITER_A begin_a,
                                     ITER_B begin_b,
-                                    size_t count)
+                                    std::iter_difference_t<ITER_A> count)
 {
-	for (size_t i = 0; i < count; ++i, ++begin_a, ++begin_b)
+	for (std::iter_difference_t<ITER_A> i = 0; i < count;
+	     ++i, ++begin_a, ++begin_b)
 		lak::swap(*begin_a, *begin_b);
 	return {begin_a, begin_b};
 }
@@ -219,15 +217,6 @@ ITER lak::stable_pivot_swap(ITER begin, ITER pivot, ITER end)
 	}
 }
 
-/* --- accumulate --- */
-
-template<std::input_iterator ITER, typename T, typename OP>
-T lak::accumulate(ITER begin, ITER end, T init, OP op)
-{
-	for (; begin != end; ++begin) init = op(lak::move(init), *begin);
-	return init;
-}
-
 /* --- threaded --- */
 
 template<typename INPUT, typename OUTPUT>
@@ -304,6 +293,120 @@ void lak::threaded(auto thread_func, auto control_func, size_t thread_count)
 	}
 }
 
+/* --- threaded_pipeline --- */
+
+template<typename INPUT, typename OUTPUT>
+void lak::threaded_pipeline(auto input_generator,
+                            auto thread_func,
+                            auto output_reduce,
+                            size_t thread_count)
+{
+	// try and make thread dependent on the template arguments
+	using thread_type =
+	  lak::nth_type_t<lak::is_same_v<INPUT, lak::thread> ? 1U : 0U,
+	                  lak::thread,
+	                  INPUT>;
+
+	lak::array<lak::atomic_optional<INPUT>, lak::dynamic_extent> thread_inputs;
+	thread_inputs.resize(thread_count);
+	lak::array<lak::atomic_optional<OUTPUT>, lak::dynamic_extent> thread_outputs;
+	thread_outputs.resize(thread_count);
+
+	lak::array<thread_type, lak::dynamic_extent> threads;
+	threads.reserve(thread_count);
+
+	for (size_t tid = 0U; tid < thread_count; ++tid)
+		threads.emplace_back(
+		  [&thread_func, &thread_inputs, &thread_outputs, id = tid]
+		  {
+			  auto &input  = thread_inputs[id];
+			  auto &output = thread_outputs[id];
+			  lak::while_some(
+			    [&] { return input.try_release(); },
+			    [&](INPUT &&in)
+			    { output.emplace(thread_func(lak::forward<INPUT>(in))); });
+		  });
+
+	size_t index      = 0U;
+	auto input_mapper = [&](INPUT &&input)
+	{
+		thread_inputs[index].emplace(lak::move(input));
+		return lak::monostate();
+	};
+
+	// initialise pipeline
+	for (; index < thread_count; ++index)
+	{
+		if (!input_generator().map(input_mapper).has_value())
+		{
+			// early stop
+			for (size_t o = 0U; o < index; ++o)
+				output_reduce(thread_outputs[o].release());
+			for (auto &in : thread_inputs) in.stop();
+			return;
+		}
+	}
+
+	// full pipelining
+	for (index = 0U; input_generator().map(input_mapper).has_value();
+	     index = (index + 1U) % thread_count)
+		output_reduce(thread_outputs[index].release());
+
+	// flush pipeline
+	for (size_t o = 0U; o < thread_count; ++o)
+		output_reduce(thread_outputs[(o + index) % thread_count].release());
+
+	for (auto &in : thread_inputs) in.stop();
+}
+
+/* --- threaded_subrange --- */
+
+template<typename INPUT,
+         typename OUTPUT,
+         std::random_access_iterator ITER,
+         std::random_access_iterator... ITERS>
+void lak::threaded_subrange(
+  ITER begin, ITER end, auto thread_func, auto control_func, ITERS... begins)
+{
+	if (begin == end) return;
+
+	using diff_type  = std::iter_difference_t<ITER>;
+	using input_type = std::iter_value_t<ITER>;
+
+	const diff_type dist = lak::distance(begin, end);
+
+	ASSERT_GREATER_OR_EQUAL(dist, diff_type(1));
+
+	const size_t thread_max   = std::thread::hardware_concurrency();
+	const size_t thread_count = std::min<size_t>(
+	  static_cast<size_t>(lak::ceil_div<diff_type>(
+	    dist,
+	    lak::ceil_div<diff_type>(dist, static_cast<diff_type>(thread_max)))),
+	  thread_max);
+	const diff_type stride = lak::ceil_div<diff_type>(dist, thread_count);
+
+	ASSERT_LESS(static_cast<diff_type>((thread_count - 1U)) * stride, dist);
+	ASSERT_GREATER_OR_EQUAL(static_cast<diff_type>(thread_count) * stride, dist);
+
+	lak::threaded<INPUT, OUTPUT>(
+	  [&](size_t i, auto... io)
+	  {
+		  diff_type range_begin = static_cast<diff_type>(i) * stride;
+		  diff_type range_end =
+		    range_begin + std::min<diff_type>(dist - range_begin, stride);
+
+		  BOUNDS_ASSERT_GREATER(range_end, range_begin);
+
+		  thread_func(i,
+		              io...,
+		              lak::next(begin, range_begin),
+		              lak::next(begin, range_end),
+		              lak::next(begins, range_begin)...);
+	  },
+	  control_func,
+	  thread_count);
+}
+
 /* --- for_each --- */
 
 template<std::input_iterator ITER, typename END, std::input_iterator... ITERS>
@@ -323,13 +426,16 @@ void lak::for_each(
 
 	if constexpr (lak::execution::concepts::parallel<POLICY>)
 	{
+		using diff_type = std::iter_difference_t<ITER>;
+
 		const size_t thread_count = [&]() -> size_t
 		{
 			if constexpr (std::random_access_iterator<ITER>)
 				return std::max<size_t>(
-				  0U,
-				  std::min<size_t>(size_t(lak::distance(begin, end)),
-				                   std::thread::hardware_concurrency()));
+				  1U,
+				  static_cast<size_t>(std::min<diff_type>(
+				    lak::distance(begin, end),
+				    static_cast<diff_type>(std::thread::hardware_concurrency()))));
 			else
 				return std::thread::hardware_concurrency();
 		}();
@@ -337,16 +443,16 @@ void lak::for_each(
 		if constexpr (std::random_access_iterator<ITER> &&
 		              ((std::random_access_iterator<ITERS>) && ...))
 		{
-			const size_t dist = size_t(lak::distance(begin, end));
+			const diff_type dist = lak::distance(begin, end);
 
-			std::atomic_size_t work_index = 0U;
-			std::atomic_bool done         = false;
+			std::atomic<diff_type> work_index = diff_type(0);
+			std::atomic_bool done             = false;
 
 			lak::threaded(
 			  [&, dist](size_t)
 			  {
-				  for (size_t ind = work_index.fetch_add(1U); !done && ind < dist;
-				       ind        = work_index.fetch_add(1U))
+				  for (diff_type ind = work_index++; !done && ind < dist;
+				       ind           = work_index++)
 				  {
 					  func(begin[ind], begins[ind]...);
 				  }
@@ -425,29 +531,34 @@ ITER_OUT lak::transform(const POLICY &,
 	{
 		if constexpr (std::random_access_iterator<ITER_OUT>)
 		{
-			std::atomic<std::iter_difference_t<ITER_OUT>> out_count = 0U;
+			using out_diff_type                  = std::iter_difference_t<ITER_OUT>;
+			std::atomic<out_diff_type> out_count = out_diff_type(0);
 
 			lak::for_each(
 			  POLICY{},
 			  begin,
 			  end,
-			  [&]<typename T, typename... U>(T &&t, size_t i, U &&...u)
+			  [&]<typename T, typename... U>(T &&t, out_diff_type i, U &&...u)
 			  {
-				  out[i] = trans_func(lak::forward<T>(t), lak::forward<U>(u)...);
+				  *lak::next(out, i) =
+				    trans_func(lak::forward<T>(t), lak::forward<U>(u)...);
 				  ++out_count;
 			  },
-			  std::views::iota(size_t(0U)).begin(),
+			  std::views::iota(out_diff_type(0)).begin(),
 			  begins...);
 
-			lak::advance(out, out_count);
+			lak::advance(out, out_count.load());
 		}
 		else if constexpr (std::random_access_iterator<ITER_IN> &&
 		                   ((std::random_access_iterator<ITER_INS>) && ...))
 		{
-			const size_t dist = size_t(lak::distance(begin, end));
-
+			using in_diff_type        = std::iter_difference_t<ITER_IN>;
+			const in_diff_type dist   = lak::distance(begin, end);
 			const size_t thread_count = std::max<size_t>(
-			  1U, std::min<size_t>(dist, std::thread::hardware_concurrency()));
+			  1U,
+			  static_cast<size_t>(std::min<in_diff_type>(
+			    dist,
+			    static_cast<in_diff_type>(std::thread::hardware_concurrency()))));
 
 			using output_type = decltype(trans_func(*begin, *begins...));
 
@@ -455,16 +566,19 @@ ITER_OUT lak::transform(const POLICY &,
 			  [&](size_t id,
 			      lak::span<lak::atomic_optional<output_type>> thread_outputs)
 			  {
-				  const size_t stride = thread_outputs.size();
-				  auto &output        = thread_outputs[id];
-				  for (size_t i = id; i < dist; i += stride)
+				  const in_diff_type stride =
+				    static_cast<in_diff_type>(thread_outputs.size());
+				  auto &output = thread_outputs[id];
+				  for (in_diff_type i = id; i < dist; i += stride)
 					  output.emplace(trans_func(begin[i], begins[i]...));
 			  },
 			  [&](lak::span<lak::atomic_optional<output_type>> thread_outputs)
 			  {
-				  for (size_t i = 0U; i < dist; ++i)
+				  for (in_diff_type i = 0; i < dist; ++i)
 				  {
-					  *out = thread_outputs[i % thread_outputs.size()].release();
+					  const size_t ind = static_cast<size_t>(
+					    i % static_cast<in_diff_type>(thread_outputs.size()));
+					  *out = thread_outputs[ind].release();
 					  ++out;
 				  }
 			  },
@@ -472,65 +586,27 @@ ITER_OUT lak::transform(const POLICY &,
 		}
 		else
 		{
-			const size_t thread_count = std::thread::hardware_concurrency();
-
 			using input_type =
 			  lak::tuple<std::iter_value_t<ITER_IN>, std::iter_value_t<ITER_INS>...>;
 			using output_type = decltype(trans_func(*begin, *begins...));
 
-			lak::threaded<input_type, output_type>(
-			  [&](size_t id,
-			      lak::span<lak::atomic_optional<input_type>> thread_inputs,
-			      lak::span<lak::atomic_optional<output_type>> thread_outputs)
+			lak::threaded_pipeline<input_type, output_type>(
+			  [&]() -> lak::optional<input_type>
 			  {
-				  auto &input  = thread_inputs[id];
-				  auto &output = thread_outputs[id];
-				  lak::while_some(
-				    [&] { return input.try_release(); },
-				    [&](input_type &&in)
-				    { output.emplace(lak::move(in).apply(trans_func)); });
+				  if (begin == end) return lak::nullopt;
+				  DEFER({
+					  ++begin;
+					  ((++begins), ...);
+				  });
+				  return {lak::in_place, *begin, *begins...};
 			  },
-			  [&](lak::span<lak::atomic_optional<input_type>> thread_inputs,
-			      lak::span<lak::atomic_optional<output_type>> thread_outputs)
+			  [&](input_type &&input) -> output_type
+			  { return lak::forward<input_type>(input).apply(trans_func); },
+			  [&](output_type &&output)
 			  {
-				  // preload inputs
-				  for (size_t i = 0U; i < thread_count;)
-				  {
-					  thread_inputs[i].emplace(*begin, *begins...);
-					  ++begin;
-					  ++i;
-					  if (begin == end)
-					  {
-						  // early termination
-						  for (size_t o = 0U; o < i; ++o)
-						  {
-							  *out = thread_outputs[o].release();
-							  ++out;
-						  }
-						  return;
-					  }
-				  }
-
-				  // run threads
-				  size_t index = 0U;
-				  while (begin != end)
-				  {
-					  *out = thread_outputs[index].release();
-					  ++out;
-					  thread_inputs[index].emplace(*begin, *begins...);
-					  ++begin;
-					  ++index;
-					  index %= thread_count;
-				  }
-
-				  // finish outputs
-				  for (size_t o = 0U; o < thread_count; ++o)
-				  {
-					  *out = thread_outputs[(o + index) % thread_count].release();
-					  ++out;
-				  }
-			  },
-			  thread_count);
+				  *out = lak::forward<output_type>(output);
+				  ++out;
+			  });
 		}
 	}
 	else
@@ -540,6 +616,90 @@ ITER_OUT lak::transform(const POLICY &,
 	}
 
 	return out;
+}
+
+/* --- accumulate --- */
+
+template<typename T, std::input_iterator ITER, typename OP>
+T lak::accumulate(ITER begin, ITER end, T init, OP op)
+{
+	return lak::reduce<T>(lak::execution::seq, begin, end, lak::move(init), op);
+}
+
+/* --- reduce --- */
+
+template<typename T, std::input_iterator ITER, typename OP>
+T lak::reduce(ITER begin, ITER end, T init, OP binary_reduce)
+{
+	return lak::reduce<T>(
+	  lak::execution::unseq, begin, end, lak::move(init), binary_reduce);
+}
+
+template<typename T,
+         lak::execution::concepts::policy POLICY,
+         std::input_iterator ITER,
+         typename OP>
+T lak::reduce(const POLICY &, ITER begin, ITER end, T init, OP binary_reduce)
+{
+	if constexpr (lak::execution::concepts::unsequenced<POLICY>)
+	{
+		if constexpr (lak::execution::concepts::parallel<POLICY> &&
+		              std::random_access_iterator<ITER>)
+		{
+			lak::threaded_subrange<void, T>(
+			  begin,
+			  end,
+			  [&](size_t i,
+			      lak::span<lak::atomic_optional<T>> thread_outputs,
+			      ITER sub_begin,
+			      ITER sub_end)
+			  {
+				  thread_outputs[i].emplace(lak::reduce<T>(lak::execution::unseq,
+				                                           lak::next(sub_begin),
+				                                           sub_end,
+				                                           *sub_begin,
+				                                           binary_reduce));
+			  },
+			  [&](lak::span<lak::atomic_optional<T>> thread_outputs)
+			  {
+				  init =
+				    lak::transform_reduce<T>(lak::execution::unseq,
+				                             thread_outputs.begin(),
+				                             thread_outputs.end(),
+				                             lak::move(init),
+				                             binary_reduce,
+				                             [](lak::atomic_optional<T> &result) -> T
+				                             { return result.release(); });
+			  });
+		}
+		else
+		{
+			// :TODO: reduce is meant to be different from accumulate in that it
+			// doesn't guarantee the order in which binary_reduce is applied. i have
+			// deliberately made the decision to make reduce with sequenced_policy
+			// behave as accumulate should and instead require unsequenced_policy to
+			// enable the expected reduce behaviour. however, it is not actually
+			// clear how out-of-order application of binary_reduce is meant to work
+			// without threading (which requires parallel_unsequenced_policy). it
+			// might be possible to implement vectorisation for known Ts and OPs on
+			// some platforms
+			for (; begin != end; ++begin)
+				init = binary_reduce(lak::move(init), *begin);
+		}
+	}
+	else
+	{
+		// generic optimisation for parallel_policy (sequenced) is impossible, as
+		// evident by accumulate not having an overload which accepts an execution
+		// policy. it might be possible
+
+		// :TRICKY: we intentionally guarantee accumulate behaviour in the case of
+		// sequenced_policy
+		for (; begin != end; ++begin)
+			init = binary_reduce(lak::move(init), *begin);
+	}
+
+	return init;
 }
 
 /* --- transform_reduce --- */
@@ -579,40 +739,27 @@ T lak::transform_reduce(const POLICY &,
 
 	if constexpr (lak::execution::concepts::parallel<POLICY>)
 	{
-		std::mutex write_mutex;
-
 		if constexpr (lak::execution::concepts::unsequenced<POLICY> &&
 		              std::random_access_iterator<ITER_IN> &&
 		              (std::random_access_iterator<ITER_INS> && ...))
 		{
-			const size_t dist = size_t(lak::distance(begin, end));
-			const size_t stride =
-			  std::max<size_t>(1U, dist / std::thread::hardware_concurrency());
-			const size_t thread_count =
-			  (dist / stride) + ((dist % stride) ? 1U : 0U);
-
-			ASSERT_LESS((thread_count - 1U) * stride, dist);
-			ASSERT_GREATER_OR_EQUAL(thread_count * stride, dist);
-
-			lak::threaded<void, T>(
-			  [&](size_t i, lak::span<lak::atomic_optional<T>> thread_outputs)
+			lak::threaded_subrange<void, T>(
+			  begin,
+			  end,
+			  [&](size_t i,
+			      lak::span<lak::atomic_optional<T>> thread_outputs,
+			      ITER_IN sub_begin,
+			      ITER_IN sub_end,
+			      ITER_INS... sub_begins)
 			  {
-				  size_t start       = i * stride;
-				  size_t range_start = start + 1U;
-				  size_t stop =
-				    start + std::min<size_t>(size_t(lak::distance(begin + start, end)),
-				                             stride);
-
-				  BOUNDS_ASSERT_GREATER_OR_EQUAL(stop, range_start);
-
-				  thread_outputs[i].emplace(lak::transform_reduce<T>(
-				    lak::execution::unseq,
-				    lak::next(begin, range_start),
-				    lak::next(begin, stop),
-				    trans_func(*lak::next(begin, start), *lak::next(begins, start)...),
-				    binary_reduce,
-				    trans_func,
-				    lak::next(begins, range_start)...));
+				  thread_outputs[i].emplace(
+				    lak::transform_reduce<T>(lak::execution::unseq,
+				                             lak::next(sub_begin),
+				                             sub_end,
+				                             trans_func(*sub_begin, *sub_begins...),
+				                             binary_reduce,
+				                             trans_func,
+				                             lak::next(sub_begins)...));
 			  },
 			  [&](lak::span<lak::atomic_optional<T>> thread_outputs)
 			  {
@@ -624,71 +771,27 @@ T lak::transform_reduce(const POLICY &,
 				                             binary_reduce,
 				                             [](lak::atomic_optional<T> &result) -> T
 				                             { return result.release(); });
-			  },
-			  thread_count);
+			  });
 		}
 		else
 		{
-			const size_t thread_count = std::thread::hardware_concurrency();
-
 			using input_type =
 			  lak::tuple<std::iter_value_t<ITER_IN>, std::iter_value_t<ITER_INS>...>;
-			using output_type = decltype(trans_func(*begin, *begins...));
 
-			lak::threaded<input_type, output_type>(
-			  [&](size_t id,
-			      lak::span<lak::atomic_optional<input_type>> thread_inputs,
-			      lak::span<lak::atomic_optional<output_type>> thread_outputs)
+			lak::threaded_pipeline<input_type, T>(
+			  [&]() -> lak::optional<input_type>
 			  {
-				  auto &input  = thread_inputs[id];
-				  auto &output = thread_outputs[id];
-				  lak::while_some(
-				    [&] { return input.try_release(); },
-				    [&](input_type &&in)
-				    { output.emplace(lak::move(in).apply(trans_func)); });
-			  },
-			  [&](lak::span<lak::atomic_optional<input_type>> thread_inputs,
-			      lak::span<lak::atomic_optional<output_type>> thread_outputs)
-			  {
-				  // preload inputs
-				  for (size_t i = 0U; i < thread_count;)
-				  {
-					  thread_inputs[i].emplace(*begin, *begins...);
+				  if (begin == end) return lak::nullopt;
+				  DEFER({
 					  ++begin;
-					  ++i;
-					  if (begin == end)
-					  {
-						  // early termination
-						  for (size_t o = 0U; o < i; ++o)
-						  {
-							  init =
-							    binary_reduce(lak::move(init), thread_outputs[o].release());
-						  }
-						  return;
-					  }
-				  }
-
-				  // run threads
-				  size_t index = 0U;
-				  while (begin != end)
-				  {
-					  init =
-					    binary_reduce(lak::move(init), thread_outputs[index].release());
-					  thread_inputs[index].emplace(*begin, *begins...);
-					  ++begin;
-					  ++index;
-					  index %= thread_count;
-				  }
-
-				  // finish outputs
-				  for (size_t o = 0U; o < thread_count; ++o)
-				  {
-					  init = binary_reduce(
-					    lak::move(init),
-					    thread_outputs[(o + index) % thread_count].release());
-				  }
+					  ((++begins), ...);
+				  });
+				  return {lak::in_place, *begin, *begins...};
 			  },
-			  thread_count);
+			  [&](input_type &&input) -> T
+			  { return lak::forward<input_type>(input).apply(trans_func); },
+			  [&](T &&output)
+			  { init = binary_reduce(lak::move(init), lak::move(output)); });
 		}
 	}
 	else
@@ -703,9 +806,9 @@ T lak::transform_reduce(const POLICY &,
 /* --- count --- */
 
 template<std::forward_iterator ITER, typename T>
-size_t lak::count(ITER begin, ITER end, const T &value)
+std::iter_difference_t<ITER> lak::count(ITER begin, ITER end, const T &value)
 {
-	size_t result = 0;
+	std::iter_difference_t<ITER> result = 0;
 
 	for (; begin != end; ++begin)
 		if (*begin == value) ++result;
@@ -716,8 +819,7 @@ size_t lak::count(ITER begin, ITER end, const T &value)
 /* --- distance --- */
 
 template<std::input_iterator ITER>
-typename std::iterator_traits<ITER>::difference_type lak::distance(ITER begin,
-                                                                   ITER end)
+std::iter_difference_t<ITER> lak::distance(ITER begin, ITER end)
 {
 	if constexpr (std::random_access_iterator<ITER>)
 	{
@@ -725,7 +827,7 @@ typename std::iterator_traits<ITER>::difference_type lak::distance(ITER begin,
 	}
 	else
 	{
-		typename std::iterator_traits<ITER>::difference_type result = 0;
+		std::iter_difference_t<ITER> result = 0;
 		for (; begin != end; ++begin, ++result);
 		return result;
 	}
@@ -734,8 +836,7 @@ typename std::iterator_traits<ITER>::difference_type lak::distance(ITER begin,
 /* --- advance --- */
 
 template<std::input_iterator ITER>
-void lak::advance(ITER &it,
-                  typename std::iterator_traits<ITER>::difference_type offset)
+void lak::advance(ITER &it, std::iter_difference_t<ITER> offset)
 {
 	if constexpr (std::random_access_iterator<ITER>)
 	{
@@ -758,8 +859,7 @@ void lak::advance(ITER &it,
 /* --- next --- */
 
 template<std::input_iterator ITER>
-ITER lak::next(ITER it,
-               typename std::iterator_traits<ITER>::difference_type offset)
+ITER lak::next(ITER it, std::iter_difference_t<ITER> offset)
 {
 	lak::advance(it, offset);
 	return it;
@@ -842,7 +942,7 @@ bool lak::is_permutation(ITER_A begin_a,
 	for (auto it = begin_a; it != end_a; ++it)
 	{
 		if (lak::find(begin_a, it, *it) != it) continue;
-		if (size_t other_count = lak::count(begin_b, end_b, *it);
+		if (auto other_count = lak::count(begin_b, end_b, *it);
 		    other_count == 0 || other_count != lak::count(begin_a, end_a, *it))
 			return false;
 	}
@@ -853,10 +953,9 @@ bool lak::is_permutation(ITER_A begin_a,
 /* --- rotate_left --- */
 
 template<std::forward_iterator ITER>
-void lak::rotate_left(
-  ITER begin,
-  typename std::iterator_traits<ITER>::difference_type end_offset,
-  size_t distance)
+void lak::rotate_left(ITER begin,
+                      std::iter_difference_t<ITER> end_offset,
+                      std::iter_difference_t<ITER> distance)
 {
 	//  rotate left 11
 	//
@@ -922,9 +1021,9 @@ void lak::rotate_left(
 	//
 	// distance = slack(1, 1) = 0
 
-	if (end_offset < 0) return;
-	size_t working_size = static_cast<size_t>(end_offset);
-	if (working_size == 0 || distance % working_size == 0) return;
+	if (end_offset <= 0) return;
+	std::iter_difference_t<ITER> working_size = end_offset;
+	if (distance % working_size == 0) return;
 	distance %= working_size;
 
 	while (distance > 0 && working_size - distance > 0)
@@ -932,13 +1031,14 @@ void lak::rotate_left(
 		begin =
 		  lak::swap(begin, lak::next(begin, distance), working_size - distance)
 		    .first;
-		distance =
-		  lak::slack<size_t>(lak::exchange(working_size, distance), distance);
+		distance = lak::slack(lak::exchange(working_size, distance), distance);
 	}
 }
 
 template<std::forward_iterator ITER>
-void lak::rotate_left(ITER begin, ITER end, size_t distance)
+void lak::rotate_left(ITER begin,
+                      ITER end,
+                      std::iter_difference_t<ITER> distance)
 {
 	lak::rotate_left(begin, lak::distance(begin, end), distance);
 }
@@ -946,7 +1046,7 @@ void lak::rotate_left(ITER begin, ITER end, size_t distance)
 template<std::forward_iterator ITER>
 void lak::rotate_left(ITER begin, ITER mid, ITER end)
 {
-	const size_t distance   = lak::distance(begin, mid);
+	const auto distance     = lak::distance(begin, mid);
 	const auto working_size = distance + lak::distance(mid, end);
 	lak::rotate_left(begin, working_size, distance);
 }
@@ -954,30 +1054,34 @@ void lak::rotate_left(ITER begin, ITER mid, ITER end)
 /* --- rotate_right --- */
 
 template<std::forward_iterator ITER>
-void lak::rotate_right(
-  ITER begin,
-  typename std::iterator_traits<ITER>::difference_type end_offset,
-  size_t distance)
+void lak::rotate_right(ITER begin,
+                       std::iter_difference_t<ITER> end_offset,
+                       std::iter_difference_t<ITER> distance)
 {
 	lak::rotate_left(
-	  begin, end_offset, lak::slack<size_t>(distance, end_offset));
+	  begin,
+	  end_offset,
+	  lak::slack<std::iter_difference_t<ITER>>(distance, end_offset));
 }
 
 template<std::forward_iterator ITER>
-void lak::rotate_right(ITER begin, ITER end, size_t distance)
+void lak::rotate_right(ITER begin,
+                       ITER end,
+                       std::iter_difference_t<ITER> distance)
 {
-	const size_t working_size = lak::distance(begin, end);
+	const auto working_size = lak::distance(begin, end);
 	lak::rotate_left(
-	  begin, working_size, lak::slack<size_t>(distance, working_size));
+	  begin,
+	  working_size,
+	  lak::slack<std::iter_difference_t<ITER>>(distance, working_size));
 }
 
 template<std::forward_iterator ITER>
 void lak::rotate_right(ITER begin, ITER mid, ITER end)
 {
-	const size_t distance   = lak::distance(mid, end);
+	const auto distance     = lak::distance(mid, end);
 	const auto working_size = distance + lak::distance(begin, mid);
-	lak::rotate_left(
-	  begin, working_size, lak::slack<size_t>(distance, working_size));
+	lak::rotate_left(begin, working_size, lak::slack(distance, working_size));
 }
 
 /* --- reverse --- */
@@ -1194,9 +1298,9 @@ ITER lak::stable_partition(ITER begin, ITER end, auto predicate)
 		ITER second_false = first_true;
 		while (second_false != end && predicate(*second_false)) ++second_false;
 
-		const size_t false_count                   = first_true - first_false;
-		const size_t true_count                    = second_false - first_true;
-		[[maybe_unused]] const size_t total_extent = false_count + true_count;
+		const auto false_count                   = first_true - first_false;
+		const auto true_count                    = second_false - first_true;
+		[[maybe_unused]] const auto total_extent = false_count + true_count;
 
 		lak::rotate_left(first_false, second_false, false_count);
 
@@ -1304,11 +1408,11 @@ ITER lak::merge(ITER begin, ITER mid, ITER end, CMP compare)
 		// [old begin, begin): < *mid
 		// [begin, mid):      >= *mid
 
-		size_t offset = 0;
+		std::iter_difference_t<ITER> offset = 0;
 		if constexpr (std::random_access_iterator<ITER>)
 		{
 			auto new_mid{lak::lower_bound(mid, end, *begin, compare)};
-			offset = size_t(new_mid - mid);
+			offset = new_mid - mid;
 			mid    = new_mid;
 		}
 		else
@@ -1331,11 +1435,8 @@ template<std::forward_iterator ITER_A,
          std::forward_iterator ITER_B,
          typename ITER_OUT,
          typename CMP>
-requires(
-  std::output_iterator<typename std::iterator_traits<ITER_A>::value_type,
-                       ITER_OUT> &&
-  std::output_iterator<typename std::iterator_traits<ITER_B>::value_type,
-                       ITER_OUT>)
+requires(std::output_iterator<std::iter_value_t<ITER_A>, ITER_OUT> &&
+         std::output_iterator<std::iter_value_t<ITER_B>, ITER_OUT>)
 ITER_OUT lak::merge(ITER_A begin_a,
                     ITER_A end_a,
                     ITER_B begin_b,
@@ -1365,9 +1466,10 @@ ITER_OUT lak::merge(ITER_A begin_a,
 
 /* --- binary_tree_is_left_child --- */
 
-constexpr inline bool lak::binary_tree_is_left_child(size_t child)
+template<typename DIFF>
+constexpr inline bool lak::binary_tree_is_left_child(DIFF child)
 {
-	return (child & 1U) != 0U;
+	return (child & 1) != 0;
 }
 
 template<std::random_access_iterator ITER>
@@ -1378,9 +1480,10 @@ bool lak::binary_tree_is_left_child(ITER root, ITER child)
 
 /* --- binary_tree_left_child --- */
 
-constexpr inline size_t lak::binary_tree_left_child(size_t parent)
+template<typename DIFF>
+constexpr inline DIFF lak::binary_tree_left_child(DIFF parent)
 {
-	return (parent << 1U) + 1U;
+	return (parent << 1U) + 1;
 }
 
 template<std::random_access_iterator ITER>
@@ -1391,9 +1494,10 @@ ITER lak::binary_tree_left_child(ITER root, ITER parent)
 
 /* --- binary_tree_right_child --- */
 
-constexpr inline size_t lak::binary_tree_right_child(size_t parent)
+template<typename DIFF>
+constexpr inline DIFF lak::binary_tree_right_child(DIFF parent)
 {
-	return (parent << 1U) + 2U;
+	return (parent << 1U) + 2;
 }
 
 template<std::random_access_iterator ITER>
@@ -1404,9 +1508,10 @@ ITER lak::binary_tree_right_child(ITER root, ITER parent)
 
 /* --- binary_tree_parent --- */
 
-constexpr inline size_t lak::binary_tree_parent(size_t child)
+template<typename DIFF>
+constexpr inline DIFF lak::binary_tree_parent(DIFF child)
 {
-	return (child - 1U) >> 1U;
+	return (child - 1) >> 1U;
 }
 
 template<std::random_access_iterator ITER>
@@ -1439,11 +1544,13 @@ ITER lak::is_heap_until(ITER begin, ITER end, CMP compare)
 {
 	if ((end - begin) <= 1U) return end;
 
-	auto parent_iter = [&](size_t index) -> ITER
+	auto parent_iter = [&](std::iter_difference_t<ITER> index) -> ITER
 	{ return begin + ((index - 1U) >> 1U); };
 
 	ITER it = begin + 1U;
-	for (size_t i = 1U; it != end && !compare(*parent_iter(i), *it); ++it, ++i);
+	for (std::iter_difference_t<ITER> i = 1;
+	     it != end && !compare(*parent_iter(i), *it);
+	     ++it, ++i);
 	return it;
 }
 
@@ -1452,24 +1559,23 @@ ITER lak::is_heap_until(ITER begin, ITER end, CMP compare)
 template<std::random_access_iterator ITER, typename CMP>
 void lak::sift_down_heap(ITER begin, ITER to_sift, ITER end, CMP compare)
 {
-	auto index_of = [&](const ITER &iter) -> size_t
-	{ return size_t(iter - begin); };
+	auto index_of = [&](const ITER &iter) { return lak::distance(begin, iter); };
 
 	if (index_of(end) <= 1) return;
 
 	// end index rounded to the nearest left <= end
-	auto left_end = [&]() -> size_t
+	auto left_end = [&]() -> std::iter_difference_t<ITER>
 	{
-		const size_t last = index_of(end);
-		return last - (1U - (last & 1U));
+		const auto last = index_of(end);
+		return last - (1 - (last & 1));
 	};
 
 	// if there's an odd number of elements in the heap, then there's always a
 	// left and right child. if there's an even number of elements, then the last
 	// element is a left child (which has no right sibling).
 
-	for (size_t end_index   = left_end(),
-	            child_index = lak::binary_tree_left_child(index_of(to_sift));
+	for (auto end_index   = left_end(),
+	          child_index = lak::binary_tree_left_child(index_of(to_sift));
 	     child_index < end_index;
 	     child_index = lak::binary_tree_left_child(index_of(to_sift)))
 	{
@@ -1486,7 +1592,7 @@ void lak::sift_down_heap(ITER begin, ITER to_sift, ITER end, CMP compare)
 			return;
 	}
 
-	if (size_t left_index = lak::binary_tree_left_child(index_of(to_sift));
+	if (auto left_index = lak::binary_tree_left_child(index_of(to_sift));
 	    left_index < index_of(end))
 	{
 		ITER left = begin + left_index;
@@ -1570,17 +1676,20 @@ template<std::random_access_iterator ITER, typename F>
 ITER lak::depth_first_search_heap(ITER begin, ITER end, F &&predicate)
 {
 	if (begin == end) return begin;
-	size_t size = end - begin;
+	auto size = lak::distance(begin, end);
 
-	auto next_index = [size](size_t index) -> size_t
+	auto next_index =
+	  [size](std::iter_difference_t<ITER> index) -> std::iter_difference_t<ITER>
 	{
-		auto right_sibling = [](size_t index) -> size_t { return index + 1U; };
+		auto right_sibling =
+		  [](std::iter_difference_t<ITER> index) -> std::iter_difference_t<ITER>
+		{ return index + 1; };
 
-		if (index >= size - 1U) return size;
+		if (index >= size - 1) return size;
 
 		if (auto l = lak::binary_tree_left_child(index); l < size) return l;
 
-		while (index != 0U)
+		while (index != 0)
 		{
 			while (!lak::binary_tree_is_left_child(index))
 				index = lak::binary_tree_parent(index);
@@ -1590,7 +1699,8 @@ ITER lak::depth_first_search_heap(ITER begin, ITER end, F &&predicate)
 		return size;
 	};
 
-	for (size_t index = 0U; index != size; index = next_index(index))
+	for (std::iter_difference_t<ITER> index = 0; index != size;
+	     index                              = next_index(index))
 	{
 		if (predicate(*(begin + index))) return begin + index;
 	}

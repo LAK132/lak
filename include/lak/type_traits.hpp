@@ -987,11 +987,37 @@ namespace lak
 	  lak::is_same_v<lak::add_rvalue_reference_t<const volatile int &&>,
 	                 const volatile int &&>);
 
+	/* --- add_pointer --- */
+
+	template<typename T>
+	struct add_pointer : lak::type_identity<lak::remove_reference_t<T> *>
+	{
+	};
+
+	template<typename T>
+	using add_pointer_t = typename lak::add_pointer<T>::type;
+
+	static_assert(lak::is_same_v<lak::add_pointer_t<int>, int *>);
+	static_assert(lak::is_same_v<lak::add_pointer_t<const int>, const int *>);
+	static_assert(lak::is_same_v<lak::add_pointer_t<const volatile int>,
+	                             const volatile int *>);
+	static_assert(lak::is_same_v<lak::add_pointer_t<int &>, int *>);
+	static_assert(lak::is_same_v<lak::add_pointer_t<const int &>, const int *>);
+	static_assert(lak::is_same_v<lak::add_pointer_t<const volatile int &>,
+	                             const volatile int *>);
+	static_assert(lak::is_same_v<lak::add_pointer_t<int &&>, int *>);
+	static_assert(lak::is_same_v<lak::add_pointer_t<const int &&>, const int *>);
+	static_assert(lak::is_same_v<lak::add_pointer_t<const volatile int &&>,
+	                             const volatile int *>);
+
 	/* --- declval --- */
 	// :TODO: this should be in utility.hpp but circular dependencies suck
 
 	template<typename T>
 	lak::add_rvalue_reference_t<T> declval() noexcept;
+
+	template<typename T>
+	T declval_noref();
 
 	/* --- conditional --- */
 
@@ -1087,6 +1113,76 @@ namespace lak
 	static_assert(!lak::is_const_v<const volatile char &&>);
 	static_assert(!lak::is_const_v<char[]>);
 	static_assert(lak::is_const_v<const volatile char[]>);
+
+	/* --- copy_const --- */
+
+	template<typename FROM, typename TO>
+	using copy_const_t = lak::conditional_t<lak::is_const_v<FROM>,
+	                                        const lak::remove_const_t<TO>,
+	                                        lak::remove_const_t<TO>>;
+
+	template<typename TO, typename FROM1, typename... FROM2>
+	using copy_consts_t = lak::conditional_t<lak::is_const_v<FROM1> ||
+	                                           ((lak::is_const_v<FROM2>) || ...),
+	                                         const lak::remove_const_t<TO>,
+	                                         lak::remove_const_t<TO>>;
+
+	/* --- is_volatile --- */
+
+	template<typename T>
+	struct is_volatile : lak::false_type
+	{
+	};
+
+	template<typename T>
+	struct is_volatile<volatile T> : lak::true_type
+	{
+	};
+
+	template<typename T>
+	inline constexpr bool is_volatile_v = lak::is_volatile<T>::value;
+
+	static_assert(!lak::is_volatile_v<char>);
+	static_assert(!lak::is_volatile_v<const char>);
+	static_assert(lak::is_volatile_v<const volatile char>);
+	static_assert(!lak::is_volatile_v<char *>);
+	static_assert(!lak::is_volatile_v<const char *>);
+	static_assert(!lak::is_volatile_v<const volatile char *>);
+	static_assert(!lak::is_volatile_v<const volatile char *const>);
+	static_assert(lak::is_volatile_v<const volatile char *const volatile>);
+	static_assert(!lak::is_volatile_v<char &>);
+	static_assert(!lak::is_volatile_v<const char &>);
+	static_assert(!lak::is_volatile_v<const volatile char &>);
+	static_assert(!lak::is_volatile_v<char &&>);
+	static_assert(!lak::is_volatile_v<const char &&>);
+	static_assert(!lak::is_volatile_v<const volatile char &&>);
+	static_assert(!lak::is_volatile_v<char[]>);
+	static_assert(!lak::is_volatile_v<const char[]>);
+	static_assert(lak::is_volatile_v<const volatile char[]>);
+
+	/* --- copy_volatile --- */
+
+	template<typename FROM, typename TO>
+	using copy_volatile_t =
+	  lak::conditional_t<lak::is_volatile_v<FROM>,
+	                     volatile lak::remove_volatile_t<TO>,
+	                     lak::remove_volatile<TO>>;
+
+	template<typename TO, typename FROM1, typename... FROM2>
+	using copy_volatiles_t =
+	  lak::conditional_t<lak::is_volatile_v<FROM1> ||
+	                       ((lak::is_volatile_v<FROM2>) || ...),
+	                     volatile lak::remove_volatile_t<TO>,
+	                     lak::remove_volatile_t<TO>>;
+
+	/* --- copy_cv --- */
+
+	template<typename FROM, typename TO>
+	using copy_cv_t = lak::copy_const_t<FROM, lak::copy_volatile_t<FROM, TO>>;
+
+	template<typename TO, typename FROM1, typename... FROM2>
+	using copy_cvs_t = lak::
+	  copy_consts_t<lak::copy_volatiles_t<TO, FROM1, FROM2...>, FROM1, FROM2...>;
 
 	/* --- is_void --- */
 
@@ -1188,6 +1284,22 @@ namespace lak
 	static_assert(lak::is_reference_v<const volatile char &&>);
 	static_assert(!lak::is_reference_v<char[]>);
 	static_assert(!lak::is_reference_v<const volatile char[]>);
+
+	/* --- copy_ref --- */
+
+	template<typename FROM, typename TO>
+	using copy_ref_t = lak::conditional_t<
+	  lak::is_lvalue_reference_v<FROM>,
+	  lak::add_lvalue_reference_t<lak::remove_reference_t<TO>>,
+	  lak::conditional_t<
+	    lak::is_rvalue_reference_v<FROM>,
+	    lak::add_rvalue_reference_t<lak::remove_reference_t<TO>>,
+	    lak::remove_reference_t<TO>>>;
+
+	/* --- copy_cvref --- */
+
+	template<typename FROM, typename TO>
+	using copy_cvref_t = lak::copy_ref_t<FROM, lak::copy_cv_t<FROM, TO>>;
 
 	/* --- is_pointer --- */
 
@@ -1440,6 +1552,438 @@ namespace lak
 	template<typename T>
 	using decay_t = typename lak::decay<T>::type;
 
+	static_assert(lak::is_same_v<lak::decay_t<int>, int>);
+	static_assert(lak::is_same_v<lak::decay_t<const int>, int>);
+	static_assert(lak::is_same_v<lak::decay_t<const volatile int>, int>);
+	static_assert(lak::is_same_v<lak::decay_t<int &>, int>);
+	static_assert(lak::is_same_v<lak::decay_t<const int &>, int>);
+	static_assert(lak::is_same_v<lak::decay_t<const volatile int &>, int>);
+	static_assert(lak::is_same_v<lak::decay_t<int &&>, int>);
+	static_assert(lak::is_same_v<lak::decay_t<const int &&>, int>);
+	static_assert(lak::is_same_v<lak::decay_t<const volatile int &&>, int>);
+	static_assert(lak::is_same_v<lak::decay_t<int (*)(int)>, int (*)(int)>);
+	static_assert(lak::is_same_v<lak::decay_t<int (*&)(int)>, int (*)(int)>);
+	static_assert(lak::is_same_v<lak::decay_t<int (*[])(int)>, int (**)(int)>);
+	static_assert(
+	  lak::is_same_v<lak::decay_t<int (*const &)(int)>, int (*)(int)>);
+	static_assert(lak::is_same_v<lak::decay_t<int[]>, int *>);
+	static_assert(lak::is_same_v<lak::decay_t<const int[]>, const int *>);
+	static_assert(
+	  lak::is_same_v<lak::decay_t<const volatile int[]>, const volatile int *>);
+	static_assert(lak::is_same_v<lak::decay_t<int[2U]>, int *>);
+	static_assert(lak::is_same_v<lak::decay_t<const int[2U]>, const int *>);
+	static_assert(lak::is_same_v<lak::decay_t<const volatile int[2U]>,
+	                             const volatile int *>);
+
+	/* --- is_convertible --- */
+
+	template<typename FROM, typename TO>
+	struct is_convertible : lak::false_type
+	{
+	};
+
+	template<typename FROM, typename TO>
+	TO _convertible_test()
+	{
+		return lak::declval<FROM>();
+	}
+
+	template<typename FROM, typename TO>
+	requires requires { _convertible_test<FROM, TO>(); }
+	struct is_convertible<FROM, TO> : lak::true_type
+	{
+	};
+
+	template<typename FROM, typename TO>
+	inline constexpr bool is_convertible_v =
+	  lak::is_convertible<FROM, TO>::value;
+
+	/* --- is_object --- */
+
+	template<typename T>
+	struct is_object
+	: lak::bool_type<!lak::is_function_v<lak::remove_cv_t<T>> &&
+	                 !lak::is_reference_v<lak::remove_cv_t<T>> &&
+	                 !lak::is_void_v<lak::remove_cv_t<T>>>
+	/*
+	: lak::bool_type<lak::is_scalar_v<T> ||
+	                 lak::is_array_v<T> ||
+	                 lak::is_union_v<T> ||
+	                 lak::is_class_v<T>>
+	*/
+	{
+	};
+
+	template<typename T>
+	inline constexpr bool is_object_v = lak::is_object<T>::value;
+
+	/* --- common_type --- */
+
+	template<typename... T>
+	struct common_type;
+
+	template<typename T>
+	struct common_type<T> : lak::type_identity<T>
+	{
+	};
+
+	template<typename T, typename U>
+	requires(lak::is_same_v<T, U>)
+	struct _common_type0 : lak::type_identity<T>
+	{
+	};
+	template<typename T, typename U>
+	concept _is_common_type0 =
+	  requires { typename lak::_common_type0<T, U>::type; };
+
+	static_assert(lak::_is_common_type0<int, int>);
+	static_assert(!lak::_is_common_type0<int, int &>);
+	static_assert(!lak::_is_common_type0<int &, int>);
+
+	template<typename T, typename U>
+	requires lak::_is_common_type0<T, U>
+	struct common_type<T, U> : lak::_common_type0<T, U>
+	{
+	};
+
+	template<typename T, typename U>
+	requires(!(lak::is_same_v<T, lak::decay_t<T>> &&
+	           lak::is_same_v<U, lak::decay_t<U>>))
+	struct _common_type1 : lak::common_type<lak::decay_t<T>, lak::decay_t<U>>
+	{
+	};
+	template<typename T, typename U>
+	concept _is_common_type1 = !lak::_is_common_type0<T, U> && requires {
+		typename lak::_common_type1<T, U>::type;
+	};
+
+	static_assert(!lak::_is_common_type1<int, int>);
+	static_assert(lak::_is_common_type1<int, int &>);
+
+	template<typename T, typename U>
+	requires _is_common_type1<T, U>
+	struct common_type<T, U> : lak::_common_type1<T, U>
+	{
+	};
+
+	template<typename T, typename U>
+	struct _common_type2
+	{
+		using type =
+		  lak::decay_t<decltype(false ? lak::declval<T>() : lak::declval<U>())>;
+	};
+	template<typename T, typename U>
+	concept _is_common_type2 =
+	  !lak::_is_common_type0<T, U> && !lak::_is_common_type1<T, U> &&
+	  requires { typename lak::_common_type2<T, U>::type; };
+
+	template<typename T, typename U>
+	requires lak::_is_common_type2<T, U>
+	struct common_type<T, U> : lak::_common_type2<T, U>
+	{
+	};
+
+	template<typename T, typename U>
+	struct _common_type3
+	{
+		using type = lak::decay_t<
+		  decltype(false ? lak::declval<const lak::remove_reference_t<T> &>()
+		                 : lak::declval<const lak::remove_reference_t<U> &>())>;
+	};
+	template<typename T, typename U>
+	concept _is_common_type3 =
+	  !lak::_is_common_type0<T, U> && !lak::_is_common_type1<T, U> &&
+	  !lak::_is_common_type2<T, U> &&
+	  requires { typename lak::_common_type3<T, U>::type; };
+
+	template<typename T, typename U>
+	requires _is_common_type3<T, U>
+	struct common_type<T, U> : lak::_common_type2<T, U>
+	{
+	};
+
+	template<typename T, typename U, typename... V>
+	struct common_type<T, U, V...>
+	: lak::common_type<typename lak::common_type<T, U>::type, V...>
+	{
+	};
+
+	template<typename... T>
+	using common_type_t = typename lak::common_type<T...>::type;
+
+	static_assert(lak::is_same_v<lak::common_type_t<int>, int>);
+	static_assert(lak::is_same_v<lak::common_type_t<int, int>, int>);
+	static_assert(lak::is_same_v<lak::common_type_t<int, int, int>, int>);
+	static_assert(lak::is_same_v<lak::common_type_t<int &>, int &>);
+	static_assert(lak::is_same_v<lak::common_type_t<int &, int>, int>);
+	static_assert(lak::is_same_v<lak::common_type_t<int &, int, int>, int>);
+
+	/* --- common_reference --- */
+
+	template<typename T>
+	struct _basic_common_reference
+	{
+		template<typename U>
+		using type = lak::copy_cvref_t<T, U>;
+	};
+
+	template<typename T,
+	         typename U,
+	         template<typename> typename TQ,
+	         template<typename> typename UQ>
+	struct basic_common_reference;
+
+	template<typename... T>
+	struct common_reference;
+
+	template<typename T>
+	struct common_reference<T> : lak::type_identity<T>
+	{
+	};
+
+	template<typename T, typename U>
+	struct _common_reference1;
+
+	template<typename T, typename U>
+	requires(lak::is_lvalue_reference_v<T> && lak::is_lvalue_reference_v<U>)
+	struct _common_reference1<T, U>
+	{
+		using comm = decltype(false ? lak::declval<lak::copy_cvs_t<T, T, U>>()
+		                            : lak::declval<lak::copy_cvs_t<U, T, U>>());
+		using type = lak::enable_if_t<
+		  lak::is_convertible_v<lak::add_pointer_t<T>, lak::add_pointer_t<comm>> &&
+		    lak::is_convertible_v<lak::add_pointer_t<U>, lak::add_pointer_t<comm>>,
+		  comm>;
+	};
+	template<typename T, typename U>
+	requires(lak::is_rvalue_reference_v<T> && lak::is_rvalue_reference_v<U>) &&
+	        requires {
+		        typename lak::_common_reference1<
+		          lak::add_lvalue_reference_t<T>,
+		          lak::add_lvalue_reference_t<U>>::type;
+	        }
+	struct _common_reference1<T, U>
+	{
+		using comm =
+		  typename lak::_common_reference1<lak::add_lvalue_reference_t<T>,
+		                                   lak::add_lvalue_reference_t<U>>::type;
+		using type = lak::enable_if_t<lak::is_convertible_v<T, comm> &&
+		                                lak::is_convertible_v<U, comm>,
+		                              comm>;
+	};
+	template<typename T, typename U>
+	requires(lak::is_lvalue_reference_v<T> && lak::is_rvalue_reference_v<U>) &&
+	        requires {
+		        typename lak::
+		          _common_reference1<T, lak::remove_reference_t<U> const &>::type;
+	        }
+	struct _common_reference1<T, U>
+	{
+		using comm = typename lak::
+		  _common_reference1<T, lak::remove_reference_t<U> const &>::type;
+		using type = lak::enable_if_t<lak::is_convertible_v<U, comm>, comm>;
+	};
+	template<typename T, typename U>
+	requires(lak::is_rvalue_reference_v<T> && lak::is_lvalue_reference_v<U>) &&
+	        requires {
+		        typename lak::
+		          _common_reference1<lak::remove_reference_t<T> const &, U>::type;
+	        }
+	struct _common_reference1<T, U>
+	{
+		using comm =
+		  typename lak::_common_reference1<lak::remove_reference_t<T> const &,
+		                                   U>::type;
+		using type = lak::enable_if_t<lak::is_convertible_v<T, comm>, comm>;
+	};
+	template<typename T, typename U>
+	concept _is_common_reference1 =
+	  requires { typename lak::_common_reference1<T, U>::type; };
+
+	static_assert(!lak::_is_common_reference1<int, int &>);
+	static_assert(!lak::_is_common_reference1<int, int &&>);
+	static_assert(!lak::_is_common_reference1<int &, int>);
+	static_assert(!lak::_is_common_reference1<int &&, int>);
+	static_assert(!lak::_is_common_reference1<const int, int &>);
+	static_assert(!lak::_is_common_reference1<const int, int &&>);
+	static_assert(!lak::_is_common_reference1<const int &, int>);
+	static_assert(!lak::_is_common_reference1<const int &&, int>);
+	static_assert(!lak::_is_common_reference1<int, const int &>);
+	static_assert(!lak::_is_common_reference1<int, const int &&>);
+	static_assert(!lak::_is_common_reference1<int &, const int>);
+	static_assert(!lak::_is_common_reference1<int &&, const int>);
+	static_assert(!lak::_is_common_reference1<int[], int[]>);
+	static_assert(!lak::_is_common_reference1<int[4], int[4]>);
+	static_assert(lak::_is_common_reference1<int &, int &>);
+	static_assert(
+	  lak::is_same_v<typename lak::_common_reference1<int &, int &>::type,
+	                 int &>);
+	static_assert(lak::_is_common_reference1<int &, int &&>);
+	static_assert(lak::_is_common_reference1<int &&, int &&>);
+	static_assert(lak::_is_common_reference1<int &&, int &>);
+	static_assert(lak::_is_common_reference1<const int &, int &>);
+	static_assert(lak::_is_common_reference1<const int &, int &&>);
+	static_assert(lak::_is_common_reference1<const int &&, int &&>);
+	static_assert(lak::_is_common_reference1<const int &&, int &>);
+	static_assert(lak::_is_common_reference1<int &, const int &>);
+	static_assert(lak::_is_common_reference1<int &, const int &&>);
+	static_assert(lak::_is_common_reference1<int &&, const int &&>);
+	static_assert(lak::_is_common_reference1<int &&, const int &>);
+	static_assert(lak::_is_common_reference1<const int &, const int &>);
+	static_assert(lak::_is_common_reference1<const int &, const int &&>);
+	static_assert(lak::_is_common_reference1<const int &&, const int &&>);
+	static_assert(lak::_is_common_reference1<const int &&, const int &>);
+
+	template<typename T, typename U>
+	requires _is_common_reference1<T, U>
+	struct common_reference<T, U> : lak::_common_reference1<T, U>
+	{
+	};
+
+	template<typename T, typename U>
+	requires requires {
+		typename lak::basic_common_reference<
+		  lak::remove_cvref_t<T>,
+		  lak::remove_cvref_t<U>,
+		  typename lak::_basic_common_reference<T>::type,
+		  typename lak::_basic_common_reference<U>::type>::type;
+	}
+	struct _common_reference2
+	: lak::basic_common_reference<lak::remove_cvref_t<T>,
+	                              lak::remove_cvref_t<U>,
+	                              typename lak::_basic_common_reference<T>::type,
+	                              typename lak::_basic_common_reference<U>::type>
+	{
+	};
+	template<typename T, typename U>
+	concept _is_common_reference2 =
+	  !lak::_is_common_reference1<T, U> &&
+	  requires { typename lak::_common_reference2<T, U>::type; };
+
+	static_assert(!lak::_is_common_reference2<int, int>);
+
+	template<typename T, typename U>
+	requires lak::_is_common_reference2<T, U>
+	struct common_reference<T, U> : lak::_common_reference2<T, U>
+	{
+	};
+
+	template<typename T, typename U>
+	requires requires {
+		lak::declval_noref<T>();
+		lak::declval_noref<U>();
+	}
+	struct _common_reference3
+	{
+		using type =
+		  decltype(false ? lak::declval_noref<T>() : lak::declval_noref<U>());
+	};
+	template<typename T, typename U>
+	concept _is_common_reference3 =
+	  !lak::_is_common_reference1<T, U> && !lak::_is_common_reference2<T, U> &&
+	  requires { typename lak::_common_reference3<T, U>::type; };
+
+	template<typename T, typename U>
+	requires lak::_is_common_reference3<T, U>
+	struct common_reference<T, U> : lak::_common_reference3<T, U>
+	{
+	};
+
+	static_assert(lak::_is_common_reference3<int, int &>);
+	static_assert(lak::_is_common_reference3<int, int &&>);
+	static_assert(lak::_is_common_reference3<int &, int>);
+	static_assert(lak::_is_common_reference3<int &&, int>);
+	static_assert(lak::_is_common_reference3<const int, int &>);
+	static_assert(lak::_is_common_reference3<const int, int &&>);
+	static_assert(lak::_is_common_reference3<const int &, int>);
+	static_assert(lak::_is_common_reference3<const int &&, int>);
+	static_assert(lak::_is_common_reference3<int, const int &>);
+	static_assert(lak::_is_common_reference3<int, const int &&>);
+	static_assert(lak::_is_common_reference3<int &, const int>);
+	static_assert(lak::_is_common_reference3<int &&, const int>);
+	static_assert(!lak::_is_common_reference3<int[], int[]>);
+	static_assert(!lak::_is_common_reference3<int[4], int[4]>);
+	static_assert(!lak::_is_common_reference3<int &, int &>);
+	static_assert(!lak::_is_common_reference3<int &, int &&>);
+	static_assert(!lak::_is_common_reference3<int &&, int &&>);
+	static_assert(!lak::_is_common_reference3<int &&, int &>);
+	static_assert(!lak::_is_common_reference3<const int &, int &>);
+	static_assert(!lak::_is_common_reference3<const int &, int &&>);
+	static_assert(!lak::_is_common_reference3<const int &&, int &&>);
+	static_assert(!lak::_is_common_reference3<const int &&, int &>);
+	static_assert(!lak::_is_common_reference3<int &, const int &>);
+	static_assert(!lak::_is_common_reference3<int &, const int &&>);
+	static_assert(!lak::_is_common_reference3<int &&, const int &&>);
+	static_assert(!lak::_is_common_reference3<int &&, const int &>);
+	static_assert(!lak::_is_common_reference3<const int &, const int &>);
+	static_assert(!lak::_is_common_reference3<const int &, const int &&>);
+	static_assert(!lak::_is_common_reference3<const int &&, const int &&>);
+	static_assert(!lak::_is_common_reference3<const int &&, const int &>);
+
+	template<typename T, typename U>
+	struct _common_reference4 : lak::common_type<T, U>
+	{
+	};
+	template<typename T, typename U>
+	concept _is_common_reference4 =
+	  !lak::_is_common_reference1<T, U> && !lak::_is_common_reference2<T, U> &&
+	  !lak::_is_common_reference3<T, U> &&
+	  requires { typename lak::_common_reference4<T, U>::type; };
+
+	static_assert(!lak::_is_common_reference4<int, int &>);
+	static_assert(!lak::_is_common_reference4<int, int &&>);
+	static_assert(!lak::_is_common_reference4<int &, int>);
+	static_assert(!lak::_is_common_reference4<int &&, int>);
+	static_assert(!lak::_is_common_reference4<const int, int &>);
+	static_assert(!lak::_is_common_reference4<const int, int &&>);
+	static_assert(!lak::_is_common_reference4<const int &, int>);
+	static_assert(!lak::_is_common_reference4<const int &&, int>);
+	static_assert(!lak::_is_common_reference4<int, const int &>);
+	static_assert(!lak::_is_common_reference4<int, const int &&>);
+	static_assert(!lak::_is_common_reference4<int &, const int>);
+	static_assert(!lak::_is_common_reference4<int &&, const int>);
+	static_assert(lak::_is_common_reference4<int[], int[]>);
+	static_assert(lak::_is_common_reference4<int[4], int[4]>);
+	static_assert(!lak::_is_common_reference4<int &, int &>);
+	static_assert(!lak::_is_common_reference4<int &, int &&>);
+	static_assert(!lak::_is_common_reference4<int &&, int &&>);
+	static_assert(!lak::_is_common_reference4<int &&, int &>);
+	static_assert(!lak::_is_common_reference4<const int &, int &>);
+	static_assert(!lak::_is_common_reference4<const int &, int &&>);
+	static_assert(!lak::_is_common_reference4<const int &&, int &&>);
+	static_assert(!lak::_is_common_reference4<const int &&, int &>);
+	static_assert(!lak::_is_common_reference4<int &, const int &>);
+	static_assert(!lak::_is_common_reference4<int &, const int &&>);
+	static_assert(!lak::_is_common_reference4<int &&, const int &&>);
+	static_assert(!lak::_is_common_reference4<int &&, const int &>);
+	static_assert(!lak::_is_common_reference4<const int &, const int &>);
+	static_assert(!lak::_is_common_reference4<const int &, const int &&>);
+	static_assert(!lak::_is_common_reference4<const int &&, const int &&>);
+	static_assert(!lak::_is_common_reference4<const int &&, const int &>);
+
+	template<typename T, typename U>
+	requires lak::_is_common_reference4<T, U>
+	struct common_reference<T, U> : lak::_common_reference4<T, U>
+	{
+	};
+
+	template<typename T, typename U, typename... V>
+	struct common_reference<T, U, V...>
+	: lak::common_reference<typename lak::common_reference<T, U>::type, V...>
+	{
+	};
+
+	template<typename... T>
+	using common_reference_t = typename lak::common_reference<T...>::type;
+
+	static_assert(lak::is_same_v<lak::common_reference_t<int>, int>);
+	static_assert(lak::is_same_v<lak::common_reference_t<int, int>, int>);
+	static_assert(lak::is_same_v<lak::common_reference_t<int, int, int>, int>);
+	static_assert(lak::is_same_v<lak::common_reference_t<int &>, int &>);
+	static_assert(lak::is_same_v<lak::common_reference_t<int &, int &>, int &>);
+	static_assert(
+	  lak::is_same_v<lak::common_reference_t<int &, int &, int &>, int &>);
+
 	/* --- lvalue_to_ptr --- */
 
 	template<typename T>
@@ -1467,13 +2011,6 @@ namespace lak
 	static_assert(lak::is_same_v<char &&, lak::lvalue_to_ptr_t<char &&>>);
 	static_assert(lak::is_same_v<const volatile char &&,
 	                             lak::lvalue_to_ptr_t<const volatile char &&>>);
-
-	/* --- copy_const --- */
-
-	template<typename FROM, typename TO>
-	using copy_const_t = lak::conditional_t<lak::is_const_v<FROM>,
-	                                        const lak::remove_const_t<TO>,
-	                                        lak::remove_const_t<TO>>;
 
 	/* --- nth_type --- */
 
