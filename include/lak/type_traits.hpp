@@ -1857,7 +1857,8 @@ namespace lak
 	template<typename T, typename U>
 	requires(lak::_common_reference2_impl<T, U>::value)
 	struct _common_reference2
-	: lak::type_identity<typename lak::_common_reference2_impl<T, U>::template type<T, U>>
+	: lak::type_identity<
+	    typename lak::_common_reference2_impl<T, U>::template type<T, U>>
 	{
 	};
 	template<typename T, typename U>
