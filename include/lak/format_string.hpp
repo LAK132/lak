@@ -422,8 +422,10 @@ namespace lak
 		static constexpr lak::pair<size_t, lak::string_view<char_type>> specifier(
 		  size_t index)
 		{
-			if (std::is_constant_evaluated() && index >= specifiers.size())
-				throw "index out of range";
+			if consteval
+			{
+				if (index >= specifiers.size()) throw "index out of range";
+			}
 			const auto spec = specifiers[index];
 			return lak::pair(
 			  spec.first,
@@ -432,8 +434,10 @@ namespace lak
 
 		static constexpr lak::string_view<char_type> prefix(size_t index)
 		{
-			if (std::is_constant_evaluated() && index >= prefixes.size())
-				throw "index out of range";
+			if consteval
+			{
+				if (index >= prefixes.size()) throw "index out of range";
+			}
 			const auto spec = prefixes[index];
 			return prefixes_buffer().substr(spec.first, spec.second);
 		}

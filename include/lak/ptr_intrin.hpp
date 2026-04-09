@@ -121,10 +121,14 @@ namespace lak
 	                                         const T *begin,
 	                                         const T *end)
 	{
-		if (std::is_constant_evaluated())
+		if consteval
+		{
 			return !std::less<void>{}(ptr, begin) && std::less<void>{}(ptr, end);
+		}
 		else
+		{
 			return !__lakc_ptr_lt(ptr, begin) && __lakc_ptr_lt(ptr, end);
+		}
 	}
 
 	template<typename T>
@@ -133,19 +137,23 @@ namespace lak
 	                                         size_t size)
 	{
 		if constexpr (lak::is_void_v<T>)
+		{
 			return lak::ptr_in_range(
 			  ptr,
 			  begin,
 			  static_cast<const void *>(static_cast<const byte_t *>(begin) + size));
+		}
 		else
+		{
 			return lak::ptr_in_range(ptr, begin, begin + size);
+		}
 	}
 
 	template<typename T>
 	constexpr force_inline lak::strong_ordering ptr_compare(const T *a,
 	                                                        const T *b)
 	{
-		if (std::is_constant_evaluated())
+		if consteval
 		{
 			return std::less<void>{}(a, b)
 			         ? lak::strong_ordering::less
