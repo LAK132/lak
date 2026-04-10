@@ -330,7 +330,7 @@ void lak::threaded_pipeline(auto input_generator,
 	size_t index      = 0U;
 	auto input_mapper = [&](INPUT &&input)
 	{
-		thread_inputs[index].emplace(lak::move(input));
+		thread_inputs[index].emplace(lak::forward<INPUT>(input));
 		return lak::monostate();
 	};
 
