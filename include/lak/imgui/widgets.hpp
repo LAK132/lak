@@ -1,6 +1,7 @@
 #ifndef LAK_IMGUI_WIDGETS_HPP
 #define LAK_IMGUI_WIDGETS_HPP
 
+#include "lak/const_string.hpp"
 #include "lak/error_code_result.hpp"
 #include "lak/macro_utils.hpp"
 #include "lak/optional.hpp"
@@ -19,6 +20,9 @@
 
 namespace lak
 {
+	template<lak::u8const_string STR, typename... ARGS>
+	void Text(ARGS &&...args);
+
 	ImTextureRef CreateTexture(const lak::image<lak::vec4u8_t> &image);
 	ImTextureRef CreateTexture(const lak::image<lak::vec3u8_t> &image);
 	ImTextureRef CreateTexture(const lak::image<lak::vec4u16_t> &image);
@@ -99,15 +103,29 @@ namespace lak
 
 	bool TreeNode(const char *fmt, ...);
 
+	template<lak::u8const_string FMT, typename... ARGS>
+	bool TreeNode(ARGS &&...args);
+
 	struct tree_node
 	{
+	private:
 		bool _result;
+		tree_node(bool b) : _result(b) { ImGui::Separator(); }
+
+	public:
+		tree_node(tree_node &&o) : _result(lak::exchange(o._result, false)) {}
 
 		template<typename... ARGS>
 		tree_node(const char *fmt, ARGS &&...args)
 		: _result(lak::TreeNode(fmt, lak::forward<ARGS>(args)...))
 		{
 			ImGui::Separator();
+		}
+
+		template<lak::u8const_string FMT, typename... ARGS>
+		static tree_node make(ARGS &&...args)
+		{
+			return {lak::TreeNode<FMT>(lak::forward<ARGS>(args)...)};
 		}
 
 		inline ~tree_node()
@@ -124,6 +142,11 @@ namespace lak
 
 #define LAK_TREE_NODE(...)                                                    \
 	if (lak::tree_node UNIQUIFY(TREE_NODE_)(__VA_ARGS__); UNIQUIFY(TREE_NODE_))
+
+#define LAK_TREE_NODE2(FMT, ...)                                              \
+	if (lak::tree_node UNIQUIFY(TREE_NODE_){                                    \
+	      lak::tree_node::make<u8"" FMT>(__VA_ARGS__)};                         \
+	    UNIQUIFY(TREE_NODE_))
 
 	enum struct file_open_error
 	{

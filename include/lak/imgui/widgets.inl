@@ -1,6 +1,17 @@
 #include "widgets.hpp"
 
 #include "lak/await.hpp"
+#include "lak/format.hpp"
+
+#include "imgui_internal.h"
+
+template<lak::u8const_string STR, typename... ARGS>
+void lak::Text(ARGS &&...args)
+{
+	lak::u8string str = lak::fmt<STR>(lak::forward<ARGS>(args)...);
+	const char *c_str = reinterpret_cast<const char *>(str.c_str());
+	ImGui::TextUnformatted(c_str, c_str + str.size());
+}
 
 template<typename R, typename... T, typename... D>
 bool lak::AwaitPopup(const char *str_id,
@@ -95,4 +106,17 @@ inline void lak::hori_split_child::end() const
 {
 	ImGui::EndChild();
 	ImGui::PopID();
+}
+
+template<lak::u8const_string FMT, typename... ARGS>
+bool lak::TreeNode(ARGS &&...args)
+{
+	ImGuiWindow *wnd = ImGui::GetCurrentWindow();
+	if (wnd->SkipItems) return false;
+
+	const auto str    = lak::fmt<FMT>(lak::forward<ARGS>(args)...);
+	const char *c_str = reinterpret_cast<const char *>(str.c_str());
+
+	return ImGui::TreeNodeBehavior(
+	  wnd->GetID(c_str, c_str + str.size()), 0, c_str);
 }
