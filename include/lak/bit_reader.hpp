@@ -13,7 +13,8 @@ namespace lak
 	  T,
 	  lak::variant<lak::err::out_of_data, lak::err::value_out_of_range>>;
 
-	template<lak::endian ENDIAN = lak::endian::little>
+	template<lak::endian BYTE_ENDIAN = lak::endian::little,
+	         lak::endian BIT_ENDIAN  = lak::endian::little>
 	struct bit_reader
 	{
 	private:
