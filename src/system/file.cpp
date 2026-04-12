@@ -107,8 +107,14 @@ lak::error_code_result<bool> lak::remove_path(const fs::path &path)
 		return lak::ok_t{result};
 }
 
-lak::errno_result<lak::array<byte_t>> lak::read_file(const lak::fs::path &path)
+lak::error_code_result<lak::array<byte_t>> lak::read_file(
+  const lak::fs::path &path)
 {
+#if 1
+	RES_TRY_ASSIGN(auto mapped =, lak::map_file(path));
+	return lak::ok_t<lak::array<byte_t>>{
+	  {mapped.data.begin(), mapped.data.end()}};
+#else
 	std::ifstream file(path, std::ios::binary | std::ios::ate);
 	if (!file.is_open()) return lak::err_t{lak::errno_error::last_error()};
 
@@ -125,6 +131,7 @@ lak::errno_result<lak::array<byte_t>> lak::read_file(const lak::fs::path &path)
 	if (file.fail()) return lak::err_t{lak::errno_error::last_error()};
 
 	return lak::move_ok(result);
+#endif
 }
 
 bool lak::save_file(const lak::fs::path &path, lak::span<const byte_t> data)

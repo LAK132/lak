@@ -50,7 +50,7 @@ namespace lak
 
 	lak::error_code_result<bool> remove_path(const fs::path &path);
 
-	lak::errno_result<lak::array<byte_t>> read_file(const fs::path &path);
+	lak::error_code_result<lak::array<byte_t>> read_file(const fs::path &path);
 
 	struct mapped_file_impl;
 	struct mapped_file
