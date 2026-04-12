@@ -1712,8 +1712,7 @@ ITER lak::depth_first_search_heap(ITER begin, ITER end, F &&predicate)
 template<std::random_access_iterator ITER, typename CMP>
 void lak::heapsort(ITER begin, ITER end, CMP compare)
 {
-	if ((end - begin) <= 1U) return;
-
+	if (lak::distance(begin, end) <= 1U) return;
 	lak::make_heap(begin, end, compare);
 	lak::sort_heap(begin, end, compare);
 }
