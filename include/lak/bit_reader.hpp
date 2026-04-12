@@ -2,6 +2,7 @@
 #define LAK_BIT_READER_HPP
 
 #include "lak/binary_reader.hpp"
+#include "lak/bit_count.hpp"
 #include "lak/result.hpp"
 #include "lak/span.hpp"
 
@@ -37,19 +38,17 @@ namespace lak
 		bit_reader &operator=(const bit_reader &) = default;
 
 		// (bytes, bits)
-		inline lak::pair<uintmax_t, uint8_t> bytes_read() const
+		inline lak::bit_count bytes_read() const
 		{
-			return lak::pair<uintmax_t, uint8_t>(_bytes_read,
-			                                     uint8_t(8 - _unused_bits));
+			return lak::bit_count{.bytes = size_t(_bytes_read),
+			                      .bits  = uint8_t(8 - _unused_bits)};
 		}
 
-		inline lak::pair<uintmax_t, uint8_t> bytes_remaining() const
+		inline lak::bit_count bytes_remaining() const
 		{
-			uintmax_t whole_bytes =
-			  _data.size() + (_num_bits / 8) - (_unused_bits != 8 ? 1 : 0);
-			uint8_t bits = (_num_bits % 8) + (_unused_bits % 8);
-			return lak::pair<uintmax_t, uint8_t>(whole_bytes + uintmax_t(bits / 8),
-			                                     uint8_t(bits % 8));
+			return (lak::bit_count::from_bytes(_data.size()) -
+			        lak::bit_count::from_bits(8U - _unused_bits)) +
+			       lak::bit_count::from_bits(_num_bits);
 		}
 
 		inline bit_reader(lak::span<const byte_t> data) : _data(data) {}
@@ -68,7 +67,7 @@ namespace lak
 
 		inline lak::bit_reader_result<byte_t> read_byte();
 
-		inline lak::bit_reader_result<> skip(size_t bytes, size_t bits);
+		inline lak::bit_reader_result<> skip(lak::bit_count bits);
 
 		inline lak::bit_reader_result<> skip_bits(const size_t bits);
 

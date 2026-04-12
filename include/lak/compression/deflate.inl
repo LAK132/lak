@@ -101,7 +101,7 @@ inline lak::deflate_iterator &lak::deflate_iterator::step()
 					// Uncompressed block
 
 					// go to byte boundary
-					if (_compressed.read_bits((8 - _compressed.bytes_read().second) % 8)
+					if (_compressed.read_bits((8 - _compressed.bytes_read().bits) % 8)
 					      .is_err())
 						return fail(error_t::out_of_data);
 

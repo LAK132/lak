@@ -73,14 +73,8 @@ inline lak::bit_reader_result<uintmax_t> lak::bit_reader<ENDIAN>::peek_bits(
 	if (bits > std::numeric_limits<uintmax_t>::digits)
 		return lak::err_t{lak::err::value_out_of_range{}};
 
-	if (bits > _num_bits)
-	{
-		auto [bytes_rem, bits_rem] = bytes_remaining();
-		if (const uint8_t bytes = bits / 8U, frac_bits = bits % 8U;
-		    !((bytes_rem > bytes) ||
-		      ((bytes_rem == bytes) && (bits_rem >= frac_bits))))
-			return lak::err_t<lak::err::out_of_data>{};
-	}
+	if (lak::bit_count::from_bits(bits) > bytes_remaining())
+		return lak::err_t<lak::err::out_of_data>{};
 
 	accumulate_to(bits);
 
@@ -110,49 +104,35 @@ inline lak::bit_reader_result<byte_t> lak::bit_reader<ENDIAN>::read_byte()
 }
 
 template<lak::endian ENDIAN>
-inline lak::bit_reader_result<> lak::bit_reader<ENDIAN>::skip(size_t bytes,
-                                                              size_t bits)
+inline lak::bit_reader_result<> lak::bit_reader<ENDIAN>::skip(
+  lak::bit_count count)
 {
-	bytes += bits / 8U;
-	bits = bits % 8U;
+	count.normalise();
 
+	auto acc = lak::bit_count::from_bits(_num_bits);
+	if (acc >= count)
 	{
-		const uint8_t acc_num_bits  = _num_bits % 8U,
-		              acc_num_bytes = _num_bits / 8U;
-		if ((acc_num_bytes > bytes) ||
-		    ((acc_num_bytes == bytes) && (acc_num_bits > bits)))
-		{
-			flush_bits(uint8_t((bytes * 8U) + bits));
-			return lak::ok_t{};
-		}
-
-		if (bits >= acc_num_bits)
-		{
-			bytes -= acc_num_bytes;
-			bits -= acc_num_bits;
-		}
-		else
-		{
-			bytes -= acc_num_bytes + 1U;
-			bits = (bits + 8U) - acc_num_bits;
-		}
+		flush_bits(uint8_t(count.to_bits()));
+		return lak::ok_t{};
 	}
 
-	if (!((_data.size() > bytes) || ((_data.size() == bytes) && (bits == 0U))))
-		return lak::err_t<lak::err::out_of_data>{};
+	if (count > bytes_remaining()) return lak::err_t<lak::err::out_of_data>{};
 
+	count -= acc;
 	_bit_accum = 0U;
 	_num_bits  = 0U;
 
-	if (bits <= _unused_bits)
+	if (_unused_bits >= count.bits)
 	{
-		_data = _data.subspan(bytes);
-		_unused_bits -= uint8_t(bits);
+		_data = _data.subspan(count.bytes);
+		_bytes_read += count.bytes;
+		_unused_bits -= count.bits;
 	}
 	else
 	{
-		_data        = _data.subspan(bytes + 1U);
-		_unused_bits = uint8_t(8U - (bits - _unused_bits));
+		_data = _data.subspan(count.bytes + 1U);
+		_bytes_read += count.bytes + 1U;
+		_unused_bits = uint8_t(8U - (count.bits - _unused_bits));
 	}
 
 	return lak::ok_t{};
@@ -162,12 +142,12 @@ template<lak::endian ENDIAN>
 inline lak::bit_reader_result<> lak::bit_reader<ENDIAN>::skip_bits(
   const size_t bits)
 {
-	return skip(0, bits);
+	return skip(lak::bit_count::from_bits(bits));
 }
 
 template<lak::endian ENDIAN>
 inline lak::bit_reader_result<> lak::bit_reader<ENDIAN>::skip_bytes(
   const size_t bytes)
 {
-	return skip(bytes, 0);
+	return skip(lak::bit_count::from_bytes(bytes));
 }

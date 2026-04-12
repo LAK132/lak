@@ -19,6 +19,7 @@ laktestcore = static_library(
 		'alloc.cpp',
 		'array.cpp',
 		'bigint.cpp',
+		'bit_count.cpp',
 		'bit_field.cpp',
 		'bit_reader.cpp',
 		'bitflag.cpp',
