@@ -12,9 +12,8 @@
 
 #include <filesystem>
 
-using load_error  = lak::variant<lak::errno_error,
-                                 lak::err::out_of_data,
-                                 lak::nbt::err::invalid_type>;
+using load_error = lak::
+  variant<std::error_code, lak::err::out_of_data, lak::nbt::err::invalid_type>;
 using load_result = lak::result<lak::nbt::named_tag, load_error>;
 
 load_result load_nbt(lak::fs::path path)
