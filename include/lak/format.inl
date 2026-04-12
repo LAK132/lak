@@ -196,7 +196,7 @@ struct lak::format_traits<T, CHAR>
 	{
 		if (args.base == lak::numeric_base::bin)
 		{
-			lak::array<CHAR, lak::dynamic_extent> result;
+			lak::string<CHAR> result;
 			result.reserve(sizeof(T) * CHAR_BIT + (args.show_base ? 2U : 0U));
 			for (size_t i = 0U; (i < sizeof(T) * CHAR_BIT) && ((value >> i) != 0U);
 			     ++i)
@@ -209,8 +209,8 @@ struct lak::format_traits<T, CHAR>
 				result.push_back(CHAR('b'));
 				result.push_back(CHAR('0'));
 			}
-			lak::reverse(lak::span(result));
-			return lak::string_view(lak::span(result));
+			lak::reverse(lak::span<CHAR>(result.data(), result.size()));
+			return result;
 		}
 		else
 		{
