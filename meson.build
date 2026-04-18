@@ -4,7 +4,9 @@ project(
 	meson_version: '>=1.3.0',
 	default_options: {
 		'c_std': 'c11',
-		'cpp_std': ['c++26', 'c++latest'],
+		'build.c_std': 'c11',
+		'cpp_std': ['c++26', 'c++23', 'c++latest'],
+		'build.cpp_std': ['c++26', 'c++23', 'c++latest'],
 		'warning_level': '3',
 		'werror': false,
 	},
