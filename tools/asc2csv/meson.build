@@ -5,7 +5,6 @@ lak_asc2csv = executable(
 		ebnf2cpp.process('asc2csv.ebnf', extra_args: [
 			'LAK_ASC2CSV_EBNF_HPP', 'lak', 'asc2csv']),
 	],
-	override_options: override_options_w3,
 	dependencies: [
 		lakcore_dep,
 		lakfile_dep,

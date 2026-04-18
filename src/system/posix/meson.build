@@ -1,12 +1,18 @@
-lakcore_system_posix = static_library(
-	'lakcore_system_posix',
-	[
-		'file.cpp',
-		'page_memory.cpp',
-		'wrapper.cpp',
-	],
-	override_options: override_options_w3,
-	include_directories: lakcore_inc,
-	dependencies: [],
-	link_args: lakcore_linkargs,
-)
+lakcore_system_posix = {}
+foreach type, comps : compilers
+	if comps['machine'].system() == 'linux' or comps['machine'].system() == 'darwin'
+		lakcore_system_posix += {type: static_library(
+			'lakcore_system_posix-@0@'.format(type),
+			[
+				'file.cpp',
+				'page_memory.cpp',
+				'wrapper.cpp',
+			],
+			include_directories: lakcore_inc,
+			dependencies: [],
+			native: comps['native'],
+		)}
+	else
+		lakcore_system_posix += {type: []}
+	endif
+endforeach

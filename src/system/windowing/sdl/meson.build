@@ -40,6 +40,5 @@ endif
 lakwindowing = static_library(
 	'lakwindowing',
 	_lakwindowing,
-	override_options: override_options,
 	dependencies: lakwindowing_dependencies,
 )

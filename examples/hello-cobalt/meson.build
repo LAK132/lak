@@ -58,7 +58,6 @@ hello_cobalt = files([
 executable(
 	'hello-cobalt',
 	hello_cobalt,
-	override_options: override_options,
 	dependencies: [
 		lak_dep,
 	],

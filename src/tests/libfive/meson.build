@@ -3,7 +3,9 @@ laktestlibfive = static_library(
 	[
 		'libfive.cpp',
 	],
-	override_options: override_options_w0,
+	override_options: {
+		'warning_level': '0',
+	},
 	dependencies: [
 		lakcore_dep,
 		laklibfive_dep,

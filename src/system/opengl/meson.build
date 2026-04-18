@@ -2,7 +2,9 @@ gl3w = static_library(
 	'gl3w',
 	'gl3w.c',
 	include_directories: include_directories('../../../include'),
-	override_options: 'warning_level=2',
+	override_options: {
+		'warning_level': '2',
+	},
 	dependencies: dependency('dl', required: false),
 )
 
@@ -13,7 +15,6 @@ lakopengl = static_library(
 		'shader.cpp',
 		'texture.cpp',
 	],
-	override_options: override_options,
 	link_with: [
 		gl3w,
 	],

@@ -10,7 +10,6 @@ laklibfive = static_library(
 	[
 		'libfive.cpp',
 	],
-	override_options: override_options,
 	dependencies: laklibfive_dependencies,
 )
 

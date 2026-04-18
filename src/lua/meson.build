@@ -3,7 +3,6 @@ laklua = static_library(
 	[
 		'lua.cpp',
 	],
-	override_options: override_options,
 	dependencies: [
 		lakcore_dep,
 		lua_dep,

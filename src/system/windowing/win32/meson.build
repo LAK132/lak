@@ -30,6 +30,5 @@ lakwindowing = static_library(
 		'platform.cpp',
 		'window.cpp',
 	],
-	override_options: override_options,
 	dependencies: lakwindowing_dependencies,
 )

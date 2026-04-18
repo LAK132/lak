@@ -39,7 +39,7 @@ meson setup build !meson_args!
 goto :eof
 
 :usage
-echo setup.bat [compiler] ^<setup args^>
+echo setup.bat ^<cross target^> [native compiler] ^<setup args^>
 echo examples:
 echo setup.bat msvc
 echo setup.bat msvc --buildtype release

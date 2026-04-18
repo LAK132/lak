@@ -142,13 +142,14 @@ _lakcobalt_dep = declare_dependency(
 lakcobalt = static_library(
 	'lakcobalt',
 	_lakcobalt_srcs,
-	override_options: override_options_w2,
+	override_options: {
+		'warning_level': '2',
+	},
 	include_directories: lakcore_inc,
 	dependencies: [
 		lakcore_dep,
 		_lakcobalt_dep,
 	],
-	link_args: lakcore_linkargs,
 )
 
 lakcobalt_dep = declare_dependency(

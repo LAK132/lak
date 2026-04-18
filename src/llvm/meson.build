@@ -25,7 +25,9 @@ lakllvm = static_library(
 	[
 		'llvm.cpp',
 	],
-	override_options: override_options_w0,
+	override_options: {
+		'warning_level': '0',
+	},
 	dependencies: [
 		lakcore_dep,
 		llvm_dep,

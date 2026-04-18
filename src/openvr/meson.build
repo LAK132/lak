@@ -43,7 +43,6 @@ lakopenvr = static_library(
 	[
 		'openvr.cpp',
 	],
-	override_options: override_options,
 	dependencies: [
 		lakcore_dep,
 		openvr_dep,

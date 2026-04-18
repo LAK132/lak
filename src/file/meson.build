@@ -7,7 +7,6 @@ lakfile = static_library(
 			'LAK_OBJ_EBNF_HPP', 'lak', 'obj_parse']),
 		'pnm.cpp',
 	],
-	override_options: override_options,
 	dependencies: [
 		lakcore_dep,
 	],

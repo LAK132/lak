@@ -3,7 +3,6 @@ lakgodot = static_library(
 	[
 		'godot.cpp',
 	],
-	override_options: override_options,
 	dependencies: [
 		lakcore_dep,
 		godot_cpp_dep,

@@ -4,7 +4,9 @@ laktestwindowing = static_library(
 		'basic_program.cpp',
 		'window.cpp',
 	],
-	override_options: override_options_w2,
+	override_options: {
+		'warning_level': '2',
+	},
 	dependencies: [
 		lakcore_dep,
 		lakwindowing_dep,

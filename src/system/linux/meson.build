@@ -1,13 +1,19 @@
-lakcore_system_linux = static_library(
-	'lakcore_system_linux',
-	[
-		'architecture.cpp',
-		'file.cpp',
-		'process.cpp',
-		'profile.cpp',
-	],
-	override_options: override_options_w3,
-	include_directories: lakcore_inc,
-	dependencies: [],
-	link_args: lakcore_linkargs,
-)
+lakcore_system_linux = {}
+foreach type, comps : compilers
+	if comps['machine'].system() == 'linux'
+		lakcore_system_linux += {type: static_library(
+			'lakcore_system_linux-@0@'.format(type),
+			[
+				'architecture.cpp',
+				'file.cpp',
+				'process.cpp',
+				'profile.cpp',
+			],
+			include_directories: lakcore_inc,
+			dependencies: [],
+			native: comps['native'],
+		)}
+	else
+		lakcore_system_linux += {type: []}
+	endif
+endforeach

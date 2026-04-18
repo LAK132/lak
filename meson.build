@@ -1,128 +1,108 @@
 project(
 	'lak',
 	['c', 'cpp'],
-	meson_version: '>=1.1.0',
+	meson_version: '>=1.3.0',
+	default_options: {
+		'c_std': 'c11',
+		'cpp_std': ['c++26', 'c++latest'],
+		'warning_level': '3',
+		'werror': false,
+	},
 )
 if host_machine.system() == 'darwin'
 	add_languages('objcpp', native: false, required: true)
 endif
 
-cxx = meson.get_compiler('cpp')
+compilers = {
+	'build': {
+		'native': true,
+		'hosted': meson.get_compiler('cpp', native: true).get_define('__STDC_HOSTED__') == '1',
+		'machine': build_machine,
+		'c': meson.get_compiler('c', native: true),
+		'cpp': meson.get_compiler('cpp', native: true),
+	},
+	'host': {
+		'native': false,
+		'hosted': meson.get_compiler('cpp', native: false).get_define('__STDC_HOSTED__') == '1',
+		'machine': host_machine,
+		'c': meson.get_compiler('c', native: false),
+		'cpp': meson.get_compiler('cpp', native: false),
+	},
+}
+cxx = compilers['host']['cpp']
 
-if cxx.get_id() == 'msvc'
-	version = 'c++latest'
+lak_natvis = meson.project_source_root()/'.natvis'
 
-	add_project_arguments(
-		'-DUNICODE',
-		'-DWIN32_LEAN_AND_MEAN',
-		'-DNOMINMAX',
-		'-wd4315',
-		'-wd4366',
-		'-wd4250',
-		'-Wv:18',
-		language: ['c', 'cpp'])
+foreach type, comps : compilers
+	if comps['cpp'].get_id() == 'msvc'
+		add_project_arguments(
+			'-DUNICODE',
+			'-DWIN32_LEAN_AND_MEAN',
+			'-DNOMINMAX',
+			'-wd4315',
+			'-wd4366',
+			'-wd4250',
+			'-Wv:18',
+			language: ['c', 'cpp'],
+			native: comps['native'])
 
-	add_project_arguments(
-		'-Zc:__cplusplus',
-		'-Zc:rvalueCast',
-		'-Zc:wchar_t',
-		'-Zc:ternary',
-		'-Zc:preprocessor',
-		language: ['cpp'])
+		add_project_arguments(
+			'-Zc:__cplusplus',
+			'-Zc:rvalueCast',
+			'-Zc:wchar_t',
+			'-Zc:ternary',
+			'-Zc:preprocessor',
+			language: ['cpp'],
+			native: comps['native'])
 
-	add_project_arguments(
-		'-W0',
-		language: ['c'])
+		add_project_link_arguments(
+			'Winmm.lib',
+			'Setupapi.lib',
+			'Version.lib',
+			'Imm32.lib',
+			'/NATVIS:@0@'.format(lak_natvis),
+			language: ['c', 'cpp'],
+			native: comps['native'])
+	else
+		add_project_arguments(
+			'-Wno-unknown-warning-option',
+			'-Wno-gnu-zero-variadic-macro-arguments',
+			'-Wno-language-extension-token',
+			'-Wno-dangling-else',
+			'-Wno-microsoft-cast',
+			'-Wno-pragma-pack',
+			'-Wno-deprecated-declarations',
+			'-Wno-unused-private-field',
+			'-Wno-unused-variable',
+			'-Wno-init-list-lifetime',
+			'-Wno-invalid-partial-specialization',
+			'-Wno-missing-field-initializers',
+			'-Wno-maybe-uninitialized',
+			'-Wfatal-errors',
+			'-Wno-psabi',
+			# '-mavx',
+			language: ['c', 'cpp', 'objcpp'],
+			native: comps['native'])
 
-	system_libraries = [
-		'Winmm.lib',
-		'Setupapi.lib',
-		'Version.lib',
-		'Imm32.lib',
-	]
-else
-	version = 'c++23'
-
-	add_project_arguments(
-		'-Wno-unknown-warning-option',
-		'-Wno-gnu-zero-variadic-macro-arguments',
-		'-Wno-language-extension-token',
-		'-Wno-dangling-else',
-		'-Wno-microsoft-cast',
-		'-Wno-pragma-pack',
-		'-Wno-deprecated-declarations',
-		'-Wno-unused-private-field',
-		'-Wno-unused-variable',
-		'-Wno-init-list-lifetime',
-		'-Wno-invalid-partial-specialization',
-		'-Wno-missing-field-initializers',
-		'-Wno-maybe-uninitialized',
-		'-Wfatal-errors',
-		'-Wno-psabi',
-		# '-mavx',
-		language: ['c', 'cpp', 'objcpp'])
-
-	if cxx.get_id() == 'gcc'
-		if cxx.has_link_argument('-Wl,-lstdc++_libbacktrace')
-			# GCC <14
-			add_project_link_arguments(
-				'-Wl,-lstdc++_libbacktrace',
-				language: ['cpp'])
-		elif cxx.has_link_argument('-Wl,-lstdc++exp')
-			# GCC >=14
-			add_project_link_arguments(
-				'-Wl,-lstdc++exp',
-				language: ['cpp'])
-		else
-			warning('Unable to determine backtrace library link argument')
+		if comps['cpp'].get_id() == 'gcc'
+			if comps['cpp'].has_link_argument('-Wl,-lstdc++_libbacktrace')
+				# GCC <14
+				add_project_link_arguments(
+					'-Wl,-lstdc++_libbacktrace',
+					language: ['cpp'],
+					native: comps['native'])
+			elif comps['cpp'].has_link_argument('-Wl,-lstdc++exp')
+				# GCC >=14
+				add_project_link_arguments(
+					'-Wl,-lstdc++exp',
+					language: ['cpp'],
+					native: comps['native'])
+			else
+				warning('Unable to determine backtrace library link argument')
+			endif
 		endif
 	endif
-
-	system_libraries = []
-endif
-
-if get_option('debug')
-	override_options = [
-		'cpp_std=' + version,
-		'werror=false',
-	]
-	override_options_w0 = [
-		'cpp_std=' + version,
-		'warning_level=0',
-		'werror=false',
-	]
-	override_options_w1 = [
-		'cpp_std=' + version,
-		'warning_level=1',
-		'werror=false',
-	]
-	override_options_w2 = [
-		'cpp_std=' + version,
-		'warning_level=2',
-		'werror=false',
-	]
-	override_options_w3 = [
-		'cpp_std=' + version,
-		'warning_level=3',
-		'werror=false',
-	]
-	override_options_werror = [
-		'cpp_std=' + version,
-		'warning_level=3',
-		'werror=true',
-	]
-else
-	override_options = [
-		'cpp_std=' + version,
-		'warning_level=0',
-		'werror=false',
-	]
-	override_options_w0 = override_options
-	override_options_w1 = override_options
-	override_options_w2 = override_options
-	override_options_w3 = override_options
-	override_options_werror = override_options
-endif
+endforeach
 
 if get_option('lak_bounds_checks') == 'never' or (get_option('lak_bounds_checks') == 'debug' and not get_option('debug'))
 	add_project_arguments(
@@ -426,7 +406,6 @@ endif
 
 lak_dep = declare_dependency(
 	dependencies: dependencies,
-	link_args: system_libraries,
 	sources: lakdlls_h,
 )
 
@@ -442,7 +421,6 @@ if get_option('lak_enable_tests')
 		[
 			'src'/'tests'/'test_main.cpp',
 		],
-		override_options: override_options,
 		include_directories: include_directories('include'),
 		dependencies: lak_dep,
 	)
@@ -452,7 +430,6 @@ if get_option('lak_enable_tests')
 		[
 			'src'/'tests'/'bigint_standalone.cpp',
 		],
-		override_options: override_options,
 		include_directories: include_directories('include'),
 	)
 endif
