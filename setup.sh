@@ -1,6 +1,17 @@
 #! /bin/sh
 rm -rf build
 case $1 in
+  esp-idf)
+    shift
+    echo [properties] > cross/esp/idf.ini
+    echo idf_path = \'$IDF_PATH\' >> cross/esp/idf.ini
+    echo idf_tools_path = \'$IDF_TOOLS_PATH\' >> cross/esp/idf.ini
+    echo [constants] >> cross/esp/idf.ini
+    echo idf_path = \'$IDF_PATH\' >> cross/esp/idf.ini
+    echo idf_tools_path = \'$IDF_TOOLS_PATH\' >> cross/esp/idf.ini
+    cross_args=--cross-file "cross/esp/$1.ini" --cross-file "cross/esp/idf.ini"
+    shift
+  ;;
   *)
     cross_args=
   ;;
@@ -31,6 +42,7 @@ case $1 in
     echo "examples:"
     echo "./setup.sh auto # let meson automatically find the compiler"
     echo "./setup.sh msvc"
+    echo "./setup.sh esp-idf esp32-s3 msvc # cross compile to the esp32-s3 on an msvc-native machine"
     echo "./setup.sh msvc --buildtype release"
     echo "./setup.sh gcc --buildtype debug"
     echo "./setup.sh clang --buildtype debugoptimized"
