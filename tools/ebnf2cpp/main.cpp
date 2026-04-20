@@ -306,6 +306,29 @@ int main(int argc, char **argv)
 					stack.pop_back();
 					break;
 
+				case replace:
+					if (index == 0U)
+					{
+						if (strm.template is_scope<decltype(strm)::template_call_scope>())
+							strm.next_template_argument(true);
+						strm.push_template_call(u8"lak::dsl::replace"_view);
+						++index;
+						stack.push_back(
+						  {grammar.rule_values[grammar.replaces[val.index].index], 0U});
+					}
+					else if (index == 1U)
+					{
+						++index;
+						stack.push_back(
+						  {grammar.rule_values[grammar.replaces[val.index].special], 0U});
+					}
+					else
+					{
+						strm.pop_template_call();
+						stack.pop_back();
+					}
+					break;
+
 				case exception:
 					if (index == 0U)
 					{

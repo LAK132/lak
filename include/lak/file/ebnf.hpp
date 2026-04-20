@@ -48,6 +48,12 @@ namespace lak
 			size_t index;
 		};
 
+		struct replace_sequence
+		{
+			size_t index;
+			size_t special;
+		};
+
 		struct exception_sequence
 		{
 			size_t rule;
@@ -93,6 +99,7 @@ namespace lak
 				grouping,
 				capture,
 				special,
+				replace,
 				exception,
 				negative_lookahead,
 				positive_lookahead,
@@ -123,6 +130,7 @@ namespace lak
 			lak::array<lak::ebnf::match_sequence> match_sequences;
 			lak::array<lak::ebnf::grouping_sequence> groupings;
 			lak::array<lak::ebnf::capture_sequence> captures;
+			lak::array<lak::ebnf::replace_sequence> replaces;
 
 			lak::array<lak::ebnf::exception_sequence> exceptions;
 			lak::array<lak::ebnf::negative_lookahead_sequence> negative_lookaheads;

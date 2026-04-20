@@ -17,7 +17,8 @@ static constexpr auto _identifier =
   lak::dsl::ascii_alphanumeric | lak::dsl::char_literal<U'_'>;
 
 static constexpr auto identifier =
-  lak::dsl::ascii_alpha + *(_identifier | ((+ws) + _identifier));
+  (lak::dsl::ascii_alpha |
+   lak::dsl::char_literal<U'_'>)+*(_identifier | ((+ws) + _identifier));
 
 static constexpr auto define_rule =
   lak::dsl::capture_1st<identifier, (*ws) + lak::dsl::char_literal<U'='>>;
@@ -27,10 +28,17 @@ static constexpr auto repeat_n =
                         (*ws) + lak::dsl::char_literal<U'*'>>;
 
 static constexpr auto trailing_punct =
-  (*ws) +
-  (lak::dsl::str_literal<u8"->"> |
-   lak::dsl::
-     one_of_chars<U',', U'+', U'-', U'|', U';', U')', U']', U'}', U'>', U'$'>);
+  (*ws) + (lak::dsl::str_literal<u8"->"> | lak::dsl::one_of_chars<U',',
+                                                                  U'+',
+                                                                  U'-',
+                                                                  U'|',
+                                                                  U'^',
+                                                                  U';',
+                                                                  U')',
+                                                                  U']',
+                                                                  U'}',
+                                                                  U'>',
+                                                                  U'$'>);
 
 lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
   lak::u8string_view str) const
@@ -66,6 +74,7 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 			match_case,
 			group,
 			capture,
+			replace,
 			except,
 			neg_lookahead,
 			pos_lookahead,
@@ -85,6 +94,16 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 	auto pop_unused = [&]() -> bool
 	{
 		if (!unused_value) return false;
+		working_tree.back().values.push_back(lak::move(*unused_value));
+		unused_value.reset();
+		return true;
+	};
+
+	auto pop_specific_unused =
+	  [&](lak::ebnf::rule_value::value_type type) -> bool
+	{
+		if (!unused_value) return false;
+		if (unused_value->type != type) return false;
 		working_tree.back().values.push_back(lak::move(*unused_value));
 		unused_value.reset();
 		return true;
@@ -182,6 +201,27 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 				break;
 		}
 		return lak::ok_t{};
+	};
+
+	auto pop_replace = [&]() -> lak::error_code<lak::dsl::err::parse>
+	{
+		if (!pop_specific_unused(lak::ebnf::rule_value::value_type::special))
+			return lak::err_t{u8"missing replacement"_str};
+
+		if (working_tree.back().size() != 2U)
+			return lak::err_t{u8"invalid replace"_str};
+
+		const size_t begin = pop_values();
+		unused_value.emplace(lak::ebnf::rule_value{
+		  .type  = lak::ebnf::rule_value::value_type::replace,
+		  .index = result.replaces.size(),
+		});
+		result.replaces.push_back({
+		  .index   = begin,
+		  .special = begin + 1U,
+		});
+
+		return pop_trailing();
 	};
 
 	auto pop_except = [&]() -> lak::error_code<lak::dsl::err::parse>
@@ -414,6 +454,10 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 				{
 					RES_TRY(pop_altern());
 				}
+				else if (working_tree.back().type == working_data::value_type::replace)
+				{
+					RES_TRY(pop_replace());
+				}
 				else if (working_tree.back().type == working_data::value_type::except)
 				{
 					RES_TRY(pop_except());
@@ -476,6 +520,10 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 				else if (working_tree.back().type == working_data::value_type::altern)
 				{
 					RES_TRY(pop_altern());
+				}
+				else if (working_tree.back().type == working_data::value_type::replace)
+				{
+					RES_TRY(pop_replace());
 				}
 				else if (working_tree.back().type == working_data::value_type::except)
 				{
@@ -541,6 +589,10 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 				{
 					RES_TRY(pop_altern());
 				}
+				else if (working_tree.back().type == working_data::value_type::replace)
+				{
+					RES_TRY(pop_replace());
+				}
 				else if (working_tree.back().type == working_data::value_type::except)
 				{
 					RES_TRY(pop_except());
@@ -603,6 +655,10 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 				else if (working_tree.back().type == working_data::value_type::altern)
 				{
 					RES_TRY(pop_altern());
+				}
+				else if (working_tree.back().type == working_data::value_type::replace)
+				{
+					RES_TRY(pop_replace());
 				}
 				else if (working_tree.back().type == working_data::value_type::except)
 				{
@@ -704,6 +760,37 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 				});
 			}
 		}
+		else if (lak::dsl::char_literal<U'^'>.EBNF_PARSE().is_ok())
+		{
+			while (true)
+			{
+				size_t s = working_tree.size();
+				if (working_tree.back().type == working_data::value_type::except)
+				{
+					RES_TRY(pop_except());
+				}
+				else if (working_tree.back().type ==
+				         working_data::value_type::neg_lookahead)
+				{
+					RES_TRY(pop_negative_lookahead());
+				}
+				else if (working_tree.back().type ==
+				         working_data::value_type::pos_lookahead)
+				{
+					RES_TRY(pop_positive_lookahead());
+				}
+				else
+					break;
+				ASSERT_GREATER(s, working_tree.size());
+			}
+
+			working_tree.push_back({
+			  .type = working_data::value_type::replace,
+			});
+
+			if (!pop_unused())
+				return lak::err_t{u8"missing beginning of replace sequence"_str};
+		}
 		else if (lak::dsl::char_literal<U'+'>.EBNF_PARSE().is_ok())
 		{
 			working_tree.push_back({
@@ -718,6 +805,10 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 				if (working_tree.back().type == working_data::value_type::altern)
 				{
 					RES_TRY(pop_altern());
+				}
+				else if (working_tree.back().type == working_data::value_type::replace)
+				{
+					RES_TRY(pop_replace());
 				}
 				else if (working_tree.back().type == working_data::value_type::except)
 				{
@@ -760,7 +851,11 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 			while (true)
 			{
 				size_t s = working_tree.size();
-				if (working_tree.back().type == working_data::value_type::except)
+				if (working_tree.back().type == working_data::value_type::replace)
+				{
+					RES_TRY(pop_replace());
+				}
+				else if (working_tree.back().type == working_data::value_type::except)
 				{
 					RES_TRY(pop_except());
 				}
@@ -808,6 +903,10 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 				else if (working_tree.back().type == working_data::value_type::altern)
 				{
 					RES_TRY(pop_altern());
+				}
+				else if (working_tree.back().type == working_data::value_type::replace)
+				{
+					RES_TRY(pop_replace());
 				}
 				else if (working_tree.back().type == working_data::value_type::except)
 				{
@@ -866,6 +965,10 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 				else if (working_tree.back().type == working_data::value_type::altern)
 				{
 					RES_TRY(pop_altern());
+				}
+				else if (working_tree.back().type == working_data::value_type::replace)
+				{
+					RES_TRY(pop_replace());
 				}
 				else if (working_tree.back().type == working_data::value_type::except)
 				{

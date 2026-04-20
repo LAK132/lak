@@ -61,6 +61,11 @@ BEGIN_TEST(ebnf2cpp)
 	static_assert(
 	  lak::is_same_v<int, typename decltype(ebnf_test::transform)::value_type>);
 
+	{
+		auto str = u8"132"_view;
+		ASSERT_EQUAL(ebnf_test::onethreetwo.parse(str).UNWRAP().value, int(132));
+	}
+
 	return 0;
 }
 END_TEST()

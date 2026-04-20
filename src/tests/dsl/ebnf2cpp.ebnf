@@ -5,4 +5,5 @@ aaabbcc = 3 * "a" , 2 * "b" , (2 * "c");
 aabbaa = 2 * "a" , <2 * "b"> , 2 * "a";
 whitespace = {?lak::dsl::ascii_whitespace?};
 up_to_5_a=5*["a"];
-transform="meow"$[](lak::u8string_view str)->int{ return 0; }$;
+transform="meow"$[](lak::u8string_view)->int{ return 0; }$;
+onethreetwo="132"^?int(132)?;
