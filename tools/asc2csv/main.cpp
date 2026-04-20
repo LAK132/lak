@@ -24,9 +24,9 @@ int main(int argc, char **argv)
 
 	std::cerr << "Loading " << source << "\n";
 
-	auto file = lak::map_file(source).UNWRAP();
+	auto file = lak::ro_mmap_file(source).UNWRAP();
 
-	auto str = lak::span<const char8_t>(lak::span(file.data));
+	auto str = lak::span<const char8_t>(lak::span(*file));
 
 	std::cerr << "Converting to CSV\n";
 

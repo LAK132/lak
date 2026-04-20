@@ -1,5 +1,13 @@
 #include "lak/system/posix/wrapper.hpp"
 
+lak::posix::result<int> lak::posix::close(int fd)
+{
+	if (int r = ::close(fd); r != -1)
+		return lak::ok_t{r};
+	else
+		return lak::err_t{lak::errno_error::last_error()};
+}
+
 lak::posix::result<struct stat> lak::posix::fstat(int fd)
 {
 	struct stat s;

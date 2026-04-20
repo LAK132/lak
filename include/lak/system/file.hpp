@@ -4,7 +4,9 @@
 #include "lak/array.hpp"
 #include "lak/errno_result.hpp"
 #include "lak/error_code_result.hpp"
+#include "lak/string.hpp"
 #include "lak/string_view.hpp"
+#include "lak/unique_ptr.hpp"
 
 #include <filesystem>
 #include <system_error>
@@ -50,31 +52,18 @@ namespace lak
 
 	lak::error_code_result<bool> remove_path(const fs::path &path);
 
+	lak::error_code_result<lak::unique_ptr<const byte_t[]>> ro_mmap_file(
+	  const fs::path &path);
+	lak::error_code_result<lak::unique_ptr<byte_t[]>> rw_mmap_file(
+	  const fs::path &path);
+	lak::error_code_result<lak::unique_ptr<byte_t[]>> cw_mmap_file(
+	  const fs::path &path);
+
 	lak::error_code_result<lak::array<byte_t>> read_file(const fs::path &path);
 
-	struct mapped_file_impl;
-	struct mapped_file
-	{
-		mapped_file_impl *_impl = nullptr;
-		lak::span<const byte_t> data;
-		mapped_file()                    = default;
-		mapped_file(const mapped_file &) = delete;
-		mapped_file(mapped_file &&other)
-		: _impl(lak::exchange(other._impl, nullptr)),
-		  data(lak::exchange(other.data, {}))
-		{
-		}
-		mapped_file &operator=(const mapped_file &) = delete;
-		mapped_file &operator=(mapped_file &&other)
-		{
-			lak::swap(_impl, other._impl);
-			lak::swap(data, other.data);
-			return *this;
-		}
-		~mapped_file();
-		operator lak::span<const byte_t>() const { return data; }
-	};
-	lak::error_code_result<lak::mapped_file> map_file(const fs::path &path);
+	template<typename CHAR>
+	lak::error_code_result<lak::string<CHAR>> read_file_str(
+	  const fs::path &path);
 
 	bool save_file(const fs::path &path, lak::span<const byte_t> data);
 

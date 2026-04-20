@@ -110,28 +110,9 @@ lak::error_code_result<bool> lak::remove_path(const fs::path &path)
 lak::error_code_result<lak::array<byte_t>> lak::read_file(
   const lak::fs::path &path)
 {
-#if 1
-	RES_TRY_ASSIGN(auto mapped =, lak::map_file(path));
-	return lak::ok_t<lak::array<byte_t>>{
-	  {mapped.data.begin(), mapped.data.end()}};
-#else
-	std::ifstream file(path, std::ios::binary | std::ios::ate);
-	if (!file.is_open()) return lak::err_t{lak::errno_error::last_error()};
-
-	std::streampos file_size = file.tellg();
-	if (file_size == std::streampos(-1))
-		return lak::err_t{lak::errno_error::last_error()};
-
-	file.seekg(0);
-	if (file.fail()) return lak::err_t{lak::errno_error::last_error()};
-
-	auto result = lak::array<byte_t>(static_cast<size_t>(file_size));
-
-	file.read(reinterpret_cast<char *>(result.data()), result.size());
-	if (file.fail()) return lak::err_t{lak::errno_error::last_error()};
-
-	return lak::move_ok(result);
-#endif
+	RES_TRY_ASSIGN(lak::unique_ptr<const byte_t[]> mapped =,
+	               lak::ro_mmap_file(path));
+	return lak::ok_t<lak::array<byte_t>>{{mapped->begin(), mapped->end()}};
 }
 
 bool lak::save_file(const lak::fs::path &path, lak::span<const byte_t> data)

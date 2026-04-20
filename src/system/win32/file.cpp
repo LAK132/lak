@@ -4,74 +4,100 @@
 
 #include "lak/array.hpp"
 
-namespace lak
+namespace
 {
-	struct mapped_file_impl
+	namespace local
 	{
-		HANDLE file      = INVALID_HANDLE_VALUE;
-		HANDLE file_map  = NULL;
-		LPVOID file_view = NULL;
-		~mapped_file_impl()
+		lak::error_code_result<lak::span<byte_t>> mmap_file(
+		  const lak::fs::path &path, bool write_access, bool copy_on_write)
 		{
-			if (file_view != NULL) ::UnmapViewOfFile(file_view);
-			if (file_map != NULL) ::CloseHandle(file_map);
-			if (file != INVALID_HANDLE_VALUE) ::CloseHandle(file);
-		}
-	};
-}
+			RES_TRY_ASSIGN(HANDLE file =,
+			               lak::winapi::invoke_invalid_handle_err(
+			                 ::CreateFileW,
+			                 path.wstring().c_str(),
+			                 GENERIC_READ | (write_access ? GENERIC_WRITE : 0L),
+			                 (write_access ? 0L : FILE_SHARE_READ),
+			                 (LPSECURITY_ATTRIBUTES)NULL,
+			                 OPEN_EXISTING,
+			                 FILE_ATTRIBUTE_NORMAL | FILE_FLAG_RANDOM_ACCESS,
+			                 (HANDLE)NULL));
 
-lak::mapped_file::~mapped_file()
-{
-	data = {};
-	if (_impl)
-	{
-		delete _impl;
-		_impl = nullptr;
+			DEFER(lak::winapi::invoke_false_err(::CloseHandle, file)
+			        .IF_ERR_WARN("CloseHandle(file) failed"));
+
+			LARGE_INTEGER size;
+			RES_TRY(lak::winapi::invoke_false_err(::GetFileSizeEx, file, &size));
+
+			RES_TRY_ASSIGN(
+			  HANDLE map =,
+			  lak::winapi::invoke_null_handle_err(
+			    ::CreateFileMappingW,
+			    file,
+			    (LPSECURITY_ATTRIBUTES)NULL,
+			    (write_access ? (copy_on_write ? PAGE_WRITECOPY : PAGE_READWRITE)
+			                  : PAGE_READONLY),
+			    0,
+			    0,
+			    (LPCWSTR)NULL));
+
+			DEFER(lak::winapi::invoke_false_err(::CloseHandle, map)
+			        .IF_ERR_WARN("CloseHandle(map) failed"));
+
+			RES_TRY_ASSIGN(
+			  LPVOID view =,
+			  lak::winapi::invoke_null_err(
+			    ::MapViewOfFile,
+			    map,
+			    FILE_MAP_READ |
+			      (write_access ? (copy_on_write ? FILE_MAP_COPY : FILE_MAP_WRITE)
+			                    : 0),
+			    0,
+			    0,
+			    0));
+
+			return lak::ok_t{lak::span<byte_t>(
+			  lak::span<void>(view, static_cast<size_t>(size.QuadPart)))};
+		}
 	}
 }
 
-lak::error_code_result<lak::mapped_file> lak::map_file(const fs::path &path)
+lak::error_code_result<lak::unique_ptr<const byte_t[]>> lak::ro_mmap_file(
+  const fs::path &path)
 {
-	auto impl = new lak::mapped_file_impl;
-	DEFER({
-		if (impl) delete impl;
-	});
+	RES_TRY_ASSIGN(auto data =, local::mmap_file(path, false, false));
+	return lak::ok_t{lak::unique_ptr<const byte_t[]>(
+	  data,
+	  +[](lak::span<const byte_t> f)
+	  {
+		  lak::winapi::invoke_false_err(::UnmapViewOfFile, f.data())
+		    .IF_ERR_WARN("UnmapViewOfFile failed");
+	  })};
+}
 
-	RES_TRY_ASSIGN(
-	  impl->file =,
-	  lak::winapi::invoke_invalid_handle_err(::CreateFileW,
-	                                         path.native().c_str(),
-	                                         GENERIC_READ,
-	                                         FILE_SHARE_READ,
-	                                         (LPSECURITY_ATTRIBUTES)NULL,
-	                                         OPEN_EXISTING,
-	                                         FILE_ATTRIBUTE_NORMAL,
-	                                         (HANDLE)NULL));
+lak::error_code_result<lak::unique_ptr<byte_t[]>> lak::rw_mmap_file(
+  const fs::path &path)
+{
+	RES_TRY_ASSIGN(auto data =, local::mmap_file(path, true, false));
+	return lak::ok_t{lak::unique_ptr<byte_t[]>(
+	  data,
+	  +[](lak::span<byte_t> f)
+	  {
+		  lak::winapi::invoke_false_err(::UnmapViewOfFile, f.data())
+		    .IF_ERR_WARN("UnmapViewOfFile failed");
+	  })};
+}
 
-	LARGE_INTEGER size;
-	RES_TRY(lak::winapi::invoke_false_err(::GetFileSizeEx, impl->file, &size));
-
-	RES_TRY_ASSIGN(
-	  impl->file_map =,
-	  lak::winapi::invoke_null_handle_err(::CreateFileMappingW,
-	                                      impl->file,
-	                                      (LPSECURITY_ATTRIBUTES)NULL,
-	                                      PAGE_READONLY,
-	                                      0,
-	                                      0,
-	                                      (LPCWSTR)NULL));
-
-	RES_TRY_ASSIGN(impl->file_view =,
-	               lak::winapi::invoke_null_err(
-	                 ::MapViewOfFile, impl->file_map, FILE_MAP_READ, 0, 0, 0));
-
-	lak::mapped_file result;
-
-	result._impl = lak::exchange(impl, nullptr);
-	result.data  = lak::span<const byte_t>(lak::span<const void>(
-    result._impl->file_view, static_cast<size_t>(size.QuadPart)));
-
-	return lak::move_ok(result);
+lak::error_code_result<lak::unique_ptr<byte_t[]>> lak::cw_mmap_file(
+  const fs::path &path)
+{
+	RES_TRY_ASSIGN(auto data =, local::mmap_file(path, true, true));
+	return lak::ok_t{lak::unique_ptr<byte_t[]>(
+	  data,
+	  +[](lak::span<byte_t> f)
+	  {
+		  lak::winapi::invoke_false_err(::UnmapViewOfFile, f.data())
+		    .IF_ERR_WARN("UnmapViewOfFile failed");
+	  })};
 }
 
 lak::fs::path lak::exe_path()

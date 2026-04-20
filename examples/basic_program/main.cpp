@@ -108,10 +108,10 @@ struct my_window : virtual public LAK_BASIC_PROGRAM(window_api)
 			ImGui::SameLine();
 			if (ImGui::Button("Load (map)"))
 			{
-				if_let_ok (auto f, lak::map_file(path).IF_ERR())
+				if_let_ok (auto f, lak::ro_mmap_file(path).IF_ERR())
 				{
-					DEBUG_EXPR(f.data.size());
-					openfile_size = f.data.size();
+					DEBUG_EXPR(f->size());
+					openfile_size = f->size();
 				}
 			}
 			ImGui::SameLine();

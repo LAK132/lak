@@ -31,6 +31,8 @@ namespace lak
 				return lak::err_t{lak::errno_error::last_error()};
 		}
 
+		lak::posix::result<int> close(int fd);
+
 		lak::posix::result<struct stat> fstat(int fd);
 
 		lak::posix::result<void *> mmap(void *address,

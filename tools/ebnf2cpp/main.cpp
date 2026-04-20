@@ -42,13 +42,13 @@ int main(int argc, char **argv)
 		prefix += "::";
 	}
 
-	auto file = lak::map_file(source).UNWRAP();
+	auto file = lak::rw_mmap_file(source).UNWRAP();
 
-	auto grammar = lak::dsl::ebnf
-	                 .parse(lak::u8string_view(
-	                   lak::span<const char8_t>(lak::span(file.data))))
-	                 .EXPECT("parse failed")
-	                 .value;
+	auto grammar =
+	  lak::dsl::ebnf
+	    .parse(lak::u8string_view(lak::span<const char8_t>(lak::span(*file))))
+	    .EXPECT("parse failed")
+	    .value;
 
 	lak::codegen::cpp_writer strm;
 

@@ -5,59 +5,82 @@
 
 #include <system_error>
 
-namespace lak
+namespace
 {
-	struct mapped_file_impl
+	namespace local
 	{
-		lak::span<void> map;
-		int fd;
-		~mapped_file_impl()
+		std::error_code errno_to_errc(const lak::errno_error &err)
 		{
-			::munmap(map.data(), map.size());
-			::close(fd);
+			return std::error_code{err.value, std::generic_category()};
 		}
-	};
-}
 
-lak::mapped_file::~mapped_file()
-{
-	data = {};
-	if (_impl)
-	{
-		delete _impl;
-		_impl = nullptr;
+		lak::error_code_result<lak::span<byte_t>> mmap_file(
+		  const lak::fs::path &path, bool write_access, bool copy_on_write)
+		{
+			RES_TRY_ASSIGN(int fd =,
+			               lak::posix::open(path.native().c_str(),
+			                                write_access ? O_RDWR : O_RDONLY)
+			                 .map_err(errno_to_errc));
+
+			DEFER(lak::posix::close(fd).IF_ERR_WARN("close(fd) failed"));
+
+			RES_TRY_ASSIGN(struct stat s =,
+			               lak::posix::fstat(fd).map_err(errno_to_errc));
+			size_t size = s.st_size;
+
+			RES_TRY_ASSIGN(
+			  auto ptr =,
+			  lak::posix::mmap(nullptr,
+			                   size,
+			                   PROT_READ | (write_access ? PROT_WRITE : 0),
+			                   write_access
+			                     ? (copy_on_write ? MAP_PRIVATE : MAP_SHARED)
+			                     : MAP_PRIVATE | MAP_NORESERVE,
+			                   fd,
+			                   0)
+			    .map_err(errno_to_errc));
+
+			return lak::ok_t{lak::span<byte_t>(lak::span<void>(ptr, size))};
+		}
 	}
 }
 
-std::error_code errno_to_errc(const lak::errno_error &err)
+lak::error_code_result<lak::unique_ptr<const byte_t[]>> lak::ro_mmap_file(
+  const fs::path &path)
 {
-	return std::error_code{err.value, std::generic_category()};
+	RES_TRY_ASSIGN(auto data =, local::mmap_file(path, false, false));
+	return lak::ok_t{lak::unique_ptr<const byte_t[]>(
+	  data,
+	  +[](lak::span<const byte_t> f)
+	  {
+		  lak::posix::munmap(
+		    const_cast<void *>(reinterpret_cast<const void *>(f.data())), f.size())
+		    .IF_ERR_WARN("munmap failed");
+	  })};
 }
 
-lak::error_code_result<lak::mapped_file> lak::map_file(const fs::path &path)
+lak::error_code_result<lak::unique_ptr<byte_t[]>> lak::rw_mmap_file(
+  const fs::path &path)
 {
-	auto impl = new lak::mapped_file_impl;
-	DEFER({
-		if (impl) delete impl;
-	});
+	RES_TRY_ASSIGN(auto data =, local::mmap_file(path, true, false));
+	return lak::ok_t{lak::unique_ptr<byte_t[]>(
+	  data,
+	  +[](lak::span<byte_t> f)
+	  {
+		  lak::posix::munmap(reinterpret_cast<void *>(f.data()), f.size())
+		    .IF_ERR_WARN("munmap failed");
+	  })};
+}
 
-	RES_TRY_ASSIGN(
-	  impl->fd =,
-	  lak::posix::open(path.native().c_str(), O_RDONLY).map_err(errno_to_errc));
-	RES_TRY_ASSIGN(struct stat s =,
-	               lak::posix::fstat(impl->fd).map_err(errno_to_errc));
-	size_t size = s.st_size;
-	RES_TRY_ASSIGN(
-	  auto ptr =,
-	  lak::posix::mmap(
-	    nullptr, size, PROT_READ, MAP_PRIVATE | MAP_NORESERVE, impl->fd, 0)
-	    .map_err(errno_to_errc));
-	impl->map = lak::span<void>(ptr, size);
-
-	lak::mapped_file result;
-
-	result._impl = lak::exchange(impl, nullptr);
-	result.data  = lak::span<const byte_t>(lak::span<const void>(ptr, size));
-
-	return lak::move_ok(result);
+lak::error_code_result<lak::unique_ptr<byte_t[]>> lak::cw_mmap_file(
+  const fs::path &path)
+{
+	RES_TRY_ASSIGN(auto data =, local::mmap_file(path, true, true));
+	return lak::ok_t{lak::unique_ptr<byte_t[]>(
+	  data,
+	  +[](lak::span<byte_t> f)
+	  {
+		  lak::posix::munmap(reinterpret_cast<void *>(f.data()), f.size())
+		    .IF_ERR_WARN("munmap failed");
+	  })};
 }
