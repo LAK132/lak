@@ -102,7 +102,7 @@ void ImplShutdownGLContext(ImGui::ImplGLContext context)
 			delete (lak::opengl::texture *)(uintptr_t)tex->GetTexID();
 }
 
-ImTextureID ImplGLCreateTexture(ImGui::ImplContext context,
+ImTextureID ImplGLCreateTexture(ImGui::ImplContext,
                                 const void *pixels,
                                 lak::vec2s_t size,
                                 ImGui::ImplTextureColourFormat colour,
@@ -146,7 +146,7 @@ ImTextureID ImplGLCreateTexture(ImGui::ImplContext context,
 	return (ImTextureID)(uintptr_t)tex;
 }
 
-ImTextureRef ImplGLUpdateTexture(ImGui::ImplContext context,
+ImTextureRef ImplGLUpdateTexture(ImGui::ImplContext,
                                  ImTextureID tex,
                                  const void *pixels,
                                  lak::vec2s_t size,
@@ -215,18 +215,17 @@ ImTextureRef ImplGLUpdateTexture(ImGui::ImplContext context,
 	return tex;
 }
 
-void ImplGLDestroyTexture(ImGui::ImplContext context, ImTextureID tex)
+void ImplGLDestroyTexture(ImGui::ImplContext, ImTextureID tex)
 {
 	delete (lak::opengl::texture *)(uintptr_t)tex;
 }
 
-lak::vec2s_t ImplGLTextureSize(ImGui::ImplContext context, ImTextureID tex)
+lak::vec2s_t ImplGLTextureSize(ImGui::ImplContext, ImTextureID tex)
 {
 	return lak::vec2s_t(((lak::opengl::texture *)(uintptr_t)tex)->size());
 }
 
-void ImplGLCreateViewport(ImGui::ImplContext context,
-                          ImGui::ImplViewport viewport)
+void ImplGLCreateViewport(ImGui::ImplContext, ImGui::ImplViewport viewport)
 {
 	viewport->gl_viewport = new ImGui::_ImplGLViewport();
 
@@ -336,10 +335,11 @@ ImGui::ImplGLViewportDetails ImplGLBeginViewport(ImGui::ImplContext context,
 	                          GL_FRAMEBUFFER,
 	                          GL_DEPTH_STENCIL_ATTACHMENT,
 	                          GL_RENDERBUFFER,
-	                          viewport->gl_viewport->rb);
+	                          viewport->gl_viewport->rb)
+	  .UNWRAP();
 
 	ASSERT_EQUAL(glCheckFramebufferStatus(GL_FRAMEBUFFER),
-	             GL_FRAMEBUFFER_COMPLETE);
+	             GLuint(GL_FRAMEBUFFER_COMPLETE));
 
 	glViewport(0, 0, GLsizei(size.x), GLsizei(size.y));
 	glScissor(0, 0, GLsizei(size.x), GLsizei(size.y));

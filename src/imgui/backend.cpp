@@ -841,10 +841,7 @@ ImGui::ImplViewport ImGui::ImplCreateViewport(
 			ImplCoCreateViewport(context, result);
 			break;
 #endif
-		default:
-			ASSERT_UNREACHABLE();
-			result->vd_viewport = nullptr;
-			break;
+		default: BOUNDS_ASSERT_UNREACHABLE(result->vd_viewport = nullptr); break;
 	}
 	return result;
 }
@@ -870,6 +867,7 @@ void ImGui::ImplDestroyViewport(ImGui::ImplContext context,
 			ImplCoDestroyViewport(context, viewport);
 			break;
 #endif
+		default: BOUNDS_ASSERT_UNREACHABLE(); break;
 	}
 	delete viewport;
 }

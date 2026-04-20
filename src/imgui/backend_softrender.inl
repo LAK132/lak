@@ -180,7 +180,7 @@ void ImplShutdownSRContext(ImGui::ImplSRContext context)
 		if (tex->RefCount == 1U) ImGui_ImplSoftrender_DestroyTexture(tex);
 }
 
-ImTextureID ImplSRCreateTexture(ImGui::ImplContext context,
+ImTextureID ImplSRCreateTexture(ImGui::ImplContext,
                                 const void *pixels,
                                 lak::vec2s_t size,
                                 ImGui::ImplTextureColourFormat colour,
@@ -327,19 +327,19 @@ ImTextureID ImplSRCreateTexture(ImGui::ImplContext context,
 }
 
 ImTextureRef ImplSRUpdateTexture(ImGui::ImplContext context,
-                                 ImTextureID tex,
+                                 ImTextureID,
                                  const void *pixels,
                                  lak::vec2s_t size,
                                  ImGui::ImplTextureColourFormat colour,
                                  ImGui::ImplTextureChannelFormat channel,
-                                 lak::span<const ImTextureRect> updates)
+                                 lak::span<const ImTextureRect>)
 {
 	// :TODO: do this correctly
 
 	return ImplSRCreateTexture(context, pixels, size, colour, channel);
 }
 
-void ImplSRDestroyTexture(ImGui::ImplContext context, ImTextureID tex)
+void ImplSRDestroyTexture(ImGui::ImplContext, ImTextureID tex)
 {
 	auto _t = (texture_base_t *)(uintptr_t)tex;
 	switch (_t->type)
@@ -353,14 +353,13 @@ void ImplSRDestroyTexture(ImGui::ImplContext context, ImTextureID tex)
 	}
 }
 
-lak::vec2s_t ImplSRTextureSize(ImGui::ImplContext context, ImTextureID tex)
+lak::vec2s_t ImplSRTextureSize(ImGui::ImplContext, ImTextureID tex)
 {
 	auto _t = (texture_base_t *)(uintptr_t)tex;
 	return {_t->w, _t->h};
 }
 
-void ImplSRCreateViewport(ImGui::ImplContext context,
-                          ImGui::ImplViewport viewport)
+void ImplSRCreateViewport(ImGui::ImplContext, ImGui::ImplViewport viewport)
 {
 	viewport->sr_viewport = new ImGui::_ImplSRViewport();
 }
