@@ -35,7 +35,7 @@ namespace lak
 	template<typename NUMBER>
 	constexpr NUMBER clamp(NUMBER x, NUMBER min, NUMBER max)
 	{
-		return std::min(std::max(x, min), max);
+		return std::min<NUMBER>(std::max<NUMBER>(x, min), max);
 	}
 
 	// FLOAT [0.0, 1.0] -> unsigned INTEGER [0, MAX]
@@ -45,19 +45,19 @@ namespace lak
 	{
 		if constexpr (std::is_unsigned_v<INTEGER>)
 			return static_cast<INTEGER>(lak::clamp<long long>(
-			  std::llround(lak::clamp(f, FLOAT(0), FLOAT(1)) *
+			  std::llround(lak::clamp<FLOAT>(f, FLOAT(0), FLOAT(1)) *
 			               FLOAT(std::numeric_limits<INTEGER>::max())),
 			  std::numeric_limits<INTEGER>::lowest(),
 			  std::numeric_limits<INTEGER>::max()));
 		else if (f >= FLOAT(0))
 			return static_cast<INTEGER>(lak::clamp<long long>(
-			  std::llround(lak::clamp(f, FLOAT(0), FLOAT(1)) *
+			  std::llround(lak::clamp<FLOAT>(f, FLOAT(0), FLOAT(1)) *
 			               FLOAT(std::numeric_limits<INTEGER>::max())),
 			  INTEGER(0),
 			  std::numeric_limits<INTEGER>::max()));
 		else
 			return static_cast<INTEGER>(lak::clamp<long long>(
-			  std::llround(lak::clamp(-f, FLOAT(0), FLOAT(1)) *
+			  std::llround(lak::clamp<FLOAT>(-f, FLOAT(0), FLOAT(1)) *
 			               FLOAT(std::numeric_limits<INTEGER>::lowest())),
 			  std::numeric_limits<INTEGER>::lowest(),
 			  INTEGER(0)));
