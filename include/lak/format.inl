@@ -92,33 +92,69 @@ struct lak::format_traits<nullptr_t, CHAR>
 static_assert(lak::concepts::static_formattable<nullptr_t, char8_t>);
 static_assert(lak::concepts::formattable<nullptr_t, char8_t>);
 
-template<typename C, typename CHAR>
-struct lak::format_traits<lak::string<C>, CHAR>
-{
-	static lak::string<CHAR> to_string(const lak::string<C> &value)
-	{
-		return lak::strconv<CHAR>(value);
-	}
-};
-static_assert(lak::concepts::static_formattable<lak::u8string, char8_t>);
-static_assert(!lak::concepts::dynamic_formattable<lak::u8string, char8_t>);
-static_assert(lak::concepts::formattable<lak::u8string, char8_t>);
-
 template<typename T, typename CHAR>
 struct lak::format_traits<lak::string_view<T>, CHAR>
 {
-	static lak::string<CHAR> to_string(const lak::string_view<T> &value)
+	struct format_args
 	{
-		return lak::strconv<CHAR>(value);
+		size_t precision = 0U; // .ddd
+	};
+
+	static consteval format_args parse_args(lak::string_view<CHAR> args)
+	{
+		format_args result;
+		if (args.empty()) return result;
+
+		if (args[0] == CHAR('.'))
+		{
+			result.precision = 0U;
+			args             = args.substr(1U);
+			if (args.empty()) return result;
+			while (args[0] >= CHAR('0') && args[0] <= CHAR('9'))
+			{
+				result.precision *= 10U;
+				result.precision += args[0] - CHAR('0');
+				args = args.substr(1U);
+				if (args.empty()) return result;
+			}
+		}
+
+		if (!args.empty()) throw "invalid format arguments";
+		return result;
+	}
+
+	static lak::string<CHAR> to_string(const format_args &args,
+	                                   const lak::string_view<T> &value)
+	{
+		lak::string<CHAR> result;
+		result.reserve(std::min<size_t>(value.size(), args.precision));
+		result.insert(result.end(), value.begin(), value.end());
+		while (result.size() < args.precision) result += CHAR(' ');
+		return result;
 	}
 };
-static_assert(lak::concepts::static_formattable<lak::u8string_view, char>);
+static_assert(lak::concepts::dynamic_formattable<lak::u8string_view, char>);
 static_assert(
-  lak::concepts::static_formattable<lak::u16string_view, char32_t>);
-static_assert(lak::concepts::static_formattable<lak::u8string_view, char8_t>);
-static_assert(
-  !lak::concepts::dynamic_formattable<lak::u8string_view, char8_t>);
+  lak::concepts::dynamic_formattable<lak::u16string_view, char32_t>);
+static_assert(lak::concepts::dynamic_formattable<lak::u8string_view, char8_t>);
+static_assert(!lak::concepts::static_formattable<lak::u8string_view, char8_t>);
 static_assert(lak::concepts::formattable<lak::u8string_view, char8_t>);
+
+template<typename C, typename CHAR>
+struct lak::format_traits<lak::string<C>, CHAR>
+: public lak::format_traits<lak::string_view<C>, CHAR>
+{
+	using typename lak::format_traits<lak::string_view<C>, CHAR>::format_args;
+	static lak::string<CHAR> to_string(const format_args &args,
+	                                   const lak::string<C> &value)
+	{
+		return lak::format_traits<lak::string_view<C>, CHAR>::to_string(
+		  args, lak::string_view<C>(value));
+	}
+};
+static_assert(lak::concepts::dynamic_formattable<lak::u8string, char8_t>);
+static_assert(!lak::concepts::static_formattable<lak::u8string, char8_t>);
+static_assert(lak::concepts::formattable<lak::u8string, char8_t>);
 
 template<lak::concepts::one_of<LAK_ALL_STD_UNSIGNED_INTEGERS> T, typename CHAR>
 struct lak::format_traits<T, CHAR>

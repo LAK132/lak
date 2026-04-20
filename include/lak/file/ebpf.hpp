@@ -1,5 +1,5 @@
-#ifndef LAK_EBPF_ASSEMBLER_HPP
-#define LAK_EBPF_ASSEMBLER_HPP
+#ifndef LAK_FILE_EBPF_HPP
+#define LAK_FILE_EBPF_HPP
 
 #include "lak/ebpf/ebpf.hpp"
 

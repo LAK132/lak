@@ -5,8 +5,8 @@
 
 #include "lak/string_literals/string.hpp"
 
-#include "lak/ebpf/assembler.hpp"
 #include "lak/ebpf/vm.hpp"
+#include "lak/file/ebpf.hpp"
 
 BEGIN_TEST(ebpf_assembler)
 {
@@ -20,52 +20,32 @@ alu   x  add r1 r2
 ld    dw imm r0 0x1234
 )"_str;
 
-		lak::binary_reader strm{lak::span<byte_t>(lak::span(str))};
-		lak::dsl::binary_reader parser{strm};
+		auto line_parser = lak::dsl::repeat_exact<
+		  lak::dsl::capture_2nd<*lak::dsl::whitespace,
+		                        lak::ebpf::instruction_parser>,
+		  5U>;
 
-		auto line_parser = lak::dsl::capture_2nd<*lak::dsl::ascii_whitespace +
-		                                           *(lak::dsl::slash_line_comment +
-		                                             *lak::dsl::ascii_whitespace),
-		                                         lak::ebpf::instruction_parser>;
+		lak::array<lak::pair<lak::ebpf::instruction_t,
+		                     lak::optional<lak::variant<lak::ebpf::instruction_t,
+		                                                lak::u8string_view>>>,
+		           5U>
+		  res = line_parser.parse(str).UNWRAP().value;
 
-		// ---
+		ASSERT_EQUAL(static_cast<uint64_t>(res[0].first), 0x00001234'0000'0'0'04U);
+		ASSERT(!res[0].second.has_value());
 
-		lak::pair<lak::ebpf::instruction_t,
-		          lak::optional<
-		            lak::variant<lak::ebpf::instruction_t, lak::u8string_view>>>
-		  res = parser.read(line_parser).UNWRAP();
+		ASSERT_EQUAL(static_cast<uint64_t>(res[1].first), 0x00000000'1234'0'0'05U);
+		ASSERT(!res[1].second.has_value());
 
-		ASSERT_EQUAL(static_cast<uint64_t>(res.first), 0x00001234'0000'0'0'04U);
-		ASSERT(!res.second.has_value());
+		ASSERT_EQUAL(static_cast<uint64_t>(res[2].first), 0x00001234'0000'0'0'07U);
+		ASSERT(!res[2].second.has_value());
 
-		// ---
+		ASSERT_EQUAL(static_cast<uint64_t>(res[3].first), 0x00000000'0000'2'1'0CU);
+		ASSERT(!res[3].second.has_value());
 
-		res = parser.read(line_parser).UNWRAP();
-
-		ASSERT_EQUAL(static_cast<uint64_t>(res.first), 0x00000000'1234'0'0'05U);
-		ASSERT(!res.second.has_value());
-
-		// ---
-
-		res = parser.read(line_parser).UNWRAP();
-
-		ASSERT_EQUAL(static_cast<uint64_t>(res.first), 0x00001234'0000'0'0'07U);
-		ASSERT(!res.second.has_value());
-
-		// ---
-
-		res = parser.read(line_parser).UNWRAP();
-
-		ASSERT_EQUAL(static_cast<uint64_t>(res.first), 0x00000000'0000'2'1'0CU);
-		ASSERT(!res.second.has_value());
-
-		// ---
-
-		res = parser.read(line_parser).UNWRAP();
-
-		ASSERT_EQUAL(static_cast<uint64_t>(res.first), 0x00001234'0000'0'0'18U);
-		ASSERT(res.second.has_value());
-		ASSERT_EQUAL(static_cast<uint64_t>(*res.second->template get<0>()),
+		ASSERT_EQUAL(static_cast<uint64_t>(res[4].first), 0x00001234'0000'0'0'18U);
+		ASSERT(res[4].second.has_value());
+		ASSERT_EQUAL(static_cast<uint64_t>(*res[4].second->template get<0>()),
 		             0x00000000'0000'0'0'00U);
 	}
 

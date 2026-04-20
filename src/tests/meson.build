@@ -7,6 +7,7 @@ laktestcore = static_library(
 	'laktestcore',
 	laktest_sources + [
 		'codegen'/'cpp.cpp',
+		'ebpf'/'ebpf.cpp',
 		'ebpf'/'assembler.cpp',
 		'ebpf'/'vm.cpp',
 		'file'/'ebnf.cpp',

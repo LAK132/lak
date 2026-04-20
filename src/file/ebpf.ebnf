@@ -1,0 +1,510 @@
+(* common *)
+
+ws = ?+lak::dsl::ascii_nonnewline_whitespace?;
+
+register_parser =
+	"r10" ^ ?lak::ebpf::register_t::R10? |
+	"r0"  ^ ?lak::ebpf::register_t::R0? |
+	"r1"  ^ ?lak::ebpf::register_t::R1? |
+	"r2"  ^ ?lak::ebpf::register_t::R2? |
+	"r3"  ^ ?lak::ebpf::register_t::R3? |
+	"r4"  ^ ?lak::ebpf::register_t::R4? |
+	"r5"  ^ ?lak::ebpf::register_t::R5? |
+	"r6"  ^ ?lak::ebpf::register_t::R6? |
+	"r7"  ^ ?lak::ebpf::register_t::R7? |
+	"r8"  ^ ?lak::ebpf::register_t::R8? |
+	"r9"  ^ ?lak::ebpf::register_t::R9?;
+
+_offset_parser =
+	("0b",<?lak::dsl::parsed_bin_uint<uint16_t>?>) |
+	("0x",<?lak::dsl::parsed_hex_uint<uint16_t>?>) |
+	       ?lak::dsl::parsed_dec_uint<uint16_t>?;
+
+_neg_offset_parser =
+	"-",<_offset_parser>
+	$[](uint16_t v){return static_cast<uint16_t>(-static_cast<int16_t>(v));}$;
+
+offset_parser = _neg_offset_parser | _offset_parser;
+
+_immediate_parser =
+	("0b",<?lak::dsl::parsed_bin_uint<uint32_t>?>) |
+	("0x",<?lak::dsl::parsed_hex_uint<uint32_t>?>) |
+	       ?lak::dsl::parsed_dec_uint<uint32_t>?;
+
+_neg_immediate_parser =
+	"-",<_immediate_parser>
+	$[](uint32_t v){return static_cast<uint32_t>(-static_cast<int32_t>(v));}$;
+
+immediate_parser = _neg_immediate_parser | _immediate_parser;
+
+_immediate64_parser =
+	("0b",<?lak::dsl::parsed_bin_uint<uint64_t>?>) |
+	("0x",<?lak::dsl::parsed_hex_uint<uint64_t>?>) |
+	       ?lak::dsl::parsed_dec_uint<uint64_t>?;
+
+_neg_immediate64_parser =
+	"-",<_immediate64_parser>
+	$[](uint64_t v){return static_cast<uint64_t>(-static_cast<int64_t>(v));}$;
+
+immediate64_parser = _neg_immediate64_parser | _immediate64_parser;
+
+(* load *)
+
+load_store_size_parser =
+	"dw" ^ ?lak::ebpf::opcode_load_store_size::DW? |
+	"w"  ^ ?lak::ebpf::opcode_load_store_size::W? |
+	"h"  ^ ?lak::ebpf::opcode_load_store_size::H? |
+	"b"  ^ ?lak::ebpf::opcode_load_store_size::B?;
+
+ld_imm_prefix = "ld",ws,"dw",ws,"imm",ws,<register_parser>;
+
+ld1_type_index_parser =
+	"mfd"  ^ ?uint8_t(1U)? |
+	"var"  ^ ?uint8_t(3U)? |
+	"code" ^ ?uint8_t(4U)? |
+	"mid"  ^ ?uint8_t(5U)?;
+
+ld1_parser =
+	<ld_imm_prefix>,ws,
+	<ld1_type_index_parser>,ws,
+	<immediate_parser>
+$[](const lak::tuple<lak::ebpf::register_t, uint8_t, uint32_t> &result)
+-> lak::ebpf::instruction_parser_t::value_type
+{
+	const auto &[dst, type, imm] = result;
+	return {lak::ebpf::instruction::make_load(dst, type, imm), lak::nullopt};
+}$;
+
+ld2_type_index_parser =
+	"mfd" ^ ?uint8_t(2U)? |
+	"mid" ^ ?uint8_t(6U)?;
+
+ld2_parser =
+	<ld_imm_prefix>,ws,
+	"mva",ws,
+	<ld2_type_index_parser>,ws,
+	<immediate_parser>,ws,
+	<immediate_parser>
+$[](const lak::tuple<lak::ebpf::register_t, uint8_t, uint32_t, uint32_t> &result)
+-> lak::ebpf::instruction_parser_t::value_type
+{
+	const auto &[dst, type, imm1, imm2] = result;
+	auto inst = lak::ebpf::instruction::make_load(dst, type, imm1, imm2);
+	return {inst.first, lak::var_t<0U>(inst.second)};
+}$;
+
+ld_imm64_parser =
+	<ld_imm_prefix>,ws,
+	<immediate64_parser>
+$[](const lak::tuple<lak::ebpf::register_t, uint64_t> &result)
+-> lak::ebpf::instruction_parser_t::value_type
+{
+	const auto &[dst, imm] = result;
+	auto inst = lak::ebpf::instruction::make_load(dst, imm);
+	return {inst.first, lak::var_t<0U>(inst.second)};
+}$;
+
+ld_parser = ld1_parser | ld2_parser | ld_imm64_parser;
+
+ldx_parser =
+	"ldx",ws,
+	<load_store_size_parser>,ws,
+	"mem",ws,
+	<register_parser>,ws,
+	<register_parser>,ws,
+	<offset_parser>
+$[](const lak::tuple<lak::ebpf::opcode_load_store_size,
+                     lak::ebpf::register_t,
+                     lak::ebpf::register_t,
+                     uint16_t> &result)
+-> lak::ebpf::instruction_parser_t::value_type
+{
+	const auto &[size, dst, src, offset] = result;
+	return {lak::ebpf::instruction::make_load(size, dst, src, offset),
+	        lak::nullopt};
+}$;
+
+(* store *)
+
+st_parser =
+	"st",ws,
+	<load_store_size_parser>,ws,
+	"mem",ws,
+	<register_parser>,ws,
+	<offset_parser>,ws,
+	<immediate_parser>
+$[](const lak::tuple<lak::ebpf::opcode_load_store_size,
+                     lak::ebpf::register_t,
+                     uint16_t,
+                     uint32_t> &result)
+-> lak::ebpf::instruction_parser_t::value_type
+{
+	const auto &[size, dst, offset, imm] = result;
+	return {lak::ebpf::instruction::make_store(size, dst, offset, imm),
+	        lak::nullopt};
+}$;
+
+(* :TODO: atomics *)
+
+stx_parser =
+	"stx",ws,
+	<load_store_size_parser>,ws,
+	"mem",ws,
+	<register_parser>,ws,
+	<offset_parser>,ws,
+	<register_parser>
+$[](const lak::tuple<lak::ebpf::opcode_load_store_size,
+                     lak::ebpf::register_t,
+                     uint16_t,
+                     lak::ebpf::register_t> &result)
+-> lak::ebpf::instruction_parser_t::value_type
+{
+	const auto &[size, dst, offset, src] = result;
+	return {lak::ebpf::instruction::make_store(size, dst, offset, src),
+	        lak::nullopt};
+}$;
+
+(* alu *)
+
+alu_code_parser =
+	"add"  ^ ?lak::ebpf::opcode_alu::ADD? |
+	"sub"  ^ ?lak::ebpf::opcode_alu::SUB? |
+	"mul"  ^ ?lak::ebpf::opcode_alu::MUL? |
+	"div"  ^ ?lak::ebpf::opcode_alu::DIV? |
+	"or"   ^ ?lak::ebpf::opcode_alu::OR? |
+	"and"  ^ ?lak::ebpf::opcode_alu::AND? |
+	"lsh"  ^ ?lak::ebpf::opcode_alu::LSH? |
+	"rsh"  ^ ?lak::ebpf::opcode_alu::RSH? |
+	"neg"  ^ ?lak::ebpf::opcode_alu::NEG? |
+	"mod"  ^ ?lak::ebpf::opcode_alu::MOD? |
+	"xor"  ^ ?lak::ebpf::opcode_alu::XOR? |
+	"mov"  ^ ?lak::ebpf::opcode_alu::MOV? |
+	"arsh" ^ ?lak::ebpf::opcode_alu::ARSH?;
+
+alu_s_code_parser =
+	"sdiv"  ^ ?lak::ebpf::opcode_alu::DIV? |
+	"smod"  ^ ?lak::ebpf::opcode_alu::MOD?;
+
+alu_prefix_parser =
+	"alu64" ^ ?lak::ebpf::opcode_class_alu::ALU64? |
+	"alu"   ^ ?lak::ebpf::opcode_class_alu::ALU?;
+
+alu_k_parser =
+	<alu_prefix_parser>,ws,
+	"k",ws,
+	<alu_code_parser>,ws,
+	<register_parser>,ws,
+	<immediate_parser>
+$[](const lak::tuple<lak::ebpf::opcode_class_alu,
+                     lak::ebpf::opcode_alu,
+                     lak::ebpf::register_t,
+                     uint32_t> &result)
+-> lak::ebpf::instruction_parser_t::value_type
+{
+	const auto &[op, code, dst, imm] = result;
+	return {lak::ebpf::instruction::make(op, code, dst, imm), lak::nullopt};
+}$;
+
+alu_k_s_parser =
+	<alu_prefix_parser>,ws,
+	"k",ws,
+	<alu_s_code_parser>,ws,
+	<register_parser>,ws,
+	<immediate_parser>
+$[](const lak::tuple<lak::ebpf::opcode_class_alu,
+                     lak::ebpf::opcode_alu,
+                     lak::ebpf::register_t,
+                     uint32_t> &result)
+-> lak::ebpf::instruction_parser_t::value_type
+{
+	const auto &[op, code, dst, imm] = result;
+	return {lak::ebpf::instruction::make(op, code, dst, uint16_t(1U), imm),
+	        lak::nullopt};
+}$;
+
+alu_x_parser =
+	<alu_prefix_parser>,ws,
+	"x",ws,
+	<alu_code_parser>,ws,
+	<register_parser>,ws,
+	<register_parser>
+$[](const lak::tuple<lak::ebpf::opcode_class_alu,
+                     lak::ebpf::opcode_alu,
+                     lak::ebpf::register_t,
+                     lak::ebpf::register_t> &result)
+-> lak::ebpf::instruction_parser_t::value_type
+{
+	const auto &[op, code, dst, src] = result;
+	return {lak::ebpf::instruction::make(op, code, dst, src), lak::nullopt};
+}$;
+
+alu_x_s_parser =
+	<alu_prefix_parser>,ws,
+	"x",ws,
+	<alu_s_code_parser>,ws,
+	<register_parser>,ws,
+	<register_parser>
+$[](const lak::tuple<lak::ebpf::opcode_class_alu,
+                     lak::ebpf::opcode_alu,
+                     lak::ebpf::register_t,
+                     lak::ebpf::register_t> &result)
+-> lak::ebpf::instruction_parser_t::value_type
+{
+	const auto &[op, code, dst, src] = result;
+	return {lak::ebpf::instruction::make(op, code, dst, src, uint16_t(1U)),
+	        lak::nullopt};
+}$;
+
+alu_x_sx_parser =
+	<alu_prefix_parser>,ws,
+	"k",ws,
+	"movsx",ws,
+	<register_parser>,ws,
+	<register_parser>,ws,
+	<"8" ^ ?uint16_t(8)? | "16" ^ ?uint16_t(16)? | "32" ^ ?uint16_t(32)?>
+$[](const lak::tuple<lak::ebpf::opcode_class_alu,
+                     lak::ebpf::register_t,
+                     lak::ebpf::register_t,
+                     uint16_t> &result)
+-> lak::ebpf::instruction_parser_t::value_type
+{
+	const auto &[op, dst, src, off] = result;
+	return {lak::ebpf::instruction::make_movsx(op, dst, src, off), lak::nullopt};
+}$;
+
+alu_endian_code_parser =
+	"to_le" ^ ?lak::ebpf::opcode_alu_endian::TO_LE? |
+	"to_be" ^ ?lak::ebpf::opcode_alu_endian::TO_BE?;
+
+alu_endian_parser =
+	"alu",ws,
+	<alu_endian_code_parser>,ws,
+	<register_parser>,ws,
+	<"16" ^ ?uint32_t(16)? | "32" ^ ?uint32_t(32)? | "64" ^ ?uint32_t(64)?>
+$[](const lak::tuple<lak::ebpf::opcode_alu_endian,
+                     lak::ebpf::register_t,
+                     uint32_t> &result)
+-> lak::ebpf::instruction_parser_t::value_type
+{
+	const auto &[source, dst, imm] = result;
+	return {lak::ebpf::instruction::make_end(source, dst, imm),
+	        lak::nullopt};
+}$;
+
+alu_bswap_parser =
+	"alu",ws,
+	"bswap",ws,
+	<register_parser>,ws,
+	<"16" ^ ?uint32_t(16)? | "32" ^ ?uint32_t(32)? | "64" ^ ?uint32_t(64)?>
+$[](const lak::tuple<lak::ebpf::register_t,
+                     uint32_t> &result)
+-> lak::ebpf::instruction_parser_t::value_type
+{
+	const auto &[dst, imm] = result;
+	return {lak::ebpf::instruction::make_bswap(dst, imm),
+	        lak::nullopt};
+}$;
+
+alu_parser =
+	alu_k_parser |
+	alu_k_s_parser |
+	alu_x_parser |
+	alu_x_s_parser |
+	alu_x_sx_parser |
+	alu_endian_parser |
+	alu_bswap_parser;
+
+(* jump *)
+
+jump32_code_parser =
+	"jeq"  ^ ?lak::ebpf::opcode_jump::JEQ? |
+	"jgt"  ^ ?lak::ebpf::opcode_jump::JGT? |
+	"jge"  ^ ?lak::ebpf::opcode_jump::JGE? |
+	"jset" ^ ?lak::ebpf::opcode_jump::JSET? |
+	"jne"  ^ ?lak::ebpf::opcode_jump::JNE? |
+	"jsgt" ^ ?lak::ebpf::opcode_jump::JSGT? |
+	"jsge" ^ ?lak::ebpf::opcode_jump::JSGE? |
+	"jlt"  ^ ?lak::ebpf::opcode_jump::JLT? |
+	"jle"  ^ ?lak::ebpf::opcode_jump::JLE? |
+	"jslt" ^ ?lak::ebpf::opcode_jump::JSLT? |
+	"jsle" ^ ?lak::ebpf::opcode_jump::JSLE?;
+
+jump_code_parser =
+	"ja"   ^ ?lak::ebpf::opcode_jump::JA? |
+	"call" ^ ?lak::ebpf::opcode_jump::CALL? |
+	"exit" ^ ?lak::ebpf::opcode_jump::EXIT? |
+	jump32_code_parser;
+
+jmp_prefix_parser =
+	"jmp32" ^ ?lak::ebpf::opcode_class_jump::JMP32? |
+	"jmp"   ^ ?lak::ebpf::opcode_class_jump::JMP?;
+
+jmp_label_parser = ?lak::ebpf::label_token_parser?;
+
+jmp_k_parser =
+	<jmp_prefix_parser>,ws,
+	"k",ws,
+	<jump32_code_parser>,ws,
+	<register_parser>,ws,
+	<immediate_parser>,ws,
+	<offset_parser>
+$[](const lak::tuple<lak::ebpf::opcode_class_jump,
+                     lak::ebpf::opcode_jump,
+                     lak::ebpf::register_t,
+                     uint32_t,
+                     uint16_t> &result)
+-> lak::ebpf::instruction_parser_t::value_type
+{
+	const auto &[op, jmp, dst, imm, offset] = result;
+	return {lak::ebpf::instruction::make(op, jmp, dst, offset, imm),
+	        lak::nullopt};
+}$;
+
+jmp_x_parser =
+	<jmp_prefix_parser>,ws,
+	"x",ws,
+	<jump32_code_parser>,ws,
+	<register_parser>,ws,
+	<register_parser>,ws,
+	<offset_parser>
+$[](const lak::tuple<lak::ebpf::opcode_class_jump,
+                     lak::ebpf::opcode_jump,
+                     lak::ebpf::register_t,
+                     lak::ebpf::register_t,
+                     uint16_t> &result)
+-> lak::ebpf::instruction_parser_t::value_type
+{
+	const auto &[op, jmp, dst, src, offset] = result;
+	return {lak::ebpf::instruction::make(op, jmp, dst, src, offset),
+	        lak::nullopt};
+}$;
+
+jmp_k_label_parser =
+	<jmp_prefix_parser>,ws,
+	"k",ws,
+	<jump32_code_parser>,ws,
+	<register_parser>,ws,
+	<immediate_parser>,ws,
+	<jmp_label_parser>
+$[](const lak::tuple<lak::ebpf::opcode_class_jump,
+                     lak::ebpf::opcode_jump,
+                     lak::ebpf::register_t,
+                     uint32_t,
+                     lak::u8string_view> &result)
+-> lak::ebpf::instruction_parser_t::value_type
+{
+	const auto &[op, jmp, dst, imm, label] = result;
+	return {lak::ebpf::instruction::make(op, jmp, dst, UINT16_MAX, imm),
+	        lak::var_t<1U>(label)};
+}$;
+
+jmp_x_label_parser =
+	<jmp_prefix_parser>,ws,
+	"x",ws,
+	<jump32_code_parser>,ws,
+	<register_parser>,ws,
+	<register_parser>,ws,
+	<jmp_label_parser>
+$[](const lak::tuple<lak::ebpf::opcode_class_jump,
+                     lak::ebpf::opcode_jump,
+                     lak::ebpf::register_t,
+                     lak::ebpf::register_t,
+                     lak::u8string_view> &result)
+-> lak::ebpf::instruction_parser_t::value_type
+{
+	const auto &[op, jmp, dst, src, label] = result;
+	return {lak::ebpf::instruction::make(op, jmp, dst, src, UINT16_MAX),
+	        lak::var_t<1U>(label)};
+}$;
+
+jmp16_ja_parser =
+	"jmp",ws,
+	"ja",ws,
+	<offset_parser>
+$[](uint16_t offset) -> lak::ebpf::instruction_parser_t::value_type
+{ return {lak::ebpf::instruction::make_jump16(offset), lak::nullopt}; }$;
+
+jmp32_ja_parser =
+	"jmp32",ws,
+	"ja",ws,
+	<immediate_parser>
+$[](uint32_t immediate) -> lak::ebpf::instruction_parser_t::value_type
+{ return {lak::ebpf::instruction::make_jump32(immediate), lak::nullopt}; }$;
+
+jmp16_ja_label_parser =
+	"jmp",ws,
+	"ja",ws,
+	<jmp_label_parser>
+$[](lak::u8string_view label) -> lak::ebpf::instruction_parser_t::value_type
+{
+	return {lak::ebpf::instruction::make_jump16(UINT16_MAX),
+	        lak::var_t<1U>(label)};
+}$;
+
+jmp32_ja_label_parser =
+	"jmp32",ws,
+	"ja",ws,
+	<jmp_label_parser>
+$[](lak::u8string_view label) -> lak::ebpf::instruction_parser_t::value_type
+{
+	return {lak::ebpf::instruction::make_jump32(UINT32_MAX),
+	        lak::var_t<1U>(label)};
+}$;
+
+jump_call_type_parser =
+	"0" ^ ?lak::ebpf::opcode_jump_call::AGNOSTIC? |
+	"1" ^ ?lak::ebpf::opcode_jump_call::LOCAL? |
+	"2" ^ ?lak::ebpf::opcode_jump_call::SPECIFIC?;
+
+jmp_call_parser =
+	"jmp",ws,
+	"call",ws,
+	<jump_call_type_parser>,ws,
+	<immediate_parser>
+$[](const lak::tuple<lak::ebpf::opcode_jump_call, uint32_t> &result)
+-> lak::ebpf::instruction_parser_t::value_type
+{
+	const auto &[src, imm] = result;
+	return {lak::ebpf::instruction::make(src, imm), lak::nullopt};
+}$;
+
+jmp_call_label_parser =
+	"jmp",ws,
+	"call",ws,
+	"1",ws,
+	<jmp_label_parser>
+$[](lak::u8string_view label)
+-> lak::ebpf::instruction_parser_t::value_type
+{
+	return {lak::ebpf::instruction::make_local_call(UINT32_MAX),
+	        lak::var_t<1U>(label)};
+}$;
+
+jmp_exit_parser =
+	"jmp",ws,
+	"exit"
+$[](lak::u8string_view) -> lak::ebpf::instruction_parser_t::value_type
+{ return {lak::ebpf::instruction::make_exit(), lak::nullopt}; }$;
+
+jmp_parser =
+	jmp_k_parser |
+	jmp_x_parser |
+	jmp_k_label_parser |
+	jmp_x_label_parser |
+	jmp16_ja_parser |
+	jmp32_ja_parser |
+	jmp16_ja_label_parser |
+	jmp32_ja_label_parser |
+	jmp_call_parser |
+	jmp_call_label_parser |
+	jmp_exit_parser;
+
+(* all *)
+
+ebpf_parser = [ws],<
+	+"ldx" -> ldx_parser |
+	+"ld" -> ld_parser |
+	+"stx" -> stx_parser |
+	+"st" -> st_parser |
+	+"alu" -> alu_parser |
+	+"jmp" -> jmp_parser>;

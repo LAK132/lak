@@ -1,4 +1,4 @@
 lakcore_ebpf_files = files(
-	'assembler.cpp',
+	'ebpf.cpp',
 	'vm.cpp',
 )

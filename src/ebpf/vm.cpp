@@ -28,17 +28,10 @@ lak::result<uint64_t, size_t> lak::ebpf::vm::run_program(
 		switch (size)
 		{
 			using enum opcode_load_store_size;
-			case DW:
-				break;
-			case W:
-				val &= UINT32_MAX;
-				break;
-			case H:
-				val &= UINT16_MAX;
-				break;
-			case B:
-				val &= UINT8_MAX;
-				break;
+			case DW: break;
+			case W:  val &= UINT32_MAX; break;
+			case H:  val &= UINT16_MAX; break;
+			case B:  val &= UINT8_MAX; break;
 		}
 		switch (reg)
 		{
@@ -47,18 +40,14 @@ lak::result<uint64_t, size_t> lak::ebpf::vm::run_program(
 			case register_t::R2:
 			case register_t::R3:
 			case register_t::R4:
-			case register_t::R5:
-				r0r5[static_cast<size_t>(reg)] = val;
-				break;
+			case register_t::R5: r0r5[static_cast<size_t>(reg)] = val; break;
 			case register_t::R6:
 			case register_t::R7:
 			case register_t::R8:
 			case register_t::R9:
 				stack_r6r9.back().second[static_cast<size_t>(reg) - 6U] = val;
 				break;
-			default:
-				FATAL("invalid register");
-				break;
+			default: FATAL("invalid register"); break;
 		}
 	};
 
@@ -73,36 +62,23 @@ lak::result<uint64_t, size_t> lak::ebpf::vm::run_program(
 			case register_t::R2:
 			case register_t::R3:
 			case register_t::R4:
-			case register_t::R5:
-				val = r0r5[static_cast<size_t>(reg)];
-				break;
+			case register_t::R5: val = r0r5[static_cast<size_t>(reg)]; break;
 			case register_t::R6:
 			case register_t::R7:
 			case register_t::R8:
 			case register_t::R9:
 				val = stack_r6r9.back().second[static_cast<size_t>(reg) - 6U];
 				break;
-			case register_t::R10:
-				val = r10;
-				break;
-			default:
-				FATAL("invalid register");
-				break;
+			case register_t::R10: val = r10; break;
+			default:              FATAL("invalid register"); break;
 		}
 		switch (size)
 		{
 			using enum opcode_load_store_size;
-			case DW:
-				break;
-			case W:
-				val &= UINT32_MAX;
-				break;
-			case H:
-				val &= UINT16_MAX;
-				break;
-			case B:
-				val &= UINT8_MAX;
-				break;
+			case DW: break;
+			case W:  val &= UINT32_MAX; break;
+			case H:  val &= UINT16_MAX; break;
+			case B:  val &= UINT8_MAX; break;
 		}
 		return val;
 	};
@@ -135,9 +111,7 @@ lak::result<uint64_t, size_t> lak::ebpf::vm::run_program(
 				*reinterpret_cast<uint64_t *>(stack.end() + offset) =
 				  static_cast<uint64_t>(val);
 				break;
-			default:
-				FATAL("invalid size");
-				break;
+			default: FATAL("invalid size"); break;
 		}
 	};
 
@@ -165,9 +139,7 @@ lak::result<uint64_t, size_t> lak::ebpf::vm::run_program(
 				if (static_cast<int64_t>(offset) > -8) FATAL("stack overflow");
 				return *reinterpret_cast<uint64_t *>(stack.end() + offset);
 				break;
-			default:
-				FATAL("invalid size");
-				break;
+			default: FATAL("invalid size"); break;
 		}
 	};
 
@@ -207,12 +179,9 @@ lak::result<uint64_t, size_t> lak::ebpf::vm::run_program(
 
 		switch (inst.opcode_class)
 		{
-			using enum opcode_class_alu;
-			using enum opcode_class_jump;
-			using enum opcode_class_load;
-			using enum opcode_class_store;
+			using enum opcode_class_t;
 
-			case static_cast<uint8_t>(LD):
+			case LD:
 			{
 				using enum opcode_load_store_mode;
 				using enum opcode_load_store_size;
@@ -228,41 +197,29 @@ lak::result<uint64_t, size_t> lak::ebpf::vm::run_program(
 								val = static_cast<uint64_t>(decode_next().immediate) << 32U |
 								      inst.immediate;
 								break;
-							case 1U:
-								val = map_by_fd(inst.immediate);
-								break;
+							case 1U: val = map_by_fd(inst.immediate); break;
 							case 2U:
 								val = mva(map_by_fd(inst.immediate)) + decode_next().immediate;
 								break;
-							case 3U:
-								val = variable_addr(inst.immediate);
-								break;
-							case 4U:
-								val = code_addr(inst.immediate);
-								break;
-							case 5U:
-								val = map_by_idx(inst.immediate);
-								break;
+							case 3U: val = variable_addr(inst.immediate); break;
+							case 4U: val = code_addr(inst.immediate); break;
+							case 5U: val = map_by_idx(inst.immediate); break;
 							case 6U:
 								val =
 								  mva(map_by_idx(inst.immediate)) + decode_next().immediate;
 								break;
-							default:
-								FATAL("invalid source");
-								break;
+							default: FATAL("invalid source"); break;
 						}
 						register_store(inst.dst_reg(), val, inst.size());
 					}
 					break;
 
-					default:
-						FATAL("invalid opcode");
-						break;
+					default: FATAL("invalid opcode"); break;
 				}
 			}
 			break;
 
-			case static_cast<uint8_t>(LDX):
+			case LDX:
 			{
 				using enum opcode_load_store_mode;
 				using enum opcode_load_store_size;
@@ -297,22 +254,18 @@ lak::result<uint64_t, size_t> lak::ebpf::vm::run_program(
 								mem = static_cast<uint64_t>(static_cast<int64_t>(
 								  static_cast<int8_t>(static_cast<uint8_t>(mem))));
 								break;
-							default:
-								FATAL("invalid size");
-								break;
+							default: FATAL("invalid size"); break;
 						}
 						register_store(inst.dst_reg(), mem, inst.size());
 					}
 					break;
 
-					default:
-						FATAL("invalid opcode");
-						break;
+					default: FATAL("invalid opcode"); break;
 				}
 			}
 			break;
 
-			case static_cast<uint8_t>(ST):
+			case ST:
 			{
 				using enum opcode_load_store_mode;
 				using enum opcode_load_store_size;
@@ -328,14 +281,12 @@ lak::result<uint64_t, size_t> lak::ebpf::vm::run_program(
 					}
 					break;
 
-					default:
-						FATAL("invalid opcode");
-						break;
+					default: FATAL("invalid opcode"); break;
 				}
 			}
 			break;
 
-			case static_cast<uint8_t>(STX):
+			case STX:
 			{
 				using enum opcode_load_store_mode;
 				using enum opcode_load_store_size;
@@ -410,24 +361,21 @@ lak::result<uint64_t, size_t> lak::ebpf::vm::run_program(
 							}
 							break;
 
-							default:
-								FATAL("invalid opcode");
-								break;
+							default: FATAL("invalid opcode"); break;
 						}
 					}
 					break;
 
-					default:
-						FATAL("invalid opcode");
-						break;
+					default: FATAL("invalid opcode"); break;
 				}
 			}
 			break;
 
-			case static_cast<uint8_t>(ALU):
+			case ALU:
 			{
 				using enum opcode_alu_jump_source;
 				using enum opcode_alu;
+				using enum opcode_alu_endian;
 				using enum opcode_load_store_size;
 
 				uint32_t _dst =
@@ -438,49 +386,31 @@ lak::result<uint64_t, size_t> lak::ebpf::vm::run_program(
 					static_assert(lak::endian::native == lak::endian::little ||
 					              lak::endian::native == lak::endian::big);
 
-					switch (inst.source())
+					switch (inst.endian())
 					{
-						case K:
+						case TO_LE:
 							if constexpr (lak::endian::native != lak::endian::little)
 								switch (inst.immediate)
 								{
-									case 16U:
-										lak::byte_swap<2U>(lak::as_bytes(&_dst));
-										break;
-									case 32U:
-										lak::byte_swap<4U>(lak::as_bytes(&_dst));
-										break;
-									case 64U:
-										lak::byte_swap<8U>(lak::as_bytes(&_dst));
-										break;
-									default:
-										FATAL("invalid opcode");
-										break;
+									case 16U: lak::byte_swap<2U>(lak::as_bytes(&_dst)); break;
+									case 32U: lak::byte_swap<4U>(lak::as_bytes(&_dst)); break;
+									case 64U: lak::byte_swap<8U>(lak::as_bytes(&_dst)); break;
+									default:  FATAL("invalid opcode"); break;
 								}
 							break;
 
-						case X:
+						case TO_BE:
 							if constexpr (lak::endian::native != lak::endian::big)
 								switch (inst.immediate)
 								{
-									case 16U:
-										lak::byte_swap<2U>(lak::as_bytes(&_dst));
-										break;
-									case 32U:
-										lak::byte_swap<4U>(lak::as_bytes(&_dst));
-										break;
-									case 64U:
-										lak::byte_swap<8U>(lak::as_bytes(&_dst));
-										break;
-									default:
-										FATAL("invalid opcode");
-										break;
+									case 16U: lak::byte_swap<2U>(lak::as_bytes(&_dst)); break;
+									case 32U: lak::byte_swap<4U>(lak::as_bytes(&_dst)); break;
+									case 64U: lak::byte_swap<8U>(lak::as_bytes(&_dst)); break;
+									default:  FATAL("invalid opcode"); break;
 								}
 							break;
 
-						default:
-							FATAL("invalid opcode");
-							break;
+						default: FATAL("invalid opcode"); break;
 					}
 				}
 				else
@@ -491,15 +421,9 @@ lak::result<uint64_t, size_t> lak::ebpf::vm::run_program(
 
 					switch (inst.alu_code())
 					{
-						case ADD:
-							_dst += _src;
-							break;
-						case SUB:
-							_dst -= _src;
-							break;
-						case MUL:
-							_dst *= _src;
-							break;
+						case ADD: _dst += _src; break;
+						case SUB: _dst -= _src; break;
+						case MUL: _dst *= _src; break;
 						case DIV:
 							if (inst.offset == 1)
 								_dst = _src != 0U ? static_cast<int32_t>(_dst) /
@@ -508,18 +432,10 @@ lak::result<uint64_t, size_t> lak::ebpf::vm::run_program(
 							else
 								_dst = _src != 0U ? _dst / _src : 0U;
 							break;
-						case OR:
-							_dst |= _src;
-							break;
-						case AND:
-							_dst &= _src;
-							break;
-						case LSH:
-							_dst <<= _src;
-							break;
-						case RSH:
-							_dst >>= _src;
-							break;
+						case OR:  _dst |= _src; break;
+						case AND: _dst &= _src; break;
+						case LSH: _dst <<= _src; break;
+						case RSH: _dst >>= _src; break;
 						case NEG:
 							_dst = static_cast<uint32_t>(-static_cast<int32_t>(_src));
 							break;
@@ -531,9 +447,7 @@ lak::result<uint64_t, size_t> lak::ebpf::vm::run_program(
 							else
 								_dst = _src != 0U ? _dst % _src : _dst;
 							break;
-						case XOR:
-							_dst ^= _src;
-							break;
+						case XOR: _dst ^= _src; break;
 						case MOV:
 							if (inst.source() == X)
 								_dst = _src;
@@ -552,17 +466,13 @@ lak::result<uint64_t, size_t> lak::ebpf::vm::run_program(
 										_dst = static_cast<uint32_t>(static_cast<int32_t>(
 										  static_cast<int32_t>(static_cast<uint32_t>(_src))));
 										break;
-									default:
-										_dst = _src;
-										break;
+									default: _dst = _src; break;
 								}
 							break;
 						case ARSH:
 							_dst = (_dst >> _src) | ((~((_dst & (1U << 31U)) >> _src)) + 1U);
 							break;
-						default:
-							FATAL("invalid opcode");
-							break;
+						default: FATAL("invalid opcode"); break;
 					}
 				}
 
@@ -570,7 +480,7 @@ lak::result<uint64_t, size_t> lak::ebpf::vm::run_program(
 			}
 			break;
 
-			case static_cast<uint8_t>(ALU64):
+			case ALU64:
 			{
 				using enum opcode_alu_jump_source;
 				using enum opcode_alu;
@@ -581,18 +491,10 @@ lak::result<uint64_t, size_t> lak::ebpf::vm::run_program(
 				{
 					switch (inst.immediate)
 					{
-						case 16U:
-							lak::byte_swap<2U>(lak::as_bytes(&_dst));
-							break;
-						case 32U:
-							lak::byte_swap<4U>(lak::as_bytes(&_dst));
-							break;
-						case 64U:
-							lak::byte_swap<8U>(lak::as_bytes(&_dst));
-							break;
-						default:
-							FATAL("invalid opcode");
-							break;
+						case 16U: lak::byte_swap<2U>(lak::as_bytes(&_dst)); break;
+						case 32U: lak::byte_swap<4U>(lak::as_bytes(&_dst)); break;
+						case 64U: lak::byte_swap<8U>(lak::as_bytes(&_dst)); break;
+						default:  FATAL("invalid opcode"); break;
 					}
 					break;
 				}
@@ -604,15 +506,9 @@ lak::result<uint64_t, size_t> lak::ebpf::vm::run_program(
 
 					switch (inst.alu_code())
 					{
-						case ADD:
-							_dst += _src;
-							break;
-						case SUB:
-							_dst -= _src;
-							break;
-						case MUL:
-							_dst *= _src;
-							break;
+						case ADD: _dst += _src; break;
+						case SUB: _dst -= _src; break;
+						case MUL: _dst *= _src; break;
 						case DIV:
 							if (inst.offset == 1)
 								_dst = _src != 0U ? static_cast<int64_t>(_dst) /
@@ -621,18 +517,10 @@ lak::result<uint64_t, size_t> lak::ebpf::vm::run_program(
 							else
 								_dst = _src != 0U ? _dst / _src : 0U;
 							break;
-						case OR:
-							_dst |= _src;
-							break;
-						case AND:
-							_dst &= _src;
-							break;
-						case LSH:
-							_dst <<= _src;
-							break;
-						case RSH:
-							_dst >>= _src;
-							break;
+						case OR:  _dst |= _src; break;
+						case AND: _dst &= _src; break;
+						case LSH: _dst <<= _src; break;
+						case RSH: _dst >>= _src; break;
 						case NEG:
 							_dst = static_cast<uint64_t>(-static_cast<int64_t>(_src));
 							break;
@@ -644,9 +532,7 @@ lak::result<uint64_t, size_t> lak::ebpf::vm::run_program(
 							else
 								_dst = _src != 0U ? _dst % _src : _dst;
 							break;
-						case XOR:
-							_dst ^= _src;
-							break;
+						case XOR: _dst ^= _src; break;
 						case MOV:
 							if (inst.source() == X)
 								_dst = _src;
@@ -665,18 +551,14 @@ lak::result<uint64_t, size_t> lak::ebpf::vm::run_program(
 										_dst = static_cast<uint64_t>(static_cast<int32_t>(
 										  static_cast<int32_t>(static_cast<uint32_t>(_src))));
 										break;
-									default:
-										_dst = _src;
-										break;
+									default: _dst = _src; break;
 								}
 							break;
 							break;
 						case ARSH:
 							_dst = (_dst >> _src) | ((~((_dst & (1U << 31U)) >> _src)) + 1U);
 							break;
-						default:
-							FATAL("invalid opcode");
-							break;
+						default: FATAL("invalid opcode"); break;
 					}
 				}
 
@@ -684,23 +566,22 @@ lak::result<uint64_t, size_t> lak::ebpf::vm::run_program(
 			}
 			break;
 
-			case static_cast<uint8_t>(JMP):
+			case JMP:
 			{
 				using enum opcode_alu_jump_source;
 				using enum opcode_jump;
+				using enum opcode_jump_call;
 				using enum opcode_load_store_size;
 
 				bool is_conditional = false;
 				switch (inst.jump_code())
 				{
-					case JA:
-						pc += static_cast<int16_t>(inst.offset);
-						break;
+					case JA: pc += static_cast<int16_t>(inst.offset); break;
 					case CALL:
 					{
-						switch (inst.src)
+						switch (inst.call_src())
 						{
-							case 0:
+							case AGNOSTIC:
 								agnostic_helper[inst.immediate](this,
 								                                r0r5[0],
 								                                r0r5[1],
@@ -714,11 +595,11 @@ lak::result<uint64_t, size_t> lak::ebpf::vm::run_program(
 								                                stack_r6r9.back().second[3],
 								                                r10);
 								break;
-							case 1:
+							case LOCAL:
 								stack_r6r9.push_back({pc, stack_r6r9.back().second});
 								pc += static_cast<int32_t>(inst.immediate);
 								break;
-							case 2:
+							case SPECIFIC:
 								specific_helper[inst.immediate](this,
 								                                r0r5[0],
 								                                r0r5[1],
@@ -732,9 +613,7 @@ lak::result<uint64_t, size_t> lak::ebpf::vm::run_program(
 								                                stack_r6r9.back().second[3],
 								                                r10);
 								break;
-							default:
-								FATAL("invalid opcode");
-								break;
+							default: FATAL("invalid opcode"); break;
 						}
 					}
 					break;
@@ -748,9 +627,7 @@ lak::result<uint64_t, size_t> lak::ebpf::vm::run_program(
 						}
 					}
 					break;
-					default:
-						is_conditional = true;
-						break;
+					default: is_conditional = true; break;
 				}
 				if (!is_conditional) break;
 				uint64_t _dst = register_read(inst.dst_reg(), DW);
@@ -797,14 +674,12 @@ lak::result<uint64_t, size_t> lak::ebpf::vm::run_program(
 						if (static_cast<int64_t>(_dst) <= static_cast<int64_t>(_src))
 							pc += static_cast<int16_t>(inst.offset);
 						break;
-					default:
-						FATAL("invalid opcode");
-						break;
+					default: FATAL("invalid opcode"); break;
 				}
 			}
 			break;
 
-			case static_cast<uint8_t>(JMP32):
+			case JMP32:
 			{
 				using enum opcode_alu_jump_source;
 				using enum opcode_jump;
@@ -858,16 +733,12 @@ lak::result<uint64_t, size_t> lak::ebpf::vm::run_program(
 						if (static_cast<int32_t>(_dst) <= static_cast<int32_t>(_src))
 							pc += static_cast<int16_t>(inst.offset);
 						break;
-					default:
-						FATAL("invalid opcode");
-						break;
+					default: FATAL("invalid opcode"); break;
 				}
 			}
 			break;
 
-			default:
-				FATAL("invalid opcode");
-				break;
+			default: FATAL("invalid opcode"); break;
 		}
 	}
 }
