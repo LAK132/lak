@@ -15,7 +15,8 @@ BEGIN_TEST(tiff)
 		// version
 		expected.write_u16le(42).UNWRAP();
 		// 1st ifd offset
-		expected.write_u32le(expected.size() + sizeof(uint32_t)).UNWRAP();
+		expected.write_u32le(uint32_t(expected.size() + sizeof(uint32_t)))
+		  .UNWRAP();
 
 		// ifd0
 		// # of entries
@@ -41,7 +42,8 @@ BEGIN_TEST(tiff)
 		// version
 		expected.write_u16le(42).UNWRAP();
 		// 1st ifd offset
-		expected.write_u32le(expected.size() + sizeof(uint32_t)).UNWRAP();
+		expected.write_u32le(uint32_t(expected.size() + sizeof(uint32_t)))
+		  .UNWRAP();
 
 		// ifd0
 		// # of entries
@@ -108,7 +110,7 @@ BEGIN_TEST(tiff)
 
 			ASSERT_EQUAL(tiff.ifd[0].tags.size(), 0x6U);
 
-			auto unreachable = [](auto &&a) { ASSERT_UNREACHABLE(); };
+			auto unreachable = [](auto &&) { ASSERT_UNREACHABLE(); };
 
 			ASSERT_EQUAL(tiff.ifd[0].tags[0].id,
 			             lak::tiff::tag_name::NewSubfileType);
