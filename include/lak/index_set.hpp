@@ -16,6 +16,9 @@ namespace lak
 		size_t _value;
 		index_set(size_t index) : _value(index) {}
 
+		template<size_t... J>
+		friend struct lak::index_set;
+
 	public:
 		template<size_t INDEX>
 		static constexpr bool has_index =

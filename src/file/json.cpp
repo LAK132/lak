@@ -6,151 +6,140 @@ void lak::json::block::intern()
 	auto old_internal = lak::exchange(_internal, {});
 
 	size_t alloc_size = 0U;
-	for (const auto &t : tokens) alloc_size += t.size();
-	for (const auto &s : strings) alloc_size += s.size();
-	for (const auto &n : numbers) alloc_size += n.size();
+	for (const auto &t : tokens()) alloc_size += t.value.size();
+	for (const auto &s : strings()) alloc_size += s.value.size();
+	for (const auto &n : numbers()) alloc_size += n.value.size();
 	_internal.reserve(alloc_size);
 	auto internalise = [&](lak::u8string_view &view)
 	{
 		view = lak::u8string_view(_internal.push_back(view.begin(), view.end()));
 	};
-	for (auto &t : tokens) internalise(t);
-	for (auto &s : strings) internalise(s);
-	for (auto &n : numbers) internalise(n);
+	for (auto &t : tokens()) internalise(t.value);
+	for (auto &s : strings()) internalise(s.value);
+	for (auto &n : numbers()) internalise(n.value);
 }
 
 lak::json::value_proxy lak::json::block::root() const
 {
-	return lak::json::value_proxy{
-	  .block = *this,
-	  .value =
-	    values.empty()
-	      ? lak::json::value{.type =
-	                           static_cast<lak::json::value::value_type>(-1),
-	                         .index = static_cast<size_t>(-1)}
-	      : values.front()};
+	ASSERT(!values().empty());
+	return lak::json::value_proxy{.block = _value, .value = values().back()};
 }
 
 lak::json::value_proxy lak::json::array_proxy::operator[](size_t index) const
 {
 	BOUNDS_ASSERT_LESS(index, size());
 	return lak::json::value_proxy{.block = block,
-	                              .value = block.values[array.begin + index]};
+	                              .value = block[array.values][index]};
 }
 
 lak::pair<lak::u8string_view, lak::json::value_proxy>
 lak::json::object_proxy::operator[](size_t index) const
 {
-	BOUNDS_ASSERT_LESS(index, size());
-	const size_t ki = object.begin + (index * 2U);
-	const size_t vi = ki + 1U;
+	BOUNDS_ASSERT_LESS(object.values.begin.index + object.values.size,
+	                   block.get<lak::json::object>().size());
+	lak::span<const value> subspan = block[object.values];
+	BOUNDS_ASSERT_LESS(index, subspan.size());
+	const value &k_v = subspan[(index * 2U) + 0U];
+	const value &v_v = subspan[(index * 2U) + 1U];
 	lak::u8string_view k;
-	switch (block.values[ki].type)
-	{
-		case lak::json::value::value_type::token:
-			k = block.tokens[block.values[ki].index];
-			break;
-		case lak::json::value::value_type::string:
-			k = block.strings[block.values[ki].index];
-			break;
-		case lak::json::value::value_type::number:
-			k = block.numbers[block.values[ki].index];
-			break;
-		default: ASSERT_UNREACHABLE();
-	}
-	return {k,
-	        lak::json::value_proxy{.block = block, .value = block.values[vi]}};
+	block[k_v.value].visit(lak::overloaded{
+	  [&k](const token &kv) { k = kv.value; },
+	  [&k](const string &kv) { k = kv.value; },
+	  [&k](const number &kv) { k = kv.value; },
+	  [](auto &&) { ASSERT_UNREACHABLE(); },
+	});
+	return {k, lak::json::value_proxy{.block = block, .value = v_v}};
 }
 
-lak::json::value_proxy lak::json::object_proxy::operator[](
+lak::optional<lak::json::value_proxy> lak::json::object_proxy::operator[](
   lak::u8string_view key) const
 {
+	BOUNDS_ASSERT_LESS(object.values.begin.index + object.values.size,
+	                   block.get<lak::json::value>().size());
+	lak::span<const value> subspan = block[object.values];
 	for (size_t i = 0U; i < size(); ++i)
 	{
-		const size_t ki = object.begin + (i * 2U);
-		const size_t vi = ki + 1U;
+		const value &k_v = subspan[(i * 2U) + 0U];
+		const value &v_v = subspan[(i * 2U) + 1U];
 		lak::u8string_view k;
-		switch (block.values[ki].type)
-		{
-			case lak::json::value::value_type::token:
-				k = block.tokens[block.values[ki].index];
-				break;
-			case lak::json::value::value_type::string:
-				k = block.strings[block.values[ki].index];
-				break;
-			case lak::json::value::value_type::number:
-				k = block.numbers[block.values[ki].index];
-				break;
-			default: ASSERT_UNREACHABLE();
-		}
-		if (k == key)
-			return lak::json::value_proxy{.block = block, .value = block.values[vi]};
+		block[k_v.value].visit(lak::overloaded{
+		  [&k](const token &kv) { k = kv.value; },
+		  [&k](const string &kv) { k = kv.value; },
+		  [&k](const number &kv) { k = kv.value; },
+		  [](auto &&) { ASSERT_UNREACHABLE(); },
+		});
+		if (k == key) return lak::json::value_proxy{.block = block, .value = v_v};
 	}
-	return lak::json::value_proxy{
-	  .block = block,
-	  .value =
-	    lak::json::value{.type  = static_cast<lak::json::value::value_type>(-1),
-	                     .index = static_cast<size_t>(-1)}};
-}
-
-bool lak::json::value_proxy::is_none() const
-{
-	return value.type == static_cast<lak::json::value::value_type>(-1);
+	return lak::nullopt;
 }
 
 bool lak::json::value_proxy::is_token() const
 {
-	return value.type == lak::json::value::value_type::token;
+	return value.value.type_index.value() ==
+	       lak::json::_block::index_of<lak::json::token>;
 }
 
 bool lak::json::value_proxy::is_string() const
 {
-	return value.type == lak::json::value::value_type::string;
+	return value.value.type_index.value() ==
+	       lak::json::_block::index_of<lak::json::string>;
 }
 
 bool lak::json::value_proxy::is_number() const
 {
-	return value.type == lak::json::value::value_type::number;
+	return value.value.type_index.value() ==
+	       lak::json::_block::index_of<lak::json::number>;
 }
 
 bool lak::json::value_proxy::is_array() const
 {
-	return value.type == lak::json::value::value_type::array;
+	return value.value.type_index.value() ==
+	       lak::json::_block::index_of<lak::json::array>;
 }
 
 bool lak::json::value_proxy::is_object() const
 {
-	return value.type == lak::json::value::value_type::object;
+	return value.value.type_index.value() ==
+	       lak::json::_block::index_of<lak::json::object>;
 }
 
 lak::json::value_proxy::result_type<lak::u8string_view>
 lak::json::value_proxy::token() const
 {
 	if (is_token())
-		return lak::ok_t{block.tokens[value.index]};
+		return lak::ok_t{block.get<lak::json::token>()[value.value.index].value};
 	else
 		return lak::err_t{lak::json::err::unexpected_type{
-		  .expected = lak::json::value::value_type::token, .got = value.type}};
+		  .expected =
+		    lak::size_type<lak::json::_block::index_of<lak::json::token>>{},
+		  .got = value.value.type_index,
+		}};
 }
 
 lak::json::value_proxy::result_type<lak::u8string_view>
 lak::json::value_proxy::string() const
 {
 	if (is_string())
-		return lak::ok_t{block.strings[value.index]};
+		return lak::ok_t{block.get<lak::json::string>()[value.value.index].value};
 	else
 		return lak::err_t{lak::json::err::unexpected_type{
-		  .expected = lak::json::value::value_type::string, .got = value.type}};
+		  .expected =
+		    lak::size_type<lak::json::_block::index_of<lak::json::string>>{},
+		  .got = value.value.type_index,
+		}};
 }
 
 lak::json::value_proxy::result_type<lak::u8string_view>
 lak::json::value_proxy::number_str() const
 {
 	if (is_number())
-		return lak::ok_t{block.numbers[value.index]};
+		return lak::ok_t{block.get<lak::json::number>()[value.value.index].value};
 	else
 		return lak::err_t{lak::json::err::unexpected_type{
-		  .expected = lak::json::value::value_type::number, .got = value.type}};
+		  .expected =
+		    lak::size_type<lak::json::_block::index_of<lak::json::number>>{},
+		  .got = value.value.type_index,
+		}};
 }
 
 lak::json::value_proxy::result_type<lak::json::array_proxy>
@@ -158,10 +147,14 @@ lak::json::value_proxy::array() const
 {
 	if (is_array())
 		return lak::ok_t{lak::json::array_proxy{
-		  .block = block, .array = block.arrays[value.index]}};
+		  .block = block,
+		  .array = *block[value.value].get<const lak::json::array &>()}};
 	else
 		return lak::err_t{lak::json::err::unexpected_type{
-		  .expected = lak::json::value::value_type::array, .got = value.type}};
+		  .expected =
+		    lak::size_type<lak::json::_block::index_of<lak::json::array>>{},
+		  .got = value.value.type_index,
+		}};
 }
 
 lak::json::value_proxy::result_type<lak::json::object_proxy>
@@ -169,10 +162,14 @@ lak::json::value_proxy::object() const
 {
 	if (is_object())
 		return lak::ok_t{lak::json::object_proxy{
-		  .block = block, .object = block.objects[value.index]}};
+		  .block  = block,
+		  .object = *block[value.value].get<const lak::json::object &>()}};
 	else
 		return lak::err_t{lak::json::err::unexpected_type{
-		  .expected = lak::json::value::value_type::object, .got = value.type}};
+		  .expected =
+		    lak::size_type<lak::json::_block::index_of<lak::json::object>>{},
+		  .got = value.value.type_index,
+		}};
 }
 
 lak::dsl::result<lak::dsl::json_t::value_type> lak::dsl::json_t::parse(
@@ -238,12 +235,14 @@ lak::dsl::result<lak::dsl::json_t::value_type> lak::dsl::json_t::parse(
 
 	auto pop_values = [&](size_t count) -> size_t
 	{
-		size_t begin = result.values.size();
-		result.values.reserve(result.values.size() + count);
+		size_t begin = result.values().size();
+		result.values().reserve(result.values().size() + count);
 		for (size_t i = working_values.size() - count; i < working_values.size();
 		     ++i)
-			result.values.push_back(working_values[i]);
-		working_values.resize(working_values.size() - count);
+			result.values().push_back(working_values[i]);
+		working_values.erase(working_values.begin() +
+		                       (working_values.size() - count),
+		                     working_values.end());
 		return begin;
 	};
 
@@ -264,10 +263,6 @@ lak::dsl::result<lak::dsl::json_t::value_type> lak::dsl::json_t::parse(
 
 		return lak::ok_t{};
 	};
-
-	// this will be replaced with the last value in the working values once
-	// parsing is complete
-	result.values.emplace_back();
 
 	do
 	{
@@ -353,12 +348,12 @@ lak::dsl::result<lak::dsl::json_t::value_type> lak::dsl::json_t::parse(
 
 			size_t begin = pop_values(working_tree.back().size);
 			working_values.push_back({
-			  .type  = lak::json::value::value_type::object,
-			  .index = result.objects.size(),
+			  .value = lak::json::value::value_type::make<lak::json::object>(
+			    result.objects().size()),
 			});
-			result.objects.push_back({
-			  .begin = begin,
-			  .end   = begin + working_tree.back().size,
+			result.objects().push_back({
+			  .values =
+			    lak::json::object::value_type::make(begin, working_tree.back().size),
 			});
 			working_tree.pop_back();
 		}
@@ -381,38 +376,38 @@ lak::dsl::result<lak::dsl::json_t::value_type> lak::dsl::json_t::parse(
 
 			size_t begin = pop_values(working_tree.back().size);
 			working_values.push_back({
-			  .type  = lak::json::value::value_type::array,
-			  .index = result.arrays.size(),
+			  .value = lak::json::value::value_type::make<lak::json::array>(
+			    result.arrays().size()),
 			});
-			result.arrays.push_back({
-			  .begin = begin,
-			  .end   = begin + working_tree.back().size,
+			result.arrays().push_back({
+			  .values =
+			    lak::json::array::value_type::make(begin, working_tree.back().size),
 			});
 			working_tree.pop_back();
 		}
 		else if_let_ok (auto tok, token_parser.parse(rem).if_ok(move_str))
 		{
 			working_values.push_back({
-			  .type  = lak::json::value::value_type::token,
-			  .index = result.tokens.size(),
+			  .value = lak::json::value::value_type::make<lak::json::token>(
+			    result.tokens().size()),
 			});
-			result.tokens.push_back(tok.value);
+			result.tokens().push_back({.value = tok.value});
 		}
 		else if_let_ok (auto num, number_parser.parse(rem).if_ok(move_str))
 		{
 			working_values.push_back({
-			  .type  = lak::json::value::value_type::number,
-			  .index = result.numbers.size(),
+			  .value = lak::json::value::value_type::make<lak::json::number>(
+			    result.numbers().size()),
 			});
-			result.numbers.push_back(num.value);
+			result.numbers().push_back({.value = num.value});
 		}
 		else if_let_ok (auto str, string_parser.parse(rem).if_ok(move_str))
 		{
 			working_values.push_back({
-			  .type  = lak::json::value::value_type::string,
-			  .index = result.strings.size(),
+			  .value = lak::json::value::value_type::make<lak::json::string>(
+			    result.strings().size()),
 			});
-			result.strings.push_back(str.value);
+			result.strings().push_back({.value = str.value});
 		}
 		else
 			return lak::err_t{u8"unexpected data"_str};
@@ -423,7 +418,7 @@ lak::dsl::result<lak::dsl::json_t::value_type> lak::dsl::json_t::parse(
 	else if (working_values.size() > 1U)
 		return lak::err_t{u8"unused working values"_str};
 
-	result.values.front() = working_values.back();
+	result.values().push_back(working_values.back());
 
 	return lak::ok_t<lak::dsl::parse_result<value_type>>{{
 	  .consumed  = str.substr(str.size() - rem.size()),
