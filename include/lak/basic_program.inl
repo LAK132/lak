@@ -61,8 +61,7 @@ void APIENTRY
 
 template<typename WINDOW_CLASS>
 lak::result<lak::strong_ref<LAK_BASIC_PROGRAM(window_instance<WINDOW_CLASS>)>,
-            lak::u8string>
-LAK_BASIC_PROGRAM(create_window)(lak::window &&wnd)
+            lak::u8string> LAK_BASIC_PROGRAM(create_window)(lak::window &&wnd)
 {
 	RES_TRY_ASSIGN(
 	  auto result =,
@@ -296,8 +295,7 @@ LAK_BASIC_PROGRAM(create_window)(const lak::cobalt_settings &settings)
 
 template<typename WINDOW_CLASS>
 lak::result<lak::strong_ref<LAK_BASIC_PROGRAM(window_instance<WINDOW_CLASS>)>,
-            lak::u8string>
-LAK_BASIC_PROGRAM(create_window)()
+            lak::u8string> LAK_BASIC_PROGRAM(create_window)()
 {
 	ASSERT(LAK_BASIC_PROGRAM(platform_initialised));
 
@@ -338,6 +336,7 @@ LAK_BASIC_PROGRAM(create_window)()
 	       .or_else(
 	         [&](const lak::u8string &err)
 	         {
+		         WARNING(err);
 		         WARNING("Attempting to create a Software window instead");
 		         return LAK_BASIC_PROGRAM(create_window<WINDOW_CLASS>)(
 		           LAK_BASIC_PROGRAM(window_software_settings));

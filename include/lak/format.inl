@@ -623,12 +623,14 @@ struct lak::format_traits<T, CHAR>
 			case format_args::ascii_printable_only:
 				if (lak::is_ascii_printable(char32_t(value)))
 				{
-					default:
+					[[fallthrough]];
+					default: [[fallthrough]];
 					case format_args::always_character:
 						return lak::strconv<CHAR>(lak::string_view(&value, 1U));
 				}
 				else
 				{
+					[[fallthrough]];
 					case format_args::always_hex:
 						if constexpr (sizeof(T) == sizeof(char8_t))
 							return lak::fmt<CHAR, "\\x{:0.2X}">(uintmax_t(value));

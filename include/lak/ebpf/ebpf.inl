@@ -122,7 +122,7 @@ constexpr lak::ebpf::instruction lak::ebpf::instruction::make(
 constexpr lak::ebpf::instruction lak::ebpf::instruction::make_immediate(
   uint32_t immediate)
 {
-	return {
+	return lak::ebpf::instruction{
 	  .opcode_class = opcode_class_t::LD,
 	  .ld_st =
 	    {
@@ -147,7 +147,7 @@ constexpr lak::ebpf::instruction lak::ebpf::instruction::make(
   uint16_t offset,
   uint32_t immediate)
 {
-	return {
+	return lak::ebpf::instruction{
 	  .opcode_class = static_cast<opcode_class_t>(load),
 	  .ld_st =
 	    {
@@ -238,7 +238,7 @@ constexpr lak::ebpf::instruction lak::ebpf::instruction::make(
   uint16_t offset,
   uint32_t immediate)
 {
-	return {
+	return lak::ebpf::instruction{
 	  .opcode_class = static_cast<opcode_class_t>(store),
 	  .ld_st =
 	    {
