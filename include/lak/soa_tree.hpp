@@ -99,10 +99,7 @@ namespace lak
 			template<lak::concepts::one_of<U...> V>
 			inline static limited_dyn_subspan make(size_t begin, size_t size)
 			{
-				return limited_dyn_subspan{
-				  .begin = limited_dyn_pointer::template make<V>(begin),
-				  .size  = size,
-				};
+				return limited_dyn_subspan(subspan<V>::make(begin, size));
 			}
 		};
 
@@ -147,10 +144,7 @@ namespace lak
 			template<lak::concepts::one_of<T...> U>
 			inline static dyn_pointer make(size_t index)
 			{
-				return dyn_pointer{
-				  .type_index = lak::size_type<index_of<U>>{},
-				  .index      = index,
-				};
+				return dyn_pointer(pointer<U>::make(index));
 			}
 		};
 
@@ -194,10 +188,7 @@ namespace lak
 			template<lak::concepts::one_of<T...> U>
 			inline static dyn_subspan make(size_t begin, size_t size)
 			{
-				return dyn_subspan{
-				  .begin = dyn_pointer::template make<U>(begin),
-				  .size  = size,
-				};
+				return dyn_subspan(subspan<U>::make(begin, size));
 			}
 		};
 

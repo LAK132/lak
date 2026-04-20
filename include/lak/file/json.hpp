@@ -19,6 +19,35 @@ namespace lak
 		struct array;
 		struct object;
 		struct value;
+	}
+
+	template<>
+	struct _array_type_is_copyable<lak::json::token> : lak::true_type
+	{
+	};
+	template<>
+	struct _array_type_is_copyable<lak::json::string> : lak::true_type
+	{
+	};
+	template<>
+	struct _array_type_is_copyable<lak::json::number> : lak::true_type
+	{
+	};
+	template<>
+	struct _array_type_is_copyable<lak::json::array> : lak::true_type
+	{
+	};
+	template<>
+	struct _array_type_is_copyable<lak::json::object> : lak::true_type
+	{
+	};
+	template<>
+	struct _array_type_is_copyable<lak::json::value> : lak::true_type
+	{
+	};
+
+	namespace json
+	{
 
 		using _block = lak::soa_tree<lak::json::token,
 		                             lak::json::string,
@@ -191,7 +220,10 @@ namespace lak
 				  });
 			}
 
-			inline auto visit(auto &&func) const { return block[value].visit(func); }
+			inline auto visit(auto &&func) const
+			{
+				return block[value.value].visit(func);
+			}
 		};
 	}
 
