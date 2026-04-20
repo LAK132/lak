@@ -26,6 +26,19 @@ namespace lak
 		  u8'a', u8'b', u8'c', u8'd', u8'e', u8'f', u8'\0',
 		};
 
+		constexpr char8_t ascii_punctuation[32 + 1] = {
+		  u8'!', u8'"', u8'#', u8'$', u8'%', u8'&',  u8'\'', u8'(', u8')',
+		  u8'*', u8'+', u8',', u8'-', u8'.', u8'/',  u8':',  u8';', u8'<',
+		  u8'=', u8'>', u8'?', u8'@', u8'[', u8'\\', u8']',  u8'^', u8'_',
+		  u8'`', u8'{', u8'|', u8'}', u8'~', u8'\0',
+		};
+
+		constexpr char32_t ascii_punctuation32[32 + 1] = {
+		  U'!', U'"',  U'#', U'$', U'%', U'&', U'\'', U'(', U')', U'*', U'+',
+		  U',', U'-',  U'.', U'/', U':', U';', U'<',  U'=', U'>', U'?', U'@',
+		  U'[', U'\\', U']', U'^', U'_', U'`', U'{',  U'|', U'}', U'~', U'\0',
+		};
+
 		constexpr char32_t control_codes[0x41 + 1] = {
 		  U'\u0000', // null
 		  U'\u0001', // start of heading
