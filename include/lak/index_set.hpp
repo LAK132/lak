@@ -5,6 +5,7 @@
 #	include "lak/result.hpp"
 
 #	include "lak/type_traits.hpp"
+#	include "lak/concepts.hpp"
 
 namespace lak
 {
@@ -16,6 +17,10 @@ namespace lak
 		index_set(size_t index) : _value(index) {}
 
 	public:
+		template<size_t INDEX>
+		static constexpr bool has_index =
+		  lak::concepts::one_of<lak::size_type<INDEX>, lak::size_type<I>...>;
+
 		index_set()                             = delete;
 		index_set(const index_set &)            = default;
 		index_set &operator=(const index_set &) = default;
@@ -25,6 +30,19 @@ namespace lak
 
 		template<size_t INDEX>
 		constexpr index_set &operator=(lak::size_type<INDEX>);
+
+		template<size_t... J>
+		requires(((has_index<J>) && ...))
+		constexpr index_set(lak::index_set<J...> other) : _value(other._value)
+		{
+		}
+
+		template<size_t... J>
+		requires(((has_index<J>) && ...))
+		constexpr index_set &operator=(lak::index_set<J...> other)
+		{
+			_value = other._value;
+		}
 
 		constexpr static lak::result<index_set> make(size_t index);
 
