@@ -32,6 +32,37 @@ namespace lak
 		return (a / b) + ((a % b) != INTEGER(0) ? INTEGER(1) : INTEGER(0));
 	}
 
+	template<typename NUMBER>
+	constexpr NUMBER clamp(NUMBER x, NUMBER min, NUMBER max)
+	{
+		return std::min(std::max(x, min), max);
+	}
+
+	// FLOAT [0.0, 1.0] -> unsigned INTEGER [0, MAX]
+	// FLOAT [-1.0, 1.0] -> signed INTEGER [MIN, MAX]
+	template<typename INTEGER, typename FLOAT>
+	constexpr INTEGER frac_to_int(FLOAT f)
+	{
+		if constexpr (std::is_unsigned_v<INTEGER>)
+			return static_cast<INTEGER>(lak::clamp<long long>(
+			  std::llround(lak::clamp(f, FLOAT(0), FLOAT(1)) *
+			               FLOAT(std::numeric_limits<INTEGER>::max())),
+			  std::numeric_limits<INTEGER>::lowest(),
+			  std::numeric_limits<INTEGER>::max()));
+		else if (f >= FLOAT(0))
+			return static_cast<INTEGER>(lak::clamp<long long>(
+			  std::llround(lak::clamp(f, FLOAT(0), FLOAT(1)) *
+			               FLOAT(std::numeric_limits<INTEGER>::max())),
+			  INTEGER(0),
+			  std::numeric_limits<INTEGER>::max()));
+		else
+			return static_cast<INTEGER>(lak::clamp<long long>(
+			  std::llround(lak::clamp(-f, FLOAT(0), FLOAT(1)) *
+			               FLOAT(std::numeric_limits<INTEGER>::lowest())),
+			  std::numeric_limits<INTEGER>::lowest(),
+			  INTEGER(0)));
+	}
+
 	// round a up to a multiple of b
 	template<typename INTEGER>
 	constexpr INTEGER to_multiple(INTEGER a, INTEGER b)
@@ -46,14 +77,14 @@ namespace lak
 		if constexpr (std::is_unsigned_v<INTEGER>)
 			return a % b;
 		else
-			return a > 0U ? a % b : b - ((-a) % b);
+			return a >= INTEGER(0) ? (a % b) : lak::slack<INTEGER>(-a, b);
 	}
 
 	// fit a to the range [0.0, b) by adding or subtracting multiples of b
 	template<typename FLOAT>
 	constexpr FLOAT fpmod(FLOAT a, FLOAT b)
 	{
-		return a > 0U ? std::fmod(a, b) : b - std::fmod(-a, b);
+		return a >= FLOAT(0) ? std::fmod(a, b) : lak::fslack<FLOAT>(-a, b);
 	}
 
 	// https://dinodini.wordpress.com/2010/04/05/normalized-tunable-sigmoid-functions/
