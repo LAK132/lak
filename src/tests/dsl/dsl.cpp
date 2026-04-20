@@ -306,6 +306,25 @@ BEGIN_TEST(dsl)
 		match3.parse(str).UNWRAP();
 	}
 
+	{
+		auto str    = u8"a,b,c,d"_view;
+		auto parser = lak::dsl::separated_sequence<lak::dsl::char_literal<U','>,
+		                                           lak::dsl::char_literal<U'a'>,
+		                                           lak::dsl::char_literal<U'b'>,
+		                                           lak::dsl::char_literal<U'c'>,
+		                                           lak::dsl::char_literal<U'd'>>;
+		lak::tuple<lak::u8string_view,
+		           lak::u8string_view,
+		           lak::u8string_view,
+		           lak::u8string_view>
+		  res             = parser.parse(str).UNWRAP().value;
+		auto [a, b, c, d] = res;
+		ASSERT_EQUAL(a, u8"a"_view);
+		ASSERT_EQUAL(b, u8"b"_view);
+		ASSERT_EQUAL(c, u8"c"_view);
+		ASSERT_EQUAL(d, u8"d"_view);
+	}
+
 	return 0;
 }
 END_TEST()

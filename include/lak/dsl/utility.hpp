@@ -192,6 +192,12 @@ namespace lak
 		inline constexpr auto simple_identifier =
 		  (lak::dsl::ascii_alpha | lak::dsl::char_literal<U'_'>)+(
 		    *(lak::dsl::ascii_alphanumeric | lak::dsl::char_literal<U'_'>));
+
+		template<lak::dsl::concepts::parser auto separator,
+		         lak::dsl::concepts::parser auto parser,
+		         lak::dsl::concepts::parser auto... parsers>
+		inline constexpr auto separated_sequence =
+		  ((parser) + ... + (lak::dsl::capture_2nd<separator, parsers>));
 	}
 }
 
