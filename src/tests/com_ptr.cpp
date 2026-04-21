@@ -13,6 +13,8 @@ struct lak::unique_com_ptr_traits<com_ptr_test_type>
 	using handle_type  = com_ptr_test_type *;
 	using exposed_type = com_ptr_test_type *;
 
+	static constexpr handle_type null_value = nullptr;
+
 	inline static lak::infallible_result<exposed_type> ctor(int *value)
 	{
 		*value = 1;
@@ -24,13 +26,18 @@ struct lak::unique_com_ptr_traits<com_ptr_test_type>
 		*(handle->value) = 2;
 		delete handle;
 	}
+
+	inline static bool valid(handle_type handle) { return !!handle; }
 };
+
+static_assert(lak::concepts::unique_com_ptr_traits<
+              lak::unique_com_ptr_traits<com_ptr_test_type>>);
 
 BEGIN_TEST(unique_com_ptr)
 {
 	int value = 0;
 	{
-		auto ptr{lak::unique_com_ptr<com_ptr_test_type>::create(&value)};
+		auto ptr{lak::unique_com_ptr<com_ptr_test_type>::make(&value)};
 		ASSERT_EQUAL(value, 1);
 	}
 	ASSERT_EQUAL(value, 2);
@@ -44,6 +51,8 @@ struct lak::shared_com_ptr_traits<com_ptr_test_type>
 {
 	using handle_type  = com_ptr_test_type *;
 	using exposed_type = com_ptr_test_type *;
+
+	static constexpr handle_type null_value = nullptr;
 
 	inline static lak::infallible_result<exposed_type> ctor(int *value)
 	{
@@ -62,19 +71,24 @@ struct lak::shared_com_ptr_traits<com_ptr_test_type>
 		--*handle->value;
 		if (*handle->value == 0) delete handle;
 	}
+
+	inline static bool valid(handle_type handle) { return !!handle; }
 };
+
+static_assert(lak::concepts::shared_com_ptr_traits<
+              lak::shared_com_ptr_traits<com_ptr_test_type>>);
 
 BEGIN_TEST(shared_com_ptr)
 {
 	int value = 0;
 	{
-		auto ptr{lak::shared_com_ptr<com_ptr_test_type>::create(&value)};
+		auto ptr{lak::shared_com_ptr<com_ptr_test_type>::make(&value)};
 		ASSERT_EQUAL(value, 1);
 	}
 	ASSERT_EQUAL(value, 0);
 
 	{
-		auto ptr1{lak::shared_com_ptr<com_ptr_test_type>::create(&value)};
+		auto ptr1{lak::shared_com_ptr<com_ptr_test_type>::make(&value)};
 		ASSERT_EQUAL(value, 1);
 		{
 			auto ptr2{ptr1};
@@ -107,6 +121,8 @@ struct lak::unique_com_ptr_traits<com_ptr_ref_count_test>
 	using handle_type  = com_ptr_ref_count_test *;
 	using exposed_type = com_ptr_ref_count_test *;
 
+	static constexpr handle_type null_value = nullptr;
+
 	inline static lak::infallible_result<exposed_type> ctor(int *value)
 	{
 		++*value;
@@ -119,19 +135,28 @@ struct lak::unique_com_ptr_traits<com_ptr_ref_count_test>
 		--*(handle->value);
 		delete handle;
 	}
+
+	inline static bool valid(handle_type handle) { return !!handle; }
 };
+
+static_assert(lak::concepts::unique_com_ptr_traits<
+              lak::unique_com_ptr_traits<com_ptr_ref_count_test>>);
+
+static_assert(
+  lak::concepts::shared_com_ptr_traits<lak::ref_count_com_ptr_adapter<
+    lak::unique_com_ptr_traits<com_ptr_ref_count_test>>>);
 
 BEGIN_TEST(ref_count_com_ptr)
 {
 	int value = 0;
 	{
-		auto ptr{lak::ref_count_com_ptr<com_ptr_ref_count_test>::create(&value)};
+		auto ptr{lak::ref_count_com_ptr<com_ptr_ref_count_test>::make(&value)};
 		ASSERT_EQUAL(value, 1);
 	}
 	ASSERT_EQUAL(value, 0);
 
 	{
-		auto ptr1{lak::ref_count_com_ptr<com_ptr_ref_count_test>::create(&value)};
+		auto ptr1{lak::ref_count_com_ptr<com_ptr_ref_count_test>::make(&value)};
 		ASSERT_EQUAL(value, 1);
 		{
 			auto ptr2{ptr1};
