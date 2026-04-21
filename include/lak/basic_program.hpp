@@ -51,14 +51,16 @@ extern lak::opengl_settings LAK_BASIC_PROGRAM(window_opengl_settings);
 extern lak::software_settings LAK_BASIC_PROGRAM(window_software_settings);
 
 // Implement init, handle_event and loop in your window class.
+struct LAK_BASIC_PROGRAM(window_instance_base);
 struct LAK_BASIC_PROGRAM(window_api)
 {
 	virtual void init()                          = 0;
 	virtual void handle_event(lak::event &event) = 0;
 	virtual void loop(uint64_t counter_delta)    = 0;
 
-	virtual void destroy()        = 0;
-	virtual lak::window &window() = 0;
+	virtual void destroy()                                            = 0;
+	virtual lak::window &window()                                     = 0;
+	virtual LAK_BASIC_PROGRAM(window_instance_base) & instance_base() = 0;
 };
 struct LAK_BASIC_PROGRAM(window_instance_base)
 : virtual public LAK_BASIC_PROGRAM(window_api)
@@ -83,7 +85,12 @@ struct LAK_BASIC_PROGRAM(window_instance_base)
 	virtual ~LAK_BASIC_PROGRAM(window_instance_base)();
 
 	virtual void destroy() override final;
-	virtual lak::window &window() override final { return _window; }
+	inline virtual lak::window &window() override final { return _window; }
+	inline virtual LAK_BASIC_PROGRAM(window_instance_base) &
+	  instance_base() override final
+	{
+		return *this;
+	};
 };
 template<typename WINDOW_CLASS>
 struct LAK_BASIC_PROGRAM(window_instance)
