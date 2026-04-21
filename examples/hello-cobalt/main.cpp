@@ -194,14 +194,20 @@ float4 main(VSOutput IN) : SV_Target
 
 	state.renderable_node = rd->CreateRenderableNode();
 
-	state.renderable_node->SetPrimitiveMode(
-	  ::cobalt::graphics::IRenderableNode::PrimitiveMode::Triangles);
+	lak::cobalt::as_result(
+	  state.renderable_node->SetPrimitiveMode(
+	    ::cobalt::graphics::IRenderableNode::PrimitiveMode::Triangles))
+	  .UNWRAP();
 
-	state.renderable_node->BindVertexAttribute(
-	  positions_attribute,
-	  state.shader_program->GetVertexAttributeId("position"));
-	state.renderable_node->BindVertexAttribute(
-	  colors_attribute, state.shader_program->GetVertexAttributeId("color"));
+	lak::cobalt::as_result(
+	  state.renderable_node->BindVertexAttribute(
+	    positions_attribute,
+	    state.shader_program->GetVertexAttributeId("position")))
+	  .UNWRAP();
+	lak::cobalt::as_result(
+	  state.renderable_node->BindVertexAttribute(
+	    colors_attribute, state.shader_program->GetVertexAttributeId("color")))
+	  .UNWRAP();
 
 	state.state_group_node->AddChildNode(state.renderable_node.get());
 

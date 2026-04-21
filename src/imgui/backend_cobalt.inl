@@ -126,16 +126,20 @@ float4 main(VSOutput IN) : SV_TARGET
 
 	context->shader_program = context->renderer->CreateShaderProgram();
 
-	context->shader_program->LoadShaderStage(
-	  ::cobalt::graphics::IShaderProgram::ShaderStage::Vertex,
-	  ::cobalt::graphics::IShaderProgram::CodeFormat::HLSL,
-	  reinterpret_cast<const uint8_t *>(vert_shader.c_str()),
-	  vert_shader.size());
-	context->shader_program->LoadShaderStage(
-	  ::cobalt::graphics::IShaderProgram::ShaderStage::Fragment,
-	  ::cobalt::graphics::IShaderProgram::CodeFormat::HLSL,
-	  reinterpret_cast<const uint8_t *>(frag_shader.c_str()),
-	  frag_shader.size());
+	lak::cobalt::as_result(
+	  context->shader_program->LoadShaderStage(
+	    ::cobalt::graphics::IShaderProgram::ShaderStage::Vertex,
+	    ::cobalt::graphics::IShaderProgram::CodeFormat::HLSL,
+	    reinterpret_cast<const uint8_t *>(vert_shader.c_str()),
+	    vert_shader.size()))
+	  .UNWRAP();
+	lak::cobalt::as_result(
+	  context->shader_program->LoadShaderStage(
+	    ::cobalt::graphics::IShaderProgram::ShaderStage::Fragment,
+	    ::cobalt::graphics::IShaderProgram::CodeFormat::HLSL,
+	    reinterpret_cast<const uint8_t *>(frag_shader.c_str()),
+	    frag_shader.size()))
+	  .UNWRAP();
 	lak::cobalt::as_result(context->shader_program->CompileProgram()).UNWRAP();
 
 	context->viewProj = context->shader_program->GetStateValueId("view_proj");
@@ -163,7 +167,9 @@ float4 main(VSOutput IN) : SV_TARGET
 
 	context->program_node = context->renderer->CreateProgramNode();
 
-	context->program_node->BindShaderProgram(context->shader_program.get());
+	lak::cobalt::as_result(
+	  context->program_node->BindShaderProgram(context->shader_program.get()))
+	  .UNWRAP();
 
 	context->render_pass_node->AddChildNode(context->program_node.get());
 
@@ -280,7 +286,7 @@ ImTextureID ImplCoCreateTexture(ImGui::ImplContext context,
 	  ->get();
 }
 
-ImTextureRef ImplCoUpdateTexture(ImGui::ImplContext context,
+ImTextureRef ImplCoUpdateTexture(ImGui::ImplContext,
                                  ImTextureID tex,
                                  const void *pixels,
                                  lak::vec2s_t size,
@@ -360,12 +366,12 @@ ImTextureRef ImplCoUpdateTexture(ImGui::ImplContext context,
 	return tex;
 }
 
-void ImplCoDestroyTexture(ImGui::ImplContext context, ImTextureID tex)
+void ImplCoDestroyTexture(ImGui::ImplContext, ImTextureID tex)
 {
 	delete (::cobalt::graphics::ITextureBuffer2D::unique_ptr *)(uintptr_t)tex;
 }
 
-lak::vec2s_t ImplCoTextureSize(ImGui::ImplContext context, ImTextureID tex)
+lak::vec2s_t ImplCoTextureSize(ImGui::ImplContext, ImTextureID tex)
 {
 	::cobalt::graphics::V2UInt32 dims =
 	  (*(::cobalt::graphics::ITextureBuffer2D::unique_ptr *)(uintptr_t)tex)
@@ -553,7 +559,7 @@ void ImplCoRender(ImGui::ImplContext ctx, ImDrawData *draw_data)
 	for (int n = 0; n < draw_data->CmdListsCount; ++n)
 	{
 		const ImDrawList *cmd_list = draw_data->CmdLists[n];
-		size_t idx_buffer_offset   = 0;
+		// size_t idx_buffer_offset   = 0;
 
 		auto &renderable = context->renderables[n];
 

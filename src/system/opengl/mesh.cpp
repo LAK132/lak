@@ -322,9 +322,10 @@ void lak::opengl::static_object_part::draw(GLuint instances) const
 
 	for (size_t texture_index = 0; const auto &[texture, sampler] : _textures)
 	{
-		lak::opengl::call_checked(glUniform1i, sampler, texture_index).UNWRAP();
+		lak::opengl::call_checked(glUniform1i, sampler, GLint(texture_index))
+		  .UNWRAP();
 		lak::opengl::call_checked(glActiveTexture,
-		                          GLenum(GL_TEXTURE0 + texture_index))
+		                          GLenum(GL_TEXTURE0 + GLint(texture_index)))
 		  .UNWRAP();
 		texture->bind();
 		++texture_index;
@@ -343,9 +344,10 @@ void lak::opengl::static_object_part::draw_part(const GLuint *offset,
 
 	for (size_t texture_index = 0; const auto &[texture, sampler] : _textures)
 	{
-		lak::opengl::call_checked(glUniform1i, sampler, texture_index).UNWRAP();
+		lak::opengl::call_checked(glUniform1i, sampler, GLint(texture_index))
+		  .UNWRAP();
 		lak::opengl::call_checked(glActiveTexture,
-		                          GLenum(GL_TEXTURE0 + texture_index))
+		                          GLenum(GL_TEXTURE0 + GLint(texture_index)))
 		  .UNWRAP();
 		texture->bind();
 		++texture_index;

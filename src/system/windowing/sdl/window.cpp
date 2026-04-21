@@ -265,6 +265,7 @@ bool lak::set_opengl_swap_interval(const lak::opengl_context &, int interval)
 lak::unique_ptr<::cobalt::graphics::IRenderer::WindowSystemInfoBase>
 lak::cobalt_window_system_info(const lak::window_handle *w)
 {
+	LAK_UNUSED(w);
 	auto driver = SDL_GetCurrentVideoDriver();
 #	ifdef LAK_OS_LINUX
 	SDL_SysWMinfo info;
@@ -331,7 +332,6 @@ lak::cobalt_window_system_info(const lak::window_handle *w)
 
 	{
 		ASSERT_UNREACHABLE();
-		return {};
 	}
 }
 
@@ -392,7 +392,6 @@ lak::cobalt_window_info(const lak::window_handle *w)
 
 	{
 		ASSERT_UNREACHABLE();
-		return {};
 	}
 }
 #	endif
@@ -542,9 +541,11 @@ void lak::window_handle_resize(const lak::window_handle *handle)
 	if (handle->graphics_mode() == lak::graphics_mode::Cobalt)
 	{
 		auto actual = lak::window_drawable_size(handle);
-		handle->cobalt_context()
-		  .platform_handle->frame_buffer->NotifyWindowResized(
-		    {(uint32_t)actual.x, (uint32_t)actual.y});
+		lak::cobalt::as_result(
+		  handle->cobalt_context()
+		    .platform_handle->frame_buffer->NotifyWindowResized(
+		      {(uint32_t)actual.x, (uint32_t)actual.y}))
+		  .IF_ERR_WARN("NotifyWindowResized failed");
 	}
 #endif
 }

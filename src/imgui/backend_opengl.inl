@@ -444,7 +444,7 @@ void ImplGLRender(ImGui::ImplContext context, ImDrawData *draw_data)
 		lak::opengl::call_checked(glUniformMatrix4fv,
 		                          gl_context->attrib_view_proj,
 		                          1,
-		                          GL_FALSE,
+		                          (GLboolean)GL_FALSE,
 		                          &viewport_matrix[0][0])
 		  .UNWRAP();
 		lak::opengl::call_checked(glUniform1i, gl_context->attrib_tex, 0).UNWRAP();
@@ -468,8 +468,8 @@ void ImplGLRender(ImGui::ImplContext context, ImDrawData *draw_data)
 	                          gl_context->attrib_pos,
 	                          2,
 	                          GL_FLOAT,
-	                          GL_FALSE,
-	                          sizeof(ImDrawVert),
+	                          (GLboolean)GL_FALSE,
+	                          (GLsizei)sizeof(ImDrawVert),
 	                          (GLvoid *)offsetof(ImDrawVert, pos))
 	  .UNWRAP();
 
@@ -479,8 +479,8 @@ void ImplGLRender(ImGui::ImplContext context, ImDrawData *draw_data)
 	                          gl_context->attrib_UV,
 	                          2,
 	                          GL_FLOAT,
-	                          GL_FALSE,
-	                          sizeof(ImDrawVert),
+	                          (GLboolean)GL_FALSE,
+	                          (GLsizei)sizeof(ImDrawVert),
 	                          (GLvoid *)offsetof(ImDrawVert, uv))
 	  .UNWRAP();
 
@@ -490,8 +490,8 @@ void ImplGLRender(ImGui::ImplContext context, ImDrawData *draw_data)
 	                          gl_context->attrib_col,
 	                          4,
 	                          GL_UNSIGNED_BYTE,
-	                          GL_TRUE,
-	                          sizeof(ImDrawVert),
+	                          (GLboolean)GL_TRUE,
+	                          (GLsizei)sizeof(ImDrawVert),
 	                          (GLvoid *)offsetof(ImDrawVert, col))
 	  .UNWRAP();
 

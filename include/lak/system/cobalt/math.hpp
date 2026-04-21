@@ -36,90 +36,108 @@ namespace lak
 
 		inline ::cobalt::graphics::M4Float32 from_glm(glm::mat4x4 m)
 		{
+			using len_t = typename decltype(m)::length_type;
 			::cobalt::graphics::M4Float32 result;
-			for (size_t y = 0; y < 4; ++y)
-				for (size_t x = 0; x < 4; ++x) result.data()[x + (y * 4)] = m[x][y];
+			for (len_t y = 0; y < 4; ++y)
+				for (len_t x = 0; x < 4; ++x)
+					result.data()[size_t(x + (y * 4))] = m[x][y];
 			return result;
 		}
 
 		inline ::cobalt::graphics::M3Float32 from_glm(glm::mat3x3 m)
 		{
+			using len_t = typename decltype(m)::length_type;
 			::cobalt::graphics::M3Float32 result;
-			for (size_t y = 0; y < 3; ++y)
-				for (size_t x = 0; x < 3; ++x) result.data()[x + (y * 3)] = m[x][y];
+			for (len_t y = 0; y < 3; ++y)
+				for (len_t x = 0; x < 3; ++x)
+					result.data()[size_t(x + (y * 3))] = m[x][y];
 			return result;
 		}
 
 		inline ::cobalt::graphics::M2Float32 from_glm(glm::mat2x2 m)
 		{
+			using len_t = typename decltype(m)::length_type;
 			::cobalt::graphics::M2Float32 result;
-			for (size_t y = 0; y < 2; ++y)
-				for (size_t x = 0; x < 2; ++x) result.data()[x + (y * 2)] = m[x][y];
+			for (len_t y = 0; y < 2; ++y)
+				for (len_t x = 0; x < 2; ++x)
+					result.data()[size_t(x + (y * 2))] = m[x][y];
 			return result;
 		}
 
 		inline ::cobalt::graphics::V4Float32 from_glm(glm::vec4 v)
 		{
+			using len_t = typename decltype(v)::length_type;
 			::cobalt::graphics::V4Float32 result;
-			for (size_t x = 0; x < 4; ++x) result.data()[x] = v[x];
+			for (len_t x = 0; x < 4; ++x) result.data()[size_t(x)] = v[x];
 			return result;
 		}
 
 		inline ::cobalt::graphics::V3Float32 from_glm(glm::vec3 v)
 		{
+			using len_t = typename decltype(v)::length_type;
 			::cobalt::graphics::V3Float32 result;
-			for (size_t x = 0; x < 3; ++x) result.data()[x] = v[x];
+			for (len_t x = 0; x < 3; ++x) result.data()[size_t(x)] = v[x];
 			return result;
 		}
 
 		inline ::cobalt::graphics::V2Float32 from_glm(glm::vec2 v)
 		{
+			using len_t = typename decltype(v)::length_type;
 			::cobalt::graphics::V2Float32 result;
-			for (size_t x = 0; x < 2; ++x) result.data()[x] = v[x];
+			for (len_t x = 0; x < 2; ++x) result.data()[size_t(x)] = v[x];
 			return result;
 		}
 		inline glm::mat4x4 to_glm(::cobalt::graphics::M4Float32 m)
 		{
 			glm::mat4x4 result;
-			for (size_t y = 0; y < 4; ++y)
-				for (size_t x = 0; x < 4; ++x) result[x][y] = m.data()[x + (y * 4)];
+			using len_t = typename decltype(result)::length_type;
+			for (len_t y = 0; y < 4; ++y)
+				for (len_t x = 0; x < 4; ++x)
+					result[x][y] = m.data()[size_t(x + (y * 4))];
 			return result;
 		}
 
 		inline glm::mat3x3 to_glm(::cobalt::graphics::M3Float32 m)
 		{
 			glm::mat3x3 result;
-			for (size_t y = 0; y < 3; ++y)
-				for (size_t x = 0; x < 3; ++x) result[x][y] = m.data()[x + (y * 3)];
+			using len_t = typename decltype(result)::length_type;
+			for (len_t y = 0; y < 3; ++y)
+				for (len_t x = 0; x < 3; ++x)
+					result[x][y] = m.data()[size_t(x + (y * 3))];
 			return result;
 		}
 
 		inline glm::mat2x2 to_glm(::cobalt::graphics::M2Float32 m)
 		{
 			glm::mat2x2 result;
-			for (size_t y = 0; y < 2; ++y)
-				for (size_t x = 0; x < 2; ++x) result[x][y] = m.data()[x + (y * 2)];
+			using len_t = typename decltype(result)::length_type;
+			for (len_t y = 0; y < 2; ++y)
+				for (len_t x = 0; x < 2; ++x)
+					result[x][y] = m.data()[size_t(x + (y * 2))];
 			return result;
 		}
 
 		inline glm::vec4 to_glm(::cobalt::graphics::V4Float32 v)
 		{
 			glm::vec4 result;
-			for (size_t x = 0; x < 4; ++x) result[x] = v.data()[x];
+			using len_t = typename decltype(result)::length_type;
+			for (len_t x = 0; x < 4; ++x) result[x] = v.data()[size_t(x)];
 			return result;
 		}
 
 		inline glm::vec3 to_glm(::cobalt::graphics::V3Float32 v)
 		{
 			glm::vec3 result;
-			for (size_t x = 0; x < 3; ++x) result[x] = v.data()[x];
+			using len_t = typename decltype(result)::length_type;
+			for (len_t x = 0; x < 3; ++x) result[x] = v.data()[size_t(x)];
 			return result;
 		}
 
 		inline glm::vec2 to_glm(::cobalt::graphics::V2Float32 v)
 		{
 			glm::vec2 result;
-			for (size_t x = 0; x < 2; ++x) result[x] = v.data()[x];
+			using len_t = typename decltype(result)::length_type;
+			for (len_t x = 0; x < 2; ++x) result[x] = v.data()[size_t(x)];
 			return result;
 		}
 	}

@@ -1,0 +1,24 @@
+From 024210354ee0627603d1fa3929224cd3eaced28d Mon Sep 17 00:00:00 2001
+From: LAK132 <lakridesagain@gmail.com>
+Date: Tue, 21 Apr 2026 13:27:04 +0930
+Subject: [PATCH] Fix not clearing boundRenderTargetCount on framebuffer change
+
+---
+ Renderers/Direct3D11Renderer/Direct3DRenderer.cpp | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/Renderers/Direct3D11Renderer/Direct3DRenderer.cpp b/Renderers/Direct3D11Renderer/Direct3DRenderer.cpp
+index 212605f..7ee39f1 100644
+--- a/Renderers/Direct3D11Renderer/Direct3DRenderer.cpp
++++ b/Renderers/Direct3D11Renderer/Direct3DRenderer.cpp
+@@ -920,6 +920,7 @@ void Direct3DRenderer::PerformRenderOperation()
+ 		Direct3DFrameBuffer* newFramebuffer = renderPassNode->GetFrameBuffer();
+ 		if (newFramebuffer != currentFramebuffer)
+ 		{
++			boundRenderTargetCount = 0;
+ 			if (newFramebuffer != nullptr)
+ 			{
+ 				newFramebuffer->BindFrameBuffer(device, context, _dxgiFactory.Get());
+-- 
+2.43.0
+

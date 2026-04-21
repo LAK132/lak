@@ -5,6 +5,8 @@ cobalt_opts = cmake.subproject_options()
 cobalt_source_root = meson.global_source_root()/'subprojects'/'Cobalt'
 cobalt_build_root = meson.global_build_root()/'subprojects'/'Cobalt'
 
+cobalt_opts.set_override_option('warning_level', '1')
+
 cobalt_opts.add_cmake_defines({
 	# Cobalt
 	'COBALT_BUILD_TESTS': 'OFF',
@@ -12,6 +14,7 @@ cobalt_opts.add_cmake_defines({
 	'COBALT_BUILD_EXAMPLES': 'OFF',
 	'COBALT_BUILD_VULKAN_VALIDATION_LAYERS': 'OFF',
 	'COBALT_OPENGL_USE_EGL': 'ON',
+	'COBALT_USE_SDL3': 'OFF',
 	# 'COBALT_ARCH': '',
 	# 'COBALT_ARCH_SHORT': '',
 	'COBALT_EXTERNAL_ROOT': cobalt_source_root/'External',

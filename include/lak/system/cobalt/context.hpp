@@ -54,7 +54,8 @@ struct lak::format_traits<::cobalt::graphics::IRendererInfo::ApiFamily, CHAR>
 				return lak::strconv<CHAR>("Vulkan"_view);
 			case ::cobalt::graphics::IRendererInfo::ApiFamily::Metal:
 				return lak::strconv<CHAR>("Metal"_view);
-			default: ASSERT_UNREACHABLE(); return lak::strconv<CHAR>("Unknown"_view);
+			default:
+				BOUNDS_ASSERT_UNREACHABLE(return lak::strconv<CHAR>("Unknown"_view));
 		}
 	}
 };
