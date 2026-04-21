@@ -14,6 +14,28 @@ extern "C"
 #include "lualib.h"
 }
 
+template<>
+struct lak::unique_com_ptr_traits<lua_State>
+{
+	using handle_type  = lua_State *;
+	using exposed_type = lua_State *;
+
+	static constexpr handle_type null_value = nullptr;
+
+	inline static lak::result<handle_type> ctor()
+	{
+		handle_type result = luaL_newstate();
+		if (result == nullptr)
+			return lak::err_t{};
+		else
+			return lak::ok_t{result};
+	}
+
+	inline static auto dtor(handle_type handle) { lua_close(handle); }
+
+	inline static bool valid(handle_type handle) { return handle != null_value; }
+};
+
 namespace lak
 {
 	namespace lua
@@ -213,7 +235,5 @@ namespace lak
 	};
 	}
 }
-
-#include "lua.inl"
 
 #endif

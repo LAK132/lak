@@ -16,7 +16,7 @@ lak::result<lua_Integer> my_wrapped_func(lua_Integer num)
 
 BEGIN_TEST(lua)
 {
-	auto state{lak::lua::state_ptr::create().UNWRAP()};
+	auto state{lak::lua::state_ptr::make().UNWRAP()};
 	luaL_openlibs(state);
 	lua_CFunction my_func = [](lua_State *state) -> int
 	{
