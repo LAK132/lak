@@ -119,7 +119,8 @@ void _ImGui_ImplSoftrender_UpdateTexture(ImTextureData *texture)
 		for (ImTextureRect &r : texture->Updates)
 			for (size_t y = r.y; y < r.y + r.h; ++y)
 				for (size_t x = r.x; x < r.x + r.w; ++x)
-					tex->at(x, y) = *(const color32_t *)texture->GetPixelsAt(x, y);
+					tex->at(x, y) =
+					  *(const color32_t *)texture->GetPixelsAt(int(x), int(y));
 
 		texture->SetTexID((ImTextureID)(uintptr_t)(texture_base_t *)tex);
 		delete old;

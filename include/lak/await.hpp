@@ -28,7 +28,7 @@ namespace lak
 					return lak::strconv<CHAR>("await running"_view);
 				case lak::await_error::failed:
 					return lak::strconv<CHAR>("await failed"_view);
-				default: ASSERT_NYI(); return {};
+				default: BOUNDS_ASSERT_UNREACHABLE(return {});
 			}
 		}
 	};

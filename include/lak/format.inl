@@ -127,8 +127,16 @@ struct lak::format_traits<lak::string_view<T>, CHAR>
 	                                   const lak::string_view<T> &value)
 	{
 		lak::string<CHAR> result;
-		result.reserve(std::min<size_t>(value.size(), args.precision));
-		result.insert(result.end(), value.begin(), value.end());
+		if constexpr (lak::is_same_v<T, CHAR>)
+		{
+			result.reserve(std::min<size_t>(value.size(), args.precision));
+			result.insert(result.end(), value.begin(), value.end());
+		}
+		else
+		{
+			result = lak::strconv<CHAR>(value);
+			result.reserve(args.precision);
+		}
 		while (result.size() < args.precision) result += CHAR(' ');
 		return result;
 	}

@@ -2,23 +2,6 @@
 
 #include "lak/binary_writer.hpp"
 
-const char *lak::lz4_error_name(lak::err::lz4_decode err)
-{
-	switch (err)
-	{
-		case lak::err::lz4_decode::too_many_literals:
-			return "too many literals";
-		case lak::err::lz4_decode::zero_offset:
-			return "zero offset";
-		case lak::err::lz4_decode::offset_too_large:
-			return "offset too large";
-		case lak::err::lz4_decode::match_too_long:
-			return "match too long";
-		default:
-			return "invalid error code";
-	}
-}
-
 lak::result<lak::array<byte_t>,
             lak::variant<lak::err::out_of_data, lak::err::lz4_decode>>
 lak::decode_lz4_block(lak::binary_reader &strm,

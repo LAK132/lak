@@ -537,6 +537,7 @@ bool lak::swap_window(lak::window_handle *handle)
 
 void lak::window_handle_resize(const lak::window_handle *handle)
 {
+	LAK_UNUSED(handle);
 #ifdef LAK_ENABLE_COBALT
 	if (handle->graphics_mode() == lak::graphics_mode::Cobalt)
 	{

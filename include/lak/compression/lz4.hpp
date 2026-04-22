@@ -5,6 +5,7 @@
 #include "lak/binary_reader.hpp"
 #include "lak/buffer_span.hpp"
 #include "lak/errors.hpp"
+#include "lak/format.hpp"
 #include "lak/result.hpp"
 #include "lak/span.hpp"
 
@@ -25,8 +26,6 @@ namespace lak
 		};
 	}
 
-	const char *lz4_error_name(lak::err::lz4_decode err);
-
 	// allow_partial_reads disables the output_full error, but in the event of a
 	// partial read, it means the input stream is left in a potentially bad state
 	// for further block decoding.
@@ -46,5 +45,27 @@ namespace lak
 		return decode_lz4_block(strm, output_size, allow_partial_read);
 	}
 }
+
+template<typename CHAR>
+struct lak::format_traits<lak::err::lz4_decode, CHAR>
+{
+	static lak::string<CHAR> to_string(const lak::err::lz4_decode &value)
+	{
+		switch (value)
+		{
+			case lak::err::lz4_decode::too_many_literals:
+				return lak::strconv<CHAR>("too many literals"_view);
+			case lak::err::lz4_decode::zero_offset:
+				return lak::strconv<CHAR>("zero offset"_view);
+			case lak::err::lz4_decode::offset_too_large:
+				return lak::strconv<CHAR>("offset too large"_view);
+			case lak::err::lz4_decode::match_too_long:
+				return lak::strconv<CHAR>("match too long"_view);
+			default:
+				BOUNDS_ASSERT_UNREACHABLE(
+				  return lak::strconv<CHAR>("invalid error code"_view));
+		}
+	}
+};
 
 #endif
