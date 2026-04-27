@@ -11,7 +11,7 @@ EXTERN_C IMAGE_DOS_HEADER __ImageBase;
 lak::wstring win32_error_string(LPCWSTR lpszFunction);
 void win32_error_popup(LPCWSTR lpszFunction);
 
-lak::mod_key get_mod_key_state(lak::key_code key)
+lak::mod_key get_mod_key_state()
 {
 	lak::mod_key mod = lak::mod_key::none;
 
@@ -324,7 +324,7 @@ void translate_event(const MSG &msg,
 		{
 			uint32_t scancode = get_scancode(msg.lParam);
 			lak::key_code key = get_key_code(msg.wParam, msg.lParam);
-			lak::mod_key mod  = get_mod_key_state(key);
+			lak::mod_key mod  = get_mod_key_state();
 
 			*event = lak::event(lak::event_type::key_down,
 			                    window,
@@ -340,7 +340,7 @@ void translate_event(const MSG &msg,
 		{
 			uint32_t scancode = get_scancode(msg.lParam);
 			lak::key_code key = get_key_code(msg.wParam, msg.lParam);
-			lak::mod_key mod  = get_mod_key_state(key);
+			lak::mod_key mod  = get_mod_key_state();
 
 			*event = lak::event(lak::event_type::key_up,
 			                    window,
