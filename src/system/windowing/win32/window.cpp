@@ -250,15 +250,15 @@ lak::result<lak::window_handle *, lak::u8string> lak::create_window(
 
 	auto renderer = device->CreateRenderer(r.features, r.options);
 
-	if (auto window_system_info = lak::cobalt_window_system_info();
+	auto handle = lak::unique_bank_ptr<lak::window_handle>::create();
+	ASSERT(handle);
+
+	if (auto window_system_info = lak::cobalt_window_system_info(handle.get());
 	    !renderer->Initialize(*window_system_info))
 	{
 		return lak::err_t<lak::u8string>{
 		  lak::streamify("Failed to initialise cobalt renderer")};
 	}
-
-	auto handle = lak::unique_bank_ptr<lak::window_handle>::create();
-	ASSERT(handle);
 
 	DEFER(if (handle) lak::destroy_window(handle.release()));
 
