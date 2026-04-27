@@ -7,9 +7,21 @@
 
 #include "lak/softrender/defines.hpp"
 
+#if defined(__GNUC__)
+#	pragma GCC diagnostic push
+#	pragma GCC diagnostic ignored "-Wcpp"
+#elif defined(__clang__)
+#	pragma GCC diagnostic push
+#	pragma GCC diagnostic ignored "-Wcpp"
+#endif
 #include <cfloat>
 #include <cmath>
 #include <cstdint>
+#if defined(__GNUC__)
+#	pragma GCC diagnostic pop
+#elif defined(__clang__)
+#	pragma clang diagnostic pop
+#endif
 
 template<typename T>
 struct range_t

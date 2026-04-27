@@ -1,9 +1,22 @@
 #ifndef LAK_STDINT_HPP
 #define LAK_STDINT_HPP
 
+// disable _FORTIFY_SOURCE warning in O0 builds
+#if defined(__GNUC__)
+#	pragma GCC diagnostic push
+#	pragma GCC diagnostic ignored "-Wcpp"
+#elif defined(__clang__)
+#	pragma GCC diagnostic push
+#	pragma GCC diagnostic ignored "-Wcpp"
+#endif
 #include <climits>
 #include <cstddef>
 #include <cstdint>
+#if defined(__GNUC__)
+#	pragma GCC diagnostic pop
+#elif defined(__clang__)
+#	pragma clang diagnostic pop
+#endif
 
 namespace lak
 {

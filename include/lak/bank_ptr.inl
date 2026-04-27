@@ -431,6 +431,7 @@ lak::shared_bank_ptr<T> &lak::shared_bank_ptr<T>::operator=(lak::nullptr_t)
 
 template<typename T>
 lak::shared_bank_ptr<T>::shared_bank_ptr(const shared_bank_ptr &other)
+: lak::unique_bank_ptr<T>(lak::dynamic_extent)
 {
 	if (other)
 	{
@@ -439,8 +440,6 @@ lak::shared_bank_ptr<T>::shared_bank_ptr(const shared_bank_ptr &other)
 		lak::unique_bank_ptr<T>::_value = other._value;
 		++_reference_count[lak::unique_bank_ptr<T>::_index];
 	}
-	else
-		reset();
 };
 
 template<typename T>

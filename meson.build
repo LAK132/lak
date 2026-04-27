@@ -116,14 +116,14 @@ add_project_arguments(
 	'-D_CRT_SECURE_NO_WARNINGS',
 	language: ['c', 'cpp', 'objcpp'])
 
-if get_option('buildtype') != 'debug'
-	add_project_arguments(
-		'-DNDEBUG',
-		language: ['c', 'cpp', 'objcpp'])
-elif get_option('buildtype') != 'release'
+if get_option('debug')
 	# needed for cobalt
 	add_project_arguments(
 		'-D_DEBUG',
+		language: ['c', 'cpp', 'objcpp'])
+else
+	add_project_arguments(
+		'-DNDEBUG',
 		language: ['c', 'cpp', 'objcpp'])
 endif
 

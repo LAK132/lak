@@ -78,6 +78,8 @@ struct my_window : virtual public LAK_BASIC_PROGRAM(window_api)
 				           // the current frame)
 				break;
 			case lak::event_type::dropfile: dropfile = event.dropfile().path; break;
+
+			default: break;
 		}
 	}
 
@@ -300,11 +302,22 @@ lak::error_code<int> LAK_BASIC_PROGRAM(program_init)()
 void LAK_BASIC_PROGRAM(program_handle_event)(lak::event &event)
 {
 	// handle non-window events
+
+	switch (event.type)
+	{
+		case lak::event_type::quit_program:
+			for (auto &inst : LAK_BASIC_PROGRAM(window_instances)()) inst->destroy();
+			break;
+		default: break;
+	}
 }
 
 bool LAK_BASIC_PROGRAM(program_loop)(uint64_t counter_delta)
 {
 	// called once per frame
+
+	[[maybe_unused]] auto frame_time_ms =
+	  ((float)counter_delta * 1000U) / lak::performance_frequency();
 
 	// return true: continue program execution
 	// return false: stop main program loop, continues to program_quit

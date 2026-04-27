@@ -104,7 +104,19 @@ static inline void lak_debug_break()
 #	elif defined(__STDC_HOSTED__) && (__STDC_HOSTED__ == 0) && defined(__GNUC__)
 #		define DEBUG_BREAK() __builtin_trap()
 #	else
+#		if defined(LAK_COMPILER_GNUC)
+#			pragma GCC diagnostic push
+#			pragma GCC diagnostic ignored "-Wcpp"
+#		elif defined(LAK_COMPILER_CLANG)
+#			pragma GCC diagnostic push
+#			pragma GCC diagnostic ignored "-Wcpp"
+#		endif
 #		include <signal.h>
+#		if defined(LAK_COMPILER_GNUC)
+#			pragma GCC diagnostic pop
+#		elif defined(LAK_COMPILER_CLANG)
+#			pragma clang diagnostic pop
+#		endif
 #		if defined(SIGTRAP)
 #			define DEBUG_BREAK() raise(SIGTRAP)
 #		else
@@ -121,7 +133,19 @@ static inline void lak_debug_break()
 #	define LAK_UNREACHABLE() __builtin_unreachable()
 #	define TYPE_NAME(X)      [&]() -> lak::astring { return {typeid(X).name()}; }()
 #elif defined(LAK_COMPILER_CLANG) || defined(LAK_COMPILER_GNUC)
+#	if defined(LAK_COMPILER_GNUC)
+#		pragma GCC diagnostic push
+#		pragma GCC diagnostic ignored "-Wcpp"
+#	elif defined(LAK_COMPILER_CLANG)
+#		pragma GCC diagnostic push
+#		pragma GCC diagnostic ignored "-Wcpp"
+#	endif
 #	include <cxxabi.h>
+#	if defined(LAK_COMPILER_GNUC)
+#		pragma GCC diagnostic pop
+#	elif defined(LAK_COMPILER_CLANG)
+#		pragma clang diagnostic pop
+#	endif
 #	define force_inline  inline __attribute__((always_inline))
 #	define packed_struct struct [[gnu::packed]]
 #	define DLL_EXPORT    [[gnu::dllexport]]
