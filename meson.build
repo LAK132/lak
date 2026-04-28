@@ -7,6 +7,7 @@ project(
 		'build.c_std': 'c11',
 		'cpp_std': ['c++26', 'c++23', 'c++latest'],
 		'build.cpp_std': ['c++26', 'c++23', 'c++latest'],
+		'b_vscrt': 'static_from_buildtype',
 		'warning_level': '3',
 		'werror': false,
 	},
@@ -116,14 +117,16 @@ add_project_arguments(
 	'-D_CRT_SECURE_NO_WARNINGS',
 	language: ['c', 'cpp', 'objcpp'])
 
-if get_option('debug')
-	# needed for cobalt
-	add_project_arguments(
-		'-D_DEBUG',
-		language: ['c', 'cpp', 'objcpp'])
-else
+if not get_option('debug')
 	add_project_arguments(
 		'-DNDEBUG',
+		language: ['c', 'cpp', 'objcpp'])
+endif
+
+if get_option('buildtype') == 'debug'
+	# needed for cobalt (and *only* in the debug buildtype specifically)
+	add_project_arguments(
+		'-D_DEBUG',
 		language: ['c', 'cpp', 'objcpp'])
 endif
 
