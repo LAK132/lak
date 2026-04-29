@@ -572,9 +572,11 @@ void lak::window_handle_resize(const lak::window_handle *handle)
 	if (handle->graphics_mode() == lak::graphics_mode::Cobalt)
 	{
 		auto actual = lak::window_drawable_size(handle);
-		handle->cobalt_context()
-		  .platform_handle->frame_buffer->NotifyWindowResized(
-		    {(uint32_t)actual.x, (uint32_t)actual.y});
+		lak::cobalt::as_result(
+		  handle->cobalt_context()
+		    .platform_handle->frame_buffer->NotifyWindowResized(
+		      {(uint32_t)actual.x, (uint32_t)actual.y}))
+		  .IF_ERR_WARN("NotifyWindowResized failed");
 	}
 #endif
 }
