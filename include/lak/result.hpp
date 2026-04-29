@@ -201,7 +201,7 @@ namespace lak
 // if_let_ok (auto ok, result) { ok; }
 // else { }
 #	define if_let_ok(VALUE, ...)                                               \
-		if (auto &&UNIQUIFY(RESULT_){lak::ref_or_move((__VA_ARGS__))};            \
+		if (auto &&UNIQUIFY(RESULT_){lak::remove_rvalue((__VA_ARGS__))};          \
 		    UNIQUIFY(RESULT_).is_ok())                                            \
 			do_with (VALUE{                                                         \
 			           lak::forward<decltype(UNIQUIFY(RESULT_))>(UNIQUIFY(RESULT_)) \
@@ -210,7 +210,7 @@ namespace lak
 // if_let_err (auto err, result) { err; }
 // else { }
 #	define if_let_err(VALUE, ...)                                              \
-		do_with (auto &&UNIQUIFY(RESULT_){lak::ref_or_move((__VA_ARGS__))})       \
+		do_with (auto &&UNIQUIFY(RESULT_){lak::remove_rvalue((__VA_ARGS__))})     \
 			if constexpr (!lak::is_same_v<                                          \
 			                lak::result_err_type_t<                                 \
 			                  lak::remove_cvref_t<decltype(UNIQUIFY(RESULT_))>>,    \

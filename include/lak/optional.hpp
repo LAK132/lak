@@ -334,7 +334,7 @@ namespace lak
 // if_let_some (auto ok, optional) { ok; }
 // else { }
 #define if_let_some(VALUE, ...)                                               \
-	if (auto &&UNIQUIFY(OPTIONAL_){lak::ref_or_move((__VA_ARGS__))};            \
+	if (auto &&UNIQUIFY(OPTIONAL_){lak::remove_rvalue((__VA_ARGS__))};          \
 	    UNIQUIFY(OPTIONAL_).has_value())                                        \
 		do_with (VALUE{lak::forward<decltype(*UNIQUIFY(OPTIONAL_))>(              \
 		           *UNIQUIFY(OPTIONAL_))})

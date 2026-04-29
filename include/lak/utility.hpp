@@ -228,17 +228,16 @@ namespace lak
 		return static_cast<T &&>(t);
 	}
 
-	/* --- ref_or_move --- */
+	/* --- remove_rvalue --- */
 
+	// T   -> T
+	// T&  -> T&
+	// T&& -> T
 	template<typename T>
-	using ref_or_move_t = lak::conditional_t<lak::is_lvalue_reference_v<T>,
-	                                         T,
-	                                         lak::remove_reference_t<T>>;
-
-	template<typename T>
-	force_inline constexpr lak::ref_or_move_t<T> ref_or_move(T &&t) noexcept
+	force_inline constexpr lak::remove_rvalue_reference_t<T> remove_rvalue(
+	  T &&t) noexcept
 	{
-		return static_cast<lak::ref_or_move_t<T> &&>(t);
+		return static_cast<lak::remove_rvalue_reference_t<T> &&>(t);
 	}
 
 	/* --- swap --- */
