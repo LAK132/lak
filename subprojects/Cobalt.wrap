@@ -1,5 +1,5 @@
 [wrap-git]
 url = https://github.com/CobaltRenderer/CobaltTest
-revision = 8dedb38637d996d35a1efb02eb37a70377107185
+revision = d27f9441b17956a797e377dec1bd3f95b48ce865
 depth = 1
 diff_files = cobalt/0001-Fix-not-clearing-boundRenderTargetCount-on-framebuff.patch, cobalt/0002-Fix-invalid-linker-argument-in-Vulkan-Loader.patch,  cobalt/0004-Allow-overriding-install-dirs.patch, cobalt/0005-Move-AppKit-specific-ObjC-code-to-its-own-.mm-files.patch

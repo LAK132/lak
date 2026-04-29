@@ -1,6 +1,7 @@
 #include "backend.inl"
 
 #include "lak/system/cobalt/math.hpp"
+#include "lak/system/cobalt/program.hpp"
 
 namespace ImGui
 {
@@ -129,16 +130,12 @@ float4 main(VSOutput IN) : SV_TARGET
 	lak::cobalt::as_result(
 	  context->shader_program->LoadShaderStage(
 	    ::cobalt::graphics::IShaderProgram::ShaderStage::Vertex,
-	    ::cobalt::graphics::IShaderProgram::CodeFormat::HLSL,
-	    reinterpret_cast<const uint8_t *>(vert_shader.c_str()),
-	    vert_shader.size()))
+	    lak::cobalt::shader_source_hlsl(vert_shader)))
 	  .UNWRAP();
 	lak::cobalt::as_result(
 	  context->shader_program->LoadShaderStage(
 	    ::cobalt::graphics::IShaderProgram::ShaderStage::Fragment,
-	    ::cobalt::graphics::IShaderProgram::CodeFormat::HLSL,
-	    reinterpret_cast<const uint8_t *>(frag_shader.c_str()),
-	    frag_shader.size()))
+	    lak::cobalt::shader_source_hlsl(frag_shader)))
 	  .UNWRAP();
 	lak::cobalt::as_result(context->shader_program->CompileProgram()).UNWRAP();
 

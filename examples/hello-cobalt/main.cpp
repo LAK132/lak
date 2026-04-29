@@ -4,6 +4,7 @@
 #include <lak/format.hpp>
 
 #include <lak/system/cobalt/log_target.hpp>
+#include <lak/system/cobalt/program.hpp>
 #include <lak/system/cobalt/renderers.hpp>
 #include <lak/system/cobalt/result.hpp>
 
@@ -99,18 +100,14 @@ float4 main(VSOutput IN) : SV_Target
 
 	if (!state.shader_program->LoadShaderStage(
 	      ::cobalt::graphics::IShaderProgram::ShaderStage::Vertex,
-	      ::cobalt::graphics::IShaderProgram::CodeFormat::HLSL,
-	      reinterpret_cast<const uint8_t *>(vs.c_str()),
-	      vs.size()))
+	      lak::cobalt::shader_source_hlsl(vs)))
 	{
 		ERROR("Loading vertex shader stage failed");
 		return lak::err_t{u8"Loading vertex shader stage failed"_str};
 	}
 	if (!state.shader_program->LoadShaderStage(
 	      ::cobalt::graphics::IShaderProgram::ShaderStage::Fragment,
-	      ::cobalt::graphics::IShaderProgram::CodeFormat::HLSL,
-	      reinterpret_cast<const uint8_t *>(fs.c_str()),
-	      fs.size()))
+	      lak::cobalt::shader_source_hlsl(fs)))
 	{
 		ERROR("Loading fragment shader stage failed");
 		return lak::err_t{u8"Loading fragment shader stage failed"_str};
@@ -285,9 +282,7 @@ void main(uint3 threadId : SV_DispatchThreadID)
 
 	if (!state.shader_program->LoadShaderStage(
 	      ::cobalt::graphics::IShaderProgram::ShaderStage::Compute,
-	      ::cobalt::graphics::IShaderProgram::CodeFormat::HLSL,
-	      reinterpret_cast<const uint8_t *>(cs.c_str()),
-	      cs.size()))
+	      lak::cobalt::shader_source_hlsl(cs, "main"_view)))
 	{
 		ERROR("Loading compute shader stage failed");
 		return lak::err_t{u8"Loading compute shader stage failed"_str};

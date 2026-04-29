@@ -24,9 +24,9 @@
 #	endif
 #	ifdef LAK_OS_LINUX
 #		include <RendererInterface/WindowInfoWayland.h>
-#		include <RendererInterface/WindowInfoXLib.h>
+#		include <RendererInterface/WindowInfoXlib.h>
 #		include <RendererInterface/WindowSystemInfoWayland.h>
-#		include <RendererInterface/WindowSystemInfoXLib.h>
+#		include <RendererInterface/WindowSystemInfoXlib.h>
 #	endif
 #	ifdef LAK_OS_APPLE
 #		include <RendererInterface/WindowInfoAppKit.h>

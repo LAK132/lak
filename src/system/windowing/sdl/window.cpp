@@ -295,9 +295,9 @@ lak::cobalt_window_system_info(const lak::window_handle *w)
 	{
 		return lak::unique_ptr<
 		  ::cobalt::graphics::IRenderer::WindowSystemInfoBase>(
-		  new ::cobalt::graphics::WindowSystemInfoXLib(info.info.x11.display),
+		  new ::cobalt::graphics::WindowSystemInfoXlib(info.info.x11.display),
 		  [](auto *p)
-		  { delete static_cast<::cobalt::graphics::WindowSystemInfoXLib *>(p); });
+		  { delete static_cast<::cobalt::graphics::WindowSystemInfoXlib *>(p); });
 	}
 	else
 #		endif
@@ -366,12 +366,12 @@ lak::cobalt_window_info(const lak::window_handle *w)
 	  if (info.subsystem == SDL_SYSWM_X11)
 	{
 		return lak::unique_ptr<::cobalt::graphics::IFrameBuffer::WindowInfoBase>(
-		  new ::cobalt::graphics::WindowInfoXLib(
+		  new ::cobalt::graphics::WindowInfoXlib(
 		    info.info.x11.display,
 		    info.info.x11.window,
 		    lak::cobalt::from_lak(lak::vec2u32_t(lak::window_drawable_size(w)))),
 		  [](auto *p)
-		  { delete static_cast<::cobalt::graphics::WindowInfoXLib *>(p); });
+		  { delete static_cast<::cobalt::graphics::WindowInfoXlib *>(p); });
 	}
 	else
 #			endif
