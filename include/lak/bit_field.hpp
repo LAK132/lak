@@ -1,6 +1,7 @@
 #ifndef LAK_BIT_FIELD_HPP
 #define LAK_BIT_FIELD_HPP
 
+#include "lak/math.hpp"
 #include "lak/packed_array.hpp"
 #include "lak/span.hpp"
 #include "lak/stdint.hpp"
@@ -30,9 +31,8 @@ namespace lak
 	{
 		static_assert((((sizeof(UINT) * 8) >= SIZE) && ...));
 		static constexpr size_t member_size[sizeof...(SIZE)] = {SIZE...};
-		static constexpr size_t bit_count = lak::sum(lak::span(member_size));
-		static constexpr size_t byte_count =
-		  ((bit_count % 8 > 0) ? 1 : 0) + (bit_count / 8);
+		static constexpr size_t bit_count  = lak::sum(lak::span(member_size));
+		static constexpr size_t byte_count = lak::ceil_div<size_t>(bit_count, 8U);
 		// uint8_t _value[byte_count] = {};
 		lak::packed_array<uint8_t, byte_count> _value = {};
 
@@ -77,10 +77,12 @@ namespace lak
 		template<size_t INDEX>
 		constexpr UINT get() const
 		{
+			constexpr size_t index_bit_count = member_size[INDEX];
+			if constexpr (index_bit_count == 0U) return UINT{};
+
 			constexpr size_t bit_offset =
 			  lak::sum(lak::span(member_size).template first<INDEX>());
-			constexpr size_t partial_offset  = bit_offset % 8;
-			constexpr size_t index_bit_count = member_size[INDEX];
+			constexpr size_t partial_offset = bit_offset % 8;
 
 			if constexpr (index_bit_count + partial_offset <= 8)
 			{
@@ -151,10 +153,12 @@ namespace lak
 		template<size_t INDEX>
 		constexpr void set(UINT value)
 		{
+			constexpr size_t index_bit_count = member_size[INDEX];
+			if constexpr (index_bit_count == 0U) return;
+
 			constexpr size_t bit_offset =
 			  lak::sum(lak::span(member_size).template first<INDEX>());
-			constexpr size_t partial_offset  = bit_offset % 8;
-			constexpr size_t index_bit_count = member_size[INDEX];
+			constexpr size_t partial_offset = bit_offset % 8;
 			ASSERT_GREATER_OR_EQUAL(lak::bit_count_mask(index_bit_count), value);
 
 			if constexpr (index_bit_count + partial_offset <= 8)
