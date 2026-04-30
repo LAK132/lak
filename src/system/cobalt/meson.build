@@ -75,6 +75,14 @@ if get_option('lak_enable_cobalt_vk')
 	cobalt_opts.set_install(true, target: 'VulkanRenderer')
 endif
 
+vis_hidden = '-fvisibility=hidden'
+if meson.get_compiler('cpp').has_argument(vis_hidden)
+	cobalt_opts.append_compile_args('cpp', vis_hidden)
+endif
+if host_machine.system() == 'darwin' and meson.get_compiler('objcpp').has_argument(vis_hidden)
+	cobalt_opts.append_compile_args('objcpp', vis_hidden)
+endif
+
 if host_machine.system() == 'darwin'
 	cobalt_opts.append_compile_args('objcpp', '-Wno-builtin-macro-redefined')
 endif
