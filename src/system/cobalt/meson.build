@@ -6,6 +6,7 @@ cobalt_source_root = meson.global_source_root()/'subprojects'/'Cobalt'
 cobalt_build_root = meson.global_build_root()/'subprojects'/'Cobalt'
 
 cobalt_opts.set_override_option('warning_level', '1')
+cobalt_opts.set_override_option('cpp_std', 'c++20')
 
 cobalt_opts.add_cmake_defines({
 	# Cobalt
