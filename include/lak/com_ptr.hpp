@@ -89,13 +89,14 @@ namespace lak
 		template<typename... ARGS>
 		auto emplace(ARGS &&...args)
 		{
-			return TRAITS::ctor(lak::forward<ARGS>(args)...)
-			  .map(
-			    [&](handle_type handle)
-			    {
-				    this->reset(handle);
-				    return lak::monostate{};
-			    });
+			return lak::unwrap_if_infallible(
+			  TRAITS::ctor(lak::forward<ARGS>(args)...)
+			    .map(
+			      [&](handle_type handle)
+			      {
+				      this->reset(handle);
+				      return lak::monostate{};
+			      }));
 		}
 
 		void reset() { reset(TRAITS::null_value); }
@@ -286,13 +287,14 @@ namespace lak
 		template<typename... ARGS>
 		auto emplace(ARGS &&...args)
 		{
-			return TRAITS::ctor(lak::forward<ARGS>(args)...)
-			  .map(
-			    [&](handle_type handle)
-			    {
-				    this->reset(handle);
-				    return lak::monostate{};
-			    });
+			return lak::unwrap_if_infallible(
+			  TRAITS::ctor(lak::forward<ARGS>(args)...)
+			    .map(
+			      [&](handle_type handle)
+			      {
+				      this->reset(handle);
+				      return lak::monostate{};
+			      }));
 		}
 
 		void reset() { reset(TRAITS::null_value); }
