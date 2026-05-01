@@ -128,6 +128,7 @@ void lak::EndViewport(ImViewport viewport)
 
 void lak::DestroyTexture(ImTextureRef &tex)
 {
+	if (tex.GetTexID() == ImTextureID_Invalid) return;
 	ImGui::ImplDestroyTexture(
 	  (ImGui::ImplContext)ImGui::GetIO().BackendPlatformUserData, tex);
 	tex = ImTextureID_Invalid;
