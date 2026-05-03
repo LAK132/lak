@@ -45,15 +45,20 @@ namespace lak
 	inline lak::u32string to_u32string(lak::string_view<FROM> str);
 
 	template<typename FROM>
-	inline lak::astring to_astring(const FROM *str);
+	inline lak::astring to_astring(const FROM *str,
+	                               size_t max_length = lak::dynamic_extent);
 	template<typename FROM>
-	inline lak::wstring to_wstring(const FROM *str);
+	inline lak::wstring to_wstring(const FROM *str,
+	                               size_t max_length = lak::dynamic_extent);
 	template<typename FROM>
-	inline lak::u8string to_u8string(const FROM *str);
+	inline lak::u8string to_u8string(const FROM *str,
+	                                 size_t max_length = lak::dynamic_extent);
 	template<typename FROM>
-	inline lak::u16string to_u16string(const FROM *str);
+	inline lak::u16string to_u16string(const FROM *str,
+	                                   size_t max_length = lak::dynamic_extent);
 	template<typename FROM>
-	inline lak::u32string to_u32string(const FROM *str);
+	inline lak::u32string to_u32string(const FROM *str,
+	                                   size_t max_length = lak::dynamic_extent);
 }
 
 #include "lak/strconv.inl"

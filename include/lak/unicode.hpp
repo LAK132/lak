@@ -80,6 +80,10 @@ namespace lak
 		lak::pair<char32_t, uint8_t> _current;
 
 	public:
+		struct sentinel
+		{
+		};
+
 		inline constexpr codepoint_iterator(lak::string_view<CHAR> str) noexcept
 		: _data(str)
 		{
@@ -91,9 +95,9 @@ namespace lak
 
 		inline constexpr codepoint_iterator &operator++() noexcept;
 
-		inline constexpr bool operator==(char32_t c) const noexcept;
+		inline constexpr bool operator==(sentinel) const noexcept;
 
-		inline constexpr bool operator!=(char32_t c) const noexcept;
+		inline constexpr bool operator!=(sentinel) const noexcept;
 	};
 
 	template<typename CHAR>
@@ -115,8 +119,22 @@ namespace lak
 
 		inline constexpr codepoint_iterator<CHAR> begin() const noexcept;
 
-		inline constexpr char32_t end() const noexcept;
+		inline constexpr typename codepoint_iterator<CHAR>::sentinel end()
+		  const noexcept;
 	};
+
+	template<typename TO, typename FROM>
+	inline void foreach_char(lak::string_view<FROM> str, auto &&func);
+	template<typename FROM>
+	inline void foreach_achar(lak::string_view<FROM> str, auto &&func);
+	template<typename FROM>
+	inline void foreach_wchar(lak::string_view<FROM> str, auto &&func);
+	template<typename FROM>
+	inline void foreach_u8char(lak::string_view<FROM> str, auto &&func);
+	template<typename FROM>
+	inline void foreach_u16char(lak::string_view<FROM> str, auto &&func);
+	template<typename FROM>
+	inline void foreach_u32char(lak::string_view<FROM> str, auto &&func);
 }
 
 #	include "lak/unicode.inl"

@@ -78,10 +78,9 @@ uint8_t lak::codepoint_length(char32_t code)
 template<typename CHAR>
 void lak::append_codepoint(lak::string<CHAR> &str, char32_t code)
 {
-	constexpr size_t buffer_size = lak::chars_per_codepoint_v<CHAR>;
-	CHAR buffer[buffer_size + 1] = {};
-	lak::from_codepoint(lak::codepoint_buffer(lak::span(buffer)), code);
-	str += buffer;
+	lak::codepoint_buffer_t<CHAR> buffer;
+	auto span = lak::from_codepoint(buffer, code);
+	str.insert(str.end(), span.begin(), span.end());
 }
 
 template<typename CHAR>
@@ -103,16 +102,16 @@ lak::codepoint_iterator<CHAR>::operator++() noexcept
 
 template<typename CHAR>
 inline constexpr bool lak::codepoint_iterator<CHAR>::operator==(
-  char32_t c) const noexcept
+  sentinel) const noexcept
 {
-	return _current.first == c;
+	return _current.second == 0U;
 }
 
 template<typename CHAR>
 inline constexpr bool lak::codepoint_iterator<CHAR>::operator!=(
-  char32_t c) const noexcept
+  sentinel) const noexcept
 {
-	return _current.first != c;
+	return _current.second != 0U;
 }
 
 template<typename CHAR>
@@ -123,7 +122,49 @@ lak::codepoint_range<CHAR>::begin() const noexcept
 }
 
 template<typename CHAR>
-inline constexpr char32_t lak::codepoint_range<CHAR>::end() const noexcept
+inline constexpr lak::codepoint_iterator<CHAR>::sentinel
+lak::codepoint_range<CHAR>::end() const noexcept
 {
-	return 0;
+	return {};
+}
+
+template<typename TO, typename FROM>
+inline void lak::foreach_char(lak::string_view<FROM> str, auto &&func)
+{
+	if constexpr (lak::is_same_v<TO, FROM>)
+		for (const FROM &c : str) func(c);
+	else
+		for (lak::codepoint_buffer_t<TO> buffer;
+		     const auto &[c, len] : lak::codepoint_range(str))
+			for (const TO &ac : lak::from_codepoint(buffer, c)) func(ac);
+}
+
+template<typename FROM>
+inline void lak::foreach_achar(lak::string_view<FROM> str, auto &&func)
+{
+	return lak::foreach_char<char>(str, func);
+}
+
+template<typename FROM>
+inline void lak::foreach_wchar(lak::string_view<FROM> str, auto &&func)
+{
+	return lak::foreach_char<wchar_t>(str, func);
+}
+
+template<typename FROM>
+inline void lak::foreach_u8char(lak::string_view<FROM> str, auto &&func)
+{
+	return lak::foreach_char<char8_t>(str, func);
+}
+
+template<typename FROM>
+inline void lak::foreach_u16char(lak::string_view<FROM> str, auto &&func)
+{
+	return lak::foreach_char<char16_t>(str, func);
+}
+
+template<typename FROM>
+inline void lak::foreach_u32char(lak::string_view<FROM> str, auto &&func)
+{
+	return lak::foreach_char<char32_t>(str, func);
 }
