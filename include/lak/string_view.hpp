@@ -12,11 +12,16 @@ namespace lak
 	/* --- string_length --- */
 
 	// Length of the null terminated string not including the null terminator.
-	size_t string_length(const char *str);
-	size_t string_length(const wchar_t *str);
-	size_t string_length(const char8_t *str);
-	size_t string_length(const char16_t *str);
-	size_t string_length(const char32_t *str);
+	size_t string_length(const char *str,
+	                     size_t max_length = lak::dynamic_extent);
+	size_t string_length(const wchar_t *str,
+	                     size_t max_length = lak::dynamic_extent);
+	size_t string_length(const char8_t *str,
+	                     size_t max_length = lak::dynamic_extent);
+	size_t string_length(const char16_t *str,
+	                     size_t max_length = lak::dynamic_extent);
+	size_t string_length(const char32_t *str,
+	                     size_t max_length = lak::dynamic_extent);
 
 	/* --- null_string_span --- */
 
@@ -78,7 +83,8 @@ namespace lak
 		{
 		}
 
-		constexpr static string_view from_c_str(const CHAR *str);
+		constexpr static string_view from_c_str(
+		  const CHAR *str, size_t max_length = lak::dynamic_extent);
 
 		constexpr const CHAR &operator[](size_t index) const
 		{

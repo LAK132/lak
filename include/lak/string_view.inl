@@ -13,9 +13,9 @@ lak::span<CHAR> lak::null_string_span(CHAR *str)
 
 template<typename CHAR>
 constexpr lak::string_view<CHAR> lak::string_view<CHAR>::from_c_str(
-  const CHAR *str)
+  const CHAR *str, size_t max_length)
 {
-	return lak::string_view<CHAR>(str, lak::string_length(str));
+	return lak::string_view<CHAR>(str, lak::string_length(str, max_length));
 }
 
 template<typename CHAR>
