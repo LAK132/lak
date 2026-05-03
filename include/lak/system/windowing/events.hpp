@@ -140,13 +140,16 @@ namespace lak
 
 	enum struct mod_key : uint32_t
 	{
-		none = 0,
+		none = 0U,
 
-		lshift = 1 << 0,
-		lctrl  = 1 << 1,
-		lalt   = 1 << 2,
-		lsuper = 1 << 3,
-		menu   = 1 << 4,
+		lshift      = 1U << 0U,
+		lctrl       = 1U << 1U,
+		lalt        = 1U << 2U,
+		lsuper      = 1U << 3U,
+		menu        = 1U << 4U,
+		caps_lock   = 1U << 5U,
+		num_lock    = 1U << 6U,
+		scroll_lock = 1U << 7U,
 
 		rshift = lshift << 16U,
 		rctrl  = lctrl << 16U,
@@ -156,7 +159,9 @@ namespace lak
 		shift = lshift | rshift,
 		ctrl  = lctrl | rctrl,
 		alt   = lalt | ralt,
-		super = lsuper | rsuper,
+		super = lsuper | rsuper, // aka GUI/"windows key"
+
+		// :TODO: meta? hyper?
 	};
 
 	static inline lak::mod_key operator|(lak::mod_key m1, lak::mod_key m2)
