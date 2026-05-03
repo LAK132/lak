@@ -475,6 +475,13 @@ bool ImGui::ImplProcessEvent(ImplContext context, const lak::event &event)
 			return true;
 		}
 
+		case lak::event_type::text:
+		{
+			lak::foreach_u16char(lak::string_view(lak::span(event.text().text)),
+			                     [&](char16_t c) { io.AddInputCharacterUTF16(c); });
+			return true;
+		}
+
 		case lak::event_type::key_down: [[fallthrough]];
 		case lak::event_type::key_up:
 		{
@@ -630,26 +637,6 @@ bool ImGui::ImplProcessEvent(ImplContext context, const lak::event &event)
 
 		default: break;
 	}
-
-#if defined(LAK_USE_WINAPI)
-	if (event._platform_event->msg.message == WM_CHAR)
-	{
-		io.AddInputCharacter((unsigned int)event._platform_event->msg.wParam);
-		return true;
-	}
-#elif defined(LAK_USE_XLIB)
-#	error "NYI"
-#elif defined(LAK_USE_XCB)
-#	error "NYI"
-#elif defined(LAK_USE_SDL)
-	if (event._platform_event->sdl_event.type == SDL_TEXTINPUT)
-	{
-		io.AddInputCharactersUTF8(event._platform_event->sdl_event.text.text);
-		return true;
-	}
-#else
-#	error "No implementation specified"
-#endif
 
 	return false;
 }

@@ -36,7 +36,7 @@ namespace lak
 		key_down,
 		key_up,
 
-		character,
+		text,
 
 		button_down,
 		button_up,
@@ -188,9 +188,9 @@ namespace lak
 		uint32_t native_scancode;
 	};
 
-	struct character_event
+	struct text_event
 	{
-		char32_t code;
+		lak::array<char8_t> text = {};
 	};
 
 	enum struct mouse_button : uint32_t
@@ -235,7 +235,7 @@ namespace lak
 		                             lak::window_event,
 		                             lak::dropfile_event,
 		                             lak::key_event,
-		                             lak::character_event,
+		                             lak::text_event,
 		                             lak::button_event,
 		                             lak::motion_event,
 		                             lak::wheel_event>;
@@ -260,9 +260,9 @@ namespace lak
 			return *_state.template get<state_t::index_of<lak::key_event>>();
 		}
 
-		const lak::character_event &character() const
+		const lak::text_event &text() const
 		{
-			return *_state.template get<state_t::index_of<lak::character_event>>();
+			return *_state.template get<state_t::index_of<lak::text_event>>();
 		}
 
 		const lak::motion_event &motion() const

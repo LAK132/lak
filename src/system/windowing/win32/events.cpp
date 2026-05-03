@@ -27,6 +27,13 @@ lak::mod_key get_mod_key_state()
 	if (pressed(VK_LWIN)) mod = mod | lak::mod_key::lsuper;
 	if (pressed(VK_RWIN)) mod = mod | lak::mod_key::rsuper;
 
+	auto locked = [](int key) -> bool
+	{ return (::GetKeyState(key) & 0x0001) != 0; };
+
+	if (locked(VK_CAPITAL)) mod = mod | lak::mod_key::caps_lock;
+	if (locked(VK_NUMLOCK)) mod = mod | lak::mod_key::num_lock;
+	if (locked(VK_SCROLL)) mod = mod | lak::mod_key::scroll_lock;
+
 	return mod;
 }
 
@@ -317,6 +324,27 @@ void translate_event(const MSG &msg,
 		}
 		break;
 
+			/* --- text --- */
+
+		case WM_UNICHAR:
+		{
+			if (msg.wParam != UNICODE_NOCHAR)
+			{
+				lak::codepoint_buffer_t<char8_t> buff;
+				auto span =
+				  lak::from_codepoint(buff, static_cast<char32_t>(msg.wParam));
+				*event = lak::event(lak::event_type::text,
+				                    window,
+				                    lak::move(platform_event),
+				                    lak::key_event{.text = lak::array<char8_t>(
+				                                     span.begin(), span.end())});
+			}
+			else
+				*event = lak::event(
+				  lak::event_type::platform_event, window, lak::move(platform_event));
+		}
+		break;
+
 			/* --- key_down --- */
 
 		case WM_SYSKEYDOWN:
@@ -346,23 +374,6 @@ void translate_event(const MSG &msg,
 			                    window,
 			                    lak::move(platform_event),
 			                    lak::key_event{key, mod, scancode});
-		}
-		break;
-
-			/* --- character --- */
-
-		case WM_UNICHAR:
-		{
-			// :TODO: is this a text input event? should SDL2 have something like
-			// this?
-			if (msg.wParam != UNICODE_NOCHAR)
-				*event = lak::event(lak::event_type::character,
-				                    window,
-				                    lak::move(platform_event),
-				                    lak::character_event{(char32_t)msg.wParam});
-			else
-				*event = lak::event(
-				  lak::event_type::platform_event, window, lak::move(platform_event));
 		}
 		break;
 

@@ -313,6 +313,21 @@ void translate_event(const SDL_Event &sdl_event,
 			}
 			break;
 
+			/* --- text --- */
+
+		case SDL_TEXTINPUT:
+		{
+			auto str = lak::as_u8string(lak::astring_view::from_c_str(
+			  sdl_event.text.text, SDL_TEXTINPUTEVENT_TEXT_SIZE));
+			lak::array<char8_t> text;
+			text.push_back(str.begin(), str.end());
+			*event = lak::event(lak::event_type::text,
+			                    window,
+			                    lak::move(platform_event),
+			                    lak::text_event{lak::move(text)});
+		}
+		break;
+
 			/* --- key_down --- */
 
 		case SDL_KEYDOWN:
