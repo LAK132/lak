@@ -119,7 +119,12 @@ namespace lak
 		feature_set_t features                                   = {};
 		std::set<::cobalt::graphics::IRenderer::Options> options = {};
 
+		// the single preferred renderer
 		static lak::result<cobalt_renderer_settings> preferred(
+		  feature_set_t &&required_features = {});
+
+		// preferred settings for each available renderer, in order of preference
+		static lak::result<lak::array<cobalt_renderer_settings>> each_preferred(
 		  feature_set_t &&required_features = {});
 
 #	ifdef LAK_ENABLE_COBALT_OGL3
@@ -281,6 +286,12 @@ namespace lak
 #endif
 
 #ifdef LAK_ENABLE_COBALT
+		// use preferred renderer settings
+		static lak::result<lak::pair<window, lak::cobalt_renderer_settings>,
+		                   lak::u8string>
+		make(const lak::cobalt_settings &s);
+
+		// use specific renderer settings
 		static lak::result<window, lak::u8string> make(
 		  const lak::cobalt_settings &s, const lak::cobalt_renderer_settings &r);
 #endif

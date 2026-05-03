@@ -51,16 +51,77 @@ static_assert(lak::is_of_template_v<lak::u8string, std::basic_string>);
 
 lak::weak_ptr<lak_test_basic_window_instance<lak_test_basic_window>> wnd_ptr;
 
+lak::graphics_mode backend;
 lak::error_code<int> lak_test_basic_program_init()
 {
 	FUNCTION_CHECKPOINT();
-	RES_TRY_ASSIGN(wnd_ptr =,
-	               lak_test_basic_create_window<lak_test_basic_window>().map_err(
-	                 [](lak::u8string err)
-	                 {
-		                 ERROR(err);
-		                 return EXIT_FAILURE;
-	                 }));
+	switch (backend)
+	{
+		case lak::graphics_mode::None:
+		{
+			// by not specifying a specific graphics settings struct, create_window
+			// will attempt to find the first working graphics backend
+			RES_TRY_ASSIGN(
+			  wnd_ptr =,
+			  lak_test_basic_create_window<lak_test_basic_window>().map_err(
+			    [](lak::u8string err)
+			    {
+				    ERROR(err);
+				    return EXIT_FAILURE;
+			    }));
+		}
+		break;
+#ifdef LAK_ENABLE_SOFTRENDER
+		case lak::graphics_mode::Software:
+		{
+			RES_TRY_ASSIGN(wnd_ptr =,
+			               lak_test_basic_create_window<lak_test_basic_window>(
+			                 lak_test_basic_window_software_settings)
+			                 .map_err(
+			                   [](lak::u8string err)
+			                   {
+				                   ERROR(err);
+				                   return EXIT_FAILURE;
+			                   }));
+		}
+		break;
+#endif
+#ifdef LAK_ENABLE_OPENGL
+		case lak::graphics_mode::OpenGL:
+		{
+			RES_TRY_ASSIGN(wnd_ptr =,
+			               lak_test_basic_create_window<lak_test_basic_window>(
+			                 lak_test_basic_window_opengl_settings)
+			                 .map_err(
+			                   [](lak::u8string err)
+			                   {
+				                   ERROR(err);
+				                   return EXIT_FAILURE;
+			                   }));
+		}
+		break;
+#endif
+#ifdef LAK_ENABLE_COBALT
+		case lak::graphics_mode::Cobalt:
+		{
+			// by not specifying a specific renderer settings struct, create_window
+			// will attempt to find the first working preferred renderer
+			RES_TRY_ASSIGN(wnd_ptr =,
+			               lak_test_basic_create_window<lak_test_basic_window>(
+			                 lak_test_basic_window_cobalt_settings)
+			                 .map_err(
+			                   [](lak::u8string err)
+			                   {
+				                   ERROR(err);
+				                   return EXIT_FAILURE;
+			                   }));
+		}
+		break;
+#endif
+		default:
+			ERROR(lak::fmt<u8"Graphics mode {} not available">(backend));
+			return lak::err_t{EXIT_FAILURE};
+	}
 	return lak::ok_t{};
 }
 
@@ -83,26 +144,34 @@ void lak_test_basic_program_handle_event(lak::event &event)
 	FUNCTION_CHECKPOINT();
 }
 
-#if !(defined(LAK_ENABLE_SOFTRENDER) || defined(LAK_ENABLE_OPENGL))
-#	error At least one renderer must be enabled
-#endif
-
 #ifdef LAK_RUN_WINDOWING_TESTS
 BEGIN_TEST(basic_program)
 #else
 int basic_program_compile_test()
 #endif
 {
-#ifdef LAK_ENABLE_OPENGL
-	DEBUG("attempting to launch hardware rendered window");
-	lak_test_basic_window_force_software = false;
+	DEBUG("attempting to launch default rendered window");
+	backend = lak::graphics_mode::None;
+	if (int err = LAK_BASIC_PROGRAM_MAIN(0, nullptr); err != EXIT_SUCCESS)
+		return err;
+
+#ifdef LAK_ENABLE_SOFTRENDER
+	DEBUG("attempting to launch software rendered window");
+	backend = lak::graphics_mode::Software;
 	if (int err = LAK_BASIC_PROGRAM_MAIN(0, nullptr); err != EXIT_SUCCESS)
 		return err;
 #endif
 
-#ifdef LAK_ENABLE_SOFTRENDER
-	DEBUG("attempting to launch software rendered window");
-	lak_test_basic_window_force_software = true;
+#ifdef LAK_ENABLE_OPENGL
+	DEBUG("attempting to launch hardware rendered window");
+	backend = lak::graphics_mode::OpenGL;
+	if (int err = LAK_BASIC_PROGRAM_MAIN(0, nullptr); err != EXIT_SUCCESS)
+		return err;
+#endif
+
+#ifdef LAK_ENABLE_COBALT
+	DEBUG("attempting to launch hardware rendered window");
+	backend = lak::graphics_mode::Cobalt;
 	if (int err = LAK_BASIC_PROGRAM_MAIN(0, nullptr); err != EXIT_SUCCESS)
 		return err;
 #endif

@@ -60,6 +60,51 @@ lak::cobalt_renderer_settings::preferred(feature_set_t &&required_features)
 	return lak::err_t{};
 }
 
+lak::result<lak::array<lak::cobalt_renderer_settings>> lak::
+  cobalt_renderer_settings::each_preferred(feature_set_t &&required_features)
+{
+	lak::array<lak::cobalt_renderer_settings> result;
+
+#	ifdef LAK_ENABLE_COBALT_D3D12
+	if_let_ok (auto settings,
+	           lak::cobalt_renderer_settings::preferred_d3d12(
+	             lak::move(required_features)))
+		result.push_back(lak::move(settings));
+#	endif
+
+#	ifdef LAK_ENABLE_COBALT_D3D11
+	if_let_ok (auto settings,
+	           lak::cobalt_renderer_settings::preferred_d3d11(
+	             lak::move(required_features)))
+		result.push_back(lak::move(settings));
+#	endif
+
+#	ifdef LAK_ENABLE_COBALT_VK
+	if_let_ok (auto settings,
+	           lak::cobalt_renderer_settings::preferred_vk(
+	             lak::move(required_features)))
+		result.push_back(lak::move(settings));
+#	endif
+
+#	ifdef LAK_ENABLE_COBALT_OGL4
+	if_let_ok (auto settings,
+	           lak::cobalt_renderer_settings::preferred_ogl4(
+	             lak::move(required_features)))
+		result.push_back(lak::move(settings));
+#	endif
+
+#	ifdef LAK_ENABLE_COBALT_OGL3
+	if_let_ok (auto settings,
+	           lak::cobalt_renderer_settings::preferred_ogl3(
+	             lak::move(required_features)))
+		result.push_back(lak::move(settings));
+#	endif
+
+	if (result.empty()) return lak::err_t{};
+
+	return lak::move_ok(result);
+}
+
 namespace
 {
 	namespace local
@@ -281,6 +326,31 @@ lak::result<lak::window, lak::u8string> lak::window::make(
 #endif
 
 #ifdef LAK_ENABLE_COBALT
+lak::result<lak::pair<lak::window, lak::cobalt_renderer_settings>,
+            lak::u8string> lak::window::make(const lak::cobalt_settings &s)
+{
+	lak::u8string errs;
+
+	RES_TRY_ASSIGN(
+	  auto each_rsettings =,
+	  lak::cobalt_renderer_settings::each_preferred().map_err(
+	    [](auto &&)
+	    { return u8"Failed to get preferred renderer settings"_str; }));
+
+	for (auto &rsettings : each_rsettings)
+	{
+		auto add_settings = [&](lak::window &&wnd)
+		  -> lak::pair<lak::window, lak::cobalt_renderer_settings>
+		{ return {lak::move(wnd), lak::move(rsettings)}; };
+
+		RES_TRY_ASSIGN_ERR(errs +=,
+		                   lak::window::make(s, rsettings).map(add_settings));
+		errs += u8"\n";
+	}
+
+	return lak::move_err(errs);
+}
+
 lak::result<lak::window, lak::u8string> lak::window::make(
   const lak::cobalt_settings &s, const lak::cobalt_renderer_settings &r)
 {

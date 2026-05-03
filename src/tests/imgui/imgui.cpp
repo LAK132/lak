@@ -32,6 +32,8 @@ int imgui_compile_test()
 		lak::window w = lak::window::make(lak::software_settings{}).UNWRAP();
 #elif defined(LAK_ENABLE_OPENGL)
 		lak::window w = lak::window::make(lak::opengl_settings{}).UNWRAP();
+#elif defined(LAK_ENABLE_COBALT)
+		auto [w, r] = lak::window::make(lak::cobalt_settings{}).UNWRAP();
 #else
 #	error no graphics backend
 #endif
@@ -60,8 +62,6 @@ int imgui_compile_test()
 		uint64_t last_counter     = lak::performance_counter();
 		uint64_t counter_delta = lak::performance_frequency() / target_framerate;
 
-		std::string str;
-
 		DEBUG("starting event loop");
 		for (bool running = true; running;)
 		{
@@ -71,13 +71,9 @@ int imgui_compile_test()
 
 				switch (e.type)
 				{
-					case lak::event_type::close_window:
-						[[fallthrough]];
-					case lak::event_type::quit_program:
-						running = false;
-						break;
-					default:
-						break;
+					case lak::event_type::close_window: [[fallthrough]];
+					case lak::event_type::quit_program: running = false; break;
+					default:                            break;
 				}
 			}
 

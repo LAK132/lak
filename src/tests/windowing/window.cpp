@@ -6,10 +6,6 @@
 #include "lak/system/windowing/platform.hpp"
 #include "lak/system/windowing/window.hpp"
 
-#if !(defined(LAK_ENABLE_SOFTRENDER) || defined(LAK_ENABLE_OPENGL))
-#	error Test requires a graphics backend to be enabled
-#endif
-
 #ifdef LAK_ENABLE_SOFTRENDER
 #	ifdef LAK_RUN_WINDOWING_TESTS
 BEGIN_TEST(softrender_window)
@@ -37,13 +33,9 @@ int softrender_window_compile_test()
 			{
 				switch (e.type)
 				{
-					case lak::event_type::close_window:
-						[[fallthrough]];
-					case lak::event_type::quit_program:
-						running = false;
-						break;
-					default:
-						break;
+					case lak::event_type::close_window: [[fallthrough]];
+					case lak::event_type::quit_program: running = false; break;
+					default:                            break;
 				}
 			}
 
@@ -91,13 +83,9 @@ int opengl_window_compile_test()
 			{
 				switch (e.type)
 				{
-					case lak::event_type::close_window:
-						[[fallthrough]];
-					case lak::event_type::quit_program:
-						running = false;
-						break;
-					default:
-						break;
+					case lak::event_type::close_window: [[fallthrough]];
+					case lak::event_type::quit_program: running = false; break;
+					default:                            break;
 				}
 			}
 
@@ -108,6 +96,76 @@ int opengl_window_compile_test()
 			glClearColor(0.0f, 0.3125f, 0.312f, 1.0f);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT |
 			        GL_STENCIL_BUFFER_BIT);
+
+			w.swap();
+		}
+		DEBUG("event loop finished");
+	}
+
+	DEBUG("platform quit");
+	lak::platform_quit();
+
+	return 0;
+}
+#	ifdef LAK_RUN_WINDOWING_TESTS
+END_TEST()
+#	endif
+#endif
+
+#ifdef LAK_ENABLE_COBALT
+
+#	ifdef LAK_RUN_WINDOWING_TESTS
+BEGIN_TEST(cobalt_window)
+#	else
+int cobalt_window_compile_test()
+#	endif
+{
+	DEBUG("platform init");
+	ASSERT(lak::platform_init());
+
+	{
+		DEBUG("create window");
+		auto [w, r] = lak::window::make(lak::cobalt_settings{}).UNWRAP();
+
+		w.set_title(L"Test Window");
+		auto title = w.title();
+		ASSERT_EQUAL(title.c_str(), L"Test Window"_str);
+
+		ASSERT_EQUAL(w.graphics(), lak::graphics_mode::Cobalt);
+
+		DEBUG("starting event loop");
+		for (bool running = true; running;)
+		{
+			for (lak::event e; lak::next_event(&e);)
+			{
+				switch (e.type)
+				{
+					case lak::event_type::close_window: [[fallthrough]];
+					case lak::event_type::quit_program: running = false; break;
+					default:                            break;
+				}
+			}
+
+			w.set_active();
+
+			const auto &cgx = lak::cobalt_graphics_context(w.handle()).UNWRAP();
+			auto *rd        = cgx.renderer.get();
+			auto *fb        = cgx.frame_buffer.get();
+			fb->DefineViewportRegion(
+			  {0, 0},
+			  {uint32_t(w.drawable_size().x), uint32_t(w.drawable_size().y)});
+			fb->DefineScissorRegion(
+			  {0, 0},
+			  {uint32_t(w.drawable_size().x), uint32_t(w.drawable_size().y)});
+			auto rp = lak::cobalt_create_render_pass(w.handle()).UNWRAP();
+			rp->SetAttachmentClearData(
+			  ::cobalt::graphics::IFrameBuffer::AttachmentType::Color,
+			  0,
+			  ::cobalt::graphics::V4Float32{0.0f, 0.3125f, 0.312f, 1.0f});
+			rp->SetAttachmentClearData(
+			  ::cobalt::graphics::IFrameBuffer::AttachmentType::Depth,
+			  0,
+			  ::cobalt::graphics::V4Float32(1.0f, 1.0f, 1.0f, 1.0f));
 
 			w.swap();
 		}
