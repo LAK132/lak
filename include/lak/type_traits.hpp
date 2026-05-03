@@ -2130,6 +2130,8 @@ namespace lak
 	                 lak::index_sequence<0, 1, 2, 3, 4, 5, 6, 7, 8, 9>>);
 	static_assert(lak::is_same_v<lak::make_index_sequence_range<5, 10>,
 	                             lak::index_sequence<5, 6, 7, 8, 9>>);
+	static_assert(lak::is_same_v<lak::make_index_sequence_range<1, 1>,
+	                             lak::index_sequence<>>);
 
 	template<typename... T>
 	using index_sequence_for = lak::make_index_sequence<sizeof...(T)>;

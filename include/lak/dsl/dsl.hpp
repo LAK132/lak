@@ -1328,60 +1328,12 @@ namespace lak
 		         size_t N,
 		         size_t END,
 		         lak::dsl::concepts::parser auto... parsers>
-		struct capture_nths_impl_t;
-
-		template<size_t BEGIN,
-		         size_t N,
-		         size_t END,
-		         lak::dsl::concepts::parser auto... parsers>
-		requires((BEGIN < N) && (END > N + 1U))
-		struct capture_nths_impl_t<BEGIN, N, END, parsers...>
-		: public lak::dsl::_capture_nths_impl_t<
-		    lak::make_index_sequence_range<BEGIN, N>,
-		    N,
-		    lak::make_index_sequence_range<N + 1U, END>,
-		    parsers...>
-		{
-		};
-
-		template<size_t BEGIN,
-		         size_t N,
-		         size_t END,
-		         lak::dsl::concepts::parser auto... parsers>
-		requires((BEGIN == N) && (END > N + 1U))
-		struct capture_nths_impl_t<BEGIN, N, END, parsers...>
-		: public lak::dsl::_capture_nths_impl_t<
-		    lak::index_sequence<>,
-		    N,
-		    lak::make_index_sequence_range<N + 1U, END>,
-		    parsers...>
-		{
-		};
-
-		template<size_t BEGIN,
-		         size_t N,
-		         size_t END,
-		         lak::dsl::concepts::parser auto... parsers>
-		requires((BEGIN < N) && (END == N + 1U))
-		struct capture_nths_impl_t<BEGIN, N, END, parsers...>
-		: public lak::dsl::_capture_nths_impl_t<
-		    lak::make_index_sequence_range<BEGIN, N>,
-		    N,
-		    lak::index_sequence<>,
-		    parsers...>
-		{
-		};
-
-		template<size_t BEGIN,
-		         size_t N,
-		         size_t END,
-		         lak::dsl::concepts::parser auto... parsers>
-		requires((BEGIN == N) && (END == N + 1U))
-		struct capture_nths_impl_t<BEGIN, N, END, parsers...>
-		: public lak::dsl::_capture_nths_impl_t<lak::index_sequence<>,
-		                                        N,
-		                                        lak::index_sequence<>,
-		                                        parsers...>
+		requires((BEGIN <= N) && (END >= N + 1U))
+		struct capture_nths_impl_t : public lak::dsl::_capture_nths_impl_t<
+		                               lak::make_index_sequence_range<BEGIN, N>,
+		                               N,
+		                               lak::make_index_sequence_range<N + 1U, END>,
+		                               parsers...>
 		{
 		};
 
