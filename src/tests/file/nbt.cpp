@@ -93,7 +93,13 @@ BEGIN_TEST(nbt)
 		    lak::nbt::make_short(u8"shortTest"_str, 32767),
 		    lak::nbt::make_string(
 		      u8"stringTest"_str,
-		      u8"HELLO WORLD THIS IS A TEST STRING \u00C5\u00C4\u00D6!"_str),
+#ifdef LAK_COMPILER_MSVC // https://developercommunity.visualstudio.com/t/11043859
+					lak::to_u8string(
+						u"HELLO WORLD THIS IS A TEST STRING \u00C5\u00C4\u00D6!"_str)
+#else
+		      u8"HELLO WORLD THIS IS A TEST STRING \u00C5\u00C4\u00D6!"_str
+#endif
+				),
 		    lak::nbt::make_float(u8"floatTest"_str, 0.49823147f),
 		    lak::nbt::make_int(u8"intTest"_str, 2147483647),
 		    lak::nbt::make_compound(

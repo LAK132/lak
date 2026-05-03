@@ -4,6 +4,15 @@
 #include "lak/string_literals/string.hpp"
 #include "lak/string_literals/view.hpp"
 
+template<typename CHAR>
+lak::string<CHAR> asciiify(lak::string_view<CHAR> str)
+{
+	lak::string<CHAR> result;
+	lak::foreach_char<CHAR>(
+		str, [&](CHAR c) { result += lak::fmt<CHAR, "{:A}">(c); });
+	return result;
+}
+
 BEGIN_TEST(strconv_ascii)
 {
 	lak::astring str = "Hello, World!";
@@ -65,6 +74,10 @@ BEGIN_TEST(strconv_unicode)
 		auto u16str = lak::to_u16string(str);
 		auto u32str = lak::to_u32string(str);
 
+		DEBUG(asciiify(lak::string_view(u8str)));
+		DEBUG(asciiify(lak::string_view(u16str)));
+		DEBUG(asciiify(lak::string_view(u32str)));
+
 		ASSERT_EQUAL(u8str,
 		             u8"Hello, World!\xF0\x9F\xAB\xAA\0\0\xF0\x9F\xAB\xAA"_view);
 		ASSERT_EQUAL(u16str, u"Hello, World!\xD83E\xDEEA\0\0\xD83E\xDEEA"_view);
@@ -77,6 +90,10 @@ BEGIN_TEST(strconv_unicode)
 		auto u16str = lak::to_u16string(view);
 		auto u32str = lak::to_u32string(view);
 
+		DEBUG(asciiify(lak::string_view(u8str)));
+		DEBUG(asciiify(lak::string_view(u16str)));
+		DEBUG(asciiify(lak::string_view(u32str)));
+
 		ASSERT_EQUAL(u8str,
 		             u8"Hello, World!\xF0\x9F\xAB\xAA\0\0\xF0\x9F\xAB\xAA"_view);
 		ASSERT_EQUAL(u16str, u"Hello, World!\xD83E\xDEEA\0\0\xD83E\xDEEA"_view);
@@ -88,6 +105,10 @@ BEGIN_TEST(strconv_unicode)
 		auto u8str  = lak::to_u8string(c_str);
 		auto u16str = lak::to_u16string(c_str);
 		auto u32str = lak::to_u32string(c_str);
+
+		DEBUG(asciiify(lak::string_view(u8str)));
+		DEBUG(asciiify(lak::string_view(u16str)));
+		DEBUG(asciiify(lak::string_view(u32str)));
 
 		ASSERT_EQUAL(u8str, u8"Hello, World!\xF0\x9F\xAB\xAA"_view);
 		ASSERT_EQUAL(u16str, u"Hello, World!\xD83E\xDEEA"_view);

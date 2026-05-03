@@ -4,6 +4,15 @@
 #include "lak/string_literals/view.hpp"
 #include "lak/unicode.hpp"
 
+template<typename CHAR>
+lak::string<CHAR> asciiify(lak::string_view<CHAR> str)
+{
+	lak::string<CHAR> result;
+	lak::foreach_char<CHAR>(
+		str, [&](CHAR c) { result += lak::fmt<CHAR, "{:A}">(c); });
+	return result;
+}
+
 BEGIN_TEST(converted_string_length)
 {
 	{
@@ -35,7 +44,13 @@ BEGIN_TEST(character_length)
 	}
 
 	{
+		DEBUG(asciiify(L"\U0001FAEA"_view));
+		DEBUG(asciiify(u8"\U0001FAEA"_view));
+		DEBUG(asciiify(u"\U0001FAEA"_view));
+		DEBUG(asciiify(U"\U0001FAEA"_view));
+#ifndef LAK_COMPILER_MSVC // https://developercommunity.visualstudio.com/t/11043859
 		ASSERT_EQUAL(lak::character_length(u8"\U0001FAEA"_view), 4U);
+#endif
 		ASSERT_EQUAL(lak::character_length(u"\U0001FAEA"_view), 2U);
 		ASSERT_EQUAL(lak::character_length(U"\U0001FAEA"_view), 1U);
 	}
@@ -47,7 +62,9 @@ END_TEST()
 BEGIN_TEST(codepoint)
 {
 	ASSERT_EQUAL(lak::codepoint(L"\U0001FAEA"_view), char32_t(0x1FAEA));
+#ifndef LAK_COMPILER_MSVC // https://developercommunity.visualstudio.com/t/11043859
 	ASSERT_EQUAL(lak::codepoint(u8"\U0001FAEA"_view), char32_t(0x1FAEA));
+#endif
 	ASSERT_EQUAL(lak::codepoint(u"\U0001FAEA"_view), char32_t(0x1FAEA));
 	ASSERT_EQUAL(lak::codepoint(U"\U0001FAEA"_view), char32_t(0x1FAEA));
 
@@ -70,17 +87,29 @@ BEGIN_TEST(from_codepoint)
 	{
 		lak::codepoint_buffer_t<char8_t> buffer;
 		auto span = lak::from_codepoint(buffer, char32_t(0x1FAEA));
-		ASSERT_EQUAL(lak::string_view(span), u8"\xF0\x9F\xAB\xAA"_view);
+		auto view = lak::string_view(span);
+		DEBUG(asciiify(view));
+		auto expected = u8"\xF0\x9F\xAB\xAA"_view;
+		DEBUG(asciiify(expected));
+		ASSERT_EQUAL(view, expected);
 	}
 	{
 		lak::codepoint_buffer_t<char16_t> buffer;
 		auto span = lak::from_codepoint(buffer, char32_t(0x1FAEA));
-		ASSERT_EQUAL(lak::string_view(span), u"\xD83E\xDEEA"_view);
+		auto view = lak::string_view(span);
+		DEBUG(asciiify(view));
+		auto expected = u"\xD83E\xDEEA"_view;
+		DEBUG(asciiify(expected));
+		ASSERT_EQUAL(view, expected);
 	}
 	{
 		lak::codepoint_buffer_t<char32_t> buffer;
 		auto span = lak::from_codepoint(buffer, char32_t(0x1FAEA));
-		ASSERT_EQUAL(lak::string_view(span), U"\x0001FAEA"_view);
+		auto view = lak::string_view(span);
+		DEBUG(asciiify(view));
+		auto expected = U"\x0001FAEA"_view;
+		DEBUG(asciiify(expected));
+		ASSERT_EQUAL(view, expected);
 	}
 
 	return 0;

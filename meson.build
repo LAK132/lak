@@ -55,6 +55,7 @@ foreach type, comps : compilers
 			'-Zc:wchar_t',
 			'-Zc:ternary',
 			'-Zc:preprocessor',
+			'-Zc:u8EscapeEncoding',
 			language: ['cpp'],
 			native: comps['native'])
 
