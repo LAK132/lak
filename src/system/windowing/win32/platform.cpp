@@ -229,7 +229,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 		             SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
 	}
 
-	if (Msg == WM_UNICHAR && wParam == UNICODE_NOCHAR) return true;
+	if (Msg == WM_UNICHAR) return wParam == UNICODE_NOCHAR;
 
 	if (window)
 	{
@@ -273,10 +273,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 					  MSG{hWnd, Msg, wParam, lParam});
 					return false;
 				}
-				break;
-
-			case WM_UNICHAR:
-				if (wParam != UNICODE_NOCHAR) return false;
 				break;
 
 			case WM_PAINT:
