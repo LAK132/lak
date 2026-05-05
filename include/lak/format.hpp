@@ -112,7 +112,7 @@ namespace lak
 			static_assert(                                                          \
 			  ((lak::concepts::formattable<lak::remove_cvref_t<ARGS>, CHAR>) &&     \
 			   ...));                                                               \
-			return lak::format<lak::format_string<STR>{}>(                          \
+			return lak::format<lak::format_string<STR.generic()>{}>(                \
 			  lak::forward<ARGS>(args)...);                                         \
 		};
 	LAK_FOREACH_CHAR(LAK_FORMAT)

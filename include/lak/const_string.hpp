@@ -60,6 +60,7 @@ namespace lak
 		: lak::const_string<CHAR, N>(str)                                         \
 		{                                                                         \
 		}                                                                         \
+		inline constexpr const_string<CHAR, N> generic() const { return *this; }  \
 		using lak::const_string<CHAR, N>::const_string;                           \
 		using lak::const_string<CHAR, N>::operator=;                              \
 		using lak::const_string<CHAR, N>::operator[];                             \

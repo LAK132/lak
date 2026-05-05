@@ -8,7 +8,7 @@
 template<lak::u8const_string STR, typename... ARGS>
 void lak::Text(ARGS &&...args)
 {
-	lak::u8string str = lak::fmt<STR>(lak::forward<ARGS>(args)...);
+	lak::u8string str = lak::fmt<STR.generic()>(lak::forward<ARGS>(args)...);
 	const char *c_str = reinterpret_cast<const char *>(str.c_str());
 	ImGui::TextUnformatted(c_str, c_str + str.size());
 }
