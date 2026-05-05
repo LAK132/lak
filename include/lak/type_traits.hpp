@@ -2081,7 +2081,11 @@ namespace lak
 		template<size_t J>
 		consteval T get() const
 		{
+#	ifdef LAK_COMPILER_CPP26
 			return I...[J];
+#	else
+			return lak::nth_value_v<J, I...>;
+#	endif
 		}
 	};
 
