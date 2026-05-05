@@ -27,7 +27,7 @@ namespace lak
 	{
 	};
 
-	using graphics_context = lak::variant<std::monostate,
+	using graphics_context = lak::variant<lak::monostate,
 	                                      lak::software_context,
 	                                      lak::opengl_context,
 	                                      lak::cobalt_context>;

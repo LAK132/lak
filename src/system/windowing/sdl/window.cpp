@@ -234,7 +234,7 @@ bool lak::destroy_window(lak::window_handle *handle)
 		}
 		break;
 	}
-	handle->gc.emplace<std::monostate>();
+	handle->gc.emplace<lak::monostate>();
 
 	if (handle->sdl_window) SDL_DestroyWindow(handle->sdl_window);
 

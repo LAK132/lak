@@ -376,7 +376,7 @@ bool lak::destroy_window(lak::window_handle *handle)
 		break;
 	}
 
-	handle->gc.emplace<std::monostate>();
+	handle->gc.emplace<lak::monostate>();
 	handle->_platform_handle = NULL;
 
 	lak::bank<lak::window_handle>::destroy(handle);
