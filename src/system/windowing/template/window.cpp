@@ -85,10 +85,18 @@ lak::graphics_mode lak::window_graphics_mode(const lak::window_handle *w)
 }
 
 #ifdef LAK_ENABLE_OPENGL
-bool lak::set_opengl_swap_interval(const lak::opengl_context &c, int interval)
+bool lak::set_opengl_swap_interval(const lak::opengl_context &c,
+                                   lak::window_swap_interval interval)
 {
 	(void)c;
-	(void)interval;
+	switch (interval)
+	{
+		case lak::window_swap_interval::vsync_off:
+		case lak::window_swap_interval::vsync_on:
+		case lak::window_swap_interval::vsync_adaptive:
+
+		default: BOUNDS_ASSERT_UNREACHABLE(return false);
+	}
 	return false;
 }
 #endif

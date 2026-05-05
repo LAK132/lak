@@ -223,7 +223,14 @@ namespace lak
 
 #ifdef LAK_ENABLE_OPENGL
 	// :TODO: This probably belongs in the platform header.
-	bool set_opengl_swap_interval(const lak::opengl_context &c, int interval);
+	enum struct window_swap_interval : int
+	{
+		vsync_off      = 0,
+		vsync_on       = 1,
+		vsync_adaptive = -1,
+	};
+	bool set_opengl_swap_interval(const lak::opengl_context &c,
+	                              lak::window_swap_interval interval);
 #endif
 
 #ifdef LAK_ENABLE_COBALT
