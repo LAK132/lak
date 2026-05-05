@@ -7,7 +7,7 @@
 #include "impl.hpp"
 
 #ifdef LAK_ENABLE_OPENGL
-#	include <GL/gl3w.h>
+#	include "lak/system/opengl/gl3w.hpp"
 #endif
 
 #include <thread>
@@ -390,7 +390,7 @@ bool init_opengl()
 
 	wglMakeCurrent(hdc, hglrc);
 
-	wglGetExtensionsStringARB = (PFNWGLGETEXTENSIONSSTRINGARB)wglGetProcAddress(
+	wglGetExtensionsStringARB = (PFNWGLGETEXTENSIONSSTRINGARB)gl3wGetProcAddress(
 	  "wglGetExtensionsStringARB");
 
 	auto extensions = lak::astring_view(
@@ -405,13 +405,13 @@ bool init_opengl()
 
 	if (has_extension("WGL_ARB_pixel_format"))
 	{
-		wglChoosePixelFormatARB =
-		  (PFNWGLCHOOSEPIXELFORMATARB)wglGetProcAddress("wglChoosePixelFormatARB");
+		wglChoosePixelFormatARB = (PFNWGLCHOOSEPIXELFORMATARB)gl3wGetProcAddress(
+		  "wglChoosePixelFormatARB");
 		wglGetPixelFormatAttribivARB =
-		  (PFNWGLGETPIXELFORMATATTRIBIVARB)wglGetProcAddress(
+		  (PFNWGLGETPIXELFORMATATTRIBIVARB)gl3wGetProcAddress(
 		    "wglGetPixelFormatAttribivARB");
 		wglGetPixelFormatAttribfvARB =
-		  (PFNWGLGETPIXELFORMATATTRIBFVARB)wglGetProcAddress(
+		  (PFNWGLGETPIXELFORMATATTRIBFVARB)gl3wGetProcAddress(
 		    "wglGetPixelFormatAttribfvARB");
 	}
 	else
@@ -424,9 +424,9 @@ bool init_opengl()
 	if (has_extension("WGL_EXT_swap_control"))
 	{
 		wglSwapIntervalEXT =
-		  (PFNWGLSWAPINTERVALEXT)wglGetProcAddress("wglSwapIntervalEXT");
+		  (PFNWGLSWAPINTERVALEXT)gl3wGetProcAddress("wglSwapIntervalEXT");
 		wglGetSwapIntervalEXT =
-		  (PFNWGLGETSWAPINTERVALEXT)wglGetProcAddress("wglGetSwapIntervalEXT");
+		  (PFNWGLGETSWAPINTERVALEXT)gl3wGetProcAddress("wglGetSwapIntervalEXT");
 		has_swap_control_tear = has_extension("WGL_EXT_swap_control_tear");
 	}
 	else
