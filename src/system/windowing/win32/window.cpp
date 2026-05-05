@@ -76,9 +76,8 @@ lak::result<lak::window_handle *, lak::u8string> lak::create_window(
 
 	if (!handle->_platform_handle)
 	{
-		return lak::err_t<lak::u8string>{
-		  lak::streamify("Failed to create window: "_view,
-		                 win32_error_string(L"CreateWindowExW"))};
+		return lak::err_t{lak::fmt<u8"Failed to create window: {}">(
+		  win32_error_string(L"CreateWindowExW"))};
 	}
 
 	handle->_device_context = ::GetDC(handle->_platform_handle);
@@ -88,9 +87,8 @@ lak::result<lak::window_handle *, lak::u8string> lak::create_window(
 
 	if (!handle->_device_context)
 	{
-		return lak::err_t<lak::u8string>{
-		  lak::streamify("Failed to get window device context: "_view,
-		                 win32_error_string(L"GetDC"))};
+		return lak::err_t{lak::fmt<u8"Failed to get window device context: {}">(
+		  win32_error_string(L"GetDC"))};
 	}
 
 	// this is also touched in handle_size_move
@@ -175,18 +173,16 @@ lak::result<lak::window_handle *, lak::u8string> lak::create_window(
 
 	if (!handle->_platform_handle)
 	{
-		return lak::err_t<lak::u8string>{
-		  lak::streamify("Failed to create window: "_view,
-		                 win32_error_string(L"CreateWindowExW"))};
+		return lak::err_t{lak::fmt<u8"Failed to create window: {}">(
+		  win32_error_string(L"CreateWindowExW"))};
 	}
 
 	handle->_device_context = ::GetDC(handle->_platform_handle);
 
 	if (!handle->_device_context)
 	{
-		return lak::err_t<lak::u8string>{
-		  lak::streamify("Failed to get window device context: "_view,
-		                 win32_error_string(L"GetDC"))};
+		return lak::err_t{lak::fmt<u8"Failed to get window device context: {}">(
+		  win32_error_string(L"GetDC"))};
 	}
 
 	PIXELFORMATDESCRIPTOR format = {};
@@ -204,9 +200,8 @@ lak::result<lak::window_handle *, lak::u8string> lak::create_window(
 
 	if (!iformat)
 	{
-		return lak::err_t<lak::u8string>{
-		  lak::streamify("Failed to choose pixel format: "_view,
-		                 win32_error_string(L"ChoosePixelFormat"))};
+		return lak::err_t{lak::fmt<u8"Failed to choose pixel format: {}">(
+		  win32_error_string(L"ChoosePixelFormat"))};
 	}
 
 	::SetPixelFormat(handle->_device_context, iformat, &format);
@@ -217,16 +212,14 @@ lak::result<lak::window_handle *, lak::u8string> lak::create_window(
 
 	if (!context.platform_handle)
 	{
-		return lak::err_t<lak::u8string>{
-		  lak::streamify("Failed to create OpenGL context: "_view,
-		                 win32_error_string(L"wglCreateContext"))};
+		return lak::err_t{lak::fmt<u8"Failed to create OpenGL context: {}">(
+		  win32_error_string(L"wglCreateContext"))};
 	}
 
 	if (!::wglMakeCurrent(handle->_device_context, context.platform_handle))
 	{
-		return lak::err_t<lak::u8string>{
-		  lak::streamify("Failed to make OpenGL context current: "_view,
-		                 win32_error_string(L"wglMakeCurrent"))};
+		return lak::err_t{lak::fmt<u8"Failed to make OpenGL context current: {}">(
+		  win32_error_string(L"wglMakeCurrent"))};
 	}
 
 	::ShowWindow(handle->_platform_handle, SW_SHOWNORMAL);
@@ -244,8 +237,7 @@ lak::result<lak::window_handle *, lak::u8string> lak::create_window(
 	  r.device ? r.device : r.device_enumerator->GetPreferredDevice();
 	if (!device)
 	{
-		return lak::err_t<lak::u8string>{
-		  lak::streamify("Failed to get preferred graphics device")};
+		return lak::err_t{u8"Failed to get preferred graphics device"_str};
 	}
 
 	auto renderer = device->CreateRenderer(r.features, r.options);
@@ -256,8 +248,7 @@ lak::result<lak::window_handle *, lak::u8string> lak::create_window(
 	if (auto window_system_info = lak::cobalt_window_system_info(handle.get());
 	    !renderer->Initialize(*window_system_info))
 	{
-		return lak::err_t<lak::u8string>{
-		  lak::streamify("Failed to initialise cobalt renderer")};
+		return lak::err_t{u8"Failed to initialise cobalt renderer"_str};
 	}
 
 	DEFER(if (handle) lak::destroy_window(handle.release()));
@@ -287,26 +278,23 @@ lak::result<lak::window_handle *, lak::u8string> lak::create_window(
 
 	if (!handle->_platform_handle)
 	{
-		return lak::err_t<lak::u8string>{
-		  lak::streamify("Failed to create window: "_view,
-		                 win32_error_string(L"CreateWindowExW"))};
+		return lak::err_t{lak::fmt<u8"Failed to create window: {}">(
+		  win32_error_string(L"CreateWindowExW"))};
 	}
 
 	handle->_device_context = ::GetDC(handle->_platform_handle);
 
 	if (!handle->_device_context)
 	{
-		return lak::err_t<lak::u8string>{
-		  lak::streamify("Failed to get window device context: "_view,
-		                 win32_error_string(L"GetDC"))};
+		return lak::err_t{lak::fmt<u8"Failed to get window device context: {}">(
+		  win32_error_string(L"GetDC"))};
 	}
 
 	auto &context = handle->gc.emplace<lak::cobalt_context>();
 	auto fb       = renderer->CreateFrameBuffer();
 	if (!fb)
 	{
-		return lak::err_t<lak::u8string>{
-		  lak::streamify("Failed to create framebuffer")};
+		return lak::err_t{u8"Failed to create framebuffer"_str};
 	}
 
 	auto window_info = lak::cobalt_window_info(handle.get());
