@@ -57,6 +57,31 @@ namespace lak
 	template<typename PACK, typename T>
 	using append_to_pack_t = typename lak::append_to_pack<PACK, T>::type;
 
+	/* --- make_repeat_pack --- */
+
+	template<typename PACK, typename T, size_t SIZE>
+	struct _make_repeat_pack;
+	template<typename... U, typename T>
+	struct _make_repeat_pack<lak::type_pack<U...>, T, 0U>
+	{
+		using type = lak::type_pack<U...>;
+	};
+	template<typename... U, typename T, size_t SIZE>
+	requires(SIZE != 0)
+	struct _make_repeat_pack<lak::type_pack<U...>, T, SIZE>
+	{
+		using type = typename lak::
+		  _make_repeat_pack<lak::type_pack<U..., T>, T, SIZE - 1U>::type;
+	};
+	template<typename T, size_t SIZE>
+	struct make_repeat_pack
+	{
+		using type =
+		  typename lak::_make_repeat_pack<lak::type_pack<>, T, SIZE>::type;
+	};
+	template<typename T, size_t SIZE>
+	using make_repeat_pack_t = typename lak::make_repeat_pack<T, SIZE>::type;
+
 	/* --- concat_packs --- */
 
 	template<typename... PACKS>
