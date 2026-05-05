@@ -4,8 +4,25 @@
 
 bool lak::platform_init()
 {
+	bool failed = false;
 	SDL_SetMainReady();
-	return SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_TIMER) == 0;
+	if (SDL_Init(SDL_INIT_VIDEO) != 0)
+	{
+		ERROR(lak::fmt<u8"SDL_INIT_VIDEO failed ({})">(SDL_GetError()));
+		failed = true;
+	}
+	if (SDL_Init(SDL_INIT_AUDIO) != 0)
+	{
+		ERROR(lak::fmt<u8"SDL_INIT_AUDIO failed ({})">(SDL_GetError()));
+		// :TODO: just ignore audio subsystem initialisation failure for now
+		// failed = true;
+	}
+	if (SDL_Init(SDL_INIT_TIMER) != 0)
+	{
+		ERROR(lak::fmt<u8"SDL_INIT_TIMER failed ({})">(SDL_GetError()));
+		failed = true;
+	}
+	return !failed;
 }
 
 bool lak::platform_quit()

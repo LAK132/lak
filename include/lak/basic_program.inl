@@ -420,7 +420,7 @@ int LAK_BASIC_PROGRAM_MAIN(int argc, char **argv)
 	              lak::span<char *>(argv, size_t(argc))))
 		return v;
 
-	lak::platform_init();
+	ASSERT(lak::platform_init());
 	LAK_BASIC_PROGRAM(platform_initialised) = true;
 	DEFER(LAK_BASIC_PROGRAM(platform_initialised) = false);
 	DEFER(lak::platform_quit());
