@@ -457,6 +457,19 @@ bool operator==(const lak::array<T, S> &a, const lak::array<T, S> &b);
 template<typename T, size_t S>
 bool operator!=(const lak::array<T, S> &a, const lak::array<T, S> &b);
 
+template<size_t I, typename T, size_t SIZE>
+requires(SIZE != lak::dynamic_extent)
+struct std::tuple_element<I, lak::array<T, SIZE>>
+{
+	using type = T;
+};
+template<typename T, size_t SIZE>
+requires(SIZE != lak::dynamic_extent)
+struct std::tuple_size<lak::array<T, SIZE>>
+{
+	static constexpr size_t value = SIZE;
+};
+
 #endif
 
 #ifdef LAK_ARRAY_FORWARD_ONLY

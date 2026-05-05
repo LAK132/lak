@@ -2078,6 +2078,11 @@ namespace lak
 	template<typename T, T... I>
 	struct integer_sequence
 	{
+		template<size_t J>
+		consteval T get() const
+		{
+			return I...[J];
+		}
 	};
 
 	template<size_t... I>
@@ -2386,5 +2391,18 @@ namespace lak
 	static constexpr size_t type_size_signature_size_v =
 	  lak::has_type_size_signature<T>::value;
 }
+
+#	include <tuple>
+
+template<typename T, T... V>
+struct std::tuple_size<lak::integer_sequence<T, V...>>
+{
+	static constexpr size_t value = sizeof...(V);
+};
+template<size_t I, typename T, T... V>
+struct std::tuple_element<I, lak::integer_sequence<T, V...>>
+{
+	using type = T;
+};
 
 #endif
