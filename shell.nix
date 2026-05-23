@@ -7,6 +7,7 @@ mkShell {
 		cmake
 		pkg-config
 		mesonNoPatch
+		sdl2-compat
 	] ++ lib.optionals stdenv.hostPlatform.isLinux [
 		libglvnd
 		libgbm

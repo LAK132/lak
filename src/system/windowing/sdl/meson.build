@@ -1,9 +1,14 @@
-subproject('SDL2-2.32.10')
+if get_option('sdl2_from_source')
+	subproject('SDL2-2.32.10')
+	sdl2_dep = dependency('SDL2-2.32.10')
+else
+	sdl2_dep = dependency('SDL2')
+endif
 
 _lakwindowing_dependencies = [
 	lakcore_dep,
 	glm_dep,
-	dependency('SDL2-2.32.10'),
+	sdl2_dep,
 	dependency('dl', required: false),
 ]
 
