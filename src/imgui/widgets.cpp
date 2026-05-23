@@ -455,14 +455,16 @@ lak::error_code_result<lak::file_open_error> lak::open_file_modal(
 
 	if (!ImGui::IsPopupOpen((name + "###" + name).c_str()))
 	{
+		std::filesystem::path init = path;
+		if_let_ok (auto res, lak::deepest_folder(init)) init = res.folder;
 		if (save)
 		{
-			if (!_file_dialog->Save(name, name, filter, path.string()))
+			if (!_file_dialog->Save(name, name, filter, init.string()))
 				ASSERT_UNREACHABLE();
 		}
 		else
 		{
-			if (!_file_dialog->Open(name, name, filter, false, path.string()))
+			if (!_file_dialog->Open(name, name, filter, false, init.string()))
 				ASSERT_UNREACHABLE();
 		}
 	}
