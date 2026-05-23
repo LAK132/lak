@@ -486,6 +486,7 @@ void lak::for_each(
 						  break;
 					  }
 				  }
+				  for (auto &in : thread_inputs) in.await_none();
 			  });
 		}
 	}
