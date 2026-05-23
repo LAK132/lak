@@ -15,8 +15,8 @@ namespace lak
 	struct atomic_optional
 	{
 	private:
-		std::mutex _mutex;
-		std::condition_variable _cond;
+		mutable std::mutex _mutex;
+		mutable std::condition_variable _cond;
 		std::atomic_bool _has_value = false;
 		std::atomic_bool _stopped   = false;
 		lak::uninitialised<T> _value;
@@ -43,6 +43,28 @@ namespace lak
 			{
 				_value.destroy();
 				_has_value = false;
+			}
+		}
+
+		template<typename M>
+		void internal_await_some(std::unique_lock<M> &lock, bool check_stop) const
+		{
+			auto fn = [&]() { return (check_stop && stopped()) || has_value(); };
+			for (;; lock.unlock())
+			{
+				_cond.wait(lock, fn);
+				if (fn()) break;
+			}
+		}
+
+		template<typename M>
+		void internal_await_none(std::unique_lock<M> &lock, bool check_stop) const
+		{
+			auto fn = [&]() { return (check_stop && stopped()) || !has_value(); };
+			for (;; lock.unlock())
+			{
+				_cond.wait(lock, fn);
+				if (fn()) break;
 			}
 		}
 
@@ -86,6 +108,19 @@ namespace lak
 		T &value() { _value.value(); }
 		const T &value() const { _value.value(); }
 
+		void await_some() const
+		{
+			std::unique_lock lock{_mutex};
+			internal_await_some(lock, true);
+			lock.unlock();
+		}
+		void await_none() const
+		{
+			std::unique_lock lock{_mutex};
+			internal_await_none(lock, true);
+			lock.unlock();
+		}
+
 		void stop()
 		{
 			{
@@ -100,11 +135,7 @@ namespace lak
 		void emplace(ARGS &&...args)
 		{
 			std::unique_lock lock{_mutex};
-			for (;; lock.unlock())
-			{
-				_cond.wait(lock, [&]() { return !has_value(); });
-				if (!has_value()) break;
-			}
+			internal_await_none(lock, false);
 			internal_emplace(lak::forward<ARGS>(args)...);
 			lock.unlock();
 			_cond.notify_all();
@@ -113,11 +144,7 @@ namespace lak
 		T release()
 		{
 			std::unique_lock lock{_mutex};
-			for (;; lock.unlock())
-			{
-				_cond.wait(lock, [&]() { return has_value(); });
-				if (has_value()) break;
-			}
+			internal_await_some(lock, false);
 			T result = internal_release();
 			lock.unlock();
 			_cond.notify_all();
@@ -129,12 +156,8 @@ namespace lak
 		{
 			if (stopped()) return false;
 			std::unique_lock lock{_mutex};
-			for (;; lock.unlock())
-			{
-				_cond.wait(lock, [&]() { return stopped() || !has_value(); });
-				if (stopped()) return false;
-				if (!has_value()) break;
-			}
+			internal_await_none(lock, true);
+			if (stopped()) return false;
 			internal_emplace(lak::forward<ARGS>(args)...);
 			lock.unlock();
 			_cond.notify_all();
@@ -145,12 +168,8 @@ namespace lak
 		{
 			if (stopped()) return lak::nullopt;
 			std::unique_lock lock{_mutex};
-			for (;; lock.unlock())
-			{
-				_cond.wait(lock, [&]() { return stopped() || has_value(); });
-				if (stopped()) return lak::nullopt;
-				if (has_value()) break;
-			}
+			internal_await_some(lock, true);
+			if (stopped()) return lak::nullopt;
 			lak::optional<T> result{lak::in_place, internal_release()};
 			lock.unlock();
 			_cond.notify_all();
