@@ -11,8 +11,10 @@ BEGIN_TEST(ebnf)
 		auto res = lak::dsl::ebnf.parse(str).UNWRAP().value;
 
 		ASSERT_EQUAL(res.strings.size(), 0U);
+		ASSERT_EQUAL(res.characters.size(), 0U);
 		ASSERT_EQUAL(res.identifiers.size(), 0U);
 		ASSERT_EQUAL(res.specials.size(), 0U);
+		ASSERT_EQUAL(res.ranges.size(), 0U);
 		ASSERT_EQUAL(res.concatenations.size(), 0U);
 		ASSERT_EQUAL(res.alternations.size(), 0U);
 		ASSERT_EQUAL(res.optionals.size(), 0U);
@@ -33,8 +35,10 @@ BEGIN_TEST(ebnf)
 		auto res = lak::dsl::ebnf.parse(str).UNWRAP().value;
 
 		ASSERT_EQUAL(res.strings.size(), 0U);
+		ASSERT_EQUAL(res.characters.size(), 0U);
 		ASSERT_EQUAL(res.identifiers.size(), 1U);
 		ASSERT_EQUAL(res.specials.size(), 0U);
+		ASSERT_EQUAL(res.ranges.size(), 0U);
 		ASSERT_EQUAL(res.concatenations.size(), 0U);
 		ASSERT_EQUAL(res.alternations.size(), 0U);
 		ASSERT_EQUAL(res.optionals.size(), 0U);
@@ -51,12 +55,38 @@ BEGIN_TEST(ebnf)
 	}
 
 	{
-		auto str = u8"rule1 = rule2 | ( 'asdf' , { 'meow tbh' } );"_view;
+		auto str = u8"a_to_z = 'a'~'z'|'A'~'Z' ;"_view;
+		auto res = lak::dsl::ebnf.parse(str).UNWRAP().value;
+
+		ASSERT_EQUAL(res.strings.size(), 0U);
+		ASSERT_EQUAL(res.characters.size(), 4U);
+		ASSERT_EQUAL(res.identifiers.size(), 0U);
+		ASSERT_EQUAL(res.specials.size(), 0U);
+		ASSERT_EQUAL(res.ranges.size(), 2U);
+		ASSERT_EQUAL(res.concatenations.size(), 0U);
+		ASSERT_EQUAL(res.alternations.size(), 1U);
+		ASSERT_EQUAL(res.optionals.size(), 0U);
+		ASSERT_EQUAL(res.repetitions.size(), 0U);
+		ASSERT_EQUAL(res.match_cases.size(), 0U);
+		ASSERT_EQUAL(res.match_sequences.size(), 0U);
+		ASSERT_EQUAL(res.groupings.size(), 0U);
+		ASSERT_EQUAL(res.exceptions.size(), 0U);
+		ASSERT_EQUAL(res.positive_lookaheads.size(), 0U);
+		ASSERT_EQUAL(res.transforms.size(), 0U);
+		ASSERT_EQUAL(res.captures.size(), 0U);
+		ASSERT_EQUAL(res.rule_values.size(), 7U);
+		ASSERT_EQUAL(res.rules.size(), 1U);
+	}
+
+	{
+		auto str = u8"rule1 = rule2 | ( \"asdf\" , { \"meow tbh\" } );"_view;
 		auto res = lak::dsl::ebnf.parse(str).UNWRAP().value;
 
 		ASSERT_EQUAL(res.strings.size(), 2U);
+		ASSERT_EQUAL(res.characters.size(), 0U);
 		ASSERT_EQUAL(res.identifiers.size(), 1U);
 		ASSERT_EQUAL(res.specials.size(), 0U);
+		ASSERT_EQUAL(res.ranges.size(), 0U);
 		ASSERT_EQUAL(res.concatenations.size(), 1U);
 		ASSERT_EQUAL(res.alternations.size(), 1U);
 		ASSERT_EQUAL(res.optionals.size(), 0U);
@@ -98,8 +128,10 @@ BEGIN_TEST(ebnf)
 		auto res = lak::dsl::ebnf.parse(str).UNWRAP().value;
 
 		ASSERT_EQUAL(res.strings.size(), 2U);
+		ASSERT_EQUAL(res.characters.size(), 0U);
 		ASSERT_EQUAL(res.identifiers.size(), 0U);
 		ASSERT_EQUAL(res.specials.size(), 0U);
+		ASSERT_EQUAL(res.ranges.size(), 0U);
 		ASSERT_EQUAL(res.concatenations.size(), 0U);
 		ASSERT_EQUAL(res.alternations.size(), 0U);
 		ASSERT_EQUAL(res.optionals.size(), 0U);
@@ -121,8 +153,10 @@ BEGIN_TEST(ebnf)
 		auto res = lak::dsl::ebnf.parse(str).UNWRAP().value;
 
 		ASSERT_EQUAL(res.strings.size(), 4U);
+		ASSERT_EQUAL(res.characters.size(), 0U);
 		ASSERT_EQUAL(res.identifiers.size(), 0U);
 		ASSERT_EQUAL(res.specials.size(), 0U);
+		ASSERT_EQUAL(res.ranges.size(), 0U);
 		ASSERT_EQUAL(res.concatenations.size(), 0U);
 		ASSERT_EQUAL(res.alternations.size(), 0U);
 		ASSERT_EQUAL(res.optionals.size(), 0U);
@@ -146,8 +180,10 @@ BEGIN_TEST(ebnf)
 		auto res = lak::dsl::ebnf.parse(str).UNWRAP().value;
 
 		ASSERT_EQUAL(res.strings.size(), 4U);
+		ASSERT_EQUAL(res.characters.size(), 0U);
 		ASSERT_EQUAL(res.identifiers.size(), 1U);
 		ASSERT_EQUAL(res.specials.size(), 0U);
+		ASSERT_EQUAL(res.ranges.size(), 0U);
 		ASSERT_EQUAL(res.concatenations.size(), 0U);
 		ASSERT_EQUAL(res.alternations.size(), 1U);
 		ASSERT_EQUAL(res.optionals.size(), 0U);
@@ -168,8 +204,10 @@ BEGIN_TEST(ebnf)
 		auto res = lak::dsl::ebnf.parse(str).UNWRAP().value;
 
 		ASSERT_EQUAL(res.strings.size(), 0U);
+		ASSERT_EQUAL(res.characters.size(), 0U);
 		ASSERT_EQUAL(res.identifiers.size(), 3U);
 		ASSERT_EQUAL(res.specials.size(), 0U);
+		ASSERT_EQUAL(res.ranges.size(), 0U);
 		ASSERT_EQUAL(res.concatenations.size(), 1U);
 		ASSERT_EQUAL(res.alternations.size(), 0U);
 		ASSERT_EQUAL(res.optionals.size(), 0U);
@@ -206,9 +244,11 @@ BEGIN_TEST(ebnf)
 
 		auto res = lak::dsl::ebnf.parse(str).UNWRAP().value;
 
-		ASSERT_EQUAL(res.strings.size(), 3U);
+		ASSERT_EQUAL(res.strings.size(), 1U);
+		ASSERT_EQUAL(res.characters.size(), 2U);
 		ASSERT_EQUAL(res.identifiers.size(), 1U);
 		ASSERT_EQUAL(res.specials.size(), 1U);
+		ASSERT_EQUAL(res.ranges.size(), 0U);
 		ASSERT_EQUAL(res.concatenations.size(), 1U);
 		ASSERT_EQUAL(res.alternations.size(), 1U);
 		ASSERT_EQUAL(res.optionals.size(), 0U);
@@ -223,9 +263,9 @@ BEGIN_TEST(ebnf)
 		ASSERT_EQUAL(res.rule_values.size(), 8U);
 		ASSERT_EQUAL(res.rules.size(), 2U);
 
-		ASSERT_EQUAL(res.strings[0], u8"\""_view);
-		ASSERT_EQUAL(res.strings[1], u8"\""_view);
-		ASSERT_EQUAL(res.strings[2], u8"hello_world"_view);
+		ASSERT_EQUAL(res.characters[0], U'"');
+		ASSERT_EQUAL(res.characters[1], U'"');
+		ASSERT_EQUAL(res.strings[0], u8"hello_world"_view);
 	}
 
 	return 0;

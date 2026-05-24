@@ -75,6 +75,8 @@ int main(int argc, char **argv)
 			return u8"U'\\n'"_str;
 		else if (c == U'\t')
 			return u8"U'\\t'"_str;
+		else if (c == U'\'')
+			return u8"U'\\''"_str;
 		else if (lak::is_ascii_printable(c))
 			return lak::fmt<u8"U'{}'">(c);
 		else
@@ -223,8 +225,8 @@ int main(int argc, char **argv)
 							for (size_t i = grammar.alternations[val.index].begin;
 							     i < grammar.alternations[val.index].end;
 							     ++i)
-								strm.next_template_argument(false).write(
-								  char32_str(grammar.characters[i]));
+								strm.next_template_argument(false).write(char32_str(
+								  grammar.characters[grammar.rule_values[i].index]));
 							strm.pop_template_call();
 							stack.pop_back();
 							break;

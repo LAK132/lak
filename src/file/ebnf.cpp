@@ -18,7 +18,9 @@ static constexpr auto terminal_char = lak::dsl::capture_2nd<
                          lak::dsl::parsed_hex_uint<char32_t>> |
    lak::dsl::replace_str_literal<u8"\\t", U'\t'> |
    lak::dsl::replace_str_literal<u8"\\n", U'\n'> |
-   lak::dsl::replace_str_literal<u8"\\r", U'\r'> | lak::dsl::any_char32),
+   lak::dsl::replace_str_literal<u8"\\r", U'\r'> |
+   lak::dsl::replace_str_literal<u8"\\'", U'\''> |
+   lak::dsl::replace_str_literal<u8"\\\"", U'"'> | lak::dsl::any_char32),
   lak::dsl::char_literal<U'\''>>;
 
 static constexpr auto _identifier =
