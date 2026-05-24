@@ -292,9 +292,7 @@ int main(int argc, char **argv)
 							  {grammar.rule_values[grammar.optionals[next.index].index],
 							   0U});
 						else
-							stack.push_back(
-							  {grammar.rule_values[grammar.repetitions[val.index].index],
-							   0U});
+							stack.push_back({next, 0U});
 					}
 					else
 					{
@@ -439,14 +437,25 @@ int main(int argc, char **argv)
 					{
 						if (strm.template is_scope<decltype(strm)::template_call_scope>())
 							strm.next_template_argument(true);
-						strm.push_template_call(u8"lak::dsl::negative_lookahead"_view)
-						  .next_template_argument(false)
-						  .push_template_call(u8"lak::dsl::as_pure"_view);
-						++index;
-						stack.push_back(
-						  {grammar
-						     .rule_values[grammar.negative_lookaheads[val.index].index],
-						   0U});
+						if (auto &next =
+						      grammar
+						        .rule_values[grammar.negative_lookaheads[val.index].index];
+						    next.type == character)
+						{
+							strm.push_template_call(u8"lak::dsl::negative_char_literal"_view)
+							  .next_template_argument(false)
+							  .write(char32_str(grammar.characters[next.index]))
+							  .pop_template_call();
+							stack.pop_back();
+						}
+						else
+						{
+							strm.push_template_call(u8"lak::dsl::negative_lookahead"_view)
+							  .next_template_argument(false)
+							  .push_template_call(u8"lak::dsl::as_pure"_view);
+							++index;
+							stack.push_back({next, 0U});
+						}
 					}
 					else
 					{
