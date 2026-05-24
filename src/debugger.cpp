@@ -206,19 +206,22 @@ lak::string<LAK_DEBUG_STREAM_CHAR> lak::debugger_t::str()
 
 void lak::debugger_t::abort()
 {
-	std::cerr << "Something went wrong!\n" << std::flush;
+	std::wcerr << L"Something went wrong!\n" << std::flush;
 #ifndef NDEBUG
 #	ifdef __cpp_lib_stacktrace
 #		if __cpp_lib_stacktrace
-	std::cerr << std::stacktrace::current() << "\n" << std::flush;
+	std::wcerr << lak::to_wstring(
+	                (std::stringstream{} << std::stacktrace::current()).str())
+	           << L"\n"
+	           << std::flush;
 #		endif
 #	endif
 	DEBUG_BREAK();
 #endif
 	if (!crash_path.empty())
-		std::cerr
-		  << "Saving crash log to '" << lak::debugger.save()
-		  << "'.\nPlease forward the crash log onto the developer so they can "
+		std::wcerr
+		  << L"Saving crash log to '" << lak::debugger.save()
+		  << L"'.\nPlease forward the crash log onto the developer so they can "
 		     "attempt to fix the issues that caused this crash.\n";
 	PAUSE();
 	std::abort();
