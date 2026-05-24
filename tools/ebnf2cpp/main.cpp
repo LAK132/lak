@@ -67,6 +67,20 @@ int main(int argc, char **argv)
 		strm.write_indent_newline().push_namespace(lak::strconv<char8_t>(ns));
 	}
 
+	auto char32_str = [](char32_t c) -> lak::u8string
+	{
+		if (c == U'\r')
+			return u8"U'\\r'"_str;
+		else if (c == U'\n')
+			return u8"U'\\n'"_str;
+		else if (c == U'\t')
+			return u8"U'\\t'"_str;
+		else if (lak::is_ascii_printable(c))
+			return lak::fmt<u8"U'{}'">(c);
+		else
+			return lak::fmt<u8"char32_t(0x{:X})">(uint32_t(c));
+	};
+
 	for (const auto &rule : grammar.rules)
 	{
 		strm.push_variable_declaration(u8"constexpr auto"_view, rule.name)
@@ -90,6 +104,35 @@ int main(int argc, char **argv)
 						strm.next_template_argument(true);
 					strm.push_template_call(u8"lak::dsl::str_literal"_view)
 					  .write_string(grammar.strings[val.index], u8"u8"_view)
+					  .pop_template_call();
+					stack.pop_back();
+				}
+				break;
+
+				case character:
+				{
+					if (strm.template is_scope<decltype(strm)::template_call_scope>())
+						strm.next_template_argument(true);
+					strm.push_template_call(u8"lak::dsl::char_literal"_view)
+					  .write(char32_str(grammar.characters[val.index]))
+					  .pop_template_call();
+					stack.pop_back();
+				}
+				break;
+
+				case range:
+				{
+					if (strm.template is_scope<decltype(strm)::template_call_scope>())
+						strm.next_template_argument(true);
+					strm.push_template_call(u8"lak::dsl::char_range"_view)
+					  .next_template_argument(false)
+					  .write(char32_str(
+					    grammar.characters
+					      [grammar.rule_values[grammar.ranges[val.index].begin].index]))
+					  .next_template_argument(false)
+					  .write(char32_str(
+					    grammar.characters
+					      [grammar.rule_values[grammar.ranges[val.index].end].index]))
 					  .pop_template_call();
 					stack.pop_back();
 				}
@@ -160,9 +203,34 @@ int main(int argc, char **argv)
 				case alternation:
 					if (index == 0U)
 					{
+						bool all_chars = true;
+						for (size_t i = grammar.alternations[val.index].begin;
+						     i < grammar.alternations[val.index].end;
+						     ++i)
+						{
+							if (grammar.rule_values[i].type !=
+							    lak::ebnf::rule_value::value_type::character)
+							{
+								all_chars = false;
+								break;
+							}
+						}
 						if (strm.template is_scope<decltype(strm)::template_call_scope>())
 							strm.next_template_argument(true);
-						strm.push_template_call(u8"lak::dsl::disjunction"_view);
+						if (all_chars)
+						{
+							strm.push_template_call(u8"lak::dsl::one_of_chars"_view);
+							for (size_t i = grammar.alternations[val.index].begin;
+							     i < grammar.alternations[val.index].end;
+							     ++i)
+								strm.next_template_argument(false).write(
+								  char32_str(grammar.characters[i]));
+							strm.pop_template_call();
+							stack.pop_back();
+							break;
+						}
+						else
+							strm.push_template_call(u8"lak::dsl::disjunction"_view);
 					}
 					if (index >= grammar.alternations[val.index].size())
 					{

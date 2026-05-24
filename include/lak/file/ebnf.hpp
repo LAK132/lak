@@ -11,6 +11,12 @@ namespace lak
 {
 	namespace ebnf
 	{
+		struct range_sequence
+		{
+			size_t begin;
+			size_t end;
+		};
+
 		struct concatenation_sequence
 		{
 			size_t begin;
@@ -89,6 +95,8 @@ namespace lak
 			enum struct value_type
 			{
 				string,
+				character,
+				range,
 				rule,
 				concatenation,
 				alternation,
@@ -118,10 +126,12 @@ namespace lak
 		struct block
 		{
 			lak::array<lak::u8string_view> strings;
+			lak::array<char32_t> characters;
 			lak::array<lak::u8string_view> identifiers;
 			lak::array<lak::u8string_view> specials;
 			lak::array<lak::u8string_view> transforms;
 
+			lak::array<lak::ebnf::range_sequence> ranges;
 			lak::array<lak::ebnf::concatenation_sequence> concatenations;
 			lak::array<lak::ebnf::alternation_sequence> alternations;
 			lak::array<lak::ebnf::optional_sequence> optionals;

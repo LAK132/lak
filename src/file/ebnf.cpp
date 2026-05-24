@@ -10,8 +10,16 @@ static constexpr auto transform_seq_parser =
   lak::dsl::capture_simple_bounded_str<u8"$", u8"$">;
 
 static constexpr auto terminal_string =
-  lak::dsl::capture_simple_bounded_str<u8"\"", u8"\""> |
-  lak::dsl::capture_simple_bounded_str<u8"'", u8"'">;
+  lak::dsl::capture_simple_bounded_str<u8"\"", u8"\"">;
+
+static constexpr auto terminal_char = lak::dsl::capture_2nd<
+  lak::dsl::char_literal<U'\''>,
+  (lak::dsl::capture_2nd<lak::dsl::str_literal<u8"\\x">,
+                         lak::dsl::parsed_hex_uint<char32_t>> |
+   lak::dsl::replace_str_literal<u8"\\t", U'\t'> |
+   lak::dsl::replace_str_literal<u8"\\n", U'\n'> |
+   lak::dsl::replace_str_literal<u8"\\r", U'\r'> | lak::dsl::any_char32),
+  lak::dsl::char_literal<U'\''>>;
 
 static constexpr auto _identifier =
   lak::dsl::ascii_alphanumeric | lak::dsl::char_literal<U'_'>;
@@ -29,6 +37,7 @@ static constexpr auto repeat_n =
 
 static constexpr auto trailing_punct =
   (*ws) + (lak::dsl::str_literal<u8"->"> | lak::dsl::one_of_chars<U',',
+                                                                  U'~',
                                                                   U'+',
                                                                   U'-',
                                                                   U'|',
@@ -66,6 +75,7 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 		enum struct value_type
 		{
 			rule,
+			range,
 			concat,
 			altern,
 			option,
@@ -179,11 +189,36 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 		return lak::ok_t{};
 	};
 
+	auto pop_range = [&]() -> lak::error_code<lak::dsl::err::parse>
+	{
+		if (!pop_specific_unused(lak::ebnf::rule_value::value_type::character))
+			return lak::err_t{u8"missing range character"_str};
+
+		if (working_tree.back().size() != 2U)
+			return lak::err_t{u8"invalid range"_str};
+
+		const size_t begin = pop_values();
+		unused_value.emplace(lak::ebnf::rule_value{
+		  .type  = lak::ebnf::rule_value::value_type::range,
+		  .index = result.ranges.size(),
+		});
+		result.ranges.push_back({
+		  .begin = begin,
+		  .end   = begin + 1U,
+		});
+
+		return lak::ok_t{};
+	};
+
 	auto pop_trailing = [&]() -> lak::error_code<lak::dsl::err::parse>
 	{
 		while (!working_tree.empty())
 		{
-			if (working_tree.back().type == working_data::value_type::repeat_n)
+			if (working_tree.back().type == working_data::value_type::range)
+			{
+				RES_TRY(pop_range());
+			}
+			else if (working_tree.back().type == working_data::value_type::repeat_n)
 			{
 				RES_TRY(pop_repeat_n());
 			}
@@ -258,6 +293,7 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 		  .type  = lak::ebnf::rule_value::value_type::match_case,
 		  .index = index,
 		});
+
 		return pop_trailing();
 	};
 
@@ -408,13 +444,24 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 		}
 		else if_let_ok (auto str, terminal_string.EBNF_PARSE())
 		{
-			if (unused_value) return lak::err_t{u8"unexpected string"_str};
+			if (unused_value) return lak::err_t{u8"unexpected string literal"_str};
 			RES_TRY(trailing_punct.parse(rem));
 			unused_value.emplace(lak::ebnf::rule_value{
 			  .type  = lak::ebnf::rule_value::value_type::string,
 			  .index = result.strings.size(),
 			});
 			result.strings.push_back(str.value);
+			RES_TRY(pop_trailing());
+		}
+		else if_let_ok (auto chr, terminal_char.EBNF_PARSE())
+		{
+			if (unused_value) return lak::err_t{u8"unexpected char literal"_str};
+			RES_TRY(trailing_punct.parse(rem));
+			unused_value.emplace(lak::ebnf::rule_value{
+			  .type  = lak::ebnf::rule_value::value_type::character,
+			  .index = result.characters.size(),
+			});
+			result.characters.push_back(chr.value);
 			RES_TRY(pop_trailing());
 		}
 		else if_let_ok (auto spec, special_seq_parser.EBNF_PARSE())
@@ -446,6 +493,10 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 			while (true)
 			{
 				size_t s = working_tree.size();
+				if (working_tree.back().type == working_data::value_type::range)
+				{
+					RES_TRY(pop_range());
+				}
 				if (working_tree.back().type == working_data::value_type::concat)
 				{
 					RES_TRY(pop_concat());
@@ -513,6 +564,10 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 			while (true)
 			{
 				size_t s = working_tree.size();
+				if (working_tree.back().type == working_data::value_type::range)
+				{
+					RES_TRY(pop_range());
+				}
 				if (working_tree.back().type == working_data::value_type::concat)
 				{
 					RES_TRY(pop_concat());
@@ -581,6 +636,10 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 			while (true)
 			{
 				size_t s = working_tree.size();
+				if (working_tree.back().type == working_data::value_type::range)
+				{
+					RES_TRY(pop_range());
+				}
 				if (working_tree.back().type == working_data::value_type::concat)
 				{
 					RES_TRY(pop_concat());
@@ -648,6 +707,10 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 			while (true)
 			{
 				size_t s = working_tree.size();
+				if (working_tree.back().type == working_data::value_type::range)
+				{
+					RES_TRY(pop_range());
+				}
 				if (working_tree.back().type == working_data::value_type::concat)
 				{
 					RES_TRY(pop_concat());
@@ -704,11 +767,24 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 
 			RES_TRY(pop_trailing());
 		}
+		else if (lak::dsl::char_literal<U'~'>.EBNF_PARSE().is_ok())
+		{
+			working_tree.push_back({
+			  .type = working_data::value_type::range,
+			});
+
+			if (!pop_specific_unused(lak::ebnf::rule_value::value_type::character))
+				return lak::err_t{u8"missing beginning of range sequence"_str};
+		}
 		else if (lak::dsl::str_literal<u8"->">.EBNF_PARSE().is_ok())
 		{
 			while (true)
 			{
 				size_t s = working_tree.size();
+				if (working_tree.back().type == working_data::value_type::range)
+				{
+					RES_TRY(pop_range());
+				}
 				if (working_tree.back().type == working_data::value_type::except)
 				{
 					RES_TRY(pop_except());
@@ -744,6 +820,18 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 		}
 		else if (lak::dsl::char_literal<U'-'>.EBNF_PARSE().is_ok())
 		{
+			while (true)
+			{
+				size_t s = working_tree.size();
+				if (working_tree.back().type == working_data::value_type::range)
+				{
+					RES_TRY(pop_range());
+				}
+				else
+					break;
+				ASSERT_GREATER(s, working_tree.size());
+			}
+
 			if (unused_value)
 			{
 				working_tree.push_back({
@@ -765,6 +853,10 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 			while (true)
 			{
 				size_t s = working_tree.size();
+				if (working_tree.back().type == working_data::value_type::range)
+				{
+					RES_TRY(pop_range());
+				}
 				if (working_tree.back().type == working_data::value_type::except)
 				{
 					RES_TRY(pop_except());
@@ -802,6 +894,10 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 			while (true)
 			{
 				size_t s = working_tree.size();
+				if (working_tree.back().type == working_data::value_type::range)
+				{
+					RES_TRY(pop_range());
+				}
 				if (working_tree.back().type == working_data::value_type::altern)
 				{
 					RES_TRY(pop_altern());
@@ -851,6 +947,10 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 			while (true)
 			{
 				size_t s = working_tree.size();
+				if (working_tree.back().type == working_data::value_type::range)
+				{
+					RES_TRY(pop_range());
+				}
 				if (working_tree.back().type == working_data::value_type::replace)
 				{
 					RES_TRY(pop_replace());
@@ -896,6 +996,10 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 			while (true)
 			{
 				size_t s = working_tree.size();
+				if (working_tree.back().type == working_data::value_type::range)
+				{
+					RES_TRY(pop_range());
+				}
 				if (working_tree.back().type == working_data::value_type::concat)
 				{
 					RES_TRY(pop_concat());
@@ -958,6 +1062,10 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 			while (true)
 			{
 				size_t s = working_tree.size();
+				if (working_tree.back().type == working_data::value_type::range)
+				{
+					RES_TRY(pop_range());
+				}
 				if (working_tree.back().type == working_data::value_type::concat)
 				{
 					RES_TRY(pop_concat());
