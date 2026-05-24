@@ -33,6 +33,10 @@ static constexpr auto identifier =
 static constexpr auto define_rule =
   lak::dsl::capture_1st<identifier, (*ws) + lak::dsl::char_literal<U'='>>;
 
+static constexpr auto repeat_atl =
+  lak::dsl::capture_1st<lak::dsl::parsed_dec_uint<size_t>,
+                        (*ws) + lak::dsl::char_literal<U'+'>>;
+
 static constexpr auto repeat_n =
   lak::dsl::capture_1st<lak::dsl::parsed_dec_uint<size_t>,
                         (*ws) + lak::dsl::char_literal<U'*'>>;
@@ -82,6 +86,7 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 			altern,
 			option,
 			repeat,
+			repeat_atl,
 			repeat_n,
 			match_case,
 			group,
@@ -130,6 +135,28 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 		return begin;
 	};
 
+	auto pop_repeat_atl = [&]() -> lak::error_code<lak::dsl::err::parse>
+	{
+		if (working_tree.back().size() != 0U)
+			return lak::err_t{u8"invalid repeat"_str};
+
+		if (!pop_unused()) return lak::err_t{u8"missing contents of repeat"_str};
+
+		const size_t count = working_tree.back().count;
+		const size_t index = pop_values();
+		unused_value.emplace(lak::ebnf::rule_value{
+		  .type  = lak::ebnf::rule_value::value_type::repetition,
+		  .index = result.repetitions.size(),
+		});
+		result.repetitions.push_back({
+		  .min   = count,
+		  .max   = lak::nullopt,
+		  .index = index,
+		});
+
+		return lak::ok_t{};
+	};
+
 	auto pop_repeat_n = [&]() -> lak::error_code<lak::dsl::err::parse>
 	{
 		if (working_tree.back().size() != 0U)
@@ -144,7 +171,8 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 		  .index = result.repetitions.size(),
 		});
 		result.repetitions.push_back({
-		  .count = count,
+		  .min   = count,
+		  .max   = count,
 		  .index = index,
 		});
 
@@ -219,6 +247,11 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 			if (working_tree.back().type == working_data::value_type::range)
 			{
 				RES_TRY(pop_range());
+			}
+			else if (working_tree.back().type ==
+			         working_data::value_type::repeat_atl)
+			{
+				RES_TRY(pop_repeat_atl());
 			}
 			else if (working_tree.back().type == working_data::value_type::repeat_n)
 			{
@@ -477,6 +510,13 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 			result.specials.push_back(spec.value);
 			RES_TRY(pop_trailing());
 		}
+		else if_let_ok (auto ral, repeat_atl.EBNF_PARSE())
+		{
+			working_tree.push_back({
+			  .type  = working_data::value_type::repeat_atl,
+			  .count = ral.value,
+			});
+		}
 		else if_let_ok (auto rn, repeat_n.EBNF_PARSE())
 		{
 			working_tree.push_back({
@@ -621,7 +661,8 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 			  .index = result.repetitions.size(),
 			});
 			result.repetitions.push_back({
-			  .count = lak::nullopt,
+			  .min   = lak::nullopt,
+			  .max   = lak::nullopt,
 			  .index = index,
 			});
 
@@ -887,9 +928,21 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 		}
 		else if (lak::dsl::char_literal<U'+'>.EBNF_PARSE().is_ok())
 		{
-			working_tree.push_back({
-			  .type = working_data::value_type::pos_lookahead,
-			});
+			if (unused_value)
+			{
+				working_tree.push_back({
+				  .type = working_data::value_type::except,
+				});
+
+				working_tree.back().values.push_back(lak::move(*unused_value));
+				unused_value.reset();
+			}
+			else
+			{
+				working_tree.push_back({
+				  .type = working_data::value_type::pos_lookahead,
+				});
+			}
 		}
 		else if (lak::dsl::char_literal<U','>.EBNF_PARSE().is_ok())
 		{
@@ -1034,6 +1087,11 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 					RES_TRY(pop_match_case());
 				}
 				else if (working_tree.back().type ==
+				         working_data::value_type::repeat_atl)
+				{
+					RES_TRY(pop_repeat_atl());
+				}
+				else if (working_tree.back().type ==
 				         working_data::value_type::repeat_n)
 				{
 					RES_TRY(pop_repeat_n());
@@ -1098,6 +1156,11 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 				         working_data::value_type::match_case)
 				{
 					RES_TRY(pop_match_case());
+				}
+				else if (working_tree.back().type ==
+				         working_data::value_type::repeat_atl)
+				{
+					RES_TRY(pop_repeat_atl());
 				}
 				else if (working_tree.back().type ==
 				         working_data::value_type::repeat_n)

@@ -271,34 +271,42 @@ int main(int argc, char **argv)
 						if (strm.template is_scope<decltype(strm)::template_call_scope>())
 							strm.next_template_argument(true);
 
-						if (auto &next =
-						      grammar.rule_values[grammar.repetitions[val.index].index];
-						    grammar.repetitions[val.index].count && next.type == optional)
-						{
-							// optimisation for `N*[P]` (up to N of P)
-							strm.push_template_call(u8"lak::dsl::repeat_up_to"_view);
-							++index;
+						auto &next =
+						  grammar.rule_values[grammar.repetitions[val.index].index];
+						// optimisation for `N*[P]` (up to N of P)
+						if (next.type == optional)
+							grammar.repetitions[val.index].min = lak::nullopt;
+
+						strm.push_template_call(
+						  grammar.repetitions[val.index].min
+						    ? (grammar.repetitions[val.index].max
+						         ? u8"lak::dsl::repeat_range"_view
+						         : u8"lak::dsl::repeat_at_least"_view)
+						    : (grammar.repetitions[val.index].max
+						         ? u8"lak::dsl::repeat_up_to"_view
+						         : u8"lak::dsl::repeat"_view));
+						++index;
+
+						if (next.type == optional)
 							stack.push_back(
 							  {grammar.rule_values[grammar.optionals[next.index].index],
 							   0U});
-						}
 						else
-						{
-							strm.push_template_call(grammar.repetitions[val.index].count
-							                          ? u8"lak::dsl::repeat_exact"_view
-							                          : u8"lak::dsl::repeat"_view);
-							++index;
 							stack.push_back(
 							  {grammar.rule_values[grammar.repetitions[val.index].index],
 							   0U});
-						}
 					}
 					else
 					{
-						if (grammar.repetitions[val.index].count)
+						if (grammar.repetitions[val.index].min)
 						{
 							strm.next_template_argument().write(
-							  lak::fmt<u8"{:d}U">(*grammar.repetitions[val.index].count));
+							  lak::fmt<u8"{:d}U">(*grammar.repetitions[val.index].min));
+						}
+						if (grammar.repetitions[val.index].max)
+						{
+							strm.next_template_argument().write(
+							  lak::fmt<u8"{:d}U">(*grammar.repetitions[val.index].max));
 						}
 						strm.pop_template_call();
 						stack.pop_back();

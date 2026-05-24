@@ -40,7 +40,8 @@ namespace lak
 
 		struct repetition_sequence
 		{
-			lak::optional<size_t> count;
+			lak::optional<size_t> min;
+			lak::optional<size_t> max;
 			size_t index;
 		};
 
