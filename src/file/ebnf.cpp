@@ -953,10 +953,6 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 				{
 					RES_TRY(pop_range());
 				}
-				if (working_tree.back().type == working_data::value_type::altern)
-				{
-					RES_TRY(pop_altern());
-				}
 				else if (working_tree.back().type == working_data::value_type::replace)
 				{
 					RES_TRY(pop_replace());
@@ -1006,7 +1002,11 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 				{
 					RES_TRY(pop_range());
 				}
-				if (working_tree.back().type == working_data::value_type::replace)
+				else if (working_tree.back().type == working_data::value_type::concat)
+				{
+					RES_TRY(pop_concat());
+				}
+				else if (working_tree.back().type == working_data::value_type::replace)
 				{
 					RES_TRY(pop_replace());
 				}
