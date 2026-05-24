@@ -1,4 +1,5 @@
 subdir('basic_program')
 subdir('hello-cobalt')
+subdir('mdc-view')
 subdir('nbt-view')
 subdir('template')
