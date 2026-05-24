@@ -22,6 +22,11 @@ namespace lak
 		inline constexpr auto nonnewline_whitespace =
 		  lak::dsl::one_of_chars_str<lak::char_utils_impl::nonnewline_spaces>;
 
+		inline constexpr auto any_char32 =
+		  lak::dsl::transform<lak::dsl::any_char,
+		                      [](lak::u8string_view chr) -> char32_t
+		                      { return lak::codepoint(chr); }>;
+
 		inline constexpr auto ascii_alpha =
 		  lak::dsl::char_range<U'a', U'z'> | lak::dsl::char_range<U'A', U'Z'>;
 		inline constexpr auto ascii_numeric = lak::dsl::char_range<U'0', U'9'>;

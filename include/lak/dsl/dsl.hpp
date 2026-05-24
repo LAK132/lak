@@ -2104,6 +2104,46 @@ namespace lak
 		template<typename T>
 		inline constexpr bool is_char_range_v = lak::dsl::is_char_range<T>::value;
 
+		/* --- any_char --- */
+
+		struct any_char_t
+		{
+			static constexpr bool is_pure_match = true;
+			using value_type                    = lak::u8string_view;
+
+			inline lak::dsl::result<lak::u8string_view> parse(
+			  lak::u8string_view str) const
+			{
+				if (str.empty()) return lak::err_t{lak::err::out_of_data{}};
+				const uint8_t clen = lak::character_length(str);
+				if (clen < 1 || clen > 4)
+					return lak::err_t{lak::err::invalid_character_length{}};
+				const char32_t c = lak::codepoint(str);
+				return lak::ok_t{lak::dsl::parse_result<value_type>{
+				  .consumed  = str.first(clen),
+				  .remaining = str.substr(clen),
+				  .value     = str.first(clen),
+				}};
+			}
+		};
+
+		inline constexpr lak::dsl::any_char_t any_char;
+
+		static_assert(lak::dsl::concepts::parser<lak::dsl::any_char_t>);
+
+		/* --- is_any_char --- */
+
+		template<typename T>
+		struct is_any_char : lak::false_type
+		{
+		};
+		template<>
+		struct is_any_char<lak::dsl::any_char_t> : lak::true_type
+		{
+		};
+		template<typename T>
+		inline constexpr bool is_any_char_v = lak::dsl::is_any_char<T>::value;
+
 		/* --- replace --- */
 
 		template<lak::dsl::concepts::parser auto par, auto value>
