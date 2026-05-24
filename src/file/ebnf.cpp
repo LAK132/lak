@@ -539,7 +539,7 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 				{
 					RES_TRY(pop_range());
 				}
-				if (working_tree.back().type == working_data::value_type::concat)
+				else if (working_tree.back().type == working_data::value_type::concat)
 				{
 					RES_TRY(pop_concat());
 				}
@@ -610,7 +610,7 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 				{
 					RES_TRY(pop_range());
 				}
-				if (working_tree.back().type == working_data::value_type::concat)
+				else if (working_tree.back().type == working_data::value_type::concat)
 				{
 					RES_TRY(pop_concat());
 				}
@@ -683,7 +683,7 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 				{
 					RES_TRY(pop_range());
 				}
-				if (working_tree.back().type == working_data::value_type::concat)
+				else if (working_tree.back().type == working_data::value_type::concat)
 				{
 					RES_TRY(pop_concat());
 				}
@@ -754,7 +754,7 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 				{
 					RES_TRY(pop_range());
 				}
-				if (working_tree.back().type == working_data::value_type::concat)
+				else if (working_tree.back().type == working_data::value_type::concat)
 				{
 					RES_TRY(pop_concat());
 				}
@@ -828,7 +828,7 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 				{
 					RES_TRY(pop_range());
 				}
-				if (working_tree.back().type == working_data::value_type::except)
+				else if (working_tree.back().type == working_data::value_type::except)
 				{
 					RES_TRY(pop_except());
 				}
@@ -900,7 +900,7 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 				{
 					RES_TRY(pop_range());
 				}
-				if (working_tree.back().type == working_data::value_type::except)
+				else if (working_tree.back().type == working_data::value_type::except)
 				{
 					RES_TRY(pop_except());
 				}
@@ -1055,7 +1055,7 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 				{
 					RES_TRY(pop_range());
 				}
-				if (working_tree.back().type == working_data::value_type::concat)
+				else if (working_tree.back().type == working_data::value_type::concat)
 				{
 					RES_TRY(pop_concat());
 				}
@@ -1126,7 +1126,7 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 				{
 					RES_TRY(pop_range());
 				}
-				if (working_tree.back().type == working_data::value_type::concat)
+				else if (working_tree.back().type == working_data::value_type::concat)
 				{
 					RES_TRY(pop_concat());
 				}
