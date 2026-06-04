@@ -1,4 +1,4 @@
-with (import <nixpkgs> { overlays = [ (import ./nix/overlay.nix) ]; });
+with (import <nixpkgs> {});
 
 mkShell {
 	packages = [
@@ -6,7 +6,7 @@ mkShell {
 		ninja
 		cmake
 		pkg-config
-		mesonNoPatch
+		meson
 		sdl2-compat
 	] ++ lib.optionals stdenv.hostPlatform.isLinux [
 		libglvnd
