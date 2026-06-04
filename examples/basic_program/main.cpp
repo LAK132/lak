@@ -17,6 +17,8 @@
 #include <lak/optional.hpp>
 #include <lak/string_literals/string.hpp>
 
+#include <lak/imgui/texture.hpp>
+
 #include <lak/system/file.hpp>
 
 #include <implot.h>
@@ -37,6 +39,10 @@ struct my_window : virtual public LAK_BASIC_PROGRAM(window_api)
 
 	ImTextureRef checker;
 
+	// unique_com_ptr wrapper of ImTextureRef which will automatically handle
+	// destroying the texture
+	lak::ImUniqueTexture checker_unique;
+
 	ImPlotContext *implot_ctx = nullptr;
 
 	lak::ImViewport viewport = nullptr;
@@ -54,6 +60,7 @@ struct my_window : virtual public LAK_BASIC_PROGRAM(window_api)
 				checker_img[{x, y}].r = checker_img[{x, y}].g = checker_img[{x, y}].b =
 				  (((x + y) & 1U) * 255U);
 		checker = lak::CreateTexture(checker_img);
+		checker_unique.emplace(checker_img);
 
 		implot_ctx = ImPlot::CreateContext();
 
@@ -63,6 +70,7 @@ struct my_window : virtual public LAK_BASIC_PROGRAM(window_api)
 
 	virtual ~my_window()
 	{
+		// safe to call with an ImTextureID_Invalid texture
 		lak::DestroyTexture(checker);
 		if (implot_ctx) ImPlot::DestroyContext(implot_ctx);
 		if (viewport) lak::DestroyViewport(viewport);

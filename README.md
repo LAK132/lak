@@ -40,8 +40,12 @@ window (backend renderer determined by settings in `meson_options.txt`):
 
 #include <lak/optional.hpp>
 
+#include <lak/imgui/texture.hpp>
+
 #include <filesystem>
 
+// refer to basic_program.inl for an example of how to implement main yourself
+// and avoid the dynamic dispatch of LAK_BASIC_PROGRAM(window_api)
 struct my_window : virtual public LAK_BASIC_PROGRAM(window_api)
 {
 	my_window() : LAK_BASIC_PROGRAM(window_api)() {}
@@ -51,7 +55,9 @@ struct my_window : virtual public LAK_BASIC_PROGRAM(window_api)
 
 	lak::optional<std::filesystem::path> dropfile;
 
-	ImTextureRef checker;
+	// unique_com_ptr wrapper of ImTextureRef which will automatically handle
+	// destroying the texture
+	lak::ImUniqueTexture checker;
 
 	virtual void init() override final
 	{
@@ -65,10 +71,14 @@ struct my_window : virtual public LAK_BASIC_PROGRAM(window_api)
 			for (size_t x = 0U; x < checker_img.size().x; ++x)
 				checker_img[{x, y}].r = checker_img[{x, y}].g = checker_img[{x, y}].b =
 				  (((x + y) & 1U) * 255U);
-		checker = lak::CreateTexture(checker_img);
+		checker.emplace(checker_img); // see also: lak::CreateTexture() and
+		                              // lak::DestroyTexture()
 	}
 
-	virtual ~my_window() { lak::DestroyTexture(checker); }
+	virtual ~my_window()
+	{
+		// handle end-of-window-lifetime cleanup here
+	}
 
 	virtual void handle_event(lak::event &event) override final
 	{
