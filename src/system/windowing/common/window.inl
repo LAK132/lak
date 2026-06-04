@@ -119,12 +119,17 @@ namespace
 			info(0, result.renderer_info);
 
 			result.device_enumerator =
-			  result.renderer_info.CreateGraphicsDeviceEnumerator(lak::move(log));
+			  result.renderer_info.CreateGraphicsDeviceEnumerator(
+			    log->CloneLogger(), result.module_handle);
 			RES_TRY(
 			  lak::cobalt::as_result(result.device_enumerator->EnumerateDevices()));
 
 			result.device = result.device_enumerator->GetPreferredDevice();
-
+			if (!result.device)
+			{
+				log->Error("Failed to get preferred device");
+				return lak::err_t{};
+			}
 			if (!result.device->AreAllFeaturesSupported(required_features))
 			{
 				log->Error("Not all features are supported");

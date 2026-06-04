@@ -5,8 +5,10 @@ cobalt_opts = cmake.subproject_options()
 cobalt_source_root = meson.global_source_root()/'subprojects'/'Cobalt'
 cobalt_build_root = meson.global_build_root()/'subprojects'/'Cobalt'
 
-cobalt_opts.set_override_option('warning_level', '1')
-cobalt_opts.set_override_option('cpp_std', 'c++20')
+cobalt_opts.set_override_option('cpp_std', 'c++17')
+if get_option('optimization') == '0'
+	cobalt_opts.set_override_option('optimization', '1')
+endif
 
 cobalt_opts.add_cmake_defines({
 	# Cobalt
@@ -113,6 +115,18 @@ _lakcobalt_deps = []
 _lakcobalt_compile_args = [
 	'-DLAK_ENABLE_COBALT',
 ]
+
+if host_machine.system() == 'windows'
+	_lakcobalt_compile_args += '-DCOBALT_RENDERER_WIN32_SUPPORT'
+elif host_machine.system() == 'darwin'
+	_lakcobalt_compile_args += '-DCOBALT_RENDERER_APPKIT_SUPPORT'
+elif host_machine.system() == 'linux'
+	_lakcobalt_compile_args += '-DCOBALT_RENDERER_WAYLAND_SUPPORT'
+	_lakcobalt_compile_args += '-DCOBALT_RENDERER_XLIB_SUPPORT'
+	_lakcobalt_compile_args += '-DCOBALT_RENDERER_XCB_SUPPORT'
+else
+	_lakcobalt_compile_args += '-DCOBALT_RENDERER_MANUAL_PLATFORM_BINDINGS'
+endif
 
 cobalt_shader_support = cobalt_subprj.dependency('ShaderSupport')
 cobalt_texture_format_conversion = cobalt_subprj.dependency('TextureFormatConversion')

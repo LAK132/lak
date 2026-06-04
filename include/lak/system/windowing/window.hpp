@@ -111,6 +111,7 @@ namespace lak
 	{
 #ifdef LAK_ENABLE_COBALT
 		::cobalt::graphics::RendererInfo renderer_info = {};
+		::cobalt::graphics::IModuleHandle::unique_ptr module_handle;
 		::cobalt::graphics::IGraphicsDeviceEnumerator::unique_ptr
 		  device_enumerator                         = nullptr;
 		::cobalt::graphics::IGraphicsDevice *device = nullptr;
