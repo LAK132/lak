@@ -61,21 +61,24 @@ cobalt_opts.set_install(false)
 
 cobalt_opts.set_install(true, target: 'ShaderSupport')
 cobalt_opts.set_install(true, target: 'TextureFormatConversion')
-if get_option('lak_enable_cobalt_ogl3')
+if lak_cobalt_enabled_renderers.contains('OpenGL3')
 	cobalt_opts.set_install(true, target: 'OpenGL3Renderer')
 endif
-if get_option('lak_enable_cobalt_ogl4')
+if lak_cobalt_enabled_renderers.contains('OpenGL4')
 	cobalt_opts.set_install(true, target: 'OpenGL4Renderer')
 endif
-if get_option('lak_enable_cobalt_d3d11')
+if lak_cobalt_enabled_renderers.contains('Direct3D11')
 	cobalt_opts.set_install(true, target: 'Direct3D11Renderer')
 endif
-if get_option('lak_enable_cobalt_d3d12')
+if lak_cobalt_enabled_renderers.contains('Direct3D12')
 	cobalt_opts.set_install(true, target: 'Direct3D12Renderer')
 	cobalt_opts.set_install(true, target: 'WinPixEventRuntime')
 endif
-if get_option('lak_enable_cobalt_vk')
+if lak_cobalt_enabled_renderers.contains('Vulkan')
 	cobalt_opts.set_install(true, target: 'VulkanRenderer')
+endif
+if lak_cobalt_enabled_renderers.contains('Metal')
+	cobalt_opts.set_install(true, target: 'MetalRenderer')
 endif
 
 vis_hidden = '-fvisibility=hidden'
@@ -131,34 +134,40 @@ endif
 cobalt_shader_support = cobalt_subprj.dependency('ShaderSupport')
 cobalt_texture_format_conversion = cobalt_subprj.dependency('TextureFormatConversion')
 
-if get_option('lak_enable_cobalt_ogl3')
+if lak_cobalt_enabled_renderers.contains('OpenGL3')
 	_lakcobalt_srcs += 'opengl3.cpp'
 	_lakcobalt_deps += cobalt_subprj.dependency('OpenGL3Renderer')
 	_lakcobalt_compile_args += '-DLAK_ENABLE_COBALT_OGL3'
 endif
 
-if get_option('lak_enable_cobalt_ogl4') and host_machine.system() != 'darwin'
+if lak_cobalt_enabled_renderers.contains('OpenGL4')
 	_lakcobalt_srcs += 'opengl4.cpp'
 	_lakcobalt_deps += cobalt_subprj.dependency('OpenGL4Renderer')
 	_lakcobalt_compile_args += '-DLAK_ENABLE_COBALT_OGL4'
 endif
 
-if get_option('lak_enable_cobalt_d3d11') and host_machine.system() == 'windows'
+if lak_cobalt_enabled_renderers.contains('Direct3D11')
 	_lakcobalt_srcs += 'direct3d11.cpp'
 	_lakcobalt_deps += cobalt_subprj.dependency('Direct3D11Renderer')
 	_lakcobalt_compile_args += '-DLAK_ENABLE_COBALT_D3D11'
 endif
 
-if get_option('lak_enable_cobalt_d3d12') and host_machine.system() == 'windows'
+if lak_cobalt_enabled_renderers.contains('Direct3D12')
 	_lakcobalt_srcs += 'direct3d12.cpp'
 	_lakcobalt_deps += cobalt_subprj.dependency('Direct3D12Renderer')
 	_lakcobalt_compile_args += '-DLAK_ENABLE_COBALT_D3D12'
 endif
 
-if get_option('lak_enable_cobalt_vk')
+if lak_cobalt_enabled_renderers.contains('Vulkan')
 	_lakcobalt_srcs += 'vulkan.cpp'
 	_lakcobalt_deps += cobalt_subprj.dependency('VulkanRenderer')
 	_lakcobalt_compile_args += '-DLAK_ENABLE_COBALT_VK'
+endif
+
+if lak_cobalt_enabled_renderers.contains('Metal')
+	_lakcobalt_srcs += 'metal.cpp'
+	_lakcobalt_deps += cobalt_subprj.dependency('MetalRenderer')
+	_lakcobalt_compile_args += '-DLAK_ENABLE_COBALT_MTL'
 endif
 
 _lakcobalt_dep = declare_dependency(

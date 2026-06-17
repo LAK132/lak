@@ -1,7 +1,7 @@
 project(
 	'lak',
 	['c', 'cpp'],
-	meson_version: '>=1.3.0',
+	meson_version: '>=1.4.0',
 	default_options: {
 		'c_std': 'c11',
 		'build.c_std': 'c11',
@@ -150,50 +150,91 @@ elif get_option('lak_backend') == 'xcb'
 		language: ['c', 'cpp'])
 endif
 
-if get_option('lak_enable_softrender')
+if get_option('lak_renderer').contains('softrender')
 	add_project_arguments(
 		'-DLAK_ENABLE_SOFTRENDER',
 		language: ['c', 'cpp', 'objcpp'])
 endif
 
-if get_option('lak_enable_opengl')
+if get_option('lak_renderer').contains('opengl')
 	add_project_arguments(
 		'-DLAK_ENABLE_OPENGL',
 		language: ['c', 'cpp', 'objcpp'])
 endif
 
-if get_option('lak_enable_cobalt')
+# get_option('cobalt_renderer') filtered by host machine system requirements
+lak_cobalt_enabled_renderers = []
+foreach renderer : get_option('cobalt_renderer')
+	renderer_warning = 'Cobalt @0@ renderer is not available on @1@ systems'
+	if renderer == 'OpenGL3' or renderer == 'Vulkan'
+		lak_cobalt_enabled_renderers += renderer
+	elif renderer == 'OpenGL4'
+		if host_machine.system() != 'darwin'
+			lak_cobalt_enabled_renderers += renderer
+		else
+			warning(renderer_warning.format(renderer, host_machine.system()))
+		endif
+	elif renderer == 'Direct3D11'
+		if host_machine.system() == 'windows'
+			lak_cobalt_enabled_renderers += renderer
+		else
+			warning(renderer_warning.format(renderer, host_machine.system()))
+		endif
+	elif renderer == 'Direct3D12'
+		if host_machine.system() == 'windows'
+			lak_cobalt_enabled_renderers += renderer
+		else
+			warning(renderer_warning.format(renderer, host_machine.system()))
+		endif
+	elif renderer == 'Metal'
+		if host_machine.system() == 'darwin'
+			lak_cobalt_enabled_renderers += renderer
+		else
+			warning(renderer_warning.format(renderer, host_machine.system()))
+		endif
+	else
+		error('Invalid Cobalt renderer "@0@"'.format(renderer))
+	endif
+endforeach
+
+if get_option('lak_renderer').contains('cobalt')
 	add_project_arguments(
 		'-DLAK_ENABLE_COBALT',
 		language: ['c', 'cpp', 'objcpp'])
 
-	if get_option('lak_enable_cobalt_ogl3')
+	if lak_cobalt_enabled_renderers.contains('OpenGL3')
 		add_project_arguments(
 			'-DLAK_ENABLE_COBALT_OGL3',
 			language: ['c', 'cpp', 'objcpp'])
 	endif
 
-	if get_option('lak_enable_cobalt_ogl4') and host_machine.system() != 'darwin'
+	if lak_cobalt_enabled_renderers.contains('OpenGL4')
 		add_project_arguments(
 			'-DLAK_ENABLE_COBALT_OGL4',
 			language: ['c', 'cpp'])
 	endif
 
-	if get_option('lak_enable_cobalt_d3d11') and host_machine.system() == 'windows'
+	if lak_cobalt_enabled_renderers.contains('Direct3D11')
 		add_project_arguments(
 			'-DLAK_ENABLE_COBALT_D3D11',
 			language: ['c', 'cpp'])
 	endif
 
-	if get_option('lak_enable_cobalt_d3d12') and host_machine.system() == 'windows'
+	if lak_cobalt_enabled_renderers.contains('Direct3D12')
 		add_project_arguments(
 			'-DLAK_ENABLE_COBALT_D3D12',
 			language: ['c', 'cpp'])
 	endif
 
-	if get_option('lak_enable_cobalt_vk')
+	if lak_cobalt_enabled_renderers.contains('Vulkan')
 		add_project_arguments(
 			'-DLAK_ENABLE_COBALT_VK',
+			language: ['c', 'cpp', 'objcpp'])
+	endif
+
+	if lak_cobalt_enabled_renderers.contains('Metal')
+		add_project_arguments(
+			'-DLAK_ENABLE_COBALT_MTL',
 			language: ['c', 'cpp', 'objcpp'])
 	endif
 endif
@@ -243,18 +284,18 @@ if get_option('lak_enable_glm')
 endif
 
 if get_option('lak_enable_windowing')
-	if get_option('lak_enable_softrender')
+	if get_option('lak_renderer').contains('softrender')
 		laksoftrender_dep = declare_dependency(
 			compile_args: '-DLAK_ENABLE_SOFTRENDER')
 		dependencies += laksoftrender_dep
 	endif
 
-	if get_option('lak_enable_opengl')
+	if get_option('lak_renderer').contains('opengl')
 		subdir('src'/'system'/'opengl')
 		dependencies += lakopengl_dep
 	endif
 
-	if get_option('lak_enable_cobalt')
+	if get_option('lak_renderer').contains('cobalt')
 		subdir('src'/'system'/'cobalt')
 		dependencies += lakcobalt_dep
 	endif

@@ -1,16 +1,21 @@
 _lakwindowing_dependencies = [
 	lakcore_dep,
+	glm_dep,
+	dependency('X11'),
 ]
 
-if get_option('lak_enable_softrender')
+if get_option('lak_renderer').contains('softrender')
 	_lakwindowing_dependencies += laksoftrender_dep
 endif
 
-if get_option('lak_enable_opengl')
-	_lakwindowing_dependencies += lakopengl_dep
+if get_option('lak_renderer').contains('opengl')
+	_lakwindowing_dependencies += [
+		lakopengl_dep,
+		dependency('GL'),
+	]
 endif
 
-if get_option('lak_enable_cobalt')
+if get_option('lak_renderer').contains('cobalt')
 	_lakwindowing_dependencies += lakcobalt_dep
 endif
 
