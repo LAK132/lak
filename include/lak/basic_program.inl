@@ -528,7 +528,6 @@ int LAK_BASIC_PROGRAM_MAIN(int argc, char **argv)
 #	endif
 
 				ImGui::ImplRender(inst.imgui_context);
-				lak::flush_file_modal();
 			}
 #else
 			inst.loop(counter_delta);

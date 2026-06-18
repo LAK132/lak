@@ -134,6 +134,16 @@ void lak::DestroyTexture(ImTextureRef &tex)
 	tex = ImTextureID_Invalid;
 }
 
+/* --- QueueDestroyTexture --- */
+
+void lak::QueueDestroyTexture(ImTextureRef &tex)
+{
+	if (tex.GetTexID() == ImTextureID_Invalid) return;
+	ImGui::ImplQueueDestroyTexture(
+	  (ImGui::ImplContext)ImGui::GetIO().BackendPlatformUserData, tex);
+	tex = ImTextureID_Invalid;
+}
+
 /* --- TextureSize --- */
 
 lak::vec2s_t lak::TextureSize(ImTextureRef tex)
@@ -240,18 +250,19 @@ bool lak::TreeNode(const char *fmt, ...)
 // :TODO: these need to be stored on a per-window basis so that textures can be
 // tracked with their corresponding graphics contexts (if a window is closed
 // while the file dialog is open it can cause issues with textures outliving
-// the context)
+// the context, and it may end up trying to share textures between graphics
+// contexts)
 lak::optional<ifd::FileDialog> _file_dialog;
-lak::array<ifd::TextureID> _textures_to_destroy;
 
 void lak::init_file_modal()
 {
-	lak::flush_file_modal();
-
-	if (!_file_dialog) _file_dialog.emplace(ifd::FileDialog{});
+	_file_dialog.emplace(ifd::FileDialog{});
 
 	_file_dialog->DeleteTexture = [](ifd::TextureID tex)
-	{ _textures_to_destroy.push_back(tex); };
+	{
+		ImTextureRef ref{(ImTextureID)tex};
+		lak::QueueDestroyTexture(ref);
+	};
 
 	_file_dialog->CreateTexture =
 	  [](uint8_t *data, int w, int h, char fmt) -> ifd::TextureID
@@ -266,25 +277,12 @@ void lak::init_file_modal()
 		return (ifd::TextureID)ref.GetTexID();
 	};
 }
-
-void lak::flush_file_modal()
-{
-	if (_textures_to_destroy.empty()) return;
-
-	for (auto tex : _textures_to_destroy)
-	{
-		ImTextureRef ref{(ImTextureID)tex};
-		lak::DestroyTexture(ref);
-	}
-	_textures_to_destroy.clear();
-}
 #endif
 
 #ifdef LAK_USE_WIN_NATIVE_FILE_DIALOG
 #	include "lak/system/win32/wrapper.hpp"
 
 void lak::init_file_modal() {}
-void lak::flush_file_modal() {}
 
 lak::error_code_result<lak::file_open_error> open_file_dialog(
   std::filesystem::path &path,

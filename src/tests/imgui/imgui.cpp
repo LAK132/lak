@@ -128,7 +128,6 @@ int imgui_compile_test()
 				}
 
 				ImGui::ImplRender(imgui_context);
-				lak::flush_file_modal();
 			}
 
 			w.swap();

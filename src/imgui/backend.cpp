@@ -263,6 +263,10 @@ void ImGui::ImplShutdownContext(ImplContext context)
 #endif
 	}
 
+	for (auto tex : context->texture_destroy_queue)
+		ImplDestroyTexture(context, ImTextureRef{tex});
+	context->texture_destroy_queue.clear();
+
 	switch (context->mode)
 	{
 #ifdef LAK_ENABLE_SOFTRENDER
@@ -726,6 +730,11 @@ void ImGui::ImplDestroyTexture(ImplContext context, ImTextureRef tex)
 	}
 }
 
+void ImGui::ImplQueueDestroyTexture(ImplContext context, ImTextureRef tex)
+{
+	context->texture_destroy_queue.push_back(tex);
+}
+
 lak::vec2s_t ImGui::ImplTextureSize(ImplContext context, ImTextureRef tex)
 {
 	ASSERT(context);
@@ -929,6 +938,10 @@ void ImGui::ImplRender(ImplContext context, const bool call_base_render)
 {
 	if (call_base_render) Render();
 	ImplRenderData(context, ImGui::GetDrawData());
+
+	for (auto tex : context->texture_destroy_queue)
+		ImplDestroyTexture(context, tex);
+	context->texture_destroy_queue.clear();
 }
 
 void ImGui::ImplRenderData(ImplContext context, ImDrawData *draw_data)

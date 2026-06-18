@@ -31,6 +31,8 @@ namespace lak
 	ImTextureRef CreateTexture(const lak::image<lak::vec3f_t> &image);
 	ImTextureRef CreateTexture(const lak::image<float> &image);
 	void DestroyTexture(ImTextureRef &tex);
+	void QueueDestroyTexture(ImTextureRef &tex); // queue for destruction at the
+	                                             // end of the current frame
 	lak::vec2s_t TextureSize(ImTextureRef tex);
 
 	using ImViewport             = ImGui::ImplViewport;
@@ -157,7 +159,6 @@ namespace lak
 	};
 
 	void init_file_modal();
-	void flush_file_modal();
 
 	lak::error_code_result<lak::file_open_error> open_file_modal(
 	  std::filesystem::path &path, bool save, const lak::astring &filter = ".*");

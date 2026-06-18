@@ -82,6 +82,7 @@ namespace ImGui
 	                               lak::span<const ImTextureRect> updates);
 
 	void ImplDestroyTexture(ImplContext context, ImTextureRef tex);
+	void ImplQueueDestroyTexture(ImplContext context, ImTextureRef tex);
 
 	lak::vec2s_t ImplTextureSize(ImplContext context, ImTextureRef tex);
 

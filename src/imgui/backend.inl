@@ -62,6 +62,7 @@ namespace ImGui
 		bool allow_set_cursor = false;
 		lak::graphics_mode mode;
 		glm::mat4x4 transform = glm::mat4x4(1.0f);
+		lak::array<ImTextureRef> texture_destroy_queue;
 		union
 		{
 			void *vd_context;
