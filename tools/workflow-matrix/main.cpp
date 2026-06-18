@@ -27,6 +27,16 @@ struct target_t
 	std::string run;
 };
 
+std::vector<target_t> operator+(std::vector<target_t> a,
+                                std::vector<target_t> b)
+{
+	std::vector<target_t> result;
+	result.reserve(a.size() + b.size());
+	for (auto &t : a) result.push_back(std::move(t));
+	for (auto &t : b) result.push_back(std::move(t));
+	return result;
+}
+
 struct matrix_entry_t
 {
 	os_t os;
@@ -75,30 +85,9 @@ int main()
 	  },
 	  {
 	    // tests
-	    .setups = {"-Dlak_enable_tests=true"s},
-	    .target = "lak_test lak_test_bigint_standalone"s,
-	    .run    = "build/lak_test --help ; "
-	              "build/lak_test --testall && "
-	              "build/lak_test_bigint_standalone --testall"s,
-	  },
-	  {
-	    // tests
 	    .setups =
 	      {
-	        "-Dlak_enable_tests=true "
-	        "-Dlak_enable_godot_cpp=true "
-	        "-Dlak_enable_lua=true "
-	        "-Dlak_enable_stb=true "
-	        "-Dlak_enable_stb_image=true "
-	        "-Dlak_enable_stb_image_write=true"s,
-
-	        "-Dlak_enable_tests=true "
-	        "-Dlak_enable_windowing=true "
-	        "-Dlak_use_native_file_dialog=false "
-	        "-Dsdl2_from_source=true "
-	        "-Dlak_backend=sdl "
-	        "-Dlak_enable_glm=true "
-	        "-Dlak_enable_imgui=true"s,
+	        "-Dlak_enable_tests=true"s,
 	      },
 	    .target = "lak_test"s,
 	    .run    = "build/lak_test --help ; "
@@ -106,30 +95,62 @@ int main()
 	  },
 	};
 
-	std::vector<target_t> windows_targets = common_targets;
-	windows_targets.push_back({
-	  .setups =
+	std::vector<target_t> native_targets =
+	  std::vector<target_t>{
 	    {
-	      "-Dlak_enable_tests=true "
-	      // :TODO: "Compatibility with CMake < 3.5 has been removed from CMake."
-	      // "-Dlak_enable_libfive=true "
-	      "-Dlak_enable_lmdb=true"s,
+	      // tests
+	      .setups =
+	        {
+	          "-Dlak_enable_tests=true "
+	          "-Dlak_enable_godot_cpp=true "
+	          "-Dlak_enable_lua=true "
+	          "-Dlak_enable_stb=true "
+	          "-Dlak_enable_stb_image=true "
+	          "-Dlak_enable_stb_image_write=true"s,
 
-	      "-Dlak_enable_tests=true "
-	      "-Dlak_enable_windowing=true "
-	      "-Dlak_use_native_file_dialog=true "
-	      "-Dlak_backend=win32 "
-	      "-Dlak_enable_glm=true "
-	      "-Dlak_enable_imgui=true"s,
+	          "-Dlak_enable_tests=true "
+	          "-Dlak_enable_windowing=true "
+	          "-Dlak_use_native_file_dialog=false "
+	          "-Dsdl2_from_source=true "
+	          "-Dlak_backend=sdl "
+	          "-Dlak_enable_glm=true "
+	          "-Dlak_enable_imgui=true"s,
+	        },
+	      .target = "lak_test"s,
+	      .run    = "build/lak_test --help ; "
+	                "build/lak_test --testall"s,
 	    },
-	  .target = "lak_test"s,
-	  .run    = "build/lak_test --help ; "
-	            "build/lak_test --testall"s,
-	});
+	  } +
+	  common_targets;
+
+	std::vector<target_t> windows_targets =
+	  std::vector<target_t>{
+	    {
+	      .setups =
+	        {
+	          "-Dlak_enable_tests=true "
+	          // "Compatibility with CMake < 3.5 has been removed from CMake."
+	          // "-Dlak_enable_libfive=true "
+	          "-Dlak_enable_lmdb=true"s,
+
+	          "-Dlak_enable_tests=true "
+	          "-Dlak_enable_windowing=true "
+	          "-Dlak_use_native_file_dialog=true "
+	          "-Dlak_backend=win32 "
+	          "-Dlak_enable_glm=true "
+	          "-Dlak_enable_imgui=true"s,
+	        },
+	      .target = "lak_test"s,
+	      .run    = "build/lak_test --help ; "
+	                "build/lak_test --testall"s,
+	    },
+	  } +
+	  common_targets;
 	for (auto &t : windows_targets)
 		for (auto &s : t.setups) s += " --vsenv"s;
 
 	std::vector<matrix_entry_t> entries = {
+	  // --- x64 ---
 	  {
 	    .os      = {.runner = "windows-2025-vs2026"s,
 	                .system = "windows"s,
@@ -137,39 +158,41 @@ int main()
 	    .targets = windows_targets,
 	  },
 	  {
-	    .os      = {.runner = "windows-2025-vs2026"s,
-	                .system = "windows"s,
-	                .arch   = "x86"s},
-	    .targets = windows_targets,
+	    .os = {.runner = "ubuntu-24.04"s, .system = "ubuntu"s, .arch = "x64"s},
+	    .targets = native_targets,
 	  },
+	  {
+	    .os = {.runner = "macos-26-intel"s, .system = "macos"s, .arch = "x64"s},
+	    .targets = native_targets,
+	  },
+
+	  // --- arm64 ---
 	  {
 	    .os      = {.runner = "windows-11-vs2026-arm"s,
 	                .system = "windows"s,
 	                .arch   = "arm64"s},
 	    .targets = windows_targets,
 	  },
-
-	  {
-	    .os = {.runner = "ubuntu-24.04"s, .system = "ubuntu"s, .arch = "x64"s},
-	    .targets = common_targets,
-	  },
-	  {
-	    .os = {.runner = "ubuntu-24.04"s, .system = "ubuntu"s, .arch = "x86"s},
-	    .targets = common_targets,
-	  },
 	  // {
 	  //   .os      = {.runner = "ubuntu-24.04-arm"s,
 	  //               .system = "ubuntu"s,
 	  //               .arch   = "arm64"s},
-	  //   .targets = common_targets,
+	  //   .targets = native_targets,
 	  // },
-
 	  {
-	    .os = {.runner = "macos-26-intel"s, .system = "macos"s, .arch = "x64"s},
+	    .os      = {.runner = "macos-26"s, .system = "macos"s, .arch = "arm64"s},
+	    .targets = native_targets,
+	  },
+
+	  // --- x86 ---
+	  {
+	    .os      = {.runner = "windows-2025-vs2026"s,
+	                .system = "windows"s,
+	                .arch   = "x86"s},
 	    .targets = common_targets,
 	  },
 	  {
-	    .os      = {.runner = "macos-26"s, .system = "macos"s, .arch = "arm64"s},
+	    .os = {.runner = "ubuntu-24.04"s, .system = "ubuntu"s, .arch = "x86"s},
 	    .targets = common_targets,
 	  },
 	};

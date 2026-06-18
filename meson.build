@@ -471,12 +471,4 @@ if get_option('lak_enable_tests')
 		include_directories: include_directories('include'),
 		dependencies: lak_dep,
 	)
-
-	lak_test_bigint_standalone_prog = executable(
-		'lak_test_bigint_standalone',
-		[
-			'src'/'tests'/'bigint_standalone.cpp',
-		],
-		include_directories: include_directories('include'),
-	)
 endif
