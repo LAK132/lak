@@ -267,6 +267,15 @@ void ImGui::ImplShutdownContext(ImplContext context)
 		ImplDestroyTexture(context, ImTextureRef{tex});
 	context->texture_destroy_queue.clear();
 
+	for (ImTextureData *tex :
+	     ImGui::GetPlatformIO(context->imgui_context).Textures)
+	{
+		if (tex->RefCount != 1) continue;
+		ImplDestroyTexture(context, tex->GetTexRef());
+		tex->SetTexID(ImTextureID_Invalid);
+		tex->SetStatus(ImTextureStatus_Destroyed);
+	}
+
 	switch (context->mode)
 	{
 #ifdef LAK_ENABLE_SOFTRENDER
@@ -287,8 +296,9 @@ void ImGui::ImplShutdownContext(ImplContext context)
 		default: FATAL("Invalid Context Mode"); break;
 	}
 
-	context->imgui_context->IO.BackendPlatformUserData = nullptr;
-	context->imgui_context->IO.BackendRendererUserData = nullptr;
+	auto &io                   = ImGui::GetIO(context->imgui_context);
+	io.BackendPlatformUserData = nullptr;
+	io.BackendRendererUserData = nullptr;
 }
 
 void ImGui::ImplSetCurrentContext(ImplContext context)
@@ -808,6 +818,7 @@ void ImGui::ImplUpdateTexture(ImplContext context, ImTextureData *texture)
 	{
 		ImGui::ImplDestroyTexture(context, texture->GetTexRef());
 
+		texture->SetTexID(ImTextureID_Invalid);
 		texture->SetStatus(ImTextureStatus_Destroyed);
 	}
 }
@@ -948,6 +959,12 @@ void ImGui::ImplRenderData(ImplContext context, ImDrawData *draw_data)
 {
 	ASSERT(context);
 	ASSERT(draw_data);
+
+	if (draw_data->Textures != nullptr)
+		for (ImTextureData *tex : *draw_data->Textures)
+			if (tex->Status != ImTextureStatus_OK)
+				ImGui::ImplUpdateTexture(context, tex);
+
 	switch (context->mode)
 	{
 #ifdef LAK_ENABLE_SOFTRENDER

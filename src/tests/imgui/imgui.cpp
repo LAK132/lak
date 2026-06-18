@@ -15,35 +15,36 @@
 
 #include "imgui_memory_editor.h"
 
+#ifdef LAK_ENABLE_OPENGL
+#	include "lak/system/opengl/state.hpp"
+#endif
+
+#ifdef LAK_ENABLE_COBALT
+#	include <RendererInterface/RendererInterface.pkg>
+#endif
+
 #ifdef LAK_RUN_WINDOWING_TESTS
 BEGIN_TEST(imgui)
 #else
 int imgui_compile_test()
 #endif
 {
-	DEBUG("platform init");
-	ASSERT(lak::platform_init());
-
-	int result = EXIT_FAILURE;
-
+	auto do_window = [](lak::window &&w)
 	{
-		DEBUG("create window");
-#if defined(LAK_ENABLE_SOFTRENDER)
-		lak::window w = lak::window::make(lak::software_settings{}).UNWRAP();
-#elif defined(LAK_ENABLE_OPENGL)
-		lak::window w = lak::window::make(lak::opengl_settings{}).UNWRAP();
-#elif defined(LAK_ENABLE_COBALT)
-		auto [w, r] = lak::window::make(lak::cobalt_settings{}).UNWRAP();
-#else
-#	error no graphics backend
-#endif
+		w.set_active();
 
-		w.set_title(L"ImGui Test Window");
+		bool result = false;
+
+		DEBUG(w.graphics());
+
+		w.set_title(lak::fmt<L"ImGui Test Window ({})">(w.graphics()));
 
 		auto imgui_context{ImGui::ImplCreateContext(w.graphics())};
+		DEFER(ImGui::ImplDestroyContext(imgui_context));
 
 		ImGui::ImplInit();
 		ImGui::ImplInitContext(imgui_context, w);
+		DEFER(ImGui::ImplShutdownContext(imgui_context));
 
 		{
 			ImGuiStyle &style      = ImGui::GetStyle();
@@ -65,6 +66,8 @@ int imgui_compile_test()
 		DEBUG("starting event loop");
 		for (bool running = true; running;)
 		{
+			w.set_active();
+
 			for (lak::event e; lak::next_event(&e);)
 			{
 				ImGui::ImplProcessEvent(imgui_context, e);
@@ -75,6 +78,52 @@ int imgui_compile_test()
 					case lak::event_type::quit_program: running = false; break;
 					default:                            break;
 				}
+			}
+
+			// clear window
+			switch (w.graphics())
+			{
+#ifdef LAK_ENABLE_SOFTRENDER
+				case lak::graphics_mode::Software:
+					// no-op
+					break;
+#endif
+#ifdef LAK_ENABLE_OPENGL
+				case lak::graphics_mode::OpenGL:
+				{
+					glViewport(0, 0, w.drawable_size().x, w.drawable_size().y);
+					glScissor(0, 0, w.drawable_size().x, w.drawable_size().y);
+					glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+					glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT |
+					        GL_STENCIL_BUFFER_BIT);
+				}
+				break;
+#endif
+#ifdef LAK_ENABLE_COBALT
+				case lak::graphics_mode::Cobalt:
+				{
+					const auto &cgx = lak::cobalt_graphics_context(w.handle()).UNWRAP();
+					auto *rd        = cgx.renderer.get();
+					auto *fb        = cgx.frame_buffer.get();
+					fb->DefineViewportRegion(
+					  {0, 0},
+					  {uint32_t(w.drawable_size().x), uint32_t(w.drawable_size().y)});
+					fb->DefineScissorRegion(
+					  {0, 0},
+					  {uint32_t(w.drawable_size().x), uint32_t(w.drawable_size().y)});
+					auto rp = lak::cobalt_create_render_pass(w.handle()).UNWRAP();
+					rp->SetAttachmentClearData(
+					  ::cobalt::graphics::IFrameBuffer::AttachmentType::Color,
+					  0,
+					  ::cobalt::graphics::V4Float32{0.0f, 0.0f, 0.0f, 0.0f});
+					rp->SetAttachmentClearData(
+					  ::cobalt::graphics::IFrameBuffer::AttachmentType::Depth,
+					  0,
+					  ::cobalt::graphics::V4Float32(1.0f, 1.0f, 1.0f, 1.0f));
+				}
+				break;
+#endif
+				default: ASSERT_UNREACHABLE();
 			}
 
 			{
@@ -102,7 +151,7 @@ int imgui_compile_test()
 					style.WindowPadding = old_window_padding;
 					if (ImGui::Button("Click Here"))
 					{
-						result  = EXIT_SUCCESS;
+						result  = true;
 						running = false;
 					}
 					static lak::path_getter pg;
@@ -138,13 +187,33 @@ int imgui_compile_test()
 		}
 		DEBUG("event loop finished");
 
-		ImGui::ImplShutdownContext(imgui_context);
+		ASSERTF(result, "should have clicked 'Click Here'");
+	};
+
+	DEBUG("platform init");
+	ASSERT(lak::platform_init());
+
+	DEBUG("create window(s)");
+
+#ifdef LAK_ENABLE_SOFTRENDER
+	do_window(lak::window::make(lak::software_settings{}).UNWRAP());
+#endif
+#ifdef LAK_ENABLE_OPENGL
+	do_window(lak::window::make(lak::opengl_settings{}).UNWRAP());
+#endif
+#ifdef LAK_ENABLE_COBALT
+	{
+		auto [cw, cr] = lak::window::make(lak::cobalt_settings{}).UNWRAP();
+		DEBUG(cr.renderer_info.GetDisplayName());
+		do_window(lak::move(cw));
 	}
+#endif
+	lak::init_file_modal(); // force clear textures
 
 	DEBUG("platform quit");
 	lak::platform_quit();
 
-	return result;
+	return EXIT_SUCCESS;
 }
 #ifdef LAK_RUN_WINDOWING_TESTS
 END_TEST()

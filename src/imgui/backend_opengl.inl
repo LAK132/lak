@@ -96,10 +96,6 @@ void ImplShutdownGLContext(ImGui::ImplGLContext context)
 	context->elements = 0;
 
 	context->shader.clear().discard();
-
-	for (ImTextureData *tex : ImGui::GetPlatformIO().Textures)
-		if (tex->RefCount == 1U)
-			delete (lak::opengl::texture *)(uintptr_t)tex->GetTexID();
 }
 
 ImTextureID ImplGLCreateTexture(ImGui::ImplContext,
@@ -389,11 +385,6 @@ void ImplGLRender(ImGui::ImplContext context, ImDrawData *draw_data)
 	auto old_clip_origin = lak::opengl::get_enum(GL_CLIP_ORIGIN).UNWRAP();
 #	endif
 #endif
-
-	if (draw_data->Textures != nullptr)
-		for (ImTextureData *tex : *draw_data->Textures)
-			if (tex->Status != ImTextureStatus_OK)
-				ImGui::ImplUpdateTexture(context, tex);
 
 	lak::opengl::call_checked(glGenVertexArrays, 1, &gl_context->vertex_array)
 	  .UNWRAP();

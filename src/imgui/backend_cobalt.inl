@@ -193,11 +193,6 @@ void ImplShutdownCoContext(ImGui::ImplCoContext context)
 	context->program_node.reset();
 	context->sampler.reset();
 	context->clear_renderables();
-
-	for (ImTextureData *tex : ImGui::GetPlatformIO().Textures)
-		if (tex->RefCount == 1U)
-			delete (::cobalt::graphics::ITextureBuffer2D::unique_ptr *)(uintptr_t)
-			  tex->GetTexID();
 }
 
 ImTextureID ImplCoCreateTexture(ImGui::ImplContext context,
@@ -530,11 +525,6 @@ void ImplCoRender(ImGui::ImplContext ctx, ImDrawData *draw_data)
 
 	draw_data->ScaleClipRects(io.DisplayFramebufferScale);
 
-	if (draw_data->Textures != nullptr)
-		for (ImTextureData *tex : *draw_data->Textures)
-			if (tex->Status != ImTextureStatus_OK)
-				ImGui::ImplUpdateTexture(ctx, tex);
-
 	const auto viewport_matrix = [&]()
 	{
 		const float &W = draw_data->DisplaySize.x;
@@ -678,9 +668,7 @@ void ImplCoRender(ImGui::ImplContext ctx, ImDrawData *draw_data)
 
 					state.state_group_node->BindTextureWithCombinedSampler(
 					  context->fTexture,
-					  ((::cobalt::graphics::ITextureBuffer2D::unique_ptr *)(uintptr_t)
-					     cmd.GetTexID())
-					    ->get(),
+					  ImGui::ImplGetCobaltTexture(cmd.GetTexID()),
 					  context->sampler.get());
 
 					state.state_group_node->SetStateValue(

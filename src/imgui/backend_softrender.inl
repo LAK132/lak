@@ -175,9 +175,6 @@ void ImplShutdownSRContext(ImGui::ImplSRContext context)
 #endif
 
 	context->screen_texture.init(0, 0);
-
-	for (ImTextureData *tex : ImGui::GetPlatformIO().Textures)
-		if (tex->RefCount == 1U) ImGui_ImplSoftrender_DestroyTexture(tex);
 }
 
 ImTextureID ImplSRCreateTexture(ImGui::ImplContext,

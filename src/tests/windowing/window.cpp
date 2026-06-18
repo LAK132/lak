@@ -20,9 +20,9 @@ int softrender_window_compile_test()
 		DEBUG("create window");
 		lak::window w = lak::window::make(lak::software_settings{}).UNWRAP();
 
-		w.set_title(L"Test Window");
+		w.set_title(L"Test Window (Software)");
 		auto title = w.title();
-		ASSERT_EQUAL(title.c_str(), L"Test Window"_str);
+		ASSERT_EQUAL(title.c_str(), L"Test Window (Software)"_str);
 
 		ASSERT_EQUAL(w.graphics(), lak::graphics_mode::Software);
 
@@ -38,6 +38,8 @@ int softrender_window_compile_test()
 					default:                            break;
 				}
 			}
+
+			// :TODO: clear to {0.0f, 0.3125f, 0.312f, 1.0f}
 
 			w.swap();
 		}
@@ -70,9 +72,9 @@ int opengl_window_compile_test()
 		DEBUG("create window");
 		lak::window w = lak::window::make(lak::opengl_settings{}).UNWRAP();
 
-		w.set_title(L"Test Window");
+		w.set_title(L"Test Window (OpenGL)");
 		auto title = w.title();
-		ASSERT_EQUAL(title.c_str(), L"Test Window"_str);
+		ASSERT_EQUAL(title.c_str(), L"Test Window (OpenGL)"_str);
 
 		ASSERT_EQUAL(w.graphics(), lak::graphics_mode::OpenGL);
 
@@ -127,9 +129,9 @@ int cobalt_window_compile_test()
 		DEBUG("create window");
 		auto [w, r] = lak::window::make(lak::cobalt_settings{}).UNWRAP();
 
-		w.set_title(L"Test Window");
+		w.set_title(L"Test Window (Cobalt)");
 		auto title = w.title();
-		ASSERT_EQUAL(title.c_str(), L"Test Window"_str);
+		ASSERT_EQUAL(title.c_str(), L"Test Window (Cobalt)"_str);
 
 		ASSERT_EQUAL(w.graphics(), lak::graphics_mode::Cobalt);
 
