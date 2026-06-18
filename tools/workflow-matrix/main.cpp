@@ -111,8 +111,10 @@ int main()
 	  .setups =
 	    {
 	      "-Dlak_enable_tests=true "
-	      "-Dlak_enable_lmdb=true "
-	      "-Dlak_enable_libfive=true"s,
+	      // :TODO: "Compatibility with CMake < 3.5 has been removed from CMake."
+	      // "-Dlak_enable_libfive=true "
+	      "-Dlak_enable_lmdb=true"s,
+
 	      "-Dlak_enable_tests=true "
 	      "-Dlak_enable_windowing=true "
 	      "-Dlak_use_native_file_dialog=true "
@@ -155,12 +157,12 @@ int main()
 	    .os = {.runner = "ubuntu-24.04"s, .system = "ubuntu"s, .arch = "x86"s},
 	    .targets = common_targets,
 	  },
-	  {
-	    .os      = {.runner = "ubuntu-24.04-arm"s,
-	                .system = "ubuntu"s,
-	                .arch   = "arm64"s},
-	    .targets = common_targets,
-	  },
+	  // {
+	  //   .os      = {.runner = "ubuntu-24.04-arm"s,
+	  //               .system = "ubuntu"s,
+	  //               .arch   = "arm64"s},
+	  //   .targets = common_targets,
+	  // },
 
 	  {
 	    .os = {.runner = "macos-26-intel"s, .system = "macos"s, .arch = "x64"s},
