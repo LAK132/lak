@@ -88,6 +88,13 @@ foreach type, comps : compilers
 			language: ['c', 'cpp', 'objcpp'],
 			native: comps['native'])
 
+		if comps['cpp'].get_id() == 'emscripten'
+			add_project_link_arguments(
+				'-sMALLOC=emmalloc',
+				language: ['c', 'cpp'],
+				native: comps['native'])
+		endif
+
 		if comps['cpp'].get_id() == 'gcc'
 			if comps['cpp'].has_link_argument('-Wl,-lstdc++_libbacktrace')
 				# GCC <14

@@ -4,6 +4,8 @@
 #include "lak/array.hpp"
 #include "lak/system/compiler.hpp"
 
+#include "lak/format_traits.hpp"
+
 // https://sourceforge.net/p/predef/wiki/Architectures/
 
 namespace lak
@@ -15,10 +17,11 @@ namespace lak
 		x86_64  = 2,
 		ia64    = 3,
 		arm     = 4,
-		aarch64 = 5
+		aarch64 = 5,
+		wasm32  = 6,
+		wasm64  = 7,
 #ifdef LAK_ARCH
-		,
-		compiled = LAK_ARCH
+		compiled = LAK_ARCH,
 #endif
 	};
 
@@ -52,5 +55,27 @@ namespace lak
 	// Returns all 0s on non-(x86|x86_64|IA-64) architectures.
 	lak::array<unsigned int, 4> cpuid(unsigned int index);
 }
+
+template<typename CHAR>
+struct lak::format_traits<lak::architecture, CHAR>
+{
+	static lak::string<CHAR> to_string(const lak::architecture &arch)
+	{
+		switch (arch)
+		{
+			case lak::architecture::unknown:
+				return lak::strconv<CHAR>("unknown"_view);
+			case lak::architecture::x86:    return lak::strconv<CHAR>("x86"_view);
+			case lak::architecture::x86_64: return lak::strconv<CHAR>("x86_64"_view);
+			case lak::architecture::ia64:   return lak::strconv<CHAR>("ia64"_view);
+			case lak::architecture::arm:    return lak::strconv<CHAR>("arm"_view);
+			case lak::architecture::aarch64:
+				return lak::strconv<CHAR>("aarch64"_view);
+			case lak::architecture::wasm32: return lak::strconv<CHAR>("wasm32"_view);
+			case lak::architecture::wasm64: return lak::strconv<CHAR>("wasm64"_view);
+			default:                        BOUNDS_ASSERT_UNREACHABLE(); return {};
+		}
+	}
+};
 
 #endif

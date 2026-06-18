@@ -195,6 +195,20 @@ int main()
 	    .os = {.runner = "ubuntu-24.04"s, .system = "ubuntu"s, .arch = "x86"s},
 	    .targets = common_targets,
 	  },
+
+	  // --- wasm32 ---
+	  {
+	    .os      = {.runner = "ubuntu-24.04"s,
+	                .system = "ubuntu"s,
+	                .arch   = "wasm32"s},
+	    .targets = {{
+	      .setups = {"--cross-file=cross/emscripten.txt "
+	                 "-Dlak_enable_tests=true"s},
+	      .target = "lak_test"s,
+	      .run    = "node build/lak_test.js --help ;"
+	                "node build/lak_test.js --testall"s,
+	    }},
+	  },
 	};
 
 	std::cout << "matrix=[";
@@ -205,7 +219,7 @@ int main()
 		if (--i != 0) std::cout << ",";
 		std::cout << "";
 	}
-	std::cout << "]";
+	std::cout << "]\n";
 
 	return EXIT_SUCCESS;
 }

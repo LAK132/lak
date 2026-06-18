@@ -8,6 +8,10 @@
 
 #include <cstdlib>
 
+#ifdef LAK_COMPILER_EMSCRIPTEN
+#	include "emscripten/emmalloc.h"
+#endif
+
 size_t lak::align_ptr_offset(byte_t *ptr, size_t align)
 {
 	return lak::align_ptr_offset(reinterpret_cast<uintptr_t>(ptr), align);
@@ -45,8 +49,10 @@ void lak::memmove(lak::span<byte_t> dst, lak::span<const byte_t> src)
 
 void *lak::aligned_alloc(size_t alignment, size_t size)
 {
-#ifdef LAK_COMPILER_MSVC
+#if defined(LAK_COMPILER_MSVC)
 	return _aligned_malloc(size, alignment);
+#elif defined(LAK_COMPILER_EMSCRIPTEN)
+	return emmalloc_memalign(alignment, size);
 #else
 	return std::aligned_alloc(alignment, size);
 #endif
@@ -54,8 +60,10 @@ void *lak::aligned_alloc(size_t alignment, size_t size)
 
 void lak::aligned_free(void *p)
 {
-#ifdef LAK_COMPILER_MSVC
-	return _aligned_free(p);
+#if defined(LAK_COMPILER_MSVC)
+	_aligned_free(p);
+#elif defined(LAK_COMPILER_EMSCRIPTEN)
+	emmalloc_free(p);
 #else
 	std::free(p);
 #endif

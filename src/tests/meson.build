@@ -1,5 +1,5 @@
 laktest_sources = []
-laktest_dependencies = [lakcore_dep]
+laktest_dependencies = [lakcore_dep, dependency('threads')]
 
 subdir('dsl')
 
@@ -16,6 +16,7 @@ laktestcore = static_library(
 		'file'/'obj.cpp',
 		'file'/'pnm.cpp',
 		'file'/'tiff.cpp',
+		'system'/'architecture.cpp',
 		'algorithm.cpp',
 		'alloc.cpp',
 		'array.cpp',

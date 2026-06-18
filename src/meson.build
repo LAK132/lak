@@ -33,7 +33,7 @@ foreach type, comps : compilers
 			'unicode.cpp',
 		],
 		include_directories: lakcore_inc,
-		dependencies: dependency('threads'),
+		dependencies: dependency('threads', native: comps['native']),
 		link_with: lakcore_system[type],
 		link_depends: lak_natvis,
 		native: comps['native'],

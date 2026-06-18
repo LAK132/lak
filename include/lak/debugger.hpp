@@ -18,7 +18,7 @@ namespace lak
 	struct debugger_t
 	{
 #ifndef LAK_DEBUG_STREAM_CHAR
-#	ifdef LAK_OS_APPLE
+#	if defined(LAK_OS_APPLE) || defined(LAK_OS_EMSCRIPTEN)
 #		define LAK_DEBUG_STREAM_CHAR char
 #	else
 #		define LAK_DEBUG_STREAM_CHAR char8_t

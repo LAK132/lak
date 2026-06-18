@@ -49,6 +49,10 @@ jobs:
         with:
           version: latest
           platform: ${{ matrix.os.arch }}
+      - if: matrix.os.system == 'ubuntu' && startsWith(matrix.os.arch, 'wasm')
+        run: |
+          sudo apt install emscripten
+          emcc --version
       - if: matrix.os.system == 'ubuntu'
         run: |
           sudo python3 -m pip install --upgrade setuptools

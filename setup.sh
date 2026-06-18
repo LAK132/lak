@@ -1,6 +1,23 @@
 #! /bin/sh
 rm -rf build
 case $1 in
+  emscripten)
+    shift
+    cross_args=--cross-file=cross/emscripten.txt
+  ;;
+
+  clang)
+    export CC=clang
+    export CXX=clang++
+    cross_args=
+  ;;
+
+  gcc)
+    export CC=gcc
+    export CXX=g++
+    cross_args=
+  ;;
+
   *)
     cross_args=
   ;;
@@ -8,22 +25,26 @@ esac
 case $1 in
   clang)
     shift
-    CC=clang CXX=clang++ CC_FOR_BUILD=clang CXX_FOR_BUILD=clang++ meson setup build $cross_args $@ || exit 1
+    export CC_FOR_BUILD=clang
+    export CXX_FOR_BUILD=clang++
+    meson setup $cross_args build $@ || exit 1
   ;;
 
   gcc)
     shift
-    CC=gcc CXX=g++ CC_FOR_BUILD=gcc CXX_FOR_BUILD=g++ meson setup build $cross_args $@ || exit 1
+    export CC_FOR_BUILD=gcc
+    export CXX_FOR_BUILD=g++
+    meson setup $cross_args build $@ || exit 1
   ;;
 
   msvc)
     shift
-    meson setup build --vsenv $cross_args $@ || exit 1
+    meson setup $cross_args build --vsenv $@ || exit 1
   ;;
 
   auto)
     shift
-    meson setup build $cross_args $@ || exit 1
+    meson setup $cross_args build $@ || exit 1
   ;;
 
   *)

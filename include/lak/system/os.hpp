@@ -26,4 +26,8 @@
 #	define LAK_OS_LINUX
 #endif
 
+#if defined(__EMSCRIPTEN__)
+#	define LAK_OS_EMSCRIPTEN
+#endif
+
 #endif

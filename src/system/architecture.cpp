@@ -10,6 +10,7 @@
 #		error Compiler not supported
 #	endif
 #elif defined(LAK_ARCH_ARM) || defined(LAK_ARCH_ARM64)
+#elif defined(LAK_ARCH_WASM32) || defined(LAK_ARCH_WASM64)
 #else
 #	error Arch not supported
 #endif

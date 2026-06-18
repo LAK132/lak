@@ -8,6 +8,8 @@ mkShell {
 		pkg-config
 		meson
 		sdl2-compat
+		# emscripten
+		# nodejs
 	] ++ lib.optionals stdenv.hostPlatform.isLinux [
 		libglvnd
 		libgbm

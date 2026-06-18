@@ -8,10 +8,12 @@
 
 #include <functional>
 
-#if defined(LAK_ARCH_X86_64) || defined(LAK_ARCH_ARM64)
+#if defined(LAK_ARCH_X86_64) || defined(LAK_ARCH_ARM64) ||                    \
+  defined(LAK_ARCH_WASM32)
 using __lakc_uptrdiff = unsigned long long;
 #	define LAKC_UPTRDIFF_MAX 0xFFFF'FFFF'FFFF'FFFFU
-#elif defined(LAK_ARCH_X86) || defined(LAK_ARCH_ARM)
+#elif defined(LAK_ARCH_X86) || defined(LAK_ARCH_ARM) ||                       \
+  defined(LAK_ARCH_WASM64)
 using __lakc_uptrdiff = uint32_t;
 #	define LAKC_UPTRDIFF_MAX 0xFFFF'FFFFU
 #else

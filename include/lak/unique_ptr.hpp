@@ -36,6 +36,12 @@ namespace lak
 		inline T *operator->() const { return _value; }
 
 		inline T *get() const { return _value; }
+
+		inline T *release()
+		{
+			_deleter = nullptr;
+			return lak::exchange(_value, nullptr);
+		}
 	};
 
 	template<typename T>
@@ -65,6 +71,12 @@ namespace lak
 		inline const lak::span<T> *operator->() const { return &_value; }
 
 		inline const lak::span<T> *get() const { return &_value; }
+
+		inline lak::span<T> release()
+		{
+			_deleter = nullptr;
+			return lak::exchange(_value, {});
+		}
 	};
 
 	template<typename T>

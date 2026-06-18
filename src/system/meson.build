@@ -14,6 +14,7 @@ foreach type, comps : compilers
 	)}
 endforeach
 
+subdir('emscripten')
 subdir('posix')
 subdir('linux')
 subdir('macos')
@@ -23,6 +24,7 @@ lakcore_system = {}
 foreach type, comps : compilers
 	lakcore_system += {type: [
 		lakcore_system_common[type],
+		lakcore_system_emscripten[type],
 		lakcore_system_posix[type],
 		lakcore_system_linux[type],
 		lakcore_system_macos[type],

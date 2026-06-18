@@ -132,6 +132,16 @@ static inline void lak_debug_break()
 #	define DLL_IMPORT
 #	define LAK_UNREACHABLE() __builtin_unreachable()
 #	define TYPE_NAME(X)      [&]() -> lak::astring { return {typeid(X).name()}; }()
+#	if MEMORY64 == 0
+#		define LAK_ARCH_WASM32
+#	elif MEMORY64 == 1
+#		define LAK_ARCH_WASM64
+#	elif MEMORY64 == 2
+// WASM64 for WASM32 (?)
+#		define LAK_ARCH_WASM64
+#	else
+#		warning Unknown WASM arch
+#	endif
 #elif defined(LAK_COMPILER_CLANG) || defined(LAK_COMPILER_GNUC)
 #	if defined(LAK_COMPILER_GNUC)
 #		pragma GCC diagnostic push
@@ -230,6 +240,12 @@ static inline void lak_debug_break()
 #endif
 #if defined(LAK_ARCH_ARM64)
 #	define LAK_ARCH aarch64
+#endif
+#if defined(LAK_ARCH_WASM32)
+#	define LAK_ARCH wasm32
+#endif
+#if defined(LAK_ARCH_WASM64)
+#	define LAK_ARCH wasm64
 #endif
 
 #endif
