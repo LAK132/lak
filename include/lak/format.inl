@@ -9,6 +9,7 @@
 #include "lak/string_view.hpp"
 
 #include <cmath>
+#include <stddef.h>
 #include <system_error>
 
 template<typename T, typename CHAR>
