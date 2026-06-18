@@ -333,11 +333,11 @@ void translate_event(const MSG &msg,
 				lak::codepoint_buffer_t<char8_t> buff;
 				auto span =
 				  lak::from_codepoint(buff, static_cast<char32_t>(msg.wParam));
-				*event = lak::event(lak::event_type::text,
-				                    window,
-				                    lak::move(platform_event),
-				                    lak::key_event{.text = lak::array<char8_t>(
-				                                     span.begin(), span.end())});
+				*event = lak::event(
+				  lak::event_type::text,
+				  window,
+				  lak::move(platform_event),
+				  lak::text_event{lak::array<char8_t>(span.begin(), span.end())});
 			}
 			else
 				*event = lak::event(
