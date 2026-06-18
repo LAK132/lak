@@ -1,9 +1,14 @@
 #! /bin/sh
 rm -rf build
 case $1 in
-  emscripten)
+  wasm32)
     shift
-    cross_args=--cross-file=cross/emscripten.txt
+    cross_args="--cross-file=cross/emscripten.txt --cross-file=cross/wasm32.txt"
+  ;;
+
+  wasm64)
+    shift
+    cross_args="--cross-file=cross/emscripten.txt --cross-file=cross/wasm64.txt"
   ;;
 
   clang)
@@ -55,6 +60,7 @@ case $1 in
     echo "./setup.sh msvc --buildtype release"
     echo "./setup.sh gcc --buildtype debug"
     echo "./setup.sh clang --buildtype debugoptimized"
+    echo "./setup.sh wasm32 gcc # cross compile to wasm32 host-machine, use gcc for build-machine binaries"
     exit 1
   ;;
 esac

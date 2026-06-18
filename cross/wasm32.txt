@@ -1,0 +1,10 @@
+[host_machine]
+cpu_family = 'wasm32'
+cpu = 'wasm32'
+endian = 'little'
+
+[built-in options]
+c_args = ['-pthread', '--target=wasm32']
+c_link_args = ['-pthread', '--target=wasm32', '-Wl,-mwasm32', '-sMALLOC=emmalloc']
+cpp_args = ['-pthread', '--target=wasm32']
+cpp_link_args = ['-pthread', '--target=wasm32', '-Wl,-mwasm32', '-sMALLOC=emmalloc']

@@ -203,6 +203,22 @@ int main()
 	                .arch   = "wasm32"s},
 	    .targets = {{
 	      .setups = {"--cross-file=cross/emscripten.txt "
+	                 "--cross-file=cross/wasm32.txt "
+	                 "-Dlak_enable_tests=true"s},
+	      .target = "lak_test"s,
+	      .run    = "node build/lak_test.js --help ;"
+	                "node build/lak_test.js --testall"s,
+	    }},
+	  },
+
+	  // --- wasm64 ---
+	  {
+	    .os      = {.runner = "ubuntu-24.04"s,
+	                .system = "ubuntu"s,
+	                .arch   = "wasm64"s},
+	    .targets = {{
+	      .setups = {"--cross-file=cross/emscripten.txt "
+	                 "--cross-file=cross/wasm64.txt "
 	                 "-Dlak_enable_tests=true"s},
 	      .target = "lak_test"s,
 	      .run    = "node build/lak_test.js --help ;"
