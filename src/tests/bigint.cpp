@@ -56,7 +56,7 @@ BEGIN_TEST(bigint)
 	ASSERT_EQUAL(lak::bigint(10U) / 2U, 5U);
 
 	ASSERT_EQUAL((lak::bigint(0xFFFF'FFFF) * 0xFFFF'FFFF),
-	             0xFFFF'FFFE'0000'0001);
+	             uintmax_t(0xFFFF'FFFE'0000'0001));
 
 	ASSERT_EQUAL(((lak::bigint(UINTMAX_MAX) * 2U) / 2U), UINTMAX_MAX);
 

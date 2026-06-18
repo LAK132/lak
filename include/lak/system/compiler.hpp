@@ -132,13 +132,10 @@ static inline void lak_debug_break()
 #	define DLL_IMPORT
 #	define LAK_UNREACHABLE() __builtin_unreachable()
 #	define TYPE_NAME(X)      [&]() -> lak::astring { return {typeid(X).name()}; }()
-#	if MEMORY64 == 0
+#	if defined(__wasm64__)
+#		define LAK_ARCH_WASM64
+#	elif defined(__wasm32__)
 #		define LAK_ARCH_WASM32
-#	elif MEMORY64 == 1
-#		define LAK_ARCH_WASM64
-#	elif MEMORY64 == 2
-// WASM64 for WASM32 (?)
-#		define LAK_ARCH_WASM64
 #	else
 #		warning Unknown WASM arch
 #	endif
