@@ -198,7 +198,7 @@ int main()
 
 	  // --- wasm32 ---
 	  {
-	    .os      = {.runner = "ubuntu-24.04"s,
+	    .os      = {.runner = "ubuntu-26.04"s,
 	                .system = "ubuntu"s,
 	                .arch   = "wasm32"s},
 	    .targets = {{
@@ -213,7 +213,7 @@ int main()
 
 	  // --- wasm64 ---
 	  {
-	    .os      = {.runner = "ubuntu-24.04"s,
+	    .os      = {.runner = "ubuntu-26.04"s,
 	                .system = "ubuntu"s,
 	                .arch   = "wasm64"s},
 	    .targets = {{
