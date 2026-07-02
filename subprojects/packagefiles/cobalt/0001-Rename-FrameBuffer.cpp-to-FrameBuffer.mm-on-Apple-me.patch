@@ -1,0 +1,72 @@
+From 24fc80f35ba4ea0bc99e91d4c162e023c97ba1b3 Mon Sep 17 00:00:00 2001
+From: LAK132 <lakridesagain@gmail.com>
+Date: Thu, 2 Jul 2026 19:43:28 +0930
+Subject: [PATCH] Rename *FrameBuffer.cpp to *FrameBuffer.mm on Apple (meson
+ fails to handle set_source_files_properties with LANGUAGE OBJCXX)
+
+---
+ Renderers/OpenGLRenderer/CMakeLists.txt | 9 ++++++---
+ Renderers/VulkanRenderer/CMakeLists.txt | 6 ++++--
+ 2 files changed, 10 insertions(+), 5 deletions(-)
+
+diff --git a/Renderers/OpenGLRenderer/CMakeLists.txt b/Renderers/OpenGLRenderer/CMakeLists.txt
+index 72a22dc..5a2a2f1 100644
+--- a/Renderers/OpenGLRenderer/CMakeLists.txt
++++ b/Renderers/OpenGLRenderer/CMakeLists.txt
+@@ -6,7 +6,6 @@ set(OpenGL3Renderer_SOURCES
+     "OpenGLDefaultState.cpp"
+     "OpenGLGraphicsDevice.cpp"
+     "OpenGLGraphicsDeviceEnumerator.cpp"
+-    "OpenGLFrameBuffer.cpp"
+     "OpenGLFrameBufferOutput.cpp"
+     "OpenGLRenderer.cpp"
+     "OpenGLStateGroupNode.cpp"
+@@ -86,7 +85,6 @@ set(OpenGL4Renderer_SOURCES
+     "OpenGL4RendererFactory.cpp"
+     "OpenGLDataArrayOutput.cpp"
+     "OpenGLDefaultState.cpp"
+-    "OpenGLFrameBuffer.cpp"
+     "OpenGLFrameBufferOutput.cpp"
+     "OpenGLGraphicsDevice.cpp"
+     "OpenGLGraphicsDeviceEnumerator.cpp"
+@@ -172,7 +170,12 @@ set(OpenGL4Renderer_HEADERS
+ 
+ # Override some files as objective C++ for Cocoa support on macos
+ if (APPLE)
+-    set_source_files_properties(OpenGLFrameBuffer.cpp PROPERTIES LANGUAGE OBJCXX)
++    file(RENAME "OpenGLFrameBuffer.cpp" "OpenGLFrameBuffer.mm")
++    set(OpenGL3Renderer_SOURCES ${OpenGL3Renderer_SOURCES} "OpenGLFrameBuffer.mm")
++    set(OpenGL4Renderer_SOURCES ${OpenGL4Renderer_SOURCES} "OpenGLFrameBuffer.mm")
++else()
++    set(OpenGL3Renderer_SOURCES ${OpenGL3Renderer_SOURCES} "OpenGLFrameBuffer.cpp")
++    set(OpenGL4Renderer_SOURCES ${OpenGL4Renderer_SOURCES} "OpenGLFrameBuffer.cpp")
+ endif()
+ 
+ # Define our project targets
+diff --git a/Renderers/VulkanRenderer/CMakeLists.txt b/Renderers/VulkanRenderer/CMakeLists.txt
+index d723116..8b9c436 100644
+--- a/Renderers/VulkanRenderer/CMakeLists.txt
++++ b/Renderers/VulkanRenderer/CMakeLists.txt
+@@ -3,7 +3,6 @@ set(VulkanRenderer_SOURCES
+     "BindingHelpers.cpp"
+     "VulkanDataArrayOutput.cpp"
+     "VulkanDefaultState.cpp"
+-    "VulkanFrameBuffer.cpp"
+     "VulkanFrameBufferOutput.cpp"
+     "VulkanGraphicsDevice.cpp"
+     "VulkanGraphicsDeviceEnumerator.cpp"
+@@ -94,7 +93,10 @@ set(VulkanRenderer_HEADERS
+ 
+ # Override some files as objective C++ for Cocoa support on macos
+ if (APPLE)
+-    set_source_files_properties(VulkanFrameBuffer.cpp PROPERTIES LANGUAGE OBJCXX)
++    file(RENAME "VulkanFrameBuffer.cpp" "VulkanFrameBuffer.mm")
++    set(VulkanRenderer_SOURCES ${VulkanRenderer_SOURCES} "VulkanFrameBuffer.mm")
++else()
++    set(VulkanRenderer_SOURCES ${VulkanRenderer_SOURCES} "VulkanFrameBuffer.cpp")
+ endif()
+ 
+ # Define our project targets
+-- 
+2.54.0
+
