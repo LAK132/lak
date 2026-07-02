@@ -15,4 +15,5 @@ executable(
 	dependencies: [
 		lak_dep,
 	],
+	install_rpath: get_option('prefix')/get_option('bindir'),
 )

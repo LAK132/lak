@@ -20,6 +20,8 @@ sdl2_opts.add_cmake_defines({
 	'SDL_DISABLE_INSTALL': 'ON',
 })
 
+sdl2_opts.set_install(false)
+
 if get_option('b_vscrt') == 'mt' or get_option('b_vscrt') == 'mtd' or get_option('b_vscrt') == 'static_from_buildtype'
 	sdl2_opts.add_cmake_defines({
 		'SDL_FORCE_STATIC_VCRT': 'ON',

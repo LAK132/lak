@@ -2,8 +2,26 @@
 
 #include "impl.hpp"
 
+#ifdef LAK_OS_APPLE
+#	include "lak/system/file.hpp"
+#	include <stdlib.h>
+#endif
+
 bool lak::platform_init()
 {
+#ifdef LAK_OS_APPLE
+#	ifdef VK_DRIVER_FILE
+	{
+		auto files = (lak::exe_path().parent_path()/VK_DRIVER_FILE).string();
+#		ifdef VK_DRIVER_PREFIX
+		files += ":" + (lak::fs::path(VK_DRIVER_PREFIX)/VK_DRIVER_FILE).string();
+#		endif
+		DEBUG_EXPR(files);
+		ASSERT_EQUAL(setenv("VK_DRIVER_FILES", files.c_str(), 1), 0);
+	}
+#	endif
+#endif
+
 	bool failed = false;
 	SDL_SetMainReady();
 	if (SDL_Init(SDL_INIT_VIDEO) != 0)

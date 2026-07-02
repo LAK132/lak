@@ -10,6 +10,7 @@ project(
 		'b_vscrt': 'static_from_buildtype',
 		'warning_level': '3',
 		'werror': false,
+		'prefix': 'install',
 	},
 )
 if host_machine.system() == 'darwin'

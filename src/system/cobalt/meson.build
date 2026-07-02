@@ -79,6 +79,9 @@ if lak_cobalt_enabled_renderers.contains('Direct3D12')
 endif
 if lak_cobalt_enabled_renderers.contains('Vulkan')
 	cobalt_opts.set_install(true, target: 'VulkanRenderer')
+	if host_machine.system() == 'darwin'
+		cobalt_opts.set_install(true, target: 'vulkan')
+	endif
 endif
 if lak_cobalt_enabled_renderers.contains('Metal')
 	cobalt_opts.set_install(true, target: 'MetalRenderer')
@@ -164,6 +167,14 @@ endif
 if lak_cobalt_enabled_renderers.contains('Vulkan')
 	_lakcobalt_srcs += 'vulkan.cpp'
 	_lakcobalt_deps += cobalt_subprj.dependency('VulkanRenderer')
+	if host_machine.system() == 'darwin'
+		vk_sdk = meson.global_build_root()/'subprojects'/'Cobalt'/'__CMake_build'/'_deps'/'vulkan-sdk-install'/'macOS'
+		install_data(vk_sdk/'lib'/'libMoltenVK.dylib', install_dir: 'lib')
+		install_data(vk_sdk/'share'/'vulkan'/'icd.d'/'MoltenVK_icd.json', install_dir: 'share'/'vulkan'/'icd.d')
+
+		_lakcobalt_compile_args += '-DVK_DRIVER_FILE="@0@"'.format('share'/'vulkan'/'icd.d'/'MoltenVK_icd.json')
+		_lakcobalt_compile_args += '-DVK_DRIVER_PREFIX="@0@"'.format(get_option('prefix'))
+	endif
 	_lakcobalt_compile_args += '-DLAK_ENABLE_COBALT_VK'
 endif
 
