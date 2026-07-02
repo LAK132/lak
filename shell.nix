@@ -8,6 +8,7 @@ mkShell {
 		pkg-config
 		meson
 		sdl2-compat
+		vulkan-loader
 		# emscripten
 		# nodejs
 	] ++ lib.optionals stdenv.hostPlatform.isLinux [
@@ -31,6 +32,7 @@ mkShell {
 	];
 
 	LD_LIBRARY_PATH = lib.makeLibraryPath ([
+		vulkan-loader
 	] ++ lib.optionals stdenv.hostPlatform.isLinux [
 		libxkbcommon
 		wayland
