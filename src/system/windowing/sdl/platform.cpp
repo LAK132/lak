@@ -16,7 +16,6 @@ bool lak::platform_init()
 #		ifdef VK_DRIVER_PREFIX
 		files += ":" + (lak::fs::path(VK_DRIVER_PREFIX) / VK_DRIVER_FILE).string();
 #		endif
-		DEBUG_EXPR(files);
 		ASSERT_EQUAL(setenv("VK_DRIVER_FILES", files.c_str(), 1), 0);
 	}
 #	endif
