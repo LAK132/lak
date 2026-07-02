@@ -55,7 +55,7 @@ int main()
 #	include "lak/system/cobalt/context.hpp"
 #	include "lak/system/cobalt/renderers.hpp"
 
-#	include <Logging/Logging.pkg>
+#	include <Cobalt/Logging/Logging.pkg>
 #endif
 
 #include <ostream>
@@ -110,8 +110,7 @@ namespace lak
 	struct cobalt_renderer_settings
 	{
 #ifdef LAK_ENABLE_COBALT
-		::cobalt::graphics::RendererInfo renderer_info = {};
-		::cobalt::graphics::IModuleHandle::unique_ptr module_handle;
+		::cobalt::graphics::RendererPlugin renderer_plugin = {};
 		::cobalt::graphics::IGraphicsDeviceEnumerator::unique_ptr
 		  device_enumerator                         = nullptr;
 		::cobalt::graphics::IGraphicsDevice *device = nullptr;

@@ -20,7 +20,7 @@
 #endif
 
 #ifdef LAK_ENABLE_COBALT
-#	include <RendererInterface/RendererInterface.pkg>
+#	include <Cobalt/RendererInterface/RendererInterface.pkg>
 #endif
 
 #ifdef LAK_RUN_WINDOWING_TESTS
@@ -204,7 +204,7 @@ int imgui_compile_test()
 #ifdef LAK_ENABLE_COBALT
 	{
 		auto [cw, cr] = lak::window::make(lak::cobalt_settings{}).UNWRAP();
-		DEBUG(cr.renderer_info.GetDisplayName());
+		DEBUG(cr.renderer_plugin.GetDisplayName());
 		do_window(lak::move(cw));
 	}
 #endif

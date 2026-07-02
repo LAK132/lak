@@ -15,7 +15,7 @@
 #endif
 
 #ifdef LAK_ENABLE_COBALT
-#	include <RendererInterface/RendererInterface.pkg>
+#	include <Cobalt/RendererInterface/RendererInterface.pkg>
 #endif
 
 namespace ImGui

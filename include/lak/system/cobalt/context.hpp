@@ -4,8 +4,8 @@
 #include "lak/array.hpp"
 #include "lak/format.hpp"
 
-#include <RendererInterface/RendererInterface.pkg>
-#include <RendererSupport/VendorName.h>
+#include <Cobalt/RendererInterface/RendererInterface.pkg>
+#include <Internal/RendererSupport/VendorName.h>
 
 namespace lak
 {
@@ -13,8 +13,8 @@ namespace lak
 	{
 		struct graphics_context
 		{
-			::cobalt::graphics::IRendererInfo::ApiFamily api_family;
-			::cobalt::graphics::IRendererInfo::ApiVersion api_version;
+			::cobalt::graphics::IRendererPlugin::ApiFamily api_family;
+			::cobalt::graphics::IRendererPlugin::ApiVersion api_version;
 			::cobalt::graphics::IGraphicsDevice::Vendor vendor;
 
 			::cobalt::graphics::IRenderer::unique_ptr renderer;
@@ -37,22 +37,22 @@ namespace lak
 }
 
 template<typename CHAR>
-struct lak::format_traits<::cobalt::graphics::IRendererInfo::ApiFamily, CHAR>
+struct lak::format_traits<::cobalt::graphics::IRendererPlugin::ApiFamily, CHAR>
 {
 	static lak::string<CHAR> to_string(
-	  ::cobalt::graphics::IRendererInfo::ApiFamily family)
+	  ::cobalt::graphics::IRendererPlugin::ApiFamily family)
 	{
 		switch (family)
 		{
-			case ::cobalt::graphics::IRendererInfo::ApiFamily::OpenGL:
+			case ::cobalt::graphics::IRendererPlugin::ApiFamily::OpenGL:
 				return lak::strconv<CHAR>("OpenGL"_view);
-			case ::cobalt::graphics::IRendererInfo::ApiFamily::OpenGLES:
+			case ::cobalt::graphics::IRendererPlugin::ApiFamily::OpenGLES:
 				return lak::strconv<CHAR>("OpenGLES"_view);
-			case ::cobalt::graphics::IRendererInfo::ApiFamily::Direct3D:
+			case ::cobalt::graphics::IRendererPlugin::ApiFamily::Direct3D:
 				return lak::strconv<CHAR>("Direct3D"_view);
-			case ::cobalt::graphics::IRendererInfo::ApiFamily::Vulkan:
+			case ::cobalt::graphics::IRendererPlugin::ApiFamily::Vulkan:
 				return lak::strconv<CHAR>("Vulkan"_view);
-			case ::cobalt::graphics::IRendererInfo::ApiFamily::Metal:
+			case ::cobalt::graphics::IRendererPlugin::ApiFamily::Metal:
 				return lak::strconv<CHAR>("Metal"_view);
 			default:
 				BOUNDS_ASSERT_UNREACHABLE(return lak::strconv<CHAR>("Unknown"_view));
@@ -61,10 +61,11 @@ struct lak::format_traits<::cobalt::graphics::IRendererInfo::ApiFamily, CHAR>
 };
 
 template<typename CHAR>
-struct lak::format_traits<::cobalt::graphics::IRendererInfo::ApiVersion, CHAR>
+struct lak::format_traits<::cobalt::graphics::IRendererPlugin::ApiVersion,
+                          CHAR>
 {
 	static lak::string<CHAR> to_string(
-	  ::cobalt::graphics::IRendererInfo::ApiVersion version)
+	  ::cobalt::graphics::IRendererPlugin::ApiVersion version)
 	{
 		return lak::fmt<CHAR, "{:d}.{:d}">(version.major, version.minor);
 	}

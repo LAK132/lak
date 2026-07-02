@@ -2,11 +2,11 @@
 
 #include "lak/system/compiler.hpp"
 
-extern "C" DLL_IMPORT bool GetVulkanRendererInfo(
-  ::cobalt::graphics::IRendererInfo &);
+extern "C" DLL_IMPORT bool GetVulkanRendererPlugin(
+  ::cobalt::graphics::IRendererPlugin &);
 
-lak::cobalt::renderer_info_func lak::cobalt::vk_get_renderer_info()
+lak::cobalt::renderer_plugin_func lak::cobalt::vk_get_renderer_plugin()
 {
-	return +[](unsigned int, ::cobalt::graphics::IRendererInfo &rendererInfo)
-	{ return GetVulkanRendererInfo(rendererInfo); };
+	return +[](unsigned int, ::cobalt::graphics::IRendererPlugin &rendererInfo)
+	{ return GetVulkanRendererPlugin(rendererInfo); };
 }

@@ -14,7 +14,7 @@
 
 #include <lak/format.hpp>
 
-#include <Logging/Logging.pkg>
+#include <Cobalt/Logging/Logging.pkg>
 
 #include <lak/basic_program.inl>
 
@@ -439,8 +439,8 @@ lak::weak_ptr<LAK_BASIC_PROGRAM(window_instance<hello_cobalt_window>)>
 void renderer_settings_info(const lak::cobalt_renderer_settings &settings)
 {
 	SCOPED_CHECKPOINT(lak::fmt<u8"Renderer {} [{}]">(
-	  settings.renderer_info.GetDisplayName().Get(),
-	  settings.renderer_info.GetName().Get()));
+	  settings.renderer_plugin.GetDisplayName().Get(),
+	  settings.renderer_plugin.GetName().Get()));
 
 	auto devices = settings.device_enumerator->GetAllDevices();
 	for (const auto &device : devices.Get())

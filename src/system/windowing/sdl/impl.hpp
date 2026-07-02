@@ -19,18 +19,18 @@
 #	include "lak/system/cobalt/math.hpp"
 
 #	ifdef LAK_OS_WINDOWS
-#		include <RendererInterface/WindowInfoWin32.h>
-#		include <RendererInterface/WindowSystemInfoWin32.h>
+#		include <Cobalt/RendererInterface/WindowInfoWin32.h>
+#		include <Cobalt/RendererInterface/WindowSystemInfoWin32.h>
 #	endif
 #	ifdef LAK_OS_LINUX
-#		include <RendererInterface/WindowInfoWayland.h>
-#		include <RendererInterface/WindowInfoXlib.h>
-#		include <RendererInterface/WindowSystemInfoWayland.h>
-#		include <RendererInterface/WindowSystemInfoXlib.h>
+#		include <Cobalt/RendererInterface/WindowInfoWayland.h>
+#		include <Cobalt/RendererInterface/WindowInfoXlib.h>
+#		include <Cobalt/RendererInterface/WindowSystemInfoWayland.h>
+#		include <Cobalt/RendererInterface/WindowSystemInfoXlib.h>
 #	endif
 #	ifdef LAK_OS_APPLE
-#		include <RendererInterface/WindowInfoAppKit.h>
-#		include <RendererInterface/WindowSystemInfoAppKit.h>
+#		include <Cobalt/RendererInterface/WindowInfoAppKit.h>
+#		include <Cobalt/RendererInterface/WindowSystemInfoAppKit.h>
 #	endif
 #endif
 

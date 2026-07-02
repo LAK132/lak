@@ -11,18 +11,21 @@ if get_option('optimization') == '0'
 endif
 
 cobalt_opts.add_cmake_defines({
-	# Cobalt
 	'COBALT_BUILD_TESTS': 'OFF',
 	'COBALT_BUILD_UTILITIES': 'OFF',
 	'COBALT_BUILD_EXAMPLES': 'OFF',
-	'COBALT_BUILD_VULKAN_VALIDATION_LAYERS': 'OFF',
 	'COBALT_OPENGL_USE_EGL': 'ON',
+	'COBALT_BUILD_VULKAN_VALIDATION_LAYERS': 'OFF',
 	'COBALT_USE_SDL3': 'OFF',
-	# 'COBALT_ARCH': '',
-	# 'COBALT_ARCH_SHORT': '',
+	'COBALT_USE_LOCAL_SDL3': 'ON',
+	'COBALT_RUN_MSVC_STATIC_ANALYSIS': 'OFF',
+	'COBALT_CLANG_FORMAT_ON_ALL': 'OFF',
+	'COBALT_CLANG_TIDY_ON_ALL': 'OFF',
+
 	'COBALT_EXTERNAL_ROOT': cobalt_source_root/'External',
 
-	'COBALT_INSTALL_PREFIX': get_option('prefix'),
+	'COBALT_INHERIT_SYSTEM_INSTALL_PATH': 'ON',
+	'CMAKE_INSTALL_PREFIX': get_option('prefix'),
 	'COBALT_SDK_BIN_DIR': get_option('prefix')/get_option('bindir'),
 	'COBALT_SDK_LIB_DIR': get_option('prefix')/get_option('libdir'),
 	'COBALT_SDK_INCLUDE_DIR': get_option('prefix')/get_option('includedir')/'Cobalt',

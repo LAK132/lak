@@ -3,7 +3,7 @@
 
 #include "lak/string_view.hpp"
 
-#include <RendererInterface/RendererInterface.pkg>
+#include <Cobalt/RendererInterface/RendererInterface.pkg>
 
 namespace lak
 {

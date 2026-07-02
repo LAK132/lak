@@ -2,11 +2,11 @@
 
 #include "lak/system/compiler.hpp"
 
-extern "C" DLL_IMPORT bool GetOpenGL3RendererInfo(
-  ::cobalt::graphics::IRendererInfo &);
+extern "C" DLL_IMPORT bool GetOpenGL3RendererPlugin(
+  ::cobalt::graphics::IRendererPlugin &);
 
-lak::cobalt::renderer_info_func lak::cobalt::ogl3_get_renderer_info()
+lak::cobalt::renderer_plugin_func lak::cobalt::ogl3_get_renderer_plugin()
 {
-	return +[](unsigned int, ::cobalt::graphics::IRendererInfo &rendererInfo)
-	{ return GetOpenGL3RendererInfo(rendererInfo); };
+	return +[](unsigned int, ::cobalt::graphics::IRendererPlugin &rendererInfo)
+	{ return GetOpenGL3RendererPlugin(rendererInfo); };
 }

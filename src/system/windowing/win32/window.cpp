@@ -302,10 +302,11 @@ lak::result<lak::window_handle *, lak::u8string> lak::create_window(
 	          fb->BindWindow(*window_info, s.depth_mode, s.colour_mode))
 	          .map_err([](auto &&) { return u8"Failed to bind window"_str; }));
 
-	context.platform_handle              = new lak::cobalt::graphics_context{};
-	context.platform_handle->api_family  = r.renderer_info.GetApiFamily();
-	context.platform_handle->api_version = r.renderer_info.GetTargetApiVersion();
-	context.platform_handle->vendor      = device->GetVendor();
+	context.platform_handle             = new lak::cobalt::graphics_context{};
+	context.platform_handle->api_family = r.renderer_plugin.GetApiFamily();
+	context.platform_handle->api_version =
+	  r.renderer_plugin.GetTargetApiVersion();
+	context.platform_handle->vendor       = device->GetVendor();
 	context.platform_handle->frame_buffer = lak::move(fb);
 	context.platform_handle->renderer     = lak::move(renderer);
 

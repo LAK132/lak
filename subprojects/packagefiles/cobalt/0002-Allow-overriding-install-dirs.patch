@@ -1,29 +1,30 @@
-From 49cc1f2de3345402330c5eadbc87eda7d5514f2f Mon Sep 17 00:00:00 2001
+From 61060324f322b656cc83d5a91823ecec8ae44c81 Mon Sep 17 00:00:00 2001
 From: LAK132 <lakridesagain@gmail.com>
-Date: Thu, 12 Feb 2026 23:11:16 +1030
-Subject: [PATCH 4/5] Allow overriding install dirs
+Date: Thu, 2 Jul 2026 18:08:58 +0930
+Subject: [PATCH 2/2] Allow overriding install dirs
 
 ---
  CMakeLists.txt | 6 +++---
  1 file changed, 3 insertions(+), 3 deletions(-)
 
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index 137c785..bc746f9 100644
+index 174550d..e4d2a85 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
-@@ -66,9 +66,9 @@ message(STATUS "Detected target arch = ${COBALT_ARCH},${COBALT_ARCH_SHORT}")
- set(COBALT_SCRIPTS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/Scripts")
+@@ -78,10 +78,10 @@ set(COBALT_ASSETS_DIR  "${PROJECT_SOURCE_DIR}/Assets")
+ set(COBALT_SCRIPTS_DIR "${PROJECT_SOURCE_DIR}/Scripts")
  set(COBALT_OUTPUT_ROOT "${CMAKE_INSTALL_PREFIX}")
  set(COBALT_SDK_ROOT    "${COBALT_OUTPUT_ROOT}/SDK_$<CONFIG>")
 -set(COBALT_SDK_BIN_DIR "${COBALT_SDK_ROOT}/Bin/${COBALT_ARCH}")
 -set(COBALT_SDK_LIB_DIR "${COBALT_SDK_ROOT}/Lib/${COBALT_ARCH}")
--set(COBALT_SDK_INCLUDE_DIR "${COBALT_SDK_ROOT}/Include/Cobalt")
 +set(COBALT_SDK_BIN_DIR "${COBALT_SDK_ROOT}/Bin/${COBALT_ARCH}" CACHE PATH "bin dir")
 +set(COBALT_SDK_LIB_DIR "${COBALT_SDK_ROOT}/Lib/${COBALT_ARCH}" CACHE PATH "lib dir")
+ set(COBALT_INTERNAL_INCLUDE_DIR "${PROJECT_SOURCE_DIR}/Libraries")
+-set(COBALT_SDK_INCLUDE_DIR "${COBALT_SDK_ROOT}/Include/Cobalt")
 +set(COBALT_SDK_INCLUDE_DIR "${COBALT_SDK_ROOT}/Include/Cobalt" CACHE PATH "include dir")
- include(FileHelperFunctions)
- 
- # Define a helper variable to give us a platform-independent shell script extension variable
+ set(COBALT_PROJECT_LICENSE_FILE "${PROJECT_SOURCE_DIR}/LICENSE.txt")
+ set(COBALT_THIRD_PARTY_LICENSES_FILE "${PROJECT_SOURCE_DIR}/THIRD_PARTY_LICENSES.md")
+ set(COBALT_VERSION_YAML_FILE "${PROJECT_SOURCE_DIR}/VersionInfo/version.yml")
 -- 
-2.43.0
+2.54.0
 

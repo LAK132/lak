@@ -110,17 +110,17 @@ namespace
 	namespace local
 	{
 		lak::result<lak::cobalt_renderer_settings> cobalt_try_renderer(
-		  lak::cobalt::renderer_info_func info,
+		  lak::cobalt::renderer_plugin_func info,
 		  ::cobalt::logging::ILogger::unique_ptr log,
 		  lak::cobalt_renderer_settings::feature_set_t &&required_features)
 		{
 			lak::cobalt_renderer_settings result;
 
-			info(0, result.renderer_info);
+			info(0, result.renderer_plugin);
 
 			result.device_enumerator =
-			  result.renderer_info.CreateGraphicsDeviceEnumerator(
-			    log->CloneLogger(), result.module_handle);
+			  result.renderer_plugin.CreateGraphicsDeviceEnumerator(
+			    log->CloneLogger());
 			RES_TRY(
 			  lak::cobalt::as_result(result.device_enumerator->EnumerateDevices()));
 
@@ -148,7 +148,7 @@ lak::result<lak::cobalt_renderer_settings> lak::cobalt_renderer_settings::
   preferred_ogl3(feature_set_t &&required_features)
 {
 	return local::cobalt_try_renderer(
-	  lak::cobalt::ogl3_get_renderer_info(),
+	  lak::cobalt::ogl3_get_renderer_plugin(),
 	  lak::cobalt::log_manager.GetLogger("OpenGL3"),
 	  lak::move(required_features));
 }
@@ -159,7 +159,7 @@ lak::result<lak::cobalt_renderer_settings> lak::cobalt_renderer_settings::
   preferred_ogl4(feature_set_t &&required_features)
 {
 	return local::cobalt_try_renderer(
-	  lak::cobalt::ogl4_get_renderer_info(),
+	  lak::cobalt::ogl4_get_renderer_plugin(),
 	  lak::cobalt::log_manager.GetLogger("OpenGL4"),
 	  lak::move(required_features));
 }
@@ -170,7 +170,7 @@ lak::result<lak::cobalt_renderer_settings> lak::cobalt_renderer_settings::
   preferred_d3d11(feature_set_t &&required_features)
 {
 	return local::cobalt_try_renderer(
-	  lak::cobalt::d3d11_get_renderer_info(),
+	  lak::cobalt::d3d11_get_renderer_plugin(),
 	  lak::cobalt::log_manager.GetLogger("D3D11"),
 	  lak::move(required_features));
 }
@@ -181,7 +181,7 @@ lak::result<lak::cobalt_renderer_settings> lak::cobalt_renderer_settings::
   preferred_d3d12(feature_set_t &&required_features)
 {
 	return local::cobalt_try_renderer(
-	  lak::cobalt::d3d12_get_renderer_info(),
+	  lak::cobalt::d3d12_get_renderer_plugin(),
 	  lak::cobalt::log_manager.GetLogger("D3D12"),
 	  lak::move(required_features));
 }
@@ -192,7 +192,7 @@ lak::result<lak::cobalt_renderer_settings>
 lak::cobalt_renderer_settings::preferred_vk(feature_set_t &&required_features)
 {
 	return local::cobalt_try_renderer(
-	  lak::cobalt::vk_get_renderer_info(),
+	  lak::cobalt::vk_get_renderer_plugin(),
 	  lak::cobalt::log_manager.GetLogger("Vulkan"),
 	  lak::move(required_features));
 }

@@ -3,7 +3,7 @@
 
 #include "lak/result.hpp"
 
-#include <RendererInterface/SuccessToken.h>
+#include <Cobalt/RendererInterface/SuccessToken.h>
 
 namespace lak
 {

@@ -10,8 +10,8 @@
 #	include "lak/system/cobalt/result.hpp"
 #	include "lak/system/cobalt/math.hpp"
 
-#	include <RendererInterface/WindowSystemInfoWin32.h>
-#	include <RendererInterface/WindowInfoWin32.h>
+#	include <Cobalt/RendererInterface/WindowSystemInfoWin32.h>
+#	include <Cobalt/RendererInterface/WindowInfoWin32.h>
 #endif
 
 namespace lak
