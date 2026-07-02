@@ -7,4 +7,4 @@
 
 uint64_t lak::performance_frequency() { return 1'000U; }
 
-uint64_t lak::performance_counter() { uint64_t(emscripten_get_now()); }
+uint64_t lak::performance_counter() { return uint64_t(emscripten_get_now()); }
