@@ -1,4 +1,4 @@
-From 24fc80f35ba4ea0bc99e91d4c162e023c97ba1b3 Mon Sep 17 00:00:00 2001
+From 08caa03fa303614da92937e3173bf579d6ad0514 Mon Sep 17 00:00:00 2001
 From: LAK132 <lakridesagain@gmail.com>
 Date: Thu, 2 Jul 2026 19:43:28 +0930
 Subject: [PATCH] Rename *FrameBuffer.cpp to *FrameBuffer.mm on Apple (meson
@@ -10,7 +10,7 @@ Subject: [PATCH] Rename *FrameBuffer.cpp to *FrameBuffer.mm on Apple (meson
  2 files changed, 10 insertions(+), 5 deletions(-)
 
 diff --git a/Renderers/OpenGLRenderer/CMakeLists.txt b/Renderers/OpenGLRenderer/CMakeLists.txt
-index 72a22dc..5a2a2f1 100644
+index 72a22dc..1ecfff7 100644
 --- a/Renderers/OpenGLRenderer/CMakeLists.txt
 +++ b/Renderers/OpenGLRenderer/CMakeLists.txt
 @@ -6,7 +6,6 @@ set(OpenGL3Renderer_SOURCES
@@ -34,7 +34,7 @@ index 72a22dc..5a2a2f1 100644
  # Override some files as objective C++ for Cocoa support on macos
  if (APPLE)
 -    set_source_files_properties(OpenGLFrameBuffer.cpp PROPERTIES LANGUAGE OBJCXX)
-+    file(RENAME "OpenGLFrameBuffer.cpp" "OpenGLFrameBuffer.mm")
++    file(COPY_FILE "OpenGLFrameBuffer.cpp" "OpenGLFrameBuffer.mm" ONLY_IF_DIFFERENT)
 +    set(OpenGL3Renderer_SOURCES ${OpenGL3Renderer_SOURCES} "OpenGLFrameBuffer.mm")
 +    set(OpenGL4Renderer_SOURCES ${OpenGL4Renderer_SOURCES} "OpenGLFrameBuffer.mm")
 +else()
@@ -44,7 +44,7 @@ index 72a22dc..5a2a2f1 100644
  
  # Define our project targets
 diff --git a/Renderers/VulkanRenderer/CMakeLists.txt b/Renderers/VulkanRenderer/CMakeLists.txt
-index d723116..8b9c436 100644
+index d723116..2c17138 100644
 --- a/Renderers/VulkanRenderer/CMakeLists.txt
 +++ b/Renderers/VulkanRenderer/CMakeLists.txt
 @@ -3,7 +3,6 @@ set(VulkanRenderer_SOURCES
@@ -60,7 +60,7 @@ index d723116..8b9c436 100644
  # Override some files as objective C++ for Cocoa support on macos
  if (APPLE)
 -    set_source_files_properties(VulkanFrameBuffer.cpp PROPERTIES LANGUAGE OBJCXX)
-+    file(RENAME "VulkanFrameBuffer.cpp" "VulkanFrameBuffer.mm")
++    file(COPY_FILE "VulkanFrameBuffer.cpp" "VulkanFrameBuffer.mm" ONLY_IF_DIFFERENT)
 +    set(VulkanRenderer_SOURCES ${VulkanRenderer_SOURCES} "VulkanFrameBuffer.mm")
 +else()
 +    set(VulkanRenderer_SOURCES ${VulkanRenderer_SOURCES} "VulkanFrameBuffer.cpp")
@@ -68,5 +68,5 @@ index d723116..8b9c436 100644
  
  # Define our project targets
 -- 
-2.54.0
+2.39.5 (Apple Git-154)
 

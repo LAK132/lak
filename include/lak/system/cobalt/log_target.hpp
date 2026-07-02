@@ -10,7 +10,7 @@ namespace lak
 {
 	namespace cobalt
 	{
-		struct log_target : ::cobalt::logging::ILogTarget
+		struct log_target final : ::cobalt::logging::ILogTarget
 		{
 			using unique_ptr =
 			  std::unique_ptr<log_target, ::cobalt::logging::ILogTarget::Deleter>;
