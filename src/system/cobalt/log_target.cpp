@@ -2,6 +2,7 @@
 
 #include "lak/span.hpp"
 #include "lak/string_view.hpp"
+#include "lak/unique_ptr.hpp"
 
 #include <version>
 #ifdef __cpp_lib_stacktrace
@@ -94,12 +95,13 @@ void lak::cobalt::log_target::LogMessage(
 	}
 }
 
-cobalt::logging::LogManager lak::cobalt::log_manager =
-  []() -> ::cobalt::logging::LogManager
+lak::unique_ref<cobalt::logging::LogManager> lak::cobalt::log_manager =
+  []() -> lak::unique_ref<::cobalt::logging::LogManager>
 {
-	::cobalt::logging::LogManager result;
+	auto result =
+	  lak::unique_ref<::cobalt::logging::LogManager>::make().unwrap();
 	auto log_target = lak::cobalt::log_target::create();
 	log_target->set_external(&lak::debugger);
-	result.AddLogTarget(lak::move(log_target));
+	result->AddLogTarget(lak::move(log_target));
 	return result;
 }();

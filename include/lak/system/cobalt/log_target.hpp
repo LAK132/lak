@@ -2,6 +2,7 @@
 #define LAK_SYSTEM_COBALT_LOG_TARGET_HPP
 
 #include "lak/debug.hpp"
+#include "lak/unique_ptr.hpp"
 
 #include <Cobalt/Logging/Logging.pkg>
 
@@ -38,7 +39,7 @@ namespace lak
 			                        size_t message_length) override;
 		};
 
-		extern ::cobalt::logging::LogManager log_manager;
+		extern lak::unique_ref<::cobalt::logging::LogManager> log_manager;
 	}
 }
 

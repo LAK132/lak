@@ -149,7 +149,7 @@ lak::result<lak::cobalt_renderer_settings> lak::cobalt_renderer_settings::
 {
 	return local::cobalt_try_renderer(
 	  lak::cobalt::ogl3_get_renderer_plugin(),
-	  lak::cobalt::log_manager.GetLogger("OpenGL3"),
+	  lak::cobalt::log_manager->GetLogger("OpenGL3"),
 	  lak::move(required_features));
 }
 #	endif
@@ -160,7 +160,7 @@ lak::result<lak::cobalt_renderer_settings> lak::cobalt_renderer_settings::
 {
 	return local::cobalt_try_renderer(
 	  lak::cobalt::ogl4_get_renderer_plugin(),
-	  lak::cobalt::log_manager.GetLogger("OpenGL4"),
+	  lak::cobalt::log_manager->GetLogger("OpenGL4"),
 	  lak::move(required_features));
 }
 #	endif
@@ -171,7 +171,7 @@ lak::result<lak::cobalt_renderer_settings> lak::cobalt_renderer_settings::
 {
 	return local::cobalt_try_renderer(
 	  lak::cobalt::d3d11_get_renderer_plugin(),
-	  lak::cobalt::log_manager.GetLogger("D3D11"),
+	  lak::cobalt::log_manager->GetLogger("D3D11"),
 	  lak::move(required_features));
 }
 #	endif
@@ -182,7 +182,7 @@ lak::result<lak::cobalt_renderer_settings> lak::cobalt_renderer_settings::
 {
 	return local::cobalt_try_renderer(
 	  lak::cobalt::d3d12_get_renderer_plugin(),
-	  lak::cobalt::log_manager.GetLogger("D3D12"),
+	  lak::cobalt::log_manager->GetLogger("D3D12"),
 	  lak::move(required_features));
 }
 #	endif
@@ -193,7 +193,7 @@ lak::cobalt_renderer_settings::preferred_vk(feature_set_t &&required_features)
 {
 	return local::cobalt_try_renderer(
 	  lak::cobalt::vk_get_renderer_plugin(),
-	  lak::cobalt::log_manager.GetLogger("Vulkan"),
+	  lak::cobalt::log_manager->GetLogger("Vulkan"),
 	  lak::move(required_features));
 }
 #	endif

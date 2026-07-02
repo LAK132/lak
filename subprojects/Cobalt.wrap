@@ -2,4 +2,4 @@
 url = https://github.com/CobaltRenderer/Cobalt
 revision = c1be8acb175d360d59b5568ab165f564c14a24e6
 depth = 1
-diff_files = cobalt/0001-Fix-invalid-linker-argument-in-Vulkan-Loader.patch, cobalt/0002-Allow-overriding-install-dirs.patch, cobalt/0001-Make-LogManager-move-constructible.patch, cobalt/0001-Rename-FrameBuffer.cpp-to-FrameBuffer.mm-on-Apple-me.patch
+diff_files = cobalt/0001-Fix-invalid-linker-argument-in-Vulkan-Loader.patch, cobalt/0002-Allow-overriding-install-dirs.patch, cobalt/0001-Rename-FrameBuffer.cpp-to-FrameBuffer.mm-on-Apple-me.patch
