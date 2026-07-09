@@ -5,7 +5,7 @@
 lak::fs::path lak::exe_path()
 {
 	lak::array<char> path;
-	uint32_t size;
+	uint32_t size = 0U;
 	_NSGetExecutablePath(path.data(), &size);
 	path.resize(size);
 	if (_NSGetExecutablePath(path.data(), &size) == 0)
