@@ -1,0 +1,25 @@
+From 6fca8d4770c5c232f7a9575642511ee5e4058824 Mon Sep 17 00:00:00 2001
+From: LAK132 <lakridesagain@gmail.com>
+Date: Fri, 10 Jul 2026 00:29:40 +0930
+Subject: [PATCH] Forward declare stbhw__process
+
+---
+ stb_herringbone_wang_tile.h | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/stb_herringbone_wang_tile.h b/stb_herringbone_wang_tile.h
+index 5517941..92c238b 100644
+--- a/stb_herringbone_wang_tile.h
++++ b/stb_herringbone_wang_tile.h
+@@ -366,6 +366,8 @@ STBHW_EXTERN const char *stbhw_get_last_error(void)
+ //  need to try to do more sophisticated parsing of edge color
+ //  markup or something.
+ 
++struct stbhw__process;
++
+ typedef void stbhw__process_rect(struct stbhw__process *p, int xpos, int ypos,
+                                  int a, int b, int c, int d, int e, int f);
+ 
+-- 
+2.54.0
+

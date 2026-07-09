@@ -3,6 +3,7 @@ url = https://github.com/nothings/stb
 revision = f1c79c02822848a9bed4315b12c8c8f3761e1296
 depth = 1
 patch_directory = stb
+diff_files = 0001-Forward-declare-stbhw__process.patch
 
 [provide]
 dependency_names = stb_c_lexer, stb_c_lexer-0.12, stb_divide, stb_divide-0.94, stb_dxt, stb_dxt-1.12, stb_easy_font, stb_easy_font-1.1, stb_herringbone_wang_tile, stb_herringbone_wang_tile-0.7, stb_hexwave, stb_hexwave-0.5, stb_image_resize, stb_image_resize-2.17, stb_image_resize, stb_image_resize-0.97, stb_image_write, stb_image_write-1.16, stb_image, stb_image-2.30, stb_include, stb_include-0.02, stb_perlin, stb_perlin-0.5, stb_rect_pack, stb_rect_pack-1.01, stb_sprintf, stb_sprintf-1.10, stb_truetype, stb_truetype-1.26, stb_vorbis, stb_vorbis-1.22
