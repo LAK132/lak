@@ -558,5 +558,7 @@ int LAK_BASIC_PROGRAM_MAIN(int argc, char **argv)
 
 	LAK_BASIC_PROGRAM(window_instances_bank).clear();
 
+	LAK_BASIC_PROGRAM(window_cobalt_renderer_settings).reset();
+
 	return LAK_BASIC_PROGRAM(program_quit)();
 }
