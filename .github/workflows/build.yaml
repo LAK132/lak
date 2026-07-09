@@ -33,12 +33,10 @@ jobs:
         with:
           python-version: '3.11'
 
-      - if: matrix.os.system == 'windows' && matrix.os.arch == 'x86'
-        uses: ilammy/msvc-dev-cmd@v1
+      - if: matrix.os.system == 'windows'
+        uses: TheMrMilchmann/setup-msvc-dev@v4
         with:
           arch: ${{ matrix.os.arch }}
-      - if: matrix.os.system == 'windows' && matrix.os.arch != 'x86'
-        uses: ilammy/msvc-dev-cmd@v1
       - if: matrix.os.system == 'windows'
         run: |
           python3 -m pip install --upgrade pip setuptools wheel
