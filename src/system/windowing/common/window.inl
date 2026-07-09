@@ -272,26 +272,23 @@ lak::result<lak::monostate> lak::cobalt_append_render_pass(
 	return lak::ok_t{};
 }
 
-#	ifdef LAK_OS_APPLE
-#		define LAK_COMPUTE_PASSES compute_passes
-#	else
-#		define LAK_COMPUTE_PASSES render_passes
-#	endif
-
 ::cobalt::graphics::IRenderPassNode *lak::cobalt_create_compute_pass(
   const lak::cobalt_context &c)
 {
+	auto &passes = c.platform_handle->api_family ==
+	                   ::cobalt::graphics::IRendererPlugin::ApiFamily::Vulkan
+	                 ? c.platform_handle->compute_passes
+	                 : c.platform_handle->render_passes;
 	c.platform_handle->owned_render_passes.reserve(
 	  c.platform_handle->owned_render_passes.size() + 1U);
-	c.platform_handle->LAK_COMPUTE_PASSES.reserve(
-	  c.platform_handle->LAK_COMPUTE_PASSES.size() + 1U);
+	passes.reserve(passes.size() + 1U);
 
 	auto p = c.platform_handle->renderer->CreateRenderPassNode();
 	p->BindFrameBuffer(c.platform_handle->frame_buffer.get());
 
 	auto res =
 	  c.platform_handle->owned_render_passes.push_back(lak::move(p)).get();
-	c.platform_handle->LAK_COMPUTE_PASSES.push_back(res);
+	passes.push_back(res);
 
 	return res;
 }
@@ -305,23 +302,31 @@ lak::cobalt_create_compute_pass(const lak::window_handle *w)
 }
 
 void lak::cobalt_append_compute_pass(const lak::cobalt_context &c,
-                                    ::cobalt::graphics::IRenderPassNode *pass)
+                                     ::cobalt::graphics::IRenderPassNode *pass)
 {
-	c.platform_handle->LAK_COMPUTE_PASSES.push_back(pass);
+	auto &passes = c.platform_handle->api_family ==
+	                   ::cobalt::graphics::IRendererPlugin::ApiFamily::Vulkan
+	                 ? c.platform_handle->compute_passes
+	                 : c.platform_handle->render_passes;
+	passes.push_back(pass);
 }
 
 void lak::cobalt_append_compute_pass(
   const lak::cobalt_context &c,
   ::cobalt::graphics::IRenderPassNode::unique_ptr &&pass)
 {
+	auto &passes = c.platform_handle->api_family ==
+	                   ::cobalt::graphics::IRendererPlugin::ApiFamily::Vulkan
+	                 ? c.platform_handle->compute_passes
+	                 : c.platform_handle->render_passes;
+
 	c.platform_handle->owned_render_passes.reserve(
 	  c.platform_handle->owned_render_passes.size() + 1U);
-	c.platform_handle->LAK_COMPUTE_PASSES.reserve(
-	  c.platform_handle->LAK_COMPUTE_PASSES.size() + 1U);
+	passes.reserve(passes.size() + 1U);
 
 	auto p =
 	  c.platform_handle->owned_render_passes.push_back(lak::move(pass)).get();
-	c.platform_handle->LAK_COMPUTE_PASSES.push_back(p);
+	passes.push_back(p);
 }
 
 #	undef LAK_COMPUTE_PASSES
