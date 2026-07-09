@@ -169,11 +169,17 @@ if lak_cobalt_enabled_renderers.contains('Vulkan')
 	_lakcobalt_deps += cobalt_subprj.dependency('VulkanRenderer')
 	if host_machine.system() == 'darwin'
 		vk_sdk = meson.global_build_root()/'subprojects'/'Cobalt'/'__CMake_build'/'_deps'/'vulkan-sdk-install'/'macOS'
-		install_data(vk_sdk/'lib'/'libMoltenVK.dylib', install_dir: 'lib')
-		install_data(vk_sdk/'share'/'vulkan'/'icd.d'/'MoltenVK_icd.json', install_dir: 'share'/'vulkan'/'icd.d')
+		_lakcobalt_compile_args += '-DLAK_VK_DRIVER_PREFIX="@0@"'.format(get_option('prefix'))
 
-		_lakcobalt_compile_args += '-DVK_DRIVER_FILE="@0@"'.format('share'/'vulkan'/'icd.d'/'MoltenVK_icd.json')
-		_lakcobalt_compile_args += '-DVK_DRIVER_PREFIX="@0@"'.format(get_option('prefix'))
+		mvk_prefix = 'share'/'vulkan'/'icd.d'
+		install_data(vk_sdk/'lib'/'libMoltenVK.dylib', install_dir: 'lib')
+		install_data(vk_sdk/mvk_prefix/'MoltenVK_icd.json', install_dir: mvk_prefix)
+		_lakcobalt_compile_args += '-DLAK_MOLTENVK_JSON="@0@"'.format(mvk_prefix/'MoltenVK_icd.json')
+
+		# vvl_prefix = 'share'/'vulkan'/'explicit_layer.d'
+		# install_data(vk_sdk/'lib'/'libVkLayer_khronos_validation.dylib', install_dir: 'lib')
+		# install_data(vk_sdk/vvl_prefix/'VkLayer_khronos_validation.json', install_dir: vvl_prefix)
+		# _lakcobalt_compile_args += '-DLAK_VK_VALIDATION_JSON="@0@"'.format(vvl_prefix/'VkLayer_khronos_validation.json')
 	endif
 	_lakcobalt_compile_args += '-DLAK_ENABLE_COBALT_VK'
 endif

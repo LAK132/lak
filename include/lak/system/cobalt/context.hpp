@@ -23,13 +23,19 @@ namespace lak
 			lak::array<::cobalt::graphics::IRenderPassNode::unique_ptr>
 			  owned_render_passes;
 			lak::array<::cobalt::graphics::IRenderPassNode *> render_passes;
+			lak::array<::cobalt::graphics::IRenderPassNode *> compute_passes;
 
 			inline ~graphics_context()
 			{
-				if (renderer) renderer->RemoveAllRenderPasses();
 				render_passes.clear();
+				compute_passes.clear();
 				owned_render_passes.clear();
 				frame_buffer.reset();
+				if (renderer)
+				{
+					renderer->RemoveAllRenderPasses();
+					renderer->WaitForDeferredDeletionComplete();
+				}
 				renderer.reset();
 			}
 		};

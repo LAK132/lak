@@ -529,11 +529,20 @@ bool lak::swap_window(lak::window_handle *handle)
 		{
 			auto &ctx = handle->cobalt_context();
 			auto *rd  = ctx.platform_handle->renderer.get();
+			rd->WaitForOutputCaptureComplete();
+			rd->RemoveAllRenderPasses();
+			if (!ctx.platform_handle->compute_passes.empty())
+			{
+				rd->SetRenderPasses(ctx.platform_handle->compute_passes.data(),
+														ctx.platform_handle->compute_passes.size());
+				rd->StartNewFrame();
+				rd->WaitForOutputCaptureComplete();
+				rd->RemoveAllRenderPasses();
+			}
 			rd->SetRenderPasses(ctx.platform_handle->render_passes.data(),
 			                    ctx.platform_handle->render_passes.size());
 			rd->StartNewFrame();
-			rd->WaitForDrawComplete();
-			rd->RemoveAllRenderPasses();
+			ctx.platform_handle->compute_passes.clear();
 			ctx.platform_handle->render_passes.clear();
 			ctx.platform_handle->owned_render_passes.clear();
 			return true;

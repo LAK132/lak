@@ -386,7 +386,7 @@ struct hello_cobalt_window : virtual public LAK_BASIC_PROGRAM(window_api)
 		if (comp)
 		{
 			if (ImGui::Button("Compute"))
-				lak::cobalt_append_render_pass(window().handle(),
+				lak::cobalt_append_compute_pass(window().handle(),
 				                               comp->render_pass_node.get())
 				  .UNWRAP();
 			if (comp->data_array_captured_output->HasCapturedCounterValue() &&

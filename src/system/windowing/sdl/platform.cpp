@@ -10,15 +10,34 @@
 bool lak::platform_init()
 {
 #ifdef LAK_OS_APPLE
-#	ifdef VK_DRIVER_FILE
 	{
-		auto files = (lak::exe_path().parent_path() / VK_DRIVER_FILE).string();
-#		ifdef VK_DRIVER_PREFIX
-		files += ":" + (lak::fs::path(VK_DRIVER_PREFIX) / VK_DRIVER_FILE).string();
-#		endif
-		ASSERT_EQUAL(setenv("VK_DRIVER_FILES", files.c_str(), 1), 0);
-	}
+		lak::fs::path current_prefix = lak::exe_path().parent_path().parent_path();
+		lak::array<lak::fs::path> files;
+#	ifdef LAK_MOLTENVK_JSON
+		files.push_back(current_prefix / LAK_MOLTENVK_JSON);
+#		ifdef LAK_VK_DRIVER_PREFIX
+		if (auto prefix = lak::fs::path(LAK_VK_DRIVER_PREFIX);
+				prefix != current_prefix)
+			files.push_back(prefix / LAK_MOLTENVK_JSON);
+# 	endif
 #	endif
+#	ifdef LAK_VK_VALIDATION_JSON
+		files.push_back(current_prefix / LAK_VK_VALIDATION_JSON);
+#		ifdef LAK_VK_DRIVER_PREFIX
+		if (auto prefix = lak::fs::path(LAK_VK_DRIVER_PREFIX);
+		    prefix != current_prefix)
+			files.push_back(prefix / LAK_VK_VALIDATION_JSON);
+# 	endif
+#	endif
+		if (!files.empty())
+		{
+			lak::astring str = files[0].string();
+			for (const auto& p : lak::span(files).subspan(1U))
+				str += ":" + p.string();
+			DEBUG_EXPR(str);
+			ASSERT_EQUAL(setenv("VK_DRIVER_FILES", str.c_str(), 1), 0);
+		}
+	}
 #endif
 
 	bool failed = false;
