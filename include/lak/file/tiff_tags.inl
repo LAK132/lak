@@ -618,3 +618,47 @@
 	LAK_FOREACH_TIFF_EP_TAG_TYPES(MACRO, __VA_ARGS__)                           \
 	LAK_FOREACH_EXIF_TAG_TYPES(MACRO, __VA_ARGS__)                              \
 	LAK_FOREACH_DNG_TAG_TYPES(MACRO, __VA_ARGS__)
+
+#define LAK_FOREACH_STRING_TIFF_TAG(MACRO, ...)                               \
+	/* TIFF 6 */                                                                \
+	MACRO(DocumentName, __VA_ARGS__)                                            \
+	MACRO(ImageDescription, __VA_ARGS__)                                        \
+	MACRO(Make, __VA_ARGS__)                                                    \
+	MACRO(Model, __VA_ARGS__)                                                   \
+	MACRO(PageName, __VA_ARGS__)                                                \
+	MACRO(Software, __VA_ARGS__)                                                \
+	MACRO(Artist, __VA_ARGS__)                                                  \
+	MACRO(HostComputer, __VA_ARGS__)                                            \
+	MACRO(InkNames, __VA_ARGS__)                                                \
+	MACRO(TargetPrinter, __VA_ARGS__)                                           \
+	MACRO(SMinSampleValue, __VA_ARGS__)                                         \
+	MACRO(SMaxSampleValue, __VA_ARGS__)                                         \
+	MACRO(Copyright, __VA_ARGS__)                                               \
+	/* TIFF EP */                                                               \
+	MACRO(BatteryLevel, __VA_ARGS__)                                            \
+	MACRO(IPTC_NAA, __VA_ARGS__)                                                \
+	MACRO(SpectralSensitivity, __VA_ARGS__)                                     \
+	MACRO(SecurityClassification, __VA_ARGS__)                                  \
+	MACRO(ImageHistory, __VA_ARGS__)                                            \
+	/* EXIF */                                                                  \
+	MACRO(LensMake, __VA_ARGS__)                                                \
+	MACRO(LensModel, __VA_ARGS__)                                               \
+	MACRO(LensSerialNumber, __VA_ARGS__)                                        \
+	/* DNG */                                                                   \
+	MACRO(UniqueCameraModel, __VA_ARGS__)                                       \
+	MACRO(LocalizedCameraModel, __VA_ARGS__)                                    \
+	MACRO(CameraSerialNumber, __VA_ARGS__)                                      \
+	MACRO(OriginalRawFileName, __VA_ARGS__)                                     \
+	MACRO(CameraCalibrationSignature, __VA_ARGS__)                              \
+	MACRO(ProfileCalibrationSignature, __VA_ARGS__)                             \
+	MACRO(AsShotProfileName, __VA_ARGS__)                                       \
+	MACRO(ProfileName, __VA_ARGS__)                                             \
+	MACRO(ProfileCopyright, __VA_ARGS__)                                        \
+	MACRO(PreviewApplicationName, __VA_ARGS__)                                  \
+	MACRO(PreviewApplicationVersion, __VA_ARGS__)                               \
+	MACRO(PreviewSettingName, __VA_ARGS__)                                      \
+	MACRO(PreviewDateTime, __VA_ARGS__)                                         \
+	MACRO(EnhanceParams, __VA_ARGS__)                                           \
+	MACRO(SemanticName, __VA_ARGS__)                                            \
+	MACRO(SemanticInstanceID, __VA_ARGS__)                                      \
+	MACRO(ProfileGroupName, __VA_ARGS__)

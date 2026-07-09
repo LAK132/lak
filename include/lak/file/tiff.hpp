@@ -222,8 +222,8 @@ namespace lak
 			  data = lak::span<byte_t>{};
 
 			ifd_tag() = default;
-			inline ifd_tag(ifd_tag &&other);
-			inline ifd_tag &operator=(ifd_tag &&other);
+			ifd_tag(ifd_tag &&other);
+			ifd_tag &operator=(ifd_tag &&other);
 
 			template<typename T>
 			requires(
@@ -256,20 +256,8 @@ namespace lak
 			                          lak::binary_span_writer &ext_strm) const;
 
 #define LAK_TIFF_TAG_MAKE(NAME, TYPE, COUNT, ...)                             \
-	static ifd_tag make_##NAME(lak::span<const TYPE, COUNT> data)               \
-	{                                                                           \
-		ifd_tag result{};                                                         \
-		result.id = lak::tiff::tag_name::NAME;                                    \
-		result.template set_data<TYPE>(data);                                     \
-		return result;                                                            \
-	}                                                                           \
-	static ifd_tag make_##NAME(lak::array<TYPE, COUNT> &&data)                  \
-	{                                                                           \
-		ifd_tag result{};                                                         \
-		result.id = lak::tiff::tag_name::NAME;                                    \
-		result.template set_data<TYPE>(lak::move(data));                          \
-		return result;                                                            \
-	}
+	static ifd_tag make_##NAME(lak::span<const TYPE, COUNT> data);              \
+	static ifd_tag make_##NAME(lak::array<TYPE, COUNT> &&data);
 			LAK_FOREACH_TIFF_TAG_TYPES(LAK_TIFF_TAG_MAKE)
 #undef LAK_TIFF_TAG_MAKE
 		};
@@ -294,7 +282,7 @@ namespace lak
 			lak::tiff::result<> read(lak::binary_reader &strm);
 
 			inline size_t _write_size() const;
-			inline size_t write_size() const;
+			size_t write_size() const;
 
 			template<lak::endian E>
 			lak::tiff::result<> write(lak::binary_span_writer &strm,
@@ -314,6 +302,15 @@ namespace lak
 				tag.id    = id;
 				tag.set_data(data);
 			}
+			inline void push(lak::tiff::tag_name id, lak::astring_view data)
+			{
+				lak::array<char> str;
+				str.resize(data.size());
+				lak::memcpy(lak::span<byte_t>(lak::span(str)),
+				            lak::span<const byte_t>(lak::span<const char>(data)));
+				str.push_back('\0');
+				push<char>(id, lak::move(str));
+			}
 
 			inline lak::tiff::strip &push_strip() { return strips.emplace_back(); }
 
@@ -331,24 +328,12 @@ namespace lak
 			}
 
 #define LAK_TIFF_TAG_MAKE(NAME, TYPE, COUNT, ...)                             \
-	void push_##NAME(lak::conditional_t<(COUNT == lak::dynamic_extent) &&       \
-	                                      lak::is_same_v<TYPE, char>,           \
-	                                    lak::string_view<TYPE>,                 \
-	                                    lak::span<const TYPE, COUNT>> data)     \
-	{                                                                           \
-		if constexpr (lak::is_same_v<TYPE, char>)                                 \
-		{                                                                         \
-			lak::array<TYPE> str;                                                   \
-			str.resize(data.size());                                                \
-			lak::memcpy(lak::span<byte_t>(lak::span(str)),                          \
-			            lak::span<const byte_t>(lak::span<const TYPE>(data)));      \
-			str.push_back(TYPE{});                                                  \
-			push<TYPE>(lak::tiff::tag_name::NAME, lak::move(str));                  \
-		}                                                                         \
-		else                                                                      \
-			push<TYPE>(lak::tiff::tag_name::NAME, data);                            \
-	}
+	void push_##NAME(lak::span<const TYPE, COUNT> data);
 			LAK_FOREACH_TIFF_TAG_TYPES(LAK_TIFF_TAG_MAKE)
+#undef LAK_TIFF_TAG_MAKE
+
+#define LAK_TIFF_TAG_MAKE(NAME, ...) void push_##NAME(lak::astring_view data);
+			LAK_FOREACH_STRING_TIFF_TAG(LAK_TIFF_TAG_MAKE)
 #undef LAK_TIFF_TAG_MAKE
 		};
 

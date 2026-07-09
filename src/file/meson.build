@@ -10,10 +10,14 @@ lakfile = static_library(
 		ebnf2cpp.process('obj.ebnf', extra_args: [
 			'LAK_OBJ_EBNF_HPP', 'lak', 'obj_parse']),
 		'pnm.cpp',
+		'tiff.cpp',
 	],
 	dependencies: [
 		lakcore_dep,
 	],
+	override_options: {
+		'optimization': '1',
+	},
 )
 
 lakfile_dep = declare_dependency(

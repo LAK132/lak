@@ -4,43 +4,6 @@
 
 /* --- ifd_tag --- */
 
-lak::tiff::ifd_tag::ifd_tag(ifd_tag &&other)
-: id(other.id),
-  _data_store(lak::exchange(other._data_store, lak::array<byte_t>{}))
-{
-	other.data.visit(
-	  [&]<typename T>(lak::span<T> d)
-	  {
-		  if (!_data_store.empty())
-			  data = lak::span<T>(lak::span(_data_store));
-		  else
-		  {
-			  lak::memcpy(_value, other._value);
-			  data = lak::span<T>(lak::span<byte_t>(_value)).first(d.size());
-		  }
-	  });
-	other.data = lak::span<byte_t>{};
-}
-
-lak::tiff::ifd_tag &lak::tiff::ifd_tag::operator=(ifd_tag &&other)
-{
-	id          = other.id;
-	_data_store = lak::exchange(other._data_store, lak::array<byte_t>{});
-	other.data.visit(
-	  [&]<typename T>(lak::span<T> d)
-	  {
-		  if (!_data_store.empty())
-			  data = lak::span<T>(lak::span(_data_store));
-		  else
-		  {
-			  lak::memcpy(_value, other._value);
-			  data = lak::span<T>(lak::span<byte_t>(_value)).first(d.size());
-		  }
-	  });
-	other.data = lak::span<byte_t>{};
-	return *this;
-}
-
 template<typename T>
 requires(
 #define LAK_TIFF_IFD_TAG(VAL, NAME, TYPE, ...) lak::is_same_v<T, TYPE> ||
@@ -317,27 +280,6 @@ size_t lak::tiff::image_file_directory::_write_size() const
 {
 	// tag count + next ifd offset + tags
 	return 2U + 4U + (lak::tiff::ifd_tag::_write_size * total_tag_count());
-}
-
-size_t lak::tiff::image_file_directory::write_size() const
-{
-	size_t result = _write_size();
-
-	size_t ext_tag_data = 0U;
-	for (const auto &t : tags) ext_tag_data += t._data_write_size();
-	result += ext_tag_data;
-
-	if (!strips.empty() || !subifds.empty() || !!exif || !!ext_tag_data)
-		result = lak::to_multiple<size_t>(result, 4U);
-
-	if (strips.size() > 1U) result += 2U * (4U * strips.size());
-	for (const auto &s : strips)
-		result += lak::to_multiple<size_t>(s.data.size(), 4U);
-	for (const auto &ifd : subifds)
-		result += lak::to_multiple<size_t>(ifd.write_size(), 4U);
-	if (exif) result += lak::to_multiple<size_t>(exif->write_size(), 4U);
-
-	return result;
 }
 
 template<lak::endian E>
