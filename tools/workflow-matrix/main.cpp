@@ -160,6 +160,21 @@ int main()
 	      .run    = "build/lak_test --help ; "
 	                "build/lak_test --testall"s,
 	    },
+	    {
+	      // test building with cobalt
+	      .setups =
+	        {
+	          "-Dlak_enable_tests=false "
+	          "-Dlak_enable_examples=true "
+	          "-Dlak_enable_windowing=true "
+	          "-Dlak_backend=win32 "
+	          "-Dlak_renderer=cobalt "
+	          "-Dlak_enable_glm=true "
+	          "-Dlak_enable_imgui=true"s,
+	        },
+	      .target = "hello-cobalt"s,
+	      .run    = {},
+	    },
 	  } +
 	  common_targets;
 	for (auto &t : windows_targets)
