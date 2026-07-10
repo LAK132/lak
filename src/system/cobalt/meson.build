@@ -105,7 +105,7 @@ if host_machine.system() == 'windows'
 		target: 'WinPixEventRuntime',
 	)
 	cobalt_opts.append_link_args(
-		'/DEF:@0@'.format(cobalt_source_root/'External'/'Vulkan-Loader'/'loader'/'vulkan-1.def'),
+		'/DEF:@0@'.format(cobalt_source_root/'External'/'Cache'/'Vulkan-Loader'/'loader'/'vulkan-1.def'),
 		target: 'vulkan',
 	)
 endif
