@@ -120,6 +120,22 @@ int main()
 	      .run    = "build/lak_test --help ; "
 	                "build/lak_test --testall"s,
 	    },
+	    {
+	      // test building with cobalt
+	      .setups =
+	        {
+	          "-Dlak_enable_tests=false "
+	          "-Dlak_enable_examples=true "
+	          "-Dlak_enable_windowing=true "
+	          "-Dsdl2_from_source=true "
+	          "-Dlak_backend=sdl "
+	          "-Dlak_renderer=cobalt "
+	          "-Dlak_enable_glm=true "
+	          "-Dlak_enable_imgui=true"s,
+	        },
+	      .target = "hello-cobalt"s,
+	      .run    = {},
+	    },
 	  } +
 	  common_targets;
 
