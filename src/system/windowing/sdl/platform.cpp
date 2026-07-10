@@ -34,7 +34,6 @@ bool lak::platform_init()
 			lak::astring str = files[0].string();
 			for (const auto& p : lak::span(files).subspan(1U))
 				str += ":" + p.string();
-			DEBUG_EXPR(str);
 			ASSERT_EQUAL(setenv("VK_DRIVER_FILES", str.c_str(), 1), 0);
 		}
 	}
