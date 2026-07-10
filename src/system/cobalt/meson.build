@@ -77,11 +77,24 @@ endif
 if lak_cobalt_enabled_renderers.contains('Direct3D12')
 	cobalt_opts.set_install(true, target: 'Direct3D12Renderer')
 	cobalt_opts.set_install(true, target: 'WinPixEventRuntime')
+	dxc_bin_dir = cobalt_source_root/'External'/'Cache'/'DirectXShaderCompilerOfficial'/'bin'
+	if host_machine.cpu_family() == 'x86'
+		meson.add_install_script('install_dxc_x86.bat')
+	elif host_machine.cpu_family() == 'x86_64'
+		meson.add_install_script('install_dxc_x64.bat')
+	elif host_machine.cpu_family() == 'aarch64'
+		meson.add_install_script('install_dxc_arm64.bat')
+	endif
 endif
 if lak_cobalt_enabled_renderers.contains('Vulkan')
 	cobalt_opts.set_install(true, target: 'VulkanRenderer')
 	if host_machine.system() == 'darwin'
 		cobalt_opts.set_install(true, target: 'vulkan')
+		meson.add_install_script('install_moltenvk.sh')
+	endif
+	if host_machine.system() == 'windows'
+		cobalt_opts.set_install(true, target: 'vulkan')
+		meson.add_install_script('install_vulkan.bat')
 	endif
 endif
 if lak_cobalt_enabled_renderers.contains('Metal')
@@ -298,7 +311,6 @@ if lak_cobalt_enabled_renderers.contains('Vulkan')
 		vk_sdk = meson.global_build_root()/'subprojects'/'Cobalt'/'__CMake_build'/'_deps'/'vulkan-sdk-install'/'macOS'
 		_lakcobalt_compile_args += '-DLAK_VK_DRIVER_PREFIX="@0@"'.format(get_option('prefix'))
 		_lakcobalt_compile_args += '-DLAK_MOLTENVK_JSON="@0@"'.format('share'/'vulkan'/'icd.d'/'MoltenVK_icd.json')
-		meson.add_install_script('install_moltenvk.sh')
 	endif
 	_lakcobalt_compile_args += '-DLAK_ENABLE_COBALT_VK'
 endif
