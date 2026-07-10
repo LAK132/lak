@@ -6,6 +6,7 @@ cobalt_source_root = meson.global_source_root()/'subprojects'/'Cobalt'
 cobalt_build_root = meson.global_build_root()/'subprojects'/'Cobalt'
 
 cobalt_opts.set_override_option('cpp_std', 'c++17')
+cobalt_opts.set_override_option('warning_level', '0')
 if get_option('optimization') == '0'
 	cobalt_opts.set_override_option('optimization', '1')
 endif
@@ -114,6 +115,132 @@ if get_option('buildtype') != 'release'
 	cobalt_opts.append_compile_args('cpp', '-D_DEBUG')
 	cobalt_opts.append_compile_args('objcpp', '-D_DEBUG')
 endif
+
+disabled_warnings = []
+if meson.get_compiler('cpp').get_id() == 'gcc'
+	disabled_warnings = [
+		'-Wno-delete-non-virtual-dtor',
+		'-Wno-cast-function-type',
+		'-Wno-switch-default',
+		'-Wno-double-promotion',
+		'-Wno-extra-semi',
+		'-Wno-float-equal',
+		'-Wno-implicit-fallthrough',
+		'-Wno-non-virtual-dtor',
+		'-Wno-old-style-cast',
+		'-Wno-reorder',
+		'-Wno-shadow',
+		'-Wno-sign-conversion',
+		'-Wno-suggest-override',
+		'-Wno-switch',
+		'-Wno-switch-enum',
+		'-Wno-unused-macros',
+		'-Wno-unused-parameter',
+		'-Wno-unused-variable',
+		'-Wno-zero-as-null-pointer-constant',
+	]
+elif meson.get_compiler('cpp').get_id() == 'clang'
+	disabled_warnings = [
+		'-Wno-unknown-warning-option',
+		'-Wno-c++98-compat',
+		'-Wno-c++98-compat-pedantic',
+		'-Wno-cast-function-type',
+		'-Wno-covered-switch-default',
+		'-Wno-ctad-maybe-unsupported',
+		'-Wno-declaration-after-statement',
+		'-Wno-delete-non-virtual-dtor',
+		'-Wno-disabled-macro-expansion',
+		'-Wno-documentation-unknown-command',
+		'-Wno-double-promotion',
+		'-Wno-exit-time-destructors',
+		'-Wno-extra-semi',
+		'-Wno-float-equal',
+		'-Wno-global-constructors',
+		'-Wno-implicit-fallthrough',
+		'-Wno-missing-noreturn',
+		'-Wno-non-virtual-dtor',
+		'-Wno-old-style-cast',
+		'-Wno-padded',
+		'-Wno-reorder-ctor',
+		'-Wno-reserved-identifier',
+		'-Wno-reserved-macro-identifier',
+		'-Wno-shadow',
+		'-Wno-sign-conversion',
+		'-Wno-suggest-override',
+		'-Wno-switch',
+		'-Wno-switch-default',
+		'-Wno-switch-enum',
+		'-Wno-unneeded-internal-declaration',
+		'-Wno-unsafe-buffer-usage',
+		'-Wno-unused-command-line-argument',
+		'-Wno-unused-macros',
+		'-Wno-unused-parameter',
+		'-Wno-unused-variable',
+		'-Wno-unused-private-field',
+		'-Wno-zero-as-null-pointer-constant',
+	]
+elif meson.get_compiler('cpp').get_id() == 'msvc'
+	disabled_warnings = [
+		'-Wv:19.50.35718',
+		'-wd4061',
+		'-wd4062',
+		'-wd4100',
+		'-wd4127',
+		'-wd4191',
+		'-wd4250',
+		'-wd4255',
+		'-wd4265',
+		'-wd4302',
+		'-wd4324',
+		'-wd4339',
+		'-wd4342',
+		'-wd4347',
+		'-wd4350',
+		'-wd4365',
+		'-wd4371',
+		'-wd4412',
+		'-wd4428',
+		'-wd4435',
+		'-wd4464',
+		'-wd4471',
+		'-wd4514',
+		'-wd4571',
+		'-wd4574',
+		'-wd4610',
+		'-wd4619',
+		'-wd4623',
+		'-wd4625',
+		'-wd4626',
+		'-wd4628',
+		'-wd4640',
+		'-wd4641',
+		'-wd4668',
+		'-wd4682',
+		'-wd4692',
+		'-wd4710',
+		'-wd4711',
+		'-wd4738',
+		'-wd4746',
+		'-wd4774',
+		'-wd4777',
+		'-wd4820',
+		'-wd4865',
+		'-wd4868',
+		'-wd4917',
+		'-wd4946',
+		'-wd4987',
+		'-wd5026',
+		'-wd5027',
+		'-wd5038',
+		'-wd5039',
+		'-wd5045',
+		'-wd5204',
+		'-wd5220',
+		'-wd5246',
+	]
+endif
+cobalt_opts.append_compile_args('cpp', disabled_warnings)
+cobalt_opts.append_compile_args('objcpp', disabled_warnings)
 
 cobalt_subprj = cmake.subproject('Cobalt', options: cobalt_opts)
 
