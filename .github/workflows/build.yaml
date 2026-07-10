@@ -63,7 +63,7 @@ jobs:
           echo "CC=$(brew --prefix llvm@20)/bin/clang" >> $GITHUB_ENV
           echo "CXX=$(brew --prefix llvm@20)/bin/clang++" >> $GITHUB_ENV
 
-      - run: meson setup build --buildtype debugoptimized ${{ matrix.setup_options }}
+      - run: meson setup build ${{ matrix.setup_options }}
       - run: meson compile -C build ${{ matrix.target }}
       - if: matrix.run != ''
         run: ${{ matrix.run }}

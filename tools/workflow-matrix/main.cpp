@@ -73,6 +73,7 @@ int main()
 	    // examples
 	    .setups =
 	      {
+	        "--buildtype=debugoptimized "
 	        "-Dlak_enable_examples=true "
 	        "-Dlak_enable_windowing=true "
 	        "-Dlak_enable_glm=true "
@@ -87,6 +88,7 @@ int main()
 	    // tests
 	    .setups =
 	      {
+	        "--buildtype=debugoptimized "
 	        "-Dlak_enable_tests=true"s,
 	      },
 	    .target = "lak_test"s,
@@ -101,6 +103,7 @@ int main()
 	      // tests
 	      .setups =
 	        {
+	          "--buildtype=debugoptimized "
 	          "-Dlak_enable_tests=true "
 	          "-Dlak_enable_godot_cpp=true "
 	          "-Dlak_enable_lua=true "
@@ -108,6 +111,7 @@ int main()
 	          "-Dlak_enable_stb_image=true "
 	          "-Dlak_enable_stb_image_write=true"s,
 
+	          "--buildtype=debugoptimized "
 	          "-Dlak_enable_tests=true "
 	          "-Dlak_enable_windowing=true "
 	          "-Dlak_use_native_file_dialog=false "
@@ -124,6 +128,7 @@ int main()
 	      // test building with cobalt
 	      .setups =
 	        {
+	          "--buildtype=release "
 	          "-Dlak_enable_tests=false "
 	          "-Dlak_enable_examples=true "
 	          "-Dlak_enable_windowing=true "
@@ -144,11 +149,13 @@ int main()
 	    {
 	      .setups =
 	        {
+	          "--buildtype=debugoptimized "
 	          "-Dlak_enable_tests=true "
 	          // "Compatibility with CMake < 3.5 has been removed from CMake."
 	          // "-Dlak_enable_libfive=true "
 	          "-Dlak_enable_lmdb=true"s,
 
+	          "--buildtype=debugoptimized "
 	          "-Dlak_enable_tests=true "
 	          "-Dlak_enable_windowing=true "
 	          "-Dlak_use_native_file_dialog=true "
@@ -164,6 +171,7 @@ int main()
 	      // test building with cobalt
 	      .setups =
 	        {
+	          "--buildtype=release "
 	          "-Dlak_enable_tests=false "
 	          "-Dlak_enable_examples=true "
 	          "-Dlak_enable_windowing=true "
@@ -235,6 +243,7 @@ int main()
 	    .targets = {{
 	      .setups = {"--cross-file=cross/emscripten.txt "
 	                 "--cross-file=cross/wasm32.txt "
+	                 "--buildtype=debugoptimized "
 	                 "-Dlak_enable_tests=true"s},
 	      .target = "lak_test"s,
 	      .run    = "node build/lak_test.js --help ;"
@@ -250,6 +259,7 @@ int main()
 	    .targets = {{
 	      .setups = {"--cross-file=cross/emscripten.txt "
 	                 "--cross-file=cross/wasm64.txt "
+	                 "--buildtype=debugoptimized "
 	                 "-Dlak_enable_tests=true"s},
 	      .target = "lak_test"s,
 	      .run    = "node build/lak_test.js --help ;"
