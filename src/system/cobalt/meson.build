@@ -264,6 +264,7 @@ _lakcobalt_deps = []
 _lakcobalt_compile_args = [
 	'-DLAK_ENABLE_COBALT',
 ]
+_lakcobalt_link_args = []
 
 if host_machine.system() == 'windows'
 	_lakcobalt_compile_args += '-DCOBALT_RENDERER_WIN32_SUPPORT'
@@ -284,24 +285,36 @@ if lak_cobalt_enabled_renderers.contains('OpenGL3')
 	_lakcobalt_srcs += 'opengl3.cpp'
 	_lakcobalt_deps += cobalt_subprj.dependency('OpenGL3Renderer')
 	_lakcobalt_compile_args += '-DLAK_ENABLE_COBALT_OGL3'
+	if meson.get_compiler('cpp').get_id() == 'msvc'
+		_lakcobalt_link_args += '/delayload:OpenGL3Renderer.dll'
+	endif
 endif
 
 if lak_cobalt_enabled_renderers.contains('OpenGL4')
 	_lakcobalt_srcs += 'opengl4.cpp'
 	_lakcobalt_deps += cobalt_subprj.dependency('OpenGL4Renderer')
 	_lakcobalt_compile_args += '-DLAK_ENABLE_COBALT_OGL4'
+	if meson.get_compiler('cpp').get_id() == 'msvc'
+		_lakcobalt_link_args += '/delayload:OpenGL4Renderer.dll'
+	endif
 endif
 
 if lak_cobalt_enabled_renderers.contains('Direct3D11')
 	_lakcobalt_srcs += 'direct3d11.cpp'
 	_lakcobalt_deps += cobalt_subprj.dependency('Direct3D11Renderer')
 	_lakcobalt_compile_args += '-DLAK_ENABLE_COBALT_D3D11'
+	if meson.get_compiler('cpp').get_id() == 'msvc'
+		_lakcobalt_link_args += '/delayload:Direct3D11Renderer.dll'
+	endif
 endif
 
 if lak_cobalt_enabled_renderers.contains('Direct3D12')
 	_lakcobalt_srcs += 'direct3d12.cpp'
 	_lakcobalt_deps += cobalt_subprj.dependency('Direct3D12Renderer')
 	_lakcobalt_compile_args += '-DLAK_ENABLE_COBALT_D3D12'
+	if meson.get_compiler('cpp').get_id() == 'msvc'
+		_lakcobalt_link_args += '/delayload:Direct3D12Renderer.dll'
+	endif
 endif
 
 if lak_cobalt_enabled_renderers.contains('Vulkan')
@@ -313,12 +326,18 @@ if lak_cobalt_enabled_renderers.contains('Vulkan')
 		_lakcobalt_compile_args += '-DLAK_MOLTENVK_JSON="@0@"'.format('share'/'vulkan'/'icd.d'/'MoltenVK_icd.json')
 	endif
 	_lakcobalt_compile_args += '-DLAK_ENABLE_COBALT_VK'
+	if meson.get_compiler('cpp').get_id() == 'msvc'
+		_lakcobalt_link_args += '/delayload:VulkanRenderer.dll'
+	endif
 endif
 
 if lak_cobalt_enabled_renderers.contains('Metal')
 	_lakcobalt_srcs += 'metal.cpp'
 	_lakcobalt_deps += cobalt_subprj.dependency('MetalRenderer')
 	_lakcobalt_compile_args += '-DLAK_ENABLE_COBALT_MTL'
+	if meson.get_compiler('cpp').get_id() == 'msvc'
+		_lakcobalt_link_args += '/delayload:MetalRenderer.dll'
+	endif
 endif
 
 _lakcobalt_dep = declare_dependency(
@@ -342,5 +361,6 @@ lakcobalt_dep = declare_dependency(
 	link_with: lakcobalt,
 	dependencies: _lakcobalt_dep.partial_dependency(includes: true),
 	compile_args: _lakcobalt_compile_args,
+	link_args: _lakcobalt_link_args,
 )
 meson.override_dependency('lak-cobalt', lakcobalt_dep)

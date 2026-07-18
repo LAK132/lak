@@ -116,7 +116,11 @@ namespace
 		{
 			lak::cobalt_renderer_settings result;
 
-			info(0, result.renderer_plugin);
+			if (!info(0, result.renderer_plugin))
+			{
+				log->Error("Failed to get renderer plugin");
+				return lak::err_t{};
+			}
 
 			result.device_enumerator =
 			  result.renderer_plugin.CreateGraphicsDeviceEnumerator(
