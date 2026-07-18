@@ -220,6 +220,30 @@ namespace lak
 					                 UNIQUIFY(RESULT_))                                 \
 					                 .unsafe_unwrap_err()})
 
+// while_let_ok(auto ok, result) { result = something(ok); }
+#	define while_let_ok(VALUE, ...)                                            \
+		while (true)                                                              \
+			if (auto &&UNIQUIFY(RESULT_){lak::remove_rvalue((__VA_ARGS__))};        \
+			    !UNIQUIFY(RESULT_).is_ok())                                         \
+				break;                                                                \
+			else do_with (VALUE{lak::forward<decltype(UNIQUIFY(RESULT_))>(          \
+			                      UNIQUIFY(RESULT_))                                \
+			                      .unsafe_unwrap()})
+
+// while_let_err(auto ok, result) { result = something(ok); }
+#	define while_let_err(VALUE, ...)                                           \
+		while (true)                                                              \
+			do_with (auto &&UNIQUIFY(RESULT_){lak::remove_rvalue((__VA_ARGS__))})   \
+				if constexpr (!lak::is_same_v<                                        \
+				                lak::result_err_type_t<                               \
+				                  lak::remove_cvref_t<decltype(UNIQUIFY(RESULT_))>>,  \
+				                lak::bottom>)                                         \
+					if (!UNIQUIFY(RESULT_).is_err())                                    \
+						break;                                                            \
+					else do_with (VALUE{lak::forward<decltype(UNIQUIFY(RESULT_))>(      \
+					                      UNIQUIFY(RESULT_))                            \
+					                      .unsafe_unwrap_err()})
+
 // match_result(result)
 // {
 //   match_let_ok(auto ok, { handle_ok(ok); });

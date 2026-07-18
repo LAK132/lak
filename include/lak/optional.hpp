@@ -338,6 +338,15 @@ namespace lak
 	    UNIQUIFY(OPTIONAL_).has_value())                                        \
 		do_with (VALUE{lak::forward<decltype(*UNIQUIFY(OPTIONAL_))>(              \
 		           *UNIQUIFY(OPTIONAL_))})
+
+// while_let_some (auto ok, optional) { optional = something(ok); }
+#define while_let_some(VALUE, ...)                                            \
+	while (true)                                                                \
+		if (auto &&UNIQUIFY(OPTIONAL_){lak::remove_rvalue((__VA_ARGS__))};        \
+		    !UNIQUIFY(OPTIONAL_).has_value())                                     \
+			break;                                                                  \
+		else do_with (VALUE{lak::forward<decltype(*UNIQUIFY(OPTIONAL_))>(         \
+		                *UNIQUIFY(OPTIONAL_))})
 }
 
 #endif
