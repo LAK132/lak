@@ -2,6 +2,11 @@ project(
 	'lak',
 	['c', 'cpp'],
 	meson_version: '>=1.4.0',
+	license: 'MIT OR Unlicense',
+	license_files: [
+		'LICENSE',
+		'UNLICENSE',
+	],
 	default_options: {
 		'c_std': 'c11',
 		'build.c_std': 'c11',
