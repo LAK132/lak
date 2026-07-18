@@ -92,10 +92,6 @@ if lak_cobalt_enabled_renderers.contains('Vulkan')
 		cobalt_opts.set_install(true, target: 'vulkan')
 		meson.add_install_script('install_moltenvk.sh')
 	endif
-	if host_machine.system() == 'windows'
-		cobalt_opts.set_install(true, target: 'vulkan')
-		meson.add_install_script('install_vulkan.bat')
-	endif
 endif
 if lak_cobalt_enabled_renderers.contains('Metal')
 	cobalt_opts.set_install(true, target: 'MetalRenderer')
@@ -335,9 +331,6 @@ if lak_cobalt_enabled_renderers.contains('Metal')
 	_lakcobalt_srcs += 'metal.cpp'
 	_lakcobalt_deps += cobalt_subprj.dependency('MetalRenderer')
 	_lakcobalt_compile_args += '-DLAK_ENABLE_COBALT_MTL'
-	if meson.get_compiler('cpp').get_id() == 'msvc'
-		_lakcobalt_link_args += '/delayload:MetalRenderer.dll'
-	endif
 endif
 
 _lakcobalt_dep = declare_dependency(
