@@ -8,6 +8,8 @@
 #include <lak/file/obj.hpp>
 #include <lak/file/pnm.hpp>
 
+#include <lak/system/file.hpp>
+
 #include <lak/system/opengl/mesh.hpp>
 #include <lak/system/opengl/shader.hpp>
 
@@ -237,6 +239,8 @@ lak::image3_t cube_texture;
 lak::array<vertex> cube_vertices;
 lak::image3_t coin_texture;
 lak::array<vertex> coin_vertices;
+
+lak::array<byte_t> map_source;
 lak::image3_t map_texture;
 
 lak::optional<std::thread> asset_loader;
@@ -276,7 +280,11 @@ namespace bga
 
 void load_assets()
 {
-	lak::fs::path assets_dir = "assets";
+	if (map_source.empty())
+	{
+		auto sp = lak::span<const byte_t>(lak::span<const uint8_t>(bga::map_ppm));
+		map_source = lak::array<byte_t>(sp.begin(), sp.end());
+	}
 
 	ball_texture = load_texture3(
 	  lak::span<const byte_t>(lak::span<const uint8_t>(bga::ball_ppm)));
@@ -290,8 +298,7 @@ void load_assets()
 	  lak::span<const byte_t>(lak::span<const uint8_t>(bga::coin_ppm)));
 	coin_vertices = load_model(lak::u8string_view::from_c_str(bga::coin_obj));
 
-	map_texture = load_texture3(
-	  lak::span<const byte_t>(lak::span<const uint8_t>(bga::map_ppm)));
+	map_texture = load_texture3(lak::span(map_source));
 
 	assets_loaded = true;
 }
@@ -468,6 +475,20 @@ struct game_window : virtual public LAK_BASIC_PROGRAM(window_api)
 
 			case lak::event_type::close_window: destroy(); break;
 
+			case lak::event_type::dropfile:
+			{
+				if_let_ok (auto new_map,
+				           lak::ro_mmap_file(event.dropfile().path)
+				             .IF_ERR("Failed to open ", event.dropfile().path))
+				{
+					DEBUG("Loading ", event.dropfile().path);
+					auto sp    = lak::span<const byte_t>(*new_map);
+					map_source = lak::array<byte_t>(sp.begin(), sp.end());
+					state      = state_t::LOADING;
+				}
+			}
+			break;
+
 			case lak::event_type::key_down:
 				switch (event.key().key)
 				{
@@ -594,34 +615,14 @@ struct game_window : virtual public LAK_BASIC_PROGRAM(window_api)
 			case state_t::WIN:
 			{
 				ImGui::Text("YOUR'RE WINNER !");
-				if (ImGui::Button("restart"))
-				{
-					sc.player->translation.value     = glm::vec3(0);
-					sc.player->translation.velocity  = glm::vec3(0);
-					sc.player->rotation.value        = glm::vec3(0);
-					sc.player->rotation.velocity     = glm::vec3(0);
-					sc.ball.frame->rotation.value    = glm::vec3(0);
-					sc.ball.frame->rotation.velocity = glm::vec3(0);
-					sc.coins                         = sc.coins_reset;
-					state                            = RUNNING;
-				}
+				if (ImGui::Button("restart")) state = LOADING;
 			}
 			break;
 
 			case state_t::LOSS:
 			{
 				ImGui::Text("you fell off :(");
-				if (ImGui::Button("try again"))
-				{
-					sc.player->translation.value     = glm::vec3(0);
-					sc.player->translation.velocity  = glm::vec3(0);
-					sc.player->rotation.value        = glm::vec3(0);
-					sc.player->rotation.velocity     = glm::vec3(0);
-					sc.ball.frame->rotation.value    = glm::vec3(0);
-					sc.ball.frame->rotation.velocity = glm::vec3(0);
-					sc.coins                         = sc.coins_reset;
-					state                            = RUNNING;
-				}
+				if (ImGui::Button("try again")) state = LOADING;
 			}
 			break;
 		}
