@@ -1,5 +1,5 @@
-#ifndef SPACE_HPP
-#define SPACE_HPP
+#ifndef BALL_GAME_SPACE_HPP
+#define BALL_GAME_SPACE_HPP
 
 #include <lak/array.hpp>
 #include <lak/memory.hpp>

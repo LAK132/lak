@@ -113,13 +113,8 @@ namespace lak
 		struct vertex_buffer
 		{
 		private:
-			lak::opengl::buffer _vertex_buffer;
-			lak::opengl::buffer _index_buffer;
+			lak::opengl::buffer _buffer;
 			lak::array<lak::opengl::vertex_attribute> _attributes;
-			// number of elements in _index_buffer if it exists, otherwise the number
-			// of elements in _vertex_buffer.
-			size_t _vertex_count = 0;
-			GLenum _draw_mode    = GL_TRIANGLES;
 
 		public:
 			vertex_buffer() = default;
@@ -131,20 +126,12 @@ namespace lak
 
 			// make will unbind the current Vertex Array Object.
 			static vertex_buffer make();
-			static vertex_buffer make_indexed();
 			static shared_vertex_buffer make_shared();
-			static shared_vertex_buffer make_indexed_shared();
 
 			vertex_buffer &bind();
 			const vertex_buffer &bind() const;
 
 			vertex_buffer &set_data(lak::span<const void> vertex_data,
-			                        size_t vertex_count,
-			                        GLenum draw_mode,
-			                        GLenum usage = GL_STATIC_DRAW);
-			vertex_buffer &set_data(lak::span<const void> vertex_data,
-			                        lak::span<const GLuint> index_data,
-			                        GLenum draw_mode,
 			                        GLenum usage = GL_STATIC_DRAW);
 			vertex_buffer &set_vertex_attributes(
 			  lak::array<lak::opengl::vertex_attribute> vertex_attributes);
@@ -153,14 +140,46 @@ namespace lak
 			vertex_buffer &apply_shader_attributes(
 			  lak::span<const lak::opengl::location> attribute_location);
 
-			void draw(GLuint instances = 1) const;
-			void draw_part(const GLuint *offset,
-			               GLsizei count,
-			               GLuint instances = 1) const;
+			lak::span<const lak::opengl::vertex_attribute> vertex_attributes() const;
+
+			explicit inline operator bool() const { return !!_buffer; }
+		};
+
+		struct index_buffer;
+		using shared_index_buffer = lak::tiny_shared_ptr<index_buffer>;
+		struct index_buffer
+		{
+		private:
+			lak::opengl::buffer _buffer;
+			size_t _size = 0;
+
+		public:
+			index_buffer() = default;
+			index_buffer(index_buffer &&other);
+			index_buffer &operator=(index_buffer &&other);
+
+			index_buffer(const index_buffer &other)            = delete;
+			index_buffer &operator=(const index_buffer &other) = delete;
+
+			// make will unbind the current Vertex Array Object.
+			static index_buffer make();
+			static shared_index_buffer make_shared();
+
+			size_t size() const { return _size; }
+
+			index_buffer &bind();
+			const index_buffer &bind() const;
+
+			index_buffer &set_data(lak::span<const GLuint> index_data,
+			                       GLenum usage = GL_STATIC_DRAW);
+
+			// apply vertex attributes to the bound Vertex Array Object.
+			index_buffer &apply_shader_attributes(
+			  lak::span<const lak::opengl::location> attribute_location);
 
 			lak::span<const lak::opengl::vertex_attribute> vertex_attributes() const;
 
-			explicit inline operator bool() const { return !!_vertex_buffer; }
+			explicit inline operator bool() const { return !!_buffer; }
 		};
 
 		struct vertex_array
@@ -193,11 +212,14 @@ namespace lak
 		struct static_object_part
 		{
 		private:
-			shared_vertex_buffer _vertex_buffer;
+			lak::array<shared_vertex_buffer> _vertex_buffers;
+			shared_index_buffer _index_buffer;
+			GLsizei _vertex_count = 0U;
 			shared_program _shader;
 			lak::array<lak::pair<lak::opengl::shared_texture, lak::opengl::location>>
 			  _textures;
 			vertex_array _vertex_array;
+			GLenum _draw_mode = GL_TRIANGLES;
 
 		public:
 			static_object_part() = default;
@@ -205,17 +227,39 @@ namespace lak
 			static_object_part &operator=(static_object_part &&other);
 
 			static static_object_part make(
-			  shared_vertex_buffer vertices,
 			  shared_program shader_program,
-			  lak::span<const lak::opengl::location> attribute_locations,
+			  GLenum draw_mode,
+			  lak::array<lak::pair<shared_vertex_buffer,
+			                       lak::span<const lak::opengl::location>>> buffers,
+			  GLsizei vertex_count,
 			  lak::array<lak::pair<lak::opengl::shared_texture,
-			                       lak::opengl::location>> textures);
+			                       lak::opengl::location>> textures = {});
+			static static_object_part make(
+			  shared_program shader_program,
+			  GLenum draw_mode,
+			  lak::array<lak::pair<shared_vertex_buffer,
+			                       lak::span<const lak::opengl::location>>> buffers,
+			  shared_index_buffer index_buff,
+			  lak::array<lak::pair<lak::opengl::shared_texture,
+			                       lak::opengl::location>> textures = {});
+
 			static shared_static_object_part make_shared(
-			  shared_vertex_buffer vertices,
 			  shared_program shader_program,
-			  lak::span<const lak::opengl::location> attribute_locations,
+			  GLenum draw_mode,
+			  lak::array<lak::pair<shared_vertex_buffer,
+			                       lak::span<const lak::opengl::location>>> buffers,
+			  GLsizei vertex_count,
 			  lak::array<lak::pair<lak::opengl::shared_texture,
-			                       lak::opengl::location>> textures);
+			                       lak::opengl::location>> textures = {});
+
+			static shared_static_object_part make_shared(
+			  shared_program shader_program,
+			  GLenum draw_mode,
+			  lak::array<lak::pair<shared_vertex_buffer,
+			                       lak::span<const lak::opengl::location>>> buffers,
+			  shared_index_buffer index_buff,
+			  lak::array<lak::pair<lak::opengl::shared_texture,
+			                       lak::opengl::location>> textures = {});
 
 			static_object_part &clear();
 

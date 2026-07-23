@@ -101,37 +101,22 @@ void lak::opengl::vertex_attribute::apply(
 /* --- vertex_buffer --- */
 
 lak::opengl::vertex_buffer::vertex_buffer(vertex_buffer &&other)
-: _vertex_buffer(lak::move(other._vertex_buffer)),
-  _index_buffer(lak::move(other._index_buffer)),
-  _attributes(lak::move(other._attributes)),
-  _vertex_count(lak::exchange(other._vertex_count, 0U)),
-  _draw_mode(lak::exchange(other._draw_mode, GL_TRIANGLES))
+: _buffer(lak::move(other._buffer)), _attributes(lak::move(other._attributes))
 {
 }
 
 lak::opengl::vertex_buffer &lak::opengl::vertex_buffer::operator=(
   vertex_buffer &&other)
 {
-	lak::swap(_vertex_buffer, other._vertex_buffer);
-	lak::swap(_index_buffer, other._index_buffer);
+	lak::swap(_buffer, other._buffer);
 	lak::swap(_attributes, other._attributes);
-	lak::swap(_vertex_count, other._vertex_count);
-	lak::swap(_draw_mode, other._draw_mode);
 	return *this;
 }
 
 lak::opengl::vertex_buffer lak::opengl::vertex_buffer::make()
 {
 	vertex_buffer buf;
-	buf._vertex_buffer = buffer::make(GL_ARRAY_BUFFER);
-	return buf;
-}
-
-lak::opengl::vertex_buffer lak::opengl::vertex_buffer::make_indexed()
-{
-	vertex_buffer buf;
-	buf._vertex_buffer = buffer::make(GL_ARRAY_BUFFER);
-	buf._index_buffer  = buffer::make(GL_ELEMENT_ARRAY_BUFFER);
+	buf._buffer = buffer::make(GL_ARRAY_BUFFER);
 	return buf;
 }
 
@@ -140,50 +125,22 @@ lak::opengl::shared_vertex_buffer lak::opengl::vertex_buffer::make_shared()
 	return lak::opengl::shared_vertex_buffer::make(make());
 }
 
-lak::opengl::shared_vertex_buffer
-lak::opengl::vertex_buffer::make_indexed_shared()
-{
-	return lak::opengl::shared_vertex_buffer::make(make_indexed());
-}
-
 lak::opengl::vertex_buffer &lak::opengl::vertex_buffer::bind()
 {
-	_vertex_buffer.bind();
-	if (_index_buffer) _index_buffer.bind();
+	_buffer.bind();
 	return *this;
 }
 
 const lak::opengl::vertex_buffer &lak::opengl::vertex_buffer::bind() const
 {
-	_vertex_buffer.bind();
-	if (_index_buffer) _index_buffer.bind();
+	_buffer.bind();
 	return *this;
 }
 
 lak::opengl::vertex_buffer &lak::opengl::vertex_buffer::set_data(
-  lak::span<const void> vertex_data,
-  size_t vertex_count,
-  GLenum draw_mode,
-  GLenum usage)
+  lak::span<const void> vertex_data, GLenum usage)
 {
-	ASSERT(!_index_buffer);
-	_vertex_buffer.set_data(vertex_data, usage);
-	_vertex_count = vertex_count;
-	_draw_mode    = draw_mode;
-	return *this;
-}
-
-lak::opengl::vertex_buffer &lak::opengl::vertex_buffer::set_data(
-  lak::span<const void> vertex_data,
-  lak::span<const GLuint> index_data,
-  GLenum draw_mode,
-  GLenum usage)
-{
-	ASSERT(!!_index_buffer);
-	_vertex_buffer.set_data(vertex_data, usage);
-	_index_buffer.set_data(index_data, usage);
-	_vertex_count = index_data.size();
-	_draw_mode    = draw_mode;
+	_buffer.set_data(vertex_data, usage);
 	return *this;
 }
 
@@ -204,40 +161,57 @@ lak::opengl::vertex_buffer::apply_shader_attributes(
 	return *this;
 }
 
-void lak::opengl::vertex_buffer::draw(GLuint instances) const
-{
-	if (_index_buffer)
-	{
-		lak::opengl::call_checked(glDrawElementsInstanced,
-		                          _draw_mode,
-		                          GLsizei(_vertex_count),
-		                          GL_UNSIGNED_INT,
-		                          (GLvoid *)nullptr,
-		                          instances)
-		  .UNWRAP();
-	}
-	else
-	{
-		lak::opengl::call_checked(
-		  glDrawArraysInstanced, _draw_mode, 0, GLsizei(_vertex_count), instances)
-		  .UNWRAP();
-	}
-}
-
-void lak::opengl::vertex_buffer::draw_part(const GLuint *offset,
-                                           GLsizei count,
-                                           GLuint instances) const
-{
-	ASSERT(_index_buffer);
-	ASSERT(((uintptr_t)(offset + count)) / sizeof(GLuint) <= _vertex_count);
-	glDrawElementsInstanced(
-	  _draw_mode, count, GL_UNSIGNED_INT, offset, instances);
-}
-
 lak::span<const lak::opengl::vertex_attribute>
 lak::opengl::vertex_buffer::vertex_attributes() const
 {
 	return lak::span(_attributes);
+}
+
+/* --- index_buffer --- */
+
+lak::opengl::index_buffer::index_buffer(index_buffer &&other)
+: _buffer(lak::move(other._buffer)), _size(lak::exchange(other._size, 0U))
+{
+}
+
+lak::opengl::index_buffer &lak::opengl::index_buffer::operator=(
+  index_buffer &&other)
+{
+	lak::swap(_buffer, other._buffer);
+	lak::swap(_size, other._size);
+	return *this;
+}
+
+lak::opengl::index_buffer lak::opengl::index_buffer::make()
+{
+	index_buffer buf;
+	buf._buffer = buffer::make(GL_ELEMENT_ARRAY_BUFFER);
+	return buf;
+}
+
+lak::opengl::shared_index_buffer lak::opengl::index_buffer::make_shared()
+{
+	return lak::opengl::shared_index_buffer::make(make());
+}
+
+lak::opengl::index_buffer &lak::opengl::index_buffer::bind()
+{
+	_buffer.bind();
+	return *this;
+}
+
+const lak::opengl::index_buffer &lak::opengl::index_buffer::bind() const
+{
+	_buffer.bind();
+	return *this;
+}
+
+lak::opengl::index_buffer &lak::opengl::index_buffer::set_data(
+  lak::span<const GLuint> index_data, GLenum usage)
+{
+	_buffer.set_data(index_data, usage);
+	_size = index_data.size();
+	return *this;
 }
 
 /* --- vertex_array --- */
@@ -287,56 +261,127 @@ const lak::opengl::vertex_array &lak::opengl::vertex_array::bind() const
 /* --- static_object_part --- */
 
 lak::opengl::static_object_part::static_object_part(static_object_part &&other)
-: _vertex_buffer(lak::move(other._vertex_buffer)),
+: _vertex_buffers(lak::move(other._vertex_buffers)),
+  _index_buffer(lak::move(other._index_buffer)),
+  _vertex_count(lak::exchange(other._vertex_count, 0)),
   _shader(lak::move(other._shader)),
   _textures(lak::move(other._textures)),
-  _vertex_array(lak::move(other._vertex_array))
+  _vertex_array(lak::move(other._vertex_array)),
+  _draw_mode(lak::exchange(other._draw_mode, GL_TRIANGLES))
 {
 }
 
 lak::opengl::static_object_part &lak::opengl::static_object_part::operator=(
   static_object_part &&other)
 {
-	lak::swap(_vertex_array, other._vertex_array);
-	lak::swap(_vertex_buffer, other._vertex_buffer);
+	lak::swap(_index_buffer, other._index_buffer);
+	lak::swap(_vertex_count, other._vertex_count);
+	lak::swap(_vertex_buffers, other._vertex_buffers);
 	lak::swap(_shader, other._shader);
 	lak::swap(_textures, other._textures);
+	lak::swap(_vertex_array, other._vertex_array);
+	lak::swap(_draw_mode, other._draw_mode);
 	return *this;
 }
 
 lak::opengl::static_object_part lak::opengl::static_object_part::make(
-  shared_vertex_buffer vertices,
   shared_program shader_program,
-  lak::span<const lak::opengl::location> attribute_locations,
+  GLenum draw_mode,
+  lak::array<lak::pair<shared_vertex_buffer,
+                       lak::span<const lak::opengl::location>>> buffers,
+  GLsizei vertex_count,
   lak::array<lak::pair<lak::opengl::shared_texture, lak::opengl::location>>
     textures)
 {
 	static_object_part mesh;
 
-	mesh._vertex_array  = lak::opengl::vertex_array::make();
-	mesh._vertex_buffer = lak::move(vertices);
-	mesh._shader        = lak::move(shader_program);
-	mesh._textures      = lak::move(textures);
+	mesh._vertex_buffers.reserve(buffers.size());
+	mesh._vertex_count = vertex_count;
+	mesh._shader       = lak::move(shader_program);
+	mesh._textures     = lak::move(textures);
+	mesh._vertex_array = lak::opengl::vertex_array::make();
+	mesh._draw_mode    = draw_mode;
 
-	mesh._vertex_array.bind();
-	mesh._vertex_buffer->bind();
-	mesh._vertex_buffer->apply_shader_attributes(attribute_locations);
+	{
+		mesh._vertex_array.bind();
+		GL_DEFER_CALL(glBindVertexArray, 0);
+		for (auto &buff : buffers)
+		{
+			mesh._vertex_buffers.push_back(buff.first)
+			  ->bind()
+			  .apply_shader_attributes(buff.second);
+		}
+	}
+
+	return mesh;
+}
+
+lak::opengl::static_object_part lak::opengl::static_object_part::make(
+  shared_program shader_program,
+  GLenum draw_mode,
+  lak::array<lak::pair<shared_vertex_buffer,
+                       lak::span<const lak::opengl::location>>> buffers,
+  shared_index_buffer index_buff,
+  lak::array<lak::pair<lak::opengl::shared_texture, lak::opengl::location>>
+    textures)
+{
+	static_object_part mesh;
+
+	mesh._vertex_buffers.reserve(buffers.size());
+	mesh._index_buffer = lak::move(index_buff);
+	mesh._shader       = lak::move(shader_program);
+	mesh._textures     = lak::move(textures);
+	mesh._vertex_array = lak::opengl::vertex_array::make();
+	mesh._draw_mode    = draw_mode;
+
+	{
+		mesh._vertex_array.bind();
+		GL_DEFER_CALL(glBindVertexArray, 0);
+		mesh._index_buffer->bind();
+		for (auto &buff : buffers)
+		{
+			mesh._vertex_buffers.push_back(buff.first)
+			  ->bind()
+			  .apply_shader_attributes(buff.second);
+		}
+	}
 
 	return mesh;
 }
 
 lak::opengl::shared_static_object_part
 lak::opengl::static_object_part::make_shared(
-  shared_vertex_buffer vertices,
   shared_program shader_program,
-  lak::span<const lak::opengl::location> attribute_locations,
+  GLenum draw_mode,
+  lak::array<lak::pair<shared_vertex_buffer,
+                       lak::span<const lak::opengl::location>>> buffers,
+  GLsizei vertex_count,
   lak::array<lak::pair<lak::opengl::shared_texture, lak::opengl::location>>
     textures)
 {
 	return lak::opengl::shared_static_object_part::make(
-	  make(lak::move(vertices),
-	       lak::move(shader_program),
-	       attribute_locations,
+	  make(lak::move(shader_program),
+	       draw_mode,
+	       lak::move(buffers),
+	       vertex_count,
+	       lak::move(textures)));
+}
+
+lak::opengl::shared_static_object_part
+lak::opengl::static_object_part::make_shared(
+  shared_program shader_program,
+  GLenum draw_mode,
+  lak::array<lak::pair<shared_vertex_buffer,
+                       lak::span<const lak::opengl::location>>> buffers,
+  shared_index_buffer index_buff,
+  lak::array<lak::pair<lak::opengl::shared_texture, lak::opengl::location>>
+    textures)
+{
+	return lak::opengl::shared_static_object_part::make(
+	  make(lak::move(shader_program),
+	       draw_mode,
+	       lak::move(buffers),
+	       lak::move(index_buff),
 	       lak::move(textures)));
 }
 
@@ -350,6 +395,7 @@ void lak::opengl::static_object_part::draw(GLuint instances) const
 	_shader->use().UNWRAP();
 
 	_vertex_array.bind();
+	GL_DEFER_CALL(glBindVertexArray, 0);
 
 	for (size_t texture_index = 0; const auto &[texture, sampler] : _textures)
 	{
@@ -362,7 +408,42 @@ void lak::opengl::static_object_part::draw(GLuint instances) const
 		++texture_index;
 	}
 
-	_vertex_buffer->draw(instances);
+	if (_index_buffer)
+	{
+		if (instances == 1)
+		{
+			lak::opengl::call_checked(glDrawElements,
+			                          _draw_mode,
+			                          GLsizei(_index_buffer->size()),
+			                          GL_UNSIGNED_INT,
+			                          (GLvoid *)nullptr)
+			  .UNWRAP();
+		}
+		else
+		{
+			lak::opengl::call_checked(glDrawElementsInstanced,
+			                          _draw_mode,
+			                          GLsizei(_index_buffer->size()),
+			                          GL_UNSIGNED_INT,
+			                          (GLvoid *)nullptr,
+			                          instances)
+			  .UNWRAP();
+		}
+	}
+	else
+	{
+		if (instances == 1)
+		{
+			lak::opengl::call_checked(glDrawArrays, _draw_mode, 0, _vertex_count)
+			  .UNWRAP();
+		}
+		else
+		{
+			lak::opengl::call_checked(
+			  glDrawArraysInstanced, _draw_mode, 0, _vertex_count, instances)
+			  .UNWRAP();
+		}
+	}
 }
 
 void lak::opengl::static_object_part::draw_part(const GLuint *offset,
@@ -371,7 +452,12 @@ void lak::opengl::static_object_part::draw_part(const GLuint *offset,
 {
 	_shader->use().UNWRAP();
 
+	ASSERT(!!_index_buffer);
+	ASSERT(((uintptr_t)(offset + count)) / sizeof(GLuint) <=
+	       _index_buffer->size());
+
 	_vertex_array.bind();
+	GL_DEFER_CALL(glBindVertexArray, 0);
 
 	for (size_t texture_index = 0; const auto &[texture, sampler] : _textures)
 	{
@@ -384,5 +470,20 @@ void lak::opengl::static_object_part::draw_part(const GLuint *offset,
 		++texture_index;
 	}
 
-	_vertex_buffer->draw_part(offset, count, instances);
+	if (instances == 1)
+	{
+		lak::opengl::call_checked(
+		  glDrawElements, _draw_mode, count, GL_UNSIGNED_INT, offset)
+		  .UNWRAP();
+	}
+	else
+	{
+		lak::opengl::call_checked(glDrawElementsInstanced,
+		                          _draw_mode,
+		                          count,
+		                          GL_UNSIGNED_INT,
+		                          offset,
+		                          instances)
+		  .UNWRAP();
+	}
 }

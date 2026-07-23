@@ -144,20 +144,20 @@ struct vertex
 };
 
 lak::opengl::shared_static_object_part make_mesh(
-  lak::span<const vertex> vertices,
-  GLenum draw_mode,
   lak::opengl::shared_program shader,
+  GLenum draw_mode,
+  lak::span<const vertex> vertices,
   lak::opengl::shared_texture albedo)
 {
 	auto buffer = lak::opengl::vertex_buffer::make_shared();
-	buffer->bind()
-	  .set_data(vertices, vertices.size(), draw_mode)
-	  .set_vertex_attributes(vertex::attributes());
+	buffer->set_data(vertices).set_vertex_attributes(vertex::attributes());
 	return lak::opengl::static_object_part::make_shared(
-	  buffer,
 	  shader,
-	  vertex::attribute_indices(
-	    *shader, "vPosition", "vColor", "vNormal", "vTexCoord"),
+	  draw_mode,
+	  {{lak::move(buffer),
+	    vertex::attribute_indices(
+	      *shader, "vPosition", "vColor", "vNormal", "vTexCoord")}},
+	  vertices.size(),
 	  {{albedo, shader->assert_uniform_location("albedo")}});
 }
 
@@ -350,7 +350,7 @@ struct game_window : virtual public LAK_BASIC_PROGRAM(window_api)
 
 				sc.ball = model{
 				  .frame = sc.player->add_child(),
-				  .mesh  = make_mesh(ball_vertices, GL_TRIANGLES, sc.shader, albedo),
+				  .mesh  = make_mesh(sc.shader, GL_TRIANGLES, ball_vertices, albedo),
 				};
 			}
 
@@ -359,7 +359,7 @@ struct game_window : virtual public LAK_BASIC_PROGRAM(window_api)
 				  lak::opengl::shared_texture::make(load_opengl_texture(cube_texture));
 
 				auto obj_part =
-				  make_mesh(cube_vertices, GL_TRIANGLES, sc.shader, albedo);
+				  make_mesh(sc.shader, GL_TRIANGLES, cube_vertices, albedo);
 
 				sc.blocks.clear();
 				sc.blocks.reserve(map_texture.size().x * map_texture.size().y);
@@ -385,7 +385,7 @@ struct game_window : virtual public LAK_BASIC_PROGRAM(window_api)
 				  lak::opengl::shared_texture::make(load_opengl_texture(coin_texture));
 
 				auto obj_part =
-				  make_mesh(coin_vertices, GL_TRIANGLES, sc.shader, albedo);
+				  make_mesh(sc.shader, GL_TRIANGLES, coin_vertices, albedo);
 
 				sc.coins.clear();
 				sc.coins.reserve(map_texture.size().x * map_texture.size().y);
@@ -671,7 +671,7 @@ struct game_window : virtual public LAK_BASIC_PROGRAM(window_api)
 	}
 };
 
-lak::graphics_mode forced_graphics_mode = lak::graphics_mode::None;
+lak::graphics_mode forced_graphics_mode = lak::graphics_mode::OpenGL;
 
 lak::error_code<int> LAK_BASIC_PROGRAM(program_preinit)(lak::span<char *> args)
 {
@@ -712,13 +712,13 @@ lak::error_code<int> LAK_BASIC_PROGRAM(program_init)()
 
 	switch (forced_graphics_mode)
 	{
-		case lak::graphics_mode::None:
-		{
-			RES_TRY_ASSIGN(
-			  game_window_ptr =,
-			  LAK_BASIC_PROGRAM(create_window<game_window>)().map_err(map_str_err));
-		}
-		break;
+		// case lak::graphics_mode::None:
+		// {
+		// 	RES_TRY_ASSIGN(
+		// 	  game_window_ptr =,
+		// 	  LAK_BASIC_PROGRAM(create_window<game_window>)().map_err(map_str_err));
+		// }
+		// break;
 		// #ifdef LAK_ENABLE_SOFTRENDER
 		// 		case lak::graphics_mode::Software:
 		// 		{

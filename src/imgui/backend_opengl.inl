@@ -4,17 +4,6 @@
 #include "lak/system/opengl/state.hpp"
 #include "lak/system/opengl/texture.hpp"
 
-auto _call_checked =
-  []<typename RET, typename... ARGS, typename... ARGS2>(
-    lak::trace trace, RET(APIENTRYP func)(ARGS...), ARGS2... args)
-{
-	return lak::opengl::call_checked(func, lak::forward<ARGS2>(args)...)
-	  .TRACE_UNWRAP(trace);
-};
-
-#define GL_DEFER_CALL(FUNC, ...)                                              \
-	DEFER_CALL(_call_checked, lak::trace{}, FUNC, __VA_ARGS__)
-
 namespace ImGui
 {
 	struct _ImplGLContext

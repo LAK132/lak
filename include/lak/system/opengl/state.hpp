@@ -9,6 +9,7 @@
 #include "lak/debug.hpp"
 #include "lak/format.hpp"
 #include "lak/result.hpp"
+#include "lak/trace.hpp"
 #include "lak/type_traits.hpp"
 
 #include "lak/string_literals/view.hpp"
@@ -86,6 +87,14 @@ namespace lak
 			func(args...);
 			return lak::opengl::get_error();
 		}
+
+		static auto trace_call_checked =
+		  []<typename RTN, typename... ARGS, typename... ARGS2>(
+		    lak::trace tr, RTN(APIENTRYP func)(ARGS...), ARGS2... args)
+		{ return lak::opengl::call_checked(func, args...).TRACE_UNWRAP(tr); };
+
+#define GL_DEFER_CALL(FUNC, ...)                                              \
+	DEFER_CALL(lak::opengl::trace_call_checked, lak::trace{}, FUNC, __VA_ARGS__)
 
 		template<size_t S = 1>
 		force_inline auto get_boolean(GLenum target)
