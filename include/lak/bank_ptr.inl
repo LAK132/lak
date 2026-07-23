@@ -181,7 +181,7 @@ T *lak::bank<T>::find_if(FUNCTOR &&func)
 /* --- lak::unique_bank_ptr<T> --- */
 
 template<typename T>
-lak::unique_bank_ptr<T> lak::unique_bank_ptr<T>::create(const T &t)
+lak::unique_bank_ptr<T> lak::unique_bank_ptr<T>::make(const T &t)
 requires(lak::is_copy_constructible_v<T>)
 {
 	std::lock_guard lock(lak::bank<T>::_mutex);
@@ -189,7 +189,7 @@ requires(lak::is_copy_constructible_v<T>)
 }
 
 template<typename T>
-lak::unique_bank_ptr<T> lak::unique_bank_ptr<T>::create(T &&t)
+lak::unique_bank_ptr<T> lak::unique_bank_ptr<T>::make(T &&t)
 {
 	std::lock_guard lock(lak::bank<T>::_mutex);
 	return {lak::bank<T>::internal_create(lak::move(t))};
@@ -197,7 +197,7 @@ lak::unique_bank_ptr<T> lak::unique_bank_ptr<T>::create(T &&t)
 
 template<typename T>
 template<typename... ARGS>
-lak::unique_bank_ptr<T> lak::unique_bank_ptr<T>::create(ARGS &&...args)
+lak::unique_bank_ptr<T> lak::unique_bank_ptr<T>::make(ARGS &&...args)
 {
 	std::lock_guard lock(lak::bank<T>::_mutex);
 	return {lak::bank<T>::internal_create(lak::forward<ARGS>(args)...)};
@@ -380,7 +380,7 @@ void lak::shared_bank_ptr<T>::flush()
 }
 
 template<typename T>
-lak::shared_bank_ptr<T> lak::shared_bank_ptr<T>::create(const T &t)
+lak::shared_bank_ptr<T> lak::shared_bank_ptr<T>::make(const T &t)
 requires(lak::is_copy_constructible_v<T>)
 {
 	std::lock_guard lock(lak::bank<T>::_mutex);
@@ -391,7 +391,7 @@ requires(lak::is_copy_constructible_v<T>)
 }
 
 template<typename T>
-lak::shared_bank_ptr<T> lak::shared_bank_ptr<T>::create(T &&t)
+lak::shared_bank_ptr<T> lak::shared_bank_ptr<T>::make(T &&t)
 {
 	std::lock_guard lock(lak::bank<T>::_mutex);
 	auto index = lak::bank<T>::internal_create(lak::move(t));
@@ -402,7 +402,7 @@ lak::shared_bank_ptr<T> lak::shared_bank_ptr<T>::create(T &&t)
 
 template<typename T>
 template<typename... ARGS>
-lak::shared_bank_ptr<T> lak::shared_bank_ptr<T>::create(ARGS &&...args)
+lak::shared_bank_ptr<T> lak::shared_bank_ptr<T>::make(ARGS &&...args)
 {
 	std::lock_guard lock(lak::bank<T>::_mutex);
 	auto index = lak::bank<T>::internal_create(lak::forward<ARGS>(args)...);

@@ -19,8 +19,8 @@ namespace lak
 		process(lak::unique_ptr<lak::process_impl> &&impl);
 
 	public:
-		static lak::result<process> create(
-		  const lak::fs::path &app, lak::string_view<char8_t> arguments = {});
+		static lak::result<process> make(const lak::fs::path &app,
+		                                 lak::string_view<char8_t> arguments = {});
 
 		process(process &&)            = default;
 		process &operator=(process &&) = default;

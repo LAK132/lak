@@ -21,7 +21,7 @@ namespace lak
 		// remember which Buffers were bound to them, so Buffers do no need to be
 		// rebound when rebinding a Vertex Array Object.
 		struct buffer;
-		using shared_buffer = lak::shared_ptr<buffer>;
+		using shared_buffer = lak::tiny_shared_ptr<buffer>;
 		struct buffer
 		{
 		private:
@@ -38,7 +38,8 @@ namespace lak
 			buffer(const buffer &other)            = delete;
 			buffer &operator=(const buffer &other) = delete;
 
-			static buffer create(GLenum target);
+			static buffer make(GLenum target);
+			static shared_buffer make_shared(GLenum target);
 
 			buffer &bind();
 			const buffer &bind() const;
@@ -52,7 +53,7 @@ namespace lak
 		};
 
 		struct uniform_buffer;
-		using shared_uniform_buffer = lak::shared_ptr<uniform_buffer>;
+		using shared_uniform_buffer = lak::tiny_shared_ptr<uniform_buffer>;
 		struct uniform_buffer
 		{
 		private:
@@ -66,7 +67,8 @@ namespace lak
 			uniform_buffer(const uniform_buffer &)            = delete;
 			uniform_buffer &operator=(const uniform_buffer &) = delete;
 
-			static uniform_buffer create();
+			static uniform_buffer make();
+			static shared_uniform_buffer make_shared();
 
 			uniform_buffer &bind();
 			const uniform_buffer &bind() const;
@@ -107,7 +109,7 @@ namespace lak
 		// Vertex Array Object. vertex_buffer tracks the vertex attributes of the
 		// data it holds.
 		struct vertex_buffer;
-		using shared_vertex_buffer = lak::shared_ptr<vertex_buffer>;
+		using shared_vertex_buffer = lak::tiny_shared_ptr<vertex_buffer>;
 		struct vertex_buffer
 		{
 		private:
@@ -127,9 +129,11 @@ namespace lak
 			vertex_buffer(const vertex_buffer &other)            = delete;
 			vertex_buffer &operator=(const vertex_buffer &other) = delete;
 
-			// create will unbind the current Vertex Array Object.
-			static vertex_buffer create();
-			static vertex_buffer create_indexed();
+			// make will unbind the current Vertex Array Object.
+			static vertex_buffer make();
+			static vertex_buffer make_indexed();
+			static shared_vertex_buffer make_shared();
+			static shared_vertex_buffer make_indexed_shared();
 
 			vertex_buffer &bind();
 			const vertex_buffer &bind() const;
@@ -173,7 +177,7 @@ namespace lak
 			vertex_array(const vertex_array &other)            = delete;
 			vertex_array &operator=(const vertex_array &other) = delete;
 
-			static vertex_array create();
+			static vertex_array make();
 
 			vertex_array &bind();
 			const vertex_array &bind() const;
@@ -184,6 +188,8 @@ namespace lak
 			inline GLuint get() const { return _array; }
 		};
 
+		struct static_object_part;
+		using shared_static_object_part = lak::tiny_shared_ptr<static_object_part>;
 		struct static_object_part
 		{
 		private:
@@ -198,7 +204,13 @@ namespace lak
 			static_object_part(static_object_part &&other);
 			static_object_part &operator=(static_object_part &&other);
 
-			static static_object_part create(
+			static static_object_part make(
+			  shared_vertex_buffer vertices,
+			  shared_program shader_program,
+			  lak::span<const lak::opengl::location> attribute_locations,
+			  lak::array<lak::pair<lak::opengl::shared_texture,
+			                       lak::opengl::location>> textures);
+			static shared_static_object_part make_shared(
 			  shared_vertex_buffer vertices,
 			  shared_program shader_program,
 			  lak::span<const lak::opengl::location> attribute_locations,

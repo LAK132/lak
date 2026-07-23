@@ -12,7 +12,7 @@ lak::process::process(lak::unique_ptr<lak::process_impl> &&impl)
 {
 }
 
-lak::result<lak::process> lak::process::create(
+lak::result<lak::process> lak::process::make(
   const lak::fs::path &app, lak::string_view<char8_t> arguments)
 {
 	ASSERT_NYI();

@@ -46,7 +46,7 @@ void ImplInitGLContext(ImGui::ImplGLContext context, const lak::window &)
 {
 	using namespace lak::opengl::literals;
 
-	context->shader = lak::opengl::program::create(
+	context->shader = lak::opengl::program::make(
 	                    R"(#version 150
 uniform mat4 viewProj;
 in vec2 vPosition;

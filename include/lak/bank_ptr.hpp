@@ -77,13 +77,13 @@ namespace lak
 		using bank<T>::flush;
 		using bank<T>::for_each;
 
-		[[nodiscard]] static unique_bank_ptr create(const T &t)
+		[[nodiscard]] static unique_bank_ptr make(const T &t)
 		requires(lak::is_copy_constructible_v<T>);
 
-		[[nodiscard]] static unique_bank_ptr create(T &&t);
+		[[nodiscard]] static unique_bank_ptr make(T &&t);
 
 		template<typename... ARGS>
-		[[nodiscard]] static unique_bank_ptr create(ARGS &&...args);
+		[[nodiscard]] static unique_bank_ptr make(ARGS &&...args);
 
 		[[nodiscard]] static unique_bank_ptr from_raw_bank_ptr(T *ptr);
 
@@ -146,13 +146,13 @@ namespace lak
 
 		static void flush();
 
-		[[nodiscard]] static shared_bank_ptr create(const T &t)
+		[[nodiscard]] static shared_bank_ptr make(const T &t)
 		requires(lak::is_copy_constructible_v<T>);
 
-		[[nodiscard]] static shared_bank_ptr create(T &&t);
+		[[nodiscard]] static shared_bank_ptr make(T &&t);
 
 		template<typename... ARGS>
-		[[nodiscard]] static shared_bank_ptr create(ARGS &&...args);
+		[[nodiscard]] static shared_bank_ptr make(ARGS &&...args);
 
 		template<typename FUNCTOR>
 		[[nodiscard]] static shared_bank_ptr find_if(FUNCTOR &&func);

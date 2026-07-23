@@ -29,8 +29,8 @@ namespace lak
 			shader(const shader &other)            = delete;
 			shader &operator=(const shader &other) = delete;
 
-			static lak::opengl::result<shader> create(const lak::astring &code,
-			                                          GLenum shader_type);
+			static lak::opengl::result<shader> make(const lak::astring &code,
+			                                        GLenum shader_type);
 
 			shader &clear();
 
@@ -87,7 +87,7 @@ namespace lak
 		};
 
 		struct program;
-		using shared_program = lak::shared_ptr<program>;
+		using shared_program = lak::tiny_shared_ptr<program>;
 		struct program
 		{
 		private:
@@ -102,12 +102,12 @@ namespace lak
 			program(const program &other)            = delete;
 			program &operator=(const program &other) = delete;
 
-			static lak::opengl::result<program> create();
-			static lak::opengl::result<program> create(const shader &vertex,
-			                                           const shader &fragment);
+			static lak::opengl::result<program> make();
+			static lak::opengl::result<program> make(const shader &vertex,
+			                                         const shader &fragment);
 
-			static lak::opengl::result<shared_program> create_shared();
-			static lak::opengl::result<shared_program> create_shared(
+			static lak::opengl::result<shared_program> make_shared();
+			static lak::opengl::result<shared_program> make_shared(
 			  const shader &vertex, const shader &fragment);
 
 			lak::opengl::result<program &> attach(const shader &shader);

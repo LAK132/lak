@@ -13,10 +13,10 @@ reference_frame::~reference_frame()
 	for (auto &child : children) child->parent = nullptr;
 }
 
-lak::shared_ptr<reference_frame> reference_frame::add_child()
+reference_frame_ptr reference_frame::add_child()
 {
 	return children.emplace_back(
-	  lak::shared_ptr<reference_frame>::make(reference_frame{.parent = this}));
+	  reference_frame_ptr::make(reference_frame{.parent = this}));
 }
 
 void reference_frame::erase(decltype(children)::const_iterator child)

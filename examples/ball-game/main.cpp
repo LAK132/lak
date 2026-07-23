@@ -30,7 +30,7 @@ enum state_t
 
 struct camera
 {
-	lak::shared_ptr<reference_frame> frame;
+	reference_frame_ptr frame;
 	glm::mat4 projection;
 	glm::mat4 view;
 
@@ -60,14 +60,14 @@ struct camera
 
 struct light
 {
-	lak::shared_ptr<reference_frame> frame;
+	reference_frame_ptr frame;
 	glm::vec4 colour = {0.5f, 0.5f, 0.5f, 1.0f};
 };
 
 struct model
 {
-	lak::shared_ptr<reference_frame> frame;
-	lak::shared_ptr<lak::opengl::static_object_part> mesh;
+	reference_frame_ptr frame;
+	lak::opengl::shared_static_object_part mesh;
 
 	void draw()
 	{
@@ -138,24 +138,22 @@ struct vertex
 	}
 };
 
-lak::shared_ptr<lak::opengl::static_object_part> make_mesh(
+lak::opengl::shared_static_object_part make_mesh(
   lak::span<const vertex> vertices,
   GLenum draw_mode,
   lak::opengl::shared_program shader,
-  lak::shared_ptr<lak::opengl::texture> albedo)
+  lak::opengl::shared_texture albedo)
 {
-	auto buffer = lak::opengl::shared_vertex_buffer::make(
-	  lak::opengl::vertex_buffer::create());
+	auto buffer = lak::opengl::vertex_buffer::make_shared();
 	buffer->bind()
 	  .set_data(vertices, vertices.size(), draw_mode)
 	  .set_vertex_attributes(vertex::attributes());
-	return lak::shared_ptr<lak::opengl::static_object_part>::make(
-	  lak::opengl::static_object_part::create(
-	    buffer,
-	    shader,
-	    vertex::attribute_indices(
-	      *shader, "vPosition", "vColor", "vNormal", "vTexCoord"),
-	    {{albedo, shader->assert_uniform_location("albedo")}}));
+	return lak::opengl::static_object_part::make_shared(
+	  buffer,
+	  shader,
+	  vertex::attribute_indices(
+	    *shader, "vPosition", "vColor", "vNormal", "vTexCoord"),
+	  {{albedo, shader->assert_uniform_location("albedo")}});
 }
 
 lak::array<vertex> load_model(const lak::obj::obj &obj)
@@ -219,10 +217,10 @@ lak::opengl::texture load_opengl_texture(const lak::image3_t &img)
 
 struct scene
 {
-	lak::shared_ptr<lak::opengl::program> shader;
-	lak::shared_ptr<reference_frame> world;
-	lak::shared_ptr<reference_frame> player;
-	lak::shared_ptr<reference_frame> cameraBoom;
+	lak::opengl::shared_program shader;
+	reference_frame_ptr world;
+	reference_frame_ptr player;
+	reference_frame_ptr cameraBoom;
 	::camera camera;
 	lak::array<light> lights;
 	lak::array<model> blocks;
@@ -318,16 +316,15 @@ struct game_window : virtual public LAK_BASIC_PROGRAM(window_api)
 
 			{
 				auto vshader =
-				  lak::opengl::shader::create(bga::vshader, GL_VERTEX_SHADER).UNWRAP();
+				  lak::opengl::shader::make(bga::vshader, GL_VERTEX_SHADER).UNWRAP();
 				auto fshader =
-				  lak::opengl::shader::create(bga::fshader, GL_FRAGMENT_SHADER)
-				    .UNWRAP();
+				  lak::opengl::shader::make(bga::fshader, GL_FRAGMENT_SHADER).UNWRAP();
 				sc.shader =
-				  lak::opengl::program::create_shared(vshader, fshader).UNWRAP();
+				  lak::opengl::program::make_shared(vshader, fshader).UNWRAP();
 				sc.shader->use().UNWRAP();
 			}
 
-			sc.world      = lak::shared_ptr<reference_frame>::make();
+			sc.world      = reference_frame_ptr::make();
 			sc.player     = sc.world->add_child();
 			sc.cameraBoom = sc.player->add_child();
 
@@ -338,8 +335,8 @@ struct game_window : virtual public LAK_BASIC_PROGRAM(window_api)
 			sc.camera.frame->translation.value.z = 0.7f;
 
 			{
-				auto albedo = lak::shared_ptr<lak::opengl::texture>::make(
-				  load_opengl_texture(ball_texture));
+				auto albedo =
+				  lak::opengl::shared_texture::make(load_opengl_texture(ball_texture));
 
 				sc.ball = model{
 				  .frame = sc.player->add_child(),
@@ -348,8 +345,8 @@ struct game_window : virtual public LAK_BASIC_PROGRAM(window_api)
 			}
 
 			{
-				auto albedo = lak::shared_ptr<lak::opengl::texture>::make(
-				  load_opengl_texture(cube_texture));
+				auto albedo =
+				  lak::opengl::shared_texture::make(load_opengl_texture(cube_texture));
 
 				auto obj_part =
 				  make_mesh(cube_vertices, GL_TRIANGLES, sc.shader, albedo);
@@ -363,7 +360,7 @@ struct game_window : virtual public LAK_BASIC_PROGRAM(window_api)
 						if (map_texture[{x, y}].r > 0)
 						{
 							auto &block = sc.blocks.push_back(model{
-							  .frame = lak::shared_ptr<reference_frame>::make(),
+							  .frame = reference_frame_ptr::make(),
 							  .mesh  = obj_part,
 							});
 
@@ -374,8 +371,8 @@ struct game_window : virtual public LAK_BASIC_PROGRAM(window_api)
 			}
 
 			{
-				auto albedo = lak::shared_ptr<lak::opengl::texture>::make(
-				  load_opengl_texture(coin_texture));
+				auto albedo =
+				  lak::opengl::shared_texture::make(load_opengl_texture(coin_texture));
 
 				auto obj_part =
 				  make_mesh(coin_vertices, GL_TRIANGLES, sc.shader, albedo);
@@ -389,7 +386,7 @@ struct game_window : virtual public LAK_BASIC_PROGRAM(window_api)
 						if (map_texture[{x, y}].g > 0)
 						{
 							auto &coin = sc.coins.push_back(model{
-							  .frame = lak::shared_ptr<reference_frame>::make(),
+							  .frame = reference_frame_ptr::make(),
 							  .mesh  = obj_part,
 							});
 
@@ -410,7 +407,7 @@ struct game_window : virtual public LAK_BASIC_PROGRAM(window_api)
 						if (map_texture[{x, y}].b > 0)
 						{
 							auto &li = sc.lights.push_back(light{
-							  .frame  = lak::shared_ptr<reference_frame>::make(),
+							  .frame  = reference_frame_ptr::make(),
 							  .colour = {0.5f, 0.5f, 0.5f, 1.0f},
 							});
 

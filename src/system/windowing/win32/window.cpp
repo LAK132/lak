@@ -48,7 +48,7 @@ lak::wstring win32_error_string(LPCWSTR lpszFunction);
 lak::result<lak::window_handle *, lak::u8string> lak::create_window(
   const lak::software_settings &)
 {
-	auto handle = lak::unique_bank_ptr<lak::window_handle>::create();
+	auto handle = lak::unique_bank_ptr<lak::window_handle>::make();
 	ASSERT(handle);
 
 	DEFER(if (handle) lak::destroy_window(handle.release()));
@@ -145,7 +145,7 @@ lak::result<lak::window_handle *, lak::u8string> lak::create_window(
 lak::result<lak::window_handle *, lak::u8string> lak::create_window(
   const lak::opengl_settings &settings)
 {
-	auto handle = lak::unique_bank_ptr<lak::window_handle>::create();
+	auto handle = lak::unique_bank_ptr<lak::window_handle>::make();
 	ASSERT(handle);
 
 	DEFER(if (handle) lak::destroy_window(handle.release()));
@@ -242,7 +242,7 @@ lak::result<lak::window_handle *, lak::u8string> lak::create_window(
 
 	auto renderer = device->CreateRenderer(r.features, r.options);
 
-	auto handle = lak::unique_bank_ptr<lak::window_handle>::create();
+	auto handle = lak::unique_bank_ptr<lak::window_handle>::make();
 	ASSERT(handle);
 
 	if (auto window_system_info = lak::cobalt_window_system_info(handle.get());
@@ -548,7 +548,7 @@ bool lak::swap_window(lak::window_handle *handle)
 			if (!ctx.platform_handle->compute_passes.empty())
 			{
 				rd->SetRenderPasses(ctx.platform_handle->compute_passes.data(),
-														ctx.platform_handle->compute_passes.size());
+				                    ctx.platform_handle->compute_passes.size());
 				rd->StartNewFrame();
 				rd->WaitForOutputCaptureComplete();
 				rd->RemoveAllRenderPasses();

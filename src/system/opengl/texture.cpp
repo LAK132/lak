@@ -24,6 +24,16 @@ lak::opengl::texture &lak::opengl::texture::operator=(texture &&other)
 	return *this;
 }
 
+lak::opengl::shared_texture lak::opengl::texture::make_shared()
+{
+	return lak::opengl::shared_texture::make();
+}
+
+lak::opengl::shared_texture lak::opengl::texture::make_shared(GLenum target)
+{
+	return lak::opengl::shared_texture::make(target);
+}
+
 lak::opengl::texture &lak::opengl::texture::init(GLenum target)
 {
 	if (_texture != 0) clear();

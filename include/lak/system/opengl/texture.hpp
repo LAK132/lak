@@ -12,6 +12,8 @@ namespace lak
 {
 	namespace opengl
 	{
+		struct texture;
+		using shared_texture = lak::tiny_shared_ptr<lak::opengl::texture>;
 		struct texture
 		{
 		private:
@@ -25,6 +27,9 @@ namespace lak
 			texture(texture &&other);
 			~texture();
 			texture &operator=(texture &&other);
+
+			static shared_texture make_shared();
+			static shared_texture make_shared(GLenum target);
 
 			texture &init(GLenum target);
 			texture &clear();
@@ -62,8 +67,6 @@ namespace lak
 			                 GLenum color_type,
 			                 const GLvoid *pixels);
 		};
-
-		using shared_texture = lak::shared_ptr<lak::opengl::texture>;
 	}
 }
 

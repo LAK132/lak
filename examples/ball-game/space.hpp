@@ -7,6 +7,9 @@
 #include <glm/mat4x4.hpp>
 #include <glm/vec3.hpp>
 
+struct reference_frame;
+using reference_frame_ptr = lak::tiny_shared_ptr<reference_frame>;
+
 struct delta_transform
 {
 	glm::vec3 value        = glm::vec3(0.0);
@@ -17,7 +20,7 @@ struct delta_transform
 struct reference_frame
 {
 	reference_frame *parent = nullptr;
-	lak::array<lak::shared_ptr<reference_frame>> children;
+	lak::array<reference_frame_ptr> children;
 
 	delta_transform translation;
 	delta_transform rotation;
@@ -25,7 +28,7 @@ struct reference_frame
 
 	~reference_frame();
 
-	lak::shared_ptr<reference_frame> add_child();
+	reference_frame_ptr add_child();
 
 	void erase(decltype(children)::const_iterator child);
 	void erase(const reference_frame *child);

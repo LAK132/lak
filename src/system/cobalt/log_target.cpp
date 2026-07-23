@@ -100,7 +100,7 @@ lak::unique_ref<cobalt::logging::LogManager> lak::cobalt::log_manager =
 {
 	auto result =
 	  lak::unique_ref<::cobalt::logging::LogManager>::make().unwrap();
-	auto log_target = lak::cobalt::log_target::create();
+	auto log_target = lak::cobalt::log_target::make();
 	log_target->set_external(&lak::debugger);
 	result->AddLogTarget(lak::move(log_target));
 	return result;

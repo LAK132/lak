@@ -25,10 +25,7 @@ namespace lak
 				debugger = external_debugger;
 			}
 
-			static inline unique_ptr create()
-			{
-				return unique_ptr(new log_target());
-			}
+			static inline unique_ptr make() { return unique_ptr(new log_target()); }
 
 			inline virtual void Delete() override { delete this; }
 

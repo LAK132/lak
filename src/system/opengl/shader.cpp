@@ -20,7 +20,7 @@ lak::opengl::shader &lak::opengl::shader::operator=(shader &&other)
 	return *this;
 }
 
-lak::opengl::result<lak::opengl::shader> lak::opengl::shader::create(
+lak::opengl::result<lak::opengl::shader> lak::opengl::shader::make(
   const lak::astring &code, GLenum shader_type)
 {
 	lak::opengl::get_error().discard();
@@ -76,37 +76,37 @@ lak::opengl::shader &lak::opengl::shader::clear()
 lak::opengl::result<lak::opengl::shader>
 lak::opengl::literals::operator""_vertex_shader(const char *str, size_t)
 {
-	return shader::create(str, GL_VERTEX_SHADER);
+	return shader::make(str, GL_VERTEX_SHADER);
 }
 
 lak::opengl::result<lak::opengl::shader>
 lak::opengl::literals::operator""_fragment_shader(const char *str, size_t)
 {
-	return shader::create(str, GL_FRAGMENT_SHADER);
+	return shader::make(str, GL_FRAGMENT_SHADER);
 }
 
 lak::opengl::result<lak::opengl::shader>
 lak::opengl::literals::operator""_tess_control_shader(const char *str, size_t)
 {
-	return shader::create(str, GL_TESS_CONTROL_SHADER);
+	return shader::make(str, GL_TESS_CONTROL_SHADER);
 }
 
 lak::opengl::result<lak::opengl::shader>
 lak::opengl::literals::operator""_tess_eval_shader(const char *str, size_t)
 {
-	return shader::create(str, GL_TESS_EVALUATION_SHADER);
+	return shader::make(str, GL_TESS_EVALUATION_SHADER);
 }
 
 lak::opengl::result<lak::opengl::shader>
 lak::opengl::literals::operator""_geometry_shader(const char *str, size_t)
 {
-	return shader::create(str, GL_GEOMETRY_SHADER);
+	return shader::make(str, GL_GEOMETRY_SHADER);
 }
 
 lak::opengl::result<lak::opengl::shader>
 lak::opengl::literals::operator""_compute_shader(const char *str, size_t)
 {
-	return shader::create(str, GL_COMPUTE_SHADER);
+	return shader::make(str, GL_COMPUTE_SHADER);
 }
 
 /* --- program --- */
@@ -124,7 +124,7 @@ lak::opengl::program &lak::opengl::program::operator=(program &&other)
 	return *this;
 }
 
-lak::opengl::result<lak::opengl::program> lak::opengl::program::create()
+lak::opengl::result<lak::opengl::program> lak::opengl::program::make()
 {
 	lak::opengl::get_error().discard();
 	program prog;
@@ -132,11 +132,11 @@ lak::opengl::result<lak::opengl::program> lak::opengl::program::create()
 	return lak::move_ok(prog);
 }
 
-lak::opengl::result<lak::opengl::program> lak::opengl::program::create(
+lak::opengl::result<lak::opengl::program> lak::opengl::program::make(
   const shader &vertex, const shader &fragment)
 {
 	ASSERT(vertex && fragment);
-	RES_TRY_ASSIGN(auto prog =, program::create());
+	RES_TRY_ASSIGN(auto prog =, program::make());
 	RES_TRY(prog.attach(vertex));
 	RES_TRY(prog.attach(fragment));
 	RES_TRY(prog.link());
@@ -144,20 +144,19 @@ lak::opengl::result<lak::opengl::program> lak::opengl::program::create(
 }
 
 lak::opengl::result<lak::opengl::shared_program>
-lak::opengl::program::create_shared()
+lak::opengl::program::make_shared()
 {
-	return create().map(
+	return make().map(
 	  [](lak::opengl::program &&prog)
-	  { return lak::shared_ptr<program>::make(lak::move(prog)); });
+	  { return lak::opengl::shared_program::make(lak::move(prog)); });
 }
 
 lak::opengl::result<lak::opengl::shared_program>
-lak::opengl::program::create_shared(const shader &vertex,
-                                    const shader &fragment)
+lak::opengl::program::make_shared(const shader &vertex, const shader &fragment)
 {
-	return create(vertex, fragment)
+	return make(vertex, fragment)
 	  .map([](lak::opengl::program &&prog)
-	       { return lak::shared_ptr<program>::make(lak::move(prog)); });
+	       { return lak::opengl::shared_program::make(lak::move(prog)); });
 }
 
 lak::opengl::result<lak::opengl::program &> lak::opengl::program::attach(

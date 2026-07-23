@@ -7,8 +7,7 @@ lak::result<lak::window_handle *, lak::u8string> lak::create_window(
   const lak::software_settings &s)
 {
 	(void)s;
-	return lak::ok_t{
-	  lak::unique_bank_ptr<lak::window_handle>::create().release()};
+	return lak::ok_t{lak::unique_bank_ptr<lak::window_handle>::make().release()};
 }
 #endif
 
@@ -17,8 +16,7 @@ lak::result<lak::window_handle *, lak::u8string> lak::create_window(
   const lak::opengl_settings &s)
 {
 	(void)s;
-	return lak::ok_t{
-	  lak::unique_bank_ptr<lak::window_handle>::create().release()};
+	return lak::ok_t{lak::unique_bank_ptr<lak::window_handle>::make().release()};
 }
 #endif
 
@@ -28,8 +26,7 @@ lak::result<lak::window_handle *, lak::u8string> lak::create_window(
 {
 	(void)s;
 	(void)r;
-	return lak::ok_t{
-	  lak::unique_bank_ptr<lak::window_handle>::create().release()};
+	return lak::ok_t{lak::unique_bank_ptr<lak::window_handle>::make().release()};
 }
 #endif
 

@@ -23,7 +23,7 @@ lak::opengl::buffer &lak::opengl::buffer::operator=(buffer &&other)
 	return *this;
 }
 
-lak::opengl::buffer lak::opengl::buffer::create(GLenum target)
+lak::opengl::buffer lak::opengl::buffer::make(GLenum target)
 {
 	ASSERT(target == GL_ARRAY_BUFFER || target == GL_ATOMIC_COUNTER_BUFFER ||
 	       target == GL_COPY_READ_BUFFER || target == GL_COPY_WRITE_BUFFER ||
@@ -39,6 +39,11 @@ lak::opengl::buffer lak::opengl::buffer::create(GLenum target)
 	lak::opengl::call_checked(glGenBuffers, 1, &buf._buffer).UNWRAP();
 	ASSERT(buf);
 	return buf;
+}
+
+lak::opengl::shared_buffer lak::opengl::buffer::make_shared(GLenum target)
+{
+	return lak::opengl::shared_buffer::make(make(target));
 }
 
 lak::opengl::buffer &lak::opengl::buffer::bind()
@@ -115,19 +120,30 @@ lak::opengl::vertex_buffer &lak::opengl::vertex_buffer::operator=(
 	return *this;
 }
 
-lak::opengl::vertex_buffer lak::opengl::vertex_buffer::create()
+lak::opengl::vertex_buffer lak::opengl::vertex_buffer::make()
 {
 	vertex_buffer buf;
-	buf._vertex_buffer = buffer::create(GL_ARRAY_BUFFER);
+	buf._vertex_buffer = buffer::make(GL_ARRAY_BUFFER);
 	return buf;
 }
 
-lak::opengl::vertex_buffer lak::opengl::vertex_buffer::create_indexed()
+lak::opengl::vertex_buffer lak::opengl::vertex_buffer::make_indexed()
 {
 	vertex_buffer buf;
-	buf._vertex_buffer = buffer::create(GL_ARRAY_BUFFER);
-	buf._index_buffer  = buffer::create(GL_ELEMENT_ARRAY_BUFFER);
+	buf._vertex_buffer = buffer::make(GL_ARRAY_BUFFER);
+	buf._index_buffer  = buffer::make(GL_ELEMENT_ARRAY_BUFFER);
 	return buf;
+}
+
+lak::opengl::shared_vertex_buffer lak::opengl::vertex_buffer::make_shared()
+{
+	return lak::opengl::shared_vertex_buffer::make(make());
+}
+
+lak::opengl::shared_vertex_buffer
+lak::opengl::vertex_buffer::make_indexed_shared()
+{
+	return lak::opengl::shared_vertex_buffer::make(make_indexed());
 }
 
 lak::opengl::vertex_buffer &lak::opengl::vertex_buffer::bind()
@@ -246,7 +262,7 @@ lak::opengl::vertex_array &lak::opengl::vertex_array::operator=(
 	return *this;
 }
 
-lak::opengl::vertex_array lak::opengl::vertex_array::create()
+lak::opengl::vertex_array lak::opengl::vertex_array::make()
 {
 	vertex_array arr;
 	lak::opengl::call_checked(glGenVertexArrays, 1, &arr._array).UNWRAP();
@@ -288,18 +304,18 @@ lak::opengl::static_object_part &lak::opengl::static_object_part::operator=(
 	return *this;
 }
 
-lak::opengl::static_object_part lak::opengl::static_object_part::create(
+lak::opengl::static_object_part lak::opengl::static_object_part::make(
   shared_vertex_buffer vertices,
   shared_program shader_program,
   lak::span<const lak::opengl::location> attribute_locations,
-  lak::array<lak::pair<lak::shared_ptr<lak::opengl::texture>,
-                       lak::opengl::location>> textures)
+  lak::array<lak::pair<lak::opengl::shared_texture, lak::opengl::location>>
+    textures)
 {
 	static_object_part mesh;
 
-	mesh._vertex_array  = lak::opengl::vertex_array::create();
-	mesh._vertex_buffer = vertices;
-	mesh._shader        = shader_program;
+	mesh._vertex_array  = lak::opengl::vertex_array::make();
+	mesh._vertex_buffer = lak::move(vertices);
+	mesh._shader        = lak::move(shader_program);
 	mesh._textures      = lak::move(textures);
 
 	mesh._vertex_array.bind();
@@ -307,6 +323,21 @@ lak::opengl::static_object_part lak::opengl::static_object_part::create(
 	mesh._vertex_buffer->apply_shader_attributes(attribute_locations);
 
 	return mesh;
+}
+
+lak::opengl::shared_static_object_part
+lak::opengl::static_object_part::make_shared(
+  shared_vertex_buffer vertices,
+  shared_program shader_program,
+  lak::span<const lak::opengl::location> attribute_locations,
+  lak::array<lak::pair<lak::opengl::shared_texture, lak::opengl::location>>
+    textures)
+{
+	return lak::opengl::shared_static_object_part::make(
+	  make(lak::move(vertices),
+	       lak::move(shader_program),
+	       attribute_locations,
+	       lak::move(textures)));
 }
 
 lak::opengl::static_object_part &lak::opengl::static_object_part::clear()
