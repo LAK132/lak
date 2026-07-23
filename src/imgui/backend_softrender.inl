@@ -48,6 +48,21 @@ namespace ImGui
 #	else
 #		error "No software render colour bit depth specified"
 #	endif
+#elif defined(LAK_USE_SDL3)
+		SDL_Window *window;
+		SDL_Surface *screen_surface;
+#	if defined(LAK_SOFTWARE_RENDER_32BIT)
+		static const SDL_PixelFormat screen_format = SDL_PIXELFORMAT_ABGR8888;
+#	elif defined(LAK_SOFTWARE_RENDER_24BIT)
+		static const SDL_PixelFormat screen_format = SDL_PIXELFORMAT_RGB24;
+#	elif defined(LAK_SOFTWARE_RENDER_16BIT)
+		static const SDL_PixelFormat screen_format = SDL_PIXELFORMAT_RGB565;
+#	elif defined(LAK_SOFTWARE_RENDER_8BIT)
+		SDL_Palette *palette;
+		static const SDL_PixelFormat screen_format = SDL_PIXELFORMAT_INDEX8;
+#	else
+#		error "No software render colour bit depth specified"
+#	endif
 #else
 #	error "No implementation specified"
 #endif
@@ -104,6 +119,21 @@ inline void ImplUpdateDisplaySize(ImGui::ImplSRContext context,
 #	ifdef LAK_SOFTWARE_RENDER_8BIT
 		SDL_SetSurfacePalette(context->screen_surface, context->palette);
 #	endif
+#elif defined(LAK_USE_SDL3)
+		if (context->screen_surface != nullptr)
+			SDL_DestroySurface(context->screen_surface);
+
+		context->screen_surface =
+		  SDL_CreateSurfaceFrom(static_cast<int>(context->screen_texture.w),
+		                        static_cast<int>(context->screen_texture.h),
+		                        context->screen_format,
+		                        context->screen_texture.pixels,
+		                        static_cast<int>(context->screen_texture.w *
+		                                         context->screen_texture.size));
+
+#	ifdef LAK_SOFTWARE_RENDER_8BIT
+		SDL_SetSurfacePalette(context->screen_surface, context->palette);
+#	endif
 #else
 #	error "No implementation specified"
 #endif
@@ -140,7 +170,21 @@ void ImplInitSRContext(ImGui::ImplSRContext context, const lak::window &window)
 	}
 	SDL_SetPaletteColors(context->palette, palette, 0, 256);
 #	endif
+#elif defined(LAK_USE_SDL3)
+	context->window = window.handle()->sdl_window;
 
+#	ifdef LAK_SOFTWARE_RENDER_8BIT
+	context->palette = SDL_CreatePalette(256);
+	SDL_Colour palette[256];
+	for (size_t i = 0; i < 256; ++i)
+	{
+		palette[i].r = uint8_t(i);
+		palette[i].g = uint8_t(i);
+		palette[i].b = uint8_t(i);
+		palette[i].a = uint8_t(255);
+	}
+	SDL_SetPaletteColors(context->palette, palette, 0, 256);
+#	endif
 #else
 #	error "No implementation specified"
 #endif
@@ -168,6 +212,16 @@ void ImplShutdownSRContext(ImGui::ImplSRContext context)
 
 #	ifdef LAK_SOFTWARE_RENDER_8BIT
 	SDL_FreePalette(context->palette);
+	context->palette = nullptr;
+#	endif
+#elif defined(LAK_USE_SDL3)
+	context->window = nullptr;
+
+	SDL_DestroySurface(context->screen_surface);
+	context->screen_surface = nullptr;
+
+#	ifdef LAK_SOFTWARE_RENDER_8BIT
+	SDL_DestroyPalette(context->palette);
 	context->palette = nullptr;
 #	endif
 #else
@@ -488,6 +542,26 @@ void ImplSRRender(ImGui::ImplContext context, ImDrawData *draw_data)
 		SDL_FillRect(
 		  window, &clip, SDL_MapRGBA(window->format, 0x00, 0x00, 0x00, 0xFF));
 		if (SDL_BlitSurface(sr_context->screen_surface, nullptr, window, nullptr))
+			ERROR(SDL_GetError());
+	}
+#elif defined(LAK_USE_SDL3)
+	ASSERT(sr_context->window != nullptr);
+
+	SDL_Surface *window = SDL_GetWindowSurface(sr_context->window);
+
+	if (window != nullptr)
+	{
+		SDL_Rect clip;
+		SDL_GetSurfaceClipRect(window, &clip);
+		SDL_FillSurfaceRect(window,
+		                    &clip,
+		                    SDL_MapRGBA(SDL_GetPixelFormatDetails(window->format),
+		                                NULL,
+		                                0x00,
+		                                0x00,
+		                                0x00,
+		                                0xFF));
+		if (!SDL_BlitSurface(sr_context->screen_surface, nullptr, window, nullptr))
 			ERROR(SDL_GetError());
 	}
 #else

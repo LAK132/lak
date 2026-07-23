@@ -142,6 +142,11 @@ if get_option('lak_backend') == 'sdl2'
 		'-DLAK_USE_SDL2',
 		'-DSDL_MAIN_HANDLED',
 		language: ['c', 'cpp', 'objcpp'])
+elif get_option('lak_backend') == 'sdl3'
+	add_project_arguments(
+		'-DLAK_USE_SDL3',
+		'-DSDL_MAIN_HANDLED',
+		language: ['c', 'cpp', 'objcpp'])
 elif get_option('lak_backend') == 'win32'
 	add_project_arguments(
 		'-DLAK_USE_WINAPI',

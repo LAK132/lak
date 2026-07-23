@@ -132,6 +132,11 @@ void ImGui::ImplInit()
 	io.BackendFlags |= ImGuiBackendFlags_HasMouseCursors;
 	io.BackendFlags |= ImGuiBackendFlags_HasSetMousePos;
 	io.Fonts->Flags |= ImFontAtlasFlags_NoMouseCursors;
+#elif defined(LAK_USE_SDL3)
+	io.BackendPlatformName = "imgui_impl_lak_sdl3";
+	io.BackendFlags |= ImGuiBackendFlags_HasMouseCursors;
+	io.BackendFlags |= ImGuiBackendFlags_HasSetMousePos;
+	io.Fonts->Flags |= ImFontAtlasFlags_NoMouseCursors;
 #else
 #	error "No implementation specified"
 #endif
@@ -194,6 +199,29 @@ void ImGui::ImplInitContext(ImplContext context, const lak::window &window)
 	  SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_WAITARROW);
 	context->mouse_cursors[ImGuiMouseCursor_NotAllowed].platform_handle =
 	  SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_NO);
+#elif defined(LAK_USE_SDL3)
+	context->mouse_cursors[ImGuiMouseCursor_Arrow].platform_handle =
+	  SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_DEFAULT);
+	context->mouse_cursors[ImGuiMouseCursor_TextInput].platform_handle =
+	  SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_TEXT);
+	context->mouse_cursors[ImGuiMouseCursor_ResizeAll].platform_handle =
+	  SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_MOVE);
+	context->mouse_cursors[ImGuiMouseCursor_ResizeNS].platform_handle =
+	  SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_NS_RESIZE);
+	context->mouse_cursors[ImGuiMouseCursor_ResizeEW].platform_handle =
+	  SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_EW_RESIZE);
+	context->mouse_cursors[ImGuiMouseCursor_ResizeNESW].platform_handle =
+	  SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_NESW_RESIZE);
+	context->mouse_cursors[ImGuiMouseCursor_ResizeNWSE].platform_handle =
+	  SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_NWSE_RESIZE);
+	context->mouse_cursors[ImGuiMouseCursor_Hand].platform_handle =
+	  SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_POINTER);
+	context->mouse_cursors[ImGuiMouseCursor_Wait].platform_handle =
+	  SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_WAIT);
+	context->mouse_cursors[ImGuiMouseCursor_Progress].platform_handle =
+	  SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_PROGRESS);
+	context->mouse_cursors[ImGuiMouseCursor_NotAllowed].platform_handle =
+	  SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_NOT_ALLOWED);
 #else
 #	error "No implementation specified"
 #endif
@@ -239,6 +267,11 @@ void ImGui::ImplInitContext(ImplContext context, const lak::window &window)
 	SDL_VERSION(&wmInfo.version);
 	SDL_GetWindowWMInfo(window.handle()->sdl_window, &wmInfo);
 	ImGui::GetMainViewport()->PlatformHandleRaw = wmInfo.info.win.window;
+#	elif defined(LAK_USE_SDL3)
+	ImGui::GetMainViewport()->PlatformHandleRaw = SDL_GetPointerProperty(
+	  SDL_GetWindowProperties(window.handle()->sdl_window),
+	  SDL_PROP_WINDOW_WIN32_HWND_POINTER,
+	  NULL);
 #	else
 #		error "No implementation specified"
 #	endif
@@ -257,6 +290,9 @@ void ImGui::ImplShutdownContext(ImplContext context)
 #	error "NYI"
 #elif defined(LAK_USE_SDL2)
 		SDL_FreeCursor(cursor.platform_handle);
+		cursor.platform_handle = nullptr;
+#elif defined(LAK_USE_SDL3)
+		SDL_DestroyCursor(cursor.platform_handle);
 		cursor.platform_handle = nullptr;
 #else
 #	error "No implementation specified"
@@ -344,6 +380,8 @@ void ImGui::ImplNewFrame(ImplContext context,
 #	error "NYI"
 #elif defined(LAK_USE_SDL2)
 			SDL_ShowCursor(SDL_FALSE);
+#elif defined(LAK_USE_SDL3)
+			SDL_HideCursor();
 #else
 #	error "No implementation specified"
 #endif
@@ -359,6 +397,9 @@ void ImGui::ImplNewFrame(ImplContext context,
 #elif defined(LAK_USE_SDL2)
 			SDL_SetCursor(context->mouse_cursors[cursor].platform_handle);
 			SDL_ShowCursor(SDL_TRUE);
+#elif defined(LAK_USE_SDL3)
+			SDL_SetCursor(context->mouse_cursors[cursor].platform_handle);
+			SDL_ShowCursor();
 #else
 #	error "No implementation specified"
 #endif
@@ -454,6 +495,8 @@ bool ImGui::ImplProcessEvent(ImplContext context, const lak::event &event)
 #	error "NYI"
 #elif defined(LAK_USE_SDL2)
 			SDL_CaptureMouse(SDL_TRUE);
+#elif defined(LAK_USE_SDL3)
+			SDL_CaptureMouse(true);
 #else
 #	error "No implementation specified"
 #endif
@@ -483,6 +526,8 @@ bool ImGui::ImplProcessEvent(ImplContext context, const lak::event &event)
 #	error "NYI"
 #elif defined(LAK_USE_SDL2)
 			SDL_CaptureMouse(SDL_FALSE);
+#elif defined(LAK_USE_SDL3)
+			SDL_CaptureMouse(false);
 #else
 #	error "No implementation specified"
 #endif

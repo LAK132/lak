@@ -24,6 +24,7 @@ namespace lak
 #	elif defined(LAK_USE_XCB)
 #		error "NYI"
 #	elif defined(LAK_USE_SDL2)
+#	elif defined(LAK_USE_SDL3)
 #	else
 #		error "No implementation specified"
 #	endif
@@ -159,6 +160,8 @@ namespace lak
 #		error "NYI"
 #	elif defined(LAK_USE_SDL2)
 #		error "NYI"
+#	elif defined(LAK_USE_SDL3)
+#		error "NYI"
 #	else
 #		error "No implementation specified"
 #	endif
@@ -174,6 +177,8 @@ namespace lak
 #	elif defined(LAK_USE_XCB)
 #		error "NYI"
 #	elif defined(LAK_USE_SDL2)
+#		error "NYI"
+#	elif defined(LAK_USE_SDL3)
 #		error "NYI"
 #	else
 #		error "No implementation specified"
