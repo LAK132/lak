@@ -71,6 +71,7 @@ namespace lak
 		}
 
 		template<size_t I>
+		requires((I < 2))
 		inline T &get()
 		{
 			if constexpr (I == 0)
@@ -80,6 +81,7 @@ namespace lak
 		}
 
 		template<size_t I>
+		requires((I < 2))
 		inline const T &get() const
 		{
 			if constexpr (I == 0)
@@ -180,9 +182,9 @@ namespace lak
 		}
 
 		template<typename GLMT, glm::precision GLMP>
-		explicit operator glm::tvec4<GLMT, GLMP>() const
+		explicit operator glm::tvec2<GLMT, GLMP>() const
 		{
-			return {static_cast<GLMT>(x), static_cast<GLMT>(y), GLMT(0), GLMT(0)};
+			return {static_cast<GLMT>(x), static_cast<GLMT>(y)};
 		}
 
 		template<typename GLMT, glm::precision GLMP>
@@ -192,9 +194,9 @@ namespace lak
 		}
 
 		template<typename GLMT, glm::precision GLMP>
-		explicit operator glm::tvec2<GLMT, GLMP>() const
+		explicit operator glm::tvec4<GLMT, GLMP>() const
 		{
-			return {static_cast<GLMT>(x), static_cast<GLMT>(y)};
+			return {static_cast<GLMT>(x), static_cast<GLMT>(y), GLMT(0), GLMT(0)};
 		}
 #endif
 	};
@@ -277,6 +279,7 @@ namespace lak
 		}
 
 		template<size_t I>
+		requires((I < 3))
 		inline T &get()
 		{
 			if constexpr (I == 0)
@@ -288,6 +291,7 @@ namespace lak
 		}
 
 		template<size_t I>
+		requires((I < 3))
 		inline const T &get() const
 		{
 			if constexpr (I == 0)
@@ -400,12 +404,9 @@ namespace lak
 		}
 
 		template<typename GLMT, glm::precision GLMP>
-		explicit operator glm::tvec4<GLMT, GLMP>() const
+		explicit operator glm::tvec2<GLMT, GLMP>() const
 		{
-			return {static_cast<GLMT>(x),
-			        static_cast<GLMT>(y),
-			        static_cast<GLMT>(z),
-			        GLMT(0)};
+			return {static_cast<GLMT>(x), static_cast<GLMT>(y)};
 		}
 
 		template<typename GLMT, glm::precision GLMP>
@@ -416,9 +417,12 @@ namespace lak
 		}
 
 		template<typename GLMT, glm::precision GLMP>
-		explicit operator glm::tvec2<GLMT, GLMP>() const
+		explicit operator glm::tvec4<GLMT, GLMP>() const
 		{
-			return {static_cast<GLMT>(x), static_cast<GLMT>(y)};
+			return {static_cast<GLMT>(x),
+			        static_cast<GLMT>(y),
+			        static_cast<GLMT>(z),
+			        GLMT(0)};
 		}
 #endif
 	};
@@ -512,6 +516,7 @@ namespace lak
 		}
 
 		template<size_t I>
+		requires((I < 4))
 		inline T &get()
 		{
 			if constexpr (I == 0)
@@ -525,6 +530,7 @@ namespace lak
 		}
 
 		template<size_t I>
+		requires((I < 4))
 		inline const T &get() const
 		{
 			if constexpr (I == 0)
@@ -647,12 +653,9 @@ namespace lak
 		}
 
 		template<typename GLMT, glm::precision GLMP>
-		explicit operator glm::tvec4<GLMT, GLMP>() const
+		explicit operator glm::tvec2<GLMT, GLMP>() const
 		{
-			return {static_cast<GLMT>(x),
-			        static_cast<GLMT>(y),
-			        static_cast<GLMT>(z),
-			        static_cast<GLMT>(w)};
+			return {static_cast<GLMT>(x), static_cast<GLMT>(y)};
 		}
 
 		template<typename GLMT, glm::precision GLMP>
@@ -663,9 +666,12 @@ namespace lak
 		}
 
 		template<typename GLMT, glm::precision GLMP>
-		explicit operator glm::tvec2<GLMT, GLMP>() const
+		explicit operator glm::tvec4<GLMT, GLMP>() const
 		{
-			return {static_cast<GLMT>(x), static_cast<GLMT>(y)};
+			return {static_cast<GLMT>(x),
+			        static_cast<GLMT>(y),
+			        static_cast<GLMT>(z),
+			        static_cast<GLMT>(w)};
 		}
 #endif
 	};
