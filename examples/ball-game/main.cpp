@@ -230,7 +230,7 @@ struct scene
 	lak::array<light> lights;
 	lak::array<model> blocks;
 	lak::array<model> coins;
-	lak::array<model> coins_reset;
+	size_t score_max = 0U;
 	model ball;
 };
 
@@ -405,7 +405,7 @@ struct game_window : virtual public LAK_BASIC_PROGRAM(window_api)
 						}
 					}
 				}
-				sc.coins_reset = sc.coins;
+				sc.score_max = sc.coins.size();
 			}
 
 			{
@@ -609,8 +609,7 @@ struct game_window : virtual public LAK_BASIC_PROGRAM(window_api)
 				if (!onTrack) state = LOSS;
 
 				ImGui::Text("Score");
-				lak::Text<u8"{}/{}">(sc.coins_reset.size() - sc.coins.size(),
-				                     sc.coins_reset.size());
+				lak::Text<u8"{}/{}">(sc.score_max - sc.coins.size(), sc.score_max);
 			}
 			break;
 
