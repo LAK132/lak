@@ -1,3 +1,4 @@
+subdir('ball-game')
 subdir('basic_program')
 subdir('hello-cobalt')
 subdir('mdc-view')

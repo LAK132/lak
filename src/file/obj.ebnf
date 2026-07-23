@@ -50,7 +50,7 @@ $[](const lak::tuple<size_t, lak::optional<lak::tuple<lak::optional<size_t>,lak:
 	else return lak::obj::face_coord{.v = v - 1U};
 }$;
 
-polyface = 3*[polyface_coord];
+polyface = 3+[polyface_coord];
 
 polyline_coord = index
 $[](size_t v) { return lak::obj::line_coord{.v = v - 1U}; }$;
