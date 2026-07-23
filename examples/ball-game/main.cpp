@@ -3,6 +3,7 @@
 #define LAK_BASIC_PROGRAM_IMGUI_IMPL
 #include <lak/basic_program.inl>
 
+#include <lak/format.hpp>
 #include <lak/stdint.hpp>
 
 #include <lak/file/obj.hpp>
@@ -12,6 +13,8 @@
 
 #include <lak/system/opengl/mesh.hpp>
 #include <lak/system/opengl/shader.hpp>
+
+#include <lak/imgui/widgets.hpp>
 
 #include <glm/mat4x4.hpp>
 #include <glm/vec3.hpp>
@@ -429,7 +432,7 @@ struct game_window : virtual public LAK_BASIC_PROGRAM(window_api)
 
 				for (size_t i = 0; i < lightCount; i++)
 				{
-					auto lightname = "lights["_str + (char)('0' + i) + "]"_str;
+					auto lightname = lak::fmt<"lights[{:d}]">(i);
 					sc.shader->assert_set_uniform(
 					  (lightname + ".position").c_str(),
 					  lak::as_bytes(&sc.lights[i].frame->translation.value));
@@ -606,9 +609,8 @@ struct game_window : virtual public LAK_BASIC_PROGRAM(window_api)
 				if (!onTrack) state = LOSS;
 
 				ImGui::Text("Score");
-				ImGui::Text("%zu/%zu",
-				            sc.coins_reset.size() - sc.coins.size(),
-				            sc.coins_reset.size());
+				lak::Text<u8"{}/{}">(sc.coins_reset.size() - sc.coins.size(),
+				                     sc.coins_reset.size());
 			}
 			break;
 
