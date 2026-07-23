@@ -33,7 +33,7 @@ namespace ImGui
 #	error "NYI"
 #elif defined(LAK_USE_XCB)
 #	error "NYI"
-#elif defined(LAK_USE_SDL)
+#elif defined(LAK_USE_SDL2)
 		SDL_Window *window;
 		SDL_Surface *screen_surface;
 #	if defined(LAK_SOFTWARE_RENDER_32BIT)
@@ -88,7 +88,7 @@ inline void ImplUpdateDisplaySize(ImGui::ImplSRContext context,
 #	error "NYI"
 #elif defined(LAK_USE_XCB)
 #	error "NYI"
-#elif defined(LAK_USE_SDL)
+#elif defined(LAK_USE_SDL2)
 		if (context->screen_surface != nullptr)
 			SDL_FreeSurface(context->screen_surface);
 
@@ -125,7 +125,7 @@ void ImplInitSRContext(ImGui::ImplSRContext context, const lak::window &window)
 #	error "NYI"
 #elif defined(LAK_USE_XCB)
 #	error "NYI"
-#elif defined(LAK_USE_SDL)
+#elif defined(LAK_USE_SDL2)
 	context->window = window.handle()->sdl_window;
 
 #	ifdef LAK_SOFTWARE_RENDER_8BIT
@@ -160,7 +160,7 @@ void ImplShutdownSRContext(ImGui::ImplSRContext context)
 #	error "NYI"
 #elif defined(LAK_USE_XCB)
 #	error "NYI"
-#elif defined(LAK_USE_SDL)
+#elif defined(LAK_USE_SDL2)
 	context->window = nullptr;
 
 	SDL_FreeSurface(context->screen_surface);
@@ -476,7 +476,7 @@ void ImplSRRender(ImGui::ImplContext context, ImDrawData *draw_data)
 #	error "NYI"
 #elif defined(LAK_USE_XCB)
 #	error "NYI"
-#elif defined(LAK_USE_SDL)
+#elif defined(LAK_USE_SDL2)
 	ASSERT(sr_context->window != nullptr);
 
 	SDL_Surface *window = SDL_GetWindowSurface(sr_context->window);

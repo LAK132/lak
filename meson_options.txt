@@ -56,9 +56,9 @@ option('lak_backend',
 		'xlib',
 		'xcb',
 		# 'wayland',
-		'sdl',
+		'sdl2',
 	],
-	value: 'sdl',
+	value: 'sdl2',
 	yield: true,
 )
 

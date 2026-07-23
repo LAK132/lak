@@ -25,8 +25,8 @@
 #	include "../system/windowing/xlib/impl.hpp"
 #elif defined(LAK_USE_XCB)
 #	include "../system/windowing/xcb/impl.hpp"
-#elif defined(LAK_USE_SDL)
-#	include "../system/windowing/sdl/impl.hpp"
+#elif defined(LAK_USE_SDL2)
+#	include "../system/windowing/sdl2/impl.hpp"
 #else
 #	error "No implementation specified"
 #endif

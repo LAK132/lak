@@ -137,9 +137,9 @@ if get_option('buildtype') == 'debug'
 		language: ['c', 'cpp', 'objcpp'])
 endif
 
-if get_option('lak_backend') == 'sdl'
+if get_option('lak_backend') == 'sdl2'
 	add_project_arguments(
-		'-DLAK_USE_SDL',
+		'-DLAK_USE_SDL2',
 		'-DSDL_MAIN_HANDLED',
 		language: ['c', 'cpp', 'objcpp'])
 elif get_option('lak_backend') == 'win32'

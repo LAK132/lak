@@ -27,7 +27,7 @@ endif
 lakwindowing_dependencies = declare_dependency(
 	dependencies: _lakwindowing_dependencies,
 	compile_args: [
-		'-DLAK_USE_SDL',
+		'-DLAK_USE_SDL2',
 		'-DSDL_MAIN_HANDLED',
 	],
 )

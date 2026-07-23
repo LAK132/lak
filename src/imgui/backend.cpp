@@ -127,7 +127,7 @@ void ImGui::ImplInit()
 #elif defined(LAK_USE_XCB)
 #	error "NYI"
 	io.BackendPlatformName = "imgui_impl_lak_xcb";
-#elif defined(LAK_USE_SDL)
+#elif defined(LAK_USE_SDL2)
 	io.BackendPlatformName = "imgui_impl_lak_sdl2";
 	io.BackendFlags |= ImGuiBackendFlags_HasMouseCursors;
 	io.BackendFlags |= ImGuiBackendFlags_HasSetMousePos;
@@ -171,7 +171,7 @@ void ImGui::ImplInitContext(ImplContext context, const lak::window &window)
 #	error "NYI"
 #elif defined(LAK_USE_XCB)
 #	error "NYI"
-#elif defined(LAK_USE_SDL)
+#elif defined(LAK_USE_SDL2)
 	context->mouse_cursors[ImGuiMouseCursor_Arrow].platform_handle =
 	  SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_ARROW);
 	context->mouse_cursors[ImGuiMouseCursor_TextInput].platform_handle =
@@ -234,7 +234,7 @@ void ImGui::ImplInitContext(ImplContext context, const lak::window &window)
 #		error "NYI"
 #	elif defined(LAK_USE_XCB)
 #		error "NYI"
-#	elif defined(LAK_USE_SDL)
+#	elif defined(LAK_USE_SDL2)
 	SDL_SysWMinfo wmInfo;
 	SDL_VERSION(&wmInfo.version);
 	SDL_GetWindowWMInfo(window.handle()->sdl_window, &wmInfo);
@@ -255,7 +255,7 @@ void ImGui::ImplShutdownContext(ImplContext context)
 #	error "NYI"
 #elif defined(LAK_USE_XCB)
 #	error "NYI"
-#elif defined(LAK_USE_SDL)
+#elif defined(LAK_USE_SDL2)
 		SDL_FreeCursor(cursor.platform_handle);
 		cursor.platform_handle = nullptr;
 #else
@@ -342,7 +342,7 @@ void ImGui::ImplNewFrame(ImplContext context,
 #	error "NYI"
 #elif defined(LAK_USE_XCB)
 #	error "NYI"
-#elif defined(LAK_USE_SDL)
+#elif defined(LAK_USE_SDL2)
 			SDL_ShowCursor(SDL_FALSE);
 #else
 #	error "No implementation specified"
@@ -356,7 +356,7 @@ void ImGui::ImplNewFrame(ImplContext context,
 #	error "NYI"
 #elif defined(LAK_USE_XCB)
 #	error "NYI"
-#elif defined(LAK_USE_SDL)
+#elif defined(LAK_USE_SDL2)
 			SDL_SetCursor(context->mouse_cursors[cursor].platform_handle);
 			SDL_ShowCursor(SDL_TRUE);
 #else
@@ -452,7 +452,7 @@ bool ImGui::ImplProcessEvent(ImplContext context, const lak::event &event)
 #	error "NYI"
 #elif defined(LAK_USE_XCB)
 #	error "NYI"
-#elif defined(LAK_USE_SDL)
+#elif defined(LAK_USE_SDL2)
 			SDL_CaptureMouse(SDL_TRUE);
 #else
 #	error "No implementation specified"
@@ -481,7 +481,7 @@ bool ImGui::ImplProcessEvent(ImplContext context, const lak::event &event)
 #	error "NYI"
 #elif defined(LAK_USE_XCB)
 #	error "NYI"
-#elif defined(LAK_USE_SDL)
+#elif defined(LAK_USE_SDL2)
 			SDL_CaptureMouse(SDL_FALSE);
 #else
 #	error "No implementation specified"
