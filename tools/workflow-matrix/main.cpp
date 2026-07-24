@@ -116,7 +116,7 @@ int main()
 	          "-Dlak_enable_windowing=true "
 	          "-Dlak_use_native_file_dialog=false "
 	          "-Dsdl2_from_source=true "
-	          "-Dlak_backend=sdl "
+	          "-Dlak_backend=sdl2 "
 	          "-Dlak_enable_glm=true "
 	          "-Dlak_enable_imgui=true"s,
 	        },
@@ -133,7 +133,7 @@ int main()
 	          "-Dlak_enable_examples=true "
 	          "-Dlak_enable_windowing=true "
 	          "-Dsdl2_from_source=true "
-	          "-Dlak_backend=sdl "
+	          "-Dlak_backend=sdl2 "
 	          "-Dlak_renderer=cobalt "
 	          "-Dlak_enable_glm=true "
 	          "-Dlak_enable_imgui=true"s,
