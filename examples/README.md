@@ -10,7 +10,7 @@ Can load custom maps by dropping a .pnm image file into the game window.
 
 - Red channel = ground blocks
 - Green channel = collectable coins
-- Blue channel = lights (max 6)
+- Blue channel = lights (max 32)
 
 See [examples/ball-game/assets/map.ppm](/examples/ball-game/assets/map.ppm) for the example map.
 

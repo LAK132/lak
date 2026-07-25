@@ -8,40 +8,51 @@ smooth in vec2 fTexCoord;
 
 uniform sampler2D albedo;
 
-uniform vec4 ambient;
-uniform vec4 diffuse;
-uniform vec4 specular;
+uniform vec3 ambient;
+uniform vec3 diffuse;
+uniform vec3 specular;
 uniform float shininess;
 
-#define MAX_LIGHTS 6
+#define MAX_LIGHTS 32
 struct light {
 	vec3 position;
-	vec4 color;
+	vec3 color;
 };
 uniform int lightCount;
 uniform light lights[MAX_LIGHTS];
 
 out vec4 pColor;
 
+float lambert_factor(vec3 normal, vec3 light_dir)
+{
+	return max(dot(normal, light_dir), 0.0);
+}
+
+float phong_factor(vec3 normal, vec3 light_dir, vec3 view_dir, float shininess)
+{
+	vec3 half = normalize(light_dir + view_dir);
+	return pow(lambert_factor(normal, half), shininess);
+}
+
 void main()
 {
 	vec3 normal = normalize(fNormal);
-	vec3 viewDir = normalize(fEye - fPosition);
-	vec4 texColor = texture(albedo, fTexCoord); // * fColor;
+	vec3 view_dir = normalize(fEye - fPosition);
+	vec4 tex_colour = texture(albedo, fTexCoord); // * fColor;
 
-	pColor = ambient * mix(fColor, texColor, texColor.w);
+	pColor = vec4(ambient, 1.0) * mix(fColor, tex_colour, tex_colour.w);
 
 	for (int i = 0; i < lightCount && i < MAX_LIGHTS; i++)
 	{
-		vec3 lightDir = normalize(lights[i].position - fPosition);
-		float dNL = max(dot(normal, lightDir), 0.0f);
-		vec4 color = diffuse;
-		color = diffuse * texColor;
-		vec4 lambert = color * lights[i].color * dNL;
+		vec3 frag_to_light = lights[i].position - fPosition;
+		vec3 light_dir = normalize(frag_to_light);
+		vec4 light_colour = vec4(lights[i].color / length(frag_to_light), 1.0);
 
-		vec3 halfVec = normalize(lightDir + viewDir);
-		float dNH = max(dot(normal, halfVec), 0.0f);
-		vec4 phong = specular * lights[i].color * pow(dNH, shininess);
-		pColor += lambert + phong;
+		float lambert = lambert_factor(normal, light_dir);
+		float phong = phong_factor(normal, light_dir, view_dir, shininess);
+
+		pColor += light_colour * (
+			(vec4(diffuse, 1.0) * tex_colour * lambert) +
+			(vec4(specular, 1.0) * phong));
 	}
 }

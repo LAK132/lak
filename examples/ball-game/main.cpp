@@ -66,7 +66,7 @@ struct camera
 struct light
 {
 	reference_frame_ptr frame;
-	glm::vec4 colour = {0.5f, 0.5f, 0.5f, 1.0f};
+	glm::vec3 colour = {1.0f, 1.0f, 1.0f};
 };
 
 struct model
@@ -74,9 +74,16 @@ struct model
 	reference_frame_ptr frame;
 	lak::opengl::shared_static_object_part mesh;
 
+	glm::vec3 diffuse  = glm::vec3(1.0f);
+	glm::vec3 specular = glm::vec3(1.0f);
+	float shininess    = 100.0f;
+
 	void draw()
 	{
 		auto model_transform = frame->get_transform();
+		mesh->shader()->assert_set_uniform("diffuse", lak::as_bytes(&diffuse));
+		mesh->shader()->assert_set_uniform("specular", lak::as_bytes(&specular));
+		mesh->shader()->assert_set_uniform("shininess", lak::as_bytes(&shininess));
 		mesh->shader()->assert_set_uniform("model",
 		                                   lak::as_bytes(&model_transform));
 		mesh->draw();
@@ -349,8 +356,11 @@ struct game_window : virtual public LAK_BASIC_PROGRAM(window_api)
 				  lak::opengl::shared_texture::make(load_opengl_texture(ball_texture));
 
 				sc.ball = model{
-				  .frame = sc.player->add_child(),
-				  .mesh  = make_mesh(sc.shader, GL_TRIANGLES, ball_vertices, albedo),
+				  .frame   = sc.player->add_child(),
+				  .mesh    = make_mesh(sc.shader, GL_TRIANGLES, ball_vertices, albedo),
+				  .diffuse = glm::vec3(1.0f),
+				  .specular  = glm::vec3(0.5f, 0.3f, 0.3f),
+				  .shininess = 100.0f,
 				};
 			}
 
@@ -370,8 +380,11 @@ struct game_window : virtual public LAK_BASIC_PROGRAM(window_api)
 						if (map_texture[{x, y}].r > 0)
 						{
 							auto &block = sc.blocks.push_back(model{
-							  .frame = reference_frame_ptr::make(),
-							  .mesh  = obj_part,
+							  .frame     = reference_frame_ptr::make(),
+							  .mesh      = obj_part,
+							  .diffuse   = glm::vec3(1.0f),
+							  .specular  = glm::vec3(0.01f),
+							  .shininess = 1.0f,
 							});
 
 							block.frame->translation.value = {x * 2.0f, y * -2.0f, -2.0f};
@@ -396,8 +409,11 @@ struct game_window : virtual public LAK_BASIC_PROGRAM(window_api)
 						if (map_texture[{x, y}].g > 0)
 						{
 							auto &coin = sc.coins.push_back(model{
-							  .frame = reference_frame_ptr::make(),
-							  .mesh  = obj_part,
+							  .frame     = reference_frame_ptr::make(),
+							  .mesh      = obj_part,
+							  .diffuse   = glm::vec3(1.0f),
+							  .specular  = glm::vec3(1.0f),
+							  .shininess = 1000.0f,
 							});
 
 							coin.frame->translation.value   = {x * 2.0f, y * -2.0f, 0.0f};
@@ -418,7 +434,7 @@ struct game_window : virtual public LAK_BASIC_PROGRAM(window_api)
 						{
 							auto &li = sc.lights.push_back(light{
 							  .frame  = reference_frame_ptr::make(),
-							  .colour = {0.5f, 0.5f, 0.5f, 1.0f},
+							  .colour = {1.0f, 1.0f, 1.0f},
 							});
 
 							li.frame->translation.value = {x * 2.0f, y * -2.0f, 2.0f};
@@ -426,7 +442,7 @@ struct game_window : virtual public LAK_BASIC_PROGRAM(window_api)
 					}
 				}
 
-				size_t lightCount = std::min<size_t>(6U, sc.lights.size());
+				size_t lightCount = std::min<size_t>(32U, sc.lights.size());
 				sc.shader->assert_set_uniform("lightCount",
 				                              lak::as_bytes(&lightCount));
 

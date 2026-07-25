@@ -20,10 +20,11 @@ const vec4 WUP = vec4(0.0, 0.0, 0.0, 1.0);
 void main()
 {
 	vec4 vertpos = model * vPosition; // object -> world space
+	vec4 campos = WUP * invprojview;  // screen -> camera -> world space
 
 	fTexCoord = vTexCoord;
 	fColor = vColor;
-	fEye = vec3(WUP * invprojview);   // screen -> camera -> world space
+	fEye = campos.xyz / campos.w;
 	fNormal = mat3(model) * vNormal;  // object -> world space (no translation/scale)
 	fPosition = vertpos.xyz;
 
