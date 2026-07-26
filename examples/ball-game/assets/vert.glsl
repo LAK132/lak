@@ -9,11 +9,11 @@ uniform mat4 projview;
 uniform mat4 invprojview;
 uniform mat4 model;
 
-out vec4 fColor;
-out vec3 fNormal;
-out vec2 fTexCoord;
-out vec3 fPosition;
-out vec3 fEye;
+smooth out vec4 fColor;
+smooth out vec3 fNormal;
+smooth out vec2 fTexCoord;
+smooth out vec3 fPosition;
+smooth out vec3 fEye;
 
 const vec4 WUP = vec4(0.0, 0.0, 0.0, 1.0);
 
