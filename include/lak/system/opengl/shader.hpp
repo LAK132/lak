@@ -103,15 +103,21 @@ namespace lak
 			program &operator=(const program &other) = delete;
 
 			static lak::opengl::result<program> make();
-			static lak::opengl::result<program> make(const shader &vertex,
-			                                         const shader &fragment);
+			static lak::result<
+			  program,
+			  lak::variant<lak::opengl::err::error_code, lak::astring>>
+			make(const shader &vertex, const shader &fragment);
 
 			static lak::opengl::result<shared_program> make_shared();
-			static lak::opengl::result<shared_program> make_shared(
-			  const shader &vertex, const shader &fragment);
+			static lak::result<
+			  shared_program,
+			  lak::variant<lak::opengl::err::error_code, lak::astring>>
+			make_shared(const shader &vertex, const shader &fragment);
 
 			lak::opengl::result<program &> attach(const shader &shader);
-			lak::opengl::result<program &> link();
+			lak::result<program &,
+			            lak::variant<lak::opengl::err::error_code, lak::astring>>
+			link();
 			lak::opengl::result<program &> clear();
 			lak::opengl::result<program &> use();
 			lak::opengl::result<const program &> use() const;

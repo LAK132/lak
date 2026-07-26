@@ -132,8 +132,9 @@ lak::opengl::result<lak::opengl::program> lak::opengl::program::make()
 	return lak::move_ok(prog);
 }
 
-lak::opengl::result<lak::opengl::program> lak::opengl::program::make(
-  const shader &vertex, const shader &fragment)
+lak::result<lak::opengl::program,
+            lak::variant<lak::opengl::err::error_code, lak::astring>>
+lak::opengl::program::make(const shader &vertex, const shader &fragment)
 {
 	ASSERT(vertex && fragment);
 	RES_TRY_ASSIGN(auto prog =, program::make());
@@ -151,7 +152,8 @@ lak::opengl::program::make_shared()
 	  { return lak::opengl::shared_program::make(lak::move(prog)); });
 }
 
-lak::opengl::result<lak::opengl::shared_program>
+lak::result<lak::opengl::shared_program,
+            lak::variant<lak::opengl::err::error_code, lak::astring>>
 lak::opengl::program::make_shared(const shader &vertex, const shader &fragment)
 {
 	return make(vertex, fragment)
@@ -170,10 +172,24 @@ lak::opengl::result<lak::opengl::program &> lak::opengl::program::attach(
 	return lak::ok_t<lak::opengl::program &>{*this};
 }
 
-lak::opengl::result<lak::opengl::program &> lak::opengl::program::link()
+lak::result<lak::opengl::program &,
+            lak::variant<lak::opengl::err::error_code, lak::astring>>
+lak::opengl::program::link()
 {
+	using error_type = lak::variant<lak::opengl::err::error_code, lak::astring>;
 	lak::opengl::get_error().discard();
 	return lak::opengl::call_checked(glLinkProgram, _program)
+	  .map_err([](const lak::opengl::err::error_code &ec) -> error_type
+	           { return ec; })
+	  .and_then(
+	    [&](auto &&) -> lak::result<lak::monostate, error_type>
+	    {
+		    RES_TRY_ASSIGN(auto maybe_err =, link_error());
+		    if_let_some (auto err, maybe_err)
+			    return lak::move_err(err);
+		    else
+			    return lak::ok_t{};
+	    })
 	  .replace<lak::opengl::program &>(*this);
 }
 
