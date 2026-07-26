@@ -363,6 +363,15 @@ namespace lak
 			  }                                                                     \
 		  })
 
+#	define AND_THEN(...)                                                       \
+		and_then(                                                                 \
+		  [&]<typename UNIQUIFY(AND_THEN_T_)>(                                    \
+		    UNIQUIFY(AND_THEN_T_) &&UNIQUIFY(AND_THEN_OK_))                       \
+		  {                                                                       \
+			  return lak::forward<UNIQUIFY(AND_THEN_T_)>(UNIQUIFY(AND_THEN_OK_))    \
+			    .__VA_ARGS__;                                                       \
+		  })
+
 #	define RES_TRY_FLUENT(...)                                                 \
 		auto UNIQUIFY(RESULT_){__VA_ARGS__};                                      \
 		if constexpr (!lak::is_same_v<lak::result_err_type_t<lak::remove_cvref_t< \
