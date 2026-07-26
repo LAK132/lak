@@ -30,8 +30,8 @@ float lambert_factor(vec3 normal, vec3 light_dir)
 
 float phong_factor(vec3 normal, vec3 light_dir, vec3 view_dir, float shininess)
 {
-	vec3 half = normalize(light_dir + view_dir);
-	return pow(lambert_factor(normal, half), shininess);
+	vec3 half_dir = normalize(light_dir + view_dir);
+	return pow(lambert_factor(normal, half_dir), shininess);
 }
 
 void main()
