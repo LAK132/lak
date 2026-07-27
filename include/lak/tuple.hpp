@@ -151,8 +151,15 @@ namespace lak
 		{
 			static_assert(sizeof...(T) == sizeof...(I));
 			static_assert(sizeof...(U) == sizeof...(J));
-			return lak::tuple<T..., U...>{lak::forward<T>(a.template get<I>())...,
-			                              lak::forward<U>(b.template get<J>())...};
+			if constexpr (sizeof...(T) == 0 && sizeof...(U) == 0)
+				return lak::tuple<T..., U...>{};
+			else if constexpr (sizeof...(T) == 0)
+				return lak::tuple<T..., U...>{lak::forward<U>(b.template get<J>())...};
+			else if constexpr (sizeof...(U) == 0)
+				return lak::tuple<T..., U...>{lak::forward<T>(a.template get<I>())...};
+			else
+				return lak::tuple<T..., U...>{lak::forward<T>(a.template get<I>())...,
+				                              lak::forward<U>(b.template get<J>())...};
 		};
 
 		return _tuple_cat(lak::index_sequence_for<T...>{},
