@@ -229,19 +229,19 @@ lak::result<uintmax_t, lak::err::string_to_numeric> lak::string_to_uintmax(
 		}
 		break;
 
-		default:
-			return lak::err_t{lak::err::string_to_numeric::invalid_base};
+		default: return lak::err_t{lak::err::string_to_numeric::invalid_base};
 	}
 }
 
 lak::result<intmax_t, lak::err::string_to_numeric> lak::string_to_intmax(
-  lak::u8string_view integer, lak::numeric_base base)
+  lak::u8string_view integer, lak::numeric_base base, bool negate)
 {
 	if (integer.empty())
 		return lak::err_t{lak::err::string_to_numeric::invalid_string};
 
 	bool is_negative = integer[0] == u8'-';
 	if (is_negative || integer[0] == u8'+') integer = integer.substr(1);
+	is_negative |= negate;
 
 	return lak::string_to_uintmax(integer, base)
 	  .and_then(
@@ -282,14 +282,16 @@ lak::result<double, lak::err::string_to_numeric> lak::string_to_double(
   lak::u8string_view fraction_part,
   lak::u8string_view exponent_part,
   uintmax_t exponent_base_part,
-  lak::numeric_base character_base)
+  lak::numeric_base character_base,
+  bool negate)
 {
 	if (integer_part.empty())
 		return lak::err_t{lak::err::string_to_numeric::invalid_string};
 
-	const bool is_negative = integer_part[0] == u8'-';
+	bool is_negative = integer_part[0] == u8'-';
 	if (is_negative || integer_part[0] == u8'+')
 		integer_part = integer_part.substr(1);
+	is_negative |= negate;
 
 	// uintmax parser guarantees all characters are digits, no + or -
 	RES_TRY_ASSIGN(const uintmax_t integer_integer =,
@@ -330,31 +332,46 @@ lak::result<double, lak::err::string_to_numeric> lak::string_to_double(
   lak::u8string_view fraction_part,
   lak::u8string_view exponent_part,
   lak::u8string_view exponent_base_part,
-  lak::numeric_base character_base)
+  lak::numeric_base character_base,
+  bool negate)
 {
 	RES_TRY_ASSIGN(const uintmax_t integer_base =,
 	               lak::string_to_uintmax(exponent_base_part, character_base));
 
-	return lak::string_to_double(
-	  integer_part, fraction_part, exponent_part, integer_base, character_base);
+	return lak::string_to_double(integer_part,
+	                             fraction_part,
+	                             exponent_part,
+	                             integer_base,
+	                             character_base,
+	                             negate);
 }
 
 lak::result<double, lak::err::string_to_numeric> lak::dec_string_to_double(
   lak::u8string_view integer_part,
   lak::u8string_view fraction_part,
-  lak::u8string_view exponent_part)
+  lak::u8string_view exponent_part,
+  bool negate)
 {
-	return lak::string_to_double(
-	  integer_part, fraction_part, exponent_part, 10, lak::numeric_base::dec);
+	return lak::string_to_double(integer_part,
+	                             fraction_part,
+	                             exponent_part,
+	                             10,
+	                             lak::numeric_base::dec,
+	                             negate);
 }
 
 lak::result<double, lak::err::string_to_numeric> lak::hex_string_to_double(
   lak::u8string_view integer_part,
   lak::u8string_view fraction_part,
-  lak::u8string_view exponent_part)
+  lak::u8string_view exponent_part,
+  bool negate)
 {
-	return lak::string_to_double(
-	  integer_part, fraction_part, exponent_part, 2, lak::numeric_base::hex);
+	return lak::string_to_double(integer_part,
+	                             fraction_part,
+	                             exponent_part,
+	                             2,
+	                             lak::numeric_base::hex,
+	                             negate);
 }
 
 lak::uintmax2_t lak::add_uintmax2(uintmax_t A, uintmax_t B, uintmax_t C)

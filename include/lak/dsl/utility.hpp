@@ -128,7 +128,9 @@ namespace lak
 		                      lak::u8string_view,
 		                      lak::u8string_view> &result)
 		  {
-			  return result.apply(lak::dec_string_to_double)
+			  return lak::dec_string_to_double(result.template get<0>(),
+			                                   result.template get<1>(),
+			                                   result.template get<2>())
 			    .map_err([&](lak::err::string_to_numeric err) -> lak::dsl::err::parse
 			             { return {err}; })
 			    .and_then(

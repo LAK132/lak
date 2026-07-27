@@ -280,6 +280,9 @@ dependencies += lakcore_dep
 
 subdir('tools'/'ebnf2cpp')
 
+subdir('src'/'lisk')
+dependencies += laklisk_dep
+
 subdir('src'/'file')
 dependencies += lakfile_dep
 

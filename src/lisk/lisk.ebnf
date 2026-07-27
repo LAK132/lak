@@ -1,0 +1,70 @@
+is_negative =
+	"+" ^ ?false? |
+	"-" ^ ?true?;
+
+hex_prefix = "0x" | "0X";
+hex_number =
+	<[is_negative]>,
+	hex_prefix,
+	<?lak::dsl::hex_number?>,
+	<[".",<?lak::dsl::hex_number?>]>
+$[](const lak::tuple<lak::optional<bool>, lak::u8string_view, lak::u8string_view> &result)
+{
+	auto [neg, int_part, frac_part] = result;
+	if (!frac_part.empty())
+		return lak::hex_string_to_double(int_part, frac_part, {}, neg? *neg : false)
+			.map_err([](lak::err::string_to_numeric err) -> lak::dsl::err::parse { return err; })
+			.map([](double v) -> lak::lisk::number { return {static_cast<lak::lisk::real_t>(v)}; });
+	else if (neg)
+		return lak::string_to_int<lak::lisk::sint_t>(int_part, lak::numeric_base::hex, *neg)
+			.map_err([](lak::err::string_to_numeric err) -> lak::dsl::err::parse { return err; })
+			.map([](lak::lisk::sint_t v) -> lak::lisk::number { return {v}; });
+	else
+		return lak::string_to_int<lak::lisk::uint_t>(int_part, lak::numeric_base::hex)
+			.map_err([](lak::err::string_to_numeric err) -> lak::dsl::err::parse { return err; })
+			.map([](lak::lisk::uint_t v) -> lak::lisk::number { return {v}; });
+}$;
+
+dec_number =
+	<[is_negative]>,
+	<?lak::dsl::dec_number?>,
+	<[?lak::dsl::bin_number?]>
+$[](const lak::tuple<lak::optional<bool>, lak::u8string_view, lak::u8string_view> &result)
+{
+	auto [neg, int_part, frac_part] = result;
+	if (!frac_part.empty())
+		return lak::dec_string_to_double(int_part, frac_part, {}, neg? *neg : false)
+			.map_err([](lak::err::string_to_numeric err) -> lak::dsl::err::parse { return err; })
+			.map([](double v) -> lak::lisk::number { return {static_cast<lak::lisk::real_t>(v)}; });
+	else if (neg)
+		return lak::string_to_int<lak::lisk::sint_t>(int_part, lak::numeric_base::dec, *neg)
+			.map_err([](lak::err::string_to_numeric err) -> lak::dsl::err::parse { return err; })
+			.map([](lak::lisk::sint_t v) -> lak::lisk::number { return {v}; });
+	else
+		return lak::string_to_int<lak::lisk::uint_t>(int_part, lak::numeric_base::dec)
+			.map_err([](lak::err::string_to_numeric err) -> lak::dsl::err::parse { return err; })
+			.map([](lak::lisk::uint_t v) -> lak::lisk::number { return {v}; });
+}$;
+
+bin_prefix = "0b" | "0B";
+bin_number =
+	<[is_negative]>,
+	bin_prefix,
+	<?lak::dsl::bin_number?>
+$[](const lak::tuple<lak::optional<bool>, lak::u8string_view> &result)
+{
+	auto [neg, int_part] = result;
+	if (neg)
+		return lak::string_to_int<lak::lisk::sint_t>(int_part, lak::numeric_base::bin, *neg)
+			.map_err([](lak::err::string_to_numeric err) -> lak::dsl::err::parse { return err; })
+			.map([](lak::lisk::sint_t v) -> lak::lisk::number { return {v}; });
+	else
+		return lak::string_to_int<lak::lisk::uint_t>(int_part, lak::numeric_base::bin)
+			.map_err([](lak::err::string_to_numeric err) -> lak::dsl::err::parse { return err; })
+			.map([](lak::lisk::uint_t v) -> lak::lisk::number { return {v}; });
+}$;
+
+number =
+	+([is_negative],hex_prefix) -> hex_number |
+	+([is_negative],bin_prefix) -> bin_number |
+	dec_number;

@@ -78,17 +78,19 @@ namespace lak
 	// hex: [+-]?[0-9a-fA-F]+
 	lak::result<intmax_t, lak::err::string_to_numeric> string_to_intmax(
 	  lak::u8string_view integer,
-	  lak::numeric_base base = lak::numeric_base::dec);
+	  lak::numeric_base base = lak::numeric_base::dec,
+	  bool negate            = false);
 
 	template<typename INTEGER>
 	lak::result<INTEGER, lak::err::string_to_numeric> string_to_int(
 	  lak::u8string_view integer,
-	  lak::numeric_base base = lak::numeric_base::dec)
+	  lak::numeric_base base = lak::numeric_base::dec,
+	  bool negate            = false)
 	{
 		static_assert(std::numeric_limits<INTEGER>::is_integer);
 		if constexpr (std::numeric_limits<INTEGER>::is_signed)
 		{
-			return lak::string_to_intmax(integer, base)
+			return lak::string_to_intmax(integer, base, negate)
 			  .and_then(
 			    [](intmax_t value)
 			      -> lak::result<INTEGER, lak::err::string_to_numeric>
@@ -101,6 +103,7 @@ namespace lak
 		}
 		else
 		{
+			BOUNDS_ASSERT(!negate);
 			return lak::string_to_uintmax(integer, base)
 			  .and_then(
 			    [](uintmax_t value)
@@ -143,13 +146,15 @@ namespace lak
 	  lak::u8string_view fraction_part,
 	  lak::u8string_view exponent_part,
 	  uintmax_t exponent_base_part,
-	  lak::numeric_base character_base = lak::numeric_base::dec);
+	  lak::numeric_base character_base = lak::numeric_base::dec,
+	  bool negate                      = false);
 	lak::result<double, lak::err::string_to_numeric> string_to_double(
 	  lak::u8string_view integer_part,
 	  lak::u8string_view fraction_part,
 	  lak::u8string_view exponent_part,
 	  lak::u8string_view exponent_base_part,
-	  lak::numeric_base character_base = lak::numeric_base::dec);
+	  lak::numeric_base character_base = lak::numeric_base::dec,
+	  bool negate                      = false);
 
 	// i: [+-]?[0-9]+
 	// f: [0-9]*
@@ -158,7 +163,8 @@ namespace lak
 	lak::result<double, lak::err::string_to_numeric> dec_string_to_double(
 	  lak::u8string_view integer_part,
 	  lak::u8string_view fraction_part,
-	  lak::u8string_view exponent_part);
+	  lak::u8string_view exponent_part,
+	  bool negate = false);
 
 	// i: [+-]?[0-9a-fA-F]+
 	// f: [0-9a-fA-F]*
@@ -167,7 +173,8 @@ namespace lak
 	lak::result<double, lak::err::string_to_numeric> hex_string_to_double(
 	  lak::u8string_view integer_part,
 	  lak::u8string_view fraction_part,
-	  lak::u8string_view exponent_part);
+	  lak::u8string_view exponent_part,
+	  bool negate = false);
 
 	struct uintmax2_t
 	{

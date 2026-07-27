@@ -18,6 +18,15 @@ See [examples/ball-game/assets/map.ppm](/examples/ball-game/assets/map.ppm) for 
 
 ![hello-cobalt.png](/examples/hello-cobalt.png?raw=true)
 
+## lisk-repl
+
+```
+lisk> (begin (define func (lambda (x n) (begin (if (zero? n) x (tail (func (* x 2) (- n 1))))))) (println (func 2 10)))
+2048
+lisk$ nil
+lisk>
+```
+
 ## mdc-view
 
 ![mdc-view.png](/examples/mdc-view.png?raw=true)
