@@ -1,6 +1,12 @@
 #ifndef LAK_SYSTEM_COMPILER_HPP
 #define LAK_SYSTEM_COMPILER_HPP
 
+#if __cplusplus >= 202603L
+#	define LAK_COMPILER_CPP26
+#endif
+#if __cplusplus >= 202302L
+#	define LAK_COMPILER_CPP23
+#endif
 #if __cplusplus >= 202002L
 #	define LAK_COMPILER_CPP20
 #endif
