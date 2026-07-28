@@ -36,7 +36,7 @@ lak::pair<lak::u8string_view, lak::json::value_proxy>
 lak::json::object_proxy::operator[](size_t index) const
 {
 	BOUNDS_ASSERT_LESS(object.values.begin.index + object.values.size,
-	                   block.get<lak::json::object>().size());
+	                   block.get<lak::json::value>().size());
 	lak::span<const value> subspan = block[object.values];
 	BOUNDS_ASSERT_LESS(index, subspan.size());
 	const value &k_v = subspan[(index * 2U) + 0U];
