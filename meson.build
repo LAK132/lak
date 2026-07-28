@@ -42,6 +42,7 @@ cxx = compilers['host']['cpp']
 
 lak_natvis = meson.project_source_root()/'.natvis'
 
+lak_reflection_argument = []
 foreach type, comps : compilers
 	if comps['cpp'].get_id() == 'msvc'
 		add_project_arguments(
@@ -95,6 +96,10 @@ foreach type, comps : compilers
 			native: comps['native'])
 
 		if comps['cpp'].get_id() == 'gcc'
+			if comps['cpp'].has_multi_arguments('-std=c++26', '-freflection')
+				# GCC >= 16.1
+				lak_reflection_argument += '-freflection'
+			endif
 			if comps['cpp'].has_link_argument('-Wl,-lstdc++_libbacktrace')
 				# GCC <14
 				add_project_link_arguments(

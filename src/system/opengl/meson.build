@@ -15,6 +15,7 @@ lakopengl = static_library(
 		'shader.cpp',
 		'texture.cpp',
 	],
+	cpp_args: lak_reflection_argument,
 	link_with: [
 		gl3w,
 	],

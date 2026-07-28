@@ -32,6 +32,7 @@ foreach type, comps : compilers
 			'tokeniser.cpp',
 			'unicode.cpp',
 		],
+		cpp_args: lak_reflection_argument,
 		include_directories: lakcore_inc,
 		dependencies: dependency('threads', native: comps['native']),
 		link_with: lakcore_system[type],
@@ -39,6 +40,7 @@ foreach type, comps : compilers
 		native: comps['native'],
 	)}
 	lakcore_dep2 += {type: declare_dependency(
+		compile_args: lak_reflection_argument,
 		link_with: lakcore2[type],
 		include_directories: lakcore_inc,
 	)}

@@ -31,5 +31,6 @@ lakwindowing = static_library(
 		'platform.cpp',
 		'window.cpp',
 	],
+	cpp_args: lak_reflection_argument,
 	dependencies: lakwindowing_dependencies,
 )

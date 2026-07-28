@@ -8,6 +8,7 @@ foreach type, comps : compilers
 				'page_memory.cpp',
 				'wrapper.cpp',
 			],
+			cpp_args: lak_reflection_argument,
 			include_directories: lakcore_inc,
 			dependencies: [],
 			native: comps['native'],
