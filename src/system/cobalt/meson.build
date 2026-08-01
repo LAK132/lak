@@ -69,21 +69,22 @@ endif
 
 cobalt_opts.set_install(false)
 
-cobalt_install_rpath_arg = []
-_cobalt_install_rpath_arg = '-Wl,-rpath=@0@'.format(get_option('prefix')/get_option('bindir'))
-if cxx.has_link_argument(_cobalt_install_rpath_arg)
-	cobalt_install_rpath_arg += _cobalt_install_rpath_arg
-endif
+cobalt_install_rpath_arg = '-Wl,-rpath,@0@'.format(get_option('prefix')/get_option('bindir'))
+use_cobalt_install_rpath_arg = cxx.has_link_argument(cobalt_install_rpath_arg)
 
 cobalt_opts.set_install(true, target: 'ShaderSupport')
 cobalt_opts.set_install(true, target: 'TextureFormatConversion')
 if lak_cobalt_enabled_renderers.contains('OpenGL3')
 	cobalt_opts.set_install(true, target: 'OpenGL3Renderer')
-	cobalt_opts.append_link_args(cobalt_install_rpath_arg, target: 'OpenGL3Renderer')
+	if use_cobalt_install_rpath_arg
+		cobalt_opts.append_link_args(cobalt_install_rpath_arg, target: 'OpenGL3Renderer')
+	endif
 endif
 if lak_cobalt_enabled_renderers.contains('OpenGL4')
 	cobalt_opts.set_install(true, target: 'OpenGL4Renderer')
-	cobalt_opts.append_link_args(cobalt_install_rpath_arg, target: 'OpenGL4Renderer')
+	if use_cobalt_install_rpath_arg
+		cobalt_opts.append_link_args(cobalt_install_rpath_arg, target: 'OpenGL4Renderer')
+	endif
 endif
 if lak_cobalt_enabled_renderers.contains('Direct3D11')
 	cobalt_opts.set_install(true, target: 'Direct3D11Renderer')
@@ -102,7 +103,9 @@ if lak_cobalt_enabled_renderers.contains('Direct3D12')
 endif
 if lak_cobalt_enabled_renderers.contains('Vulkan')
 	cobalt_opts.set_install(true, target: 'VulkanRenderer')
-	cobalt_opts.append_link_args(cobalt_install_rpath_arg, target: 'VulkanRenderer')
+	if use_cobalt_install_rpath_arg
+		cobalt_opts.append_link_args(cobalt_install_rpath_arg, target: 'VulkanRenderer')
+	endif
 	if host_machine.system() == 'darwin'
 		cobalt_opts.set_install(true, target: 'vulkan')
 		meson.add_install_script('install_moltenvk.sh')
@@ -110,7 +113,9 @@ if lak_cobalt_enabled_renderers.contains('Vulkan')
 endif
 if lak_cobalt_enabled_renderers.contains('Metal')
 	cobalt_opts.set_install(true, target: 'MetalRenderer')
-	cobalt_opts.append_link_args(cobalt_install_rpath_arg, target: 'MetalRenderer')
+	if use_cobalt_install_rpath_arg
+		cobalt_opts.append_link_args(cobalt_install_rpath_arg, target: 'MetalRenderer')
+	endif
 endif
 
 vis_hidden = '-fvisibility=hidden'
@@ -345,7 +350,7 @@ _lakcobalt_inc_dep = declare_dependency(
 ).partial_dependency(includes: true)
 
 cobalt_build_rpath_arg = []
-_cobalt_build_rpath_arg = '-Wl,-rpath=@0@'.format(cobalt_build_root)
+_cobalt_build_rpath_arg = '-Wl,-rpath,@0@'.format(cobalt_build_root)
 if cxx.has_link_argument(_cobalt_build_rpath_arg)
 	cobalt_build_rpath_arg += _cobalt_build_rpath_arg
 endif
