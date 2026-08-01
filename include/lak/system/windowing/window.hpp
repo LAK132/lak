@@ -265,7 +265,7 @@ namespace lak
 	cobalt_create_compute_pass(const lak::window_handle *w);
 
 	void cobalt_append_compute_pass(const lak::cobalt_context &c,
-	                               ::cobalt::graphics::IRenderPassNode *pass);
+	                                ::cobalt::graphics::IRenderPassNode *pass);
 	void cobalt_append_compute_pass(
 	  const lak::cobalt_context &c,
 	  ::cobalt::graphics::IRenderPassNode::unique_ptr &&pass);

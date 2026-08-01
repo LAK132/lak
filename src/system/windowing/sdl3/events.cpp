@@ -440,10 +440,7 @@ void translate_event(const SDL_Event &sdl_event,
 		}
 		break;
 
-		case SDL_EVENT_DROP_TEXT:
-		{
-		}
-			[[fallthrough]];
+		case SDL_EVENT_DROP_TEXT:     [[fallthrough]];
 		case SDL_EVENT_DROP_BEGIN:    [[fallthrough]];
 		case SDL_EVENT_DROP_COMPLETE: [[fallthrough]];
 		default:

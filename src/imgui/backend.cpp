@@ -364,6 +364,13 @@ void ImGui::ImplNewFrame(ImplContext context,
 		window.set_cursor_pos({(long)io.MousePos.x, (long)io.MousePos.y});
 	}
 
+#if defined(LAK_USE_SDL3)
+	if (io.WantTextInput && !context->taking_text_input)
+		SDL_StartTextInput(window.handle()->sdl_window);
+	if (!io.WantTextInput && context->taking_text_input)
+		SDL_StopTextInput(window.handle()->sdl_window);
+#endif
+
 	// UpdateMouseCursor()
 	if (context->allow_set_cursor &&
 	    (io.ConfigFlags & ImGuiConfigFlags_NoMouseCursorChange) == 0)

@@ -45,10 +45,5 @@ endif
 lakwindowing = static_library(
 	'lakwindowing',
 	_lakwindowing,
-	override_options: {
-		# a system header on macos is doing something that is illegal in later
-		# versions of C++, so limit to C++20 where it is merely deprecated
-		'cpp_std': 'c++20',
-	},
 	dependencies: lakwindowing_dependencies,
 )

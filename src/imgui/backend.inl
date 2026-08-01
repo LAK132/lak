@@ -61,7 +61,8 @@ namespace ImGui
 	{
 		ImGuiContext *imgui_context;
 		lak::cursor mouse_cursors[ImGuiMouseCursor_COUNT];
-		bool allow_set_cursor = false;
+		bool allow_set_cursor  = false;
+		bool taking_text_input = false;
 		lak::graphics_mode mode;
 		glm::mat4x4 transform = glm::mat4x4(1.0f);
 		lak::array<ImTextureRef> texture_destroy_queue;
