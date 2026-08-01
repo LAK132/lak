@@ -32,6 +32,12 @@ cobalt_opts.add_cmake_defines({
 	'COBALT_SDK_INCLUDE_DIR': get_option('prefix')/get_option('includedir')/'Cobalt',
 })
 
+if get_option('cobalt_cmake_no_download')
+	cobalt_opts.add_cmake_defines({
+		'FETCHCONTENT_FULLY_DISCONNECTED': 'ON',
+	})
+endif
+
 # Vulkan-Loader
 cobalt_opts.add_cmake_defines({
 	'USE_MASM': 'OFF',

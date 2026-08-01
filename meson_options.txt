@@ -96,6 +96,12 @@ option('cobalt_renderer',
 	yield: true,
 )
 
+option('cobalt_cmake_no_download',
+	type: 'boolean',
+	value: false,
+	yield: true,
+)
+
 option('lak_enable_cobalt_ogl3',
 	type: 'boolean', deprecated: 'cobalt_renderer')
 option('lak_enable_cobalt_ogl4',
