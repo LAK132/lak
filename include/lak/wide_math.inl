@@ -2,8 +2,8 @@
 
 #include "lak/system/compiler.hpp"
 
-#if defined(LAK_COMPILER_MSVC) && \
-	(defined(LAK_ARCH_X86_COMPAT) || defined(LAK_ARCH_ARM64))
+#if defined(LAK_COMPILER_MSVC) &&                                             \
+  (defined(LAK_ARCH_X86_COMPAT) || defined(LAK_ARCH_ARM64))
 #	include <intrin.h>
 #endif
 
@@ -17,7 +17,7 @@ unsigned char lak::add_carry_u32(uint32_t A, uint32_t B, uint32_t *O)
 	return __builtin_add_overflow(A, B, O) ? 1U : 0U;
 #else
 	uint64_t o = uint64_t(A) + uint64_t(B);
-	*O = o;
+	*O         = uint32_t(o);
 	return (unsigned char)(bool)(o >> 32U);
 #endif
 }
