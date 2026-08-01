@@ -210,6 +210,9 @@ struct my_window : virtual public LAK_BASIC_PROGRAM(window_api)
 };
 
 lak::graphics_mode forced_graphics_mode = lak::graphics_mode::None;
+#ifdef LAK_ENABLE_COBALT
+lak::optional<lak::cobalt_renderer_settings> forced_cobalt_mode;
+#endif
 
 // lak::error_code<int> -> lak::result<lak::monostate, int>
 lak::error_code<int> LAK_BASIC_PROGRAM(program_preinit)(lak::span<char *> args)
@@ -218,17 +221,114 @@ lak::error_code<int> LAK_BASIC_PROGRAM(program_preinit)(lak::span<char *> args)
 
 	if (args.size() >= 2U)
 	{
+#ifdef LAK_ENABLE_SOFTRNEDER
 		if (args[1] == "--software"_str)
 		{
 			forced_graphics_mode = lak::graphics_mode::Software;
 		}
-		else if (args[1] == "--opengl"_str)
+		else
+#endif
+#ifdef LAK_ENABLE_OPENGL
+		  if (args[1] == "--opengl"_str)
 		{
 			forced_graphics_mode = lak::graphics_mode::OpenGL;
 		}
-		else if (args[1] == "--cobalt"_str)
+		else
+#endif
+#ifdef LAK_ENABLE_COBALT
+		  if (args[1] == "--cobalt"_str)
 		{
 			forced_graphics_mode = lak::graphics_mode::Cobalt;
+		}
+		else
+#	ifdef LAK_ENABLE_COBALT_OGL3
+		  if (args[1] == "--cobalt-opengl3"_str)
+		{
+			forced_graphics_mode = lak::graphics_mode::Cobalt;
+			RES_TRY_ASSIGN(forced_cobalt_mode =,
+			               lak::cobalt_renderer_settings::preferred_ogl3().map_err(
+			                 [](lak::monostate) -> int
+			                 {
+				                 ERROR("Failed to get OpenGL3 renderer");
+				                 return EXIT_FAILURE;
+			                 }));
+		}
+		else
+#	endif
+#	ifdef LAK_ENABLE_COBALT_OGL4
+		  if (args[1] == "--cobalt-opengl4"_str)
+		{
+			forced_graphics_mode = lak::graphics_mode::Cobalt;
+			RES_TRY_ASSIGN(forced_cobalt_mode =,
+			               lak::cobalt_renderer_settings::preferred_ogl4().map_err(
+			                 [](lak::monostate) -> int
+			                 {
+				                 ERROR("Failed to get OpenGL4 renderer");
+				                 return EXIT_FAILURE;
+			                 }));
+		}
+		else
+#	endif
+#	ifdef LAK_ENABLE_COBALT_VK
+		  if (args[1] == "--cobalt-vulkan"_str)
+		{
+			forced_graphics_mode = lak::graphics_mode::Cobalt;
+			RES_TRY_ASSIGN(forced_cobalt_mode =,
+			               lak::cobalt_renderer_settings::preferred_vk().map_err(
+			                 [](lak::monostate) -> int
+			                 {
+				                 ERROR("Failed to get Vulkan renderer");
+				                 return EXIT_FAILURE;
+			                 }));
+		}
+		else
+#	endif
+#	ifdef LAK_ENABLE_COBALT_D3D11
+		  if (args[1] == "--cobalt-d3d11"_str)
+		{
+			forced_graphics_mode = lak::graphics_mode::Cobalt;
+			RES_TRY_ASSIGN(forced_cobalt_mode =,
+			               lak::cobalt_renderer_settings::preferred_d3d11().map_err(
+			                 [](lak::monostate) -> int
+			                 {
+				                 ERROR("Failed to get Direct3D11 renderer");
+				                 return EXIT_FAILURE;
+			                 }));
+		}
+		else
+#	endif
+#	ifdef LAK_ENABLE_COBALT_D3D12
+		  if (args[1] == "--cobalt-d3d12"_str)
+		{
+			forced_graphics_mode = lak::graphics_mode::Cobalt;
+			RES_TRY_ASSIGN(forced_cobalt_mode =,
+			               lak::cobalt_renderer_settings::preferred_d3d11().map_err(
+			                 [](lak::monostate) -> int
+			                 {
+				                 ERROR("Failed to get Direct3D12 renderer");
+				                 return EXIT_FAILURE;
+			                 }));
+		}
+		else
+#	endif
+#	ifdef LAK_ENABLE_COBALT_MTL
+		  if (args[1] == "--cobalt-metal"_str)
+		{
+			forced_graphics_mode = lak::graphics_mode::Cobalt;
+			RES_TRY_ASSIGN(forced_cobalt_mode =,
+			               lak::cobalt_renderer_settings::preferred_metal().map_err(
+			                 [](lak::monostate) -> int
+			                 {
+				                 ERROR("Failed to get Metal renderer");
+				                 return EXIT_FAILURE;
+			                 }));
+		}
+		else
+#	endif
+#endif
+		{
+			ERROR(args[1], " not supported");
+			return lak::err_t{EXIT_FAILURE};
 		}
 	}
 
@@ -287,10 +387,20 @@ lak::error_code<int> LAK_BASIC_PROGRAM(program_init)()
 #ifdef LAK_ENABLE_COBALT
 		case lak::graphics_mode::Cobalt:
 		{
-			RES_TRY_ASSIGN(my_window_ptr =,
-			               LAK_BASIC_PROGRAM(create_window<my_window>)(
-			                 LAK_BASIC_PROGRAM(window_cobalt_settings))
-			                 .map_err(map_str_err));
+			if_let_some (const auto &settings, forced_cobalt_mode)
+			{
+				RES_TRY_ASSIGN(my_window_ptr =,
+				               LAK_BASIC_PROGRAM(create_window<my_window>)(
+				                 LAK_BASIC_PROGRAM(window_cobalt_settings), settings)
+				                 .map_err(map_str_err));
+			}
+			else
+			{
+				RES_TRY_ASSIGN(my_window_ptr =,
+				               LAK_BASIC_PROGRAM(create_window<my_window>)(
+				                 LAK_BASIC_PROGRAM(window_cobalt_settings))
+				                 .map_err(map_str_err));
+			}
 		}
 		break;
 #endif
