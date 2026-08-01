@@ -56,6 +56,12 @@ inline lak::const_string<CHAR, N>::operator lak::span<const CHAR, N>() const
 }
 
 template<typename CHAR, size_t N>
+inline lak::const_string<CHAR, N>::operator lak::string_view<CHAR>() const
+{
+	return lak::string_view<CHAR>(begin(), end());
+}
+
+template<typename CHAR, size_t N>
 inline lak::const_string<CHAR, N>::operator std::basic_string<CHAR>() const
 {
 	return std::basic_string<CHAR>(begin(), end());

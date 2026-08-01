@@ -44,6 +44,8 @@ namespace lak
 
 		inline operator lak::span<const CHAR, N>() const;
 
+		inline operator lak::string_view<CHAR>() const;
+
 		inline operator std::basic_string<CHAR>() const;
 
 		inline constexpr uint32_t crc32() const;
@@ -72,6 +74,7 @@ namespace lak
 		using lak::const_string<CHAR, N>::size;                                   \
 		using lak::const_string<CHAR, N>::operator lak::c_array<CHAR, N>;         \
 		using lak::const_string<CHAR, N>::operator lak::span<const CHAR, N>;      \
+		using lak::const_string<CHAR, N>::operator lak::string_view<CHAR>;        \
 		using lak::const_string<CHAR, N>::operator std::basic_string<CHAR>;       \
 		using lak::const_string<CHAR, N>::crc32;                                  \
 	};                                                                          \

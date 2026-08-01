@@ -143,48 +143,8 @@ namespace lak
 		}
 	};
 
-	template<typename V>
-	struct _bytes_errors;
-	template<typename ERR>
-	struct _bytes_errors<lak::type_pack<ERR>> : lak::type_identity<ERR>
-	{
-	};
-	template<typename... ERRS>
-	struct _bytes_errors<lak::type_pack<ERRS...>>
-	: lak::type_identity<lak::try_remove_variant_t<lak::create_from_pack_t<
-	    lak::variant,
-	    lak::remove_from_pack_t<lak::bottom, lak::type_pack<ERRS...>>>>>
-	{
-	};
-	template<typename... ERR>
-	using bytes_errors_t =
-	  typename lak::_bytes_errors<lak::unique_pack_t<lak::flatten_pack_t<
-	    lak::all_variants_to_type_pack_t<lak::variant<ERR...>>>>>::type;
-
-	static_assert(lak::is_same_v<lak::bytes_errors_t<uint8_t, uint32_t>,
-	                             lak::variant<uint8_t, uint32_t>>);
-	static_assert(
-	  lak::is_same_v<lak::bytes_errors_t<lak::variant<uint8_t, uint32_t>>,
-	                 lak::variant<uint8_t, uint32_t>>);
-	static_assert(
-	  lak::is_same_v<
-	    lak::bytes_errors_t<lak::variant<uint8_t, uint32_t>, lak::bottom>,
-	    lak::variant<uint8_t, uint32_t>>);
-	static_assert(lak::is_same_v<
-	              lak::bytes_errors_t<uint8_t, lak::variant<uint8_t, uint32_t>>,
-	              lak::variant<uint8_t, uint32_t>>);
-	static_assert(lak::is_same_v<lak::bytes_errors_t<uint8_t>, uint8_t>);
-	static_assert(
-	  lak::is_same_v<lak::bytes_errors_t<lak::variant<uint8_t, lak::bottom>>,
-	                 uint8_t>);
-	static_assert(
-	  lak::is_same_v<lak::bytes_errors_t<uint8_t, uint8_t>, uint8_t>);
-	static_assert(
-	  lak::is_same_v<lak::bytes_errors_t<lak::bottom, lak::variant<uint8_t>>,
-	                 uint8_t>);
-
 	template<lak::endian E, typename... T>
-	using from_bytes_traits_errors_t = lak::bytes_errors_t<
+	using from_bytes_traits_errors_t = lak::unique_errors_t<
 	  typename lak::from_bytes_traits<lak::remove_const_t<T>, E>::error_type...>;
 
 	namespace concepts
@@ -314,7 +274,7 @@ namespace lak
 	};
 
 	template<lak::endian E, typename... T>
-	using to_bytes_traits_errors_t = lak::bytes_errors_t<
+	using to_bytes_traits_errors_t = lak::unique_errors_t<
 	  typename lak::to_bytes_traits<lak::remove_const_t<T>, E>::error_type...>;
 
 	namespace concepts

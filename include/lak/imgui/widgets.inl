@@ -114,7 +114,7 @@ bool lak::TreeNode(ARGS &&...args)
 	ImGuiWindow *wnd = ImGui::GetCurrentWindow();
 	if (wnd->SkipItems) return false;
 
-	const auto str    = lak::fmt<FMT>(lak::forward<ARGS>(args)...);
+	const auto str    = lak::fmt<FMT.generic()>(lak::forward<ARGS>(args)...);
 	const char *c_str = reinterpret_cast<const char *>(str.c_str());
 
 	return ImGui::TreeNodeBehavior(

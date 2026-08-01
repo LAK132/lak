@@ -163,6 +163,8 @@ namespace lak
 
 			lak::optional<lak::json::value_proxy> operator[](
 			  lak::u8string_view key) const;
+
+			lak::result<lak::json::value_proxy> get(lak::u8string_view key) const;
 		};
 
 		struct value_proxy
@@ -279,6 +281,141 @@ namespace lak
 			return lak::fmt<CHAR, "expected {}, got {}">(err.expected, err.got);
 		}
 	};
+
+	template<typename T>
+	struct from_json_traits;
+
+	namespace json
+	{
+		namespace err
+		{
+			struct missing_object_key
+			{
+				lak::u8string expected;
+			};
+		}
+	}
+
+	template<typename CHAR>
+	struct format_traits<lak::json::err::missing_object_key, CHAR>
+	{
+		static constexpr lak::string<CHAR> to_string(
+		  const lak::json::err::missing_object_key &err)
+		{
+			return lak::fmt<CHAR, "missing object key '{}'">(err.expected);
+		}
+	};
+
+	namespace concepts
+	{
+		template<typename T>
+		concept has_from_json_traits = requires() {
+			typename lak::from_json_traits<T>::value_type;
+			typename lak::from_json_traits<T>::error_type;
+			{
+				lak::from_json_traits<T>::from_json(
+				  lak::declval<const lak::json::value_proxy &>())
+			} -> lak::concepts::same_as<
+			  lak::result<typename lak::from_json_traits<T>::value_type,
+			              typename lak::from_json_traits<T>::error_type>>;
+		};
+	}
+
+	template<typename T>
+	requires(lak::concepts::has_from_json_traits<T>)
+	auto from_json(const lak::json::value_proxy &vp)
+	{
+		return lak::from_json_traits<T>::from_json(vp);
+	}
+
+	template<typename T, auto... MEMBERS>
+	struct from_json_traits_fixed_struct_impl;
+
+	template<typename T, lak::u8const_string STR, auto MEMBER>
+	requires(lak::is_of_template_v<
+	         lak::remove_cvref_t<decltype(lak::declval<T &>().*MEMBER)>,
+	         lak::optional>)
+	struct from_json_traits_fixed_struct_impl<T, STR, MEMBER>
+	{
+		using value_type =
+		  typename lak::remove_cvref_t<decltype(lak::declval<T &>().*
+		                                        MEMBER)>::value_type;
+		using error_type = typename lak::from_json_traits<value_type>::error_type;
+		static force_inline lak::error_code<error_type> from_json(
+		  const lak::json::object_proxy &obj, T &t)
+		{
+			if_let_some (auto mem, obj[STR])
+			{
+				RES_TRY_ASSIGN(t.*MEMBER =, lak::from_json<value_type>(mem));
+			}
+			return lak::ok_t{};
+		}
+	};
+
+	template<typename T, lak::u8const_string STR, auto MEMBER>
+	requires(!lak::is_of_template_v<
+	         lak::remove_cvref_t<decltype(lak::declval<T &>().*MEMBER)>,
+	         lak::optional>)
+	struct from_json_traits_fixed_struct_impl<T, STR, MEMBER>
+	{
+		using value_type =
+		  lak::remove_cvref_t<decltype(lak::declval<T &>().*MEMBER)>;
+		using error_type = lak::unique_errors_t<
+		  lak::json::err::missing_object_key,
+		  typename lak::from_json_traits<value_type>::error_type>;
+		static force_inline lak::error_code<error_type> from_json(
+		  const lak::json::object_proxy &obj, T &t)
+		{
+			RES_TRY_ASSIGN(
+			  auto mem =,
+			  obj.get(STR).map_err(
+			    [](auto &&)
+			    { return lak::json::err::missing_object_key{.expected = STR}; }));
+			RES_TRY_ASSIGN(t.*MEMBER =, lak::from_json<value_type>(mem));
+			return lak::ok_t{};
+		}
+	};
+
+	template<typename T, lak::u8const_string STR, auto MEMBER, auto... MEMBERS>
+	struct from_json_traits_fixed_struct_impl<T, STR, MEMBER, MEMBERS...>
+	{
+		using error_type = lak::unique_errors_t<
+		  typename from_json_traits_fixed_struct_impl<T, STR, MEMBER>::error_type,
+		  typename from_json_traits_fixed_struct_impl<T, MEMBERS...>::error_type>;
+		static force_inline lak::error_code<error_type> from_json(
+		  const lak::json::object_proxy &obj, T &t)
+		{
+			RES_TRY(
+			  from_json_traits_fixed_struct_impl<T, STR, MEMBER>::from_json(obj, t));
+			RES_TRY(
+			  from_json_traits_fixed_struct_impl<T, MEMBERS...>::from_json(obj, t));
+			return lak::ok_t{};
+		}
+	};
+
+	// LAK_FIXED_STRUCT_FROM_JSON_TRAITS(
+	//   type, lak::u8const_string(u8"json-obj-name"), &type::member, ...)
+#define LAK_FIXED_STRUCT_FROM_JSON_TRAITS(TYPE, ...)                          \
+	template<>                                                                  \
+	struct lak::from_json_traits<TYPE>                                          \
+	{                                                                           \
+		using value_type = TYPE;                                                  \
+		using impl_type =                                                         \
+		  lak::from_json_traits_fixed_struct_impl<TYPE, __VA_ARGS__>;             \
+		using error_type = lak::unique_errors_t<lak::json::err::unexpected_type,  \
+		                                        typename impl_type::error_type>;  \
+		static lak::result<value_type, error_type> from_json(                     \
+		  const lak::json::value_proxy &value)                                    \
+		{                                                                         \
+			RES_TRY_ASSIGN(auto obj =, value.object());                             \
+			value_type result;                                                      \
+			RES_TRY(impl_type::from_json(obj, result));                             \
+			return lak::move_ok(result);                                            \
+		}                                                                         \
+	};                                                                          \
+	static_assert(lak::concepts::has_from_json_traits<TYPE>);
 }
+
+#include "json.inl"
 
 #endif

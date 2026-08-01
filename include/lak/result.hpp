@@ -1241,6 +1241,50 @@ namespace lak
 		lak::remove_reference_t<OK> *operator->() { return &unwrap(); }
 	};
 
+	/* --- unique_errors --- */
+
+	template<typename V>
+	struct unique_errors;
+	template<typename ERR>
+	struct unique_errors<lak::type_pack<ERR>> : lak::type_identity<ERR>
+	{
+	};
+	template<typename... ERRS>
+	struct unique_errors<lak::type_pack<ERRS...>>
+	: lak::type_identity<lak::try_remove_variant_t<lak::create_from_pack_t<
+	    lak::variant,
+	    lak::remove_from_pack_t<lak::bottom, lak::type_pack<ERRS...>>>>>
+	{
+	};
+	template<typename... ERRS>
+	using unique_errors_t =
+	  typename lak::unique_errors<lak::unique_pack_t<lak::flatten_pack_t<
+	    lak::all_variants_to_type_pack_t<lak::variant<ERRS...>>>>>::type;
+	template<typename... ERRS>
+	using unique_error_codes = lak::error_code<lak::unique_errors_t<ERRS...>>;
+
+	static_assert(lak::is_same_v<lak::unique_errors_t<uint8_t, uint32_t>,
+	                             lak::variant<uint8_t, uint32_t>>);
+	static_assert(
+	  lak::is_same_v<lak::unique_errors_t<lak::variant<uint8_t, uint32_t>>,
+	                 lak::variant<uint8_t, uint32_t>>);
+	static_assert(
+	  lak::is_same_v<
+	    lak::unique_errors_t<lak::variant<uint8_t, uint32_t>, lak::bottom>,
+	    lak::variant<uint8_t, uint32_t>>);
+	static_assert(lak::is_same_v<
+	              lak::unique_errors_t<uint8_t, lak::variant<uint8_t, uint32_t>>,
+	              lak::variant<uint8_t, uint32_t>>);
+	static_assert(lak::is_same_v<lak::unique_errors_t<uint8_t>, uint8_t>);
+	static_assert(
+	  lak::is_same_v<lak::unique_errors_t<lak::variant<uint8_t, lak::bottom>>,
+	                 uint8_t>);
+	static_assert(
+	  lak::is_same_v<lak::unique_errors_t<uint8_t, uint8_t>, uint8_t>);
+	static_assert(
+	  lak::is_same_v<lak::unique_errors_t<lak::bottom, lak::variant<uint8_t>>,
+	                 uint8_t>);
+
 	/* --- ok_or_err --- */
 
 	template<typename T>

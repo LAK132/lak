@@ -54,6 +54,12 @@ lak::json::object_proxy::operator[](size_t index) const
 lak::optional<lak::json::value_proxy> lak::json::object_proxy::operator[](
   lak::u8string_view key) const
 {
+	return get(key).ok();
+}
+
+lak::result<lak::json::value_proxy> lak::json::object_proxy::get(
+  lak::u8string_view key) const
+{
 	BOUNDS_ASSERT_LESS(object.values.begin.index + object.values.size,
 	                   block.get<lak::json::value>().size());
 	lak::span<const value> subspan = block[object.values];
@@ -68,9 +74,10 @@ lak::optional<lak::json::value_proxy> lak::json::object_proxy::operator[](
 		  [&k](const number &kv) { k = kv.value; },
 		  [](auto &&) { ASSERT_UNREACHABLE(); },
 		});
-		if (k == key) return lak::json::value_proxy{.block = block, .value = v_v};
+		if (k == key)
+			return lak::ok_t<lak::json::value_proxy>{{.block = block, .value = v_v}};
 	}
-	return lak::nullopt;
+	return lak::err_t{};
 }
 
 bool lak::json::value_proxy::is_token() const

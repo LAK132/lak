@@ -27,7 +27,7 @@ namespace lak
 		binary_reader &operator=(const binary_reader &) = default;
 
 		template<typename T, lak::endian E, typename... ERR>
-		using error_type = lak::bytes_errors_t<
+		using error_type = lak::unique_errors_t<
 		  ERR...,
 		  typename lak::from_bytes_traits<lak::remove_const_t<T>, E>::error_type>;
 
