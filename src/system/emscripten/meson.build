@@ -5,6 +5,7 @@ foreach type, comps : compilers
 			'lakcore_system_emscripten-@0@'.format(type),
 			[
 				'architecture.cpp',
+				'dll.cpp',
 				'file.cpp',
 				'page_memory.cpp',
 				'process.cpp',

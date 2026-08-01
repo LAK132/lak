@@ -4,6 +4,7 @@ foreach type, comps : compilers
 		lakcore_system_posix += {type: static_library(
 			'lakcore_system_posix-@0@'.format(type),
 			[
+				'dll.cpp',
 				'file.cpp',
 				'page_memory.cpp',
 				'wrapper.cpp',
