@@ -7,8 +7,8 @@ namespace lak
 {
 	namespace cobalt
 	{
-		using renderer_plugin_func = bool (*)(
-		  unsigned int indexNo, ::cobalt::graphics::IRendererPlugin &rendererInfo);
+		using renderer_plugin_func =
+		  bool (*)(::cobalt::graphics::IRendererPlugin &rendererInfo);
 
 #ifdef LAK_ENABLE_COBALT_OGL3
 		renderer_plugin_func ogl3_get_renderer_plugin();

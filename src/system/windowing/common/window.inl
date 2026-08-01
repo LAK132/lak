@@ -116,7 +116,7 @@ namespace
 		{
 			lak::cobalt_renderer_settings result;
 
-			if (!info(0, result.renderer_plugin))
+			if (!info(result.renderer_plugin))
 			{
 				log->Error("Failed to get renderer plugin");
 				return lak::err_t{};

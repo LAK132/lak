@@ -69,13 +69,21 @@ endif
 
 cobalt_opts.set_install(false)
 
+cobalt_install_rpath_arg = []
+_cobalt_install_rpath_arg = '-Wl,-rpath=@0@'.format(get_option('prefix')/get_option('bindir'))
+if cxx.has_link_argument(_cobalt_install_rpath_arg)
+	cobalt_install_rpath_arg += _cobalt_install_rpath_arg
+endif
+
 cobalt_opts.set_install(true, target: 'ShaderSupport')
 cobalt_opts.set_install(true, target: 'TextureFormatConversion')
 if lak_cobalt_enabled_renderers.contains('OpenGL3')
 	cobalt_opts.set_install(true, target: 'OpenGL3Renderer')
+	cobalt_opts.append_link_args(cobalt_install_rpath_arg, target: 'OpenGL3Renderer')
 endif
 if lak_cobalt_enabled_renderers.contains('OpenGL4')
 	cobalt_opts.set_install(true, target: 'OpenGL4Renderer')
+	cobalt_opts.append_link_args(cobalt_install_rpath_arg, target: 'OpenGL4Renderer')
 endif
 if lak_cobalt_enabled_renderers.contains('Direct3D11')
 	cobalt_opts.set_install(true, target: 'Direct3D11Renderer')
@@ -94,6 +102,7 @@ if lak_cobalt_enabled_renderers.contains('Direct3D12')
 endif
 if lak_cobalt_enabled_renderers.contains('Vulkan')
 	cobalt_opts.set_install(true, target: 'VulkanRenderer')
+	cobalt_opts.append_link_args(cobalt_install_rpath_arg, target: 'VulkanRenderer')
 	if host_machine.system() == 'darwin'
 		cobalt_opts.set_install(true, target: 'vulkan')
 		meson.add_install_script('install_moltenvk.sh')
@@ -101,6 +110,7 @@ if lak_cobalt_enabled_renderers.contains('Vulkan')
 endif
 if lak_cobalt_enabled_renderers.contains('Metal')
 	cobalt_opts.set_install(true, target: 'MetalRenderer')
+	cobalt_opts.append_link_args(cobalt_install_rpath_arg, target: 'MetalRenderer')
 endif
 
 vis_hidden = '-fvisibility=hidden'
@@ -263,10 +273,10 @@ _lakcobalt_srcs = [
 	'log_target.cpp',
 ]
 _lakcobalt_deps = []
+_lakcobalt_targets = []
 _lakcobalt_compile_args = [
 	'-DLAK_ENABLE_COBALT',
 ]
-_lakcobalt_link_args = []
 
 if host_machine.system() == 'windows'
 	_lakcobalt_compile_args += '-DCOBALT_RENDERER_WIN32_SUPPORT'
@@ -286,61 +296,71 @@ cobalt_texture_format_conversion = cobalt_subprj.dependency('TextureFormatConver
 if lak_cobalt_enabled_renderers.contains('OpenGL3')
 	_lakcobalt_srcs += 'opengl3.cpp'
 	_lakcobalt_deps += cobalt_subprj.dependency('OpenGL3Renderer')
+	_lakcobalt_targets += cobalt_subprj.target('OpenGL3Renderer')
 	_lakcobalt_compile_args += '-DLAK_ENABLE_COBALT_OGL3'
-	if meson.get_compiler('cpp').get_id() == 'msvc'
-		_lakcobalt_link_args += '/delayload:OpenGL3Renderer.dll'
-	endif
 endif
 
 if lak_cobalt_enabled_renderers.contains('OpenGL4')
 	_lakcobalt_srcs += 'opengl4.cpp'
 	_lakcobalt_deps += cobalt_subprj.dependency('OpenGL4Renderer')
+	_lakcobalt_targets += cobalt_subprj.target('OpenGL4Renderer')
 	_lakcobalt_compile_args += '-DLAK_ENABLE_COBALT_OGL4'
-	if meson.get_compiler('cpp').get_id() == 'msvc'
-		_lakcobalt_link_args += '/delayload:OpenGL4Renderer.dll'
-	endif
 endif
 
 if lak_cobalt_enabled_renderers.contains('Direct3D11')
 	_lakcobalt_srcs += 'direct3d11.cpp'
 	_lakcobalt_deps += cobalt_subprj.dependency('Direct3D11Renderer')
+	_lakcobalt_targets += cobalt_subprj.target('Direct3D11Renderer')
 	_lakcobalt_compile_args += '-DLAK_ENABLE_COBALT_D3D11'
-	if meson.get_compiler('cpp').get_id() == 'msvc'
-		_lakcobalt_link_args += '/delayload:Direct3D11Renderer.dll'
-	endif
 endif
 
 if lak_cobalt_enabled_renderers.contains('Direct3D12')
 	_lakcobalt_srcs += 'direct3d12.cpp'
 	_lakcobalt_deps += cobalt_subprj.dependency('Direct3D12Renderer')
+	_lakcobalt_targets += cobalt_subprj.target('Direct3D12Renderer')
 	_lakcobalt_compile_args += '-DLAK_ENABLE_COBALT_D3D12'
-	if meson.get_compiler('cpp').get_id() == 'msvc'
-		_lakcobalt_link_args += '/delayload:Direct3D12Renderer.dll'
-	endif
 endif
 
 if lak_cobalt_enabled_renderers.contains('Vulkan')
 	_lakcobalt_srcs += 'vulkan.cpp'
 	_lakcobalt_deps += cobalt_subprj.dependency('VulkanRenderer')
+	_lakcobalt_targets += cobalt_subprj.target('VulkanRenderer')
 	if host_machine.system() == 'darwin'
 		vk_sdk = meson.global_build_root()/'subprojects'/'Cobalt'/'__CMake_build'/'_deps'/'vulkan-sdk-install'/'macOS'
 		_lakcobalt_compile_args += '-DLAK_VK_DRIVER_PREFIX="@0@"'.format(get_option('prefix'))
 		_lakcobalt_compile_args += '-DLAK_MOLTENVK_JSON="@0@"'.format('share'/'vulkan'/'icd.d'/'MoltenVK_icd.json')
 	endif
 	_lakcobalt_compile_args += '-DLAK_ENABLE_COBALT_VK'
-	if meson.get_compiler('cpp').get_id() == 'msvc'
-		_lakcobalt_link_args += '/delayload:VulkanRenderer.dll'
-	endif
 endif
 
 if lak_cobalt_enabled_renderers.contains('Metal')
 	_lakcobalt_srcs += 'metal.cpp'
 	_lakcobalt_deps += cobalt_subprj.dependency('MetalRenderer')
+	_lakcobalt_targets += cobalt_subprj.target('MetalRenderer')
 	_lakcobalt_compile_args += '-DLAK_ENABLE_COBALT_MTL'
 endif
 
-_lakcobalt_dep = declare_dependency(
+_lakcobalt_inc_dep = declare_dependency(
 	dependencies: _lakcobalt_deps,
+).partial_dependency(includes: true)
+
+cobalt_build_rpath_arg = []
+_cobalt_build_rpath_arg = '-Wl,-rpath=@0@'.format(cobalt_build_root)
+if cxx.has_link_argument(_cobalt_build_rpath_arg)
+	cobalt_build_rpath_arg += _cobalt_build_rpath_arg
+endif
+_lakcobalt_link = declare_dependency(
+	dependencies: declare_dependency(
+		dependencies: _lakcobalt_deps,
+	).partial_dependency(link_args: true),
+	sources: custom_target(
+		'lakcobalt-deps-indirect',
+		output: 'lakcobalt-deps-indirect.hpp',
+		depends: _lakcobalt_targets,
+		capture: true,
+		command: [find_program('python3'), '-c', ''],
+	),
+	link_args: cobalt_build_rpath_arg,
 )
 
 lakcobalt = static_library(
@@ -352,14 +372,14 @@ lakcobalt = static_library(
 	include_directories: lakcore_inc,
 	dependencies: [
 		lakcore_dep,
-		_lakcobalt_dep,
+		_lakcobalt_inc_dep,
+		_lakcobalt_link,
 	],
 )
 
 lakcobalt_dep = declare_dependency(
 	link_with: lakcobalt,
-	dependencies: _lakcobalt_dep.partial_dependency(includes: true),
+	dependencies: _lakcobalt_inc_dep,
 	compile_args: _lakcobalt_compile_args,
-	link_args: _lakcobalt_link_args,
 )
 meson.override_dependency('lak-cobalt', lakcobalt_dep)
