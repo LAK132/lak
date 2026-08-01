@@ -4,6 +4,11 @@
 #include <typeindex>
 #include <typeinfo>
 
+#include <lak/system/os.hpp>
+#ifdef LAK_OS_WINDOWS
+#	include <lak/system/win32/windows.hpp>
+#endif
+
 bool running = true;
 
 lak::lisk::expression my_exit(lak::lisk::environment &, bool)
