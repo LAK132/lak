@@ -166,26 +166,34 @@
 #define ABORT()                                                               \
 	do                                                                          \
 	{                                                                           \
-		lak::debugger.abort();                                                    \
+		if (std::is_constant_evaluated())                                         \
+			std::terminate();                                                       \
+		else                                                                      \
+			lak::debugger.abort();                                                  \
 	} while (false)
 #define ABORTF(...)                                                           \
 	do                                                                          \
 	{                                                                           \
-		lak::debugger.std_err(u8"", lak::streamify(__VA_ARGS__, "\n"));           \
+		if (!std::is_constant_evaluated())                                        \
+			lak::debugger.std_err(u8"", lak::streamify(__VA_ARGS__, "\n"));         \
 		ABORT();                                                                  \
 	} while (false)
 #define ABORTF_S(...)                                                         \
 	do                                                                          \
 	{                                                                           \
-		lak::debugger.std_err(u8"",                                               \
-		                      __VA_OPT__(lak::u8string(__VA_ARGS__) +) u8"\n");   \
+		if (!std::is_constant_evaluated())                                        \
+			lak::debugger.std_err(u8"",                                             \
+			                      __VA_OPT__(lak::u8string(__VA_ARGS__) +) u8"\n"); \
 		ABORT();                                                                  \
 	} while (false)
 #define NOISY_ABORT()                                                         \
 	do                                                                          \
 	{                                                                           \
-		DEBUG_BREAK();                                                            \
-		std::cerr << lak::as_astring(lak::debugger.stream.str()) << "\n";         \
+		if (!std::is_constant_evaluated())                                        \
+		{                                                                         \
+			DEBUG_BREAK();                                                          \
+			std::cerr << lak::as_astring(lak::debugger.stream.str()) << "\n";       \
+		}                                                                         \
 		ABORT();                                                                  \
 	} while (false)
 
@@ -204,11 +212,21 @@
 #	define FATAL(...) ABORT()
 #else
 #	define WARNING_S(...)                                                      \
-		lak::debugger.std_err(u8"" DEBUG_WARNING_LINE_FILE,                       \
-		                      __VA_OPT__(lak::u8string(__VA_ARGS__) +) u8"\n")
+		do                                                                        \
+		{                                                                         \
+			if (!std::is_constant_evaluated())                                      \
+				lak::debugger.std_err(                                                \
+				  u8"" DEBUG_WARNING_LINE_FILE,                                       \
+				  __VA_OPT__(lak::u8string(__VA_ARGS__) +) u8"\n");                   \
+		} while (false)
 #	define ERROR_S(...)                                                        \
-		lak::debugger.std_err(u8"" DEBUG_ERROR_LINE_FILE,                         \
-		                      __VA_OPT__(lak::u8string(__VA_ARGS__) +) u8"\n")
+		do                                                                        \
+		{                                                                         \
+			if (!std::is_constant_evaluated())                                      \
+				lak::debugger.std_err(                                                \
+				  u8"" DEBUG_ERROR_LINE_FILE,                                         \
+				  __VA_OPT__(lak::u8string(__VA_ARGS__) +) u8"\n");                   \
+		} while (false)
 #	define FATAL_S(...)                                                        \
 		ABORTF_S(                                                                 \
 		  u8"" DEBUG_FATAL_LINE_FILE __VA_OPT__(+lak::u8string(__VA_ARGS__)))
