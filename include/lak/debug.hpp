@@ -526,23 +526,92 @@
 #undef BOUNDS_ASSERT_GREATER_OR_EQUAL
 #undef BOUNDS_ASSERT_UNREACHABLE
 #ifndef ASSERT_NO_BOUNDS_CHECKS
-#	define BOUNDS_ASSERT(X)                     ASSERT(X)
+#	define BOUNDS_ASSERT(...)                   ASSERT(__VA_ARGS__)
 #	define BOUNDS_ASSERT_EQUAL(X, Y)            ASSERT_EQUAL(X, Y)
 #	define BOUNDS_ASSERT_NOT_EQUAL(X, Y)        ASSERT_NOT_EQUAL(X, Y)
 #	define BOUNDS_ASSERT_LESS(X, Y)             ASSERT_LESS(X, Y)
 #	define BOUNDS_ASSERT_LESS_OR_EQUAL(X, Y)    ASSERT_LESS_OR_EQUAL(X, Y)
 #	define BOUNDS_ASSERT_GREATER(X, Y)          ASSERT_GREATER(X, Y)
 #	define BOUNDS_ASSERT_GREATER_OR_EQUAL(X, Y) ASSERT_GREATER_OR_EQUAL(X, Y)
-#	define BOUNDS_ASSERT_UNREACHABLE(...)       ASSERT_UNREACHABLE()
+#	define BOUNDS_ASSERT_UNREACHABLE(...)                                      \
+		do                                                                        \
+		{                                                                         \
+			ASSERT_UNREACHABLE();                                                   \
+			__VA_ARGS__;                                                            \
+		} while (false)
 #else
-#	define BOUNDS_ASSERT(X)
-#	define BOUNDS_ASSERT_EQUAL(X, Y)
-#	define BOUNDS_ASSERT_NOT_EQUAL(X, Y)
-#	define BOUNDS_ASSERT_LESS(X, Y)
-#	define BOUNDS_ASSERT_LESS_OR_EQUAL(X, Y)
-#	define BOUNDS_ASSERT_GREATER(X, Y)
-#	define BOUNDS_ASSERT_GREATER_OR_EQUAL(X, Y)
-#	define BOUNDS_ASSERT_UNREACHABLE(...) __VA_ARGS__
+#	define BOUNDS_ASSERT(...)                                                  \
+		do                                                                        \
+		{                                                                         \
+			if (std::is_constant_evaluated())                                       \
+				if (!(__VA_ARGS__)) std::abort();                                     \
+		} while (false)
+#	define BOUNDS_ASSERT_EQUAL(X, Y)                                           \
+		do                                                                        \
+		{                                                                         \
+			if (std::is_constant_evaluated())                                       \
+			{                                                                       \
+				const auto &UNIQUIFY(x) = (X);                                        \
+				const auto &UNIQUIFY(y) = (Y);                                        \
+				if (!lak::equal_to<>{}(UNIQUIFY(x), UNIQUIFY(y))) std::abort();       \
+			}                                                                       \
+		} while (false)
+#	define BOUNDS_ASSERT_NOT_EQUAL(X, Y)                                       \
+		do                                                                        \
+		{                                                                         \
+			if (std::is_constant_evaluated())                                       \
+			{                                                                       \
+				const auto &UNIQUIFY(x) = (X);                                        \
+				const auto &UNIQUIFY(y) = (Y);                                        \
+				if (!lak::not_equal_to<>{}(UNIQUIFY(x), UNIQUIFY(y))) std::abort();   \
+			}                                                                       \
+		} while (false)
+#	define BOUNDS_ASSERT_LESS(X, Y)                                            \
+		do                                                                        \
+		{                                                                         \
+			if (std::is_constant_evaluated())                                       \
+			{                                                                       \
+				const auto &UNIQUIFY(x) = (X);                                        \
+				const auto &UNIQUIFY(y) = (Y);                                        \
+				if (!lak::less<>{}(UNIQUIFY(x), UNIQUIFY(y))) std::abort();           \
+			}                                                                       \
+		} while (false)
+#	define BOUNDS_ASSERT_LESS_OR_EQUAL(X, Y)                                   \
+		do                                                                        \
+		{                                                                         \
+			if (std::is_constant_evaluated())                                       \
+			{                                                                       \
+				const auto &UNIQUIFY(x) = (X);                                        \
+				const auto &UNIQUIFY(y) = (Y);                                        \
+				if (!lak::less_equal<>{}(UNIQUIFY(x), UNIQUIFY(y))) std::abort();     \
+			}                                                                       \
+		} while (false)
+#	define BOUNDS_ASSERT_GREATER(X, Y)                                         \
+		do                                                                        \
+		{                                                                         \
+			if (std::is_constant_evaluated())                                       \
+			{                                                                       \
+				const auto &UNIQUIFY(x) = (X);                                        \
+				const auto &UNIQUIFY(y) = (Y);                                        \
+				if (!lak::greater<>{}(UNIQUIFY(x), UNIQUIFY(y))) std::abort();        \
+			}                                                                       \
+		} while (false)
+#	define BOUNDS_ASSERT_GREATER_OR_EQUAL(X, Y)                                \
+		do                                                                        \
+		{                                                                         \
+			if (std::is_constant_evaluated())                                       \
+			{                                                                       \
+				const auto &UNIQUIFY(x) = (X);                                        \
+				const auto &UNIQUIFY(y) = (Y);                                        \
+				if (!lak::greater_equal<>{}(UNIQUIFY(x), UNIQUIFY(y))) std::abort();  \
+			}                                                                       \
+		} while (false)
+#	define BOUNDS_ASSERT_UNREACHABLE(...)                                      \
+		do                                                                        \
+		{                                                                         \
+			if (std::is_constant_evaluated()) std::abort();                         \
+			__VA_ARGS__;                                                            \
+		} while (false)
 #endif
 
 #include "lak/debugger.hpp"
