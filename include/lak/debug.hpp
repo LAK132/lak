@@ -167,7 +167,7 @@
 	do                                                                          \
 	{                                                                           \
 		if (std::is_constant_evaluated())                                         \
-			std::terminate();                                                       \
+			std::abort();                                                           \
 		else                                                                      \
 			lak::debugger.abort();                                                  \
 	} while (false)
