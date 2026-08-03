@@ -1,5 +1,41 @@
 #include "lak/file/json.hpp"
 
+constexpr auto raw_escaped_string_character =
+  lak::dsl::str_literal<u8"\\\""> | lak::dsl::str_literal<u8"\\\\"> |
+  lak::dsl::str_literal<u8"\\/"> | lak::dsl::str_literal<u8"\\b"> |
+  lak::dsl::str_literal<u8"\\f"> | lak::dsl::str_literal<u8"\\n"> |
+  lak::dsl::str_literal<u8"\\r"> | lak::dsl::str_literal<u8"\\t"> |
+  (lak::dsl::str_literal<u8"\\u"> +
+   (lak::dsl::repeat_exact<lak::dsl::hex_digit, 4>));
+constexpr auto raw_string_parser = lak::dsl::capture_2nd<
+  lak::dsl::char_literal<U'"'>,
+  *(raw_escaped_string_character |
+    ((!lak::dsl::char_literal<U'"'>)&(!lak::dsl::char_literal<U'\\'>))),
+  lak::dsl::char_literal<U'"'>>;
+
+constexpr auto escaped_string_character =
+  lak::dsl::replace_str_literal<u8"\\\"", u8'\"'> |
+  lak::dsl::replace_str_literal<u8"\\\\", u8'\\'> |
+  lak::dsl::replace_str_literal<u8"\\/", u8'/'> |
+  lak::dsl::replace_str_literal<u8"\\b", char8_t(0x08)> |
+  lak::dsl::replace_str_literal<u8"\\f", char8_t(0x0C)> |
+  lak::dsl::replace_str_literal<u8"\\n", u8'\n'> |
+  lak::dsl::replace_str_literal<u8"\\r", u8'\r'> |
+  lak::dsl::replace_str_literal<u8"\\t", u8'\t'> |
+  lak::dsl::transform<
+    +(lak::dsl::transform<
+      lak::dsl::capture_2nd<lak::dsl::str_literal<u8"\\u">,
+                            lak::dsl::repeat_exact<lak::dsl::hex_digit, 4>>,
+      [](lak::u8string_view str)
+      {
+	      return static_cast<char16_t>(
+	        lak::string_to_uintmax(str, lak::numeric_base::hex).unwrap());
+      }>),
+    [](lak::span<const char16_t> c16)
+    { return lak::to_u8string(lak::u16string_view(c16)); }>;
+constexpr auto string_parser =
+  *(escaped_string_character | +!lak::dsl::char_literal<U'\\'>);
+
 void lak::json::block::intern()
 {
 	// make repeated calls to intern safe
@@ -123,8 +159,22 @@ lak::json::value_proxy::token() const
 		}};
 }
 
-lak::json::value_proxy::result_type<lak::u8string_view>
+lak::json::value_proxy::result_type<lak::u8string>
 lak::json::value_proxy::string() const
+{
+	return raw_string().map(
+	  [](lak::u8string_view str)
+	  {
+		  lak::u8string result;
+		  auto parsed = string_parser.parse(str).unwrap();
+		  for (const auto &s : parsed.value)
+			  s.visit([&result](const auto &v) { result += v; });
+		  return result;
+	  });
+}
+
+lak::json::value_proxy::result_type<lak::u8string_view>
+lak::json::value_proxy::raw_string() const
 {
 	if (is_string())
 		return lak::ok_t{block.get<lak::json::string>()[value.value.index].value};
@@ -199,18 +249,6 @@ lak::dsl::result<lak::dsl::json_t::value_type> lak::dsl::json_t::parse(
 	constexpr auto number_parser =
 	  lak::dsl::as_pure<lak::dsl::dec_float<lak::dsl::char_literal<U'.'>,
 	                                        lak::dsl::one_of_chars_str<U"eE">>>;
-	constexpr auto escaped_string_character =
-	  lak::dsl::str_literal<u8"\\\""> | lak::dsl::str_literal<u8"\\\\"> |
-	  lak::dsl::str_literal<u8"\\/"> | lak::dsl::str_literal<u8"\\b"> |
-	  lak::dsl::str_literal<u8"\\f"> | lak::dsl::str_literal<u8"\\n"> |
-	  lak::dsl::str_literal<u8"\\r"> | lak::dsl::str_literal<u8"\\t"> |
-	  (lak::dsl::str_literal<u8"\\u"> +
-	   (lak::dsl::repeat_exact<lak::dsl::hex_digit, 4>));
-	constexpr auto string_parser =
-	  lak::dsl::capture_2nd<lak::dsl::char_literal<U'"'>,
-	                        *(escaped_string_character |
-	                          !lak::dsl::char_literal<U'"'>),
-	                        lak::dsl::char_literal<U'"'>>;
 	constexpr auto token_parser = lak::dsl::str_literal<u8"true"> |
 	                              lak::dsl::str_literal<u8"false"> |
 	                              lak::dsl::str_literal<u8"null">;
@@ -408,7 +446,7 @@ lak::dsl::result<lak::dsl::json_t::value_type> lak::dsl::json_t::parse(
 			});
 			result.numbers().push_back({.value = num.value});
 		}
-		else if_let_ok (auto str, string_parser.parse(rem).if_ok(move_str))
+		else if_let_ok (auto str, raw_string_parser.parse(rem).if_ok(move_str))
 		{
 			working_values.push_back({
 			  .value = lak::json::value::value_type::make<lak::json::string>(

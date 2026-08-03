@@ -83,6 +83,24 @@ BEGIN_TEST(json)
 		ASSERT_EQUAL(res.tokens()[0].value, str);
 	}
 	{
+		auto str          = u8"\"my \\u0008 string \\r\\n\""_view;
+		auto raw_expected = u8"my \\u0008 string \\r\\n"_view;
+		auto expected     = u8"my "_str + char8_t(0x08) + u8" string \r\n"_str;
+		auto res          = lak::dsl::json.parse(str).UNWRAP().value;
+
+		ASSERT_EQUAL(res.tokens().size(), 0U);
+		ASSERT_EQUAL(res.strings().size(), 1U);
+		ASSERT_EQUAL(res.numbers().size(), 0U);
+		ASSERT_EQUAL(res.values().size(), 1U);
+		ASSERT_EQUAL(res.arrays().size(), 0U);
+		ASSERT_EQUAL(res.objects().size(), 0U);
+
+		res.intern();
+
+		ASSERT_EQUAL(res.strings()[0].value, raw_expected);
+		ASSERT_EQUAL(res.root().string().UNWRAP(), expected);
+	}
+	{
 		auto str = u8"{\"hello\":[\"world\", \"!\"], \"meow\":{0:null}}"_view;
 		auto res = lak::dsl::json.parse(str).UNWRAP().value;
 

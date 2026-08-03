@@ -187,7 +187,8 @@ namespace lak
 			bool is_object() const;
 
 			result_type<lak::u8string_view> token() const;
-			result_type<lak::u8string_view> string() const;
+			result_type<lak::u8string> string() const;
+			result_type<lak::u8string_view> raw_string() const;
 			result_type<lak::u8string_view> number_str() const;
 			result_type<lak::json::array_proxy> array() const;
 			result_type<lak::json::object_proxy> object() const;
