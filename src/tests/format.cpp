@@ -1,6 +1,8 @@
 #include "lak/test.hpp"
 
 #include "lak/format.hpp"
+#include "lak/string_literals/string.hpp"
+#include "lak/string_literals/view.hpp"
 
 BEGIN_TEST(format)
 {
@@ -125,6 +127,30 @@ BEGIN_TEST(format)
 	ASSERT_EQUAL(lak::fmt<"{:#0.4X}">(0x132U), "0x0132"_view);
 
 	DEBUG_EXPR(lak::fmt<"{0}, {0:+#08.4}, {0:+#08.4d}">(-.01));
+
+	ASSERT_EQUAL(lak::fmt<"{:H}">(char(0x40)), "\\x40"_view);
+
+	ASSERT_EQUAL(lak::fmt<"{:A}">(char(0x40)), "\x40"_view);
+
+	ASSERT_EQUAL(lak::fmt<"{:A}">(char(0xFF)), "\\xFF"_view);
+
+	ASSERT_EQUAL(lak::fmt<"{:C}">(char(0xFF)), ""_str + char(0xFF));
+
+	ASSERT_EQUAL(
+	  lak::fmt<u8"{:A}">(u8"hello "_str + char8_t(0x40) + u8" world"_str),
+	  u8"hello \x40 world"_view);
+
+	ASSERT_EQUAL(
+	  lak::fmt<u8"{:A}">(u8"hello "_str + char8_t(0xFF) + u8" world"_str),
+	  u8"hello \\xFF world"_view);
+
+	ASSERT_EQUAL(
+	  lak::fmt<u8"{:Ax}">(u8"hello "_str + char8_t(0xFF) + u8" world"_str),
+	  u8"hello \\xFF world"_view);
+
+	ASSERT_EQUAL(
+	  lak::fmt<u8"{:AU}">(u8"hello "_str + char8_t(0xFF) + u8" world"_str),
+	  u8"hello \\UFF world"_view);
 
 	return 0;
 }

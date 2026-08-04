@@ -93,52 +93,210 @@ struct lak::format_traits<nullptr_t, CHAR>
 static_assert(lak::concepts::static_formattable<nullptr_t, char8_t>);
 static_assert(lak::concepts::formattable<nullptr_t, char8_t>);
 
-template<typename T, typename CHAR>
-struct lak::format_traits<lak::string_view<T>, CHAR>
+namespace lak
 {
-	struct format_args
+	template<typename CHAR>
+	struct char_format_args
 	{
-		size_t precision = 0U; // .ddd
-	};
+		bool escape_ascii_printable     = false;     // H, !C
+		bool escape_ascii_non_printable = false;     // H, A
+		CHAR hex_char                   = CHAR('x'); // xXuU
 
-	static consteval format_args parse_args(lak::string_view<CHAR> args)
-	{
-		format_args result;
-		if (args.empty()) return result;
-
-		if (args[0] == CHAR('.'))
+		static consteval void _parse_args(char_format_args &result,
+		                                  lak::string_view<CHAR> &args)
 		{
-			result.precision = 0U;
-			args             = args.substr(1U);
-			if (args.empty()) return result;
-			while (args[0] >= CHAR('0') && args[0] <= CHAR('9'))
+			if (args.empty()) return;
+
+			if (args[0] == CHAR('C'))
 			{
-				result.precision *= 10U;
-				result.precision += args[0] - CHAR('0');
-				args = args.substr(1U);
-				if (args.empty()) return result;
+				result.escape_ascii_printable     = false;
+				result.escape_ascii_non_printable = false;
+				args                              = args.substr(1U);
+			}
+			else if (args[0] == CHAR('H'))
+			{
+				result.escape_ascii_printable     = true;
+				result.escape_ascii_non_printable = true;
+				args                              = args.substr(1U);
+			}
+			else if (args[0] == CHAR('A'))
+			{
+				result.escape_ascii_printable     = false;
+				result.escape_ascii_non_printable = true;
+				args                              = args.substr(1U);
+			}
+
+			if (args.empty()) return;
+
+			if (args[0] == CHAR('x') || args[0] == CHAR('X') ||
+			    args[0] == CHAR('u') || args[0] == CHAR('U'))
+			{
+				result.hex_char = args[0];
+				args            = args.substr(1U);
 			}
 		}
 
-		if (!args.empty()) throw "invalid format arguments";
-		return result;
+		static consteval char_format_args parse_args(lak::string_view<CHAR> args)
+		{
+			char_format_args result;
+			_parse_args(result, args);
+			if (!args.empty()) throw "invalid format arguments";
+			return result;
+		}
+	};
+
+	template<typename CHAR>
+	struct string_format_args : public char_format_args<CHAR>
+	{
+		size_t precision = 0U; // .ddd
+
+		static consteval string_format_args parse_args(lak::string_view<CHAR> args)
+		{
+			string_format_args result;
+
+			char_format_args<CHAR>::_parse_args(result, args);
+
+			if (args.empty()) return result;
+
+			if (args[0] == CHAR('.'))
+			{
+				result.precision = 0U;
+				args             = args.substr(1U);
+				if (args.empty()) return result;
+				while (args[0] >= CHAR('0') && args[0] <= CHAR('9'))
+				{
+					result.precision *= 10U;
+					result.precision += args[0] - CHAR('0');
+					args = args.substr(1U);
+					if (args.empty()) return result;
+				}
+			}
+
+			if (!args.empty()) throw "invalid format arguments";
+
+			return result;
+		}
+	};
+}
+
+template<lak::concepts::one_of<LAK_ALL_CHARS> T, typename CHAR>
+struct lak::format_traits<T, CHAR>
+{
+	using format_args = lak::char_format_args<CHAR>;
+
+	static consteval format_args parse_args(lak::string_view<CHAR> args)
+	{
+		return format_args::parse_args(args);
+	}
+
+	static lak::string<CHAR> to_string(const format_args &args, const T &value)
+	{
+		bool escape =
+		  ((args.escape_ascii_printable ^ args.escape_ascii_non_printable) &&
+		   (args.escape_ascii_printable ^
+		    !lak::is_ascii_printable(char32_t(value)))) ||
+		  args.escape_ascii_printable /* = args.escape_ascii_non_printable */;
+
+		if (escape) switch (args.hex_char)
+			{
+				case CHAR('x'):
+					if constexpr (sizeof(T) == sizeof(char8_t))
+						return lak::fmt<CHAR, "\\x{:0.2X}">(
+						  uintmax_t(static_cast<uint8_t>(value)));
+					else if constexpr (sizeof(T) == sizeof(char16_t))
+						return lak::fmt<CHAR, "\\x{:0.4X}">(
+						  uintmax_t(static_cast<uint16_t>(value)));
+					else if constexpr (sizeof(T) == sizeof(char32_t))
+						return lak::fmt<CHAR, "\\x{:0.8X}">(
+						  uintmax_t(static_cast<uint32_t>(value)));
+					else
+						return lak::fmt<CHAR, "\\x{:0X}">(uintmax_t(value));
+					break;
+				case CHAR('X'):
+					if constexpr (sizeof(T) == sizeof(char8_t))
+						return lak::fmt<CHAR, "\\X{:0.2X}">(
+						  uintmax_t(static_cast<uint8_t>(value)));
+					else if constexpr (sizeof(T) == sizeof(char16_t))
+						return lak::fmt<CHAR, "\\X{:0.4X}">(
+						  uintmax_t(static_cast<uint16_t>(value)));
+					else if constexpr (sizeof(T) == sizeof(char32_t))
+						return lak::fmt<CHAR, "\\X{:0.8X}">(
+						  uintmax_t(static_cast<uint32_t>(value)));
+					else
+						return lak::fmt<CHAR, "\\X{:0X}">(uintmax_t(value));
+					break;
+				case CHAR('u'):
+					if constexpr (sizeof(T) == sizeof(char8_t))
+						return lak::fmt<CHAR, "\\u{:0.2X}">(
+						  uintmax_t(static_cast<uint8_t>(value)));
+					else if constexpr (sizeof(T) == sizeof(char16_t))
+						return lak::fmt<CHAR, "\\u{:0.4X}">(
+						  uintmax_t(static_cast<uint16_t>(value)));
+					else if constexpr (sizeof(T) == sizeof(char32_t))
+						return lak::fmt<CHAR, "\\u{:0.8X}">(
+						  uintmax_t(static_cast<uint32_t>(value)));
+					else
+						return lak::fmt<CHAR, "\\u{:0X}">(uintmax_t(value));
+					break;
+				case CHAR('U'):
+					if constexpr (sizeof(T) == sizeof(char8_t))
+						return lak::fmt<CHAR, "\\U{:0.2X}">(
+						  uintmax_t(static_cast<uint8_t>(value)));
+					else if constexpr (sizeof(T) == sizeof(char16_t))
+						return lak::fmt<CHAR, "\\U{:0.4X}">(
+						  uintmax_t(static_cast<uint16_t>(value)));
+					else if constexpr (sizeof(T) == sizeof(char32_t))
+						return lak::fmt<CHAR, "\\U{:0.8X}">(
+						  uintmax_t(static_cast<uint32_t>(value)));
+					else
+						return lak::fmt<CHAR, "\\U{:0X}">(uintmax_t(value));
+					break;
+				default: BOUNDS_ASSERT_UNREACHABLE(); break;
+			}
+		else
+			return lak::strconv<CHAR>(lak::string_view(&value, 1U));
+	}
+};
+static_assert(!lak::concepts::static_formattable<wchar_t, char8_t>);
+static_assert(lak::concepts::dynamic_formattable<wchar_t, char8_t>);
+static_assert(lak::concepts::formattable<wchar_t, char8_t>);
+
+template<typename T, typename CHAR>
+struct lak::format_traits<lak::string_view<T>, CHAR>
+{
+	using format_args = lak::string_format_args<CHAR>;
+
+	static consteval format_args parse_args(lak::string_view<CHAR> args)
+	{
+		return format_args::parse_args(args);
 	}
 
 	static lak::string<CHAR> to_string(const format_args &args,
 	                                   const lak::string_view<T> &value)
 	{
 		lak::string<CHAR> result;
-		if constexpr (lak::is_same_v<T, CHAR>)
-		{
-			result.reserve(std::min<size_t>(value.size(), args.precision));
-			result.insert(result.end(), value.begin(), value.end());
-		}
+		if (!(args.escape_ascii_printable || args.escape_ascii_non_printable))
+			if constexpr (lak::is_same_v<T, CHAR>)
+			{
+				result.reserve(std::min<size_t>(value.size(), args.precision));
+				result.insert(result.end(), value.begin(), value.end());
+			}
+			else
+			{
+				result = lak::strconv<CHAR>(value);
+				result.reserve(args.precision);
+			}
 		else
 		{
-			result = lak::strconv<CHAR>(value);
-			result.reserve(args.precision);
+			result.reserve(std::min<size_t>(
+			  args.escape_ascii_printable ? value.size() * (2U + (2U * sizeof(T)))
+			                              : value.size(),
+			  args.precision));
+			for (const T &c : value)
+				result += lak::format_traits<T, CHAR>::to_string(args, c);
 		}
-		while (result.size() < args.precision) result += CHAR(' ');
+		if (result.size() < args.precision)
+			result.append(args.precision - result.size(), CHAR(' '));
 		return result;
 	}
 };
@@ -604,58 +762,6 @@ static_assert(lak::concepts::dynamic_formattable<double, char8_t>);
 static_assert(lak::concepts::dynamic_formattable<double, char>);
 static_assert(!lak::concepts::static_formattable<long double, char8_t>);
 static_assert(lak::concepts::formattable<long double, char8_t>);
-
-template<lak::concepts::one_of<LAK_ALL_CHARS> T, typename CHAR>
-struct lak::format_traits<T, CHAR>
-{
-	enum struct format_args
-	{
-		always_character,     // C
-		always_hex,           // H
-		ascii_printable_only, // A
-	};
-
-	static consteval format_args parse_args(lak::string_view<CHAR> args)
-	{
-		if (args.empty()) return format_args::always_character;
-		if (args.size() != 1) throw "invalid format arguments";
-		if (args[0] == CHAR('C')) return format_args::always_character;
-		if (args[0] == CHAR('H')) return format_args::always_hex;
-		if (args[0] == CHAR('A')) return format_args::ascii_printable_only;
-		throw "invalid format arguments";
-	}
-
-	static lak::string<CHAR> to_string(const format_args &args, const T &value)
-	{
-		switch (args)
-		{
-			case format_args::ascii_printable_only:
-				if (lak::is_ascii_printable(char32_t(value)))
-				{
-					[[fallthrough]];
-					default: [[fallthrough]];
-					case format_args::always_character:
-						return lak::strconv<CHAR>(lak::string_view(&value, 1U));
-				}
-				else
-				{
-					[[fallthrough]];
-					case format_args::always_hex:
-						if constexpr (sizeof(T) == sizeof(char8_t))
-							return lak::fmt<CHAR, "\\x{:0.2X}">(uintmax_t(value));
-						else if constexpr (sizeof(T) == sizeof(char16_t))
-							return lak::fmt<CHAR, "\\x{:0.4X}">(uintmax_t(value));
-						else if constexpr (sizeof(T) == sizeof(char32_t))
-							return lak::fmt<CHAR, "\\x{:0.8X}">(uintmax_t(value));
-						else
-							return lak::fmt<CHAR, "\\x{:0X}">(uintmax_t(value));
-				}
-		}
-	}
-};
-static_assert(!lak::concepts::static_formattable<wchar_t, char8_t>);
-static_assert(lak::concepts::dynamic_formattable<wchar_t, char8_t>);
-static_assert(lak::concepts::formattable<wchar_t, char8_t>);
 
 template<typename CHAR>
 struct lak::format_traits<std::error_code, CHAR>
