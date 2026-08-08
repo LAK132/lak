@@ -1,5 +1,5 @@
 [wrap-git]
-url = https://github.com/CobaltRenderer/Cobalt
+url = https://github.com/LAK132/Cobalt
 revision = 90bf88edcba30b0ed90b06d052ab9a2573f23c20
 depth = 1
 diff_files = cobalt/0001-Fix-invalid-linker-argument-in-Vulkan-Loader.patch, cobalt/0002-Allow-overriding-install-dirs.patch, cobalt/0001-Rename-FrameBuffer.cpp-to-FrameBuffer.mm-on-Apple-me.patch

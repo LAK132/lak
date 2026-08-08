@@ -116,36 +116,38 @@ namespace lak
 		::cobalt::graphics::IGraphicsDevice *device = nullptr;
 		using feature_set_t =
 		  std::set<::cobalt::graphics::IGraphicsDevice::Feature>;
-		feature_set_t features                                   = {};
-		std::set<::cobalt::graphics::IRenderer::Options> options = {};
+		using options_set_t    = std::set<::cobalt::graphics::IRenderer::Options>;
+		feature_set_t features = {};
+		options_set_t options  = {};
 
 		// the single preferred renderer
 		static lak::result<cobalt_renderer_settings> preferred(
-		  feature_set_t &&required_features = {});
+		  feature_set_t &&required_features = {}, options_set_t &&options = {});
 
 		// preferred settings for each available renderer, in order of preference
 		static lak::result<lak::array<cobalt_renderer_settings>> each_preferred(
-		  feature_set_t &&required_features = {});
+		  const feature_set_t &required_features = {},
+		  const options_set_t &options           = {});
 
 #	ifdef LAK_ENABLE_COBALT_OGL3
 		static lak::result<cobalt_renderer_settings> preferred_ogl3(
-		  feature_set_t &&required_features = {});
+		  feature_set_t &&required_features = {}, options_set_t &&options = {});
 #	endif
 #	ifdef LAK_ENABLE_COBALT_OGL4
 		static lak::result<cobalt_renderer_settings> preferred_ogl4(
-		  feature_set_t &&required_features = {});
+		  feature_set_t &&required_features = {}, options_set_t &&options = {});
 #	endif
 #	ifdef LAK_ENABLE_COBALT_D3D11
 		static lak::result<cobalt_renderer_settings> preferred_d3d11(
-		  feature_set_t &&required_features = {});
+		  feature_set_t &&required_features = {}, options_set_t &&options = {});
 #	endif
 #	ifdef LAK_ENABLE_COBALT_D3D12
 		static lak::result<cobalt_renderer_settings> preferred_d3d12(
-		  feature_set_t &&required_features = {});
+		  feature_set_t &&required_features = {}, options_set_t &&options = {});
 #	endif
 #	ifdef LAK_ENABLE_COBALT_VK
 		static lak::result<cobalt_renderer_settings> preferred_vk(
-		  feature_set_t &&required_features = {});
+		  feature_set_t &&required_features = {}, options_set_t &&options = {});
 #	endif
 
 #endif

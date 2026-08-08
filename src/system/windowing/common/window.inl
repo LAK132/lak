@@ -20,83 +20,85 @@ template struct lak::shared_bank_ptr<lak::window_handle>;
 
 #ifdef LAK_ENABLE_COBALT
 lak::result<lak::cobalt_renderer_settings>
-lak::cobalt_renderer_settings::preferred(feature_set_t &&required_features)
+lak::cobalt_renderer_settings::preferred(feature_set_t &&required_features,
+                                         options_set_t &&options)
 {
 #	ifdef LAK_ENABLE_COBALT_D3D12
 	if_let_ok (auto settings,
 	           lak::cobalt_renderer_settings::preferred_d3d12(
-	             lak::move(required_features)))
+	             lak::move(required_features), lak::move(options)))
 		return lak::move_ok(settings);
 #	endif
 
 #	ifdef LAK_ENABLE_COBALT_D3D11
 	if_let_ok (auto settings,
 	           lak::cobalt_renderer_settings::preferred_d3d11(
-	             lak::move(required_features)))
+	             lak::move(required_features), lak::move(options)))
 		return lak::move_ok(settings);
 #	endif
 
 #	ifdef LAK_ENABLE_COBALT_VK
 	if_let_ok (auto settings,
 	           lak::cobalt_renderer_settings::preferred_vk(
-	             lak::move(required_features)))
+	             lak::move(required_features), lak::move(options)))
 		return lak::move_ok(settings);
 #	endif
 
 #	ifdef LAK_ENABLE_COBALT_OGL4
 	if_let_ok (auto settings,
 	           lak::cobalt_renderer_settings::preferred_ogl4(
-	             lak::move(required_features)))
+	             lak::move(required_features), lak::move(options)))
 		return lak::move_ok(settings);
 #	endif
 
 #	ifdef LAK_ENABLE_COBALT_OGL3
 	if_let_ok (auto settings,
 	           lak::cobalt_renderer_settings::preferred_ogl3(
-	             lak::move(required_features)))
+	             lak::move(required_features), lak::move(options)))
 		return lak::move_ok(settings);
 #	endif
 
 	return lak::err_t{};
 }
 
-lak::result<lak::array<lak::cobalt_renderer_settings>> lak::
-  cobalt_renderer_settings::each_preferred(feature_set_t &&required_features)
+lak::result<lak::array<lak::cobalt_renderer_settings>>
+lak::cobalt_renderer_settings::each_preferred(
+  const feature_set_t &required_features, const options_set_t &options)
 {
 	lak::array<lak::cobalt_renderer_settings> result;
 
 #	ifdef LAK_ENABLE_COBALT_D3D12
 	if_let_ok (auto settings,
 	           lak::cobalt_renderer_settings::preferred_d3d12(
-	             lak::move(required_features)))
+	             feature_set_t(required_features), options_set_t(options)))
 		result.push_back(lak::move(settings));
 #	endif
 
 #	ifdef LAK_ENABLE_COBALT_D3D11
 	if_let_ok (auto settings,
 	           lak::cobalt_renderer_settings::preferred_d3d11(
-	             lak::move(required_features)))
+	             feature_set_t(required_features), options_set_t(options)))
 		result.push_back(lak::move(settings));
 #	endif
 
 #	ifdef LAK_ENABLE_COBALT_VK
 	if_let_ok (auto settings,
 	           lak::cobalt_renderer_settings::preferred_vk(
-	             lak::move(required_features)))
+	             feature_set_t(required_features), options_set_t(options)))
 		result.push_back(lak::move(settings));
 #	endif
 
 #	ifdef LAK_ENABLE_COBALT_OGL4
 	if_let_ok (auto settings,
 	           lak::cobalt_renderer_settings::preferred_ogl4(
-	             lak::move(required_features)))
+	             feature_set_t(required_features), options_set_t(options)))
 		result.push_back(lak::move(settings));
 #	endif
 
 #	ifdef LAK_ENABLE_COBALT_OGL3
 	if_let_ok (auto settings,
 	           lak::cobalt_renderer_settings::preferred_ogl3(
-	             lak::move(required_features)))
+	             feature_set_t(required_features), options_set_t(options)))
 		result.push_back(lak::move(settings));
 #	endif
 
@@ -112,7 +114,8 @@ namespace
 		lak::result<lak::cobalt_renderer_settings> cobalt_try_renderer(
 		  lak::cobalt::renderer_plugin_func info,
 		  ::cobalt::logging::ILogger::unique_ptr log,
-		  lak::cobalt_renderer_settings::feature_set_t &&required_features)
+		  lak::cobalt_renderer_settings::feature_set_t &&required_features,
+		  lak::cobalt_renderer_settings::options_set_t &&options)
 		{
 			lak::cobalt_renderer_settings result;
 
@@ -141,6 +144,7 @@ namespace
 			}
 
 			result.features = lak::move(required_features);
+			result.options  = lak::move(options);
 
 			return lak::move_ok(result);
 		}
@@ -149,56 +153,62 @@ namespace
 
 #	ifdef LAK_ENABLE_COBALT_OGL3
 lak::result<lak::cobalt_renderer_settings> lak::cobalt_renderer_settings::
-  preferred_ogl3(feature_set_t &&required_features)
+  preferred_ogl3(feature_set_t &&required_features, options_set_t &&options)
 {
 	return local::cobalt_try_renderer(
 	  lak::cobalt::ogl3_get_renderer_plugin(),
 	  lak::cobalt::log_manager->GetLogger("OpenGL3"),
-	  lak::move(required_features));
+	  lak::move(required_features),
+	  lak::move(options));
 }
 #	endif
 
 #	ifdef LAK_ENABLE_COBALT_OGL4
 lak::result<lak::cobalt_renderer_settings> lak::cobalt_renderer_settings::
-  preferred_ogl4(feature_set_t &&required_features)
+  preferred_ogl4(feature_set_t &&required_features, options_set_t &&options)
 {
 	return local::cobalt_try_renderer(
 	  lak::cobalt::ogl4_get_renderer_plugin(),
 	  lak::cobalt::log_manager->GetLogger("OpenGL4"),
-	  lak::move(required_features));
+	  lak::move(required_features),
+	  lak::move(options));
 }
 #	endif
 
 #	ifdef LAK_ENABLE_COBALT_D3D11
 lak::result<lak::cobalt_renderer_settings> lak::cobalt_renderer_settings::
-  preferred_d3d11(feature_set_t &&required_features)
+  preferred_d3d11(feature_set_t &&required_features, options_set_t &&options)
 {
 	return local::cobalt_try_renderer(
 	  lak::cobalt::d3d11_get_renderer_plugin(),
 	  lak::cobalt::log_manager->GetLogger("D3D11"),
-	  lak::move(required_features));
+	  lak::move(required_features),
+	  lak::move(options));
 }
 #	endif
 
 #	ifdef LAK_ENABLE_COBALT_D3D12
 lak::result<lak::cobalt_renderer_settings> lak::cobalt_renderer_settings::
-  preferred_d3d12(feature_set_t &&required_features)
+  preferred_d3d12(feature_set_t &&required_features, options_set_t &&options)
 {
 	return local::cobalt_try_renderer(
 	  lak::cobalt::d3d12_get_renderer_plugin(),
 	  lak::cobalt::log_manager->GetLogger("D3D12"),
-	  lak::move(required_features));
+	  lak::move(required_features),
+	  lak::move(options));
 }
 #	endif
 
 #	ifdef LAK_ENABLE_COBALT_VK
 lak::result<lak::cobalt_renderer_settings>
-lak::cobalt_renderer_settings::preferred_vk(feature_set_t &&required_features)
+lak::cobalt_renderer_settings::preferred_vk(feature_set_t &&required_features,
+                                            options_set_t &&options)
 {
 	return local::cobalt_try_renderer(
 	  lak::cobalt::vk_get_renderer_plugin(),
 	  lak::cobalt::log_manager->GetLogger("Vulkan"),
-	  lak::move(required_features));
+	  lak::move(required_features),
+	  lak::move(options));
 }
 #	endif
 

@@ -144,7 +144,10 @@ lak::result<lak::strong_ref<LAK_BASIC_PROGRAM(window_instance<WINDOW_CLASS>)>,
 template<typename WINDOW_CLASS>
 lak::result<lak::strong_ref<LAK_BASIC_PROGRAM(window_instance<WINDOW_CLASS>)>,
             lak::u8string>
-  LAK_BASIC_PROGRAM(create_window)(const lak::cobalt_settings &);
+  LAK_BASIC_PROGRAM(create_window)(
+    const lak::cobalt_settings &,
+    const lak::cobalt_renderer_settings::feature_set_t & = {},
+    const lak::cobalt_renderer_settings::options_set_t & = {});
 #endif
 
 #endif

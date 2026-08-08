@@ -186,12 +186,19 @@ LAK_BASIC_PROGRAM(create_window)(const lak::cobalt_settings &settings,
 template<typename WINDOW_CLASS>
 lak::result<lak::strong_ref<LAK_BASIC_PROGRAM(window_instance<WINDOW_CLASS>)>,
             lak::u8string>
-LAK_BASIC_PROGRAM(create_window)(const lak::cobalt_settings &settings)
+LAK_BASIC_PROGRAM(create_window)(
+  const lak::cobalt_settings &settings,
+  const lak::cobalt_renderer_settings::feature_set_t &features,
+  const lak::cobalt_renderer_settings::options_set_t &options)
 {
 	lak::u8string errs;
 
 	if (LAK_BASIC_PROGRAM(window_cobalt_renderer_settings))
 	{
+		if (!features.empty())
+			LAK_BASIC_PROGRAM(window_cobalt_renderer_settings)->features = features;
+		if (!options.empty())
+			LAK_BASIC_PROGRAM(window_cobalt_renderer_settings)->options = options;
 		RES_TRY_ASSIGN_ERR(
 		  errs +=,
 		  LAK_BASIC_PROGRAM(create_window<WINDOW_CLASS>)(
@@ -199,13 +206,15 @@ LAK_BASIC_PROGRAM(create_window)(const lak::cobalt_settings &settings)
 		errs += u8"\n";
 	}
 
-	RES_TRY_ASSIGN(auto each_rsettings =,
-	               lak::cobalt_renderer_settings::each_preferred().map_err(
-	                 [&](auto &&) -> lak::u8string
-	                 {
-		                 errs += u8"Failed to get preferred renderer settings";
-		                 return lak::move(errs);
-	                 }));
+	RES_TRY_ASSIGN(
+	  auto each_rsettings =,
+	  lak::cobalt_renderer_settings::each_preferred(features, options)
+	    .map_err(
+	      [&](auto &&) -> lak::u8string
+	      {
+		      errs += u8"Failed to get preferred renderer settings";
+		      return lak::move(errs);
+	      }));
 
 	for (auto &rsettings : each_rsettings)
 	{
