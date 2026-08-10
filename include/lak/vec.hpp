@@ -48,31 +48,31 @@ namespace lak
 			T g;
 		};
 
-		vec2() : x(0), y(0) {}
+		constexpr vec2() : x(0), y(0) {}
 
-		vec2(const vec2 &other) : x(other.x), y(other.y) {}
+		constexpr vec2(const vec2 &other) : x(other.x), y(other.y) {}
 
-		vec2(const T (&values)[2]) : x(values[0]), y(values[1]) {}
+		constexpr vec2(const T (&values)[2]) : x(values[0]), y(values[1]) {}
 
-		vec2(const T X, const T Y) : x(X), y(Y) {}
+		constexpr vec2(const T X, const T Y) : x(X), y(Y) {}
 
-		vec2 &operator=(const vec2 &rhs)
+		constexpr vec2 &operator=(const vec2 &rhs)
 		{
 			x = (T)rhs.x;
 			y = (T)rhs.y;
 			return *this;
 		}
 
-		inline T &operator[](const size_t index) { return (&x)[index]; }
+		constexpr T &operator[](const size_t index) { return (&x)[index]; }
 
-		inline const T &operator[](const size_t index) const
+		constexpr const T &operator[](const size_t index) const
 		{
 			return (&x)[index];
 		}
 
 		template<size_t I>
 		requires((I < 2))
-		inline T &get()
+		constexpr T &get()
 		{
 			if constexpr (I == 0)
 				return x;
@@ -82,7 +82,7 @@ namespace lak
 
 		template<size_t I>
 		requires((I < 2))
-		inline const T &get() const
+		constexpr const T &get() const
 		{
 			if constexpr (I == 0)
 				return x;
@@ -91,19 +91,19 @@ namespace lak
 		}
 
 		template<typename L>
-		explicit operator vec2<L>() const
+		constexpr explicit operator vec2<L>() const
 		{
 			return vec2<L>{static_cast<L>(x), static_cast<L>(y)};
 		}
 
 		template<typename L>
-		explicit operator vec3<L>() const
+		constexpr explicit operator vec3<L>() const
 		{
 			return vec3<L>{static_cast<L>(x), static_cast<L>(y), 0};
 		}
 
 		template<typename L>
-		explicit operator vec4<L>() const
+		constexpr explicit operator vec4<L>() const
 		{
 			return vec4<L>{static_cast<L>(x), static_cast<L>(y), 0, 0};
 		}
@@ -255,15 +255,18 @@ namespace lak
 			T b;
 		};
 
-		vec3() : x(0), y(0), z(0) {}
+		constexpr vec3() : x(0), y(0), z(0) {}
 
-		vec3(const vec3 &other) : x(other.x), y(other.y), z(other.z) {}
+		constexpr vec3(const vec3 &other) : x(other.x), y(other.y), z(other.z) {}
 
-		vec3(const T (&values)[3]) : x(values[0]), y(values[1]), z(values[2]) {}
+		constexpr vec3(const T (&values)[3])
+		: x(values[0]), y(values[1]), z(values[2])
+		{
+		}
 
-		vec3(const T X, const T Y, const T Z) : x(X), y(Y), z(Z) {}
+		constexpr vec3(const T X, const T Y, const T Z) : x(X), y(Y), z(Z) {}
 
-		vec3 &operator=(const vec3 &rhs)
+		constexpr vec3 &operator=(const vec3 &rhs)
 		{
 			x = rhs.x;
 			y = rhs.y;
@@ -271,16 +274,16 @@ namespace lak
 			return *this;
 		}
 
-		inline T &operator[](const size_t index) { return (&x)[index]; }
+		constexpr T &operator[](const size_t index) { return (&x)[index]; }
 
-		inline const T &operator[](const size_t index) const
+		constexpr const T &operator[](const size_t index) const
 		{
 			return (&x)[index];
 		}
 
 		template<size_t I>
 		requires((I < 3))
-		inline T &get()
+		constexpr T &get()
 		{
 			if constexpr (I == 0)
 				return x;
@@ -292,7 +295,7 @@ namespace lak
 
 		template<size_t I>
 		requires((I < 3))
-		inline const T &get() const
+		constexpr const T &get() const
 		{
 			if constexpr (I == 0)
 				return x;
@@ -486,20 +489,24 @@ namespace lak
 			T a;
 		};
 
-		vec4() : x(0), y(0), z(0), w(0) {}
+		constexpr vec4() : x(0), y(0), z(0), w(0) {}
 
-		vec4(const vec4 &other) : x(other.x), y(other.y), z(other.z), w(other.w) {}
+		constexpr vec4(const vec4 &other)
+		: x(other.x), y(other.y), z(other.z), w(other.w)
+		{
+		}
 
-		vec4(const T (&values)[4])
+		constexpr vec4(const T (&values)[4])
 		: x(values[0]), y(values[1]), z(values[2]), w(values[3])
 		{
 		}
 
-		vec4(const T X, const T Y, const T Z, const T W) : x(X), y(Y), z(Z), w(W)
+		constexpr vec4(const T X, const T Y, const T Z, const T W)
+		: x(X), y(Y), z(Z), w(W)
 		{
 		}
 
-		vec4 &operator=(const vec4 &rhs)
+		constexpr vec4 &operator=(const vec4 &rhs)
 		{
 			x = rhs.x;
 			y = rhs.y;
@@ -508,16 +515,16 @@ namespace lak
 			return *this;
 		}
 
-		inline T &operator[](const size_t index) { return (&x)[index]; }
+		constexpr T &operator[](const size_t index) { return (&x)[index]; }
 
-		inline const T &operator[](const size_t index) const
+		constexpr const T &operator[](const size_t index) const
 		{
 			return (&x)[index];
 		}
 
 		template<size_t I>
 		requires((I < 4))
-		inline T &get()
+		constexpr T &get()
 		{
 			if constexpr (I == 0)
 				return x;
@@ -531,7 +538,7 @@ namespace lak
 
 		template<size_t I>
 		requires((I < 4))
-		inline const T &get() const
+		constexpr const T &get() const
 		{
 			if constexpr (I == 0)
 				return x;
@@ -544,19 +551,19 @@ namespace lak
 		}
 
 		template<typename L>
-		explicit operator vec2<L>() const
+		constexpr explicit operator vec2<L>() const
 		{
 			return vec2<L>{static_cast<L>(x), static_cast<L>(y)};
 		}
 
 		template<typename L>
-		explicit operator vec3<L>() const
+		constexpr explicit operator vec3<L>() const
 		{
 			return vec3<L>{static_cast<L>(x), static_cast<L>(y), static_cast<L>(z)};
 		}
 
 		template<typename L>
-		explicit operator vec4<L>() const
+		constexpr explicit operator vec4<L>() const
 		{
 			return vec4<L>{static_cast<L>(x),
 			               static_cast<L>(y),
@@ -751,19 +758,19 @@ namespace std
 // dot product
 
 template<typename T>
-T dot(const lak::vec2<T> &lhs, const lak::vec2<T> &rhs)
+constexpr T dot(const lak::vec2<T> &lhs, const lak::vec2<T> &rhs)
 {
 	return (lhs.x * rhs.x) + (lhs.y * rhs.y);
 }
 
 template<typename T>
-T dot(const lak::vec3<T> &lhs, const lak::vec3<T> &rhs)
+constexpr T dot(const lak::vec3<T> &lhs, const lak::vec3<T> &rhs)
 {
 	return (lhs.x * rhs.x) + (lhs.y * rhs.y) + (lhs.z * rhs.z);
 }
 
 template<typename T>
-T dot(const lak::vec4<T> &lhs, const lak::vec4<T> &rhs)
+constexpr T dot(const lak::vec4<T> &lhs, const lak::vec4<T> &rhs)
 {
 	return (lhs.x * rhs.x) + (lhs.y * rhs.y) + (lhs.z * rhs.z) + (lhs.w * rhs.w);
 }
@@ -771,7 +778,7 @@ T dot(const lak::vec4<T> &lhs, const lak::vec4<T> &rhs)
 // hammard product
 
 template<typename T>
-lak::vec2<T> operator*(lak::vec2<T> lhs, const lak::vec2<T> &rhs)
+constexpr lak::vec2<T> operator*(lak::vec2<T> lhs, const lak::vec2<T> &rhs)
 {
 	lhs.x *= rhs.x;
 	lhs.y *= rhs.y;
@@ -779,7 +786,7 @@ lak::vec2<T> operator*(lak::vec2<T> lhs, const lak::vec2<T> &rhs)
 }
 
 template<typename T>
-lak::vec2<T> operator*(lak::vec2<T> lhs, T rhs)
+constexpr lak::vec2<T> operator*(lak::vec2<T> lhs, T rhs)
 {
 	lhs.x *= rhs;
 	lhs.y *= rhs;
@@ -787,7 +794,7 @@ lak::vec2<T> operator*(lak::vec2<T> lhs, T rhs)
 }
 
 template<typename T>
-lak::vec2<T> operator*(T lhs, lak::vec2<T> rhs)
+constexpr lak::vec2<T> operator*(T lhs, lak::vec2<T> rhs)
 {
 	rhs.x *= lhs;
 	rhs.y *= lhs;
@@ -795,7 +802,7 @@ lak::vec2<T> operator*(T lhs, lak::vec2<T> rhs)
 }
 
 template<typename T>
-lak::vec3<T> operator*(lak::vec3<T> lhs, const lak::vec3<T> &rhs)
+constexpr lak::vec3<T> operator*(lak::vec3<T> lhs, const lak::vec3<T> &rhs)
 {
 	lhs.x *= rhs.x;
 	lhs.y *= rhs.y;
@@ -804,7 +811,7 @@ lak::vec3<T> operator*(lak::vec3<T> lhs, const lak::vec3<T> &rhs)
 }
 
 template<typename T>
-lak::vec3<T> operator*(lak::vec3<T> lhs, T rhs)
+constexpr lak::vec3<T> operator*(lak::vec3<T> lhs, T rhs)
 {
 	lhs.x *= rhs;
 	lhs.y *= rhs;
@@ -813,7 +820,7 @@ lak::vec3<T> operator*(lak::vec3<T> lhs, T rhs)
 }
 
 template<typename T>
-lak::vec3<T> operator*(T lhs, lak::vec3<T> rhs)
+constexpr lak::vec3<T> operator*(T lhs, lak::vec3<T> rhs)
 {
 	rhs.x *= lhs;
 	rhs.y *= lhs;
@@ -822,7 +829,7 @@ lak::vec3<T> operator*(T lhs, lak::vec3<T> rhs)
 }
 
 template<typename T>
-lak::vec4<T> operator*(lak::vec4<T> lhs, const lak::vec4<T> &rhs)
+constexpr lak::vec4<T> operator*(lak::vec4<T> lhs, const lak::vec4<T> &rhs)
 {
 	lhs.x *= rhs.x;
 	lhs.y *= rhs.y;
@@ -832,7 +839,7 @@ lak::vec4<T> operator*(lak::vec4<T> lhs, const lak::vec4<T> &rhs)
 }
 
 template<typename T>
-lak::vec4<T> operator*(lak::vec4<T> lhs, T rhs)
+constexpr lak::vec4<T> operator*(lak::vec4<T> lhs, T rhs)
 {
 	lhs.x *= rhs;
 	lhs.y *= rhs;
@@ -842,7 +849,7 @@ lak::vec4<T> operator*(lak::vec4<T> lhs, T rhs)
 }
 
 template<typename T>
-lak::vec4<T> operator*(T lhs, lak::vec4<T> rhs)
+constexpr lak::vec4<T> operator*(T lhs, lak::vec4<T> rhs)
 {
 	rhs.x *= lhs;
 	rhs.y *= lhs;
@@ -852,7 +859,7 @@ lak::vec4<T> operator*(T lhs, lak::vec4<T> rhs)
 }
 
 template<typename T>
-lak::vec2<T> &operator*=(lak::vec2<T> &lhs, const lak::vec2<T> &rhs)
+constexpr lak::vec2<T> &operator*=(lak::vec2<T> &lhs, const lak::vec2<T> &rhs)
 {
 	lhs.x *= rhs.x;
 	lhs.y *= rhs.y;
@@ -860,7 +867,7 @@ lak::vec2<T> &operator*=(lak::vec2<T> &lhs, const lak::vec2<T> &rhs)
 }
 
 template<typename T>
-lak::vec2<T> &operator*=(lak::vec2<T> &lhs, T rhs)
+constexpr lak::vec2<T> &operator*=(lak::vec2<T> &lhs, T rhs)
 {
 	lhs.x *= rhs;
 	lhs.y *= rhs;
@@ -868,7 +875,7 @@ lak::vec2<T> &operator*=(lak::vec2<T> &lhs, T rhs)
 }
 
 template<typename T>
-lak::vec3<T> &operator*=(lak::vec3<T> &lhs, const lak::vec3<T> &rhs)
+constexpr lak::vec3<T> &operator*=(lak::vec3<T> &lhs, const lak::vec3<T> &rhs)
 {
 	lhs.x *= rhs.x;
 	lhs.y *= rhs.y;
@@ -877,7 +884,7 @@ lak::vec3<T> &operator*=(lak::vec3<T> &lhs, const lak::vec3<T> &rhs)
 }
 
 template<typename T>
-lak::vec3<T> &operator*=(lak::vec3<T> &lhs, T rhs)
+constexpr lak::vec3<T> &operator*=(lak::vec3<T> &lhs, T rhs)
 {
 	lhs.x *= rhs;
 	lhs.y *= rhs;
@@ -886,7 +893,7 @@ lak::vec3<T> &operator*=(lak::vec3<T> &lhs, T rhs)
 }
 
 template<typename T>
-lak::vec4<T> &operator*=(lak::vec4<T> &lhs, const lak::vec4<T> &rhs)
+constexpr lak::vec4<T> &operator*=(lak::vec4<T> &lhs, const lak::vec4<T> &rhs)
 {
 	lhs.x *= rhs.x;
 	lhs.y *= rhs.y;
@@ -896,7 +903,7 @@ lak::vec4<T> &operator*=(lak::vec4<T> &lhs, const lak::vec4<T> &rhs)
 }
 
 template<typename T>
-lak::vec4<T> &operator*=(lak::vec4<T> &lhs, T rhs)
+constexpr lak::vec4<T> &operator*=(lak::vec4<T> &lhs, T rhs)
 {
 	lhs.x *= rhs;
 	lhs.y *= rhs;
@@ -908,37 +915,37 @@ lak::vec4<T> &operator*=(lak::vec4<T> &lhs, T rhs)
 // matrix multiplication
 
 template<typename T>
-lak::vec2<T> operator*(lak::mat2<T> mat, lak::vec2<T> vec)
+constexpr lak::vec2<T> operator*(lak::mat2<T> mat, lak::vec2<T> vec)
 {
 	return {dot(mat.x, vec), dot(mat.y, vec)};
 }
 
 template<typename T>
-lak::vec3<T> operator*(lak::mat3<T> mat, lak::vec3<T> vec)
+constexpr lak::vec3<T> operator*(lak::mat3<T> mat, lak::vec3<T> vec)
 {
 	return {dot(mat.x, vec), dot(mat.y, vec), dot(mat.z, vec)};
 }
 
 template<typename T>
-lak::vec4<T> operator*(lak::mat4<T> mat, lak::vec4<T> vec)
+constexpr lak::vec4<T> operator*(lak::mat4<T> mat, lak::vec4<T> vec)
 {
 	return {dot(mat.x, vec), dot(mat.y, vec), dot(mat.z, vec), dot(mat.w, vec)};
 }
 
 template<typename T>
-lak::vec2<T> &operator*=(lak::vec2<T> &vec, lak::mat2<T> mat)
+constexpr lak::vec2<T> &operator*=(lak::vec2<T> &vec, lak::mat2<T> mat)
 {
 	return vec = mat * vec;
 }
 
 template<typename T>
-lak::vec3<T> &operator*=(lak::vec3<T> &vec, lak::mat3<T> mat)
+constexpr lak::vec3<T> &operator*=(lak::vec3<T> &vec, lak::mat3<T> mat)
 {
 	return vec = mat * vec;
 }
 
 template<typename T>
-lak::vec4<T> &operator*=(lak::vec4<T> &vec, lak::mat4<T> mat)
+constexpr lak::vec4<T> &operator*=(lak::vec4<T> &vec, lak::mat4<T> mat)
 {
 	return vec = mat * vec;
 }
@@ -946,7 +953,7 @@ lak::vec4<T> &operator*=(lak::vec4<T> &vec, lak::mat4<T> mat)
 // division
 
 template<typename T>
-lak::vec2<T> operator/(lak::vec2<T> lhs, T rhs)
+constexpr lak::vec2<T> operator/(lak::vec2<T> lhs, T rhs)
 {
 	lhs.x /= rhs;
 	lhs.y /= rhs;
@@ -954,7 +961,7 @@ lak::vec2<T> operator/(lak::vec2<T> lhs, T rhs)
 }
 
 template<typename T>
-lak::vec2<T> operator/(T lhs, lak::vec2<T> rhs)
+constexpr lak::vec2<T> operator/(T lhs, lak::vec2<T> rhs)
 {
 	rhs.x = lhs / rhs.x;
 	rhs.y = lhs / rhs.y;
@@ -962,7 +969,7 @@ lak::vec2<T> operator/(T lhs, lak::vec2<T> rhs)
 }
 
 template<typename T>
-lak::vec2<T> operator/(lak::vec2<T> lhs, lak::vec2<T> rhs)
+constexpr lak::vec2<T> operator/(lak::vec2<T> lhs, lak::vec2<T> rhs)
 {
 	lhs.x /= rhs.x;
 	lhs.y /= rhs.y;
@@ -970,7 +977,7 @@ lak::vec2<T> operator/(lak::vec2<T> lhs, lak::vec2<T> rhs)
 }
 
 template<typename T>
-lak::vec3<T> operator/(lak::vec3<T> lhs, T rhs)
+constexpr lak::vec3<T> operator/(lak::vec3<T> lhs, T rhs)
 {
 	lhs.x /= rhs;
 	lhs.y /= rhs;
@@ -979,7 +986,7 @@ lak::vec3<T> operator/(lak::vec3<T> lhs, T rhs)
 }
 
 template<typename T>
-lak::vec3<T> operator/(T lhs, lak::vec3<T> rhs)
+constexpr lak::vec3<T> operator/(T lhs, lak::vec3<T> rhs)
 {
 	rhs.x = lhs / rhs.x;
 	rhs.y = lhs / rhs.y;
@@ -988,7 +995,7 @@ lak::vec3<T> operator/(T lhs, lak::vec3<T> rhs)
 }
 
 template<typename T>
-lak::vec3<T> operator/(lak::vec3<T> lhs, lak::vec3<T> rhs)
+constexpr lak::vec3<T> operator/(lak::vec3<T> lhs, lak::vec3<T> rhs)
 {
 	lhs.x /= rhs.x;
 	lhs.y /= rhs.y;
@@ -997,7 +1004,7 @@ lak::vec3<T> operator/(lak::vec3<T> lhs, lak::vec3<T> rhs)
 }
 
 template<typename T>
-lak::vec4<T> operator/(lak::vec4<T> lhs, T rhs)
+constexpr lak::vec4<T> operator/(lak::vec4<T> lhs, T rhs)
 {
 	lhs.x /= rhs;
 	lhs.y /= rhs;
@@ -1007,7 +1014,7 @@ lak::vec4<T> operator/(lak::vec4<T> lhs, T rhs)
 }
 
 template<typename T>
-lak::vec4<T> operator/(T lhs, lak::vec4<T> rhs)
+constexpr lak::vec4<T> operator/(T lhs, lak::vec4<T> rhs)
 {
 	rhs.x = lhs / rhs.x;
 	rhs.y = lhs / rhs.y;
@@ -1017,7 +1024,7 @@ lak::vec4<T> operator/(T lhs, lak::vec4<T> rhs)
 }
 
 template<typename T>
-lak::vec4<T> operator/(lak::vec4<T> lhs, lak::vec4<T> rhs)
+constexpr lak::vec4<T> operator/(lak::vec4<T> lhs, lak::vec4<T> rhs)
 {
 	lhs.x /= rhs.x;
 	lhs.y /= rhs.y;
@@ -1027,7 +1034,7 @@ lak::vec4<T> operator/(lak::vec4<T> lhs, lak::vec4<T> rhs)
 }
 
 template<typename T>
-lak::vec2<T> &operator/=(lak::vec2<T> &lhs, T rhs)
+constexpr lak::vec2<T> &operator/=(lak::vec2<T> &lhs, T rhs)
 {
 	lhs.x /= rhs;
 	lhs.y /= rhs;
@@ -1035,7 +1042,7 @@ lak::vec2<T> &operator/=(lak::vec2<T> &lhs, T rhs)
 }
 
 template<typename T>
-lak::vec2<T> &operator/=(lak::vec2<T> &lhs, lak::vec2<T> rhs)
+constexpr lak::vec2<T> &operator/=(lak::vec2<T> &lhs, lak::vec2<T> rhs)
 {
 	lhs.x /= rhs.x;
 	lhs.y /= rhs.y;
@@ -1043,7 +1050,7 @@ lak::vec2<T> &operator/=(lak::vec2<T> &lhs, lak::vec2<T> rhs)
 }
 
 template<typename T>
-lak::vec3<T> &operator/=(lak::vec3<T> &lhs, T rhs)
+constexpr lak::vec3<T> &operator/=(lak::vec3<T> &lhs, T rhs)
 {
 	lhs.x /= rhs;
 	lhs.y /= rhs;
@@ -1052,7 +1059,7 @@ lak::vec3<T> &operator/=(lak::vec3<T> &lhs, T rhs)
 }
 
 template<typename T>
-lak::vec3<T> &operator/=(lak::vec3<T> &lhs, lak::vec3<T> rhs)
+constexpr lak::vec3<T> &operator/=(lak::vec3<T> &lhs, lak::vec3<T> rhs)
 {
 	lhs.x /= rhs.x;
 	lhs.y /= rhs.y;
@@ -1061,7 +1068,7 @@ lak::vec3<T> &operator/=(lak::vec3<T> &lhs, lak::vec3<T> rhs)
 }
 
 template<typename T>
-lak::vec4<T> &operator/=(lak::vec4<T> &lhs, T rhs)
+constexpr lak::vec4<T> &operator/=(lak::vec4<T> &lhs, T rhs)
 {
 	lhs.x /= rhs;
 	lhs.y /= rhs;
@@ -1071,7 +1078,7 @@ lak::vec4<T> &operator/=(lak::vec4<T> &lhs, T rhs)
 }
 
 template<typename T>
-lak::vec4<T> &operator/=(lak::vec4<T> &lhs, lak::vec4<T> rhs)
+constexpr lak::vec4<T> &operator/=(lak::vec4<T> &lhs, lak::vec4<T> rhs)
 {
 	lhs.x /= rhs.x;
 	lhs.y /= rhs.y;
@@ -1083,7 +1090,7 @@ lak::vec4<T> &operator/=(lak::vec4<T> &lhs, lak::vec4<T> rhs)
 // addition
 
 template<typename T>
-lak::vec2<T> operator+(lak::vec2<T> lhs, const lak::vec2<T> &rhs)
+constexpr lak::vec2<T> operator+(lak::vec2<T> lhs, const lak::vec2<T> &rhs)
 {
 	lhs.x += rhs.x;
 	lhs.y += rhs.y;
@@ -1091,7 +1098,7 @@ lak::vec2<T> operator+(lak::vec2<T> lhs, const lak::vec2<T> &rhs)
 }
 
 template<typename T>
-lak::vec3<T> operator+(lak::vec3<T> lhs, const lak::vec3<T> &rhs)
+constexpr lak::vec3<T> operator+(lak::vec3<T> lhs, const lak::vec3<T> &rhs)
 {
 	lhs.x += rhs.x;
 	lhs.y += rhs.y;
@@ -1100,7 +1107,7 @@ lak::vec3<T> operator+(lak::vec3<T> lhs, const lak::vec3<T> &rhs)
 }
 
 template<typename T>
-lak::vec4<T> operator+(lak::vec4<T> lhs, const lak::vec4<T> &rhs)
+constexpr lak::vec4<T> operator+(lak::vec4<T> lhs, const lak::vec4<T> &rhs)
 {
 	lhs.x += rhs.x;
 	lhs.y += rhs.y;
@@ -1110,7 +1117,7 @@ lak::vec4<T> operator+(lak::vec4<T> lhs, const lak::vec4<T> &rhs)
 }
 
 template<typename T>
-lak::vec2<T> &operator+=(lak::vec2<T> &lhs, const lak::vec2<T> &rhs)
+constexpr lak::vec2<T> &operator+=(lak::vec2<T> &lhs, const lak::vec2<T> &rhs)
 {
 	lhs.x += rhs.x;
 	lhs.y += rhs.y;
@@ -1118,7 +1125,7 @@ lak::vec2<T> &operator+=(lak::vec2<T> &lhs, const lak::vec2<T> &rhs)
 }
 
 template<typename T>
-lak::vec3<T> &operator+=(lak::vec3<T> &lhs, const lak::vec3<T> &rhs)
+constexpr lak::vec3<T> &operator+=(lak::vec3<T> &lhs, const lak::vec3<T> &rhs)
 {
 	lhs.x += rhs.x;
 	lhs.y += rhs.y;
@@ -1127,7 +1134,7 @@ lak::vec3<T> &operator+=(lak::vec3<T> &lhs, const lak::vec3<T> &rhs)
 }
 
 template<typename T>
-lak::vec4<T> &operator+=(lak::vec4<T> &lhs, const lak::vec4<T> &rhs)
+constexpr lak::vec4<T> &operator+=(lak::vec4<T> &lhs, const lak::vec4<T> &rhs)
 {
 	lhs.x += rhs.x;
 	lhs.y += rhs.y;
@@ -1139,7 +1146,7 @@ lak::vec4<T> &operator+=(lak::vec4<T> &lhs, const lak::vec4<T> &rhs)
 // subtraction
 
 template<typename T>
-lak::vec2<T> operator-(lak::vec2<T> lhs, const lak::vec2<T> &rhs)
+constexpr lak::vec2<T> operator-(lak::vec2<T> lhs, const lak::vec2<T> &rhs)
 {
 	lhs.x -= rhs.x;
 	lhs.y -= rhs.y;
@@ -1147,34 +1154,7 @@ lak::vec2<T> operator-(lak::vec2<T> lhs, const lak::vec2<T> &rhs)
 }
 
 template<typename T>
-lak::vec3<T> operator-(lak::vec3<T> lhs, const lak::vec3<T> &rhs)
-{
-	lhs.x -= rhs.x;
-	lhs.y -= rhs.y;
-	lhs.z -= rhs.z;
-	return lhs;
-}
-
-template<typename T>
-lak::vec4<T> operator-(lak::vec4<T> lhs, const lak::vec4<T> &rhs)
-{
-	lhs.x -= rhs.x;
-	lhs.y -= rhs.y;
-	lhs.z -= rhs.z;
-	lhs.w -= rhs.w;
-	return lhs;
-}
-
-template<typename T>
-lak::vec2<T> &operator-=(lak::vec2<T> &lhs, const lak::vec2<T> &rhs)
-{
-	lhs.x -= rhs.x;
-	lhs.y -= rhs.y;
-	return lhs;
-}
-
-template<typename T>
-lak::vec3<T> &operator-=(lak::vec3<T> &lhs, const lak::vec3<T> &rhs)
+constexpr lak::vec3<T> operator-(lak::vec3<T> lhs, const lak::vec3<T> &rhs)
 {
 	lhs.x -= rhs.x;
 	lhs.y -= rhs.y;
@@ -1183,7 +1163,7 @@ lak::vec3<T> &operator-=(lak::vec3<T> &lhs, const lak::vec3<T> &rhs)
 }
 
 template<typename T>
-lak::vec4<T> &operator-=(lak::vec4<T> &lhs, const lak::vec4<T> &rhs)
+constexpr lak::vec4<T> operator-(lak::vec4<T> lhs, const lak::vec4<T> &rhs)
 {
 	lhs.x -= rhs.x;
 	lhs.y -= rhs.y;
@@ -1193,38 +1173,65 @@ lak::vec4<T> &operator-=(lak::vec4<T> &lhs, const lak::vec4<T> &rhs)
 }
 
 template<typename T>
-bool operator==(const lak::vec2<T> &lhs, const lak::vec2<T> &rhs)
+constexpr lak::vec2<T> &operator-=(lak::vec2<T> &lhs, const lak::vec2<T> &rhs)
+{
+	lhs.x -= rhs.x;
+	lhs.y -= rhs.y;
+	return lhs;
+}
+
+template<typename T>
+constexpr lak::vec3<T> &operator-=(lak::vec3<T> &lhs, const lak::vec3<T> &rhs)
+{
+	lhs.x -= rhs.x;
+	lhs.y -= rhs.y;
+	lhs.z -= rhs.z;
+	return lhs;
+}
+
+template<typename T>
+constexpr lak::vec4<T> &operator-=(lak::vec4<T> &lhs, const lak::vec4<T> &rhs)
+{
+	lhs.x -= rhs.x;
+	lhs.y -= rhs.y;
+	lhs.z -= rhs.z;
+	lhs.w -= rhs.w;
+	return lhs;
+}
+
+template<typename T>
+constexpr bool operator==(const lak::vec2<T> &lhs, const lak::vec2<T> &rhs)
 {
 	return (lhs.x == rhs.x) && (lhs.y == rhs.y);
 }
 
 template<typename T>
-bool operator==(const lak::vec3<T> &lhs, const lak::vec3<T> &rhs)
+constexpr bool operator==(const lak::vec3<T> &lhs, const lak::vec3<T> &rhs)
 {
 	return (lhs.x == rhs.x) && (lhs.y == rhs.y) && (lhs.z == rhs.z);
 }
 
 template<typename T>
-bool operator==(const lak::vec4<T> &lhs, const lak::vec4<T> &rhs)
+constexpr bool operator==(const lak::vec4<T> &lhs, const lak::vec4<T> &rhs)
 {
 	return (lhs.x == rhs.x) && (lhs.y == rhs.y) && (lhs.z == rhs.z) &&
 	       (lhs.w == rhs.w);
 }
 
 template<typename T>
-bool operator!=(const lak::vec2<T> &lhs, const lak::vec2<T> &rhs)
+constexpr bool operator!=(const lak::vec2<T> &lhs, const lak::vec2<T> &rhs)
 {
 	return !(lhs == rhs);
 }
 
 template<typename T>
-bool operator!=(const lak::vec3<T> &lhs, const lak::vec3<T> &rhs)
+constexpr bool operator!=(const lak::vec3<T> &lhs, const lak::vec3<T> &rhs)
 {
 	return !(lhs == rhs);
 }
 
 template<typename T>
-bool operator!=(const lak::vec4<T> &lhs, const lak::vec4<T> &rhs)
+constexpr bool operator!=(const lak::vec4<T> &lhs, const lak::vec4<T> &rhs)
 {
 	return !(lhs == rhs);
 }
