@@ -42,7 +42,7 @@
 	MACRO(0x13C, HostComputer, __VA_ARGS__)                                     \
 	MACRO(0x13D, Predictor, __VA_ARGS__)                                        \
 	MACRO(0x13E, WhitePoint, __VA_ARGS__)                                       \
-	MACRO(0x13F, PrimaryChomaticities, __VA_ARGS__)                             \
+	MACRO(0x13F, PrimaryChromaticities, __VA_ARGS__)                            \
 	MACRO(0x140, ColorMap, __VA_ARGS__)                                         \
 	MACRO(0x141, HalftoneHints, __VA_ARGS__)                                    \
 	MACRO(0x142, TileWidth, __VA_ARGS__)                                        \
@@ -307,7 +307,7 @@
 	MACRO(HostComputer, char, lak::dynamic_extent, __VA_ARGS__)                 \
 	MACRO(Predictor, uint16_t, 1U, __VA_ARGS__)                                 \
 	MACRO(WhitePoint, lak::tiff::urational, 2U, __VA_ARGS__)                    \
-	MACRO(PrimaryChomaticities, lak::tiff::urational, 6U, __VA_ARGS__)          \
+	MACRO(PrimaryChromaticities, lak::tiff::urational, 6U, __VA_ARGS__)         \
 	MACRO(ColorMap, uint16_t, lak::dynamic_extent, __VA_ARGS__)                 \
 	MACRO(HalftoneHints, uint16_t, 2U, __VA_ARGS__)                             \
 	MACRO(TileWidth, uint16_t, 1U, __VA_ARGS__)                                 \
