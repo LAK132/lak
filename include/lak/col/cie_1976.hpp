@@ -152,8 +152,10 @@ namespace lak
 			LAK_CMATH_CONSTEXPR lak::col::cie::Luv to_Luv(lak::col::cie::uvY colour,
 			                                              lak::col::cie::uvY white)
 			{
-				constexpr float thresh   = float(std::pow(6.0 / 29.0, 3.0));
-				constexpr float less_pre = float(std::pow(29.0 / 3.0, 3.0));
+				LAK_CMATH_CONSTEXPR_CONST float thresh =
+				  float(std::pow(6.0 / 29.0, 3.0));
+				LAK_CMATH_CONSTEXPR_CONST float less_pre =
+				  float(std::pow(29.0 / 3.0, 3.0));
 
 				const float YYn = colour.Y / white.Y;
 				const float L   = (YYn <= thresh) ? (less_pre * YYn)
