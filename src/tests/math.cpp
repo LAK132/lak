@@ -118,6 +118,18 @@ BEGIN_TEST(fpmod)
 	ASSERT_CLOSE(lak::fpmod(10.0, 10.0), 0.0);
 	ASSERT_CLOSE(lak::fpmod(11.0, 10.0), 1.0);
 	ASSERT_CLOSE(lak::fpmod(15.0, 10.0), 5.0);
+
+	ASSERT_CLOSE(lak::fpmod(-11.0, -1.0, 10.0), 0.0);
+	ASSERT_CLOSE(lak::fpmod(-10.0, -1.0, 10.0), 1.0);
+	ASSERT_CLOSE(lak::fpmod(-9.0, -1.0, 10.0), 2.0);
+	ASSERT_CLOSE(lak::fpmod(-5.0, -1.0, 10.0), 6.0);
+	ASSERT_CLOSE(lak::fpmod(-2.0, -1.0, 10.0), 9.0);
+	ASSERT_CLOSE(lak::fpmod(0.0, 1.0, 10.0), 9.0);
+	ASSERT_CLOSE(lak::fpmod(1.0, 1.0, 10.0), 1.0);
+	ASSERT_CLOSE(lak::fpmod(5.0, 1.0, 10.0), 5.0);
+	ASSERT_CLOSE(lak::fpmod(10.0, 1.0, 10.0), 1.0);
+	ASSERT_CLOSE(lak::fpmod(11.0, 2.0, 10.0), 3.0);
+	ASSERT_CLOSE(lak::fpmod(15.0, 3.0, 10.0), 8.0);
 	return 0;
 }
 END_TEST()

@@ -80,11 +80,22 @@ namespace lak
 			return a >= INTEGER(0) ? (a % b) : lak::slack<INTEGER>(-a, b);
 	}
 
-	// fit a to the range [0.0, b) by adding or subtracting multiples of b
+	// fit value to the range [0.0, range_max) by adding or subtracting multiples
+	// of range_max
 	template<typename FLOAT>
-	constexpr FLOAT fpmod(FLOAT a, FLOAT b)
+	constexpr FLOAT fpmod(FLOAT value, FLOAT range_max)
 	{
-		return a >= FLOAT(0) ? std::fmod(a, b) : lak::fslack<FLOAT>(-a, b);
+		return value >= FLOAT(0) ? std::fmod(value, range_max)
+		                         : lak::fslack<FLOAT>(-value, range_max);
+	}
+
+	// fit value to the range [range_min, range_max) by adding or subtracting
+	// multiples of range_max-range_min
+	template<typename FLOAT>
+	constexpr FLOAT fpmod(FLOAT value, FLOAT range_min, FLOAT range_max)
+	{
+		return lak::fpmod<FLOAT>(value - range_min, range_max - range_min) +
+		       range_min;
 	}
 
 	// https://dinodini.wordpress.com/2010/04/05/normalized-tunable-sigmoid-functions/
