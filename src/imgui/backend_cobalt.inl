@@ -371,13 +371,11 @@ lak::vec2s_t ImplCoTextureSize(ImGui::ImplContext, ImTextureID tex)
 	return {size_t(dims.X()), size_t(dims.Y())};
 }
 
-void ImplCoCreateViewport(ImGui::ImplContext context,
-                          ImGui::ImplViewport viewport)
+static void ImplCoCreateViewportTextures(ImGui::ImplContext context,
+                                         ImGui::ImplViewport viewport)
 {
-	viewport->co_viewport = new ImGui::_ImplCoViewport();
-
-	viewport->co_viewport->fb =
-	  context->co_context->renderer->CreateFrameBuffer();
+	if (viewport->output.GetTexID() != ImTextureID_Invalid)
+		ImplCoDestroyTexture(context, viewport->output.GetTexID());
 
 	auto &tx = *(new ::cobalt::graphics::ITextureBuffer2D::unique_ptr);
 	tx       = context->co_context->renderer->CreateTextureBuffer2D();
@@ -440,6 +438,17 @@ void ImplCoCreateViewport(ImGui::ImplContext context,
 	  .UNWRAP();
 }
 
+void ImplCoCreateViewport(ImGui::ImplContext context,
+                          ImGui::ImplViewport viewport)
+{
+	viewport->co_viewport = new ImGui::_ImplCoViewport();
+
+	viewport->co_viewport->fb =
+	  context->co_context->renderer->CreateFrameBuffer();
+
+	ImplCoCreateViewportTextures(context, viewport);
+}
+
 void ImplCoDestroyViewport(ImGui::ImplContext context,
                            ImGui::ImplViewport viewport)
 {
@@ -458,21 +467,23 @@ ImGui::ImplCoViewportDetails ImplCoBeginViewport(ImGui::ImplContext context,
                                                  ImGui::ImplViewport viewport,
                                                  lak::vec2s_t size)
 {
-	auto id = viewport->output.GetTexID();
-
-	if (id == ImTextureID_Invalid)
 	{
-		viewport->output = ImplCoCreateTexture(
-		  context, nullptr, size, viewport->colour, viewport->channel);
-		id = viewport->output.GetTexID();
-	}
-	else
-	{
+		auto id = viewport->output.GetTexID();
+		ASSERT(id != ImTextureID_Invalid);
 		auto *tex =
 		  ((::cobalt::graphics::ITextureBuffer2D::unique_ptr *)id)->get();
-		if (tex->MipmapLevelCount() < 1U ||
+		if (tex->MipmapLevelCount() >= 1U &&
 		    tex->MipmapLevelDimensions(0) !=
 		      ::cobalt::graphics::V2UInt32(uint32_t(size.x), uint32_t(size.y)))
+		{
+			// Cobalt doesn't tolerate resizing textures, so if the size doesn't
+			// match we need to destroy them and start again.
+			ImplCoCreateViewportTextures(context, viewport);
+			id = viewport->output.GetTexID();
+			ASSERT(id != ImTextureID_Invalid);
+			tex = ((::cobalt::graphics::ITextureBuffer2D::unique_ptr *)id)->get();
+		}
+		if (tex->MipmapLevelCount() < 1)
 		{
 			viewport->co_viewport->db->SetTextureDimensions(
 			  {uint32_t(size.x), uint32_t(size.y)});
