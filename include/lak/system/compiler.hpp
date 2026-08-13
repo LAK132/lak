@@ -23,6 +23,12 @@
 #	define LAK_COMPILER_CPP98
 #endif
 
+#if __has_cpp_attribute(__cpp_lib_constexpr_cmath)
+#	define LAK_CMATH_CONSTEXPR constexpr
+#else
+#	define LAK_CMATH_CONSTEXPR
+#endif
+
 #ifndef LAK_COMPILER_CPP20
 #	error Expected at least a C++20 compiler
 #endif
