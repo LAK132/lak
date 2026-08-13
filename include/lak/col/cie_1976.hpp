@@ -1,6 +1,8 @@
 #ifndef LAK_COL_CIE_1976_HPP
 #define LAK_COL_CIE_1976_HPP
 
+#include "lak/system/compiler.hpp"
+
 #include "lak/col/cie_1931.hpp"
 
 #include <cmath>
@@ -102,8 +104,8 @@ namespace lak
 				};
 			}
 
-			constexpr lak::col::cie::XYZ to_XYZ(lak::col::cie::Luv colour,
-			                                    lak::col::cie::uvY white)
+			LAK_CMATH_CONSTEXPR lak::col::cie::XYZ to_XYZ(lak::col::cie::Luv colour,
+			                                              lak::col::cie::uvY white)
 			{
 				const float u = ((colour.u / colour.L) / 13.f) + white.u;
 				const float v = ((colour.v / colour.L) / 13.f) + white.v;
@@ -147,8 +149,8 @@ namespace lak
 				};
 			}
 
-			constexpr lak::col::cie::Luv to_Luv(lak::col::cie::uvY colour,
-			                                    lak::col::cie::uvY white)
+			LAK_CMATH_CONSTEXPR lak::col::cie::Luv to_Luv(lak::col::cie::uvY colour,
+			                                              lak::col::cie::uvY white)
 			{
 				constexpr float thresh   = float(std::pow(6.0 / 29.0, 3.0));
 				constexpr float less_pre = float(std::pow(29.0 / 3.0, 3.0));
@@ -164,7 +166,7 @@ namespace lak
 				};
 			}
 
-			constexpr lak::col::cie::Luv to_Luv(lak::col::cie::LCh colour)
+			LAK_CMATH_CONSTEXPR lak::col::cie::Luv to_Luv(lak::col::cie::LCh colour)
 			{
 				return {
 				  .L = colour.L,
@@ -173,7 +175,7 @@ namespace lak
 				};
 			}
 
-			constexpr lak::col::cie::LCh to_LCh(lak::col::cie::Luv colour)
+			LAK_CMATH_CONSTEXPR lak::col::cie::LCh to_LCh(lak::col::cie::Luv colour)
 			{
 				return {
 				  .L = colour.L,
@@ -184,91 +186,91 @@ namespace lak
 
 			// ---
 
-			constexpr lak::col::cie::xyY to_xyY(lak::col::cie::Luv colour,
-			                                    lak::col::cie::uvY white)
+			LAK_CMATH_CONSTEXPR lak::col::cie::xyY to_xyY(lak::col::cie::Luv colour,
+			                                              lak::col::cie::uvY white)
 			{
 				return to_xyY(to_XYZ(colour, white));
 			}
 
-			constexpr lak::col::cie::xyY to_xyY(lak::col::cie::Luv colour,
-			                                    lak::col::cie::uv white)
+			LAK_CMATH_CONSTEXPR lak::col::cie::xyY to_xyY(lak::col::cie::Luv colour,
+			                                              lak::col::cie::uv white)
 			{
 				return to_xyY(colour, {white.u, white.v, 1.f});
 			}
 
-			constexpr lak::col::cie::xyY to_xyY(lak::col::cie::LCh colour,
-			                                    lak::col::cie::uvY white)
+			LAK_CMATH_CONSTEXPR lak::col::cie::xyY to_xyY(lak::col::cie::LCh colour,
+			                                              lak::col::cie::uvY white)
 			{
 				return to_xyY(to_Luv(colour), white);
 			}
 
-			constexpr lak::col::cie::xyY to_xyY(lak::col::cie::LCh colour,
-			                                    lak::col::cie::uv white)
+			LAK_CMATH_CONSTEXPR lak::col::cie::xyY to_xyY(lak::col::cie::LCh colour,
+			                                              lak::col::cie::uv white)
 			{
 				return to_xyY(colour, {white.u, white.v, 1.f});
 			}
 
-			constexpr lak::col::cie::XYZ to_XYZ(lak::col::cie::Luv colour,
-			                                    lak::col::cie::uv white)
+			LAK_CMATH_CONSTEXPR lak::col::cie::XYZ to_XYZ(lak::col::cie::Luv colour,
+			                                              lak::col::cie::uv white)
 			{
 				return to_XYZ(colour, {white.u, white.v, 1.f});
 			}
 
-			constexpr lak::col::cie::uvY to_uvY(lak::col::cie::XYZ colour)
+			LAK_CMATH_CONSTEXPR lak::col::cie::uvY to_uvY(lak::col::cie::XYZ colour)
 			{
 				return to_uvY(to_xyY(colour));
 			}
 
-			constexpr lak::col::cie::uvY to_uvY(lak::col::cie::Luv colour,
-			                                    lak::col::cie::uv white)
+			LAK_CMATH_CONSTEXPR lak::col::cie::uvY to_uvY(lak::col::cie::Luv colour,
+			                                              lak::col::cie::uv white)
 			{
 				return to_uvY(to_XYZ(colour, white));
 			}
 
-			constexpr lak::col::cie::uvY to_uvY(lak::col::cie::Luv colour,
-			                                    lak::col::cie::uvY white)
+			LAK_CMATH_CONSTEXPR lak::col::cie::uvY to_uvY(lak::col::cie::Luv colour,
+			                                              lak::col::cie::uvY white)
 			{
 				return to_uvY(to_XYZ(colour, white));
 			}
 
-			constexpr lak::col::cie::Luv to_Luv(lak::col::cie::uvY colour,
-			                                    lak::col::cie::uv white)
+			LAK_CMATH_CONSTEXPR lak::col::cie::Luv to_Luv(lak::col::cie::uvY colour,
+			                                              lak::col::cie::uv white)
 			{
 				return to_Luv(colour, {white.u, white.v, 1.f});
 			}
 
-			constexpr lak::col::cie::Luv to_Luv(lak::col::cie::xyY colour,
-			                                    lak::col::cie::uvY white)
+			LAK_CMATH_CONSTEXPR lak::col::cie::Luv to_Luv(lak::col::cie::xyY colour,
+			                                              lak::col::cie::uvY white)
 			{
 				return to_Luv(to_uvY(colour), white);
 			}
 
-			constexpr lak::col::cie::Luv to_Luv(lak::col::cie::xyY colour,
-			                                    lak::col::cie::uv white)
+			LAK_CMATH_CONSTEXPR lak::col::cie::Luv to_Luv(lak::col::cie::xyY colour,
+			                                              lak::col::cie::uv white)
 			{
 				return to_Luv(to_uvY(colour), white);
 			}
 
-			constexpr lak::col::cie::Luv to_Luv(lak::col::cie::XYZ colour,
-			                                    lak::col::cie::uvY white)
+			LAK_CMATH_CONSTEXPR lak::col::cie::Luv to_Luv(lak::col::cie::XYZ colour,
+			                                              lak::col::cie::uvY white)
 			{
 				return to_Luv(to_uvY(colour), white);
 			}
 
-			constexpr lak::col::cie::Luv to_Luv(lak::col::cie::XYZ colour,
-			                                    lak::col::cie::uv white)
+			LAK_CMATH_CONSTEXPR lak::col::cie::Luv to_Luv(lak::col::cie::XYZ colour,
+			                                              lak::col::cie::uv white)
 			{
 				return to_Luv(to_uvY(colour), white);
 			}
 
-			constexpr lak::col::cie::LCh to_LCh(lak::col::cie::xyY colour,
-			                                    lak::col::cie::uvY white)
+			LAK_CMATH_CONSTEXPR lak::col::cie::LCh to_LCh(lak::col::cie::xyY colour,
+			                                              lak::col::cie::uvY white)
 			{
 				return to_LCh(to_Luv(colour, white));
 			}
 
-			constexpr lak::col::cie::LCh to_LCh(lak::col::cie::xyY colour,
-			                                    lak::col::cie::uv white)
+			LAK_CMATH_CONSTEXPR lak::col::cie::LCh to_LCh(lak::col::cie::xyY colour,
+			                                              lak::col::cie::uv white)
 			{
 				return to_LCh(to_Luv(colour, white));
 			}

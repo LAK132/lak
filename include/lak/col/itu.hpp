@@ -1,6 +1,8 @@
 #ifndef LAK_COL_ITU_HPP
 #define LAK_COL_ITU_HPP
 
+#include "lak/system/compiler.hpp"
+
 #include "lak/col/cie.hpp"
 
 namespace lak
@@ -49,7 +51,7 @@ namespace lak
 				constexpr lak::vec3f_t to_vec() const { return {R, G, B}; }
 			};
 
-			constexpr lak::col::itu::rec709 to_rec709(
+			LAK_CMATH_CONSTEXPR lak::col::itu::rec709 to_rec709(
 			  lak::col::itu::rec709_linear colour)
 			{
 				auto from_linear = [](float value)
@@ -66,7 +68,7 @@ namespace lak
 				};
 			}
 
-			constexpr lak::col::itu::rec709_linear to_rec709_linear(
+			LAK_CMATH_CONSTEXPR lak::col::itu::rec709_linear to_rec709_linear(
 			  lak::col::itu::rec709 colour)
 			{
 				auto to_linear = [](float value)

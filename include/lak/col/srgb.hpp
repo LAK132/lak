@@ -1,6 +1,8 @@
 #ifndef LAK_COL_SRGB_HPP
 #define LAK_COL_SRGB_HPP
 
+#include "lak/system/compiler.hpp"
+
 #include "lak/col/cie.hpp"
 
 namespace lak
@@ -40,7 +42,7 @@ namespace lak
 			constexpr lak::vec3f_t to_vec() const { return {R, G, B}; }
 		};
 
-		constexpr lak::col::sRGB to_sRGB(lak::col::sRGB_linear colour)
+		LAK_CMATH_CONSTEXPR lak::col::sRGB to_sRGB(lak::col::sRGB_linear colour)
 		{
 			auto from_linear = [](float value)
 			{
@@ -72,7 +74,8 @@ namespace lak
 			};
 		}
 
-		constexpr lak::col::sRGB_linear to_sRGB_linear(lak::col::sRGB colour)
+		LAK_CMATH_CONSTEXPR lak::col::sRGB_linear to_sRGB_linear(
+		  lak::col::sRGB colour)
 		{
 			auto to_linear = [](float value)
 			{
@@ -105,12 +108,12 @@ namespace lak
 
 		// ---
 
-		constexpr lak::col::cie::XYZ to_XYZ(lak::col::sRGB colour)
+		LAK_CMATH_CONSTEXPR lak::col::cie::XYZ to_XYZ(lak::col::sRGB colour)
 		{
 			return to_XYZ(to_sRGB_linear(colour));
 		}
 
-		constexpr lak::col::sRGB to_sRGB(lak::col::cie::XYZ colour)
+		LAK_CMATH_CONSTEXPR lak::col::sRGB to_sRGB(lak::col::cie::XYZ colour)
 		{
 			return to_sRGB(to_sRGB_linear(colour));
 		}

@@ -221,6 +221,19 @@ namespace lak
 					};
 				}
 
+				constexpr lak::mat3f_t linear_to_XYZ() const
+				{
+					const auto [r_X, r_Y, r_Z] = to_XYZ(r);
+					const auto [g_X, g_Y, g_Z] = to_XYZ(g);
+					const auto [b_X, b_Y, b_Z] = to_XYZ(b);
+
+					return {
+					  lak::vec3f_t(r_X, g_X, b_X),
+					  lak::vec3f_t(r_Y, g_Y, b_Y),
+					  lak::vec3f_t(r_Z, g_Z, b_Z),
+					};
+				}
+
 				constexpr lak::col::cie::xyY linear_to_xyY(lak::vec3f_t colour) const
 				{
 					const auto [x, y, Y] = homogenise(colour) * bases();
