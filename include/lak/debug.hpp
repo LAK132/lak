@@ -294,7 +294,8 @@
 		if (!lak::close_to(UNIQUIFY(x), UNIQUIFY(y) __VA_OPT__(, ) __VA_ARGS__))  \
 		  [[unlikely]]                                                            \
 		{                                                                         \
-			FATAL("Assertion '" DEBUG_STRINGIFY_EXPR(X == Y) "' failed: '",         \
+			FATAL("Assertion '" DEBUG_STRINGIFY_EXPR(                               \
+			        lak::close_to(X, Y)) "' failed: '",                             \
 			      UNIQUIFY(x),                                                      \
 			      "' not close to '",                                               \
 			      UNIQUIFY(y),                                                      \
@@ -356,7 +357,8 @@
 		if (lak::close_to(UNIQUIFY(x), UNIQUIFY(y) __VA_OPT__(, ) __VA_ARGS__))   \
 		  [[unlikely]]                                                            \
 		{                                                                         \
-			FATAL("Assertion '" DEBUG_STRINGIFY_EXPR(X == Y) "' failed: '",         \
+			FATAL("Assertion '" DEBUG_STRINGIFY_EXPR(                               \
+			        lak::close_to(X, Y)) "' failed: '",                             \
 			      UNIQUIFY(x),                                                      \
 			      "' close to '",                                                   \
 			      UNIQUIFY(y),                                                      \

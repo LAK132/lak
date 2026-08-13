@@ -2,23 +2,6 @@
 
 #include "lak/math.hpp"
 
-#define ASSERT_CLOSE(X, Y, ...)                                               \
-	do                                                                          \
-	{                                                                           \
-		const auto &UNIQUIFY(x) = (X);                                            \
-		const auto &UNIQUIFY(y) = (Y);                                            \
-		if (!lak::close_to(UNIQUIFY(x), UNIQUIFY(y) __VA_OPT__(, ) __VA_ARGS__))  \
-		  [[unlikely]]                                                            \
-		{                                                                         \
-			FATAL("Assertion '" DEBUG_STRINGIFY_EXPR(                               \
-			        lak::close_to(X, Y)) "' failed: '",                             \
-			      UNIQUIFY(x),                                                      \
-			      "' != '",                                                         \
-			      UNIQUIFY(y),                                                      \
-			      "'");                                                             \
-		}                                                                         \
-	} while (false)
-
 BEGIN_TEST(slack)
 {
 	ASSERT_EQUAL(lak::slack(10U, 5U), 0U);
