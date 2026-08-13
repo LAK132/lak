@@ -8,7 +8,7 @@ namespace lak
 	namespace col
 	{
 		constexpr lak::col::cie::xyY_primaries opRGB_primaries =
-		  lak::col::to_xyY(lak::col::cie::xyY_primaries{
+		  lak::col::cie::to_xyY(lak::col::cie::xyY_primaries{
 		    .r = {.x = 0.64f, .y = 0.33f},
 		    .g = {.x = 0.21f, .y = 0.71f},
 		    .b = {.x = 0.15f, .y = 0.06f},
