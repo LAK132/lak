@@ -1529,7 +1529,7 @@ namespace lak
 	}
 
 	template<typename T>
-	constexpr T lak::det(const lak::mat4<T> &mat)
+	constexpr T det(const lak::mat4<T> &mat)
 	{
 		return lak::dot(mat.x, lak::det_part(mat.yzw()));
 	}
