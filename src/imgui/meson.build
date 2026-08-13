@@ -4,6 +4,7 @@ lakimgui_dependencies = declare_dependency(
 		lakwindowing_dep,
 		imgui_dep,
 		imgui_file_dialog_dep,
+		implot_dep,
 		glm_dep,
 	],
 )
@@ -12,6 +13,7 @@ lakimgui = static_library(
 	'lakimgui',
 	[
 		'backend.cpp',
+		'cie.cpp',
 		'softrender.cpp',
 		'widgets.cpp',
 	],

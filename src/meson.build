@@ -34,7 +34,10 @@ foreach type, comps : compilers
 		],
 		cpp_args: lak_reflection_argument,
 		include_directories: lakcore_inc,
-		dependencies: dependency('threads', native: comps['native']),
+		dependencies: [
+			dependency('threads', native: comps['native']),
+			subproject('cie-cmf').get_variable('cie_cmf_dep'),
+		],
 		link_with: lakcore_system[type],
 		link_depends: lak_natvis,
 		native: comps['native'],
@@ -43,6 +46,7 @@ foreach type, comps : compilers
 		compile_args: lak_reflection_argument,
 		link_with: lakcore2[type],
 		include_directories: lakcore_inc,
+		dependencies: subproject('cie-cmf').get_variable('cie_cmf_dep'),
 	)}
 endforeach
 
