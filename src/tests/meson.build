@@ -51,6 +51,7 @@ laktestcore = static_library(
 		'trie.cpp',
 		'type_pack.cpp',
 		'unicode.cpp',
+		'vec.cpp',
 		'visit.cpp',
 		'wide_math.cpp',
 	],
