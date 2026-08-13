@@ -1,6 +1,7 @@
 #ifndef LAK_IMGUI_WIDGETS_HPP
 #define LAK_IMGUI_WIDGETS_HPP
 
+#include "lak/com_ptr.hpp"
 #include "lak/const_string.hpp"
 #include "lak/error_code_result.hpp"
 #include "lak/macro_utils.hpp"
@@ -52,6 +53,29 @@ namespace lak
 	  bool *clicked          = nullptr,
 	  ImGuiButtonFlags flags = ImGuiButtonFlags_None);
 	void EndViewport(ImViewport viewport);
+
+	template<>
+	struct unique_com_ptr_traits<ImViewport>
+	{
+		using handle_type                = ImViewport;
+		using exposed_type               = ImViewport;
+		static constexpr auto null_value = nullptr;
+		inline static lak::infallible_result<ImViewport> ctor(
+		  lak::ImTextureColourFormat colour, lak::ImTextureChannelFormat channel)
+		{
+			return lak::ok_t{lak::CreateViewport(colour, channel)};
+		}
+		inline static void dtor(ImViewport &viewport)
+		{
+			lak::DestroyViewport(viewport);
+			viewport = nullptr;
+		}
+		inline static bool valid(ImViewport viewport)
+		{
+			return viewport != nullptr;
+		}
+	};
+	using ImUniqueViewport = lak::unique_com_ptr<ImViewport>;
 
 	template<typename R, typename... T, typename... D>
 	bool AwaitPopup(const char *str_id,
