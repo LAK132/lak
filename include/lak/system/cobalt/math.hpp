@@ -17,21 +17,34 @@ namespace lak
 	namespace cobalt
 	{
 		template<typename T>
+		requires(!lak::is_vec_v<T>)
 		inline ::cobalt::graphics::BasicVector<T, 2> from_lak(lak::vec2<T> v)
 		{
 			return {v.x, v.y};
 		}
 
 		template<typename T>
+		requires(!lak::is_vec_v<T>)
 		inline ::cobalt::graphics::BasicVector<T, 3> from_lak(lak::vec3<T> v)
 		{
 			return {v.x, v.y, v.z};
 		}
 
 		template<typename T>
+		requires(!lak::is_vec_v<T>)
 		inline ::cobalt::graphics::BasicVector<T, 4> from_lak(lak::vec4<T> v)
 		{
 			return {v.x, v.y, v.z, v.w};
+		}
+
+		template<typename T, size_t D>
+		inline ::cobalt::graphics::BasicMatrix<T, D> from_lak(lak::mat<T, D, D> m)
+		{
+			::cobalt::graphics::M4Float32 result;
+			for (size_t y = 0; y < D; ++y)
+				for (size_t x = 0; x < D; ++x)
+					result.data()[size_t(x + (y * D))] = m[x][y];
+			return result;
 		}
 
 		inline ::cobalt::graphics::M4Float32 from_glm(glm::mat4x4 m)
