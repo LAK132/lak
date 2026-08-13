@@ -17,9 +17,17 @@
 #	define LAK_BASIC_PROGRAM_IMGUI_IMPL
 #endif
 
+#if defined(LAK_BASIC_PROGRAM_IMPLOT_IMPL) &&                                 \
+  !defined(LAK_BASIC_PROGRAM_IMGUI_IMPL)
+#	error LAK_BASIC_PROGRAM_IMPLOT_IMPL requires LAK_BASIC_PROGRAM_IMGUI_IMPL
+#endif
+
 #ifdef LAK_BASIC_PROGRAM_IMGUI_IMPL
 #	include "lak/imgui/backend.hpp"
 #	include "lak/imgui/widgets.hpp"
+#	ifdef LAK_BASIC_PROGRAM_IMPLOT_IMPL
+#		include <implot.h>
+#	endif
 #endif
 
 #ifndef LAK_BASIC_PROGRAM_MAIN
@@ -69,6 +77,9 @@ struct LAK_BASIC_PROGRAM(window_instance_base)
 	lak::vec4f_t clear_colour{0.0f, 0.3125f, 0.312f, 1.0f};
 #ifdef LAK_BASIC_PROGRAM_IMGUI_IMPL
 	ImGui::ImplContext imgui_context = nullptr;
+#	ifdef LAK_BASIC_PROGRAM_IMPLOT_IMPL
+	ImPlotContext *implot_context = nullptr;
+#	endif
 #endif
 #ifdef LAK_BASIC_PROGRAM_IMGUI_WINDOW_IMPL
 	ImGuiWindowFlags imgui_window_flags =

@@ -95,6 +95,10 @@ lak::result<lak::strong_ref<LAK_BASIC_PROGRAM(window_instance<WINDOW_CLASS>)>,
 	ImGui::GetStyle().WindowRounding = 0;
 
 	lak::init_file_modal();
+
+#	ifdef LAK_BASIC_PROGRAM_IMPLOT_IMPL
+	result->implot_context = ImPlot::CreateContext();
+#	endif
 #endif
 
 	result->window().set_title(L"" APP_NAME);
@@ -305,6 +309,9 @@ LAK_BASIC_PROGRAM(window_instance_base)::~LAK_BASIC_PROGRAM(
 	{
 		auto ctx = ImGui::GetCurrentContext();
 		DEFER(ImGui::SetCurrentContext(ctx));
+#	ifdef LAK_BASIC_PROGRAM_IMPLOT_IMPL
+		ImPlot::DestroyContext(implot_context);
+#	endif
 		ImGui::ImplSetCurrentContext(imgui_context);
 		ImGui::ImplShutdownContext(imgui_context);
 		ImGui::ImplDestroyContext(imgui_context);
@@ -515,6 +522,10 @@ int LAK_BASIC_PROGRAM_MAIN(int argc, char **argv)
 				  (float)counter_delta / lak::performance_frequency();
 				ImGui::ImplSetCurrentContext(inst.imgui_context);
 				ImGui::ImplNewFrame(inst.imgui_context, window, frame_time);
+
+#	ifdef LAK_BASIC_PROGRAM_IMPLOT_IMPL
+				ImPlot::SetCurrentContext(inst.implot_context);
+#	endif
 
 #	ifdef LAK_BASIC_PROGRAM_IMGUI_WINDOW_IMPL
 				bool mainOpen = true;
