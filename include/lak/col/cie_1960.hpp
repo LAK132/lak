@@ -14,11 +14,11 @@ namespace lak
 				float u;
 				float v;
 
-				static constexpr uv_1960 from_linear(lak::vec2f_t v)
+				static constexpr uv_1960 from_vec(lak::vec2f_t v)
 				{
 					return {.u = v.x, .v = v.y};
 				}
-				constexpr lak::vec2f_t to_linear() const { return {u, v}; }
+				constexpr lak::vec2f_t to_vec() const { return {u, v}; }
 			};
 
 			struct UVW_1960
@@ -27,11 +27,11 @@ namespace lak
 				float V;
 				float W;
 
-				static constexpr UVW_1960 from_linear(lak::vec3f_t v)
+				static constexpr UVW_1960 from_vec(lak::vec3f_t v)
 				{
 					return {.U = v.x, .V = v.y, .W = v.z};
 				}
-				constexpr lak::vec3f_t to_linear() const { return {U, V, W}; }
+				constexpr lak::vec3f_t to_vec() const { return {U, V, W}; }
 			};
 
 			constexpr lak::col::cie::xy to_xy(lak::col::cie::uv_1960 colour)

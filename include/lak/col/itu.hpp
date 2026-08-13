@@ -28,6 +28,12 @@ namespace lak
 				float R; // E'_R
 				float G; // E'_G
 				float B; // E'_B
+
+				static constexpr rec709 from_vec(lak::vec3f_t v)
+				{
+					return {.R = v.x, .G = v.y, .B = v.z};
+				}
+				constexpr lak::vec3f_t to_vec() const { return {R, G, B}; }
 			};
 
 			struct rec709_linear
@@ -35,6 +41,12 @@ namespace lak
 				float R; // E_R
 				float G; // E_G
 				float B; // E_B
+
+				static constexpr rec709_linear from_vec(lak::vec3f_t v)
+				{
+					return {.R = v.x, .G = v.y, .B = v.z};
+				}
+				constexpr lak::vec3f_t to_vec() const { return {R, G, B}; }
 			};
 
 			constexpr lak::col::itu::rec709 to_rec709(

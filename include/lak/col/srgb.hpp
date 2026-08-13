@@ -19,6 +19,12 @@ namespace lak
 			float R; // R'
 			float G; // G'
 			float B; // B'
+
+			static constexpr sRGB from_vec(lak::vec3f_t v)
+			{
+				return {.R = v.x, .G = v.y, .B = v.z};
+			}
+			constexpr lak::vec3f_t to_vec() const { return {R, G, B}; }
 		};
 
 		struct sRGB_linear
@@ -26,6 +32,12 @@ namespace lak
 			float R;
 			float G;
 			float B;
+
+			static constexpr sRGB_linear from_vec(lak::vec3f_t v)
+			{
+				return {.R = v.x, .G = v.y, .B = v.z};
+			}
+			constexpr lak::vec3f_t to_vec() const { return {R, G, B}; }
 		};
 
 		constexpr lak::col::sRGB to_sRGB(lak::col::sRGB_linear colour)

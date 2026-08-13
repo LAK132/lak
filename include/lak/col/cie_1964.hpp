@@ -16,11 +16,11 @@ namespace lak
 				float V; // V*
 				float W; // W*
 
-				static constexpr UVW from_linear(lak::vec3f_t v)
+				static constexpr UVW from_vec(lak::vec3f_t v)
 				{
 					return {.U = v.x, .V = v.y, .W = v.z};
 				}
-				constexpr lak::vec3f_t to_linear() const { return {U, V, W}; }
+				constexpr lak::vec3f_t to_vec() const { return {U, V, W}; }
 			};
 
 			constexpr lak::col::cie::UVW to_UVW(lak::col::cie::uvY colour,

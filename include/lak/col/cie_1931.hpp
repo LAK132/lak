@@ -18,11 +18,11 @@ namespace lak
 				float x;
 				float y;
 
-				static constexpr xy from_linear(lak::vec2f_t v)
+				static constexpr xy from_vec(lak::vec2f_t v)
 				{
 					return {.x = v.x, .y = v.y};
 				}
-				constexpr lak::vec2f_t to_linear() const { return {x, y}; }
+				constexpr lak::vec2f_t to_vec() const { return {x, y}; }
 			};
 
 			struct xyY
@@ -31,11 +31,11 @@ namespace lak
 				float y;
 				float Y;
 
-				static constexpr xyY from_linear(lak::vec3f_t v)
+				static constexpr xyY from_vec(lak::vec3f_t v)
 				{
 					return {.x = v.x, .y = v.y, .Y = v.z};
 				}
-				constexpr lak::vec3f_t to_linear() const { return {x, y, Y}; }
+				constexpr lak::vec3f_t to_vec() const { return {x, y, Y}; }
 			};
 
 			struct XYZ
@@ -44,11 +44,11 @@ namespace lak
 				float Y;
 				float Z;
 
-				static constexpr XYZ from_linear(lak::vec3f_t v)
+				static constexpr XYZ from_vec(lak::vec3f_t v)
 				{
 					return {.X = v.x, .Y = v.y, .Z = v.z};
 				}
-				constexpr lak::vec3f_t to_linear() const { return {X, Y, Z}; }
+				constexpr lak::vec3f_t to_vec() const { return {X, Y, Z}; }
 			};
 
 			struct RGB
@@ -57,11 +57,11 @@ namespace lak
 				float G;
 				float B;
 
-				static constexpr RGB from_linear(lak::vec3f_t v)
+				static constexpr RGB from_vec(lak::vec3f_t v)
 				{
 					return {.R = v.x, .G = v.y, .B = v.z};
 				}
-				constexpr lak::vec3f_t to_linear() const { return {R, G, B}; }
+				constexpr lak::vec3f_t to_vec() const { return {R, G, B}; }
 			};
 
 			constexpr lak::col::cie::xyY to_xyY(lak::col::cie::xy chroma, float luma)

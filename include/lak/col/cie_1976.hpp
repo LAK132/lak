@@ -17,11 +17,11 @@ namespace lak
 				float u; // u'
 				float v; // v'
 
-				static constexpr uv from_linear(lak::vec2f_t v)
+				static constexpr uv from_vec(lak::vec2f_t v)
 				{
 					return {.u = v.x, .v = v.y};
 				}
-				constexpr lak::vec2f_t to_linear() const { return {u, v}; }
+				constexpr lak::vec2f_t to_vec() const { return {u, v}; }
 			};
 
 			// CIELUV u' v' Y
@@ -31,11 +31,11 @@ namespace lak
 				float v; // v'
 				float Y; // Y
 
-				static constexpr uvY from_linear(lak::vec3f_t v)
+				static constexpr uvY from_vec(lak::vec3f_t v)
 				{
 					return {.u = v.x, .v = v.y, .Y = v.z};
 				}
-				constexpr lak::vec3f_t to_linear() const { return {u, v, Y}; }
+				constexpr lak::vec3f_t to_vec() const { return {u, v, Y}; }
 			};
 
 			// CIELUV L* u* v*
@@ -45,11 +45,11 @@ namespace lak
 				float u; // u*
 				float v; // v*
 
-				static constexpr Luv from_linear(lak::vec3f_t v)
+				static constexpr Luv from_vec(lak::vec3f_t v)
 				{
 					return {.L = v.x, .u = v.y, .v = v.z};
 				}
-				constexpr lak::vec3f_t to_linear() const { return {L, u, v}; }
+				constexpr lak::vec3f_t to_vec() const { return {L, u, v}; }
 			};
 
 			// CIELCh L* C*uv huv
@@ -61,11 +61,11 @@ namespace lak
 
 				constexpr float s() const { return C / L; }
 
-				static constexpr LCh from_linear(lak::vec3f_t v)
+				static constexpr LCh from_vec(lak::vec3f_t v)
 				{
 					return {.L = v.x, .C = v.y, .h = v.z};
 				}
-				constexpr lak::vec3f_t to_linear() const { return {L, C, h}; }
+				constexpr lak::vec3f_t to_vec() const { return {L, C, h}; }
 			};
 
 			// CIELAB L* a* b*
@@ -75,11 +75,11 @@ namespace lak
 				float a; // a*
 				float b; // b*
 
-				static constexpr Lab from_linear(lak::vec3f_t v)
+				static constexpr Lab from_vec(lak::vec3f_t v)
 				{
 					return {.L = v.x, .a = v.y, .b = v.z};
 				}
-				constexpr lak::vec3f_t to_linear() const { return {L, a, b}; }
+				constexpr lak::vec3f_t to_vec() const { return {L, a, b}; }
 			};
 
 			constexpr lak::col::cie::xy to_xy(lak::col::cie::uv colour)
