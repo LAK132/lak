@@ -1,0 +1,132 @@
+{
+	"identifier": {
+		"identifier": "10.25039/CIE.DS.qnm382a6",
+		"identifierType": "DOI"
+	},
+	"creators": [
+		{
+			"name": "International Commission on Illumination (CIE)",
+			"nameType": "Organizational"
+		}
+	],
+	"titles": [
+		{
+			"title": "CIE 1964 chromaticity coordinates of spectrum loci, 10 degree  observer"
+		}
+	],
+	"publisher": "International Commission on Illumination (CIE), Vienna, AT",
+	"publicationYear": "2019",
+	"subjects": [
+		{
+			"subject": "Photometry"
+		},
+		{
+			"subject": "Objective photometry"
+		},
+		{
+			"subject": "Units. Constants"
+		}
+	],
+	"language": "en",
+	"alternateIdentifiers": [
+		{
+			"alternateIdentifier": "CIE_cc_1964_10deg.csv",
+			"alternateIdentifierType": "fileName"
+		}
+	],
+	"relatedItems": [
+		{
+			"relatedItemIdentifier": "10.25039/IS.ISO_CIE.11664-1.2019",
+			"relatedItemIdentifierType": "DOI",
+			"relationType": "IsPartOf",
+			"relatedItemType": "Standard",
+			"titles": [
+				"ISO/CIE 11664-1:2019 Colorimetry — Part 1: CIE standard colorimetric observers"
+			]
+		}
+	],
+	"formats": [
+		"text/csv"
+	],
+	"types": {
+		"resourceType": "dataTable",
+		"resourceTypeGeneral": "Dataset"
+	},
+	"descriptions": [
+		{
+			"description": "Loci in a chromaticity diagram of points that represent monochromatic stimuli, CIE 1964, 10 degree observer, wavelength range: 360 nm to 830 nm, wavelength increment: 1 nm, original source: ISO/CIE 11664-1:2019, Table 2",
+			"descriptionType": "Abstract"
+		}
+	],
+	"rightsList": [
+		{
+			"rights": "Creative Commons Attribution-ShareAlike 4.0 International",
+			"rightsURI": "https://creativecommons.org/licenses/by-sa/4.0/",
+			"rightsIdentifier": "CC BY-SA 4.0"
+		}
+	],
+	"checksums": [
+		{
+			"hashMethod": "md5",
+			"checksum": "87f745ef28af679a2b61adfdc53432aa"
+		},
+		{
+			"hashMethod": "sha256",
+			"checksum": "7485d416ac4d6c30269b4267d739aec208d9110a94711537b95c48716890e98c"
+		}
+	],
+	"datatableInfo": {
+		"validations": [
+			{
+				"validationType": "sumOfColumns",
+				"validationValue": "[280245,217.06150,143.07743,110.86108]"
+			},
+			{
+				"validationType": "sampleRow",
+				"validationParameter": "120",
+				"validationValue": "479,0.07748,0.21323,0.70929"
+			}
+		],
+		"interpolationMethod": "useRelatedFormula",
+		"extrapolationMethod": "zero",
+		"dataQuality": "approximated",
+		"columnHeaders": [
+			{
+				"title": "lambda",
+				"unit": "nm",
+				"quantity": "wavelength",
+				"wavelength_first": 360,
+				"wavelength_last": 830,
+				"wavelength_step": 1
+			},
+			{
+				"title": "x_10(lambda)",
+				"unit": "dimensionless",
+				"quantity": "chromaticity coordinates",
+				"wavelength_first": 360,
+				"wavelength_last": 830,
+				"wavelength_step": 1
+			},
+			{
+				"title": "y_10(lambda)",
+				"unit": "dimensionless",
+				"quantity": "chromaticity coordinates",
+				"wavelength_first": 360,
+				"wavelength_last": 830,
+				"wavelength_step": 1
+			},
+			{
+				"title": "z_10(lambda)",
+				"unit": "dimensionless",
+				"quantity": "chromaticity coordinates",
+				"wavelength_first": 360,
+				"wavelength_last": 559,
+				"wavelength_step": 1
+			}
+		]
+	},
+	"schemaName": "CIEmetaDigitalProduct",
+	"schemaVersion": 4,
+	"schemaURL": "https://doi.org/10.25039/CIE.SC.4taqevcd",
+	"metadataRevision": 2
+}
