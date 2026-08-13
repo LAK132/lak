@@ -1572,6 +1572,35 @@ namespace lak
 		else
 			return lak::err_t{};
 	}
+
+	/* --- optional get --- */
+
+	template<typename T>
+	lak::result<T &> get(lak::optional<T> &opt)
+	{
+		if (opt.has_value())
+			return lak::ok_t<T &>{*opt};
+		else
+			return lak::err_t{};
+	}
+
+	template<typename T>
+	lak::result<const T &> get(const lak::optional<T> &opt)
+	{
+		if (opt.has_value())
+			return lak::ok_t<const T &>{*opt};
+		else
+			return lak::err_t{};
+	}
+
+	template<typename T>
+	lak::result<T> get(lak::optional<T> &&opt)
+	{
+		if (opt.has_value())
+			return lak::move_ok(*opt);
+		else
+			return lak::err_t{};
+	}
 }
 
 template<typename T, typename E1, typename E2>
