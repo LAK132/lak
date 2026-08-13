@@ -76,6 +76,19 @@ BEGIN_TEST(frac_to_int)
 }
 END_TEST()
 
+BEGIN_TEST(int_to_frac)
+{
+	ASSERT(lak::close_to(lak::int_to_frac<float>(uint8_t(0U)), 0.f));
+	ASSERT(lak::close_to(lak::int_to_frac<float>(uint8_t(255U)), 1.f));
+
+	ASSERT(lak::close_to(lak::int_to_frac<float>(int32_t(INT32_MIN)), -1.f));
+	ASSERT(lak::close_to(lak::int_to_frac<float>(int32_t(0)), 0.f));
+	ASSERT(lak::close_to(lak::int_to_frac<float>(int32_t(INT32_MAX)), 1.f));
+
+	return 0;
+}
+END_TEST()
+
 BEGIN_TEST(to_multiple)
 {
 	ASSERT_EQUAL(lak::to_multiple(1U, 10U), 10U);
