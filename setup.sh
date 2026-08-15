@@ -49,6 +49,7 @@ case $1 in
   ;;
 
   homebrew-clang)
+    shift
     export CC_FOR_BUILD=$(brew --prefix llvm)/bin/clang
     export CXX_FOR_BUILD=$(brew --prefix llvm)/bin/clang++
     meson setup $cross_args build $@ || exit 1
