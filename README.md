@@ -158,7 +158,7 @@ lisk>
 
 Demosaics/desqueezes/upscales Minolta RD-175 `.MDC` raw files and saves the results as a `.png`.
 
-[Setup requirements](/README.md#basic-setup):
+[Required feature settings](/README.md#basic-setup):
 - `-Dlak_enable_stb=true`
 - `-Dlak_enable_stb_image_write=true`
 
@@ -176,7 +176,7 @@ Demosaics/desqueezes/upscales Minolta RD-175 `.MDC` raw files and saves the resu
 
 Demo of various features available with `<lak/basic_program.inl>`
 
-[Setup requirements](/README.md#basic-setup):
+[Required feature settings](/README.md#basic-setup):
 - `-Dlak_enable_windowing=true`
 - `-Dlak_enable_imgui=true`
 - `-Dlak_renderer=`
@@ -197,7 +197,7 @@ Demo of various features available with `<lak/basic_program.inl>`
 
 Roll a ball around a maze of blocks and collect all the coins. Controlled with the arrow keys. Don't fall off!
 
-[Setup requirements](/README.md#basic-setup):
+[Required feature settings](/README.md#basic-setup):
 - `-Dlak_enable_windowing=true`
 - `-Dlak_enable_imgui=true`
 - `-Dlak_renderer=opengl`
@@ -222,7 +222,7 @@ See [examples/ball-game/assets/map.ppm](/examples/ball-game/assets/map.ppm) for 
 
 Demo of the Cobalt Renderer integration. Will attempt to open a window for every enabled renderer simultaneously.
 
-[Setup requirements](/README.md#basic-setup):
+[Required feature settings](/README.md#basic-setup):
 - `-Dlak_enable_windowing=true`
 - `-Dlak_enable_imgui=true`
 - `-Dlak_renderer=cobalt`
@@ -246,7 +246,7 @@ Demo of the Cobalt Renderer integration. Will attempt to open a window for every
 
 Inspector for Minolta RD-175 `.MDC` raw files.
 
-[Setup requirements](/README.md#basic-setup):
+[Required feature settings](/README.md#basic-setup):
 - `-Dlak_enable_windowing=true`
 - `-Dlak_enable_imgui=true`
 - `-Dlak_enable_stb=true`
@@ -264,7 +264,7 @@ Inspector for Minolta RD-175 `.MDC` raw files.
 
 Inspector for `.nbt` files.
 
-[Setup requirements](/README.md#basic-setup):
+[Required feature settings](/README.md#basic-setup):
 - `-Dlak_enable_windowing=true`
 - `-Dlak_enable_imgui=true`
 - `-Dlak_enable_stb=true`
