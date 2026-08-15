@@ -1,7 +1,14 @@
 # LAK
 
+Please make sure you have read the [basic setup guide](/README.md#basic-setup) before building anything!
+
 - [License](/README.md#license)
 - [Philosophy](/README.md#philosophy)
+- [Basic setup](/README.md#basic-setup)
+	- [Windows](/README.md#windows)
+	- [Linux](/README.md#most-linux-distros)
+		- [NixOS](/README.md#nixos)
+	- [MacOS](/README.md#macos)
 - [Tools](/README.md#tools)
 	- [asc2csv](/README.md#asc2csv)
 	- [ebnf2cpp](/README.md#ebnf2cpp)
@@ -13,18 +20,15 @@
 	- [hello-cobalt](/README.md#hello-cobalt)
 	- [mdc-view](/README.md#mdc-view)
 	- [nbt-view](/README.md#nbt-view)
-- [Basic setup](/README.md#basic-setup)
-	- [Windows](/README.md#windows)
-	- [Linux](/README.md#most-linux-distros)
-		- [NixOS](/README.md#nixos)
-	- [MacOS](/README.md#macos)
+- [Using `lak::`](/README.md#using-lak)
+- [Advanced setup](/README.md#advanced-setup)
 	- [Cross compiling](/README.md#cross-compiling)
 		- [Emscripten](/README.md#emscripten)
 	- [Tests](/README.md#build-with-tests)
 	- [libgphoto2 support](/README.md#build-with-libgphoto2)
-- [Using `lak::`](/README.md#using-lak)
 
 ## License
+
 This library is dual licensed under the Unlicense and MIT license. See LICENSE and UNLICENSE.
 Attribution would be nice but is not required.
 
@@ -39,6 +43,61 @@ Attribution would be nice but is not required.
 - `virtual` is _usually_ a sign of systematic design failure.
 - Design APIs to be granular.
 
+## Basic setup
+
+Enable or disable features by modifying `meson_options.txt` or with `-D[feature]=[setting]` command line options during setup.
+
+Running `setup.sh`/`setup.bat`/`win_setup.sh` multiple times will wipe the build directory, make sure you've specified all the options you need up front.
+
+### Windows
+
+Native (msvc) via command prompt:
+
+```
+./setup.bat msvc
+./compile.bat <target>
+```
+
+Native (msvc) via WSL:
+
+```
+./win_setup.sh msvc
+./win_compile.sh <target>
+```
+
+### MacOS
+
+Install LLVM (at least `llvm@20` recommended) with homebrew
+
+```
+./setup.sh homebrew-clang
+./compile.sh <target>
+```
+
+### Linux
+
+#### `gcc`
+
+```
+./setup.sh gcc
+./compile.sh <target>
+```
+
+#### `clang`
+
+```
+./setup.sh clang
+./compile.sh <target>
+```
+
+#### NixOS
+
+```
+nix-shell
+./setup.sh auto
+./compile.sh <target>
+```
+
 ## Tools
 
 These are command line tools mostly designed to only depend on `std::` or a very minimal subset of the core of `lak::`, in some cases so they can be used as pre-processors for later build stages.
@@ -49,6 +108,7 @@ Run with no arguments to get help text.
 
 Converts `.asc` point cloud files to `.csv`s.
 
+[Setup the build directory](/README.md#basic-setup) then
 ```
 ./compile.[sh/bat] asc2csv
 ./build/tools/asc2csv/asc2csv
@@ -58,6 +118,7 @@ Converts `.asc` point cloud files to `.csv`s.
 
 Reads in a semi-custom EBNF grammar description language and uses it to generate `lak::dsl::` headers.
 
+[Setup the build directory](/README.md#basic-setup) then
 ```
 ./compile.[sh/bat] ebnf2cpp
 ./build/tools/ebnf2cpp/ebnf2cpp
@@ -80,6 +141,7 @@ my_lib = static_library(
 
 ### lisk-repl
 
+[Setup the build directory](/README.md#basic-setup) then
 ```
 ./compile.[sh/bat] lisk-repl
 ./build/tools/lisk-repl/lisk-repl
@@ -100,6 +162,7 @@ Demosaics/desqueezes/upscales Minolta RD-175 `.MDC` raw files and saves the resu
 - `-Dlak_enable_stb=true`
 - `-Dlak_enable_stb_image_write=true`
 
+[Setup the build directory](/README.md#basic-setup) then
 ```
 ./compile.[sh/bat] mdc2png
 ./build/tools/mdc2png/mdc2png /path/to/.MDC /path/to/.png
@@ -122,6 +185,7 @@ Demo of various features available with `<lak/basic_program.inl>`
 	- `cobalt` (`-Dcobalt_renderer=` to change which Cobalt renderers to use)
 	- any or all of the above (`-Dlak_renderer=softrender,opengl,cobalt`)
 
+[Setup the build directory](/README.md#basic-setup) then
 ```
 ./compile.[sh/bat] basic_program
 ./build/examples/basic_program/basic_program
@@ -138,6 +202,7 @@ Roll a ball around a maze of blocks and collect all the coins. Controlled with t
 - `-Dlak_enable_imgui=true`
 - `-Dlak_renderer=opengl`
 
+[Setup the build directory](/README.md#basic-setup) then
 ```
 ./compile.[sh/bat] ball-game
 ./build/examples/ball-game/ball-game
@@ -169,6 +234,7 @@ Demo of the Cobalt Renderer integration. Will attempt to open a window for every
 	- `Direct3D12` (Windows)
 	- any or all of the above (`-Dcobalt_renderer=OpenGL3,OpenGL4,Vulkan,Direct3D11,Direct3D12`)
 
+[Setup the build directory](/README.md#basic-setup) then
 ```
 ./compile.[sh/bat] hello-cobalt
 ./build/examples/hello-cobalt/hello-cobalt
@@ -186,6 +252,7 @@ Inspector for Minolta RD-175 `.MDC` raw files.
 - `-Dlak_enable_stb=true`
 - `-Dlak_enable_stb_image_write=true`
 
+[Setup the build directory](/README.md#basic-setup) then
 ```
 ./compile.[sh/bat] mdc-view
 ./build/examples/mdc-view/mdc-view
@@ -203,6 +270,7 @@ Inspector for `.nbt` files.
 - `-Dlak_enable_stb=true`
 - `-Dlak_enable_stb_image_write=true`
 
+[Setup the build directory](/README.md#basic-setup) then
 ```
 ./compile.[sh/bat] nbt-view
 ./build/examples/nbt-view/nbt-view
@@ -210,43 +278,9 @@ Inspector for `.nbt` files.
 
 ![nbt-view.png](/examples/nbt-view.png?raw=true)
 
-## Basic setup
+## Advanced setup
 
-Enable or disable features by modifying `meson_options.txt` or with `-D[feature]=[setting]` command line options during setup.
-
-### Windows
-
-Native (msvc) via command prompt:
-
-```
-./setup.bat msvc
-./compile.bat <target>
-```
-
-Native (msvc) via WSL:
-
-```
-./win_setup.sh msvc
-./win_compile.sh <target>
-```
-
-### Linux
-
-#### `gcc`
-
-```
-./setup.sh gcc
-./compile.sh <target>
-```
-
-#### `clang`
-
-```
-./setup.sh clang
-./compile.sh <target>
-```
-
-#### Specify compiler manually
+To specify compilers manually:
 
 ```
 export CC=<C compiler>
@@ -257,28 +291,13 @@ export CXX_FOR_BUILD=<C++ compiler>
 ./compile.sh <target>
 ```
 
-#### NixOS
+MacOS example:
 
 ```
-nix-shell
-./setup.sh auto
-./compile.sh <target>
-```
-
-### MacOS
-
-```
-./setup.sh homebrew-clang
-./compile.sh <target>
-```
-
-#### Specify compiler manually
-
-```
-export CC=$(brew --prefix llvm)/bin/clang
-export CXX=$(brew --prefix llvm)/bin/clang++
-export CC_FOR_BUILD=$(brew --prefix llvm)/bin/clang
-export CXX_FOR_BUILD=$(brew --prefix llvm)/bin/clang++
+export CC=$(brew --prefix llvm@20)/bin/clang
+export CXX=$(brew --prefix llvm@20)/bin/clang++
+export CC_FOR_BUILD=$(brew --prefix llvm@20)/bin/clang
+export CXX_FOR_BUILD=$(brew --prefix llvm@20)/bin/clang++
 ./setup.sh auto
 ./compile.sh <target>
 ```
