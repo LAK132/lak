@@ -1,20 +1,384 @@
 # LAK
 
+- [License](/README.md#license)
+- [Philosophy](/README.md#philosophy)
+- [Tools](/README.md#tools)
+	- [asc2csv](/README.md#asc2csv)
+	- [ebnf2cpp](/README.md#ebnf2cpp)
+	- [lisk-repl](/README.md#lisk-repl)
+	- [mdc2png](/README.md#mdc2png)
+- [Examples](/README.md#examples)
+	- [basic_program](/README.md#basic_program)
+	- [ball-game](/README.md#ball-game)
+	- [hello-cobalt](/README.md#hello-cobalt)
+	- [mdc-view](/README.md#mdc-view)
+	- [nbt-view](/README.md#nbt-view)
+- [Basic setup](/README.md#basic-setup)
+	- [Windows](/README.md#windows)
+	- [Linux](/README.md#most-linux-distros)
+		- [NixOS](/README.md#nixos)
+	- [MacOS](/README.md#macos)
+	- [Cross compiling](/README.md#cross-compiling)
+		- [Emscripten](/README.md#emscripten)
+	- [Tests](/README.md#build-with-tests)
+	- [libgphoto2 support](/README.md#build-with-libgphoto2)
+- [Using `lak::`](/README.md#using-lak)
+
 ## License
 This library is dual licensed under the Unlicense and MIT license. See LICENSE and UNLICENSE.
 Attribution would be nice but is not required.
 
 ## Philosophy
 
-* Reserving address space should not increase physical memory usage on a hosted system.
-* Prefer dense allocation over sparse allocation.
-* Recursion is evil.
-* Abuse the type system whenever and wherever possible.
-* Types should be either primarily data (POD/C-structs) or primarily functionality (containers, traits), but not both (OOP).
-* `virtual` is _usually_ a sign of systematic design failure.
-* Design APIs to be granular.
+- Reserving address space should not increase physical memory usage on a hosted system.
+- Prefer dense allocation over sparse allocation.
+- Recursion is evil.
+- Runtime performance is more important than compile time performance.
+- Abuse the type system whenever and wherever possible.
+- Types should be either primarily data (POD/C-structs) or primarily functionality (containers, traits), but not both (OOP).
+- `virtual` is _usually_ a sign of systematic design failure.
+- Design APIs to be granular.
 
-## Example program
+## Tools
+
+These are command line tools mostly designed to only depend on `std::` or a very minimal subset of the core of `lak::`, in some cases so they can be used as pre-processors for later build stages.
+
+Run with no arguments to get help text.
+
+### asc2csv
+
+Converts `.asc` point cloud files to `.csv`s.
+
+```
+./compile.[sh/bat] asc2csv
+./build/tools/asc2csv/asc2csv
+```
+
+### ebnf2cpp
+
+Reads in a semi-custom EBNF grammar description language and uses it to generate `lak::dsl::` headers.
+
+```
+./compile.[sh/bat] ebnf2cpp
+./build/tools/ebnf2cpp/ebnf2cpp
+```
+
+There is a generator in meson that can be used to use `ebnf2cpp` at compile time:
+
+```meson
+ebnf2cpp = subproject('lak').get_variable('ebnf2cpp')
+my_lib = static_library(
+	'my_lib',
+	[
+		'my_lib.cpp',
+		# Accessed with #include "my_grammar.ebnf.hpp"
+		ebnf2cpp.process('my_grammar.ebnf', extra_args: [
+			'MY_LIB_EBNF_HPP', 'my_lib_parse']),
+	],
+)
+```
+
+### lisk-repl
+
+```
+./compile.[sh/bat] lisk-repl
+./build/tools/lisk-repl/lisk-repl
+```
+
+```
+lisk> (begin (define func (lambda (x n) (begin (if (zero? n) x (tail (func (* x 2) (- n 1))))))) (println (func 2 10)))
+2048
+lisk$ nil
+lisk>
+```
+
+### mdc2png
+
+Demosaics/desqueezes/upscales Minolta RD-175 `.MDC` raw files and saves the results as a `.png`.
+
+[Setup requirements](/README.md#basic-setup):
+- `-Dlak_enable_stb=true`
+- `-Dlak_enable_stb_image_write=true`
+
+```
+./compile.[sh/bat] mdc2png
+./build/tools/mdc2png/mdc2png /path/to/.MDC /path/to/.png
+```
+
+![mdc2png.png](/tools/mdc2png.png?raw=true)
+
+## Examples
+
+### basic_program
+
+Demo of various features available with `<lak/basic_program.inl>`
+
+[Setup requirements](/README.md#basic-setup):
+- `-Dlak_enable_windowing=true`
+- `-Dlak_enable_imgui=true`
+- `-Dlak_renderer=`
+	- `softrender`
+	- `opengl`
+	- `cobalt` (`-Dcobalt_renderer=` to change which Cobalt renderers to use)
+	- any or all of the above (`-Dlak_renderer=softrender,opengl,cobalt`)
+
+```
+./compile.[sh/bat] basic_program
+./build/examples/basic_program/basic_program
+```
+
+![basic_program.png](/examples/basic_program.png?raw=true)
+
+### ball-game
+
+Roll a ball around a maze of blocks and collect all the coins. Controlled with the arrow keys. Don't fall off!
+
+[Setup requirements](/README.md#basic-setup):
+- `-Dlak_enable_windowing=true`
+- `-Dlak_enable_imgui=true`
+- `-Dlak_renderer=opengl`
+
+```
+./compile.[sh/bat] ball-game
+./build/examples/ball-game/ball-game
+```
+
+![ball-game.png](/examples/ball-game.png?raw=true)
+
+Can load custom maps by dropping a `.pnm` image file into the game window.
+
+- Red channel = ground blocks
+- Green channel = collectable coins
+- Blue channel = lights (max 32)
+
+See [examples/ball-game/assets/map.ppm](/examples/ball-game/assets/map.ppm) for the example map.
+
+### hello-cobalt
+
+Demo of the Cobalt Renderer integration. Will attempt to open a window for every enabled renderer simultaneously.
+
+[Setup requirements](/README.md#basic-setup):
+- `-Dlak_enable_windowing=true`
+- `-Dlak_enable_imgui=true`
+- `-Dlak_renderer=cobalt`
+- `-Dcobalt_renderer=` (optional: all system-available renderers enabled by default)
+	- `OpenGL3` (Windows, MacOS, Linux)
+	- `OpenGL4` (Windows, Linux)
+	- `Vulkan` (Windows, MacOS, Linux)
+	- `Direct3D11` (Windows)
+	- `Direct3D12` (Windows)
+	- any or all of the above (`-Dcobalt_renderer=OpenGL3,OpenGL4,Vulkan,Direct3D11,Direct3D12`)
+
+```
+./compile.[sh/bat] hello-cobalt
+./build/examples/hello-cobalt/hello-cobalt
+```
+
+![hello-cobalt.png](/examples/hello-cobalt.png?raw=true)
+
+### mdc-view
+
+Inspector for Minolta RD-175 `.MDC` raw files.
+
+[Setup requirements](/README.md#basic-setup):
+- `-Dlak_enable_windowing=true`
+- `-Dlak_enable_imgui=true`
+- `-Dlak_enable_stb=true`
+- `-Dlak_enable_stb_image_write=true`
+
+```
+./compile.[sh/bat] mdc-view
+./build/examples/mdc-view/mdc-view
+```
+
+![mdc-view.png](/examples/mdc-view.png?raw=true)
+
+### nbt-view
+
+Inspector for `.nbt` files.
+
+[Setup requirements](/README.md#basic-setup):
+- `-Dlak_enable_windowing=true`
+- `-Dlak_enable_imgui=true`
+- `-Dlak_enable_stb=true`
+- `-Dlak_enable_stb_image_write=true`
+
+```
+./compile.[sh/bat] nbt-view
+./build/examples/nbt-view/nbt-view
+```
+
+![nbt-view.png](/examples/nbt-view.png?raw=true)
+
+## Basic setup
+
+Enable or disable features by modifying `meson_options.txt` or with `-D[feature]=[setting]` command line options during setup.
+
+### Windows
+
+Native (msvc) via command prompt:
+
+```
+./setup.bat msvc
+./compile.bat <target>
+```
+
+Native (msvc) via WSL:
+
+```
+./win_setup.sh msvc
+./win_compile.sh <target>
+```
+
+### Linux
+
+#### `gcc`
+
+```
+./setup.sh gcc
+./compile.sh <target>
+```
+
+#### `clang`
+
+```
+./setup.sh clang
+./compile.sh <target>
+```
+
+#### Specify compiler manually
+
+```
+export CC=<C compiler>
+export CXX=<C++ compiler>
+export CC_FOR_BUILD=<C compiler>
+export CXX_FOR_BUILD=<C++ compiler>
+./setup.sh auto
+./compile.sh <target>
+```
+
+#### NixOS
+
+```
+nix-shell
+./setup.sh auto
+./compile.sh <target>
+```
+
+### MacOS
+
+```
+./setup.sh homebrew-clang
+./compile.sh <target>
+```
+
+#### Specify compiler manually
+
+```
+export CC=$(brew --prefix llvm)/bin/clang
+export CXX=$(brew --prefix llvm)/bin/clang++
+export CC_FOR_BUILD=$(brew --prefix llvm)/bin/clang
+export CXX_FOR_BUILD=$(brew --prefix llvm)/bin/clang++
+./setup.sh auto
+./compile.sh <target>
+```
+
+Use `llvm@<version>` for a specific version of of LLVM. `llvm@20` or higher is recommended.
+
+### Cross compiling
+
+Pre-configured cross compilation options take the form:
+```
+./setup.sh <host system option> <build system option>
+```
+
+(Host system means the system the `<target>` executables will run on, build system means the system that will compile them. Some parts of `lak::` require building pre-processing tools, which means a compiler to build executables for the build machine must also be specificed)
+
+#### `gcc` for host/`clang` for build
+
+```
+./setup.sh gcc clang
+./compile.sh <target>
+```
+
+#### `clang` for host/`gcc` for build
+
+```
+./setup.sh clang gcc
+./compile.sh <target>
+```
+
+#### Specify compilers manually
+
+```
+export CC_FOR_BUILD=<build C compiler>
+export CXX_FOR_BUILD=<build C++ compiler>
+./setup.sh auto --cross-file=<host system cross file>
+./compile.sh <target>
+```
+
+```
+export CC=<host C compiler>
+export CXX=<host C++ compiler>
+export CC_FOR_BUILD=<build C compiler>
+export CXX_FOR_BUILD=<build C++ compiler>
+./setup.sh auto
+./compile.sh <target>
+```
+
+#### Emscripten
+
+Specifying `wasm32` or `wasm64` will automatically select pre-configured cross files for use with Emscripten
+
+```
+./setup.sh wasm32 <build system option>
+./compile.sh <target>
+```
+
+```
+./setup.sh wasm64 <build system option>
+./compile.sh <target>
+```
+
+### Build with tests
+
+```
+./setup.bat msvc --buildtype=debug -Dlak_enable_tests=true
+./compile.bat lak_test
+./build/lak_test --testall
+```
+
+### Build with libgphoto2
+
+#### Windows
+
+Requires msys64
+
+```
+./setup.bat msvc -Dlak_enable_libgphoto2=true -Dlibgphoto2_msys_prefix=C:/msys64
+./compile.bat install-msys-libgphoto2-dependencies
+./compile.bat <target>
+```
+
+#### Other
+
+Requires libgphoto2 dependencies to be preinstalled.
+
+```
+./setup.sh gcc -Dlak_enable_libgphoto2=true
+./compile.sh <target>
+```
+
+### Build with llvm
+
+To use LLVM on Windows, MSVC must be installed with the MFC and ATL components
+
+```
+./setup.bat msvc -Dlak_enable_llvm=true
+./compile.bat <target>
+```
+
+## Using `lak::`
 
 An example of an extremely simple program that opens a fullscreen Dear ImGui
 window (backend renderer determined by settings in `meson_options.txt`):
@@ -186,65 +550,3 @@ int LAK_BASIC_PROGRAM(program_quit)()
 (basic_program) style of application framework too restricting,
 you might look at the source of basic_program.hpp/basic_program.inl
 for examples of how you might implement a lower level program yourself.
-
-## Basic setup
-
-Enable or disable features by modifying `meson_options.txt` or with `-D[feature]=[setting]` command line options during setup.
-
-### Windows
-
-```
-> ./setup.bat msvc
-> ./compile.bat
-```
-
-### WSL
-
-```
-> ./win_setup.sh msvc
-> ./win_compile.sh
-```
-
-### Linux
-
-```
-> ./setup.sh gcc
-> ./compile.sh
-```
-
-## Build with tests
-
-```
-> ./setup.bat msvc --buildtype=debug -Dlak_enable_tests=true
-> ./compile.bat
-```
-
-## Build with libgphoto2
-
-### Windows
-
-Requires msys64
-
-```
-> ./setup.bat msvc -Dlak_enable_libgphoto2=true -Dlibgphoto2_msys_prefix=C:/msys64
-> ./compile.bat install-msys-libgphoto2-dependencies
-> ./compile.bat
-```
-
-### Other
-
-Requires libgphoto2 dependencies to be preinstalled.
-
-```
-> ./setup.sh gcc -Dlak_enable_libgphoto2=true
-> ./compile.sh
-```
-
-## Build with llvm
-
-To use LLVM on Windows, MSVC must be installed with the MFC and ATL components
-
-```
-> ./setup.bat msvc -Dlak_enable_llvm=true
-> ./compile.bat
-```
