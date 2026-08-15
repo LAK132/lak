@@ -490,5 +490,7 @@ if get_option('lak_enable_tests')
 		],
 		include_directories: include_directories('include'),
 		dependencies: lak_dep,
+		install: true,
+		install_rpath: get_option('prefix')/get_option('bindir'),
 	)
 endif
