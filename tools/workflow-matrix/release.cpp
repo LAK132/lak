@@ -12,10 +12,11 @@ int main()
 	    .targets = {{
 	      .setups =
 	        {
+	          "--vsenv "
+	          "--buildtype=release "
 	          "-Dbindir=bin "
 	          "-Dlibdir=bin "
 	          "-Dcpp_args=\\\"-D_DISABLE_CONSTEXPR_MUTEX_CONSTRUCTOR\\\" "
-	          "--buildtype=release "
 	          "-Dlak_bounds_checks=always "
 	          "-Dlak_enable_examples=true "
 	          "-Dlak_enable_tests=true "
@@ -38,8 +39,8 @@ int main()
 	                "hello-cobalt "
 	                "mdc-view "
 	                "nbt-view"s,
-	      .run    = "$pwd/install/bin/lak_test --help ; "
-	                "$pwd/install/bin/lak_test --testall"s,
+	      .run    = "install/bin/lak_test --help ; "
+	                "install/bin/lak_test --testall"s,
 	    }},
 	  },
 	};

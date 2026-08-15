@@ -85,6 +85,8 @@ jobs:
           meson setup build -Dprefix="$pwd/install" ${{ matrix.setup_options }}
           meson compile -C build ${{ matrix.target }}
           meson install -C build --no-rebuild
+          ls install/
+          ls install/bin/
       - if: matrix.run != ''
         run: |
           ${{ matrix.run }}
