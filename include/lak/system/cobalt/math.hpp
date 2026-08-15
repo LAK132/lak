@@ -40,7 +40,7 @@ namespace lak
 		template<typename T, size_t D>
 		inline ::cobalt::graphics::BasicMatrix<T, D> from_lak(lak::mat<T, D, D> m)
 		{
-			::cobalt::graphics::M4Float32 result;
+			::cobalt::graphics::BasicMatrix<T, D> result;
 			for (size_t y = 0; y < D; ++y)
 				for (size_t x = 0; x < D; ++x)
 					result.data()[size_t(x + (y * D))] = m[x][y];
