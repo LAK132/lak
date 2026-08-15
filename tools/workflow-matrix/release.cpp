@@ -12,7 +12,7 @@ int main()
 	    .targets = {{
 	      .setups =
 	        {
-	          "-Dprefix=\"$pwd\\install\" "
+	          "-Dprefix=\"$pwd/install\" "
 	          "-Dbindir=bin "
 	          "-Dlibdir=bin "
 	          "-Dcpp_args=\"-D_DISABLE_CONSTEXPR_MUTEX_CONSTRUCTOR\" "
@@ -39,8 +39,8 @@ int main()
 	                "hello-cobalt "
 	                "mdc-view "
 	                "nbt-view"s,
-	      .run    = "install\\bin\\lak_test --help ; "
-	                "install\\bin\\lak_test --testall"s,
+	      .run    = "install/bin/lak_test --help ; "
+	                "install/bin/lak_test --testall"s,
 	    }},
 	  },
 	};
