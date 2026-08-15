@@ -1,10 +1,9 @@
-name: Build
+name: Release
 
 on:
   push:
-    branches: [ staging ]
-  pull_request:
-    branches: [ staging ]
+    tags:
+      - '*'
   workflow_dispatch:
 
 jobs:
@@ -14,13 +13,31 @@ jobs:
       matrix: ${{ steps.matrix.outputs.matrix }}
     steps:
       - uses: actions/checkout@v6
-      - run: g++ --std=c++20 tools/workflow-matrix/build.cpp -o gen-matrix
+      - run: g++ --std=c++20 tools/workflow-matrix/release.cpp -o gen-matrix
       - run: echo $(./gen-matrix)
       - id: matrix
         run: ./gen-matrix >> $GITHUB_OUTPUT
 
-  test:
+  create-release:
     needs: setup
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+      tag: ${{ steps.get_tag.outputs.TAG }}
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "TAG=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+        shell: bash
+        id: get_tag
+      - uses: softprops/action-gh-release@v3
+        id: create_release
+        with:
+          draft: false
+          prerelease: true
+          name: lak ${{ github.ref_name }}
+          tag_name: ${{ github.ref }}
+
+  build:
+    needs: [setup, create-release]
     strategy:
       fail-fast: false
       matrix:
@@ -67,16 +84,29 @@ jobs:
       - run: |
           meson setup build ${{ matrix.setup_options }}
           meson compile -C build ${{ matrix.target }}
+          meson install -C build --no-rebuild
       - if: matrix.run != ''
-        run: ${{ matrix.run }}
+        run: |
+          ${{ matrix.run }}
 
-  push-staging:
-    needs: [test]
-    runs-on: windows-2022
-    steps:
-      - uses: actions/checkout@v4
+      - if: matrix.os.system == 'windows'
+        run: |
+          Compress-Archive -Path install\bin -DestinationPath lak-${{ needs.create-release.outputs.tag }}-${{ matrix.os.system }}-${{ matrix.os.arch }}.zip
+
+      - if: matrix.os.system == 'ubuntu' || matrix.os.system == 'macos'
+        run: |
+          cd install/bin
+          tar cfz lak-${{ needs.create-release.outputs.tag }}-${{ matrix.os.system }}-${{ matrix.os.arch }}.tar.gz *
+          ls
+
+      - if: matrix.os.system == 'windows'
+        uses: softprops/action-gh-release@v3
         with:
-          fetch-depth: 0
-      - name: Push staging branch to trunk
-        if: github.event_name == 'push'
-        run: git switch trunk && git merge --ff-only staging && git push origin trunk
+          fail_on_unmatched_files: true
+          files: lak-${{ needs.create-release.outputs.tag }}-${{ matrix.os.system }}-${{ matrix.os.arch }}.zip
+
+      - if: matrix.os.system == 'ubuntu' || matrix.os.system == 'macos'
+        uses: softprops/action-gh-release@v3
+        with:
+          fail_on_unmatched_files: true
+          files: install/bin/lak-${{ needs.create-release.outputs.tag }}-${{ matrix.os.system }}-${{ matrix.os.arch }}.tar.gz
