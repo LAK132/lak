@@ -1,5 +1,5 @@
 if not get_option('lak_enable_stb_image_write')
-	warning('mdc-view requires stb image write')
+	warning('mdc2png requires stb image write')
 	subdir_done()
 endif
 
