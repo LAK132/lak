@@ -12,7 +12,6 @@ int main()
 	    .targets = {{
 	      .setups =
 	        {
-	          "-Dprefix=\"$pwd/install\" "
 	          "-Dbindir=bin "
 	          "-Dlibdir=bin "
 	          "-Dcpp_args=\"-D_DISABLE_CONSTEXPR_MUTEX_CONSTRUCTOR\" "

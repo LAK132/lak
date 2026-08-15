@@ -82,7 +82,7 @@ jobs:
           echo "CXX=$(brew --prefix llvm@20)/bin/clang++" >> $GITHUB_ENV
 
       - run: |
-          meson setup build ${{ matrix.setup_options }}
+          meson setup build -Dprefix="$pwd/install" ${{ matrix.setup_options }}
           meson compile -C build ${{ matrix.target }}
           meson install -C build --no-rebuild
       - if: matrix.run != ''
