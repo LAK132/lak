@@ -38,8 +38,8 @@ int main()
 	                "hello-cobalt "
 	                "mdc-view "
 	                "nbt-view"s,
-	      .run    = "install/bin/lak_test --help ; "
-	                "install/bin/lak_test --testall"s,
+	      .run    = "$pwd/install/bin/lak_test --help ; "
+	                "$pwd/install/bin/lak_test --testall"s,
 	    }},
 	  },
 	};

@@ -91,7 +91,7 @@ jobs:
 
       - if: matrix.os.system == 'windows'
         run: |
-          Compress-Archive -Path install\bin -DestinationPath lak-${{ needs.create-release.outputs.tag }}-${{ matrix.os.system }}-${{ matrix.os.arch }}.zip
+          Compress-Archive -Path install\bin\*.exe, install\bin\*.dll, install\bin\licenses -DestinationPath lak-${{ needs.create-release.outputs.tag }}-${{ matrix.os.system }}-${{ matrix.os.arch }}.zip
 
       - if: matrix.os.system == 'ubuntu' || matrix.os.system == 'macos'
         run: |
