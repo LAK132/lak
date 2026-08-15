@@ -4,6 +4,12 @@
 // handle Dear ImGui context creation, event processing and rendering
 #define LAK_BASIC_PROGRAM_IMGUI_IMPL
 
+// handle ImPlot context creation
+#define LAK_BASIC_PROGRAM_IMPLOT_IMPL
+
+// handle ImPlot3D context creation
+#define LAK_BASIC_PROGRAM_IMPLOT3D_IMPL
+
 // create a full screen Dear ImGui window surrounding calls to window loop
 #define LAK_BASIC_PROGRAM_IMGUI_WINDOW_IMPL
 
@@ -22,6 +28,7 @@
 #include <lak/system/file.hpp>
 
 #include <implot.h>
+#include <implot3d.h>
 
 #include <filesystem>
 
@@ -43,9 +50,7 @@ struct my_window : virtual public LAK_BASIC_PROGRAM(window_api)
 	// destroying the texture
 	lak::ImUniqueTexture checker_unique;
 
-	ImPlotContext *implot_ctx = nullptr;
-
-	lak::ImViewport viewport = nullptr;
+	lak::ImUniqueViewport viewport;
 
 	virtual void init() override final
 	{
@@ -62,18 +67,14 @@ struct my_window : virtual public LAK_BASIC_PROGRAM(window_api)
 		checker = lak::CreateTexture(checker_img);
 		checker_unique.emplace(checker_img);
 
-		implot_ctx = ImPlot::CreateContext();
-
-		viewport = lak::CreateViewport(ImGui::ImplTextureColourFormat::RGBA,
-		                               ImGui::ImplTextureChannelFormat::U8);
+		viewport.emplace(ImGui::ImplTextureColourFormat::RGBA,
+		                 ImGui::ImplTextureChannelFormat::U8);
 	}
 
 	virtual ~my_window()
 	{
 		// safe to call with an ImTextureID_Invalid texture
 		lak::DestroyTexture(checker);
-		if (implot_ctx) ImPlot::DestroyContext(implot_ctx);
-		if (viewport) lak::DestroyViewport(viewport);
 	}
 
 	virtual void handle_event(lak::event &event) override final
@@ -94,8 +95,6 @@ struct my_window : virtual public LAK_BASIC_PROGRAM(window_api)
 	virtual void loop(uint64_t counter_delta) override final
 	{
 		// called once every frame
-
-		ImPlot::SetCurrentContext(implot_ctx);
 
 		ImGui::Text("Frame time: %01.2fms",
 		            ((float)counter_delta * 1000U) / lak::performance_frequency());
@@ -203,6 +202,9 @@ struct my_window : virtual public LAK_BASIC_PROGRAM(window_api)
 
 		bool implot_demo_open = true;
 		ImPlot::ShowDemoWindow(&implot_demo_open);
+
+		bool implot3d_demo_open = true;
+		ImPlot3D::ShowDemoWindow(&implot3d_demo_open);
 
 		bool demo_open = true;
 		ImGui::ShowDemoWindow(&demo_open);
