@@ -267,8 +267,6 @@ Inspector for `.nbt` files.
 [Required feature settings](/README.md#basic-setup):
 - `-Dlak_enable_windowing=true`
 - `-Dlak_enable_imgui=true`
-- `-Dlak_enable_stb=true`
-- `-Dlak_enable_stb_image_write=true`
 
 [Setup the build directory](/README.md#basic-setup) then
 ```
