@@ -23,6 +23,12 @@ case $1 in
     cross_args=
   ;;
 
+  homebrew-clang)
+    export CC=$(brew --prefix llvm)/bin/clang
+    export CXX=$(brew --prefix llvm)/bin/clang++
+    cross_args=
+  ;;
+
   *)
     cross_args=
   ;;
@@ -39,6 +45,12 @@ case $1 in
     shift
     export CC_FOR_BUILD=gcc
     export CXX_FOR_BUILD=g++
+    meson setup $cross_args build $@ || exit 1
+  ;;
+
+  homebrew-clang)
+    export CC_FOR_BUILD=$(brew --prefix llvm)/bin/clang
+    export CXX_FOR_BUILD=$(brew --prefix llvm)/bin/clang++
     meson setup $cross_args build $@ || exit 1
   ;;
 
