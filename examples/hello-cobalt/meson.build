@@ -6,10 +6,6 @@ if not get_option('lak_renderer').contains('cobalt')
 	warning('hello-cobalt requires cobalt')
 	subdir_done()
 endif
-if not get_option('lak_enable_glm')
-	warning('hello-cobalt requires glm')
-	subdir_done()
-endif
 if not get_option('lak_enable_imgui')
 	warning('hello-cobalt requires imgui')
 	subdir_done()
