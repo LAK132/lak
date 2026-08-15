@@ -499,7 +499,6 @@ int LAK_BASIC_PROGRAM_MAIN(int argc, char **argv)
 			{
 				const auto &cgx =
 				  lak::cobalt_graphics_context(window.handle()).UNWRAP();
-				auto *rd = cgx.renderer.get();
 				auto *fb = cgx.frame_buffer.get();
 				fb->DefineViewportRegion({0, 0},
 				                         {uint32_t(window.drawable_size().x),

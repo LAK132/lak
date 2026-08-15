@@ -82,6 +82,7 @@ static bool _chromaticity_plot(const char *name,
 				  *x, *y, col, ImVec2(-10, -10), false, "%s", channel);
 				if constexpr (lak::is_const_v<PRIMARIES>)
 				{
+					LAK_UNUSED(id);
 					ImPlot::SetNextMarkerStyle(IMPLOT_AUTO, IMPLOT_AUTO, col);
 					ImPlot::PlotScatter(
 					  lak::fmt<"##{}scatter{}">(name, channel).c_str(), x, y, 1);
