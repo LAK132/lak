@@ -26,8 +26,8 @@ int main()
 	          "-Dlak_enable_stb_image_write=true "
 	          "-Dlak_use_native_file_dialog=true "
 	          "-Dlak_backend=win32 "
-	          "-Dlak_renderer=softrender,opengl,cobalt "
-	          "-Dcobalt_renderer=OpenGL3,OpenGL4,Vulkan,Direct3D11,Direct3D12"s,
+	          "\\\"-Dlak_renderer=softrender,opengl,cobalt\\\" "
+	          "\\\"-Dcobalt_renderer=OpenGL3,OpenGL4,Vulkan,Direct3D11,Direct3D12\\\""s,
 	        },
 	      .target = "lak_test "
 	                "asc2csv "
