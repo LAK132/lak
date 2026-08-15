@@ -5,14 +5,17 @@
 !SDL2-*/**
 
 !boost-*.wrap
+!Cobalt.wrap
 !eigen-*.wrap
 !glm-*.wrap
 !godot-cpp-*.wrap
-!ImFileDialog-*.wrap
-!imgui_club-*.wrap
-!imgui-*.wrap
-!imgui-node-editor-*.wrap
-!ImGuiColorTextEdit-*.wrap
+!ImFileDialog.wrap
+!imgui_club.wrap
+!imgui-node-editor.wrap
+!imgui.wrap
+!ImGuiColorTextEdit.wrap
+!implot.wrap
+!implot3d.wrap
 !libfive-*.wrap
 !libgphoto2.wrap
 !libpng-*.wrap

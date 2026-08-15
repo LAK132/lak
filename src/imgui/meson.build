@@ -5,6 +5,7 @@ lakimgui_dependencies = declare_dependency(
 		imgui_dep,
 		imgui_file_dialog_dep,
 		implot_dep,
+		implot3d_dep,
 		glm_dep,
 	],
 )

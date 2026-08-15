@@ -336,6 +336,7 @@ if get_option('lak_enable_imgui')
 	imgui_file_dialog_dep = dependency('ImFileDialog')
 	imgui_memory_editor_dep = dependency('imgui_memory_editor')
 	implot_dep = dependency('implot')
+	implot3d_dep = dependency('implot3d')
 	dependencies += imgui_dep
 
 	if get_option('lak_enable_windowing')

@@ -1,0 +1,8 @@
+[wrap-git]
+url = https://github.com/brenocq/implot3d
+revision = 6cbefa9b976471f44deffa1571165454976fe994
+depth = 1
+patch_directory = implot3d
+
+[provide]
+dependency_names = implot3d, implot3d-0.5

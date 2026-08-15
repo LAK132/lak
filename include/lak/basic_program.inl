@@ -99,6 +99,9 @@ lak::result<lak::strong_ref<LAK_BASIC_PROGRAM(window_instance<WINDOW_CLASS>)>,
 #	ifdef LAK_BASIC_PROGRAM_IMPLOT_IMPL
 	result->implot_context = ImPlot::CreateContext();
 #	endif
+#	ifdef LAK_BASIC_PROGRAM_IMPLOT3D_IMPL
+	result->implot3d_context = ImPlot3D::CreateContext();
+#	endif
 #endif
 
 	result->window().set_title(L"" APP_NAME);
@@ -311,6 +314,9 @@ LAK_BASIC_PROGRAM(window_instance_base)::~LAK_BASIC_PROGRAM(
 		DEFER(ImGui::SetCurrentContext(ctx));
 #	ifdef LAK_BASIC_PROGRAM_IMPLOT_IMPL
 		ImPlot::DestroyContext(implot_context);
+#	endif
+#	ifdef LAK_BASIC_PROGRAM_IMPLOT3D_IMPL
+		ImPlot3D::DestroyContext(implot3d_context);
 #	endif
 		ImGui::ImplSetCurrentContext(imgui_context);
 		ImGui::ImplShutdownContext(imgui_context);
@@ -525,6 +531,9 @@ int LAK_BASIC_PROGRAM_MAIN(int argc, char **argv)
 
 #	ifdef LAK_BASIC_PROGRAM_IMPLOT_IMPL
 				ImPlot::SetCurrentContext(inst.implot_context);
+#	endif
+#	ifdef LAK_BASIC_PROGRAM_IMPLOT3D_IMPL
+				ImPlot3D::SetCurrentContext(inst.implot3d_context);
 #	endif
 
 #	ifdef LAK_BASIC_PROGRAM_IMGUI_WINDOW_IMPL

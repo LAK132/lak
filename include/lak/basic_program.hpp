@@ -22,11 +22,19 @@
 #	error LAK_BASIC_PROGRAM_IMPLOT_IMPL requires LAK_BASIC_PROGRAM_IMGUI_IMPL
 #endif
 
+#if defined(LAK_BASIC_PROGRAM_IMPLOT3D_IMPL) &&                               \
+  !defined(LAK_BASIC_PROGRAM_IMGUI_IMPL)
+#	error LAK_BASIC_PROGRAM_IMPLOT3D_IMPL requires LAK_BASIC_PROGRAM_IMGUI_IMPL
+#endif
+
 #ifdef LAK_BASIC_PROGRAM_IMGUI_IMPL
 #	include "lak/imgui/backend.hpp"
 #	include "lak/imgui/widgets.hpp"
 #	ifdef LAK_BASIC_PROGRAM_IMPLOT_IMPL
 #		include <implot.h>
+#	endif
+#	ifdef LAK_BASIC_PROGRAM_IMPLOT3D_IMPL
+#		include <implot3d.h>
 #	endif
 #endif
 
@@ -79,6 +87,9 @@ struct LAK_BASIC_PROGRAM(window_instance_base)
 	ImGui::ImplContext imgui_context = nullptr;
 #	ifdef LAK_BASIC_PROGRAM_IMPLOT_IMPL
 	ImPlotContext *implot_context = nullptr;
+#	endif
+#	ifdef LAK_BASIC_PROGRAM_IMPLOT3D_IMPL
+	ImPlot3DContext *implot3d_context = nullptr;
 #	endif
 #endif
 #ifdef LAK_BASIC_PROGRAM_IMGUI_WINDOW_IMPL
