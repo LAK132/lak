@@ -296,7 +296,7 @@ if get_option('lak_enable_tests')
 	dependencies += laktestcore_dep
 endif
 
-if get_option('lak_enable_glm')
+if get_option('lak_enable_windowing') or get_option('lak_enable_glm')
 	subproject('glm-1.0.2')
 	glm_dep = dependency('glm-1.0.2')
 	dependencies += glm_dep
