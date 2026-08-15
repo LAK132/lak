@@ -32,6 +32,8 @@ Please make sure you have read the [basic setup guide](/README.md#basic-setup) b
 This library is dual licensed under the Unlicense and MIT license. See LICENSE and UNLICENSE.
 Attribution would be nice but is not required.
 
+If you are intending to use this as a subproject or distribute binaries, ensure you have also checked the licenses of the subprojects used by this library. Many subproject dependencies can be turned on or off with [meson settings](/README.md#basic-setup).
+
 ## Philosophy
 
 - Reserving address space should not increase physical memory usage on a hosted system.
