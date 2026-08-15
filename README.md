@@ -185,7 +185,7 @@ Demo of various features available with `<lak/basic_program.inl>`
 	- `softrender`
 	- `opengl`
 	- `cobalt` (`-Dcobalt_renderer=` to change which Cobalt renderers to use)
-	- any or all of the above (`-Dlak_renderer=softrender,opengl,cobalt`)
+	- any or all of the above (`"-Dlak_renderer=softrender,opengl,cobalt"` (including quotes))
 
 [Setup the build directory](/README.md#basic-setup) then
 ```
@@ -234,7 +234,7 @@ Demo of the Cobalt Renderer integration. Will attempt to open a window for every
 	- `Vulkan` (Windows, MacOS, Linux)
 	- `Direct3D11` (Windows)
 	- `Direct3D12` (Windows)
-	- any or all of the above (`-Dcobalt_renderer=OpenGL3,OpenGL4,Vulkan,Direct3D11,Direct3D12`)
+	- any or all of the above (`"-Dcobalt_renderer=OpenGL3,OpenGL4,Vulkan,Direct3D11,Direct3D12"` (including quotes))
 
 [Setup the build directory](/README.md#basic-setup) then
 ```
