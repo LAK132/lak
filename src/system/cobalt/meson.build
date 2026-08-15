@@ -70,8 +70,20 @@ endif
 cobalt_opts.set_install(false)
 
 if get_option('lak_install_targets').contains('cobalt')
-	cobalt_install_rpath_arg = '-Wl,-rpath,@0@'.format(get_option('prefix')/get_option('bindir'))
+	cobalt_install_rpath_arg = '-Wl,-rpath,@0@'.format(get_option('prefix')/get_option('libdir'))
 	use_cobalt_install_rpath_arg = cxx.has_link_argument(cobalt_install_rpath_arg)
+
+	cobalt_licenses_dst = get_option('licensedir')/'subprojects'/'Cobalt'
+	meson.add_install_script(
+		find_program('python3'),
+		'-c',
+		'import shutil;' +
+		'import os;' +
+		'destdir=os.path.join(os.environ[\'MESON_INSTALL_DESTDIR_PREFIX\'],\'@0@\');'.format(cobalt_licenses_dst) +
+		'os.makedirs(destdir, exist_ok=True);' +
+		'shutil.copy(\'@0@\',destdir);'.format(cobalt_source_root/'LICENSE.txt') +
+		'shutil.copy(\'@0@\',destdir);'.format(cobalt_source_root/'THIRD_PARTY_LICENSES.md'),
+	)
 
 	cobalt_opts.set_install(true, target: 'ShaderSupport')
 	cobalt_opts.set_install(true, target: 'TextureFormatConversion')

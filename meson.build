@@ -16,6 +16,9 @@ project(
 		'warning_level': '3',
 		'werror': false,
 		'prefix': meson.global_build_root()/'install',
+		'bindir': 'bin',
+		'libdir': 'lib',
+		'licensedir': 'share'/'licenses',
 	},
 )
 if host_machine.system() == 'darwin'

@@ -28,6 +28,18 @@ if get_option('b_vscrt') == 'mt' or get_option('b_vscrt') == 'mtd' or get_option
 	})
 endif
 
+licenses_dst = get_option('licensedir')/'subprojects'/'SDL2-@0@'.format(version_str)
+license_src = meson.global_source_root()/'subprojects'/'SDL2-@0@-cmake'.format(version_str)/'LICENSE.txt'
+meson.add_install_script(
+	find_program('python3'),
+	'-c',
+	'import shutil;' +
+	'import os;' +
+	'destdir=os.path.join(os.environ[\'MESON_INSTALL_DESTDIR_PREFIX\'],\'@0@\');'.format(licenses_dst) +
+	'os.makedirs(destdir, exist_ok=True);' +
+	'shutil.copy(\'@0@\',destdir);'.format(license_src),
+)
+
 sdl2_subprj = cmake.subproject(
 	'SDL2-@0@-cmake'.format(version_str),
 	options: sdl2_opts)

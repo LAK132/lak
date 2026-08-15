@@ -82,22 +82,23 @@ jobs:
           echo "CXX=$(brew --prefix llvm@20)/bin/clang++" >> $GITHUB_ENV
 
       - run: |
-          meson setup build -Dprefix="$pwd/install" ${{ matrix.setup_options }}
-          meson compile -C build ${{ matrix.target }}
-          meson install -C build --no-rebuild
+          meson setup build -Dprefix="$pwd/install" -Dbindir=bin -Dlibdir=lib -Dlicensedir="share/licenses" ${{ matrix.setup_options }}
+          meson install -C build
           ls install/
           ls install/bin/
+          ls install/lib/
+          ls install/share/
       - if: matrix.run != ''
         run: |
           ${{ matrix.run }}
 
       - if: matrix.os.system == 'windows'
         run: |
-          Compress-Archive -Path install\bin\*.exe, install\bin\*.dll, install\bin\licenses -DestinationPath lak-${{ needs.create-release.outputs.tag }}-${{ matrix.os.system }}-${{ matrix.os.arch }}.zip
+          Compress-Archive -Path install\bin\*.exe, install\bin\*.dll, install\lib\*.dll, install\share -DestinationPath lak-${{ needs.create-release.outputs.tag }}-${{ matrix.os.system }}-${{ matrix.os.arch }}.zip
 
       - if: matrix.os.system == 'ubuntu' || matrix.os.system == 'macos'
         run: |
-          cd install/bin
+          cd install
           tar cfz lak-${{ needs.create-release.outputs.tag }}-${{ matrix.os.system }}-${{ matrix.os.arch }}.tar.gz *
           ls
 
