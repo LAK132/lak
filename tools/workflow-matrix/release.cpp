@@ -14,7 +14,7 @@ int main()
 	        {
 	          "-Dbindir=bin "
 	          "-Dlibdir=bin "
-	          "-Dcpp_args=\"-D_DISABLE_CONSTEXPR_MUTEX_CONSTRUCTOR\" "
+	          "-Dcpp_args=\\\"-D_DISABLE_CONSTEXPR_MUTEX_CONSTRUCTOR\\\" "
 	          "--buildtype=release "
 	          "-Dlak_bounds_checks=always "
 	          "-Dlak_enable_examples=true "
