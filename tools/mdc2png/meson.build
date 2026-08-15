@@ -14,6 +14,5 @@ lak_mdc2png = executable(
 		stb_image_write_dep,
 	],
 	build_by_default: false,
-	install: true,
 	install_rpath: get_option('prefix')/get_option('bindir'),
 )
