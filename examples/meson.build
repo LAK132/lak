@@ -1,7 +1,6 @@
 subdir('ball-game')
 subdir('basic_program')
 subdir('hello-cobalt')
-subdir('lisk-repl')
 subdir('mdc-view')
 subdir('nbt-view')
 subdir('template')
