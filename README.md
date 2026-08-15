@@ -45,7 +45,7 @@ Attribution would be nice but is not required.
 
 ## Basic setup
 
-Enable or disable features by modifying `meson_options.txt` or with `-D[feature]=[setting]` command line options during setup.
+Enable or disable features by modifying `meson_options.txt` or with `-D[feature]=[setting]` command line options during setup (`./setup.bat msvc -Dfeature=setting`, `./setup.sh gcc -Dfeature=setting`, etc, etc).
 
 Running `setup.sh`/`setup.bat`/`win_setup.sh` multiple times will wipe the build directory, make sure you've specified all the options you need up front.
 
@@ -54,14 +54,14 @@ Running `setup.sh`/`setup.bat`/`win_setup.sh` multiple times will wipe the build
 Native (msvc) via command prompt:
 
 ```
-./setup.bat msvc
+./setup.bat msvc <feature settings>
 ./compile.bat <target>
 ```
 
 Native (msvc) via WSL:
 
 ```
-./win_setup.sh msvc
+./win_setup.sh msvc <feature settings>
 ./win_compile.sh <target>
 ```
 
@@ -70,7 +70,7 @@ Native (msvc) via WSL:
 Install LLVM (at least `llvm@20` recommended) with homebrew
 
 ```
-./setup.sh homebrew-clang
+./setup.sh homebrew-clang <feature settings>
 ./compile.sh <target>
 ```
 
@@ -79,14 +79,14 @@ Install LLVM (at least `llvm@20` recommended) with homebrew
 #### `gcc`
 
 ```
-./setup.sh gcc
+./setup.sh gcc <feature settings>
 ./compile.sh <target>
 ```
 
 #### `clang`
 
 ```
-./setup.sh clang
+./setup.sh clang <feature settings>
 ./compile.sh <target>
 ```
 
@@ -94,7 +94,7 @@ Install LLVM (at least `llvm@20` recommended) with homebrew
 
 ```
 nix-shell
-./setup.sh auto
+./setup.sh auto <feature settings>
 ./compile.sh <target>
 ```
 
