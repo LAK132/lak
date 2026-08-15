@@ -1,3 +1,42 @@
+# installing
+
+option('lak_install_targets',
+	type: 'array',
+	choices: [
+		# shared libs
+		'cobalt',
+
+		# examples
+		'ball-game',
+		'basic_program',
+		'hello-cobalt',
+		'mdc-view',
+		'nbt-view',
+
+		# tools
+		'asc2csv',
+		'ebnf2cpp',
+		'lisk-repl',
+		'mdc2png',
+
+		# tests
+		'lak_test',
+	],
+	value: [
+		'cobalt',
+		'basic_program',
+		'hello-cobalt',
+		'mdc-view',
+		'nbt-view',
+		'asc2csv',
+		'ebnf2cpp',
+		'lisk-repl',
+		'mdc2png',
+		'lak_test',
+	],
+	yield: true,
+)
+
 # testing options
 
 option('lak_enable_tests',

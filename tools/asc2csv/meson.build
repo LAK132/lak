@@ -10,6 +10,6 @@ lak_asc2csv = executable(
 		lakfile_dep,
 	],
 	build_by_default: false,
-	install: true,
+	install: get_option('lak_install_targets').contains('asc2csv'),
 	install_rpath: get_option('prefix')/get_option('bindir'),
 )

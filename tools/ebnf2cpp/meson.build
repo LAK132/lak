@@ -11,7 +11,7 @@ foreach type, comps : compilers
 		dependencies: lakcore_dep2[type],
 		build_by_default: false,
 		native: comps['native'],
-		install: not comps['native'],
+		install: get_option('lak_install_targets').contains('ebnf2cpp') and not comps['native'],
 		install_rpath: get_option('prefix')/get_option('bindir'),
 	)
 	if type == 'build'

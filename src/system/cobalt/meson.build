@@ -69,52 +69,54 @@ endif
 
 cobalt_opts.set_install(false)
 
-cobalt_install_rpath_arg = '-Wl,-rpath,@0@'.format(get_option('prefix')/get_option('bindir'))
-use_cobalt_install_rpath_arg = cxx.has_link_argument(cobalt_install_rpath_arg)
+if get_option('lak_install_targets').contains('cobalt')
+	cobalt_install_rpath_arg = '-Wl,-rpath,@0@'.format(get_option('prefix')/get_option('bindir'))
+	use_cobalt_install_rpath_arg = cxx.has_link_argument(cobalt_install_rpath_arg)
 
-cobalt_opts.set_install(true, target: 'ShaderSupport')
-cobalt_opts.set_install(true, target: 'TextureFormatConversion')
-if lak_cobalt_enabled_renderers.contains('OpenGL3')
-	cobalt_opts.set_install(true, target: 'OpenGL3Renderer')
-	if use_cobalt_install_rpath_arg
-		cobalt_opts.append_link_args(cobalt_install_rpath_arg, target: 'OpenGL3Renderer')
+	cobalt_opts.set_install(true, target: 'ShaderSupport')
+	cobalt_opts.set_install(true, target: 'TextureFormatConversion')
+	if lak_cobalt_enabled_renderers.contains('OpenGL3')
+		cobalt_opts.set_install(true, target: 'OpenGL3Renderer')
+		if use_cobalt_install_rpath_arg
+			cobalt_opts.append_link_args(cobalt_install_rpath_arg, target: 'OpenGL3Renderer')
+		endif
 	endif
-endif
-if lak_cobalt_enabled_renderers.contains('OpenGL4')
-	cobalt_opts.set_install(true, target: 'OpenGL4Renderer')
-	if use_cobalt_install_rpath_arg
-		cobalt_opts.append_link_args(cobalt_install_rpath_arg, target: 'OpenGL4Renderer')
+	if lak_cobalt_enabled_renderers.contains('OpenGL4')
+		cobalt_opts.set_install(true, target: 'OpenGL4Renderer')
+		if use_cobalt_install_rpath_arg
+			cobalt_opts.append_link_args(cobalt_install_rpath_arg, target: 'OpenGL4Renderer')
+		endif
 	endif
-endif
-if lak_cobalt_enabled_renderers.contains('Direct3D11')
-	cobalt_opts.set_install(true, target: 'Direct3D11Renderer')
-endif
-if lak_cobalt_enabled_renderers.contains('Direct3D12')
-	cobalt_opts.set_install(true, target: 'Direct3D12Renderer')
-	cobalt_opts.set_install(true, target: 'WinPixEventRuntime')
-	dxc_bin_dir = cobalt_source_root/'External'/'Cache'/'DirectXShaderCompilerOfficial'/'bin'
-	if host_machine.cpu_family() == 'x86'
-		meson.add_install_script('install_dxc_x86.bat')
-	elif host_machine.cpu_family() == 'x86_64'
-		meson.add_install_script('install_dxc_x64.bat')
-	elif host_machine.cpu_family() == 'aarch64'
-		meson.add_install_script('install_dxc_arm64.bat')
+	if lak_cobalt_enabled_renderers.contains('Direct3D11')
+		cobalt_opts.set_install(true, target: 'Direct3D11Renderer')
 	endif
-endif
-if lak_cobalt_enabled_renderers.contains('Vulkan')
-	cobalt_opts.set_install(true, target: 'VulkanRenderer')
-	if use_cobalt_install_rpath_arg
-		cobalt_opts.append_link_args(cobalt_install_rpath_arg, target: 'VulkanRenderer')
+	if lak_cobalt_enabled_renderers.contains('Direct3D12')
+		cobalt_opts.set_install(true, target: 'Direct3D12Renderer')
+		cobalt_opts.set_install(true, target: 'WinPixEventRuntime')
+		dxc_bin_dir = cobalt_source_root/'External'/'Cache'/'DirectXShaderCompilerOfficial'/'bin'
+		if host_machine.cpu_family() == 'x86'
+			meson.add_install_script('install_dxc_x86.bat')
+		elif host_machine.cpu_family() == 'x86_64'
+			meson.add_install_script('install_dxc_x64.bat')
+		elif host_machine.cpu_family() == 'aarch64'
+			meson.add_install_script('install_dxc_arm64.bat')
+		endif
 	endif
-	if host_machine.system() == 'darwin'
-		cobalt_opts.set_install(true, target: 'vulkan')
-		meson.add_install_script('install_moltenvk.sh')
+	if lak_cobalt_enabled_renderers.contains('Vulkan')
+		cobalt_opts.set_install(true, target: 'VulkanRenderer')
+		if use_cobalt_install_rpath_arg
+			cobalt_opts.append_link_args(cobalt_install_rpath_arg, target: 'VulkanRenderer')
+		endif
+		if host_machine.system() == 'darwin'
+			cobalt_opts.set_install(true, target: 'vulkan')
+			meson.add_install_script('install_moltenvk.sh')
+		endif
 	endif
-endif
-if lak_cobalt_enabled_renderers.contains('Metal')
-	cobalt_opts.set_install(true, target: 'MetalRenderer')
-	if use_cobalt_install_rpath_arg
-		cobalt_opts.append_link_args(cobalt_install_rpath_arg, target: 'MetalRenderer')
+	if lak_cobalt_enabled_renderers.contains('Metal')
+		cobalt_opts.set_install(true, target: 'MetalRenderer')
+		if use_cobalt_install_rpath_arg
+			cobalt_opts.append_link_args(cobalt_install_rpath_arg, target: 'MetalRenderer')
+		endif
 	endif
 endif
 
