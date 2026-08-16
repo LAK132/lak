@@ -3,30 +3,55 @@ SetLocal EnableDelayedExpansion
 
 set meson_args=
 
+if "%~1"=="wasm32" (
+  shift
+  set cross_args="--cross-file=cross/emscripten.txt --cross-file=cross/wasm32.txt"
+  goto build-compiler
+)
+
+if "%~1"=="wasm64" (
+  shift
+  set cross_args="--cross-file=cross/emscripten.txt --cross-file=cross/wasm64.txt"
+  goto build-compiler
+)
+
+if "%~1"=="clang" (
+  set CC=clang
+  set CXX=clang++
+  set cross_args=
+  goto build-compiler
+)
+
+if "%~1"=="gcc" (
+  set CC=gcc
+  set CXX=g++
+  set cross_args=
+  goto build-compiler
+)
+
+set cross_args=
+
+:build-compiler
 if "%~1"=="msvc" (
   set meson_args=!meson_args! --vsenv
   goto run
 )
 
 if "%~1"=="clang" (
-  set CC=clang
-  set CXX=clang++
+  set CC_FOR_BUILD=clang
+  set CXX_FOR_BUILD=clang++
   goto run
 )
 
 if "%~1"=="gcc" (
-  set CC=gcc
-  set CXX=g++
+  set CC_FOR_BUILD=gcc
+  set CXX_FOR_BUILD=g++
   goto run
 )
 
 goto usage
 
 :run
-shift
-if not "%~1"=="--reconfigure" (
-  rmdir /s /q build
-)
 
 :arg-loop
 if "%1"=="" goto end-arg-loop
@@ -35,7 +60,7 @@ shift
 goto arg-loop
 :end-arg-loop
 
-meson setup build !meson_args!
+meson setup --wipe !cross_args! build !meson_args!
 goto :eof
 
 :usage

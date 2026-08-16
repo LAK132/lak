@@ -313,38 +313,6 @@ Pre-configured cross compilation options take the form:
 
 (Host system means the system the `<target>` executables will run on, build system means the system that will compile them. Some parts of `lak::` require building pre-processing tools, which means a compiler to build executables for the build machine must also be specificed)
 
-#### `gcc` for host/`clang` for build
-
-```
-./setup.sh gcc clang
-./compile.sh <target>
-```
-
-#### `clang` for host/`gcc` for build
-
-```
-./setup.sh clang gcc
-./compile.sh <target>
-```
-
-#### Specify compilers manually
-
-```
-export CC_FOR_BUILD=<build C compiler>
-export CXX_FOR_BUILD=<build C++ compiler>
-./setup.sh auto --cross-file=<host system cross file>
-./compile.sh <target>
-```
-
-```
-export CC=<host C compiler>
-export CXX=<host C++ compiler>
-export CC_FOR_BUILD=<build C compiler>
-export CXX_FOR_BUILD=<build C++ compiler>
-./setup.sh auto
-./compile.sh <target>
-```
-
 #### Emscripten
 
 Specifying `wasm32` or `wasm64` will automatically select pre-configured cross files for use with Emscripten
@@ -356,6 +324,24 @@ Specifying `wasm32` or `wasm64` will automatically select pre-configured cross f
 
 ```
 ./setup.sh wasm64 <build system option>
+./compile.sh <target>
+```
+
+#### Specify compilers manually
+
+```
+export CC=<host C compiler>
+export CXX=<host C++ compiler>
+export CC_FOR_BUILD=<build C compiler>
+export CXX_FOR_BUILD=<build C++ compiler>
+./setup.sh auto
+./compile.sh <target>
+```
+
+```
+export CC_FOR_BUILD=<build C compiler>
+export CXX_FOR_BUILD=<build C++ compiler>
+./setup.sh auto --cross-file=<host system cross file>
 ./compile.sh <target>
 ```
 

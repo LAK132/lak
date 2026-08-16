@@ -1,5 +1,5 @@
 #! /bin/sh
-rm -rf build
+
 case $1 in
   wasm32)
     shift
@@ -38,31 +38,31 @@ case $1 in
     shift
     export CC_FOR_BUILD=clang
     export CXX_FOR_BUILD=clang++
-    meson setup $cross_args build $@ || exit 1
+    meson setup --wipe $cross_args build $@ || exit 1
   ;;
 
   gcc)
     shift
     export CC_FOR_BUILD=gcc
     export CXX_FOR_BUILD=g++
-    meson setup $cross_args build $@ || exit 1
+    meson setup --wipe $cross_args build $@ || exit 1
   ;;
 
   homebrew-clang)
     shift
     export CC_FOR_BUILD=$(brew --prefix llvm)/bin/clang
     export CXX_FOR_BUILD=$(brew --prefix llvm)/bin/clang++
-    meson setup $cross_args build $@ || exit 1
+    meson setup --wipe $cross_args build $@ || exit 1
   ;;
 
   msvc)
     shift
-    meson setup $cross_args build --vsenv $@ || exit 1
+    meson setup --wipe $cross_args build --vsenv $@ || exit 1
   ;;
 
   auto)
     shift
-    meson setup $cross_args build $@ || exit 1
+    meson setup --wipe $cross_args build $@ || exit 1
   ;;
 
   *)
