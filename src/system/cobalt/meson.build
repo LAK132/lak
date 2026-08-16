@@ -45,13 +45,17 @@ cobalt_opts.add_cmake_defines({
 })
 
 if host_machine.system() == 'linux'
-	cobalt_opts.add_cmake_defines({'BUILD_WSI_XLIB_SUPPORT': 'ON'})
-	cobalt_opts.add_cmake_defines({'BUILD_WSI_XCB_SUPPORT': 'ON'})
-	cobalt_opts.add_cmake_defines({'BUILD_WSI_WAYLAND_SUPPORT': 'ON'})
+	cobalt_opts.add_cmake_defines({
+		'BUILD_WSI_XLIB_SUPPORT': 'ON',
+		'BUILD_WSI_XCB_SUPPORT': 'ON',
+		'BUILD_WSI_WAYLAND_SUPPORT': 'ON',
+	})
 else
-	cobalt_opts.add_cmake_defines({'BUILD_WSI_XLIB_SUPPORT': 'OFF'})
-	cobalt_opts.add_cmake_defines({'BUILD_WSI_XCB_SUPPORT': 'OFF'})
-	cobalt_opts.add_cmake_defines({'BUILD_WSI_WAYLAND_SUPPORT': 'OFF'})
+	cobalt_opts.add_cmake_defines({
+		'BUILD_WSI_XLIB_SUPPORT': 'OFF',
+		'BUILD_WSI_XCB_SUPPORT': 'OFF',
+		'BUILD_WSI_WAYLAND_SUPPORT': 'OFF',
+	})
 endif
 
 vk_support_directfb = false
@@ -155,9 +159,23 @@ if host_machine.system() == 'windows'
 	)
 endif
 
-if get_option('buildtype') != 'release'
+if get_option('debug')
 	cobalt_opts.append_compile_args('cpp', '-D_DEBUG')
 	cobalt_opts.append_compile_args('objcpp', '-D_DEBUG')
+	cobalt_opts.add_cmake_defines({
+		'CMAKE_BUILD_TYPE': 'RelWithDebInfo',
+	})
+	if meson.get_compiler('cpp').get_id() == 'msvc'
+		if get_option('b_vscrt') == 'mt' or get_option('b_vscrt') == 'static_from_buildtype'
+			cobalt_opts.set_override_option('b_vscrt', 'mtd')
+			cobalt_opts.append_compile_args('c', '/MTd')
+			cobalt_opts.append_compile_args('cpp', '/MTd')
+		elif get_option('b_vscrt') == 'md' or get_option('b_vscrt') == 'from_buildtype'
+			cobalt_opts.set_override_option('b_vscrt', 'mdd')
+			cobalt_opts.append_compile_args('c', '/MDd')
+			cobalt_opts.append_compile_args('cpp', '/MDd')
+		endif
+	endif
 endif
 
 disabled_warnings = []

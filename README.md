@@ -47,23 +47,25 @@ If you are intending to use this as a subproject or distribute binaries, ensure 
 
 ## Basic setup
 
-Enable or disable features by modifying `meson_options.txt` or with `-D[feature]=[setting]` command line options during setup (`./setup.bat msvc -Dfeature=setting`, `./setup.sh gcc -Dfeature=setting`, etc, etc).
+Building requires [meson](https://mesonbuild.com/Getting-meson.html) and a C++ compiler (msvc, clang, gcc, etc).
+
+Enable or disable features by modifying `meson_options.txt` or with `-D[feature]=[setting]` command line options during setup (`setup.bat msvc "-Dfeature=setting"`, `./setup.sh gcc -Dfeature=setting`, etc, etc).
 
 Running `setup.sh`/`setup.bat`/`win_setup.sh` multiple times will wipe the build directory, make sure you've specified all the options you need up front.
 
 ### Windows
 
-Native (msvc) via command prompt:
+Native (msvc) via command prompt (always use `*.bat` scripts, wrap settings in `""` quotes):
 
 ```
-./setup.bat msvc <feature settings>
-./compile.bat <target>
+setup.bat msvc "-Dfeature1=settings1" "-Dfeature2=settings2"
+compile.bat <target>
 ```
 
-Native (msvc) via WSL:
+Native (msvc) via WSL (always use `win_*.sh` scripts):
 
 ```
-./win_setup.sh msvc <feature settings>
+./win_setup.sh msvc -Dfeature1=settings1 -Dfeature2=settings2
 ./win_compile.sh <target>
 ```
 
@@ -112,7 +114,12 @@ Converts `.asc` point cloud files to `.csv`s.
 
 [Setup the build directory](/README.md#basic-setup) then
 ```
-./compile.[sh/bat] asc2csv
+compile.bat asc2csv
+build\tools\asc2csv\asc2csv
+```
+or
+```
+./compile.sh asc2csv
 ./build/tools/asc2csv/asc2csv
 ```
 
@@ -122,7 +129,12 @@ Reads in a semi-custom EBNF grammar description language and uses it to generate
 
 [Setup the build directory](/README.md#basic-setup) then
 ```
-./compile.[sh/bat] ebnf2cpp
+compile.bat ebnf2cpp
+build\tools\ebnf2cpp\ebnf2cpp
+```
+or
+```
+./compile.sh ebnf2cpp
 ./build/tools/ebnf2cpp/ebnf2cpp
 ```
 
@@ -145,7 +157,12 @@ my_lib = static_library(
 
 [Setup the build directory](/README.md#basic-setup) then
 ```
-./compile.[sh/bat] lisk-repl
+compile.bat lisk-repl
+build\tools\lisk-repl\lisk-repl
+```
+or
+```
+./compile.sh lisk-repl
 ./build/tools/lisk-repl/lisk-repl
 ```
 
@@ -166,7 +183,12 @@ Demosaics/desqueezes/upscales Minolta RD-175 `.MDC` raw files and saves the resu
 
 [Setup the build directory](/README.md#basic-setup) then
 ```
-./compile.[sh/bat] mdc2png
+compile.bat mdc2png
+build\tools\mdc2png\mdc2png C:\path\to\.MDC D:\path\to\.png
+```
+or
+```
+./compile.sh mdc2png
 ./build/tools/mdc2png/mdc2png /path/to/.MDC /path/to/.png
 ```
 
@@ -189,7 +211,12 @@ Demo of various features available with `<lak/basic_program.inl>`
 
 [Setup the build directory](/README.md#basic-setup) then
 ```
-./compile.[sh/bat] basic_program
+compile.bat basic_program
+build\examples\basic_program\basic_program
+```
+or
+```
+./compile.sh basic_program
 ./build/examples/basic_program/basic_program
 ```
 
@@ -206,7 +233,12 @@ Roll a ball around a maze of blocks and collect all the coins. Controlled with t
 
 [Setup the build directory](/README.md#basic-setup) then
 ```
-./compile.[sh/bat] ball-game
+compile.bat ball-game
+build\examples\ball-game\ball-game
+```
+or
+```
+./compile.sh ball-game
 ./build/examples/ball-game/ball-game
 ```
 
@@ -238,7 +270,12 @@ Demo of the Cobalt Renderer integration. Will attempt to open a window for every
 
 [Setup the build directory](/README.md#basic-setup) then
 ```
-./compile.[sh/bat] hello-cobalt
+compile.bat hello-cobalt
+build\examples\hello-cobalt\hello-cobalt
+```
+or
+```
+./compile.sh hello-cobalt
 ./build/examples/hello-cobalt/hello-cobalt
 ```
 
@@ -256,7 +293,12 @@ Inspector for Minolta RD-175 `.MDC` raw files.
 
 [Setup the build directory](/README.md#basic-setup) then
 ```
-./compile.[sh/bat] mdc-view
+compile.bat mdc-view
+build\examples\mdc-view\mdc-view
+```
+or
+```
+./compile.sh mdc-view
 ./build/examples/mdc-view/mdc-view
 ```
 
@@ -272,7 +314,12 @@ Inspector for `.nbt` files.
 
 [Setup the build directory](/README.md#basic-setup) then
 ```
-./compile.[sh/bat] nbt-view
+compile.bat nbt-view
+build\examples\nbt-view\nbt-view
+```
+or
+```
+./compile.sh nbt-view
 ./build/examples/nbt-view/nbt-view
 ```
 
@@ -283,11 +330,27 @@ Inspector for `.nbt` files.
 To specify compilers manually:
 
 ```
+set CC=<C compiler>
+set CXX=<C++ compiler>
+set CC_FOR_BUILD=<C compiler>
+set CXX_FOR_BUILD=<C++ compiler>
+setup.bat auto
+compile.bat <target>
+```
+
+```
 export CC=<C compiler>
 export CXX=<C++ compiler>
 export CC_FOR_BUILD=<C compiler>
 export CXX_FOR_BUILD=<C++ compiler>
 ./setup.sh auto
+./compile.sh <target>
+```
+
+```
+export CC_FOR_BUILD=<build C compiler>
+export CXX_FOR_BUILD=<build C++ compiler>
+./setup.sh auto --cross-file=<host system cross file>
 ./compile.sh <target>
 ```
 
@@ -324,24 +387,6 @@ Specifying `wasm32` or `wasm64` will automatically select pre-configured cross f
 
 ```
 ./setup.sh wasm64 <build system option>
-./compile.sh <target>
-```
-
-#### Specify compilers manually
-
-```
-export CC=<host C compiler>
-export CXX=<host C++ compiler>
-export CC_FOR_BUILD=<build C compiler>
-export CXX_FOR_BUILD=<build C++ compiler>
-./setup.sh auto
-./compile.sh <target>
-```
-
-```
-export CC_FOR_BUILD=<build C compiler>
-export CXX_FOR_BUILD=<build C++ compiler>
-./setup.sh auto --cross-file=<host system cross file>
 ./compile.sh <target>
 ```
 

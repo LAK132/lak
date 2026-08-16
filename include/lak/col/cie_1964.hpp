@@ -23,8 +23,8 @@ namespace lak
 				constexpr lak::vec3f_t to_vec() const { return {U, V, W}; }
 			};
 
-			constexpr lak::col::cie::UVW to_UVW(lak::col::cie::uvY colour,
-			                                    lak::col::cie::uv white)
+			LAK_CMATH_CONSTEXPR lak::col::cie::UVW to_UVW(lak::col::cie::uvY colour,
+			                                              lak::col::cie::uv white)
 			{
 				const float W   = (25.f * std::cbrt(colour.Y)) - 17.f;
 				const float W13 = 13.f * W;
