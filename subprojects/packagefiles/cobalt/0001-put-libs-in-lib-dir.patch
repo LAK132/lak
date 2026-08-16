@@ -1,0 +1,68 @@
+From b5c0c2792be6a9f8d2496c3533a6b8f8de0fcca4 Mon Sep 17 00:00:00 2001
+From: LAK132 <lakridesagain@gmail.com>
+Date: Sun, 16 Aug 2026 21:38:36 +0930
+Subject: [PATCH] put libs in lib dir
+
+---
+ cmake/FileHelperFunctions.cmake | 24 ++++++++++++++++--------
+ 1 file changed, 16 insertions(+), 8 deletions(-)
+
+diff --git a/cmake/FileHelperFunctions.cmake b/cmake/FileHelperFunctions.cmake
+index 81925ac..9ba7b07 100644
+--- a/cmake/FileHelperFunctions.cmake
++++ b/cmake/FileHelperFunctions.cmake
+@@ -205,35 +205,43 @@ function(cobalt_configure_sdk_install target)
+         # No ARCHIVE, so no .lib/.a
+         install(TARGETS ${target}
+             RUNTIME DESTINATION "${COBALT_SDK_BIN_DIR}"  # .exe / .dll
+-            LIBRARY DESTINATION "${COBALT_SDK_BIN_DIR}"  # .so / .dylib
++            LIBRARY DESTINATION "${COBALT_SDK_LIB_DIR}"  # .so / .dylib
+         )
+     else()
+         # Include ARCHIVE - static/import libs go to Lib/x64
+         install(TARGETS ${target}
+             RUNTIME DESTINATION "${COBALT_SDK_BIN_DIR}"
+-            LIBRARY DESTINATION "${COBALT_SDK_BIN_DIR}"
++            LIBRARY DESTINATION "${COBALT_SDK_LIB_DIR}"
+             ARCHIVE DESTINATION "${COBALT_SDK_LIB_DIR}"
+         )
+     endif()
+-    if(_cobalt_target_type STREQUAL "EXECUTABLE"
+-        OR _cobalt_target_type STREQUAL "SHARED_LIBRARY"
+-        OR _cobalt_target_type STREQUAL "MODULE_LIBRARY")
++    if(_cobalt_target_type STREQUAL "EXECUTABLE")
+         cobalt_split_debug_info("${target}" "${COBALT_SDK_BIN_DIR}")
+     endif()
++    if(_cobalt_target_type STREQUAL "SHARED_LIBRARY"
++        OR _cobalt_target_type STREQUAL "MODULE_LIBRARY")
++        cobalt_split_debug_info("${target}" "${COBALT_SDK_LIB_DIR}")
++    endif()
+ 
+     # PDBs (MSVC): install next to the binaries.
+     # Only valid for targets that produce linker-created artifacts
+     # (executables, shared/libs, module libs). Skip static or header-only libraries.
+     if(WIN32)
+-        if(_cobalt_target_type STREQUAL "EXECUTABLE"
+-           OR _cobalt_target_type STREQUAL "SHARED_LIBRARY"
+-           OR _cobalt_target_type STREQUAL "MODULE_LIBRARY")
++        if(_cobalt_target_type STREQUAL "EXECUTABLE")
+             install(FILES
+                 "$<TARGET_PDB_FILE:${target}>"
+                 DESTINATION "${COBALT_SDK_BIN_DIR}"
+                 OPTIONAL
+             )
+         endif()
++        if(_cobalt_target_type STREQUAL "SHARED_LIBRARY"
++           OR _cobalt_target_type STREQUAL "MODULE_LIBRARY")
++            install(FILES
++                "$<TARGET_PDB_FILE:${target}>"
++                DESTINATION "${COBALT_SDK_LIB_DIR}"
++                OPTIONAL
++            )
++        endif()
+     endif()
+ endfunction()
+ 
+-- 
+2.54.0
+

@@ -8,7 +8,14 @@ lak::cobalt::renderer_plugin_func lak::cobalt::vk_get_renderer_plugin()
 {
 	if (!GetVulkanRendererPlugin)
 	{
-		auto paths = lak::fixed_array(lak::exe_path().parent_path());
+		const static auto paths = []() -> lak::array<lak::fs::path>
+		{
+			lak::array<lak::fs::path> result;
+			result.push_back(lak::exe_path().parent_path());
+			if (result.back().has_parent_path())
+				result.push_back(result.back().parent_path() / "lib");
+			return result;
+		}();
 #if defined(LAK_OS_WINDOWS)
 		uintptr_t library = lak::load_library("VulkanRenderer.dll", paths);
 #elif defined(LAK_OS_LINUX)

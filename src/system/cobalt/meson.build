@@ -26,6 +26,7 @@ cobalt_opts.add_cmake_defines({
 	'COBALT_EXTERNAL_ROOT': cobalt_source_root/'External',
 
 	'COBALT_INHERIT_SYSTEM_INSTALL_PATH': 'ON',
+	'COBALT_INSTALL_OMIT_LIB': 'ON', # no static libs
 	'CMAKE_INSTALL_PREFIX': get_option('prefix'),
 	'COBALT_SDK_BIN_DIR': get_option('prefix')/get_option('bindir'),
 	'COBALT_SDK_LIB_DIR': get_option('prefix')/get_option('libdir'),
