@@ -14,8 +14,6 @@ int main()
 	        {
 	          "--vsenv "
 	          "--buildtype=release "
-	          "-Dbindir=bin "
-	          "-Dlibdir=bin "
 	          "-Dcpp_args=\\\"-D_DISABLE_CONSTEXPR_MUTEX_CONSTRUCTOR\\\" "
 	          "-Dlak_bounds_checks=always "
 	          "-Dlak_enable_examples=true "
