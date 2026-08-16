@@ -12,7 +12,7 @@ foreach type, comps : compilers
 		build_by_default: false,
 		native: comps['native'],
 		install: get_option('lak_install_targets').contains('ebnf2cpp') and not comps['native'],
-		install_rpath: get_option('prefix')/get_option('bindir'),
+		install_rpath: get_option('prefix')/get_option('libdir'),
 	)
 	if type == 'build'
 		lak_ebnf2cpp = _lak_ebnf2cpp

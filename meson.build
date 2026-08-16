@@ -495,6 +495,6 @@ if get_option('lak_enable_tests')
 		dependencies: lak_dep,
 		build_by_default: false,
 		install: get_option('lak_install_targets').contains('lak_test'),
-		install_rpath: get_option('prefix')/get_option('bindir'),
+		install_rpath: get_option('prefix')/get_option('libdir'),
 	)
 endif

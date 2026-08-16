@@ -15,5 +15,5 @@ lak_mdc2png = executable(
 	],
 	build_by_default: false,
 	install: get_option('lak_install_targets').contains('mdc2png'),
-	install_rpath: get_option('prefix')/get_option('bindir'),
+	install_rpath: get_option('prefix')/get_option('libdir'),
 )
