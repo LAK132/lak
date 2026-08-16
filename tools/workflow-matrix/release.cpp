@@ -32,11 +32,6 @@ int main()
 	      {
 	        {
 	          .setups = {windows_setup},
-	          .target = "debug"s,
-	          .run    = windows_run,
-	        },
-	        {
-	          .setups = {windows_setup},
 	          .target = "release"s,
 	          .run    = windows_run,
 	        },
