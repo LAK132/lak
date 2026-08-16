@@ -45,6 +45,7 @@ namespace lak
 {
 	struct platform_instance
 	{
+		mutable bool opengl_initialised = false;
 	};
 
 	extern lak::platform_instance *_platform_instance;

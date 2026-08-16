@@ -89,8 +89,10 @@ lak::result<lak::window_handle *, lak::u8string> lak::create_window(
 		  u8"Failed to create an OpenGL context: "_str +
 		  reinterpret_cast<const char8_t *>(SDL_GetError())};
 
-	if (gl3wInit() != GL3W_OK)
-		return lak::err_t<lak::u8string>{u8"Failed to initialise gl3w"_str};
+	if (!lak::_platform_instance->opengl_initialised)
+		if (lak::_platform_instance->opengl_initialised = (gl3wInit() == GL3W_OK);
+		    !lak::_platform_instance->opengl_initialised)
+			return lak::err_t<lak::u8string>{u8"Failed to initialise gl3w"_str};
 
 	if_let_err (const auto err, lak::opengl::get_error())
 		return lak::err_t<lak::u8string>{

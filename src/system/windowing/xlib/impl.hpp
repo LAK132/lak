@@ -9,6 +9,7 @@ namespace lak
 	{
 		Display *handle;
 		Atom wm_delete_window;
+		mutable bool opengl_initialised = false;
 	};
 
 	extern lak::platform_instance *_platform_instance;

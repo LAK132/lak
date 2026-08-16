@@ -8,6 +8,7 @@ namespace lak
 	struct platform_instance
 	{
 		xcb_connection_t *handle;
+		mutable bool opengl_initialised = false;
 	};
 
 	extern lak::platform_instalce *_platform_instance;

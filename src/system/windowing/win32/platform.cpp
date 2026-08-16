@@ -1,4 +1,5 @@
 #include "lak/debug.hpp"
+#include "lak/defer.hpp"
 #include "lak/image.hpp"
 #include "lak/memmanip.hpp"
 #include "lak/strconv.hpp"
@@ -326,10 +327,12 @@ bool init_opengl()
 		ERROR("Failed to create dummy window for initialising OpenGL");
 		return false;
 	}
+	DEFER(DestroyWindow(hwnd));
 
 	/* pump events */
 
 	auto hdc = GetDC(hwnd);
+	DEFER(ReleaseDC(hwnd, hdc));
 
 	PIXELFORMATDESCRIPTOR format;
 	format.nSize    = sizeof(format);
@@ -370,15 +373,22 @@ bool init_opengl()
 	SetPixelFormat(hdc, ChoosePixelFormat(hdc, &format), &format);
 
 	auto hglrc = wglCreateContext(hdc);
+	DEFER(wglDeleteContext(hglrc));
 
 	if (!hglrc)
 	{
-		DestroyWindow(hwnd);
 		ERROR("Failed to create OpenGL context");
 		return false;
 	}
 
 	wglMakeCurrent(hdc, hglrc);
+	DEFER(wglMakeCurrent(hdc, NULL));
+
+	if (gl3wInit() != GL3W_OK)
+	{
+		ERROR("Failed to init gl3w");
+		return false;
+	}
 
 	wglGetExtensionsStringARB = (PFNWGLGETEXTENSIONSSTRINGARB)gl3wGetProcAddress(
 	  "wglGetExtensionsStringARB");
@@ -426,15 +436,7 @@ bool init_opengl()
 	}
 	has_swap_control = wglSwapIntervalEXT && wglGetSwapIntervalEXT;
 
-	bool result = gl3wInit() == GL3W_OK;
-
-	wglMakeCurrent(hdc, NULL);
-	wglDeleteContext(hglrc);
-	ReleaseDC(hwnd, hdc);
-	DestroyWindow(hwnd);
-	/* pump events */
-
-	return result;
+	return true;
 }
 #endif
 
@@ -465,9 +467,8 @@ bool lak::platform_init()
 	}
 
 #ifdef LAK_ENABLE_OPENGL
-	if (init_opengl())
-		lak::_platform_instance->opengl_initialised = true;
-	else
+	if (lak::_platform_instance->opengl_initialised = init_opengl();
+	    !lak::_platform_instance->opengl_initialised)
 #	if defined(LAK_ENABLE_SOFTRENDER) || defined(LAK_ENABLE_COBALT)
 		WARNING("Failed to init OpenGL");
 #	else

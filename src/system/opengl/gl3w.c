@@ -53,8 +53,6 @@ static int open_libgl(void)
 		return GL3W_ERROR_LIBRARY_OPEN;
 
 	wgl_get_proc_address = (GL3WglGetProcAddr)GetProcAddress(libgl, "wglGetProcAddress");
-	if (!wgl_get_proc_address)
-		return GL3W_ERROR_LIBRARY_OPEN;
 	return GL3W_OK;
 }
 
@@ -65,9 +63,10 @@ static void close_libgl(void)
 
 static GL3WglProc get_proc(const char *proc)
 {
-	GL3WglProc res;
+	GL3WglProc res = NULL;
 
-	res = (GL3WglProc)wgl_get_proc_address(proc);
+	if (wgl_get_proc_address)
+		res = (GL3WglProc)wgl_get_proc_address(proc);
 	if (!res)
 		res = (GL3WglProc)GetProcAddress(libgl, proc);
 	return res;
