@@ -145,6 +145,11 @@ lak::result<lak::window_handle *, lak::u8string> lak::create_window(
 lak::result<lak::window_handle *, lak::u8string> lak::create_window(
   const lak::opengl_settings &settings)
 {
+	ASSERT(lak::_platform_instance);
+
+	if (!lak::_platform_instance->opengl_initialised)
+		return lak::err_t{u8"Failed to create window: OpenGL not initialised"_str};
+
 	auto handle = lak::unique_bank_ptr<lak::window_handle>::make();
 	ASSERT(handle);
 

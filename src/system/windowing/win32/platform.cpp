@@ -465,7 +465,14 @@ bool lak::platform_init()
 	}
 
 #ifdef LAK_ENABLE_OPENGL
-	if (!init_opengl()) return false;
+	if (init_opengl())
+		lak::_platform_instance->opengl_initialised = true;
+	else
+#	if defined(LAK_ENABLE_SOFTRENDER) || defined(LAK_ENABLE_COBALT)
+		WARNING("Failed to init OpenGL");
+#	else
+		return false;
+#	endif
 #endif
 
 	return true;
