@@ -90,7 +90,12 @@ lak::result<lak::strong_ref<LAK_BASIC_PROGRAM(window_instance<WINDOW_CLASS>)>,
 		style.WindowRounding   = 0.0f;
 	}
 
-	ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+	{
+		auto &io = ImGui::GetIO();
+		io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+		io.IniFilename = nullptr;
+		io.LogFilename = nullptr;
+	}
 	ImGui::StyleColorsDark();
 	ImGui::GetStyle().WindowRounding = 0;
 
