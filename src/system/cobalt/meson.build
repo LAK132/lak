@@ -10,6 +10,17 @@ cobalt_opts.set_override_option('warning_level', '0')
 if get_option('optimization') == '0'
 	cobalt_opts.set_override_option('optimization', '1')
 endif
+if get_option('debug')
+	cobalt_opts.append_compile_args('cpp', '-D_DEBUG')
+	cobalt_opts.append_compile_args('objcpp', '-D_DEBUG')
+	cobalt_opts.add_cmake_defines({
+		'CMAKE_BUILD_TYPE': 'RelWithDebInfo',
+	})
+else
+	cobalt_opts.add_cmake_defines({
+		'CMAKE_BUILD_TYPE': 'Release',
+	})
+endif
 
 cobalt_opts.add_cmake_defines({
 	'COBALT_BUILD_TESTS': 'OFF',
@@ -160,18 +171,31 @@ if host_machine.system() == 'windows'
 	)
 endif
 
-if get_option('debug')
-	cobalt_opts.append_compile_args('cpp', '-D_DEBUG')
-	cobalt_opts.append_compile_args('objcpp', '-D_DEBUG')
-	cobalt_opts.add_cmake_defines({
-		'CMAKE_BUILD_TYPE': 'RelWithDebInfo',
-	})
-	if meson.get_compiler('cpp').get_id() == 'msvc'
-		if get_option('b_vscrt') == 'mt' or get_option('b_vscrt') == 'static_from_buildtype'
+if meson.get_compiler('cpp').get_id() == 'msvc'
+	if get_option('debug')
+		if ['static_from_buildtype', 'mt', 'mtd'].contains(get_option('b_vscrt'))
 			cobalt_opts.set_override_option('b_vscrt', 'mtd')
 			cobalt_opts.append_compile_args('c', '/MTd')
 			cobalt_opts.append_compile_args('cpp', '/MTd')
-		elif get_option('b_vscrt') == 'md' or get_option('b_vscrt') == 'from_buildtype'
+		elif ['from_buildtype', 'md', 'mdd'].contains(get_option('b_vscrt'))
+			cobalt_opts.set_override_option('b_vscrt', 'mdd')
+			cobalt_opts.append_compile_args('c', '/MDd')
+			cobalt_opts.append_compile_args('cpp', '/MDd')
+		endif
+	else
+		if ['static_from_buildtype', 'mt'].contains(get_option('b_vscrt'))
+			cobalt_opts.set_override_option('b_vscrt', 'mt')
+			cobalt_opts.append_compile_args('c', '/MT')
+			cobalt_opts.append_compile_args('cpp', '/MT')
+		elif ['from_buildtype', 'md'].contains(get_option('b_vscrt'))
+			cobalt_opts.set_override_option('b_vscrt', 'md')
+			cobalt_opts.append_compile_args('c', '/MD')
+			cobalt_opts.append_compile_args('cpp', '/MD')
+		elif ['mtd'].contains(get_option('b_vscrt'))
+			cobalt_opts.set_override_option('b_vscrt', 'mtd')
+			cobalt_opts.append_compile_args('c', '/MTd')
+			cobalt_opts.append_compile_args('cpp', '/MTd')
+		elif ['mdd'].contains(get_option('b_vscrt'))
 			cobalt_opts.set_override_option('b_vscrt', 'mdd')
 			cobalt_opts.append_compile_args('c', '/MDd')
 			cobalt_opts.append_compile_args('cpp', '/MDd')
