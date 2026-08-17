@@ -178,105 +178,74 @@ namespace lak
 				{
 					r.Y = g.Y = b.Y = 1.f;
 
-					const auto [r_X, r_Y, r_Z] = to_XYZ(r);
-					const auto [g_X, g_Y, g_Z] = to_XYZ(g);
-					const auto [b_X, b_Y, b_Z] = to_XYZ(b);
-					const auto [w_X, w_Y, w_Z] = to_XYZ(w);
-
-					const auto rgb_Y =
-					  inverse(lak::mat3f_t{
-					    {r_X, g_X, b_X}, {r_Y, g_Y, b_Y}, {r_Z, g_Z, b_Z}}) *
-					  lak::vec3f_t(w_X, w_Y, w_Z);
+					const auto rgb_Y = lak::inverse(lak::transpose(lak::mat3f_t{
+					                     to_XYZ(r).to_vec(),
+					                     to_XYZ(g).to_vec(),
+					                     to_XYZ(b).to_vec(),
+					                   })) *
+					                   to_XYZ(w).to_vec();
 
 					r.Y = rgb_Y.x;
 					g.Y = rgb_Y.y;
 					b.Y = rgb_Y.z;
 				}
 
-				constexpr lak::vec3f_t r_basis() const
-				{
-					return {r.x - w.x, r.y - w.y, r.Y};
-				}
-				constexpr lak::vec3f_t g_basis() const
-				{
-					return {g.x - w.x, g.y - w.y, g.Y};
-				}
-				constexpr lak::vec3f_t b_basis() const
-				{
-					return {b.x - w.x, b.y - w.y, b.Y};
-				}
-				constexpr lak::mat<float, 4U, 3U> bases() const
-				{
-					return {
-					  r_basis(), g_basis(), b_basis(), lak::vec3f_t(w.x, w.y, 0.f)};
-				}
-
-				constexpr lak::mat4f_t linear_to_xyY() const
-				{
-					return {
-					  lak::vec4f_t(r.x - w.x, g.x - w.x, b.x - w.x, w.x),
-					  lak::vec4f_t(r.y - w.y, g.y - w.y, b.y - w.y, w.y),
-					  lak::vec4f_t(r.Y, g.Y, b.Y, 0.f),
-					  lak::vec4f_t(0.f, 0.f, 0.f, 1.f),
-					};
-				}
-
 				constexpr lak::mat3f_t linear_to_XYZ() const
 				{
-					const auto [r_X, r_Y, r_Z] = to_XYZ(r);
-					const auto [g_X, g_Y, g_Z] = to_XYZ(g);
-					const auto [b_X, b_Y, b_Z] = to_XYZ(b);
+					return lak::transpose(lak::mat3f_t{
+					  to_XYZ(r).to_vec(),
+					  to_XYZ(g).to_vec(),
+					  to_XYZ(b).to_vec(),
+					});
+				}
 
-					return {
-					  lak::vec3f_t(r_X, g_X, b_X),
-					  lak::vec3f_t(r_Y, g_Y, b_Y),
-					  lak::vec3f_t(r_Z, g_Z, b_Z),
+				constexpr auto linear_to_xyY() const
+				{
+					return
+					  [mat = linear_to_XYZ()](lak::vec3f_t colour) -> lak::col::cie::xyY
+					{
+						return lak::col::cie::to_xyY(
+						  lak::col::cie::XYZ::from_vec(mat * colour));
 					};
 				}
 
 				constexpr lak::col::cie::xyY linear_to_xyY(lak::vec3f_t colour) const
 				{
-					const auto [x, y, Y] = homogenise(colour) * bases();
-					return {
-					  .x = x,
-					  .y = y,
-					  .Y = Y,
-					};
+					return linear_to_xyY()(colour);
 				}
 
 				constexpr void linear_to_xyY(lak::span<lak::col::cie::xyY> dst,
 				                             lak::span<const lak::vec3f_t> src) const
 				{
 					ASSERT_EQUAL(src.size(), dst.size());
-					const auto _bases = bases();
-					for (size_t i = 0U; i < src.size(); ++i)
-					{
-						const auto [x, y, Y] = homogenise(src[i]) * _bases;
-						dst[i].x             = x;
-						dst[i].y             = y;
-						dst[i].Y             = Y;
-					}
+					const auto transform = linear_to_xyY();
+					for (size_t i = 0U; i < src.size(); ++i) dst[i] = transform(src[i]);
 				}
 
-				constexpr lak::mat4f_t xyY_to_linear() const
+				constexpr lak::mat3f_t XYZ_to_linear() const
 				{
-					return inverse(linear_to_xyY());
+					return lak::inverse(linear_to_XYZ());
+				}
+
+				constexpr auto xyY_to_linear() const
+				{
+					return
+					  [mat = XYZ_to_linear()](lak::col::cie::xyY colour) -> lak::vec3f_t
+					{ return mat * lak::col::cie::to_XYZ(colour).to_vec(); };
 				}
 
 				constexpr lak::vec3f_t xyY_to_linear(lak::col::cie::xyY colour) const
 				{
-					return homogeneous_mult(xyY_to_linear(),
-					                        lak::vec3f_t(colour.x, colour.y, colour.Y));
+					return xyY_to_linear()(colour);
 				}
 
-				constexpr void xyY_to_linear(lak::span<lak::vec3f_t> dst,
-				                             lak::span<const lak::col::cie::xyY> src)
+				constexpr void xyY_to_linear(
+				  lak::span<lak::vec3f_t> dst,
+				  lak::span<const lak::col::cie::xyY> src) const
 				{
 					ASSERT_EQUAL(src.size(), dst.size());
 					const auto transform = xyY_to_linear();
-					for (size_t i = 0U; i < src.size(); ++i)
-						dst[i] = homogeneous_mult(
-						  transform, lak::vec3f_t(src[i].x, src[i].y, src[i].Y));
+					for (size_t i = 0U; i < src.size(); ++i) dst[i] = transform(src[i]);
 				}
 			};
 
