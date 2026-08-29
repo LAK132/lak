@@ -49,6 +49,22 @@ namespace lak
 		inline operator std::basic_string<CHAR>() const;
 
 		inline constexpr uint32_t crc32() const;
+
+		template<size_t N2>
+		inline constexpr bool operator==(
+		  const lak::const_string<CHAR, N2> &other) const
+		{
+			if constexpr (N != N2) return false;
+			for (size_t i = 0U; i < N; ++i)
+				if (_value[i] != other._value[i]) return false;
+			return true;
+		}
+		template<size_t N2>
+		inline constexpr bool operator!=(
+		  const lak::const_string<CHAR, N2> &other) const
+		{
+			return !(*this == other);
+		}
 	};
 	template<typename CHAR, size_t N>
 	const_string(const CHAR (&)[N]) -> const_string<CHAR, N - 1>;
@@ -77,6 +93,8 @@ namespace lak
 		using lak::const_string<CHAR, N>::operator lak::string_view<CHAR>;        \
 		using lak::const_string<CHAR, N>::operator std::basic_string<CHAR>;       \
 		using lak::const_string<CHAR, N>::crc32;                                  \
+		using lak::const_string<CHAR, N>::operator==;                             \
+		using lak::const_string<CHAR, N>::operator!=;                             \
 	};                                                                          \
 	template<size_t N>                                                          \
 	PREFIX##const_string(const CHAR(&)[N])->PREFIX##const_string<N - 1>;
