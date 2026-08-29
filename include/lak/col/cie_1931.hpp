@@ -178,16 +178,11 @@ namespace lak
 				{
 					r.Y = g.Y = b.Y = 1.f;
 
-					const auto rgb_Y = lak::inverse(lak::transpose(lak::mat3f_t{
-					                     to_XYZ(r).to_vec(),
-					                     to_XYZ(g).to_vec(),
-					                     to_XYZ(b).to_vec(),
-					                   })) *
-					                   to_XYZ(w).to_vec();
+					const auto [r_Y, g_Y, b_Y] = XYZ_to_linear() * to_XYZ(w).to_vec();
 
-					r.Y = rgb_Y.x;
-					g.Y = rgb_Y.y;
-					b.Y = rgb_Y.z;
+					r.Y = r_Y;
+					g.Y = g_Y;
+					b.Y = b_Y;
 				}
 
 				constexpr lak::mat3f_t linear_to_XYZ() const
