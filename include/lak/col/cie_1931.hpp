@@ -185,6 +185,14 @@ namespace lak
 					b.Y = b_Y;
 				}
 
+				constexpr auto regenerate_w()
+				{
+					auto new_w = lak::col::cie::to_xyY(lak::col::cie::XYZ::from_vec(
+					  linear_to_XYZ() * lak::vec3f_t(1.f, 1.f, 1.f)));
+					w.x        = new_w.x;
+					w.y        = new_w.y;
+				}
+
 				constexpr lak::mat3f_t linear_to_XYZ() const
 				{
 					return lak::transpose(lak::mat3f_t{
