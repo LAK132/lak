@@ -637,7 +637,6 @@ struct lak::format_traits<T, CHAR>
 
 		if (args[0] == CHAR('-'))
 		{
-			throw "NYI";
 			result.left_justified = true;
 			args                  = args.substr(1U);
 			if (args.empty()) return result;
@@ -665,7 +664,6 @@ struct lak::format_traits<T, CHAR>
 
 		if (args[0] == CHAR('0'))
 		{
-			if (result.left_justified) throw "invalid argument combination";
 			result.fill = '0';
 			args        = args.substr(1U);
 			if (args.empty()) return result;
@@ -725,32 +723,44 @@ struct lak::format_traits<T, CHAR>
 			case lak::numeric_base::bin: /* strm << std::bin; */ break;
 			default:                     break;
 		}
-		strm << std::noshowbase;
-		if (args.uppercase) strm << std::uppercase;
+
+		lak::astring prefix;
 
 		if (std::signbit(value))
-			strm << "-";
+			prefix += "-";
 		else if (args.force_sign)
-			strm << "+";
+			prefix += "+";
 		else if (args.sign_pad)
-			strm << " ";
+			prefix += " ";
 
 		if (args.show_base)
 		{
 			switch (args.base)
 			{
 				case lak::numeric_base::dec: break;
-				case lak::numeric_base::hex: strm << "0x"; break;
-				case lak::numeric_base::oct: strm << "0"; break;
-				case lak::numeric_base::bin: strm << "0b"; break;
+				case lak::numeric_base::hex: prefix += "0x"; break;
+				case lak::numeric_base::oct: prefix += "0"; break;
+				case lak::numeric_base::bin: prefix += "0b"; break;
 			}
 		}
 
-		strm << std::setfill(args.fill) << std::setw(args.min_width)
-		     << std::setprecision(args.precision)
+		if (args.uppercase) strm << std::uppercase;
+		strm << std::noshowbase << std::fixed << std::setprecision(args.precision)
 		     << (std::signbit(value) ? -value : value);
 
-		return lak::strconv<CHAR>(lak::string_view<char>(strm.view()));
+		const auto view = lak::string_view<char>(strm.view());
+
+		if (const size_t width = view.size() + prefix.size();
+		    args.min_width < width)
+			return lak::fmt<CHAR, "{}{}">(prefix, view);
+		else if (const auto fill =
+		           lak::astring(size_t(args.min_width - width), args.fill);
+		         args.left_justified)
+			return lak::fmt<CHAR, "{}{}{}">(prefix, view, fill);
+		else if (args.fill == '0')
+			return lak::fmt<CHAR, "{}{}{}">(prefix, fill, view);
+		else
+			return lak::fmt<CHAR, "{}{}{}">(fill, prefix, view);
 	}
 };
 static_assert(lak::concepts::dynamic_formattable<float, char>);
