@@ -17,6 +17,11 @@
 
 #include <imgui.h>
 
+#if __has_include(<imgui_node_editor.h>)
+#	include <imgui_node_editor.h>
+#	define LAK_IMGUI_WIDGETS_HAS_NODE_EDITOR
+#endif
+
 #include <thread>
 
 namespace lak
@@ -76,6 +81,28 @@ namespace lak
 		}
 	};
 	using ImUniqueViewport = lak::unique_com_ptr<ImViewport>;
+
+#ifdef LAK_IMGUI_WIDGETS_HAS_NODE_EDITOR
+	template<>
+	struct unique_com_ptr_traits<ax::NodeEditor::EditorContext>
+	{
+		using handle_type                = ax::NodeEditor::EditorContext *;
+		using exposed_type               = ax::NodeEditor::EditorContext *;
+		static constexpr auto null_value = nullptr;
+		inline static lak::infallible_result<handle_type> ctor(
+		  const ax::NodeEditor::Config &config)
+		{
+			return lak::ok_t{ax::NodeEditor::CreateEditor(&config)};
+		}
+		inline static void dtor(handle_type &editor)
+		{
+			ax::NodeEditor::DestroyEditor(editor);
+			editor = nullptr;
+		}
+		inline static bool valid(handle_type editor) { return editor != nullptr; }
+	};
+	using UniqueNodeEditor = lak::unique_com_ptr<ax::NodeEditor::EditorContext>;
+#endif
 
 	template<typename R, typename... T, typename... D>
 	bool AwaitPopup(const char *str_id,
