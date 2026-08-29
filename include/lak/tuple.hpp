@@ -106,6 +106,12 @@ namespace lak
 		template<typename F>
 		void foreach (F &&func) const;
 
+		// func(lak::size_type<I>{}, lak::type_identity<T>{})
+		template<typename F>
+		static constexpr void foreach_type(F &&func);
+		template<size_t I, typename F>
+		static constexpr force_inline void _foreach_type(F &&func);
+
 		template<size_t I>
 		constexpr auto &get();
 		template<size_t I>

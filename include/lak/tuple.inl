@@ -156,7 +156,7 @@ template<typename F>
 void lak::tuple<T, U...>::foreach (F &&func)
 {
 	func(value);
-	next.foreach (func);
+	next.foreach (lak::forward<F>(func));
 }
 
 template<typename T, typename... U>
@@ -164,7 +164,22 @@ template<typename F>
 void lak::tuple<T, U...>::foreach (F &&func) const
 {
 	func(value);
-	next.foreach (func);
+	next.foreach (lak::forward<F>(func));
+}
+
+template<typename T, typename... U>
+template<typename F>
+constexpr void lak::tuple<T, U...>::foreach_type(F &&func)
+{
+	_foreach_type<0U>(lak::forward<F>(func));
+}
+
+template<typename T, typename... U>
+template<size_t I, typename F>
+constexpr void force_inline lak::tuple<T, U...>::_foreach_type(F &&func)
+{
+	func(lak::size_type<I>{}, lak::type_identity<T>{});
+	decltype(next)::template _foreach_type<I + 1U>(lak::forward<F>(func));
 }
 
 template<typename T, typename... U>
