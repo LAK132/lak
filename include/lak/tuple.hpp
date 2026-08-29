@@ -78,6 +78,8 @@ namespace lak
 
 		template<typename V>
 		static constexpr size_t index_of = lak::index_of_element_v<V, T, U...>;
+		template<size_t I>
+		using type_of = lak::nth_type_t<I, T, U...>;
 
 		constexpr tuple() = default;
 		constexpr tuple(const tuple &p);
