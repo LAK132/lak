@@ -915,6 +915,14 @@ namespace std
 
 namespace lak
 {
+	template<typename T, size_t S>
+	constexpr lak::mat<T, S, S> diagonal(lak::vec<T, S> v)
+	{
+		lak::mat<T, S, S> result{0.f};
+		for (size_t i = 0U; i < S; ++i) result[i][i] = v[i];
+		return result;
+	}
+
 	template<typename T>
 	constexpr lak::vec3<T> homogenise(lak::vec2<T> v)
 	{
