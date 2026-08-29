@@ -802,6 +802,11 @@ namespace lak
 	};
 	template<typename T>
 	constexpr bool is_vec_v = lak::is_vec<T>::value;
+	namespace concepts
+	{
+		template<typename T>
+		concept vec = lak::is_vec_v<T>;
+	}
 
 	using vec4f_t   = vec4<float>;
 	using vec4c_t   = vec4<signed char>;
@@ -822,6 +827,22 @@ namespace lak
 
 	template<typename T, size_t R, size_t C>
 	using mat = lak::vec<lak::vec<T, C>, R>;
+
+	template<typename T>
+	struct is_mat : lak::false_type
+	{
+	};
+	template<typename T, size_t R, size_t C>
+	struct is_mat<lak::mat<T, R, C>> : lak::true_type
+	{
+	};
+	template<typename T>
+	constexpr bool is_mat_v = lak::is_mat<T>::value;
+	namespace concepts
+	{
+		template<typename T>
+		concept mat = lak::is_mat_v<T>;
+	}
 
 	template<typename T>
 	using mat2      = mat<T, 2U, 2U>;

@@ -17,6 +17,36 @@ namespace lak
 	namespace cobalt
 	{
 		template<typename T>
+		struct is_vector : lak::false_type
+		{
+		};
+		template<typename T, size_t S>
+		struct is_vector<::cobalt::graphics::BasicVector<T, S>> : lak::true_type
+		{
+		};
+		template<typename T>
+		inline constexpr bool is_vector_v = lak::cobalt::is_vector<T>::value;
+
+		template<typename T>
+		struct is_matrix : lak::false_type
+		{
+		};
+		template<typename T, size_t S>
+		struct is_matrix<::cobalt::graphics::BasicMatrix<T, S>> : lak::true_type
+		{
+		};
+		template<typename T>
+		inline constexpr bool is_matrix_v = lak::cobalt::is_matrix<T>::value;
+
+		namespace concepts
+		{
+			template<typename T>
+			concept vector = lak::cobalt::is_vector_v<T>;
+			template<typename T>
+			concept matrix = lak::cobalt::is_matrix_v<T>;
+		}
+
+		template<typename T>
 		requires(!lak::is_vec_v<T>)
 		inline ::cobalt::graphics::BasicVector<T, 2> from_lak(lak::vec2<T> v)
 		{
