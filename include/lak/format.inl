@@ -673,7 +673,7 @@ struct lak::format_traits<T, CHAR>
 
 		if (args[0] >= CHAR('1') && args[0] <= CHAR('9'))
 		{
-			result.min_width = 0U;
+			result.min_width = args[0] - CHAR('0');
 			args             = args.substr(1U);
 			if (args.empty()) return result;
 			while (args[0] >= CHAR('0') && args[0] <= CHAR('9'))
