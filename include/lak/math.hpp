@@ -180,6 +180,8 @@ namespace lak
 		return ((_2hc2 / w5) / std::expm1(_hck / wT)) * 1E-9;
 	}
 
+	constexpr double suns_steradian = 6E-5;
+
 	// earth irradiance (W/m^2/nm) = blackbody (W/sr/m^2/nm) * sun's steradian
 	// wavelength = nanometers
 	// temperature = kelvins
@@ -187,7 +189,6 @@ namespace lak
 	inline double earth_sun_blackbody_irradiance(double wavelength,
 	                                             double temperature)
 	{
-		constexpr double suns_steradian = 6E-5;
 		return lak::blackbody_radiance(wavelength, temperature) * suns_steradian;
 	}
 
