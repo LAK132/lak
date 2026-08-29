@@ -554,7 +554,8 @@ namespace lak
 			arguments_t args;                                                       \
 			lak::lisk::exception exc;                                               \
                                                                               \
-			if (!lak::lisk::impl::get_or_eval_arg_as(l, e, allow_tail, exc, args))  \
+			if (!lak::lisk::impl::get_or_eval_arg_as(                               \
+			      l, e, allow_tail, exc, args, true))                               \
 			{                                                                       \
 				return lak::pair<lak::lisk::expression, size_t>(exc, 0);              \
 			}                                                                       \
@@ -816,7 +817,8 @@ namespace lak
 			                        lak::lisk::environment &e,
 			                        bool allow_tail,
 			                        lak::lisk::exception &exc,
-			                        lak::tuple<TYPES...> &out_arg);
+			                        lak::tuple<TYPES...> &out_arg,
+			                        bool exact_arg_count = false);
 		}
 
 		template<>

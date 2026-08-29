@@ -1417,17 +1417,13 @@ bool lak::lisk::impl::get_or_eval_arg_as(lak::lisk::shared_list in_list,
                                          lak::lisk::environment &e,
                                          bool allow_tail,
                                          lak::lisk::exception &exc,
-                                         lak::tuple<TYPES...> &out_arg)
+                                         lak::tuple<TYPES...> &out_arg,
+                                         bool exact_arg_count)
 {
 	auto _get_or_eval_arg_as =
-	  []<typename... TS, size_t... I>(lak::lisk::shared_list in_list,
-	                                  lak::lisk::environment &e,
-	                                  bool allow_tail,
-	                                  lak::lisk::exception &exc,
-	                                  lak::tuple<TS...> &out_arg,
-	                                  lak::index_sequence<I...>) -> bool
+	  [&]<size_t... I>(lak::index_sequence<I...>) -> bool
 	{
-		lak::tuple<lak::remove_cv_t<TS>...> result;
+		lak::tuple<lak::remove_cv_t<TYPES>...> result;
 
 		lak::lisk::list_reader reader(in_list, e, allow_tail);
 
@@ -1452,6 +1448,12 @@ bool lak::lisk::impl::get_or_eval_arg_as(lak::lisk::shared_list in_list,
 		};
 		if ((_get_or_eval(result.template get<I>(), I) && ...))
 		{
+			if (exact_arg_count && reader.list)
+			{
+				exc.message =
+				  lak::fmt<u8"Too many arguments, expected {}">(sizeof...(TYPES));
+				return false;
+			}
 			out_arg = lak::move(result);
 			return true;
 		}
@@ -1462,10 +1464,5 @@ bool lak::lisk::impl::get_or_eval_arg_as(lak::lisk::shared_list in_list,
 	if constexpr (sizeof...(TYPES) == 0)
 		return true;
 	else
-		return _get_or_eval_arg_as(in_list,
-		                           e,
-		                           allow_tail,
-		                           exc,
-		                           out_arg,
-		                           lak::index_sequence_for<TYPES...>{});
+		return _get_or_eval_arg_as(lak::index_sequence_for<TYPES...>{});
 }
