@@ -890,6 +890,8 @@ namespace lak
 		bool is_nil(const lak::lisk::expression &expr);
 		bool is_null(const lak::lisk::expression &expr);
 
+		lak::lisk::string next_token(lak::u8string_view str,
+		                             lak::u8string_view *chars_used = nullptr);
 		lak::vector<lak::lisk::string> tokenise(const lak::lisk::string &str,
 		                                        size_t *chars_used = nullptr);
 		lak::vector<lak::lisk::string> root_tokenise(const lak::lisk::string &str,

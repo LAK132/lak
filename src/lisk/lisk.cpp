@@ -618,87 +618,142 @@ bool lak::lisk::is_null(const lak::lisk::expression &expr)
 	return expr.is_null();
 }
 
-lak::vector<lak::lisk::string> lak::lisk::tokenise(
-  const lak::lisk::string &str, size_t *chars_used)
+lak::lisk::string lak::lisk::next_token(lak::u8string_view str,
+                                        lak::u8string_view *chars_used)
 {
-	lak::vector<lak::lisk::string> result;
-	lak::lisk::string buffer;
-	size_t chars_read = 0;
-
-	auto begin_next = [&]
+	size_t skipped  = 0U;
+	bool in_comment = false;
+	for (const auto &c : str)
 	{
-		if (!buffer.empty()) result.emplace_back(lak::move(buffer));
-		buffer.clear();
-		if (chars_used) *chars_used = chars_read;
-	};
-
-	bool in_string          = false;
-	bool is_string_escaping = false;
-	bool in_comment         = false;
-	char string_char        = 0;
-	for (const auto c : str)
-	{
-		++chars_read;
-		if (in_comment)
+		if (lak::lisk::is_whitespace(c))
+			;
+		else if (in_comment)
 		{
 			if (c == u8'\n') in_comment = false;
-		}
-		else if (in_string)
-		{
-			if (is_string_escaping)
-			{
-				if (c == u8'n')
-					buffer += u8'\n';
-				else if (c == u8'r')
-					buffer += u8'\r';
-				else if (c == u8't')
-					buffer += u8'\t';
-				else if (c == u8'0')
-					buffer += u8'\0';
-				else
-					buffer += c;
-				is_string_escaping = false;
-			}
-			else if (c == u8'\\')
-			{
-				is_string_escaping = true;
-			}
-			else
-			{
-				buffer += c;
-				if (c == string_char)
-				{
-					in_string = false;
-					begin_next();
-				}
-			}
 		}
 		else if (c == u8';')
 		{
 			in_comment = true;
 		}
+		else
+			break;
+
+		++skipped;
+	}
+
+	lak::lisk::string buffer;
+	size_t chars_read = 0;
+
+	auto done = [&]
+	{
+		if (chars_used) *chars_used = str.substr(skipped, chars_read);
+	};
+
+	auto begin_next = [&]() -> bool
+	{
+		if (buffer.empty()) return false;
+		done();
+		return true;
+	};
+
+	auto append = [&](char8_t c)
+	{
+		buffer += c;
+		++chars_read;
+	};
+
+	bool in_string          = false;
+	bool is_string_escaping = false;
+	char string_char        = 0;
+	for (const auto &c : str.substr(skipped))
+	{
+		if (in_string)
+		{
+			if (is_string_escaping)
+			{
+				if (c == u8'n')
+					append(u8'\n');
+				else if (c == u8'r')
+					append(u8'\r');
+				else if (c == u8't')
+					append(u8'\t');
+				else if (c == u8'0')
+					append(u8'\0');
+				else
+					append(c);
+				is_string_escaping = false;
+			}
+			else if (c == u8'\\')
+			{
+				is_string_escaping = true;
+				++chars_read;
+			}
+			else
+			{
+				append(c);
+				if (c == string_char)
+				{
+					done();
+					return buffer;
+				}
+			}
+		}
+		else if (c == u8';')
+		{
+			done();
+			return buffer;
+		}
 		else if (c == u8'"' || c == u8'\'')
 		{
-			buffer += c;
+			append(c);
 			in_string          = true;
 			is_string_escaping = false;
 			string_char        = c;
 		}
 		else if (lak::lisk::is_whitespace(c))
 		{
-			if (!buffer.empty()) begin_next();
+			done();
+			return buffer;
 		}
 		else if (lak::lisk::is_bracket(c))
 		{
-			if (!buffer.empty()) begin_next();
-			buffer += c;
-			begin_next();
+			if (begin_next())
+				return buffer;
+			else
+			{
+				append(c);
+				done();
+				return buffer;
+			}
 		}
 		else
-		{
-			buffer += c;
-		}
+			append(c);
 	}
+
+	done();
+	return buffer;
+}
+
+lak::vector<lak::lisk::string> lak::lisk::tokenise(
+  const lak::lisk::string &str, size_t *chars_used)
+{
+	lak::vector<lak::lisk::string> result;
+
+	size_t chars_read = 0U;
+	for (lak::u8string_view _chars_read;; _chars_read = {})
+	{
+		auto token = lak::lisk::next_token(
+		  lak::u8string_view(str).substr(chars_read), &_chars_read);
+		auto read =
+		  lak::u8string_view(str.c_str() + chars_read, _chars_read.end());
+		if (!token.empty())
+			result.emplace_back(lak::move(token));
+		else if (read.empty())
+			break;
+		chars_read += read.size();
+	}
+
+	if (chars_used) *chars_used = chars_read;
 
 	return result;
 }
