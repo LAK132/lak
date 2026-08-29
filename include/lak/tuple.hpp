@@ -121,6 +121,34 @@ namespace lak
 	template<>
 	struct tuple<>
 	{
+		template<typename F>
+		auto apply(F &&func)
+		{
+			return func();
+		}
+		template<typename F>
+		auto apply(F &&func) const
+		{
+			return func();
+		}
+
+		template<typename F>
+		void foreach (F &&)
+		{
+		}
+		template<typename F>
+		void foreach (F &&) const
+		{
+		}
+
+		template<typename F>
+		static constexpr void foreach_type(F &&)
+		{
+		}
+		template<size_t I, typename F>
+		static constexpr void _foreach_type(F &&)
+		{
+		}
 	};
 
 	template<typename... T>
