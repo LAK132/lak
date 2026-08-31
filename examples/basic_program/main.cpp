@@ -304,7 +304,7 @@ lak::error_code<int> LAK_BASIC_PROGRAM(program_preinit)(lak::span<char *> args)
 		{
 			forced_graphics_mode = lak::graphics_mode::Cobalt;
 			RES_TRY_ASSIGN(forced_cobalt_mode =,
-			               lak::cobalt_renderer_settings::preferred_d3d11().map_err(
+			               lak::cobalt_renderer_settings::preferred_d3d12().map_err(
 			                 [](lak::monostate) -> int
 			                 {
 				                 ERROR("Failed to get Direct3D12 renderer");
