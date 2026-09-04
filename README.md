@@ -20,6 +20,7 @@ Please make sure you have read the [basic setup guide](/README.md#basic-setup) b
 	- [hello-cobalt](/README.md#hello-cobalt)
 	- [mdc-view](/README.md#mdc-view)
 	- [nbt-view](/README.md#nbt-view)
+	- [tiff-view](/README.md#tiff-view)
 - [Using `lak::`](/README.md#using-lak)
 - [Advanced setup](/README.md#advanced-setup)
 	- [Cross compiling](/README.md#cross-compiling)
@@ -324,6 +325,27 @@ or
 ```
 
 ![nbt-view.png](/examples/nbt-view.png?raw=true)
+
+### tiff-view
+
+Inspector for TIFF 6, TIFF/EP and DNG 1.7.1.0 image files.
+
+[Required feature settings](/README.md#basic-setup):
+- `-Dlak_enable_windowing=true`
+- `-Dlak_enable_imgui=true`
+
+[Setup the build directory](/README.md#basic-setup) then
+```
+compile.bat tiff-view
+build\examples\tiff-view\tiff-view
+```
+or
+```
+./compile.sh tiff-view
+./build/examples/tiff-view/tiff-view
+```
+
+![tiff-view.png](/examples/tiff-view.png?raw=true)
 
 ## Advanced setup
 
