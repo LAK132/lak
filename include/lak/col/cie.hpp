@@ -67,21 +67,46 @@ namespace lak
 				};
 			}
 
+			constexpr lak::col::cie::xy A_xy{0.44758f, 0.40745f};
+			constexpr auto A_xyY = to_xyY(A_xy, 1.f);
+			constexpr auto A_XYZ = to_XYZ(A_xyY);
+			constexpr auto A_RGB = to_RGB(A_XYZ);
+
+			constexpr float B_CCT            = D_series_CCT(4874.f);
+			constexpr lak::col::cie::xy B_xy = D_series_illuminant(B_CCT);
+			constexpr auto B_xyY             = to_xyY(B_xy, 1.f);
+			constexpr auto B_XYZ             = to_XYZ(B_xyY);
+			constexpr auto B_RGB             = to_RGB(B_XYZ);
+
+			constexpr float C_CCT            = D_series_CCT(6774.f);
+			constexpr lak::col::cie::xy C_xy = D_series_illuminant(C_CCT);
+			constexpr auto C_xyY             = to_xyY(C_xy, 1.f);
+			constexpr auto C_XYZ             = to_XYZ(C_xyY);
+			constexpr auto C_RGB             = to_RGB(C_XYZ);
+
 			constexpr float D50_CCT            = D_series_CCT(5000.f);
 			constexpr lak::col::cie::xy D50_xy = D_series_illuminant(D50_CCT);
+			constexpr auto D50_xyY             = to_xyY(D50_xy, 1.f);
+			constexpr auto D50_XYZ             = to_XYZ(D50_xyY);
+			constexpr auto D50_RGB             = to_RGB(D50_XYZ);
 
 			constexpr float D55_CCT            = D_series_CCT(5500.f);
 			constexpr lak::col::cie::xy D55_xy = D_series_illuminant(D55_CCT);
+			constexpr auto D55_xyY             = to_xyY(D55_xy, 1.f);
+			constexpr auto D55_XYZ             = to_XYZ(D55_xyY);
+			constexpr auto D55_RGB             = to_RGB(D55_XYZ);
 
 			constexpr float D65_CCT            = D_series_CCT(6500.f);
 			constexpr lak::col::cie::xy D65_xy = D_series_illuminant(D65_CCT);
+			constexpr auto D65_xyY             = to_xyY(D65_xy, 1.f);
+			constexpr auto D65_XYZ             = to_XYZ(D65_xyY);
+			constexpr auto D65_RGB             = to_RGB(D65_XYZ);
 
 			constexpr float D75_CCT            = D_series_CCT(7500.f);
 			constexpr lak::col::cie::xy D75_xy = D_series_illuminant(D75_CCT);
-
-			constexpr auto D65_xyY = to_xyY(D65_xy, 1.f);
-			constexpr auto D65_XYZ = to_XYZ(D65_xyY);
-			constexpr auto D65_RGB = to_RGB(D65_XYZ);
+			constexpr auto D75_xyY             = to_xyY(D75_xy, 1.f);
+			constexpr auto D75_XYZ             = to_XYZ(D75_xyY);
+			constexpr auto D75_RGB             = to_RGB(D75_XYZ);
 
 			constexpr lak::col::cie::xy E_xy{.x = 1.f / 3.f, .y = 1.f / 3.f};
 			constexpr auto E_xyY = to_xyY(E_xy, 1.f);
