@@ -27,7 +27,7 @@
 #	define LAK_CMATH_CONSTEXPR       constexpr
 #	define LAK_CMATH_CONSTEXPR_CONST constexpr
 #else
-#	define LAK_CMATH_CONSTEXPR
+#	define LAK_CMATH_CONSTEXPR       inline
 #	define LAK_CMATH_CONSTEXPR_CONST const
 #endif
 
