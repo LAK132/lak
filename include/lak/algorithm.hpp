@@ -434,6 +434,11 @@ namespace lak
 	template<std::random_access_iterator ITER, typename F>
 	ITER depth_first_search_heap(ITER begin, ITER end, F &&predicate);
 
+	/* --- depth_first_traverse --- */
+
+	template<typename T>
+	void depth_first_traverse(T &&init, auto &&func, size_t depth_hint = 0U);
+
 	/* --- heapsort --- */
 
 	template<std::random_access_iterator ITER, typename CMP = lak::less<>>

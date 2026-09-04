@@ -5,6 +5,7 @@
 #include "lak/functional.hpp"
 #include "lak/integer_range.hpp"
 #include "lak/math.hpp"
+#include "lak/optional.hpp"
 #include "lak/ptr_intrin.hpp"
 #include "lak/span.hpp"
 #include "lak/thread.hpp"
@@ -1706,6 +1707,26 @@ ITER lak::depth_first_search_heap(ITER begin, ITER end, F &&predicate)
 	}
 
 	return end;
+}
+
+/* --- depth_first_traverse --- */
+
+template<typename T>
+inline void lak::depth_first_traverse(T &&init, auto &&func, size_t depth_hint)
+{
+	lak::array<T, lak::dynamic_extent> stack;
+	static_assert(lak::is_same_v<decltype(func(stack.popped_back())),
+	                             lak::pair<lak::optional<T>, lak::optional<T>>>);
+
+	stack.reserve(depth_hint + 1U);
+	stack.push_back(lak::forward<T>(init));
+
+	while (!stack.empty())
+	{
+		auto [l, r] = func(stack.popped_back());
+		if (r) stack.push_back(*r);
+		if (l) stack.push_back(*l);
+	}
 }
 
 /* --- heapsort --- */
