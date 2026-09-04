@@ -92,7 +92,7 @@ namespace lak
 				_finished = false;
 				if (_result.is_err())
 					ASSERT_EQUAL(_result.unwrap_err(), lak::await_error::failed);
-				return _result;
+				return lak::exchange(_result, lak::err_t{lak::await_error::failed});
 			}
 			else
 			{
