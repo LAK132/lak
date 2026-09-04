@@ -83,6 +83,19 @@ namespace lak
 			                  FLOAT(0));
 	}
 
+	// unsigned INTEGER [0, max] -> FLOAT [0.0, 1.0]
+	// signed INTEGER [-max, max] -> FLOAT [-1.0, 1.0]
+	template<typename FLOAT, typename INTEGER>
+	constexpr FLOAT int_to_frac(INTEGER i, INTEGER i_max)
+	{
+		if constexpr (std::is_unsigned_v<INTEGER>)
+			return lak::clamp(FLOAT(i) / FLOAT(i_max), FLOAT(0), FLOAT(1));
+		else if (i >= INTEGER(0))
+			return lak::clamp(FLOAT(i) / FLOAT(i_max), FLOAT(0), FLOAT(1));
+		else
+			return lak::clamp(FLOAT(i) / -FLOAT(i_max), FLOAT(-1), FLOAT(0));
+	}
+
 	// round a up to a multiple of b
 	template<typename INTEGER>
 	constexpr INTEGER to_multiple(INTEGER a, INTEGER b)
