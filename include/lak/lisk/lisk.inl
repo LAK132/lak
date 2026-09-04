@@ -1420,10 +1420,12 @@ bool lak::lisk::impl::get_or_eval_arg_as(lak::lisk::shared_list in_list,
                                          lak::tuple<TYPES...> &out_arg,
                                          bool exact_arg_count)
 {
+	// pass in TS as an argument so this doesn't evaluate when TYPES is empty
 	auto _get_or_eval_arg_as =
-	  [&]<size_t... I>(lak::index_sequence<I...>) -> bool
+	  [&]<typename... TS, size_t... I>(lak::type_pack<TS...>,
+	                                   lak::index_sequence<I...>) -> bool
 	{
-		lak::tuple<lak::remove_cv_t<TYPES>...> result;
+		lak::tuple<lak::remove_cv_t<TS>...> result;
 
 		lak::lisk::list_reader reader(in_list, e, allow_tail);
 
@@ -1451,7 +1453,7 @@ bool lak::lisk::impl::get_or_eval_arg_as(lak::lisk::shared_list in_list,
 			if (exact_arg_count && reader.list)
 			{
 				exc.message =
-				  lak::fmt<u8"Too many arguments, expected {}">(sizeof...(TYPES));
+				  lak::fmt<u8"Too many arguments, expected {}">(sizeof...(TS));
 				return false;
 			}
 			out_arg = lak::move(result);
@@ -1464,5 +1466,6 @@ bool lak::lisk::impl::get_or_eval_arg_as(lak::lisk::shared_list in_list,
 	if constexpr (sizeof...(TYPES) == 0)
 		return true;
 	else
-		return _get_or_eval_arg_as(lak::index_sequence_for<TYPES...>{});
+		return _get_or_eval_arg_as(lak::type_pack<TYPES...>{},
+		                           lak::index_sequence_for<TYPES...>{});
 }
