@@ -52,9 +52,9 @@ namespace lak
 		value_type *try_get() const
 		{
 			if constexpr (lak::is_lvalue_reference_v<T>)
-				return has_value() ? &_data->result.value() : nullptr;
-			else
 				return has_value() ? _data->result.value() : nullptr;
+			else
+				return has_value() ? &_data->result.value() : nullptr;
 		}
 		value_type &wait() const
 		{
