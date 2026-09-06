@@ -520,6 +520,10 @@ lak::lisk::expression lak::lisk::eval(const lak::lisk::expression &exp,
 		else
 			return a;
 	}
+	else if_let_ok (lak::lisk::callable c, exp.get_callable())
+	{
+		return c;
+	}
 	else if_let_ok (lak::lisk::shared_list l, exp.get_list())
 	{
 		// If we're about do do a function call, this should evalutate the symbol
