@@ -838,18 +838,36 @@ template<typename T>
 lak::lisk::basic_shared_list<T> lak::lisk::basic_shared_list<T>::append(
   basic_shared_list &list, const T &v)
 {
-	lak::lisk::basic_shared_list result = list._node ? list.next() : list;
-	result.value()                      = v;
-	return result;
+	if (list._node)
+	{
+		auto new_next = lak::lisk::shared_list::make();
+		list.set_next(new_next);
+		new_next.value() = v;
+		return new_next;
+	}
+	else
+	{
+		list.value() = v;
+		return list;
+	}
 }
 
 template<typename T>
 lak::lisk::basic_shared_list<T> lak::lisk::basic_shared_list<T>::append(
   basic_shared_list &list, T &&v)
 {
-	lak::lisk::basic_shared_list result = list._node ? list.next() : list;
-	result.value()                      = lak::move(v);
-	return result;
+	if (list._node)
+	{
+		auto new_next = lak::lisk::shared_list::make();
+		list.set_next(new_next);
+		new_next.value() = lak::move(v);
+		return new_next;
+	}
+	else
+	{
+		list.value() = lak::move(v);
+		return list;
+	}
 }
 
 template<typename T>
