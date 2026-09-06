@@ -118,125 +118,235 @@ lak::error_code<lak::err::out_of_data> lak::mdc::mdc::_read(
 	return lak::ok_t{};
 }
 
-lak::mdc::mdc::operator lak::image3_t() const
+uint8_t lak::mdc::mdc::sample_channel(const lak::span<const uint8_t> data,
+                                      const lak::vec2s_t source_size,
+                                      lak::vec2s_t index) const
 {
-	const lak::vec2s_t sensor_size{768U, 494U};
-	const lak::vec2s_t aspect_ratio{25U, 29U};
-	const lak::vec2s_t inset{4U, 2U};
-	const lak::vec2s_t offset{8U, 0U};
-	lak::image3_t result;
-	// 768 x 494
-	// - 2*inset      = 760 x 490
-	// * aspect_ratio = 19000 x 14210
-	// / 10           = 1900 x 1421
-	result.resize(((sensor_size - (inset * size_t(2U))) * aspect_ratio) /
-	              size_t(10U));
+	BOUNDS_ASSERT_EQUAL(data.size(), (source_size.x * source_size.y));
 
-	auto sample_channel = [](const lak::span<const uint8_t> data,
-	                         const lak::vec2s_t source_size,
-	                         lak::vec2s_t index) -> uint8_t
-	{
-		const auto t_x = uint32_t(index.x % 8U);
-		const auto t_y = uint32_t(index.y % 8U);
-		index          = index / size_t(8U);
+	const auto t_x = uint32_t(index.x % 8U);
+	const auto t_y = uint32_t(index.y % 8U);
+	index          = index / size_t(8U);
 
-		const size_t x1 = std::min(index.x, source_size.x - 1U);
-		const size_t x2 = std::min(index.x + 1U, source_size.x - 1U);
-		const size_t y1 = std::min(index.y, source_size.y - 1U);
-		const size_t y2 = std::min(index.y + 1U, source_size.y - 1U);
+	const size_t x1 = std::min(index.x, source_size.x - 1U);
+	const size_t x2 = std::min(index.x + 1U, source_size.x - 1U);
+	const size_t y1 = std::min(index.y, source_size.y - 1U);
+	const size_t y2 = std::min(index.y + 1U, source_size.y - 1U);
 
-		const auto d11 = data[x1 + (y1 * source_size.x)];
-		const auto d21 = data[x2 + (y1 * source_size.x)];
-		const uint32_t dt1 =
-		  ((uint32_t(d11) * (8U - t_x)) + (uint32_t(d21) * t_x)) / 8U;
+	const auto d11 = data[x1 + (y1 * source_size.x)];
+	const auto d21 = data[x2 + (y1 * source_size.x)];
+	const uint32_t dt1 =
+	  ((uint32_t(d11) * (8U - t_x)) + (uint32_t(d21) * t_x)) / 8U;
 
-		const auto d12 = data[x1 + (y2 * source_size.x)];
-		const auto d22 = data[x2 + (y2 * source_size.x)];
-		const uint32_t dt2 =
-		  ((uint32_t(d12) * (8U - t_x)) + (uint32_t(d22) * t_x)) / 8U;
+	const auto d12 = data[x1 + (y2 * source_size.x)];
+	const auto d22 = data[x2 + (y2 * source_size.x)];
+	const uint32_t dt2 =
+	  ((uint32_t(d12) * (8U - t_x)) + (uint32_t(d22) * t_x)) / 8U;
 
-		return uint8_t(((uint32_t(dt1) * (8U - t_y)) + (uint32_t(dt2) * t_y)) /
-		               8U);
-	};
+	return uint8_t(((uint32_t(dt1) * (8U - t_y)) + (uint32_t(dt2) * t_y)) / 8U);
+}
 
-	auto sample = [&, this](const lak::vec2s_t r_pos,
-	                        const lak::vec2s_t g1_pos,
-	                        const lak::vec2s_t g2_pos,
-	                        const lak::vec2s_t b_pos) -> lak::color3_t
-	{
-		const auto r_sample  = sample_channel(red, {0x180U, 0x1EEU}, r_pos);
-		const auto g1_sample = sample_channel(green1, {0x300U, 0x1EEU}, g1_pos);
-		const auto g2_sample = sample_channel(green2, {0x300U, 0x1EEU}, g2_pos);
-		const auto b_sample  = sample_channel(blue, {0x180U, 0x1EEU}, b_pos);
-		// :TODO: better interpolate g1 and g2.
-		return {r_sample,
-		        uint8_t((uint16_t(g1_sample) + uint16_t(g2_sample)) / 2U),
-		        b_sample};
-	};
+uint8_t lak::mdc::mdc::sample_r(const lak::vec2s_t index) const
+{
+	return sample_channel(red, red_blue_data_size, index);
+}
 
-	auto process_sample = [&](const lak::vec2s_t xy) -> lak::color3_t
-	{
-		const size_t _y   = size_t(((uint64_t(xy.y) * 10U * 8U) / aspect_ratio.y) +
-                             inset.y + offset.y);
-		const size_t r_y  = red_offset.y < 0
-		                      ? _y - std::min(_y, size_t(-red_offset.y))
-		                      : _y + size_t(red_offset.y);
-		const size_t g1_y = green1_offset.y < 0
-		                      ? _y - std::min(_y, size_t(-green1_offset.y))
-		                      : _y + size_t(green1_offset.y);
-		const size_t g2_y = green2_offset.y < 0
-		                      ? _y - std::min(_y, size_t(-green2_offset.y))
-		                      : _y + size_t(green2_offset.y);
-		const size_t b_y  = blue_offset.y < 0
-		                      ? _y - std::min(_y, size_t(-blue_offset.y))
-		                      : _y + size_t(blue_offset.y);
+uint8_t lak::mdc::mdc::sample_g1(const lak::vec2s_t index) const
+{
+	return sample_channel(green1, green_data_size, index);
+}
 
-		const size_t _x = size_t(((uint64_t(xy.x) * 10U * 8U) / aspect_ratio.x) +
-		                         inset.x + offset.x);
-		const size_t r_x =
-		  (red_offset.x < 0 ? _y - std::min(_x, size_t(-red_offset.x))
-		                    : _x + size_t(red_offset.x)) /
-		  2U;
-		const size_t g1_x = green1_offset.x < 0
-		                      ? _y - std::min(_x, size_t(-green1_offset.x))
-		                      : _x + size_t(green1_offset.x);
-		const size_t g2_x = green2_offset.x < 0
-		                      ? _y - std::min(_x, size_t(-green2_offset.x))
-		                      : _x + size_t(green2_offset.x);
-		const size_t b_x =
-		  (blue_offset.x < 0 ? _y - std::min(_x, size_t(-blue_offset.x))
-		                     : _x + size_t(blue_offset.x)) /
-		  2U;
+uint8_t lak::mdc::mdc::sample_g2(const lak::vec2s_t index) const
+{
+	return sample_channel(green2, green_data_size, index);
+}
 
-		return sample({r_x, r_y}, {g1_x, g1_y}, {g2_x, g2_y}, {b_x, b_y});
-	};
+uint8_t lak::mdc::mdc::sample_b(const lak::vec2s_t index) const
+{
+	return sample_channel(blue, red_blue_data_size, index);
+}
 
-#if 0
+lak::vec3u8_t lak::mdc::mdc::sample(const lak::vec2s_t r_pos,
+                                    const lak::vec2s_t g1_pos,
+                                    const lak::vec2s_t g2_pos,
+                                    const lak::vec2s_t b_pos) const
+{
+	// :TODO: better interpolate g1 and g2.
+	return {
+	  sample_r(r_pos),
+	  uint8_t((uint16_t(sample_g1(g1_pos)) + uint16_t(sample_g2(g2_pos))) / 2U),
+	  sample_b(b_pos)};
+}
+
+lak::vec3u8_t lak::mdc::mdc::process_sample(const lak::vec2s_t xy) const
+{
+	const size_t _y   = size_t(((uint64_t(xy.y) * 10U * 8U) / aspect_ratio.y) +
+                           image_inset.y + image_offset.y);
+	const size_t r_y  = red_offset.y < 0
+	                      ? _y - std::min(_y, size_t(-red_offset.y))
+	                      : _y + size_t(red_offset.y);
+	const size_t g1_y = green1_offset.y < 0
+	                      ? _y - std::min(_y, size_t(-green1_offset.y))
+	                      : _y + size_t(green1_offset.y);
+	const size_t g2_y = green2_offset.y < 0
+	                      ? _y - std::min(_y, size_t(-green2_offset.y))
+	                      : _y + size_t(green2_offset.y);
+	const size_t b_y  = blue_offset.y < 0
+	                      ? _y - std::min(_y, size_t(-blue_offset.y))
+	                      : _y + size_t(blue_offset.y);
+
+	const size_t _x = size_t(((uint64_t(xy.x) * 10U * 8U) / aspect_ratio.x) +
+	                         image_inset.x + image_offset.x);
+	const size_t r_x =
+	  (red_offset.x < 0 ? _y - std::min(_x, size_t(-red_offset.x))
+	                    : _x + size_t(red_offset.x)) /
+	  2U;
+	const size_t g1_x = green1_offset.x < 0
+	                      ? _y - std::min(_x, size_t(-green1_offset.x))
+	                      : _x + size_t(green1_offset.x);
+	const size_t g2_x = green2_offset.x < 0
+	                      ? _y - std::min(_x, size_t(-green2_offset.x))
+	                      : _x + size_t(green2_offset.x);
+	const size_t b_x =
+	  (blue_offset.x < 0 ? _y - std::min(_x, size_t(-blue_offset.x))
+	                     : _x + size_t(blue_offset.x)) /
+	  2U;
+
+	return sample({r_x, r_y}, {g1_x, g1_y}, {g2_x, g2_y}, {b_x, b_y});
+}
+
+lak::vec3u8_t lak::mdc::mdc::get_pixel(lak::vec2s_t coord) const
+{
+	ASSERT_LESS(coord.x, upscaled_image_size.x);
+	ASSERT_LESS(coord.y, upscaled_image_size.y);
+	ASSERT_EQUAL(red.size(), red_blue_data_size.x * red_blue_data_size.y);
+	ASSERT_EQUAL(green1.size(), green_data_size.x * green_data_size.y);
+	ASSERT_EQUAL(green2.size(), green_data_size.x * green_data_size.y);
+	ASSERT_EQUAL(blue.size(), red_blue_data_size.x * red_blue_data_size.y);
+
+	return process_sample(coord);
+}
+
+lak::image<lak::color3_t> lak::mdc::mdc::process_color3() const
+{
+	ASSERT_EQUAL(red.size(), red_blue_data_size.x * red_blue_data_size.y);
+	ASSERT_EQUAL(green1.size(), green_data_size.x * green_data_size.y);
+	ASSERT_EQUAL(green2.size(), green_data_size.x * green_data_size.y);
+	ASSERT_EQUAL(blue.size(), red_blue_data_size.x * red_blue_data_size.y);
+
+	auto vec3_to_color3 = [](lak::vec3u8_t c) -> lak::color3_t
+	{ return {c.x, c.y, c.z}; };
+
+	lak::image<lak::color3_t> result;
+	result.resize(upscaled_image_size);
+	for (size_t y = 0U; y < result.size().y; ++y)
+		for (size_t x = 0U; x < result.size().x; ++x)
+			result[{x, y}] = vec3_to_color3(process_sample({x, y}));
+	return result;
+}
+
+lak::image<lak::color3_t> lak::mdc::mdc::process_color3(
+  lak::tasks &tasks) const
+{
+	ASSERT_EQUAL(red.size(), red_blue_data_size.x * red_blue_data_size.y);
+	ASSERT_EQUAL(green1.size(), green_data_size.x * green_data_size.y);
+	ASSERT_EQUAL(green2.size(), green_data_size.x * green_data_size.y);
+	ASSERT_EQUAL(blue.size(), red_blue_data_size.x * red_blue_data_size.y);
+
+	auto vec3_to_color3 = [](lak::vec3u8_t c) -> lak::color3_t
+	{ return {c.x, c.y, c.z}; };
+
+	lak::image<lak::color3_t> result;
+	result.resize(upscaled_image_size);
+	for (size_t y = 0U; y < result.size().y; ++y)
+		tasks.push(
+		  [&, y = y]()
+		  {
+			  for (size_t x = 0U; x < result.size().x; ++x)
+				  result[{x, y}] = vec3_to_color3(process_sample({x, y}));
+		  });
+	return result;
+}
+
+lak::image<lak::vec3u8_t> lak::mdc::mdc::process_vec3u8() const
+{
+	ASSERT_EQUAL(red.size(), red_blue_data_size.x * red_blue_data_size.y);
+	ASSERT_EQUAL(green1.size(), green_data_size.x * green_data_size.y);
+	ASSERT_EQUAL(green2.size(), green_data_size.x * green_data_size.y);
+	ASSERT_EQUAL(blue.size(), red_blue_data_size.x * red_blue_data_size.y);
+
+	lak::image<lak::vec3u8_t> result;
+	result.resize(upscaled_image_size);
 	for (size_t y = 0U; y < result.size().y; ++y)
 		for (size_t x = 0U; x < result.size().x; ++x)
 			result[{x, y}] = process_sample({x, y});
-#else
-	lak::threaded<lak::pair<size_t, lak::span<lak::color3_t>>>(
-	  [&](size_t id, auto inputs)
-	  {
-		  lak::while_some([&]() { return inputs[id].try_release(); },
-		                  [&](lak::pair<size_t, lak::span<lak::color3_t>> data)
-		                  {
-			                  auto [y, d] = data;
-			                  for (lak::vec2s_t xy{0U, y}; xy.x < d.size(); ++xy.x)
-				                  d[xy.x] = process_sample(xy);
-		                  });
-	  },
-	  [&](auto inputs)
-	  {
-		  auto data           = lak::span(result.data(), result.contig_size());
-		  const size_t stride = result.size().x;
-		  for (size_t i = 0U, y = 0U; y < result.size().y;
-		       ++y, i           = (i + 1U) % inputs.size())
-        inputs[i].emplace(y, data.subspan(y * stride, stride));
-		  for (auto &in : inputs) in.await_none();
-	  });
-#endif
+	return result;
+}
 
+lak::image<lak::vec3u8_t> lak::mdc::mdc::process_vec3u8(
+  lak::tasks &tasks) const
+{
+	ASSERT_EQUAL(red.size(), red_blue_data_size.x * red_blue_data_size.y);
+	ASSERT_EQUAL(green1.size(), green_data_size.x * green_data_size.y);
+	ASSERT_EQUAL(green2.size(), green_data_size.x * green_data_size.y);
+	ASSERT_EQUAL(blue.size(), red_blue_data_size.x * red_blue_data_size.y);
+
+	lak::image<lak::vec3u8_t> result;
+	result.resize(upscaled_image_size);
+	for (size_t y = 0U; y < result.size().y; ++y)
+		tasks.push(
+		  [&, y = y]()
+		  {
+			  for (size_t x = 0U; x < result.size().x; ++x)
+				  result[{x, y}] = process_sample({x, y});
+		  });
+	return result;
+}
+
+lak::image<lak::vec3f_t> lak::mdc::mdc::process_vec3f() const
+{
+	ASSERT_EQUAL(red.size(), red_blue_data_size.x * red_blue_data_size.y);
+	ASSERT_EQUAL(green1.size(), green_data_size.x * green_data_size.y);
+	ASSERT_EQUAL(green2.size(), green_data_size.x * green_data_size.y);
+	ASSERT_EQUAL(blue.size(), red_blue_data_size.x * red_blue_data_size.y);
+
+	auto vec3u8_to_vec3f = [](lak::vec3u8_t c) -> lak::vec3f_t
+	{
+		return {lak::int_to_frac<float>(c.x),
+		        lak::int_to_frac<float>(c.y),
+		        lak::int_to_frac<float>(c.z)};
+	};
+
+	lak::image<lak::vec3f_t> result;
+	result.resize(upscaled_image_size);
+	for (size_t y = 0U; y < result.size().y; ++y)
+		for (size_t x = 0U; x < result.size().x; ++x)
+			result[{x, y}] = vec3u8_to_vec3f(process_sample({x, y}));
+	return result;
+}
+
+lak::image<lak::vec3f_t> lak::mdc::mdc::process_vec3f(lak::tasks &tasks) const
+{
+	ASSERT_EQUAL(red.size(), red_blue_data_size.x * red_blue_data_size.y);
+	ASSERT_EQUAL(green1.size(), green_data_size.x * green_data_size.y);
+	ASSERT_EQUAL(green2.size(), green_data_size.x * green_data_size.y);
+	ASSERT_EQUAL(blue.size(), red_blue_data_size.x * red_blue_data_size.y);
+
+	auto vec3u8_to_vec3f = [](lak::vec3u8_t c) -> lak::vec3f_t
+	{
+		return {lak::int_to_frac<float>(c.x),
+		        lak::int_to_frac<float>(c.y),
+		        lak::int_to_frac<float>(c.z)};
+	};
+
+	lak::image<lak::vec3f_t> result;
+	result.resize(upscaled_image_size);
+	for (size_t y = 0U; y < result.size().y; ++y)
+		tasks.push(
+		  [&, y = y]()
+		  {
+			  for (size_t x = 0U; x < result.size().x; ++x)
+				  result[{x, y}] = vec3u8_to_vec3f(process_sample({x, y}));
+		  });
 	return result;
 }

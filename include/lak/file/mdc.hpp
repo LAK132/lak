@@ -7,6 +7,8 @@
 #include "lak/result.hpp"
 #include "lak/span.hpp"
 #include "lak/stdint.hpp"
+#include "lak/tasks.hpp"
+#include "lak/vec.hpp"
 
 // - sensors are 768 * 494 pixels, active area is 760 * 490.
 //
@@ -119,14 +121,41 @@ namespace lak
 {
 	namespace mdc
 	{
+		using ::operator-;
+
 		struct mdc
 		{
+		private:
+			uint8_t sample_channel(const lak::span<const uint8_t> data,
+			                       const lak::vec2s_t source_size,
+			                       lak::vec2s_t index) const;
+			uint8_t sample_r(lak::vec2s_t index) const;
+			uint8_t sample_g1(lak::vec2s_t index) const;
+			uint8_t sample_g2(lak::vec2s_t index) const;
+			uint8_t sample_b(lak::vec2s_t index) const;
+			lak::vec3u8_t sample(const lak::vec2s_t r_pos,
+			                     const lak::vec2s_t g1_pos,
+			                     const lak::vec2s_t g2_pos,
+			                     const lak::vec2s_t b_pos) const;
+			lak::vec3u8_t process_sample(const lak::vec2s_t xy) const;
+
 		public:
+			static constexpr lak::vec2s_t sensor_size{768U, 494U};
+			static constexpr lak::vec2s_t aspect_ratio{25U, 29U};
+			static constexpr lak::vec2s_t red_blue_data_size{0x180U, 0x1EEU};
+			static constexpr lak::vec2s_t green_data_size{0x300U, 0x1EEU};
+
 			// offset values discovered experimentally. 8u=1pixel
 			lak::vec2i16_t red_offset    = {8, 0};  // 1.0, 0.0
 			lak::vec2i16_t green1_offset = {8, 0};  // 1.0, 0.0
 			lak::vec2i16_t green2_offset = {12, 4}; // 1.5, 0.5
 			lak::vec2i16_t blue_offset   = {0, 0};  // 0.0, 0.0
+
+			static constexpr lak::vec2s_t image_inset{4U, 2U};
+			static constexpr lak::vec2s_t image_offset{8U, 0U};
+			static constexpr lak::vec2s_t upscaled_image_size{
+			  ((sensor_size - (image_inset * size_t(2U))) * aspect_ratio) /
+			  size_t(10U)};
 
 			lak::array<uint8_t> red;
 			lak::array<uint8_t> green1;
@@ -157,7 +186,49 @@ namespace lak
 
 			shot_settings settings;
 
-			operator lak::image3_t() const;
+			lak::vec3u8_t get_pixel(lak::vec2s_t coord) const;
+
+			template<typename T>
+			lak::image<T> process(T (*func)(lak::vec3u8_t)) const
+			{
+				ASSERT_EQUAL(red.size(), red_blue_data_size.x * red_blue_data_size.y);
+				ASSERT_EQUAL(green1.size(), green_data_size.x * green_data_size.y);
+				ASSERT_EQUAL(green2.size(), green_data_size.x * green_data_size.y);
+				ASSERT_EQUAL(blue.size(), red_blue_data_size.x * red_blue_data_size.y);
+
+				lak::image<T> result;
+				result.resize(upscaled_image_size);
+				for (size_t y = 0U; y < result.size().y; ++y)
+					for (size_t x = 0U; x < result.size().x; ++x)
+						result[{x, y}] = func(process_sample({x, y}));
+				return result;
+			}
+			template<typename T>
+			lak::image<T> process(T (*func)(lak::vec3u8_t), lak::tasks &tasks) const
+			{
+				ASSERT_EQUAL(red.size(), red_blue_data_size.x * red_blue_data_size.y);
+				ASSERT_EQUAL(green1.size(), green_data_size.x * green_data_size.y);
+				ASSERT_EQUAL(green2.size(), green_data_size.x * green_data_size.y);
+				ASSERT_EQUAL(blue.size(), red_blue_data_size.x * red_blue_data_size.y);
+
+				lak::image<T> result;
+				result.resize(upscaled_image_size);
+				for (size_t y = 0U; y < result.size().y; ++y)
+					tasks.push(
+					  [&, y = y]()
+					  {
+						  for (size_t x = 0U; x < result.size().x; ++x)
+							  result[{x, y}] = func(process_sample({x, y}));
+					  });
+				return result;
+			}
+
+			lak::image<lak::color3_t> process_color3() const;
+			lak::image<lak::color3_t> process_color3(lak::tasks &tasks) const;
+			lak::image<lak::vec3u8_t> process_vec3u8() const;
+			lak::image<lak::vec3u8_t> process_vec3u8(lak::tasks &tasks) const;
+			lak::image<lak::vec3f_t> process_vec3f() const;
+			lak::image<lak::vec3f_t> process_vec3f(lak::tasks &tasks) const;
 
 			template<lak::endian E>
 			inline lak::error_code<lak::err::out_of_data> read(

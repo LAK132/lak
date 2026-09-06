@@ -306,7 +306,7 @@ struct my_window : virtual public LAK_BASIC_PROGRAM(window_api)
 			raw.green1_offset = {int16_t(g1_offset[0]), int16_t(g1_offset[1])};
 			raw.green2_offset = {int16_t(g2_offset[0]), int16_t(g2_offset[1])};
 			raw.blue_offset   = {int16_t(b_offset[0]), int16_t(b_offset[1])};
-			processedimg      = raw;
+			processedimg      = raw.process_color3();
 			lak::image4_t img2;
 			img2.resize(processedimg.size());
 			for (const auto i : lak::size_range_count(processedimg.contig_size()))

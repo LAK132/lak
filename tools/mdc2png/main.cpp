@@ -23,7 +23,7 @@ int main(int argc, char **argv)
 
 	auto file      = lak::read_file(source).UNWRAP();
 	auto raw       = lak::from_bytes<lak::mdc::mdc>(file).UNWRAP().first;
-	auto processed = (lak::image3_t)raw;
+	auto processed = raw.process_color3();
 
 	std::cerr << "Converting to PNG\n";
 
