@@ -973,6 +973,13 @@ namespace lak
 
 			lak::lisk::environment default_env();
 
+			/* --- --- */
+
+			lak::pair<lak::lisk::expression, size_t> quote(
+			  lak::lisk::shared_list l,
+			  lak::lisk::environment &env,
+			  bool allow_tail);
+
 			/* --- check --- */
 
 			lak::lisk::expression null_check(lak::lisk::environment &env,

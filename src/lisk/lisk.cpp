@@ -668,6 +668,7 @@ lak::lisk::string lak::lisk::next_token(lak::u8string_view str,
 
 	bool in_string          = false;
 	bool is_string_escaping = false;
+	bool in_quote           = false;
 	char string_char        = 0;
 	for (const auto &c : str.substr(skipped))
 	{
@@ -707,6 +708,12 @@ lak::lisk::string lak::lisk::next_token(lak::u8string_view str,
 			done();
 			return buffer;
 		}
+		else if (c == u8'`')
+		{
+			if (begin_next()) return buffer;
+			append(c);
+			in_quote = true;
+		}
 		else if (c == u8'"' || c == u8'\'')
 		{
 			append(c);
@@ -721,7 +728,7 @@ lak::lisk::string lak::lisk::next_token(lak::u8string_view str,
 		}
 		else if (lak::lisk::is_bracket(c))
 		{
-			if (begin_next())
+			if (!in_quote && begin_next())
 				return buffer;
 			else
 			{
@@ -862,6 +869,22 @@ lak::lisk::expression lak::lisk::parse(
 		{
 			if (!pop_scope())
 				return lak::lisk::exception{.message = u8"unexpected end of scope"};
+		}
+		else if (c == u8'`')
+		{
+			if (token == u8"`("_view)
+			{
+				push_scope();
+				push_element().value() = lak::lisk::atom{lak::lisk::symbol("quote")};
+			}
+			else
+			{
+				push_scope();
+				push_element().value() = lak::lisk::atom{lak::lisk::symbol("quote")};
+				push_element().value() = lak::lisk::atom{
+				  lak::lisk::symbol(lak::string_view(token).substr(1U))};
+				pop_scope();
+			}
 		}
 		else
 		{
@@ -1045,6 +1068,14 @@ lak::lisk::expression lak::lisk::builtin::list_env(lak::lisk::environment &env,
 	previous.clear_next();
 
 	return root;
+}
+
+lak::pair<lak::lisk::expression, size_t> lak::lisk::builtin::quote(
+  lak::lisk::shared_list l, lak::lisk::environment &env, bool allow_tail)
+{
+	size_t i = 0U;
+	for (const auto &e : l) ++i;
+	return {lak::lisk::expression(l), i};
 }
 
 lak::lisk::expression lak::lisk::builtin::null_check(lak::lisk::environment &,
@@ -1583,6 +1614,8 @@ lak::lisk::environment lak::lisk::builtin::default_env()
 	                std::filesystem::current_path().generic_u8string())));
 
 	e.define_atom("pi", lak::lisk::atom(lak::lisk::number(3.14159L)));
+
+	e.define_function("quote", quote);
 
 	e.define_function("env", LISK_FUNCTION_WRAPPER(list_env));
 	e.define_function("null?", LISK_FUNCTION_WRAPPER(null_check));

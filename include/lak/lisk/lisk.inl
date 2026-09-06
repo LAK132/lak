@@ -100,6 +100,24 @@ struct lak::lisk::from_expr_traits<lak::lisk::eval_shared_list>
 static_assert(
   lak::lisk::concepts::from_expr_convertible<lak::lisk::eval_shared_list>);
 
+template<>
+struct lak::lisk::from_expr_traits<lak::lisk::uneval_shared_list>
+{
+	using value_type = lak::lisk::uneval_shared_list;
+	using error_type = lak::monostate;
+	static lak::result<lak::lisk::uneval_shared_list> from_expr(
+	  const lak::lisk::expression &expr)
+	{
+		if_let_ok (lak::lisk::shared_list list, expr.get_list())
+			return lak::ok_t{lak::lisk::uneval_shared_list{lak::move(list)}};
+		else
+			return lak::err_t{};
+	}
+};
+
+static_assert(
+  lak::lisk::concepts::from_expr_convertible<lak::lisk::uneval_shared_list>);
+
 template<typename T>
 struct lak::lisk::from_expr_traits<T *>
 {
