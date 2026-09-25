@@ -175,7 +175,33 @@ lak::x3f::image_data::_read(lak::binary_reader &strm)
 				  return lak::ok_t{};
 			  switch (d.format)
 			  {
-				  case lak::x3f::image_format(0x05): break;
+				  case lak::x3f::image_format::x530:
+				  {
+					  constexpr uint16_t max_value = 1024U;
+					  constexpr uint16_t mask      = max_value - 1U;
+					  RES_TRYF_ASSIGN(auto diff =,
+					                  strm.template read_le<uint16_t>(max_value));
+
+					  image.resize({d.columns, d.rows});
+					  image.fill(lak::vec4u16_t{0x0000U, 0x0000U, 0x0000U, 0xFFFFU});
+
+					  for (uint32_t y = 0; y < d.rows; ++y)
+					  {
+						  int32_t pred[] = {0, 0, 0};
+						  for (uint32_t x = 0; x < d.columns; ++x)
+						  {
+							  RES_TRYF_ASSIGN(uint32_t p =, strm.read_u32le());
+							  for (size_t c = 0; c < 3; ++c)
+							  {
+								  pred[c] += int16_t(diff[(p >> ((2U - c) * 10U)) & mask]);
+								  pred[c] = lak::clamp<int32_t>(pred[c], 0, (1U << 12U) - 1U);
+								  image[{x, y}][c] = uint16_t(pred[c]) << (16U - 12U);
+							  }
+						  }
+					  }
+				  }
+				  break;
+
 				  case lak::x3f::image_format::SD9_SD10_SD14:
 				  {
 					  // if (true) return lak::ok_t{};

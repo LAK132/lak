@@ -147,6 +147,7 @@ namespace lak
 		};
 
 #define LAK_FOREACH_X3F_IMAGE_FORMAT(MACRO, ...)                              \
+	MACRO(0x05, x530, __VA_ARGS__)                                              \
 	MACRO(0x06, SD9_SD10_SD14, __VA_ARGS__)                                     \
 	MACRO(0x0B, Huffman_DCPM_888_RGB, __VA_ARGS__)                              \
 	MACRO(0x12, JPEG_888_RGB, __VA_ARGS__)                                      \
