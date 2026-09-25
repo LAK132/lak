@@ -150,7 +150,8 @@ lak::tiff::result<> lak::tiff::ifd_tag::write(
 		}                                                                         \
 		return lak::ok_t{};                                                       \
 	},
-	RES_TRY(visit(lak::overloaded{LAK_FOREACH_TIFF_TYPE(LAK_TIFF_TAG_WRITE)}));
+	RES_TRY(
+	  data.visit(lak::overloaded{LAK_FOREACH_TIFF_TYPE(LAK_TIFF_TAG_WRITE)}));
 #undef LAK_TIFF_TAG_WRITE
 	return lak::ok_t{};
 }
@@ -190,9 +191,8 @@ lak::tiff::result<> lak::tiff::image_file_directory::read(
 	size_t pos = strm.position();
 	if (strip_offsets && strip_byte_counts && rows_per_strip)
 	{
-		strip_byte_counts->visit(lak::overloaded{
-		  [&]<lak::concepts::one_of<uint16_t, uint32_t> T>(
-		    const lak::span<T> &sizes_data)
+		strip_byte_counts->data.visit(lak::overloaded{
+		  [&]<lak::concepts::one_of<uint16_t, uint32_t> T>(lak::span<T> sizes_data)
 		  {
 			  strips.reserve(sizes_data.size());
 			  for (auto s : sizes_data) strips.emplace_back().data.resize(s);
@@ -200,9 +200,8 @@ lak::tiff::result<> lak::tiff::image_file_directory::read(
 		  [](auto &&) { ASSERT_UNREACHABLE(); },
 		});
 
-		rows_per_strip->visit(lak::overloaded{
-		  [&]<lak::concepts::one_of<uint16_t, uint32_t> T>(
-		    const lak::span<T> &rows_data)
+		rows_per_strip->data.visit(lak::overloaded{
+		  [&]<lak::concepts::one_of<uint16_t, uint32_t> T>(lak::span<T> rows_data)
 		  {
 			  ASSERT_EQUAL(rows_data.size(), 1U);
 			  rows = rows_data[0];
@@ -210,9 +209,9 @@ lak::tiff::result<> lak::tiff::image_file_directory::read(
 		  [](auto &&) { ASSERT_UNREACHABLE(); },
 		});
 
-		RES_TRY(strip_offsets->visit(lak::overloaded{
+		RES_TRY(strip_offsets->data.visit(lak::overloaded{
 		  [&]<lak::concepts::one_of<uint16_t, uint32_t> T>(
-		    const lak::span<T> &off_data) -> lak::tiff::result<>
+		    lak::span<T> off_data) -> lak::tiff::result<>
 		  {
 			  if (off_data.size() > strips.size()) strips.resize(off_data.size());
 			  for (size_t o = 0U; o < off_data.size(); ++o)

@@ -12,6 +12,8 @@
 #include "lak/utility.hpp"
 #include "lak/variant.hpp"
 
+#include "lak/file/tiff_types.inl"
+
 #include "lak/file/tiff_tags.inl"
 
 namespace lak
@@ -34,44 +36,6 @@ namespace lak
 		  T,
 		  lak::variant<lak::err::out_of_data, lak::err::value_out_of_range>>;
 
-		struct urational
-		{
-			uint32_t numerator;
-			uint32_t denominator;
-		};
-
-		struct rational
-		{
-			int32_t numerator;
-			int32_t denominator;
-		};
-
-		enum struct _offset : uint32_t
-		{
-		};
-
-#define LAK_FOREACH_TIFF_TYPE(MACRO, ...)                                     \
-	MACRO(1, Byte, uint8_t, __VA_ARGS__)                                        \
-	MACRO(2, ASCII, char, __VA_ARGS__)                                          \
-	MACRO(3, Short, uint16_t, __VA_ARGS__)                                      \
-	MACRO(4, Long, uint32_t, __VA_ARGS__)                                       \
-	MACRO(5, Rational, lak::tiff::urational, __VA_ARGS__)                       \
-	MACRO(6, SByte, int8_t, __VA_ARGS__)                                        \
-	MACRO(7, Undefined, byte_t, __VA_ARGS__)                                    \
-	MACRO(8, SShort, int16_t, __VA_ARGS__)                                      \
-	MACRO(9, SLong, int32_t, __VA_ARGS__)                                       \
-	MACRO(10, SRational, lak::tiff::rational, __VA_ARGS__)                      \
-	MACRO(11, Float, f32_t, __VA_ARGS__)                                        \
-	MACRO(12, Double, f64_t, __VA_ARGS__)                                       \
-	MACRO(13, IFD, lak::tiff::_offset, __VA_ARGS__)
-
-		enum struct tag_type : uint16_t
-		{
-#define LAK_TIFF_TAG_TYPE(VAL, NAME, ...) NAME = VAL,
-			LAK_FOREACH_TIFF_TYPE(LAK_TIFF_TAG_TYPE)
-#undef LAK_TIFF_TAG_TYPE
-		};
-
 		using tag_types_pack =
 		  lak::remove_from_pack_t<lak::bottom,
 		                          lak::type_pack<
@@ -80,106 +44,36 @@ namespace lak
 #undef LAK_TIFF_TAG_TYPE
 		                              lak::bottom>>;
 
-		enum struct tag_name : uint16_t
+		template<lak::tiff::tag_name NAME>
+		using tag_name_type = lak::integral_constant<lak::tiff::tag_name, NAME>;
+
+		template<lak::tiff::tag_name TAG, typename T, size_t S>
+		struct valid_tag_type_size : lak::false_type
 		{
-#define LAK_TIFF_TAG_NAME(VAL, NAME, ...) NAME = VAL,
-			LAK_FOREACH_TIFF_TAG_VALUE(LAK_TIFF_TAG_NAME)
-#undef LAK_TIFF_TAG_NAME
 		};
-	}
 
-	template<typename CHAR>
-	struct format_traits<lak::tiff::urational, CHAR>
-	{
-		using format_args =
-		  typename lak::format_traits<uint32_t, CHAR>::format_args;
-
-		static consteval format_args parse_args(lak::string_view<CHAR> str)
-		{
-			return lak::format_traits<uint32_t, CHAR>::parse_args(str);
-		}
-
-		static constexpr lak::string<CHAR> to_string(
-		  const format_args &args, const lak::tiff::urational &val)
-		{
-			return lak::fmt<CHAR, "{}/{}">(
-			  lak::format_traits<uint32_t, CHAR>::to_string(args, val.numerator),
-			  lak::format_traits<uint32_t, CHAR>::to_string(args, val.denominator));
-		}
+#define LAK_TIFF_TAG_TYPE(NAME, TYPE, SIZE, ...)                              \
+	template<>                                                                  \
+	struct valid_tag_type_size<lak::tiff::tag_name::NAME, TYPE, SIZE>           \
+	: lak::true_type                                                            \
+	{                                                                           \
 	};
-
-	template<typename CHAR>
-	struct format_traits<lak::tiff::rational, CHAR>
-	{
-		using format_args =
-		  typename lak::format_traits<int32_t, CHAR>::format_args;
-
-		static consteval format_args parse_args(lak::string_view<CHAR> str)
-		{
-			return lak::format_traits<int32_t, CHAR>::parse_args(str);
-		}
-
-		static constexpr lak::string<CHAR> to_string(
-		  const format_args &args, const lak::tiff::rational &val)
-		{
-			return lak::fmt<CHAR, "{}/{}">(
-			  lak::format_traits<int32_t, CHAR>::to_string(args, val.numerator),
-			  lak::format_traits<int32_t, CHAR>::to_string(args, val.denominator));
-		}
-	};
-
-	template<typename CHAR>
-	struct format_traits<lak::tiff::_offset, CHAR>
-	{
-		using format_args =
-		  typename lak::format_traits<uint32_t, CHAR>::format_args;
-
-		static consteval format_args parse_args(lak::string_view<CHAR> str)
-		{
-			return lak::format_traits<uint32_t, CHAR>::parse_args(str);
-		}
-
-		static constexpr lak::string<CHAR> to_string(const format_args &args,
-		                                             const lak::tiff::_offset &val)
-		{
-			return lak::format_traits<uint32_t, CHAR>::to_string(
-			  args, static_cast<uint32_t>(val));
-		}
-	};
-
-	template<typename CHAR>
-	struct format_traits<lak::tiff::tag_type, CHAR>
-	{
-		static constexpr lak::string<CHAR> to_string(
-		  const lak::tiff::tag_type &tag)
-		{
-			switch (tag)
-			{
-#define LAK_TIFF_TAG_TYPE(VAL, NAME, ...)                                     \
-	case lak::tiff::tag_type::NAME: return lak::strconv<CHAR>(#NAME ""_view);
-				LAK_FOREACH_TIFF_TYPE(LAK_TIFF_TAG_TYPE)
+		LAK_FOREACH_TIFF_TAG_TYPES(LAK_TIFF_TAG_TYPE)
 #undef LAK_TIFF_TAG_TYPE
-			}
-			return {};
-		}
-	};
 
-	template<typename CHAR>
-	struct format_traits<lak::tiff::tag_name, CHAR>
-	{
-		static constexpr lak::string<CHAR> to_string(
-		  const lak::tiff::tag_name &tag)
+		template<lak::tiff::tag_name TAG, typename T, size_t S>
+		inline constexpr bool is_valid_tag_type_size_v =
+		  lak::tiff::valid_tag_type_size<TAG, T, S>::value;
+
+		template<lak::tiff::tag_name TAG, typename T>
+		struct valid_tag_type : lak::false_type
 		{
-			switch (tag)
-			{
-#define LAK_TIFF_TAG_NAME(VAL, NAME, ...)                                     \
-	case lak::tiff::tag_name::NAME: return lak::strconv<CHAR>(#NAME ""_view);
-				LAK_FOREACH_TIFF_TAG_VALUE(LAK_TIFF_TAG_NAME)
-#undef LAK_TIFF_TAG_NAME
-			}
-			return {};
-		}
-	};
+		};
+
+		template<lak::tiff::tag_name TAG, typename T>
+		inline constexpr bool is_valid_tag_type_v =
+		  lak::tiff::valid_tag_type<TAG, T>::value;
+	}
 }
 
 LAK_FIXED_STRUCT_BYTES_TRAITS(lak::tiff::urational,
@@ -241,7 +135,34 @@ namespace lak
 			    false)
 			void set_data(lak::span<const T> new_data);
 
-			auto visit(auto &&func) const { return data.visit(func); }
+			bool visit(auto &&func) const
+			{
+				switch (id)
+				{
+#define LAK_TIFF_TAG_VISIT(VAL, NAME, ...)                                    \
+	case lak::tiff::tag_name::NAME:                                             \
+		return data.visit(                                                        \
+		  [&]<typename T>(lak::span<T> data)                                      \
+		  {                                                                       \
+				if constexpr (!lak::tiff::                                            \
+				                is_valid_tag_type_v<lak::tiff::tag_name::NAME, T>)    \
+				{                                                                     \
+					BOUNDS_ASSERT_UNREACHABLE();                                        \
+					return false;                                                       \
+				}                                                                     \
+				else                                                                  \
+				{                                                                     \
+					func(lak::tiff::tag_name_type<lak::tiff::tag_name::NAME>{},         \
+					     lak::span<const T>(data));                                     \
+					return true;                                                        \
+				}                                                                     \
+		  });
+					LAK_FOREACH_TIFF_TAG_VALUE(LAK_TIFF_TAG_VISIT)
+#undef LAK_TIFF_TAG_VISIT
+					default: break;
+				}
+				return false;
+			}
 
 			template<lak::endian E>
 			lak::tiff::result<> read(lak::binary_reader &strm);
