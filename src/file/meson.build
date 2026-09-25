@@ -11,6 +11,7 @@ lakfile = static_library(
 			'LAK_OBJ_EBNF_HPP', 'lak', 'obj_parse']),
 		'pnm.cpp',
 		'tiff.cpp',
+		'x3f.cpp',
 	],
 	dependencies: [
 		lakcore_dep,
