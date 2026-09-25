@@ -382,11 +382,11 @@ lak::x3f::image_data::_read(lak::binary_reader &strm)
 									  hpred[x & 1] += uint16_t(diff);
 
 								  if (i == 2U)
-									  image[{x, y}][i] = hpred[x & 1] << (16U - 12U);
+									  image[{x, y}][i] = hpred[x & 1] << (16U - 14U);
 								  else
 									  for (uint32_t y2 = y * 2; y2 < (y * 2U) + 2U; ++y2)
 										  for (uint32_t x2 = x * 2; x2 < (x * 2U) + 2U; ++x2)
-											  image[{x2, y2}][i] = hpred[x & 1] << (16U - 11U);
+											  image[{x2, y2}][i] = hpred[x & 1] << (16U - 14U);
 							  }
 						  }
 						  return lak::ok_t{};
