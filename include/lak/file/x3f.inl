@@ -54,7 +54,8 @@ LAK_FIXED_STRUCT_BYTES_TRAITS(lak::x3f::image_data_2_0,
 
 LAK_FIXED_STRUCT_BYTES_TRAITS(lak::x3f::camf_data_header,
                               &lak::x3f::camf_data_header::type,
-                              &lak::x3f::camf_data_header::unknown,
+                              &lak::x3f::camf_data_header::decompressed,
+                              &lak::x3f::camf_data_header::seed,
                               &lak::x3f::camf_data_header::columns,
                               &lak::x3f::camf_data_header::rows);
 

@@ -302,6 +302,7 @@ lak::x3f::image_data::_read(lak::binary_reader &strm)
 #endif
 				  }
 				  break;
+
 				  case lak::x3f::image_format::DP2_Quattro:  [[fallthrough]];
 				  case lak::x3f::image_format::SD_Quattro:   [[fallthrough]];
 				  case lak::x3f::image_format::SD_Quattro_H: [[fallthrough]];
@@ -403,15 +404,14 @@ lak::x3f::camf_data::_read(lak::binary_reader &strm)
 	auto rem = strm.read_remaining_bytes();
 	data     = lak::array<byte_t>(rem.begin(), rem.end());
 
-#if 0
 	if (header.type == 2)
 	{
 		uint32_t h = header.rows;
 		for (auto &d : data)
 		{
 			h            = (h * 1597 + 51749) % 244944;
-			uint32_t val = h * (INT64)301593171 >> 24;
-			d            = static_cast<byte_t>(static_cast<uint8_t>(d) ^
+			uint32_t val = h * int64_t(301593171) >> 24;
+			d            = static_cast<byte_t>(uint8_t(d) ^
                               uint8_t(((((h << 8) - val) >> 1) + val) >> 17));
 		}
 	}
@@ -419,43 +419,39 @@ lak::x3f::camf_data::_read(lak::binary_reader &strm)
 	{
 		lak::binary_reader dstrm{data};
 
-		RES_TRYF_ASSIGN(auto huff =, read_huff<258U>(dstrm));
+		RES_TRYF_ASSIGN(auto huff =, read_huff(dstrm));
 
-		RES_TRY(dstrm.skip(4U));
+		RES_TRYF_ASSIGN(auto size =, dstrm.read_u32le());
+		lak::array<uint32_t, 2U> sizes = {0U, size};
+		DEBUG_EXPR(sizes[0], sizes[1]);
 
-		lak::bit_reader<lak::endian::little, lak::endian::big> bstrm{
-		  dstrm.read_remaining_bytes()};
-
-		auto _read_huff = [&]() -> lak::bit_reader_result<uint8_t>
+		lak::array<lak::span<const byte_t>, 1U> pdata;
+		for (size_t i = 0U; i < pdata.size(); ++i)
 		{
-			RES_TRYF_ASSIGN(auto peeked =, bstrm.peek_bits(uint8_t(huff[0])));
-			RES_TRY(bstrm.read_bits(uint8_t(huff[peeked + 1U] >> 8U)));
-			return lak::ok_t{uint8_t(huff[peeked + 1U])};
-		};
+			DEBUG_EXPR(dstrm.position(), dstrm.remaining().size());
+			RES_TRYF_ASSIGN(
+			  pdata[i] =,
+			  dstrm.read_bytes(std::min<size_t>(
+			    std::max<size_t>(dstrm.remaining().size(), sizes[i + 1U]),
+			    lak::to_multiple<size_t>(sizes[i + 1U], 16U))));
+		}
+		lak::bit_reader<lak::endian::little, lak::endian::big> bstrm{pdata[0]};
 
-		auto read_diff = [&]() -> lak::bit_reader_result<uint32_t>
-		{
-			RES_TRYF_ASSIGN(uint8_t len =, _read_huff());
-			DEBUG_EXPR(len);
-			RES_TRYF_ASSIGN(uintmax_t diff =, bstrm.read_bits(len));
-			if ((diff & uint32_t(1U << (len - 1U))) == 0)
-				diff -= uint32_t((1U << len) - 1U);
-			return lak::ok_t{uint32_t(diff)};
-		};
-
-		uint16_t vpred[2][2], hpred[2];
 		lak::array<byte_t> camf;
-		camf.resize((header.columns * header.rows * 3) / 2);
+		camf.resize(header.decompressed);
 
+		uint16_t vpred[2][2] = {{header.seed[0], header.seed[0]},
+		                        {header.seed[0], header.seed[0]}},
+		         hpred[2];
 		for (uint32_t j = 0, y = 0; y < header.rows; y++)
 		{
 			for (uint32_t x = 0; x < header.columns; x++)
 			{
-				RES_TRYF_ASSIGN(uint32_t diff =, read_diff());
+				RES_TRYF_ASSIGN(uint32_t diff =, read_true_diff(&huff, bstrm));
 				if (x < 2)
-					hpred[x] = vpred[y & 1][x] += static_cast<uint16_t>(diff);
+					hpred[x] = vpred[y & 1][x] += static_cast<int16_t>(diff);
 				else
-					hpred[x & 1] += static_cast<uint16_t>(diff);
+					hpred[x & 1] += static_cast<int16_t>(diff);
 				if (x & 1)
 				{
 					camf[j++] = static_cast<byte_t>(hpred[0] >> 4);
@@ -467,7 +463,42 @@ lak::x3f::camf_data::_read(lak::binary_reader &strm)
 
 		data = lak::move(camf);
 	}
-#endif
+	else if (header.type == 5)
+	{
+		lak::binary_reader dstrm{data};
+
+		RES_TRYF_ASSIGN(auto huff =, read_huff(dstrm));
+
+		RES_TRYF(dstrm.skip(4U));
+		RES_TRYF_ASSIGN(auto sizes =, dstrm.read_le<lak::array<uint32_t, 2U>>());
+		DEBUG_EXPR(sizes[0], sizes[1]);
+
+		lak::array<lak::span<const byte_t>, 1U> pdata;
+		for (size_t i = 0U; i < pdata.size(); ++i)
+		{
+			DEBUG_EXPR(dstrm.position(), dstrm.remaining().size());
+			RES_TRYF_ASSIGN(
+			  pdata[i] =,
+			  dstrm.read_bytes(std::min<size_t>(
+			    std::max<size_t>(dstrm.remaining().size(), sizes[i + 1U]),
+			    lak::to_multiple<size_t>(sizes[i + 1U], 16U))));
+		}
+		lak::bit_reader<lak::endian::little, lak::endian::big> bstrm{pdata[0]};
+
+		lak::array<byte_t> camf;
+		camf.resize(header.decompressed);
+
+		int32_t prev = header.seed[0];
+		for (uint32_t i = 0; i < camf.size(); ++i)
+		{
+			RES_TRYF_ASSIGN(uint32_t diff =, read_true_diff(&huff, bstrm));
+			camf[i] = static_cast<byte_t>(prev += diff);
+		}
+
+		data = lak::move(camf);
+	}
+	else
+		return lak::err_t<lak::err::value_out_of_range>{};
 
 	return lak::ok_t{};
 }

@@ -200,7 +200,8 @@ namespace lak
 		struct camf_data_header
 		{
 			uint32_t type;
-			uint64_t unknown;
+			uint32_t decompressed;
+			lak::array<uint16_t, 2U> seed;
 			uint32_t columns;
 			uint32_t rows;
 		};
