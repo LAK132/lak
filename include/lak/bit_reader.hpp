@@ -60,6 +60,10 @@ namespace lak
 
 		inline void reset_data(lak::span<const byte_t> data) { _data = data; }
 
+		inline bool try_accumulate_remaining();
+		// false: still data remaining.
+		// true: data needs to be reset.
+
 		inline lak::bit_reader_result<uintmax_t> peek_bits(const uint8_t bits);
 
 		inline lak::bit_reader_result<uintmax_t> read_bits(const uint8_t bits);

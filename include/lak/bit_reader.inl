@@ -86,6 +86,25 @@ inline void lak::bit_reader<BYTE_ENDIAN, BIT_ENDIAN>::accumulate_bits(
 }
 
 template<lak::endian BYTE_ENDIAN, lak::endian BIT_ENDIAN>
+inline bool lak::bit_reader<BYTE_ENDIAN,
+                            BIT_ENDIAN>::try_accumulate_remaining()
+{
+	if (auto max_bits =
+	      lak::bit_count::from_bits(std::numeric_limits<uintmax_t>::digits),
+	    remaining = bytes_remaining();
+	    max_bits < remaining)
+	{
+		accumulate_to(std::numeric_limits<uintmax_t>::digits);
+		return false;
+	}
+	else
+	{
+		accumulate_to(remaining.to_bits());
+		return true;
+	}
+}
+
+template<lak::endian BYTE_ENDIAN, lak::endian BIT_ENDIAN>
 inline lak::bit_reader_result<uintmax_t>
 lak::bit_reader<BYTE_ENDIAN, BIT_ENDIAN>::peek_bits(const uint8_t bits)
 {
