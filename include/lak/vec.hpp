@@ -1034,6 +1034,7 @@ namespace lak
 // hammard product
 
 template<typename T>
+requires(!lak::is_vec_v<T>)
 constexpr lak::vec2<T> operator*(lak::vec2<T> lhs, const lak::vec2<T> &rhs)
 {
 	lhs.x *= rhs.x;
@@ -1060,6 +1061,7 @@ constexpr lak::vec2<T> operator*(T lhs, lak::vec2<T> rhs)
 }
 
 template<typename T>
+requires(!lak::is_vec_v<T>)
 constexpr lak::vec3<T> operator*(lak::vec3<T> lhs, const lak::vec3<T> &rhs)
 {
 	lhs.x *= rhs.x;
@@ -1089,6 +1091,7 @@ constexpr lak::vec3<T> operator*(T lhs, lak::vec3<T> rhs)
 }
 
 template<typename T>
+requires(!lak::is_vec_v<T>)
 constexpr lak::vec4<T> operator*(lak::vec4<T> lhs, const lak::vec4<T> &rhs)
 {
 	lhs.x *= rhs.x;
@@ -1498,6 +1501,18 @@ constexpr lak::vec<T, C> operator*(const lak::vec<T, R> &vec,
                                    const lak::mat<T, R, C> &mat)
 {
 	return lak::transpose(mat) * vec;
+}
+
+template<typename T, size_t S>
+constexpr lak::mat<T, S, S> operator*(const lak::mat<T, S, S> &lhs,
+                                      const lak::mat<T, S, S> &rhs)
+{
+	const auto rhs_trans = lak::transpose(rhs);
+	lak::mat<T, S, S> result;
+	for (size_t y = 0U; y < S; ++y)
+		for (size_t x = 0U; x < S; ++x)
+			result[y][x] = lak::dot(lhs[y], rhs_trans[x]);
+	return result;
 }
 
 namespace lak
