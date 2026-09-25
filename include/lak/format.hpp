@@ -49,46 +49,47 @@ namespace lak
 
 		constexpr auto format_args =
 		  lak::get_format_args<FMT, lak::remove_cvref_t<ARGS>...>();
-		lak::c_array<lak::string<char_type>, fmt_type::specifiers.size()>
-		  parsed_results;
-		[&]<size_t... Is>(lak::index_sequence<Is...>)
-		{
-			auto func = [&]<size_t I>(lak::size_type<I>)
+		constexpr size_t specifiers_count = fmt_type::specifiers.size();
+		lak::c_array<lak::string<char_type>, specifiers_count> parsed_results;
+		if constexpr (specifiers_count != 0U)
+			[&]<size_t... Is>(lak::index_sequence<Is...>)
 			{
-				constexpr size_t arg_i = fmt_type::specifier(I).first;
+				auto func = [&]<size_t I>(lak::size_type<I>)
+				{
+					constexpr size_t arg_i = fmt_type::specifier(I).first;
 
-				static_assert(I < lak::tuple_size_v<decltype(format_args)>);
-				static_assert(arg_i < sizeof...(ARGS));
+					static_assert(I < lak::tuple_size_v<decltype(format_args)>);
+					static_assert(arg_i < sizeof...(ARGS));
 
-				using value_type =
-				  lak::remove_cvref_t<lak::nth_type_t<arg_i, ARGS...>>;
+					using value_type =
+					  lak::remove_cvref_t<lak::nth_type_t<arg_i, ARGS...>>;
 
-				// const value_type &arg =
-				//   lak::get_nth<arg_i, lak::remove_reference_t<ARGS>...>(args...);
-				const value_type &arg =
-				  *lak::tuple((&args)..., nullptr).template get<arg_i>();
+					// const value_type &arg =
+					//   lak::get_nth<arg_i, lak::remove_reference_t<ARGS>...>(args...);
+					const value_type &arg =
+					  *lak::tuple((&args)...).template get<arg_i>();
 
-				if constexpr (lak::concepts::dynamic_formattable<value_type,
-				                                                 char_type>)
-					parsed_results[I] =
-					  lak::format_traits<value_type, char_type>::to_string(
-					    format_args.template get<I>(), arg);
-				else
-					parsed_results[I] =
-					  lak::format_traits<value_type, char_type>::to_string(arg);
-			};
-			((func(lak::size_type<Is>{}), ...));
-		}(lak::make_index_sequence<fmt_type::specifiers.size()>{});
+					if constexpr (lak::concepts::dynamic_formattable<value_type,
+					                                                 char_type>)
+						parsed_results[I] =
+						  lak::format_traits<value_type, char_type>::to_string(
+						    format_args.template get<I>(), arg);
+					else
+						parsed_results[I] =
+						  lak::format_traits<value_type, char_type>::to_string(arg);
+				};
+				((func(lak::size_type<Is>{}), ...));
+			}(lak::make_index_sequence<specifiers_count>{});
 
 		size_t reserve_space = fmt_type::prefix(0).size();
-		for (size_t i = 0; i < fmt_type::specifiers.size(); ++i)
+		for (size_t i = 0; i < specifiers_count; ++i)
 			reserve_space +=
 			  parsed_results[i].size() + fmt_type::prefix(i + 1U).size();
 
 		lak::string<char_type> result;
 		result.reserve(reserve_space);
 		result += fmt_type::prefix(0);
-		for (size_t i = 0; i < fmt_type::specifiers.size(); ++i)
+		for (size_t i = 0; i < specifiers_count; ++i)
 		{
 			result += parsed_results[i];
 			result += fmt_type::prefix(i + 1U);
