@@ -133,7 +133,7 @@ int main()
 	    .targets = windows_targets,
 	  },
 	  {
-	    .os = {.runner = "ubuntu-24.04"s, .system = "ubuntu"s, .arch = "x64"s},
+	    .os = {.runner = "ubuntu-26.04"s, .system = "ubuntu"s, .arch = "x64"s},
 	    .targets = native_targets,
 	  },
 	  {
@@ -149,7 +149,7 @@ int main()
 	    .targets = windows_targets,
 	  },
 	  // {
-	  //   .os      = {.runner = "ubuntu-24.04-arm"s,
+	  //   .os      = {.runner = "ubuntu-26.04-arm"s,
 	  //               .system = "ubuntu"s,
 	  //               .arch   = "arm64"s},
 	  //   .targets = native_targets,
@@ -167,7 +167,7 @@ int main()
 	    .targets = common_targets,
 	  },
 	  {
-	    .os = {.runner = "ubuntu-24.04"s, .system = "ubuntu"s, .arch = "x86"s},
+	    .os = {.runner = "ubuntu-26.04"s, .system = "ubuntu"s, .arch = "x86"s},
 	    .targets = common_targets,
 	  },
 
