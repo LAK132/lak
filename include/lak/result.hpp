@@ -390,6 +390,18 @@ namespace lak
 				return lak::err_t{lak::move(UNIQUIFY(RESULT_)).unsafe_unwrap_err()};  \
 		ASSIGN lak::move(UNIQUIFY(RESULT_)).unsafe_unwrap()
 
+#	define RES_TRYF_ASSIGN(ASSIGN, ...)                                        \
+		auto UNIQUIFY(RESULT_){__VA_ARGS__};                                      \
+		if constexpr (!lak::is_same_v<lak::result_err_type_t<lak::remove_cvref_t< \
+		                                decltype(UNIQUIFY(RESULT_))>>,            \
+		                              lak::bottom>)                               \
+			if (UNIQUIFY(RESULT_).is_err())                                         \
+			{                                                                       \
+				ERROR("try failed: ", UNIQUIFY(RESULT_).unsafe_unwrap_err());         \
+				return lak::err_t{lak::move(UNIQUIFY(RESULT_)).unsafe_unwrap_err()};  \
+			}                                                                       \
+		ASSIGN lak::move(UNIQUIFY(RESULT_)).unsafe_unwrap()
+
 #	define RES_TRY_ASSIGN_ERR(ASSIGN, ...)                                     \
 		auto UNIQUIFY(RESULT_){__VA_ARGS__};                                      \
 		if constexpr (!lak::is_same_v<lak::result_ok_type_t<lak::remove_cvref_t<  \
@@ -404,6 +416,16 @@ namespace lak
 		{                                                                         \
 			if_let_err (auto &&err, __VA_ARGS__)                                    \
 				return lak::err_t{lak::forward<decltype(err)>(err)};                  \
+		} while (false)
+
+#	define RES_TRYF(...)                                                       \
+		do                                                                        \
+		{                                                                         \
+			if_let_err (auto &&err, __VA_ARGS__)                                    \
+			{                                                                       \
+				ERROR("try failed: ", UNIQUIFY(RESULT_).unsafe_unwrap_err());         \
+				return lak::err_t{lak::forward<decltype(err)>(err)};                  \
+			}                                                                       \
 		} while (false)
 }
 

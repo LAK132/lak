@@ -248,6 +248,7 @@
 #undef ASSERT_LESS
 #undef ASSERT_LESS_OR_EQUAL
 #undef ASSERTF
+#undef ASSERTF_UNREACHABLE
 #undef ASSERTF_EQUAL
 #undef ASSERTF_NOT_EQUAL
 #undef ASSERTF_GREATER
@@ -457,6 +458,11 @@
 			FATAL("Assertion '" DEBUG_STRINGIFY_EXPR(X) "' failed: ",               \
 			      TO_U8STRING(str));                                                \
 		}                                                                         \
+	} while (false)
+#define ASSERTF_UNREACHABLE(str)                                              \
+	do                                                                          \
+	{                                                                           \
+		FATAL(u8"Unreachable code reached: ", TO_U8STRING(str));                  \
 	} while (false)
 #define ASSERTF_EQUAL(X, Y, str)                                              \
 	do                                                                          \
