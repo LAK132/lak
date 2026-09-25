@@ -13,9 +13,11 @@ void lak::tasks::push(FUNC &&func)
 		_threads[index] = std::thread(
 		  [func, this]
 		  {
+			  DEFER({
+				  std::lock_guard lock{this->_mutex};
+				  this->deactivate(std::this_thread::get_id());
+			  });
 			  func();
-			  std::lock_guard lock{this->_mutex};
-			  this->deactivate(std::this_thread::get_id());
 		  });
 		++_active;
 	}
