@@ -65,7 +65,8 @@ namespace lak
 
 				// const value_type &arg =
 				//   lak::get_nth<arg_i, lak::remove_reference_t<ARGS>...>(args...);
-				const value_type &arg = *lak::tuple((&args)...).template get<arg_i>();
+				const value_type &arg =
+				  *lak::tuple((&args)..., nullptr).template get<arg_i>();
 
 				if constexpr (lak::concepts::dynamic_formattable<value_type,
 				                                                 char_type>)
