@@ -143,8 +143,9 @@ namespace lak
 		};
 
 #define LAK_FOREACH_X3F_IMAGE_TYPE(MACRO, ...)                                \
-	MACRO(1, One, __VA_ARGS__)                                                  \
-	MACRO(3, Three, __VA_ARGS__)
+	MACRO(1, RAW_Merrill_Quattro, __VA_ARGS__)                                  \
+	MACRO(2, Processed, __VA_ARGS__)                                            \
+	MACRO(3, RAW, __VA_ARGS__)
 
 		enum struct image_type : uint32_t
 		{

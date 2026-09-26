@@ -170,8 +170,8 @@ lak::x3f::image_data::_read(lak::binary_reader &strm)
 		    -> lak::error_codes<lak::err::out_of_data,
 		                        lak::err::value_out_of_range>
 		  {
-			  if (d.type != lak::x3f::image_type::One &&
-			      d.type != lak::x3f::image_type::Three)
+			  if (d.type != lak::x3f::image_type::RAW_Merrill_Quattro &&
+			      d.type != lak::x3f::image_type::RAW)
 				  return lak::ok_t{};
 			  switch (d.format)
 			  {
