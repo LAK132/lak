@@ -45,52 +45,100 @@ lak::error_code<lak::err::out_of_data> lak::x3f::directory::_read(
 	return lak::ok_t{};
 }
 
+template<typename LEAF = uint8_t>
 struct huff_element
 {
-	lak::array<lak::unique_ptr<huff_element>, 2U> branch;
-	lak::optional<uint8_t> leaf;
+	lak::array<lak::unique_ptr<huff_element<LEAF>>, 2U> branch;
+	lak::optional<LEAF> leaf;
 };
 
-lak::result<huff_element,
-            lak::variant<lak::err::out_of_data, lak::err::value_out_of_range>>
-read_huff(lak::binary_reader &strm, bool right_align = true)
+template<typename LEAF, lak::endian EB, lak::endian Eb>
+lak::bit_reader_result<huff_element<LEAF> *> search_huff(
+  huff_element<LEAF> *e, lak::bit_reader<EB, Eb> &strm)
 {
-	huff_element huff;
-
-	for (uint16_t i = 0U; i < 16; ++i)
+	while (!strm.empty() && (e->branch[0] || e->branch[1]))
 	{
-		RES_TRYF_ASSIGN(uint8_t len =, strm.read_u8le());
-		RES_TRYF_ASSIGN(auto code_s =, strm.read_bytes(1U));
-		if (len == 0U) break;
-		lak::bit_reader<lak::endian::little, lak::endian::big> cstrm{code_s};
-		huff_element *e = &huff;
-		for (uint8_t j = 0U; j < len; ++j)
+		RES_TRYF_ASSIGN(auto pick =, strm.peek_bits(1U));
+		if (auto next = e->branch[size_t(pick)].get(); next)
 		{
-			RES_TRYF_ASSIGN(auto pick =, cstrm.read_bits(1U));
+			RES_TRYF_ASSIGN(pick =, strm.read_bits(1U));
+			e = next;
+		}
+		else
+			break;
+	}
+	return lak::ok_t{e};
+}
+
+lak::result<huff_element<int16_t>,
+            lak::variant<lak::err::out_of_data, lak::err::value_out_of_range>>
+read_huffman_huff(lak::binary_reader &strm)
+{
+	RES_TRYF_ASSIGN(auto diff =, strm.read_s16le(1024U));
+
+	huff_element<int16_t> huff;
+
+	for (uint16_t i = 0U; i < 1024U; ++i)
+	{
+		RES_TRYF_ASSIGN(uint32_t code =, strm.read_u32le());
+		uint8_t len = code >> 27U;
+		if (len == 0U || len > 26U) continue;
+		huff_element<int16_t> *e = &huff;
+		for (uint8_t j = 1U; j <= len; ++j)
+		{
+			uint32_t pick = (code >> (len - j)) & 1U;
 			if (!e->branch[size_t(pick)])
-				e->branch[size_t(pick)] = lak::unique_ptr<huff_element>::make();
+				e->branch[size_t(pick)] =
+				  lak::unique_ptr<huff_element<int16_t>>::make();
 			e = e->branch[size_t(pick)].get();
 		}
-		e->leaf = uint8_t(i);
+		e->leaf = diff[i];
 	}
 
 	return lak::move_ok(huff);
 }
 
 template<lak::endian EB, lak::endian Eb>
-lak::bit_reader_result<uint32_t> read_true_diff(huff_element *e,
+lak::bit_reader_result<int16_t> read_huffman_diff(
+  huff_element<int16_t> *e, lak::bit_reader<EB, Eb> &strm)
+{
+	RES_TRYF_ASSIGN(e =, search_huff(e, strm));
+	if (!e->leaf.has_value()) return lak::ok_t{0U};
+	return lak::ok_t{*e->leaf};
+}
+
+lak::result<huff_element<uint8_t>,
+            lak::variant<lak::err::out_of_data, lak::err::value_out_of_range>>
+read_true_huff(lak::binary_reader &strm, bool right_align = true)
+{
+	huff_element<uint8_t> huff;
+
+	for (uint8_t i = 0U; i < 16U; ++i)
+	{
+		RES_TRYF_ASSIGN(uint8_t len =, strm.read_u8le());
+		RES_TRYF_ASSIGN(auto code_s =, strm.read_bytes(1U));
+		if (len == 0U) break;
+		lak::bit_reader<lak::endian::little, lak::endian::big> cstrm{code_s};
+		huff_element<uint8_t> *e = &huff;
+		for (uint8_t j = 0U; j < len; ++j)
+		{
+			RES_TRYF_ASSIGN(auto pick =, cstrm.read_bits(1U));
+			if (!e->branch[size_t(pick)])
+				e->branch[size_t(pick)] =
+				  lak::unique_ptr<huff_element<uint8_t>>::make();
+			e = e->branch[size_t(pick)].get();
+		}
+		e->leaf = i;
+	}
+
+	return lak::move_ok(huff);
+}
+
+template<lak::endian EB, lak::endian Eb>
+lak::bit_reader_result<uint32_t> read_true_diff(huff_element<uint8_t> *e,
                                                 lak::bit_reader<EB, Eb> &strm)
 {
-	while (e && (e->branch[0] || e->branch[1]))
-	{
-		RES_TRYF_ASSIGN(auto pick =, strm.read_bits(1U));
-		e = e->branch[size_t(pick)].get();
-	}
-	if (!e)
-	{
-		ERROR("invalid huff path");
-		return lak::ok_t{0U};
-	}
+	RES_TRYF_ASSIGN(e =, search_huff(e, strm));
 	if (!e->leaf.has_value()) return lak::ok_t{0U};
 	uint8_t len = *e->leaf;
 	RES_TRYF_ASSIGN(uintmax_t diff =, strm.read_bits(len));
@@ -179,11 +227,10 @@ lak::x3f::image_data::_read(lak::binary_reader &strm)
 				  {
 					  constexpr uint16_t max_value = 1024U;
 					  constexpr uint16_t mask      = max_value - 1U;
-					  RES_TRYF_ASSIGN(auto diff =,
-					                  strm.template read_le<uint16_t>(max_value));
+					  RES_TRYF_ASSIGN(auto diff =, strm.read_u16le(max_value));
 
-					  image.resize({d.columns, d.rows});
-					  image.fill(lak::vec4u16_t{0x0000U, 0x0000U, 0x0000U, 0xFFFFU});
+					  image.resize({d.columns, d.rows},
+					               lak::vec4u16_t{0x0000U, 0x0000U, 0x0000U, 0xFFFFU});
 
 					  for (uint32_t y = 0; y < d.rows; ++y)
 					  {
@@ -204,60 +251,36 @@ lak::x3f::image_data::_read(lak::binary_reader &strm)
 
 				  case lak::x3f::image_format::SD9_SD10_SD14:
 				  {
-					  // if (true) return lak::ok_t{};
-					  // RES_TRYF_ASSIGN(auto huff =, read_huff(strm));
-					  // RES_TRYF_ASSIGN(auto roff =, read_roff(strm));
+					  lak::binary_reader dstrm{data};
 
-					  // lak::bit_reader bstrm{data};
+					  constexpr uint16_t max_value = 1024U;
+					  constexpr uint16_t mask      = max_value - 1U;
 
-					  RES_TRYF_ASSIGN(auto diff =,
-					                  strm.template read_le<uint16_t>(1024));
+					  RES_TRYF_ASSIGN(auto huff =, read_huffman_huff(dstrm));
 
-					  image.resize({d.columns, d.rows});
+					  RES_TRYF_ASSIGN(auto comp =,
+					                  dstrm.read_bytes(dstrm.remaining().size() -
+					                                   (sizeof(uint32_t) * d.rows)));
 
-					  if (/*load_flags*/ true)
+					  RES_TRYF_ASSIGN(auto offs =, dstrm.read_u32le(d.rows));
+
+					  image.resize({d.columns, d.rows},
+					               lak::vec4u16_t{0x0000U, 0x0000U, 0x0000U, 0xFFFFU});
+
+					  for (uint32_t y = 0; y < d.rows; ++y)
 					  {
-						  for (uint32_t y = 0; y < d.rows; ++y)
+						  int32_t pred[] = {0, 0, 0};
+
+						  lak::bit_reader<lak::endian::little, lak::endian::big> bstrm{
+						    lak::span(comp).subspan(offs[y])};
+						  for (uint32_t x = 0; x < d.columns; ++x)
 						  {
-							  int pred[] = {0, 0, 0, 0};
-							  for (uint32_t x = 0; x < d.columns; ++x)
+							  for (uint32_t c = 0; c < 3; ++c)
 							  {
-								  RES_TRYF_ASSIGN(uint32_t p =, strm.read_u32le());
-								  for (size_t c = 0; c < 4; ++c)
-									  pred[3 - c] += diff[p >> c * 10 & 0x3FF];
-								  for (size_t c = 0; c < 4; ++c)
-									  image[{x, y}][c] = uint16_t(pred[c]);
-							  }
-						  }
-					  }
-					  else
-					  {
-						  // foveon_decoder(1024, 0);
-						  // int bit = -1;
-						  for (uint32_t y = 0; y < d.rows; ++y)
-						  {
-							  int pred[] = {0, 0, 0};
-							  // if (!bit && atoi(model + 2) < 14)
-							  {
-								  RES_TRY(strm.skip(4U));
-							  }
-							  for (uint32_t x = 0; x < d.columns; ++x)
-							  {
-								  // RES_TRYF_ASSIGN(uint32_t p =, strm.read_u32le());
-								  for (size_t c = 0; c < 4; ++c)
-								  {
-									  // for (dindex = first_decode; dindex->branch[0];)
-									  // {
-									  //   if ((bit = (bit - 1) & 31) == 31)
-									  // 	  for (i = 0; i < 4; i++)
-									  // 		  bitbuf = (bitbuf << 8) + fgetc(ifp);
-									  //   dindex = dindex->branch[bitbuf >> bit & 1];
-									  // }
-									  // pred[c] += diff[dindex->leaf];
-									  // if (pred[c] >> 16 && ~pred[c] >> 16) derror();
-								  }
-								  for (size_t c = 0; c < 4; ++c)
-									  image[{x, y}][c] = uint16_t(pred[c]);
+								  RES_TRYF_ASSIGN(int16_t diff =,
+								                  read_huffman_diff(&huff, bstrm));
+								  pred[c] += diff;
+								  image[{x, y}][c] = uint16_t(pred[c]);
 							  }
 						  }
 					  }
@@ -268,12 +291,12 @@ lak::x3f::image_data::_read(lak::binary_reader &strm)
 				  {
 					  RES_TRYF_ASSIGN(auto seed =,
 					                  strm.read_le<lak::array<uint16_t, 4U>>());
-					  RES_TRYF_ASSIGN(auto huff =, read_huff(strm));
+					  RES_TRYF_ASSIGN(auto huff =, read_true_huff(strm));
 					  RES_TRYF_ASSIGN(auto sizes =,
 					                  strm.read_le<lak::array<uint32_t, 4U>>());
 
-					  image.resize({d.columns, d.rows});
-					  image.fill(lak::vec4u16_t{0x0000U, 0x0000U, 0x0000U, 0xFFFFU});
+					  image.resize({d.columns, d.rows},
+					               lak::vec4u16_t{0x0000U, 0x0000U, 0x0000U, 0xFFFFU});
 
 					  lak::array<lak::span<const byte_t>, 3U> pdata;
 					  for (size_t i = 0U; i < pdata.size(); ++i)
@@ -343,12 +366,12 @@ lak::x3f::image_data::_read(lak::binary_reader &strm)
 					  RES_TRYF_ASSIGN(auto seed =,
 					                  strm.read_le<lak::array<uint16_t, 4U>>());
 					  DEBUG_EXPR(seed[0], seed[1], seed[2], seed[3]);
-					  RES_TRYF_ASSIGN(auto huff =, read_huff(strm));
+					  RES_TRYF_ASSIGN(auto huff =, read_true_huff(strm));
 					  RES_TRYF_ASSIGN(auto sizes =,
 					                  strm.read_le<lak::array<uint32_t, 4U>>());
 
-					  image.resize({quattro_sizes[2].x, quattro_sizes[2].y});
-					  image.fill(lak::vec4u16_t{0x0000U, 0x0000U, 0x0000U, 0xFFFFU});
+					  image.resize({quattro_sizes[2].x, quattro_sizes[2].y},
+					               lak::vec4u16_t{0x0000U, 0x0000U, 0x0000U, 0xFFFFU});
 
 					  DEBUG_EXPR(sizes[0], sizes[1], sizes[2], sizes[3]);
 					  lak::array<lak::span<const byte_t>, 3U> pdata;
@@ -445,7 +468,7 @@ lak::x3f::camf_data::_read(lak::binary_reader &strm)
 	{
 		lak::binary_reader dstrm{data};
 
-		RES_TRYF_ASSIGN(auto huff =, read_huff(dstrm));
+		RES_TRYF_ASSIGN(auto huff =, read_true_huff(dstrm));
 
 		RES_TRYF_ASSIGN(auto size =, dstrm.read_u32le());
 		lak::array<uint32_t, 2U> sizes = {0U, size};
@@ -493,7 +516,7 @@ lak::x3f::camf_data::_read(lak::binary_reader &strm)
 	{
 		lak::binary_reader dstrm{data};
 
-		RES_TRYF_ASSIGN(auto huff =, read_huff(dstrm));
+		RES_TRYF_ASSIGN(auto huff =, read_true_huff(dstrm));
 
 		RES_TRYF(dstrm.skip(4U));
 		RES_TRYF_ASSIGN(auto sizes =, dstrm.read_le<lak::array<uint32_t, 2U>>());
