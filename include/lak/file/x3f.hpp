@@ -158,7 +158,7 @@ namespace lak
 	MACRO(0x06, SD9_SD10_SD14, __VA_ARGS__)                                     \
 	MACRO(0x0B, Huffman_DCPM_888_RGB, __VA_ARGS__)                              \
 	MACRO(0x12, JPEG_888_RGB, __VA_ARGS__)                                      \
-	MACRO(0x1E, DP1_DP1S_DP2_Merril, __VA_ARGS__)                               \
+	MACRO(0x1E, DP1_DP1S_DP2_Merrill, __VA_ARGS__)                              \
 	MACRO(0x23, DP2_Quattro, __VA_ARGS__)                                       \
 	MACRO(0x25, SD_Quattro, __VA_ARGS__)                                        \
 	MACRO(0x27, SD_Quattro_H, __VA_ARGS__)                                      \

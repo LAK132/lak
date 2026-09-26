@@ -264,7 +264,7 @@ lak::x3f::image_data::_read(lak::binary_reader &strm)
 				  }
 				  break;
 
-				  case lak::x3f::image_format::DP1_DP1S_DP2_Merril:
+				  case lak::x3f::image_format::DP1_DP1S_DP2_Merrill:
 				  {
 					  RES_TRYF_ASSIGN(auto seed =,
 					                  strm.read_le<lak::array<uint16_t, 4U>>());
