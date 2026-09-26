@@ -303,6 +303,17 @@ namespace lak
 			}
 		};
 
+		struct prop_entry
+		{
+			lak::u16string name;
+			lak::array<uint16_t> data;
+
+			inline lak::u16string_view string_data() const
+			{
+				return lak::string_view(lak::span<const char16_t>(lak::span(data)));
+			}
+		};
+
 		struct prop_data_header
 		{
 			uint32_t entry_count;
@@ -316,7 +327,7 @@ namespace lak
 			lak::x3f::section_header section;
 			lak::x3f::prop_data_header header;
 			lak::array<byte_t> data;
-			lak::array<lak::pair<lak::u16string, lak::u16string>> strings;
+			lak::array<lak::x3f::prop_entry> entries;
 
 			lak::error_codes<lak::err::out_of_data, lak::err::value_out_of_range>
 			_read(lak::binary_reader &strm);

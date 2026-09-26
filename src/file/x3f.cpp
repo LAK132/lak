@@ -673,22 +673,24 @@ lak::x3f::prop_data::_read(lak::binary_reader &strm)
 	auto rem = strm.remaining();
 	data     = lak::array<byte_t>(rem.begin(), rem.end());
 
-	lak::array<lak::pair<uint32_t, uint32_t>> entries;
-	entries.reserve(header.entry_count);
-	for (uint32_t i = 0U; i < header.entry_count; ++i)
-	{
-		RES_TRYF_ASSIGN(uint32_t a =, strm.read_u32le());
-		RES_TRYF_ASSIGN(uint32_t b =, strm.read_u32le());
-		entries.emplace_back(a, b);
-	}
+	RES_TRYF_ASSIGN(auto offsets =,
+	                strm.read_u32le(size_t(header.entry_count) * 2U));
+	lak::binary_reader kvstrm{strm.remaining()};
+	size_t start = strm.position();
+	offsets.push_back((strm.size() - start) / 2U);
 
-	// strings.reserve(header.entry_count);
-	// for (uint32_t i = 0U; i < header.entry_count; ++i)
-	// {
-	// 	auto name  = strm.template read_any_c_str<char16_t>();
-	// 	auto value = strm.template read_any_c_str<char16_t>();
-	// 	strings.emplace_back(lak::move(name), lak::move(value));
-	// }
+	entries.reserve(header.entry_count);
+	for (size_t i = 0U; i < header.entry_count; ++i)
+	{
+		const size_t name_i = i * 2U;
+		const size_t data_i = name_i + 1U;
+		auto &e             = entries.emplace_back();
+		RES_TRYF_ASSIGN(e.name =,
+		                strm.template read_exact_c_str<char16_t>(
+		                  offsets[name_i + 1U] - offsets[name_i]));
+		RES_TRYF_ASSIGN(e.data =,
+		                strm.read_u16le(offsets[data_i + 1U] - offsets[data_i]));
+	}
 
 	return lak::ok_t{};
 }
