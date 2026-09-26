@@ -279,7 +279,30 @@ namespace lak
 			return read<TYPE, E>();                                                 \
 		}                                                                         \
 		inline auto read_##NAME##le() { return read_le<TYPE>(); }                 \
-		inline auto read_##NAME##be() { return read_be<TYPE>(); }
+		inline auto read_##NAME##be() { return read_be<TYPE>(); }                 \
+		template<lak::endian E = lak::endian::little>                             \
+		inline auto peek_##NAME(size_t count)                                     \
+		{                                                                         \
+			return peek<TYPE, E>(count);                                            \
+		}                                                                         \
+		inline auto peek_##NAME##le(size_t count)                                 \
+		{                                                                         \
+			return peek_le<TYPE>(count);                                            \
+		}                                                                         \
+		inline auto peek_##NAME##be(size_t count)                                 \
+		{                                                                         \
+			return peek_be<TYPE>(count);                                            \
+		}                                                                         \
+		template<lak::endian E = lak::endian::little>                             \
+		inline auto read_##NAME(size_t count)                                     \
+		{                                                                         \
+			return read<TYPE, E>(count);                                            \
+		}                                                                         \
+		inline auto read_##NAME##le(size_t count)                                 \
+		{                                                                         \
+			return read_le<TYPE>(count);                                            \
+		}                                                                         \
+		inline auto read_##NAME##be(size_t count) { return read_be<TYPE>(count); }
 		LAK_FOREACH_INTEGER(BINARY_READER_MEMBERS)
 		LAK_FOREACH_FLOAT(BINARY_READER_MEMBERS)
 #	undef BINARY_READER_MEMBERS
