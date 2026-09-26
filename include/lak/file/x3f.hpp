@@ -5,6 +5,8 @@
 // https://www.dpreview.com/forums/thread/3178331
 // https://github.com/pvachon/libx3f
 // https://github.com/Kalpanika/x3f
+// Useful:
+// http://brucelindbloom.com/
 
 #include "lak/binary_reader.hpp"
 #include "lak/binary_traits.hpp"
@@ -203,6 +205,72 @@ namespace lak
 			}
 		};
 
+		struct camf_prop
+		{
+			lak::astring name;
+			lak::array<byte_t> data;
+		};
+
+		struct camf_matrix
+		{
+			template<typename T>
+			struct matrix_type
+			{
+				lak::array<size_t> dimensions;
+				lak::array<T> data;
+
+				template<typename... I>
+				requires((lak::is_same_v<I, size_t> && ...))
+				size_t get_index(I... index) const
+				{
+					ASSERT_EQUAL(dimensions.size(), sizeof...(index));
+
+					size_t offset = 0U;
+					for (size_t multiplier = 1U, dim = 0U; size_t ind : {index...})
+					{
+						size_t dim_size = dimensions[dim++];
+						ASSERT_LESS(ind, dim_size);
+						offset += ind * multiplier;
+						multiplier *= dim_size;
+					}
+					return offset;
+				}
+
+				template<typename... I>
+				requires((lak::is_static_castable_v<I, size_t> && ...))
+				T &operator()(I... index)
+				{
+					return data[get_index(size_t(index)...)];
+				}
+				template<typename... I>
+				requires((lak::is_static_castable_v<I, size_t> && ...))
+				const T &operator()(I... index) const
+				{
+					return data[get_index(size_t(index)...)];
+				}
+			};
+
+			lak::variant<lak::monostate,
+			             matrix_type<uint8_t>,
+			             matrix_type<int16_t>,
+			             matrix_type<uint16_t>,
+			             matrix_type<uint32_t>,
+			             matrix_type<f32_t>>
+			  data;
+		};
+
+		struct camf_entry
+		{
+			lak::x3f::section_header section;
+			lak::array<byte_t> source;
+			lak::astring name;
+			lak::variant<lak::monostate,
+			             lak::astring,
+			             lak::array<lak::x3f::camf_prop>,
+			             lak::x3f::camf_matrix>
+			  data;
+		};
+
 		struct camf_data_header
 		{
 			uint32_t type;
@@ -217,6 +285,7 @@ namespace lak
 			lak::x3f::section_header section;
 			lak::x3f::camf_data_header header;
 			lak::array<byte_t> data;
+			lak::array<lak::x3f::camf_entry> entries;
 
 			lak::error_codes<lak::err::out_of_data, lak::err::value_out_of_range>
 			_read(lak::binary_reader &strm);
