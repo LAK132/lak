@@ -17,9 +17,9 @@ bool lak::platform_init()
 		files.push_back(current_prefix / LAK_MOLTENVK_JSON);
 #		ifdef LAK_VK_DRIVER_PREFIX
 		if (auto prefix = lak::fs::path(LAK_VK_DRIVER_PREFIX);
-				prefix != current_prefix)
+		    prefix != current_prefix)
 			files.push_back(prefix / LAK_MOLTENVK_JSON);
-# 	endif
+#		endif
 #	endif
 #	ifdef LAK_VK_VALIDATION_JSON
 		files.push_back(current_prefix / LAK_VK_VALIDATION_JSON);
@@ -27,12 +27,12 @@ bool lak::platform_init()
 		if (auto prefix = lak::fs::path(LAK_VK_DRIVER_PREFIX);
 		    prefix != current_prefix)
 			files.push_back(prefix / LAK_VK_VALIDATION_JSON);
-# 	endif
+#		endif
 #	endif
 		if (!files.empty())
 		{
 			lak::astring str = files[0].string();
-			for (const auto& p : lak::span(files).subspan(1U))
+			for (const auto &p : lak::span(files).subspan(1U))
 				str += ":" + p.string();
 			ASSERT_EQUAL(setenv("VK_DRIVER_FILES", str.c_str(), 1), 0);
 		}
@@ -57,12 +57,15 @@ bool lak::platform_init()
 		ERROR(lak::fmt<u8"SDL_INIT_TIMER failed ({})">(SDL_GetError()));
 		failed = true;
 	}
+
+	if (!failed) lak::_platform_instance = new lak::platform_instance();
 	return !failed;
 }
 
 bool lak::platform_quit()
 {
 	SDL_Quit();
+	delete lak::_platform_instance;
 	return true;
 }
 

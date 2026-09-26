@@ -54,12 +54,15 @@ bool lak::platform_init()
 		// :TODO: just ignore audio subsystem initialisation failure for now
 		// failed = true;
 	}
+
+	if (!failed) lak::_platform_instance = new lak::platform_instance();
 	return !failed;
 }
 
 bool lak::platform_quit()
 {
 	SDL_Quit();
+	delete lak::_platform_instance;
 	return true;
 }
 

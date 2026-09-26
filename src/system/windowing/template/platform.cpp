@@ -2,9 +2,17 @@
 
 #include "impl.hpp"
 
-bool lak::platform_init() { return false; }
+bool lak::platform_init()
+{
+	// lak::_platform_instance = new lak::platform_instance();
+	return false;
+}
 
-bool lak::platform_quit() { return false; }
+bool lak::platform_quit()
+{
+	// delete lak::_platform_instance;
+	return false;
+}
 
 bool lak::get_clipboard(lak::u8string *s)
 {
