@@ -169,6 +169,33 @@ namespace lak
 
 #define LAK_FOREACH_EXIF_TAG_NAME(MACRO, ...)                                 \
 	MACRO(ApplicationNotes, __VA_ARGS__)                                        \
+	MACRO(Model2, __VA_ARGS__)                                                  \
+	MACRO(KodakIFD, __VA_ARGS__)                                                \
+	MACRO(ExifVersion, __VA_ARGS__)                                             \
+	MACRO(CreateDate, __VA_ARGS__)                                              \
+	MACRO(ComponentsConfiguration, __VA_ARGS__)                                 \
+	MACRO(FlashpixVersion, __VA_ARGS__)                                         \
+	MACRO(ColorSpace, __VA_ARGS__)                                              \
+	MACRO(ExifImageWidth, __VA_ARGS__)                                          \
+	MACRO(ExifImageHeight, __VA_ARGS__)                                         \
+	MACRO(RelatedSoundFile, __VA_ARGS__)                                        \
+	MACRO(InteropOffset, __VA_ARGS__)                                           \
+	MACRO(ExifFlashEnergy, __VA_ARGS__)                                         \
+	MACRO(ExifExposureIndex, __VA_ARGS__)                                       \
+	MACRO(ExifSensingMethod, __VA_ARGS__)                                       \
+	MACRO(FileSource, __VA_ARGS__)                                              \
+	MACRO(SceneType, __VA_ARGS__)                                               \
+	MACRO(CustomRendered, __VA_ARGS__)                                          \
+	MACRO(ExposureMode, __VA_ARGS__)                                            \
+	MACRO(WhiteBalance, __VA_ARGS__)                                            \
+	MACRO(DigitalZoomRatio, __VA_ARGS__)                                        \
+	MACRO(FocalLengthIn35mmFormat, __VA_ARGS__)                                 \
+	MACRO(SceneCaptureType, __VA_ARGS__)                                        \
+	MACRO(GainControl, __VA_ARGS__)                                             \
+	MACRO(Contrast, __VA_ARGS__)                                                \
+	MACRO(Saturation, __VA_ARGS__)                                              \
+	MACRO(Sharpness, __VA_ARGS__)                                               \
+	MACRO(SubjectDistanceRange, __VA_ARGS__)                                    \
 	MACRO(LensMake, __VA_ARGS__)                                                \
 	MACRO(LensModel, __VA_ARGS__)                                               \
 	MACRO(LensSerialNumber, __VA_ARGS__)                                        \
@@ -403,11 +430,9 @@ namespace lak
 #define LAK_FOREACH_TIFF_EP_TAG_VALUE(MACRO, ...)                             \
 	MACRO(0x14A, SubIFDs, TIFF_EP, __VA_ARGS__)                                 \
 	MACRO(0x15B, JPEGTables, TIFF_EP, __VA_ARGS__)                              \
-	/*MACRO(0x827D, DCS620_Unknown1, TIFF_EP,__VA_ARGS__)*/                     \
 	MACRO(0x828D, CFARepeatPatternDim, TIFF_EP, __VA_ARGS__)                    \
 	MACRO(0x828E, CFAPattern, TIFF_EP, __VA_ARGS__)                             \
 	MACRO(0x828F, BatteryLevel, TIFF_EP, __VA_ARGS__)                           \
-	/*MACRO(0x8290, DCS620_Unknown2, TIFF_EP,__VA_ARGS__)*/                     \
 	MACRO(0x829A, ExposureTime, TIFF_EP, __VA_ARGS__)                           \
 	MACRO(0x829D, FNumber, TIFF_EP, __VA_ARGS__)                                \
 	MACRO(0x83BB, IPTC_NAA, TIFF_EP, __VA_ARGS__)                               \
@@ -448,6 +473,33 @@ namespace lak
 
 #define LAK_FOREACH_EXIF_TAG_VALUE(MACRO, ...)                                \
 	MACRO(0x2BC, ApplicationNotes, EXIF, __VA_ARGS__)                           \
+	MACRO(0x827D, Model2, EXIF, __VA_ARGS__)                                    \
+	MACRO(0x8290, KodakIFD, EXIF, __VA_ARGS__)                                  \
+	MACRO(0x9000, ExifVersion, EXIF, __VA_ARGS__)                               \
+	MACRO(0x9004, DateTimeDigitized, EXIF, __VA_ARGS__)                         \
+	MACRO(0x9101, ComponentsConfiguration, EXIF, __VA_ARGS__)                   \
+	MACRO(0xA000, FlashpixVersion, EXIF, __VA_ARGS__)                           \
+	MACRO(0xA001, ColorSpace, EXIF, __VA_ARGS__)                                \
+	MACRO(0xA002, PixelXDimension, EXIF, __VA_ARGS__)                           \
+	MACRO(0xA003, PixelYDimension, EXIF, __VA_ARGS__)                           \
+	MACRO(0xA004, RelatedSoundFile, EXIF, __VA_ARGS__)                          \
+	MACRO(0xA005, InteropIFD, EXIF, __VA_ARGS__)                                \
+	MACRO(0xA20B, ExifFlashEnergy, EXIF, __VA_ARGS__)                           \
+	MACRO(0xA215, ExifExposureIndex, EXIF, __VA_ARGS__)                         \
+	MACRO(0xA217, ExifSensingMethod, EXIF, __VA_ARGS__)                         \
+	MACRO(0xA300, FileSource, EXIF, __VA_ARGS__)                                \
+	MACRO(0xA301, SceneType, EXIF, __VA_ARGS__)                                 \
+	MACRO(0xA401, CustomRendered, EXIF, __VA_ARGS__)                            \
+	MACRO(0xA402, ExposureMode, EXIF, __VA_ARGS__)                              \
+	MACRO(0xA403, WhiteBalance, EXIF, __VA_ARGS__)                              \
+	MACRO(0xA404, DigitalZoomRatio, EXIF, __VA_ARGS__)                          \
+	MACRO(0xA405, FocalLengthIn35mmFormat, EXIF, __VA_ARGS__)                   \
+	MACRO(0xA406, SceneCaptureType, EXIF, __VA_ARGS__)                          \
+	MACRO(0xA407, GainControl, EXIF, __VA_ARGS__)                               \
+	MACRO(0xA408, Contrast, EXIF, __VA_ARGS__)                                  \
+	MACRO(0xA409, Saturation, EXIF, __VA_ARGS__)                                \
+	MACRO(0xA40A, Sharpness, EXIF, __VA_ARGS__)                                 \
+	MACRO(0xA40C, SubjectDistanceRange, EXIF, __VA_ARGS__)                      \
 	MACRO(0xA433, LensMake, EXIF, __VA_ARGS__)                                  \
 	MACRO(0xA434, LensModel, EXIF, __VA_ARGS__)                                 \
 	MACRO(0xA435, LensSerialNumber, EXIF, __VA_ARGS__)                          \
@@ -796,6 +848,35 @@ namespace lak
 	MACRO(SensingMethod, uint16_t, 1U, __VA_ARGS__)
 
 #define LAK_FOREACH_EXIF_TAG_TYPES(MACRO, ...)                                \
+	MACRO(Model2, char, lak::dynamic_extent, __VA_ARGS__)                       \
+	MACRO(KodakIFD, uint32_t, 1U, __VA_ARGS__)                                  \
+	MACRO(ExifVersion, byte_t, 4U, __VA_ARGS__)                                 \
+	MACRO(DateTimeDigitized, char, 20U, __VA_ARGS__)                            \
+	MACRO(ComponentsConfiguration, byte_t, 4U, __VA_ARGS__)                     \
+	MACRO(FlashpixVersion, byte_t, 4U, __VA_ARGS__)                             \
+	MACRO(ColorSpace, uint16_t, 1U, __VA_ARGS__)                                \
+	MACRO(PixelXDimension, uint16_t, 1U, __VA_ARGS__)                           \
+	MACRO(PixelXDimension, uint32_t, 1U, __VA_ARGS__)                           \
+	MACRO(PixelYDimension, uint16_t, 1U, __VA_ARGS__)                           \
+	MACRO(PixelYDimension, uint32_t, 1U, __VA_ARGS__)                           \
+	MACRO(RelatedSoundFile, char, 13U, __VA_ARGS__)                             \
+	MACRO(InteropIFD, uint32_t, 1U, __VA_ARGS__)                                \
+	MACRO(ExifFlashEnergy, lak::tiff::urational, 1U, __VA_ARGS__)               \
+	MACRO(ExifExposureIndex, lak::tiff::urational, 1U, __VA_ARGS__)             \
+	MACRO(ExifSensingMethod, uint16_t, 1U, __VA_ARGS__)                         \
+	MACRO(FileSource, byte_t, 1U, __VA_ARGS__)                                  \
+	MACRO(SceneType, byte_t, 1U, __VA_ARGS__)                                   \
+	MACRO(CustomRendered, uint16_t, 1U, __VA_ARGS__)                            \
+	MACRO(ExposureMode, uint16_t, 1U, __VA_ARGS__)                              \
+	MACRO(WhiteBalance, uint16_t, 1U, __VA_ARGS__)                              \
+	MACRO(DigitalZoomRatio, lak::tiff::urational, 1U, __VA_ARGS__)              \
+	MACRO(FocalLengthIn35mmFormat, uint16_t, 1U, __VA_ARGS__)                   \
+	MACRO(SceneCaptureType, uint16_t, 1U, __VA_ARGS__)                          \
+	MACRO(GainControl, lak::tiff::urational, 1U, __VA_ARGS__)                   \
+	MACRO(Contrast, uint16_t, 1U, __VA_ARGS__)                                  \
+	MACRO(Saturation, uint16_t, 1U, __VA_ARGS__)                                \
+	MACRO(Sharpness, uint16_t, 1U, __VA_ARGS__)                                 \
+	MACRO(SubjectDistanceRange, uint16_t, 1U, __VA_ARGS__)                      \
 	MACRO(LensMake, char, lak::dynamic_extent, __VA_ARGS__)                     \
 	MACRO(LensModel, char, lak::dynamic_extent, __VA_ARGS__)                    \
 	MACRO(LensSerialNumber, char, lak::dynamic_extent, __VA_ARGS__)             \
