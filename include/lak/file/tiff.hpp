@@ -191,6 +191,8 @@ namespace lak
 			lak::array<lak::tiff::ifd_tag> tags;
 			lak::array<image_file_directory> subifds;
 			lak::unique_ptr<image_file_directory> exif;
+			lak::unique_ptr<image_file_directory> interop;
+			lak::unique_ptr<image_file_directory> kodak;
 			uint32_t _ifd_offset;
 
 			inline size_t total_tag_count() const
@@ -246,6 +248,18 @@ namespace lak
 			{
 				ASSERT(!exif);
 				return *(exif = decltype(exif)::make());
+			}
+
+			inline image_file_directory &push_interop()
+			{
+				ASSERT(!interop);
+				return *(interop = decltype(interop)::make());
+			}
+
+			inline image_file_directory &push_kodak()
+			{
+				ASSERT(!kodak);
+				return *(kodak = decltype(kodak)::make());
 			}
 
 #define LAK_TIFF_TAG_MAKE(NAME, TYPE, COUNT, ...)                             \

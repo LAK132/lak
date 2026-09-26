@@ -170,6 +170,8 @@ lak::tiff::result<> lak::tiff::image_file_directory::read(
 	lak::optional<lak::tiff::ifd_tag &> strip_byte_counts;
 	lak::optional<lak::tiff::ifd_tag &> subifd_tag;
 	lak::optional<lak::tiff::ifd_tag &> exif_tag;
+	lak::optional<lak::tiff::ifd_tag &> interopifd_tag;
+	lak::optional<lak::tiff::ifd_tag &> kodakifd_tag;
 
 	for (auto &t : tags)
 	{
@@ -182,6 +184,8 @@ lak::tiff::result<> lak::tiff::image_file_directory::read(
 			case lak::tiff::tag_name::StripByteCounts: strip_byte_counts = t; break;
 			case lak::tiff::tag_name::SubIFDs:         subifd_tag = t; break;
 			case lak::tiff::tag_name::ExifOffset:      exif_tag = t; break;
+			case lak::tiff::tag_name::InteropIFD:      interopifd_tag = t; break;
+			case lak::tiff::tag_name::KodakIFD:        kodakifd_tag = t; break;
 			default:                                   break;
 		}
 	}
@@ -263,6 +267,46 @@ lak::tiff::result<> lak::tiff::image_file_directory::read(
 
 			  RES_TRY(push_exif().template read<E>(strm));
 			  ASSERT_EQUAL(exif->_ifd_offset, 0U);
+
+			  RES_TRY(strm.seek(pos).replace_err(lak::err::out_of_data{}));
+			  return lak::ok_t{};
+		  },
+		  [](auto &&) -> lak::tiff::result<> { ASSERT_UNREACHABLE(); }}));
+	}
+
+	if (interopifd_tag)
+	{
+		RES_TRY(interopifd_tag->data.visit(lak::overloaded{
+		  [&](lak::span<uint32_t> offsets) -> lak::tiff::result<>
+		  {
+			  ASSERT_EQUAL(offsets.size(), 1U);
+
+			  const size_t pos = strm.position();
+
+			  RES_TRY(strm.seek(offsets[0]).replace_err(lak::err::out_of_data{}));
+
+			  RES_TRY(push_interop().template read<E>(strm));
+			  ASSERT_EQUAL(interop->_ifd_offset, 0U);
+
+			  RES_TRY(strm.seek(pos).replace_err(lak::err::out_of_data{}));
+			  return lak::ok_t{};
+		  },
+		  [](auto &&) -> lak::tiff::result<> { ASSERT_UNREACHABLE(); }}));
+	}
+
+	if (kodakifd_tag)
+	{
+		RES_TRY(kodakifd_tag->data.visit(lak::overloaded{
+		  [&](lak::span<uint32_t> offsets) -> lak::tiff::result<>
+		  {
+			  ASSERT_EQUAL(offsets.size(), 1U);
+
+			  const size_t pos = strm.position();
+
+			  RES_TRY(strm.seek(offsets[0]).replace_err(lak::err::out_of_data{}));
+
+			  RES_TRY(push_kodak().template read<E>(strm));
+			  ASSERT_EQUAL(kodak->_ifd_offset, 0U);
 
 			  RES_TRY(strm.seek(pos).replace_err(lak::err::out_of_data{}));
 			  return lak::ok_t{};
