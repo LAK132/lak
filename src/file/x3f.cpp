@@ -526,6 +526,139 @@ lak::x3f::camf_data::_read(lak::binary_reader &strm)
 	else
 		return lak::err_t<lak::err::value_out_of_range>{};
 
+	lak::binary_reader dstrm{data};
+
+	while (dstrm.remaining().size() > 4U)
+	{
+		size_t start = dstrm.position();
+
+		auto &e = entries.emplace_back();
+		RES_TRYF_ASSIGN(e.section =,
+		                dstrm.template read_le<lak::x3f::section_header>());
+		RES_TRYF_ASSIGN(uint32_t size =, dstrm.read_u32le());
+		RES_TRYF(dstrm.seek(start));
+		RES_TRYF_ASSIGN(auto source =, dstrm.read_bytes(size));
+		e.source = lak::array<byte_t>(source.begin(), source.end());
+
+		lak::binary_reader estrm{e.source};
+
+		RES_TRYF(estrm.skip(4U + 4U + 4U)); // section header + size
+		RES_TRYF_ASSIGN(uint32_t name_off =, estrm.read_u32le());
+		RES_TRYF_ASSIGN(uint32_t data_off =, estrm.read_u32le());
+
+		RES_TRYF(estrm.seek(name_off));
+		RES_TRYF_ASSIGN(
+		  e.name =, estrm.template read_exact_c_str<char>(data_off - name_off));
+
+		RES_TRYF(estrm.seek(data_off));
+		switch (lak::bit_cast<uint32_t>(e.section.fourcc))
+		{
+			case u8"CMbM"_magic_le:
+			{
+				RES_TRYF_ASSIGN(uint32_t type =, estrm.read_u32le());
+				RES_TRYF_ASSIGN(uint32_t dim =, estrm.read_u32le());
+				RES_TRYF_ASSIGN(uint32_t off =, estrm.read_u32le());
+				auto &matrix = e.data.template emplace<lak::x3f::camf_matrix>();
+				lak::binary_reader mstrm{source.subspan(off)};
+
+				auto read_type = [&]<typename T>(lak::type_identity<T>)
+				  -> lak::error_codes<lak::err::out_of_data,
+				                      lak::err::value_out_of_range>
+				{
+					auto &mat =
+					  matrix.data
+					    .template emplace<lak::x3f::camf_matrix::matrix_type<T>>();
+					mat.dimensions.resize(dim);
+					size_t mat_data_size = 1U;
+					for (size_t d = 0U; d < mat.dimensions.size(); ++d)
+					{
+						RES_TRYF_ASSIGN(uint32_t dim_size =, estrm.read_u32le());
+						RES_TRYF_ASSIGN([[maybe_unused]] uint32_t dim_name_off =,
+						                estrm.read_u32le());
+						RES_TRYF_ASSIGN(uint32_t dim_index =, estrm.read_u32le());
+						mat.dimensions[dim_index] = dim_size;
+						mat_data_size *= dim_size;
+					}
+					RES_TRYF_ASSIGN(mat.data =,
+					                mstrm.template read_le<T>(mat_data_size));
+					return lak::ok_t{};
+				};
+
+				switch (type)
+				{
+					case 0:
+					{
+						RES_TRYF(read_type(lak::type_identity<int16_t>{}));
+					}
+					break;
+					case 1: [[fallthrough]];
+					case 2:
+					{
+						RES_TRYF(read_type(lak::type_identity<uint32_t>{}));
+					}
+					break;
+					case 3:
+					{
+						RES_TRYF(read_type(lak::type_identity<f32_t>{}));
+					}
+					break;
+					case 5:
+					{
+						RES_TRYF(read_type(lak::type_identity<uint8_t>{}));
+					}
+					break;
+					case 6:
+					{
+						RES_TRYF(read_type(lak::type_identity<uint16_t>{}));
+					}
+					break;
+					default:   BOUNDS_ASSERT_NYI(); [[fallthrough]];
+					case 4:    [[fallthrough]];
+					case 0x3C: break;
+				}
+			}
+			break;
+			case u8"CMbP"_magic_le:
+			{
+				RES_TRYF_ASSIGN(uint32_t num =, estrm.read_u32le());
+				BOUNDS_ASSERT_GREATER(num, 0U);
+				if (num == 0U) break;
+				RES_TRYF_ASSIGN([[maybe_unused]] uint32_t off =, estrm.read_u32le());
+				auto &props =
+				  e.data.template emplace<lak::array<lak::x3f::camf_prop>>();
+				props.resize(num);
+
+				RES_TRYF_ASSIGN(auto sections =, estrm.read_u32le(num * 2U));
+				auto src = estrm.remaining();
+				lak::array<lak::span<const byte_t>> edata;
+				edata.reserve(sections.size());
+				for (size_t i = 1U; i < sections.size(); ++i)
+					edata.push_back(
+					  src.subspan(sections[i - 1U], sections[i] - sections[i - 1U]));
+				edata.push_back(src.subspan(sections.back()));
+
+				for (uint32_t i = 0U; i < num; ++i)
+				{
+					const uint32_t name_i = i * 2U;
+					const uint32_t data_i = name_i + 1U;
+					props[i].name =
+					  lak::string_view(lak::span<const char>(edata[name_i]));
+					props[i].data =
+					  lak::array<byte_t>(edata[data_i].begin(), edata[data_i].end());
+				}
+			}
+			break;
+			case u8"CMbT"_magic_le:
+			{
+				RES_TRYF_ASSIGN(uint32_t str_len =, estrm.read_u32le());
+				RES_TRYF_ASSIGN(e.data =,
+				                estrm.template read_exact_c_str<char>(str_len));
+			}
+			break;
+			default: BOUNDS_ASSERT_UNREACHABLE(); break;
+		}
+	}
+
 	return lak::ok_t{};
 }
 
