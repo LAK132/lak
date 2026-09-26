@@ -59,6 +59,12 @@ LAK_FIXED_STRUCT_BYTES_TRAITS(lak::x3f::camf_data_header,
                               &lak::x3f::camf_data_header::columns,
                               &lak::x3f::camf_data_header::rows);
 
+LAK_FIXED_STRUCT_BYTES_TRAITS(lak::x3f::prop_data_header,
+                              &lak::x3f::prop_data_header::entry_count,
+                              &lak::x3f::prop_data_header::unknown2,
+                              &lak::x3f::prop_data_header::unknown3,
+                              &lak::x3f::prop_data_header::unknown4);
+
 template<typename CHAR>
 struct lak::format_traits<lak::x3f::extended_data_type, CHAR>
 {

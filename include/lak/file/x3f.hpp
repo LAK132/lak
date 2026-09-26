@@ -299,12 +299,40 @@ namespace lak
 			}
 		};
 
+		struct prop_data_header
+		{
+			uint32_t entry_count;
+			uint32_t unknown2;
+			uint32_t unknown3;
+			uint32_t unknown4;
+		};
+
+		struct prop_data
+		{
+			lak::x3f::section_header section;
+			lak::x3f::prop_data_header header;
+			lak::array<byte_t> data;
+			lak::array<lak::pair<lak::u16string, lak::u16string>> strings;
+
+			lak::error_codes<lak::err::out_of_data, lak::err::value_out_of_range>
+			_read(lak::binary_reader &strm);
+
+			template<lak::endian E>
+			lak::error_codes<lak::err::out_of_data, lak::err::value_out_of_range>
+			read(lak::binary_reader &strm)
+			{
+				ASSERT_EQUAL(strm.position(), 0U);
+				return _read(strm);
+			}
+		};
+
 		struct x3f
 		{
 			lak::x3f::header header;
 			lak::x3f::directory directory;
 			lak::array<lak::x3f::image_data> image_entries;
 			lak::array<lak::x3f::camf_data> camf_entries;
+			lak::array<lak::x3f::prop_data> prop_entries;
 			lak::array<lak::tiff::tiff> format_12s;
 
 			lak::error_codes<lak::err::out_of_data, lak::err::value_out_of_range>

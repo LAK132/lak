@@ -663,6 +663,37 @@ lak::x3f::camf_data::_read(lak::binary_reader &strm)
 }
 
 lak::error_codes<lak::err::out_of_data, lak::err::value_out_of_range>
+lak::x3f::prop_data::_read(lak::binary_reader &strm)
+{
+	RES_TRYF_ASSIGN(section =,
+	                strm.template read_le<lak::x3f::section_header>());
+	RES_TRYF_ASSIGN(header =,
+	                strm.template read_le<lak::x3f::prop_data_header>());
+
+	auto rem = strm.remaining();
+	data     = lak::array<byte_t>(rem.begin(), rem.end());
+
+	lak::array<lak::pair<uint32_t, uint32_t>> entries;
+	entries.reserve(header.entry_count);
+	for (uint32_t i = 0U; i < header.entry_count; ++i)
+	{
+		RES_TRYF_ASSIGN(uint32_t a =, strm.read_u32le());
+		RES_TRYF_ASSIGN(uint32_t b =, strm.read_u32le());
+		entries.emplace_back(a, b);
+	}
+
+	// strings.reserve(header.entry_count);
+	// for (uint32_t i = 0U; i < header.entry_count; ++i)
+	// {
+	// 	auto name  = strm.template read_any_c_str<char16_t>();
+	// 	auto value = strm.template read_any_c_str<char16_t>();
+	// 	strings.emplace_back(lak::move(name), lak::move(value));
+	// }
+
+	return lak::ok_t{};
+}
+
+lak::error_codes<lak::err::out_of_data, lak::err::value_out_of_range>
 lak::x3f::x3f::_read(lak::binary_reader &strm)
 {
 	RES_TRY(header._read(strm));
@@ -708,10 +739,30 @@ lak::x3f::x3f::_read(lak::binary_reader &strm)
 					  cstrm.seek(e.offset).unwrap();
 					  lak::x3f::camf_data centry;
 					  RES_TRY(centry._read(cstrm));
-					  // RES_TRYF_ASSIGN(lak::x3f::camf_data centry =,
-					  //                 cstrm.template
-					  //                 read_le<lak::x3f::camf_data>());
 					  camf_entries.push_back(lak::move(centry));
+				  }
+				  else if (lak::compare<char>(e.type, "PROP"_span) == 4U)
+				  {
+					  RES_TRY(strm.seek(e.offset));
+					  {
+						  RES_TRYF_ASSIGN(
+						    auto sec_hdr =,
+						    strm.template peek_le<lak::x3f::section_header>());
+						  if (lak::compare<char>(lak::span(sec_hdr.fourcc), "SECp"_span) !=
+						      4U)
+						  {
+							  ERROR("Corrupt X3F");
+							  return lak::err_t<lak::err::out_of_data>{};
+						  }
+					  }
+					  lak::span<const byte_t> cdata;
+					  strm.seek(0U).unwrap();
+					  RES_TRYF_ASSIGN(cdata =, strm.read_bytes(e.offset + e.size));
+					  lak::binary_reader cstrm{cdata};
+					  cstrm.seek(e.offset).unwrap();
+					  lak::x3f::prop_data pentry;
+					  RES_TRY(pentry._read(cstrm));
+					  prop_entries.push_back(lak::move(pentry));
 				  }
 				  else if ((lak::compare<char>(e.type, "IMAG"_span) == 4U) ||
 				           (lak::compare<char>(e.type, "IMA2"_span) == 4U))
