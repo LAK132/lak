@@ -556,6 +556,7 @@
 	} while (false)
 
 #undef BOUNDS_ASSERT
+#undef BOUNDS_ASSERT_NYI
 #undef BOUNDS_ASSERT_EQUAL
 #undef BOUNDS_ASSERT_NOT_EQUAL
 #undef BOUNDS_ASSERT_LESS
@@ -565,6 +566,7 @@
 #undef BOUNDS_ASSERT_UNREACHABLE
 #ifndef ASSERT_NO_BOUNDS_CHECKS
 #	define BOUNDS_ASSERT(...)                   ASSERT(__VA_ARGS__)
+#	define BOUNDS_ASSERT_NYI()                  ASSERT_NYI()
 #	define BOUNDS_ASSERT_EQUAL(X, Y)            ASSERT_EQUAL(X, Y)
 #	define BOUNDS_ASSERT_NOT_EQUAL(X, Y)        ASSERT_NOT_EQUAL(X, Y)
 #	define BOUNDS_ASSERT_LESS(X, Y)             ASSERT_LESS(X, Y)
@@ -583,6 +585,11 @@
 		{                                                                         \
 			if (std::is_constant_evaluated())                                       \
 				if (!(__VA_ARGS__)) std::abort();                                     \
+		} while (false)
+#	define BOUNDS_ASSERT_NYI()                                                 \
+		do                                                                        \
+		{                                                                         \
+			if (std::is_constant_evaluated()) std::abort();                         \
 		} while (false)
 #	define BOUNDS_ASSERT_EQUAL(X, Y)                                           \
 		do                                                                        \
