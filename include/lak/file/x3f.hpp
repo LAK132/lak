@@ -1,6 +1,11 @@
 #ifndef LAK_X3F_HPP
 #define LAK_X3F_HPP
 
+// Prior art:
+// https://www.dpreview.com/forums/thread/3178331
+// https://github.com/pvachon/libx3f
+// https://github.com/Kalpanika/x3f
+
 #include "lak/binary_reader.hpp"
 #include "lak/binary_traits.hpp"
 #include "lak/errors.hpp"
