@@ -308,10 +308,34 @@ lak::x3f::image_data::_read(lak::binary_reader &strm)
 						      lak::to_multiple<size_t>(sizes[i], 16U))));
 					  }
 
-					  auto thread_func =
+					  auto r_thread_func =
 					    [&](size_t i) -> lak::error_codes<lak::err::out_of_data,
 					                                      lak::err::value_out_of_range>
 					  {
+						  BOUNDS_ASSERT_EQUAL(d.type, lak::x3f::image_type::RAW);
+						  lak::bit_reader<lak::endian::little, lak::endian::big> bstrm{
+						    pdata[i]};
+						  int32_t pred = seed[i];
+						  for (uint32_t y = 0; y < d.rows; y++)
+						  {
+							  for (uint32_t x = 0; x < d.columns; x++)
+							  {
+								  RES_TRYF_ASSIGN(uint32_t diff =,
+								                  read_true_diff(&huff, bstrm));
+								  pred += int32_t(diff);
+								  pred = lak::clamp<int32_t>(pred, 0, (1U << 14U) - 1U);
+								  image[{x, y}][i] = uint16_t(pred) << (16U - 14U);
+							  }
+						  }
+						  return lak::ok_t{};
+					  };
+
+					  auto mq_thread_func =
+					    [&](size_t i) -> lak::error_codes<lak::err::out_of_data,
+					                                      lak::err::value_out_of_range>
+					  {
+						  BOUNDS_ASSERT_EQUAL(d.type,
+						                      lak::x3f::image_type::RAW_Merrill_Quattro);
 						  lak::bit_reader<lak::endian::little, lak::endian::big> bstrm{
 						    pdata[i]};
 						  uint16_t vpred[2][2], hpred[2];
@@ -330,6 +354,14 @@ lak::x3f::image_data::_read(lak::binary_reader &strm)
 							  }
 						  }
 						  return lak::ok_t{};
+					  };
+
+					  auto thread_func =
+					    [&](size_t i) -> lak::error_codes<lak::err::out_of_data,
+					                                      lak::err::value_out_of_range>
+					  {
+						  return d.type == lak::x3f::image_type::RAW ? r_thread_func(i)
+						                                             : mq_thread_func(i);
 					  };
 
 #if 1
@@ -415,7 +447,7 @@ lak::x3f::image_data::_read(lak::binary_reader &strm)
 						  return lak::ok_t{};
 					  };
 
-#if 0
+#if 1
 					  using res_type = lak::error_codes<lak::err::out_of_data,
 					                                    lak::err::value_out_of_range>;
 					  lak::array<res_type> results;
