@@ -182,11 +182,31 @@ struct my_window : virtual public LAK_BASIC_PROGRAM(window_api)
 
 		if (ifd.exif)
 		{
-			LAK_TREE_NODE("Exif")
+			LAK_TREE_NODE("Exif IFD")
 			{
 				ImGui::PushID(ifd.exif.get());
 				DEFER(ImGui::PopID());
 				draw_tiff(*ifd.exif);
+			}
+		}
+
+		if (ifd.interop)
+		{
+			LAK_TREE_NODE("Interop IFD")
+			{
+				ImGui::PushID(ifd.interop.get());
+				DEFER(ImGui::PopID());
+				draw_tiff(*ifd.interop);
+			}
+		}
+
+		if (ifd.kodak)
+		{
+			LAK_TREE_NODE("Kodak IFD")
+			{
+				ImGui::PushID(ifd.kodak.get());
+				DEFER(ImGui::PopID());
+				draw_tiff(*ifd.kodak);
 			}
 		}
 	}
