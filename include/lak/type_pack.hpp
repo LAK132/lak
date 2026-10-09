@@ -12,6 +12,17 @@ namespace lak
 	{
 	};
 
+	/* --- pack_nth_type --- */
+
+	template<size_t I, typename P>
+	struct pack_nth_type;
+	template<size_t I, typename... T>
+	struct pack_nth_type<I, lak::type_pack<T...>> : public lak::nth_type<I, T...>
+	{
+	};
+	template<size_t I, typename P>
+	using pack_nth_type_t = typename lak::pack_nth_type<I, P>::type;
+
 	/* --- index_of_element --- */
 
 	template<size_t I, typename T, typename... U>
