@@ -121,6 +121,11 @@ namespace lak
 	template<>
 	struct tuple<>
 	{
+		template<typename V>
+		static constexpr size_t index_of = lak::dynamic_extent;
+		template<size_t I>
+		using type_of = lak::incomplete_t<lak::size_type<I>>;
+
 		template<typename F>
 		auto apply(F &&func)
 		{

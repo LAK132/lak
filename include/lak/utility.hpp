@@ -9,6 +9,9 @@ namespace lak
 
 	struct incomplete;
 
+	template<typename...>
+	struct incomplete_t;
+
 	/* --- monostate --- */
 
 	struct monostate
@@ -25,7 +28,7 @@ namespace lak
 		bottom() = delete;
 	};
 
-	/* --- nonsuch --- */
+	/* --- nonesuch --- */
 
 	struct nonesuch
 	{
