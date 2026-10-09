@@ -560,7 +560,9 @@ namespace lak
 			return _data.get_meta() ? _data.get_meta()->load_ref() : 0U;
 		}
 
-		explicit inline operator bool() const { return _data.get() != nullptr; }
+		bool empty() const { return _data.get() == nullptr; }
+
+		explicit inline operator bool() const { return !empty(); }
 
 		inline reference operator*() const { return *_data.get(); }
 
@@ -665,7 +667,9 @@ namespace lak
 			return _data.get_meta() ? _data.get_meta()->load_ref() : 0U;
 		}
 
-		explicit inline operator bool() const { return _data.get() != nullptr; }
+		bool empty() const { return _data.get() == nullptr; }
+
+		explicit inline operator bool() const { return !empty(); }
 
 		inline value_type *get() const { return _data.get(); }
 	};
@@ -832,6 +836,8 @@ namespace lak
 				result.reset(_data);
 			return result;
 		}
+
+		bool empty() const { return _data.get() == nullptr; }
 	};
 }
 
