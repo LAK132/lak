@@ -35,7 +35,11 @@ namespace lak
 	template<typename NUMBER>
 	constexpr NUMBER clamp(NUMBER x, NUMBER min, NUMBER max)
 	{
-		return std::min<NUMBER>(std::max<NUMBER>(x, min), max);
+		if constexpr (std::is_floating_point_v<NUMBER>)
+			// clamp NaN to min
+			return std::fmin<NUMBER>(std::fmax<NUMBER>(x, min), max);
+		else
+			return std::min<NUMBER>(std::max<NUMBER>(x, min), max);
 	}
 
 	// FLOAT [0.0, 1.0] -> unsigned INTEGER [0, MAX]
