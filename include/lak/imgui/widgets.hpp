@@ -29,6 +29,12 @@ namespace lak
 	template<lak::u8const_string STR, typename... ARGS>
 	void Text(ARGS &&...args);
 
+	void Image(const char *str_id,
+	           ImTextureRef tex,
+	           ImVec2 &pos,
+	           float &scale,
+	           ImVec2 size = ImVec2(0, 0));
+
 	ImTextureRef CreateTexture(const lak::image<lak::vec4u8_t> &image);
 	ImTextureRef CreateTexture(const lak::image<lak::vec3u8_t> &image);
 	ImTextureRef CreateTexture(const lak::image<lak::vec4u16_t> &image);

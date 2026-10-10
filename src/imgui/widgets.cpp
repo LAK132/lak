@@ -18,6 +18,111 @@
 
 #include <imgui_internal.h>
 
+void lak::Image(
+  const char *str_id, ImTextureRef tex, ImVec2 &pos, float &scale, ImVec2 size)
+{
+	using ::operator-;
+
+	if (size.x <= 0.0f || size.y <= 0.0f)
+	{
+		ImVec2 avail = ImGui::GetContentRegionAvail();
+		if (size.x <= 0.0f) size.x = avail.x + size.x;
+		if (size.y <= 0.0f) size.y = avail.y + size.y;
+	}
+	size.x = std::fmax(4.0f, size.x);
+	size.y = std::fmax(4.0f, size.y);
+
+	const auto tex_size  = lak::vec2f_t(lak::TextureSize(tex));
+	const auto tex_size2 = tex_size / 2.f;
+
+	pos.x = lak::clamp<float>(pos.x, -tex_size2.x, tex_size2.x);
+	pos.y = lak::clamp<float>(pos.y, -tex_size2.y, tex_size2.y);
+	scale = lak::clamp<float>(scale, 0.1f, 1000.f);
+
+	const auto s_tex_size = tex_size * scale;
+	const lak::vec2f_t _size{size.x, size.y};
+	const lak::vec2f_t size2 = _size / 2.f;
+
+	const lak::vec2f_t vpos{pos.x, pos.y};
+
+	const lak::vec2f_t p0 = ((s_tex_size - _size) / 2.f) - (vpos * scale);
+	const lak::vec2f_t p1 = p0 + _size;
+
+	const lak::vec2f_t uv0 = p0 / s_tex_size;
+	const lak::vec2f_t uv1 = p1 / s_tex_size;
+
+	ImVec2 _uv0 = (ImVec2)uv0;
+	ImVec2 _uv1 = (ImVec2)uv1;
+
+	auto cur   = ImGui::GetCursorScreenPos();
+	auto b_max = cur + size;
+
+	auto b0 = cur;
+	auto b1 = b_max;
+
+	if (_uv0.x < 0.f) b0.x -= s_tex_size.x * (_uv0.x);
+	if (_uv0.y < 0.f) b0.y -= s_tex_size.y * (_uv0.y);
+	b0.x   = lak::clamp<float>(b0.x, cur.x, b_max.x);
+	b0.y   = lak::clamp<float>(b0.y, cur.y, b_max.y);
+	_uv0.x = lak::clamp<float>(_uv0.x, 0.f, 1.f);
+	_uv0.y = lak::clamp<float>(_uv0.y, 0.f, 1.f);
+
+	if (_uv1.x > 1.f) b1.x -= s_tex_size.x * (_uv1.x - 1.f);
+	if (_uv1.y > 1.f) b1.y -= s_tex_size.y * (_uv1.y - 1.f);
+	b1.x   = lak::clamp<float>(b1.x, cur.x, b_max.x);
+	b1.y   = lak::clamp<float>(b1.y, cur.y, b_max.y);
+	_uv1.x = lak::clamp<float>(_uv1.x, 0.f, 1.f);
+	_uv1.y = lak::clamp<float>(_uv1.y, 0.f, 1.f);
+
+	ImGui::GetWindowDrawList()->AddImage(tex, b0, b1, _uv0, _uv1);
+	ImGui::InvisibleButton(str_id,
+	                       size,
+	                       ImGuiButtonFlags_MouseButtonLeft |
+	                         ImGuiButtonFlags_MouseButtonRight);
+	ImGui::SetItemKeyOwner(ImGuiKey_MouseWheelY);
+
+	const bool is_active  = ImGui::IsItemActive();
+	const bool is_hovered = ImGui::IsItemHovered() && !ImGui::IsAnyItemActive();
+	auto &io              = ImGui::GetIO();
+
+	auto calc_scale = [&](lak::vec2f_t mpos, float scroll)
+	{
+		mpos -= lak::vec2f_t{cur.x, cur.y};
+		mpos -= size2;
+
+		float pscale = scale;
+		scale += scale * scroll;
+
+		auto diff = (mpos / scale) - (mpos / pscale);
+
+		pos.x += diff.x;
+		pos.y += diff.y;
+	};
+
+	if (is_active)
+	{
+		if (ImGui::IsMouseDragging(ImGuiMouseButton_Left, 0.5f))
+		{
+			pos.x += io.MouseDelta.x / scale;
+			pos.y += io.MouseDelta.y / scale;
+		}
+		else if (ImGui::IsMouseDragging(ImGuiMouseButton_Right, 1.f))
+		{
+			calc_scale(lak::vec2f_t{io.MouseClickedPos[ImGuiMouseButton_Right].x,
+			                        io.MouseClickedPos[ImGuiMouseButton_Right].y},
+			           io.MouseDelta.y / 100.f);
+		}
+	}
+	else if (is_hovered)
+	{
+		if (io.MouseWheel != 0.0f)
+		{
+			calc_scale(lak::vec2f_t{io.MousePos.x, io.MousePos.y},
+			           io.MouseWheel / 10.f);
+		}
+	}
+}
+
 /* --- CreateTexture --- */
 
 ImTextureRef lak::CreateTexture(const lak::image<lak::vec4u8_t> &image)
