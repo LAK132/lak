@@ -74,7 +74,8 @@ void lak::Image(
 	_uv1.x = lak::clamp<float>(_uv1.x, 0.f, 1.f);
 	_uv1.y = lak::clamp<float>(_uv1.y, 0.f, 1.f);
 
-	ImGui::GetWindowDrawList()->AddImage(tex, b0, b1, _uv0, _uv1);
+	if (tex.GetID() != ImTextureID_Invalid)
+		ImGui::GetWindowDrawList()->AddImage(tex, b0, b1, _uv0, _uv1);
 	ImGui::InvisibleButton(str_id,
 	                       size,
 	                       ImGuiButtonFlags_MouseButtonLeft |
