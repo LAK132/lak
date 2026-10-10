@@ -58,7 +58,8 @@ namespace ImGui
 	{
 		::cobalt::graphics::IFrameBuffer::unique_ptr fb;
 		::cobalt::graphics::ITextureBuffer2D::unique_ptr db;
-		lak::array<::cobalt::graphics::IRenderPassNode::unique_ptr> ps;
+		lak::array<::cobalt::graphics::IRenderPassNode *> ps;
+		lak::array<::cobalt::graphics::IRenderPassNode::unique_ptr> ops;
 	};
 }
 
@@ -500,9 +501,10 @@ ImGui::ImplCoViewportDetails ImplCoBeginViewport(ImGui::ImplContext context,
 	  {0, 0}, {uint32_t(size.x), uint32_t(size.y)});
 
 	return {
-	  .renderer    = context->co_context->renderer,
-	  .framebuffer = viewport->co_viewport->fb.get(),
-	  .passes      = &viewport->co_viewport->ps,
+	  .renderer     = context->co_context->renderer,
+	  .framebuffer  = viewport->co_viewport->fb.get(),
+	  .passes       = &viewport->co_viewport->ps,
+	  .owned_passes = &viewport->co_viewport->ops,
 	};
 }
 

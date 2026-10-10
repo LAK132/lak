@@ -113,13 +113,22 @@ namespace ImGui
 #ifdef LAK_ENABLE_COBALT
 		::cobalt::graphics::IRenderer *renderer;
 		::cobalt::graphics::IFrameBuffer *framebuffer;
-		lak::array<::cobalt::graphics::IRenderPassNode::unique_ptr> *passes;
+		lak::array<::cobalt::graphics::IRenderPassNode *> *passes;
+		lak::array<::cobalt::graphics::IRenderPassNode::unique_ptr> *owned_passes;
 
 		inline void clear_passes() const { passes->clear(); }
+		inline void append_pass(::cobalt::graphics::IRenderPassNode *pass) const
+		{
+			passes->push_back(pass);
+			pass->BindFrameBuffer(framebuffer);
+		}
 		inline ::cobalt::graphics::IRenderPassNode *append_pass() const
 		{
 			passes->reserve(passes->size() + 1U);
-			auto result = passes->push_back(renderer->CreateRenderPassNode()).get();
+			owned_passes->reserve(passes->size() + 1U);
+			auto result =
+			  owned_passes->push_back(renderer->CreateRenderPassNode()).get();
+			passes->push_back(result);
 			result->BindFrameBuffer(framebuffer);
 			return result;
 		}
