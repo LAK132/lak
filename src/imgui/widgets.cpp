@@ -32,7 +32,9 @@ void lak::Image(
 	size.x = std::fmax(4.0f, size.x);
 	size.y = std::fmax(4.0f, size.y);
 
-	const auto tex_size  = lak::vec2f_t(lak::TextureSize(tex));
+	const auto tex_size  = (tex.GetTexID() != ImTextureID_Invalid)
+	                         ? lak::vec2f_t(lak::TextureSize(tex))
+	                         : lak::vec2f_t(1.f, 1.f);
 	const auto tex_size2 = tex_size / 2.f;
 
 	pos.x = lak::clamp<float>(pos.x, -tex_size2.x, tex_size2.x);
