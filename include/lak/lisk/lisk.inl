@@ -581,6 +581,21 @@ const lak::lisk::string &lak::lisk::type_name(const lak::shared_ptr<T> &t)
 	return name;
 }
 
+template<>
+struct lak::lisk::from_expr_traits<lak::lisk::pointer>
+{
+	using value_type = lak::lisk::pointer;
+	using error_type = lak::monostate;
+	static lak::result<lak::lisk::pointer> from_expr(
+	  const lak::lisk::expression &expr)
+	{
+		if_let_ok (const auto &p, expr.get_atom().AND_THEN(get_pointer()))
+			return lak::ok_t{p};
+		else
+			return lak::err_t{};
+	}
+};
+
 /* --- atom -- */
 
 inline lak::lisk::atom::atom(nil) : _value(nil{}) {}
