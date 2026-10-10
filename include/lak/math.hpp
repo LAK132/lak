@@ -37,7 +37,7 @@ namespace lak
 	{
 		if constexpr (std::is_floating_point_v<NUMBER>)
 			// clamp NaN to min
-			return std::fmin<NUMBER>(std::fmax<NUMBER>(x, min), max);
+			return std::fmin(std::fmax(x, min), max);
 		else
 			return std::min<NUMBER>(std::max<NUMBER>(x, min), max);
 	}
