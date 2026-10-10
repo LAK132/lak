@@ -309,19 +309,25 @@ namespace lak
 		if_ok(                                                                    \
 		  [&](const auto &val)                                                    \
 		  {                                                                       \
-			  if constexpr (lak::is_same_v<lak::remove_cvref_t<decltype(err)>,      \
+			  if constexpr (lak::is_same_v<lak::remove_cvref_t<decltype(val)>,      \
 			                               lak::monostate>)                         \
 			  {                                                                     \
 				  DEBUG(__VA_ARGS__);                                                 \
 			  }                                                                     \
 			  else if constexpr (lak::concepts::streamable<                         \
-			                       lak::remove_cvref_t<decltype(err)>>)             \
+			                       lak::remove_cvref_t<decltype(val)>>)             \
 			  {                                                                     \
 				  DEBUG(__VA_ARGS__ __VA_OPT__(, ": ", ) val);                        \
 			  }                                                                     \
+			  else if constexpr (lak::concepts::formattable<                        \
+			                       lak::remove_cvref_t<decltype(val)>,              \
+			                       char8_t>)                                        \
+			  {                                                                     \
+				  DEBUG(__VA_ARGS__ __VA_OPT__(, ": ", ) lak::fmt<u8"{}">(val));      \
+			  }                                                                     \
 			  else                                                                  \
 			  {                                                                     \
-				  DEBUG(__VA_ARGS__ __VA_OPT__(, ": ", ) typeid(err).name());         \
+				  DEBUG(__VA_ARGS__ __VA_OPT__(, ": ", ) typeid(val).name());         \
 			  }                                                                     \
 		  })
 #	define IF_ERR(...)                                                         \
@@ -337,6 +343,12 @@ namespace lak
 			                       lak::remove_cvref_t<decltype(err)>>)             \
 			  {                                                                     \
 				  ERROR(__VA_ARGS__ __VA_OPT__(, ": ", ) err);                        \
+			  }                                                                     \
+			  else if constexpr (lak::concepts::formattable<                        \
+			                       lak::remove_cvref_t<decltype(err)>,              \
+			                       char8_t>)                                        \
+			  {                                                                     \
+				  ERROR(__VA_ARGS__ __VA_OPT__(, ": ", ) lak::fmt<u8"{}">(err));      \
 			  }                                                                     \
 			  else                                                                  \
 			  {                                                                     \
@@ -356,6 +368,12 @@ namespace lak
 			                       lak::remove_cvref_t<decltype(err)>>)             \
 			  {                                                                     \
 				  WARNING(__VA_ARGS__ __VA_OPT__(, ": ", ) err);                      \
+			  }                                                                     \
+			  else if constexpr (lak::concepts::formattable<                        \
+			                       lak::remove_cvref_t<decltype(err)>,              \
+			                       char8_t>)                                        \
+			  {                                                                     \
+				  WARNING(__VA_ARGS__ __VA_OPT__(, ": ", ) lak::fmt<u8"{}">(err));    \
 			  }                                                                     \
 			  else                                                                  \
 			  {                                                                     \
