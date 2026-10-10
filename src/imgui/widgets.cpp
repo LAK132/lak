@@ -18,68 +18,80 @@
 
 #include <imgui_internal.h>
 
-void lak::Image(
-  const char *str_id, ImTextureRef tex, ImVec2 &pos, float &scale, ImVec2 size)
+bool lak::PanZoomViewportBehaviour(const char *str_id,
+                                   ImVec4 &viewport_rect,
+                                   float &viewport_scale,
+                                   ImVec4 &quad_uv,
+                                   ImVec4 *screen_pos,
+                                   ImVec2 viewport_screen_size)
 {
 	using ::operator-;
 
-	if (size.x <= 0.0f || size.y <= 0.0f)
+	if (viewport_screen_size.x <= 0.0f || viewport_screen_size.y <= 0.0f)
 	{
 		ImVec2 avail = ImGui::GetContentRegionAvail();
-		if (size.x <= 0.0f) size.x = avail.x + size.x;
-		if (size.y <= 0.0f) size.y = avail.y + size.y;
+		if (viewport_screen_size.x <= 0.0f)
+			viewport_screen_size.x = avail.x + viewport_screen_size.x;
+		if (viewport_screen_size.y <= 0.0f)
+			viewport_screen_size.y = avail.y + viewport_screen_size.y;
 	}
-	size.x = std::fmax(4.0f, size.x);
-	size.y = std::fmax(4.0f, size.y);
+	viewport_screen_size.x = std::fmax(4.0f, viewport_screen_size.x);
+	viewport_screen_size.y = std::fmax(4.0f, viewport_screen_size.y);
 
-	const auto tex_size  = (tex.GetTexID() != ImTextureID_Invalid)
-	                         ? lak::vec2f_t(lak::TextureSize(tex))
-	                         : lak::vec2f_t(1.f, 1.f);
+	const auto tex_size  = lak::vec2f_t(viewport_rect.z, viewport_rect.w);
 	const auto tex_size2 = tex_size / 2.f;
 
-	pos.x = lak::clamp<float>(pos.x, -tex_size2.x, tex_size2.x);
-	pos.y = lak::clamp<float>(pos.y, -tex_size2.y, tex_size2.y);
-	scale = lak::clamp<float>(scale, 0.1f, 1000.f);
+	viewport_rect.x =
+	  lak::clamp<float>(viewport_rect.x, -tex_size2.x, tex_size2.x);
+	viewport_rect.y =
+	  lak::clamp<float>(viewport_rect.y, -tex_size2.y, tex_size2.y);
+	viewport_scale = lak::clamp<float>(viewport_scale, 0.01f, 1000.f);
 
-	const auto s_tex_size = tex_size * scale;
-	const lak::vec2f_t _size{size.x, size.y};
+	const auto s_tex_size = tex_size * viewport_scale;
+	const lak::vec2f_t _size{viewport_screen_size.x, viewport_screen_size.y};
 	const lak::vec2f_t size2 = _size / 2.f;
 
-	const lak::vec2f_t vpos{pos.x, pos.y};
+	const lak::vec2f_t vpos{viewport_rect.x, viewport_rect.y};
 
-	const lak::vec2f_t p0 = ((s_tex_size - _size) / 2.f) - (vpos * scale);
+	const lak::vec2f_t p0 =
+	  ((s_tex_size - _size) / 2.f) - (vpos * viewport_scale);
 	const lak::vec2f_t p1 = p0 + _size;
 
 	const lak::vec2f_t uv0 = p0 / s_tex_size;
 	const lak::vec2f_t uv1 = p1 / s_tex_size;
 
-	ImVec2 _uv0 = (ImVec2)uv0;
-	ImVec2 _uv1 = (ImVec2)uv1;
+	quad_uv.x = uv0.x;
+	quad_uv.y = uv0.y;
+	quad_uv.z = uv1.x;
+	quad_uv.w = uv1.y;
 
-	auto cur   = ImGui::GetCursorScreenPos();
-	auto b_max = cur + size;
+	const auto cur   = ImGui::GetCursorScreenPos();
+	const auto b_max = cur + viewport_screen_size;
 
-	auto b0 = cur;
-	auto b1 = b_max;
+	if (screen_pos)
+	{
+		screen_pos->x = cur.x;
+		screen_pos->y = cur.y;
+		screen_pos->z = b_max.x;
+		screen_pos->w = b_max.y;
 
-	if (_uv0.x < 0.f) b0.x -= s_tex_size.x * (_uv0.x);
-	if (_uv0.y < 0.f) b0.y -= s_tex_size.y * (_uv0.y);
-	b0.x   = lak::clamp<float>(b0.x, cur.x, b_max.x);
-	b0.y   = lak::clamp<float>(b0.y, cur.y, b_max.y);
-	_uv0.x = lak::clamp<float>(_uv0.x, 0.f, 1.f);
-	_uv0.y = lak::clamp<float>(_uv0.y, 0.f, 1.f);
+		if (quad_uv.x < 0.f) screen_pos->x -= s_tex_size.x * (quad_uv.x);
+		if (quad_uv.y < 0.f) screen_pos->y -= s_tex_size.y * (quad_uv.y);
+		screen_pos->x = lak::clamp<float>(screen_pos->x, cur.x, b_max.x);
+		screen_pos->y = lak::clamp<float>(screen_pos->y, cur.y, b_max.y);
+		quad_uv.x     = lak::clamp<float>(quad_uv.x, 0.f, 1.f);
+		quad_uv.y     = lak::clamp<float>(quad_uv.y, 0.f, 1.f);
 
-	if (_uv1.x > 1.f) b1.x -= s_tex_size.x * (_uv1.x - 1.f);
-	if (_uv1.y > 1.f) b1.y -= s_tex_size.y * (_uv1.y - 1.f);
-	b1.x   = lak::clamp<float>(b1.x, cur.x, b_max.x);
-	b1.y   = lak::clamp<float>(b1.y, cur.y, b_max.y);
-	_uv1.x = lak::clamp<float>(_uv1.x, 0.f, 1.f);
-	_uv1.y = lak::clamp<float>(_uv1.y, 0.f, 1.f);
+		if (quad_uv.z > 1.f) screen_pos->z -= s_tex_size.x * (quad_uv.z - 1.f);
+		if (quad_uv.w > 1.f) screen_pos->w -= s_tex_size.y * (quad_uv.w - 1.f);
+		screen_pos->z = lak::clamp<float>(screen_pos->z, cur.x, b_max.x);
+		screen_pos->w = lak::clamp<float>(screen_pos->w, cur.y, b_max.y);
+		quad_uv.z     = lak::clamp<float>(quad_uv.z, 0.f, 1.f);
+		quad_uv.w     = lak::clamp<float>(quad_uv.w, 0.f, 1.f);
+	}
 
-	if (tex.GetTexID() != ImTextureID_Invalid)
-		ImGui::GetWindowDrawList()->AddImage(tex, b0, b1, _uv0, _uv1);
 	ImGui::InvisibleButton(str_id,
-	                       size,
+	                       viewport_screen_size,
 	                       ImGuiButtonFlags_MouseButtonLeft |
 	                         ImGuiButtonFlags_MouseButtonRight);
 	ImGui::SetItemKeyOwner(ImGuiKey_MouseWheelY);
@@ -93,27 +105,29 @@ void lak::Image(
 		mpos -= lak::vec2f_t{cur.x, cur.y};
 		mpos -= size2;
 
-		float pscale = scale;
-		scale += scale * scroll;
+		float pscale = viewport_scale;
+		viewport_scale += viewport_scale * scroll;
 
-		auto diff = (mpos / scale) - (mpos / pscale);
+		auto diff = (mpos / viewport_scale) - (mpos / pscale);
 
-		pos.x += diff.x;
-		pos.y += diff.y;
+		viewport_rect.x += diff.x;
+		viewport_rect.y += diff.y;
 	};
 
 	if (is_active)
 	{
 		if (ImGui::IsMouseDragging(ImGuiMouseButton_Left, 0.5f))
 		{
-			pos.x += io.MouseDelta.x / scale;
-			pos.y += io.MouseDelta.y / scale;
+			viewport_rect.x += io.MouseDelta.x / viewport_scale;
+			viewport_rect.y += io.MouseDelta.y / viewport_scale;
+			return true;
 		}
 		else if (ImGui::IsMouseDragging(ImGuiMouseButton_Right, 1.f))
 		{
 			calc_scale(lak::vec2f_t{io.MouseClickedPos[ImGuiMouseButton_Right].x,
 			                        io.MouseClickedPos[ImGuiMouseButton_Right].y},
 			           io.MouseDelta.y / 100.f);
+			return true;
 		}
 	}
 	else if (is_hovered)
@@ -122,8 +136,33 @@ void lak::Image(
 		{
 			calc_scale(lak::vec2f_t{io.MousePos.x, io.MousePos.y},
 			           io.MouseWheel / 10.f);
+			return true;
 		}
 	}
+
+	return false;
+}
+
+void lak::Image(
+  const char *str_id, ImTextureRef tex, ImVec2 &pos, float &scale, ImVec2 size)
+{
+	auto viewport_rect = ImVec4(pos.x, pos.y, 1.f, 1.f);
+	if (tex.GetTexID() != ImTextureID_Invalid)
+	{
+		auto sz         = lak::TextureSize(tex);
+		viewport_rect.z = sz.x;
+		viewport_rect.w = sz.y;
+	}
+	ImVec4 screen_pos;
+	ImVec4 quad_uv;
+	lak::PanZoomViewportBehaviour(
+	  str_id, viewport_rect, scale, quad_uv, &screen_pos, size);
+	if (tex.GetTexID() != ImTextureID_Invalid)
+		ImGui::GetWindowDrawList()->AddImage(tex,
+		                                     ImVec2(screen_pos.x, screen_pos.y),
+		                                     ImVec2(screen_pos.z, screen_pos.w),
+		                                     ImVec2(quad_uv.x, quad_uv.y),
+		                                     ImVec2(quad_uv.z, quad_uv.w));
 }
 
 /* --- CreateTexture --- */

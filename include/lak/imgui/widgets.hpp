@@ -29,6 +29,13 @@ namespace lak
 	template<lak::u8const_string STR, typename... ARGS>
 	void Text(ARGS &&...args);
 
+	// screen_pos = nullptr: quad_uv may be outside the range [0, 1]
+	bool PanZoomViewportBehaviour(const char *str_id,
+	                              ImVec4 &viewport_rect,
+	                              float &viewport_scale,
+	                              ImVec4 &quad_uv,
+	                              ImVec4 *screen_pos          = nullptr,
+	                              ImVec2 viewport_screen_size = ImVec2(0, 0));
 	void Image(const char *str_id,
 	           ImTextureRef tex,
 	           ImVec2 &pos,
