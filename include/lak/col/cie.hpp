@@ -30,8 +30,8 @@ namespace lak
 				  lak::inverse(lak::col::bradford_matrix) * colour.to_vec());
 			}
 
-			constexpr lak::mat3f_t bradford_adaption_matrix(lak::col::cie::XYZ src,
-			                                                lak::col::cie::XYZ dst)
+			constexpr lak::mat3f_t bradford_adaptation_matrix(lak::col::cie::XYZ src,
+			                                                  lak::col::cie::XYZ dst)
 			{
 				const auto src_lms = lak::col::cie::to_LMS_bradford(src);
 				const auto dst_lms = lak::col::cie::to_LMS_bradford(dst);
@@ -40,17 +40,17 @@ namespace lak
 				       (scale * lak::col::bradford_matrix);
 			}
 
-			constexpr lak::mat3f_t bradford_adaption_matrix(lak::col::cie::xyY src,
-			                                                lak::col::cie::xyY dst)
+			constexpr lak::mat3f_t bradford_adaptation_matrix(lak::col::cie::xyY src,
+			                                                  lak::col::cie::xyY dst)
 			{
-				return lak::col::cie::bradford_adaption_matrix(
+				return lak::col::cie::bradford_adaptation_matrix(
 				  lak::col::cie::to_XYZ(src), lak::col::cie::to_XYZ(dst));
 			}
 
-			constexpr lak::mat3f_t bradford_adaption_matrix(lak::col::cie::xy src,
-			                                                lak::col::cie::xy dst)
+			constexpr lak::mat3f_t bradford_adaptation_matrix(lak::col::cie::xy src,
+			                                                  lak::col::cie::xy dst)
 			{
-				return lak::col::cie::bradford_adaption_matrix(
+				return lak::col::cie::bradford_adaptation_matrix(
 				  lak::col::cie::to_XYZ(src), lak::col::cie::to_XYZ(dst));
 			}
 
@@ -58,7 +58,8 @@ namespace lak
 			  lak::col::cie::xyY_primaries src, lak::col::cie::xy dst)
 			{
 				const auto w = lak::col::cie::to_XYZ(dst, 1.f);
-				const auto m = lak::col::cie::bradford_adaption_matrix(src.w_XYZ(), w);
+				const auto m =
+				  lak::col::cie::bradford_adaptation_matrix(src.w_XYZ(), w);
 				const auto r = lak::col::cie::XYZ::from_vec(
 				  m * lak::col::cie::to_XYZ(src.r).to_vec());
 				const auto g = lak::col::cie::XYZ::from_vec(
@@ -96,8 +97,8 @@ namespace lak
 				  lak::inverse(lak::col::von_kries_matrix) * colour.to_vec());
 			}
 
-			constexpr lak::mat3f_t von_kries_adaption_matrix(lak::col::cie::XYZ src,
-			                                                 lak::col::cie::XYZ dst)
+			constexpr lak::mat3f_t von_kries_adaptation_matrix(
+			  lak::col::cie::XYZ src, lak::col::cie::XYZ dst)
 			{
 				const auto src_lms = lak::col::cie::to_LMS_von_kries(src);
 				const auto dst_lms = lak::col::cie::to_LMS_von_kries(dst);
