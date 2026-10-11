@@ -109,6 +109,23 @@ namespace lak
 
 			// ---
 
+			constexpr lak::col::cie::XYZ to_XYZ_hunter_pointer_estevez(
+			  lak::col::LMS colour)
+			{
+				return lak::col::cie::XYZ::from_vec(
+				  lak::col::hunter_pointer_estevez_matrix * colour.to_vec());
+			}
+
+			constexpr lak::col::LMS to_LMS_hunter_pointer_estevez(
+			  lak::col::cie::XYZ colour)
+			{
+				return lak::col::LMS::from_vec(
+				  lak::inverse(lak::col::hunter_pointer_estevez_matrix) *
+				  colour.to_vec());
+			}
+
+			// ---
+
 			constexpr float D_series_CCT(float temp)
 			{
 				constexpr double chk =

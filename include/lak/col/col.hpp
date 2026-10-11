@@ -31,6 +31,12 @@ namespace lak
 		  lak::vec3f_t(-0.22630f, 1.16532f, 0.04570f),
 		  lak::vec3f_t(0.00000f, 0.00000f, 0.91822f),
 		};
+
+		constexpr lak::mat3f_t hunter_pointer_estevez_matrix{
+		  lak::vec3f_t(1.91020f, -1.11212f, 0.20191f),
+		  lak::vec3f_t(0.37095f, 0.62905f, 0.00000f),
+		  lak::vec3f_t(0.00000f, 0.00000f, 1.00000f),
+		};
 	}
 }
 
