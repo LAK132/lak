@@ -274,6 +274,17 @@ namespace lak
 
 				return result;
 			}
+
+			constexpr lak::col::cie::xy_primaries to_xy(
+			  lak::col::cie::xyY_primaries primaries)
+			{
+				return {
+				  .r = {primaries.r.x, primaries.r.y},
+				  .g = {primaries.g.x, primaries.g.y},
+				  .b = {primaries.b.x, primaries.b.y},
+				  .w = primaries.w,
+				};
+			}
 		}
 	}
 }
