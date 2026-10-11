@@ -41,7 +41,7 @@ inline std::string build_type_string(build_type_t bt)
 	switch (bt)
 	{
 		case build_type_t::debug:           return "debug"s;
-		case build_type_t::debug_optimised: return "debugoptmized"s;
+		case build_type_t::debug_optimised: return "debugoptimized"s;
 		case build_type_t::release:         return "release"s;
 
 		default: std::cerr << "invalid build type\n"; std::abort();
