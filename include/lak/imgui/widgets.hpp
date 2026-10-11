@@ -29,7 +29,12 @@ namespace lak
 	template<lak::u8const_string STR, typename... ARGS>
 	void Text(ARGS &&...args);
 
+	template<lak::u8const_string STR, typename... ARGS>
+	bool Button(ARGS &&...args);
+
 	// screen_pos = nullptr: quad_uv may be outside the range [0, 1]
+	// pan: left click + drag
+	// zoom: vertical scroll or right click + drag
 	bool PanZoomViewportBehaviour(const char *str_id,
 	                              ImVec4 &viewport_rect,
 	                              float &viewport_scale,

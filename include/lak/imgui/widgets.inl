@@ -13,6 +13,14 @@ void lak::Text(ARGS &&...args)
 	ImGui::TextUnformatted(c_str, c_str + str.size());
 }
 
+template<lak::u8const_string STR, typename... ARGS>
+bool lak::Button(ARGS &&...args)
+{
+	lak::u8string str = lak::fmt<STR.generic()>(lak::forward<ARGS>(args)...);
+	const char *c_str = reinterpret_cast<const char *>(str.c_str());
+	return ImGui::Button(c_str);
+}
+
 template<typename R, typename... T, typename... D>
 bool lak::AwaitPopup(const char *str_id,
                      bool &open,
