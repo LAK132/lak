@@ -5,20 +5,22 @@ int main()
 	using namespace std::literals::string_literals;
 
 	std::string windows_setup =
-	  "--vsenv "
-	  "-Dcpp_args=\\\"-D_DISABLE_CONSTEXPR_MUTEX_CONSTRUCTOR\\\" "
-	  "-Dlak_bounds_checks=always "
-	  "-Dlak_enable_examples=true "
-	  "-Dlak_enable_tests=true "
-	  "-Dlak_enable_windowing=true "
-	  "-Dlak_enable_imgui=true "
-	  "-Dlak_enable_stb=true "
-	  "-Dlak_enable_stb_image=true "
-	  "-Dlak_enable_stb_image_write=true "
-	  "-Dlak_use_native_file_dialog=true "
-	  "-Dlak_backend=win32 "
-	  "\\\"-Dlak_renderer=softrender,opengl,cobalt\\\" "
-	  "\\\"-Dcobalt_renderer=OpenGL3,OpenGL4,Vulkan,Direct3D11,Direct3D12\\\""s;
+	  "--vsenv "s +
+	  meson_option("cpp_args",
+	               {quote("-D_DISABLE_CONSTEXPR_MUTEX_CONSTRUCTOR")}) +
+	  meson_option("lak_bounds_checks", {"always"}) +
+	  meson_option("lak_enable_examples", {"true"}) +
+	  meson_option("lak_enable_tests", {"true"}) +
+	  meson_option("lak_enable_windowing", {"true"}) +
+	  meson_option("lak_enable_imgui", {"true"}) +
+	  meson_option("lak_enable_stb", {"true"}) +
+	  meson_option("lak_enable_stb_image", {"true"}) +
+	  meson_option("lak_enable_stb_image_write", {"true"}) +
+	  meson_option("lak_use_native_file_dialog", {"true"}) +
+	  meson_option("lak_backend", {"win32"}) +
+	  meson_option("lak_renderer", {"softrender", "opengl", "cobalt"}) +
+	  meson_option("cobalt_renderer",
+	               {"OpenGL3", "OpenGL4", "Vulkan", "Direct3D11", "Direct3D12"});
 	std::string windows_run =
 	  "install/bin/lak_test --help ; "
 	  "install/bin/lak_test --testall"s;

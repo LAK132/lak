@@ -65,6 +65,28 @@ struct matrix_entry_t
 	}
 };
 
+inline std::string quote(const std::string &str)
+{
+	using namespace std::literals::string_literals;
+	return "\\\""s + str + "\\\""s;
+}
+
+inline std::string meson_option(const std::string &option,
+                                const std::vector<std::string> &args)
+{
+	using namespace std::literals::string_literals;
+
+	std::string result = "-D"s + option + "="s;
+	if (!args.empty())
+	{
+		result += args[0];
+		for (size_t i = 1U; i < args.size(); ++i) result += ","s + args[1];
+	}
+	if (args.size() > 1U) result = quote(result);
+	result += " "s;
+	return result;
+}
+
 inline void print_matrix(const std::vector<matrix_entry_t> &matrix)
 {
 	std::cout << "matrix=[";

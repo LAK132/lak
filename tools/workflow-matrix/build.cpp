@@ -9,11 +9,11 @@ int main()
 	    // examples
 	    .setups =
 	      {
-	        "--buildtype=debugoptimized "
-	        "-Dlak_enable_examples=true "
-	        "-Dlak_enable_windowing=true "
-	        "-Dlak_enable_glm=true "
-	        "-Dlak_enable_imgui=true"s,
+	        "--buildtype=debugoptimized "s +
+	          meson_option("lak_enable_examples", {"true"}) +
+	          meson_option("lak_enable_windowing", {"true"}) +
+	          meson_option("lak_enable_glm", {"true"}) +
+	          meson_option("lak_enable_imgui", {"true"}),
 	      },
 	    .target = "basic_program "
 	              "nbt-view "
@@ -24,8 +24,8 @@ int main()
 	    // tests
 	    .setups =
 	      {
-	        "--buildtype=debugoptimized "
-	        "-Dlak_enable_tests=true"s,
+	        "--buildtype=debugoptimized "s +
+	          meson_option("lak_enable_tests", {"true"}),
 	      },
 	    .target = "lak_test"s,
 	    .run    = "build/lak_test --help ; "
@@ -39,22 +39,22 @@ int main()
 	      // tests
 	      .setups =
 	        {
-	          "--buildtype=debugoptimized "
-	          "-Dlak_enable_tests=true "
-	          "-Dlak_enable_godot_cpp=true "
-	          "-Dlak_enable_lua=true "
-	          "-Dlak_enable_stb=true "
-	          "-Dlak_enable_stb_image=true "
-	          "-Dlak_enable_stb_image_write=true"s,
+	          "--buildtype=debugoptimized "s +
+	            meson_option("lak_enable_tests", {"true"}) +
+	            meson_option("lak_enable_godot_cpp", {"true"}) +
+	            meson_option("lak_enable_lua", {"true"}) +
+	            meson_option("lak_enable_stb", {"true"}) +
+	            meson_option("lak_enable_stb_image", {"true"}) +
+	            meson_option("lak_enable_stb_image_write", {"true"}),
 
-	          "--buildtype=debugoptimized "
-	          "-Dlak_enable_tests=true "
-	          "-Dlak_enable_windowing=true "
-	          "-Dlak_use_native_file_dialog=false "
-	          "-Dsdl2_from_source=true "
-	          "-Dlak_backend=sdl2 "
-	          "-Dlak_enable_glm=true "
-	          "-Dlak_enable_imgui=true"s,
+	          "--buildtype=debugoptimized "s +
+	            meson_option("lak_enable_tests", {"true"}) +
+	            meson_option("lak_enable_windowing", {"true"}) +
+	            meson_option("lak_use_native_file_dialog", {"false"}) +
+	            meson_option("sdl2_from_source", {"true"}) +
+	            meson_option("lak_backend", {"sdl2"}) +
+	            meson_option("lak_enable_glm", {"true"}) +
+	            meson_option("lak_enable_imgui", {"true"}),
 	        },
 	      .target = "lak_test"s,
 	      .run    = "build/lak_test --help ; "
@@ -64,15 +64,15 @@ int main()
 	      // test building with cobalt
 	      .setups =
 	        {
-	          "--buildtype=release "
-	          "-Dlak_enable_tests=false "
-	          "-Dlak_enable_examples=true "
-	          "-Dlak_enable_windowing=true "
-	          "-Dsdl2_from_source=true "
-	          "-Dlak_backend=sdl2 "
-	          "-Dlak_renderer=cobalt "
-	          "-Dlak_enable_glm=true "
-	          "-Dlak_enable_imgui=true"s,
+	          "--buildtype=release "s +
+	            meson_option("lak_enable_tests", {"false"}) +
+	            meson_option("lak_enable_examples", {"true"}) +
+	            meson_option("lak_enable_windowing", {"true"}) +
+	            meson_option("sdl2_from_source", {"true"}) +
+	            meson_option("lak_backend", {"sdl2"}) +
+	            meson_option("lak_renderer", {"cobalt"}) +
+	            meson_option("lak_enable_glm", {"true"}) +
+	            meson_option("lak_enable_imgui", {"true"}),
 	        },
 	      .target = "hello-cobalt"s,
 	      .run    = {},
@@ -85,19 +85,19 @@ int main()
 	    {
 	      .setups =
 	        {
-	          "--buildtype=debugoptimized "
-	          "-Dlak_enable_tests=true "
-	          // "Compatibility with CMake < 3.5 has been removed from CMake."
-	          // "-Dlak_enable_libfive=true "
-	          "-Dlak_enable_lmdb=true"s,
+	          "--buildtype=debugoptimized "s +
+	            meson_option("lak_enable_tests", {"true"}) +
+	            // "Compatibility with CMake < 3.5 has been removed from CMake."
+	            // meson_option("lak_enable_libfive", {"true"}) +
+	            meson_option("lak_enable_lmdb", {"true"}),
 
-	          "--buildtype=debugoptimized "
-	          "-Dlak_enable_tests=true "
-	          "-Dlak_enable_windowing=true "
-	          "-Dlak_use_native_file_dialog=true "
-	          "-Dlak_backend=win32 "
-	          "-Dlak_enable_glm=true "
-	          "-Dlak_enable_imgui=true"s,
+	          "--buildtype=debugoptimized "s +
+	            meson_option("lak_enable_tests", {"true"}) +
+	            meson_option("lak_enable_windowing", {"true"}) +
+	            meson_option("lak_use_native_file_dialog", {"true"}) +
+	            meson_option("lak_backend", {"win32"}) +
+	            meson_option("lak_enable_glm", {"true"}) +
+	            meson_option("lak_enable_imgui", {"true"}),
 	        },
 	      .target = "lak_test"s,
 	      .run    = "build/lak_test --help ; "
@@ -107,14 +107,14 @@ int main()
 	      // test building with cobalt
 	      .setups =
 	        {
-	          "--buildtype=release "
-	          "-Dlak_enable_tests=false "
-	          "-Dlak_enable_examples=true "
-	          "-Dlak_enable_windowing=true "
-	          "-Dlak_backend=win32 "
-	          "-Dlak_renderer=cobalt "
-	          "-Dlak_enable_glm=true "
-	          "-Dlak_enable_imgui=true"s,
+	          "--buildtype=release "s +
+	            meson_option("lak_enable_tests", {"false"}) +
+	            meson_option("lak_enable_examples", {"true"}) +
+	            meson_option("lak_enable_windowing", {"true"}) +
+	            meson_option("lak_backend", {"win32"}) +
+	            meson_option("lak_renderer", {"cobalt"}) +
+	            meson_option("lak_enable_glm", {"true"}) +
+	            meson_option("lak_enable_imgui", {"true"}),
 	        },
 	      .target = "hello-cobalt"s,
 	      .run    = {},
@@ -179,8 +179,8 @@ int main()
 	    .targets = {{
 	      .setups = {"--cross-file=cross/emscripten.txt "
 	                 "--cross-file=cross/wasm32.txt "
-	                 "--buildtype=debugoptimized "
-	                 "-Dlak_enable_tests=true"s},
+	                 "--buildtype=debugoptimized "s +
+	                 meson_option("lak_enable_tests", {"true"})},
 	      .target = "lak_test"s,
 	      .run    = "node build/lak_test.js --help ;"
 	                "node build/lak_test.js --testall"s,
@@ -195,8 +195,8 @@ int main()
 	    .targets = {{
 	      .setups = {"--cross-file=cross/emscripten.txt "
 	                 "--cross-file=cross/wasm64.txt "
-	                 "--buildtype=debugoptimized "
-	                 "-Dlak_enable_tests=true"s},
+	                 "--buildtype=debugoptimized "s +
+	                 meson_option("lak_enable_tests", {"true"})},
 	      .target = "lak_test"s,
 	      .run    = "node build/lak_test.js --help ;"
 	                "node build/lak_test.js --testall"s,
