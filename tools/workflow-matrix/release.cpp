@@ -27,14 +27,15 @@ int main()
 
 	std::vector<matrix_entry_t> entries = {
 	  {
-	    .os = {.runner = "windows-2025-vs2026"s,
+	    .os = {.runner = windows_intel_runner,
 	           .system = "windows"s,
 	           .arch   = "x64"s},
 	    .targets =
 	      {
 	        {
-	          .setups = {windows_setup},
-	          .target = "release"s,
+	          .setups = {{.setup_options = windows_setup,
+	                      .build_type    = build_type_t::release}},
+	          .target = "lak_test"s,
 	          .run    = windows_run,
 	        },
 	      },

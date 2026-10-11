@@ -3,6 +3,13 @@
 #include <string>
 #include <vector>
 
+static const std::string windows_intel_runner = "windows-2025-vs2026";
+static const std::string windows_arm_runner   = "windows-11-vs2026-arm";
+static const std::string ubuntu_intel_runner  = "ubuntu-26.04";
+static const std::string ubuntu_arm_runner    = "ubuntu-26.04-arm";
+static const std::string macos_intel_runner   = "macos-26-intel";
+static const std::string macos_arm_runner     = "macos-26";
+
 struct os_t
 {
 	std::string runner;
@@ -20,9 +27,37 @@ struct os_t
 	}
 };
 
+enum struct build_type_t
+{
+	debug,
+	debug_optimised,
+	release,
+};
+
+inline std::string build_type_string(build_type_t bt)
+{
+	using namespace std::literals::string_literals;
+
+	switch (bt)
+	{
+		case build_type_t::debug:           return "debug"s;
+		case build_type_t::debug_optimised: return "debugoptmized"s;
+		case build_type_t::release:         return "release"s;
+
+		default: std::cerr << "invalid build type\n"; std::abort();
+	}
+}
+
+struct setup_t
+{
+	std::string setup_options;
+	build_type_t build_type = build_type_t::debug;
+	std::string compile_options;
+};
+
 struct target_t
 {
-	std::vector<std::string> setups;
+	std::vector<setup_t> setups;
 	std::string target;
 	std::string run;
 };
@@ -54,7 +89,9 @@ struct matrix_entry_t
 			{
 				strm << "{";
 				strm << e.os;
-				strm << "setup_options:\"" << s << "\",";
+				strm << "setup_options:\"" << s.setup_options << "\",";
+				strm << "compile_options:\"" << s.compile_options << "\",";
+				strm << "build_type:\"" << build_type_string(s.build_type) << "\",";
 				strm << "target:\"" << t.target << "\",";
 				strm << "run:\"" << t.run << "\"";
 				strm << "}";

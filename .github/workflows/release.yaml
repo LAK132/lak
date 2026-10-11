@@ -84,10 +84,11 @@ jobs:
           echo "CXX=$(brew --prefix llvm@20)/bin/clang++" >> $GITHUB_ENV
 
       - if: matrix.os.system == 'windows'
-        run: meson setup build ${{ matrix.setup_options }} -Dprefix="$pwd\install" -Dbindir=bin -Dlibdir=bin -Dlicensedir="share\licenses" --buildtype=${{ matrix.target }}
+        run: meson setup build ${{ matrix.setup_options }} -Dprefix="$pwd\install" -Dbindir=bin -Dlibdir=bin -Dlicensedir="share\licenses" --buildtype=${{ matrix.build_type }}
       - if: matrix.os.system != 'windows'
-        run: meson setup build ${{ matrix.setup_options }} -Dprefix="$(pwd)/install" -Dlicensedir="share/licenses" --buildtype=${{ matrix.target }}
+        run: meson setup build ${{ matrix.setup_options }} -Dprefix="$(pwd)/install" -Dlicensedir="share/licenses" --buildtype=${{ matrix.build_type }}
       - run: |
+          meson compile -C build ${{ matrix.compile_options }} ${{ matrix.target }}
           meson install -C build
       - if: matrix.run != ''
         run: |
@@ -95,27 +96,22 @@ jobs:
 
       - if: matrix.os.system == 'windows'
         run: |
-          Compress-Archive -Path install\* -DestinationPath lak-${{ matrix.target }}-${{ needs.create-release.outputs.tag }}-${{ matrix.os.system }}-${{ matrix.os.arch }}.zip
+          Compress-Archive -Path install\* -DestinationPath lak-${{ matrix.build_type }}-${{ needs.create-release.outputs.tag }}-${{ matrix.os.system }}-${{ matrix.os.arch }}.zip
 
       - if: matrix.os.system == 'ubuntu' || matrix.os.system == 'macos'
         run: |
           cd install
-          tar cfz lak-${{ matrix.target }}-${{ needs.create-release.outputs.tag }}-${{ matrix.os.system }}-${{ matrix.os.arch }}.tar.gz *
+          tar cfz lak-${{ matrix.build_type }}-${{ needs.create-release.outputs.tag }}-${{ matrix.os.system }}-${{ matrix.os.arch }}.tar.gz *
           ls
 
       - if: matrix.os.system == 'windows'
         uses: softprops/action-gh-release@v3
         with:
           fail_on_unmatched_files: true
-          files: lak-${{ matrix.target }}-${{ needs.create-release.outputs.tag }}-${{ matrix.os.system }}-${{ matrix.os.arch }}.zip
+          files: lak-${{ matrix.build_type }}-${{ needs.create-release.outputs.tag }}-${{ matrix.os.system }}-${{ matrix.os.arch }}.zip
 
       - if: matrix.os.system == 'ubuntu' || matrix.os.system == 'macos'
         uses: softprops/action-gh-release@v3
         with:
           fail_on_unmatched_files: true
-          files: install/bin/lak-${{ matrix.target }}-${{ needs.create-release.outputs.tag }}-${{ matrix.os.system }}-${{ matrix.os.arch }}.tar.gz
-
-      - name: check for out-of-memory kills
-        if: always() && matrix.os.system == 'ubuntu'
-        run: |
-          sudo dmesg -T | grep -iE 'oom|out of memory|kill' || true
+          files: install/bin/lak-${{ matrix.build_type }}-${{ needs.create-release.outputs.tag }}-${{ matrix.os.system }}-${{ matrix.os.arch }}.tar.gz

@@ -67,15 +67,10 @@ jobs:
           echo "CXX=$(brew --prefix llvm@20)/bin/clang++" >> $GITHUB_ENV
 
       - run: |
-          meson setup build ${{ matrix.setup_options }}
-          meson compile -C build ${{ matrix.target }}
+          meson setup build ${{ matrix.setup_options }} --buildtype=${{ matrix.build_type }}
+          meson compile -C build ${{ matrix.compile_options }} ${{ matrix.target }}
       - if: matrix.run != ''
         run: ${{ matrix.run }}
-
-      - name: check for out-of-memory kills
-        if: always() && matrix.os.system == 'ubuntu'
-        run: |
-          sudo dmesg -T | grep -iE 'oom|out of memory|kill' || true
 
   push-staging:
     needs: [test]
