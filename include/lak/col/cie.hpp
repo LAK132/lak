@@ -18,20 +18,68 @@ namespace lak
 	{
 		namespace cie
 		{
-			constexpr lak::col::cie::XYZ to_XYZ(lak::col::LMS colour)
+			constexpr lak::col::LMS to_LMS_bradford(lak::col::cie::XYZ colour)
 			{
-				// https://en.wikipedia.org/wiki/CIE_1931_color_space#CIE_XYZ_color_space
-				const auto from_vec = lak::vec3f64_t(colour.L, colour.M, colour.S);
-				const auto mat =
-				  lak::mat3f64_t(lak::vec3f64_t(1.91020, -1.11212, 0.20191),
-				                 lak::vec3f64_t(0.37095, 0.62905, 0.00000),
-				                 lak::vec3f64_t(0.00000, 0.00000, 1.00000));
-				const auto to_vec = mat * from_vec;
-				return {
-				  .X = float(to_vec.r),
-				  .Y = float(to_vec.g),
-				  .Z = colour.S,
+				return lak::col::LMS::from_vec(lak::col::bradford_matrix *
+				                               colour.to_vec());
+			}
+
+			constexpr lak::col::cie::XYZ to_XYZ_bradford(lak::col::LMS colour)
+			{
+				return lak::col::cie::XYZ::from_vec(
+				  lak::inverse(lak::col::bradford_matrix) * colour.to_vec());
+			}
+
+			constexpr lak::mat3f_t bradford_adaption_matrix(lak::col::cie::XYZ src,
+			                                                lak::col::cie::XYZ dst)
+			{
+				const auto src_lms = lak::col::cie::to_LMS_bradford(src);
+				const auto dst_lms = lak::col::cie::to_LMS_bradford(dst);
+				const auto scale = lak::diagonal(dst_lms.to_vec() / src_lms.to_vec());
+				return lak::inverse(lak::col::bradford_matrix) *
+				       (scale * lak::col::bradford_matrix);
+			}
+
+			constexpr lak::mat3f_t bradford_adaption_matrix(lak::col::cie::xyY src,
+			                                                lak::col::cie::xyY dst)
+			{
+				return lak::col::cie::bradford_adaption_matrix(
+				  lak::col::cie::to_XYZ(src), lak::col::cie::to_XYZ(dst));
+			}
+
+			constexpr lak::mat3f_t bradford_adaption_matrix(lak::col::cie::xy src,
+			                                                lak::col::cie::xy dst)
+			{
+				return lak::col::cie::bradford_adaption_matrix(
+				  lak::col::cie::to_XYZ(src), lak::col::cie::to_XYZ(dst));
+			}
+
+			constexpr lak::col::cie::xyY_primaries bradford_adapt(
+			  lak::col::cie::xyY_primaries src, lak::col::cie::xy dst)
+			{
+				const auto w = lak::col::cie::to_XYZ(dst, 1.f);
+				const auto m = lak::col::cie::bradford_adaption_matrix(src.w_XYZ(), w);
+				const auto r = lak::col::cie::XYZ::from_vec(
+				  m * lak::col::cie::to_XYZ(src.r).to_vec());
+				const auto g = lak::col::cie::XYZ::from_vec(
+				  m * lak::col::cie::to_XYZ(src.g).to_vec());
+				const auto b = lak::col::cie::XYZ::from_vec(
+				  m * lak::col::cie::to_XYZ(src.b).to_vec());
+				lak::col::cie::xyY_primaries result{
+				  .r = lak::col::cie::to_xyY(r),
+				  .g = lak::col::cie::to_xyY(g),
+				  .b = lak::col::cie::to_xyY(b),
+				  .w = dst,
 				};
+				result.regenerate_Y();
+				return result;
+			}
+
+			constexpr lak::col::cie::xy_primaries bradford_adapt(
+			  lak::col::cie::xy_primaries src, lak::col::cie::xy dst)
+			{
+				return lak::col::cie::to_xy(
+				  lak::col::cie::bradford_adapt(lak::col::cie::to_xyY(src), dst));
 			}
 
 			// ---
