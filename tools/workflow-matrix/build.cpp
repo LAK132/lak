@@ -123,11 +123,11 @@ int main()
 
 	std::vector<target_t> ubuntu_targets = native_targets;
 	for (auto &t : ubuntu_targets)
-		for (auto &s : t.setups) s.compile_options += " -j 1"s;
+		for (auto &s : t.setups) s.build_type = build_type_t::debug;
 
 	std::vector<target_t> ubuntu_x86_targets = common_targets;
 	for (auto &t : ubuntu_x86_targets)
-		for (auto &s : t.setups) s.compile_options += " -j 1"s;
+		for (auto &s : t.setups) s.build_type = build_type_t::debug;
 
 	std::vector<target_t> macos_targets = native_targets;
 
