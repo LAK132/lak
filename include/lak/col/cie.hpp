@@ -84,6 +84,30 @@ namespace lak
 
 			// ---
 
+			constexpr lak::col::LMS to_LMS_von_kries(lak::col::cie::XYZ colour)
+			{
+				return lak::col::LMS::from_vec(lak::col::von_kries_matrix *
+				                               colour.to_vec());
+			}
+
+			constexpr lak::col::cie::XYZ to_XYZ_von_kries(lak::col::LMS colour)
+			{
+				return lak::col::cie::XYZ::from_vec(
+				  lak::inverse(lak::col::von_kries_matrix) * colour.to_vec());
+			}
+
+			constexpr lak::mat3f_t von_kries_adaption_matrix(lak::col::cie::XYZ src,
+			                                                 lak::col::cie::XYZ dst)
+			{
+				const auto src_lms = lak::col::cie::to_LMS_von_kries(src);
+				const auto dst_lms = lak::col::cie::to_LMS_von_kries(dst);
+				const auto scale = lak::diagonal(dst_lms.to_vec() / src_lms.to_vec());
+				return lak::inverse(lak::col::von_kries_matrix) *
+				       (scale * lak::col::von_kries_matrix);
+			}
+
+			// ---
+
 			constexpr float D_series_CCT(float temp)
 			{
 				constexpr double chk =
