@@ -139,8 +139,9 @@ namespace lak
 				return index;
 			}
 			template<lak::aconst_string NAME>
-			using type_of_state_value = typename decltype(state_values)::type_of<
-			  index_of_state_value<NAME>()>::value_type;
+			using type_of_state_value =
+			  typename decltype(state_values)::template type_of<
+			    index_of_state_value<NAME>()>::value_type;
 			template<lak::aconst_string NAME>
 			const auto &state_value() const
 			{
@@ -182,11 +183,13 @@ namespace lak
 				return index;
 			}
 			template<lak::aconst_string NAME>
-			using type_of_texture_buffer = typename decltype(textures)::type_of<
-			  index_of_texture<NAME>()>::buffer_type;
+			using type_of_texture_buffer =
+			  typename decltype(textures)::template type_of<
+			    index_of_texture<NAME>()>::buffer_type;
 			template<lak::aconst_string NAME>
-			using type_of_texture_sampler = typename decltype(textures)::type_of<
-			  index_of_texture<NAME>()>::sampler_type;
+			using type_of_texture_sampler =
+			  typename decltype(textures)::template type_of<
+			    index_of_texture<NAME>()>::sampler_type;
 			template<lak::aconst_string NAME>
 			const auto &texture() const
 			{
