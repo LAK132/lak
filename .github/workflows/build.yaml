@@ -72,6 +72,11 @@ jobs:
       - if: matrix.run != ''
         run: ${{ matrix.run }}
 
+      - name: check for out-of-memory kills
+        if: failure()
+        run: |
+          sudo dmesg -T | grep -iE 'oom|out of memory|kill' || true
+
   push-staging:
     needs: [test]
     runs-on: windows-2022
