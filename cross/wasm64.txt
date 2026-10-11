@@ -5,6 +5,6 @@ endian = 'little'
 
 [built-in options]
 c_args = ['-pthread', '--target=wasm64']
-c_link_args = ['-pthread', '--target=wasm64', '-Wl,-mwasm64', '-sMALLOC=emmalloc']
+c_link_args = ['-pthread', '--target=wasm64', '-Wl,-mwasm64', '-sMALLOC=emmalloc', '-sSTACK_SIZE=1MB]
 cpp_args = ['-pthread', '--target=wasm64']
-cpp_link_args = ['-pthread', '--target=wasm64', '-Wl,-mwasm64', '-sMALLOC=emmalloc']
+cpp_link_args = ['-pthread', '--target=wasm64', '-Wl,-mwasm64', '-sMALLOC=emmalloc', '-sSTACK_SIZE=1MB]
