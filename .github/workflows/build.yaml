@@ -73,7 +73,7 @@ jobs:
         run: ${{ matrix.run }}
 
       - name: check for out-of-memory kills
-        if: failure()
+        if: always() && matrix.os.system == 'ubuntu'
         run: |
           sudo dmesg -T | grep -iE 'oom|out of memory|kill' || true
 
