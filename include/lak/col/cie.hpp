@@ -156,6 +156,12 @@ namespace lak
 			constexpr auto D75_XYZ             = to_XYZ(D75_xyY);
 			constexpr auto D75_RGB             = to_RGB(D75_XYZ);
 
+			constexpr float D93_CCT            = D_series_CCT(9300.f);
+			constexpr lak::col::cie::xy D93_xy = D_series_illuminant(D93_CCT);
+			constexpr auto D93_xyY             = to_xyY(D93_xy, 1.f);
+			constexpr auto D93_XYZ             = to_XYZ(D93_xyY);
+			constexpr auto D93_RGB             = to_RGB(D93_XYZ);
+
 			constexpr lak::col::cie::xy E_xy{.x = 1.f / 3.f, .y = 1.f / 3.f};
 			constexpr auto E_xyY = to_xyY(E_xy, 1.f);
 			constexpr lak::col::cie::XYZ E_XYZ{.X = 1.f, .Y = 1.f, .Z = 1.f};
