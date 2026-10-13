@@ -121,7 +121,7 @@ inline std::string meson_option(const std::string &option,
 	if (!args.empty())
 	{
 		result += args[0];
-		for (size_t i = 1U; i < args.size(); ++i) result += ","s + args[1];
+		for (size_t i = 1U; i < args.size(); ++i) result += ","s + args[i];
 	}
 	if (args.size() > 1U) result = quote(result);
 	result += " "s;
