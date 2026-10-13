@@ -2,10 +2,12 @@
 #define LAK_COL_CIE_1931_HPP
 
 #include "lak/debug.hpp"
+#include "lak/math.hpp"
 #include "lak/span.hpp"
 #include "lak/vec.hpp"
 
-// https://www.cie.co.at/datatable/cie-1931-chromaticity-coordinates-spectrum-loci-2-degree-observer
+#include <cie-cmf/CIE_cc_1931_2deg.csv.hpp>
+#include <cie-cmf/CIE_xyz_1931_2deg.csv.hpp>
 
 namespace lak
 {
@@ -285,8 +287,27 @@ namespace lak
 				  .w = primaries.w,
 				};
 			}
+
+			// see cie_1931.inl for constexpr table
+			inline lak::col::cie::XYZ planckian_locus_1931_2deg_at(
+			  double temperature)
+			{
+				lak::col::cie::XYZ result{.X = 0.f, .Y = 0.f, .Z = 0.f};
+				for (const auto &entry :
+				     lak::span(cie_cmf::cie_1931_xyz_cmf_2deg_observer))
+				{
+					double weight =
+					  lak::blackbody_radiance(double(entry.wavelength), temperature);
+					result.X += entry.x * weight;
+					result.Y += entry.y * weight;
+					result.Z += entry.z * weight;
+				}
+				return result;
+			}
 		}
 	}
 }
+
+#include "lak/col/cie_1931.inl"
 
 #endif
