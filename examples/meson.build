@@ -1,5 +1,6 @@
 subdir('ball-game')
 subdir('basic_program')
+subdir('colour-demo')
 subdir('hello-cobalt')
 subdir('mdc-view')
 subdir('nbt-view')
