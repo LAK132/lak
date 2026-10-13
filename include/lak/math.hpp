@@ -101,10 +101,13 @@ namespace lak
 	}
 
 	// round a up to a multiple of b
-	template<typename INTEGER>
-	constexpr INTEGER to_multiple(INTEGER a, INTEGER b)
+	template<typename NUMBER>
+	constexpr NUMBER to_multiple(NUMBER a, NUMBER b)
 	{
-		return a + lak::slack<INTEGER>(a, b);
+		if constexpr (std::is_floating_point_v<NUMBER>)
+			return a + lak::fslack<NUMBER>(a, b);
+		else
+			return a + lak::slack<NUMBER>(a, b);
 	}
 
 	// fit a to the range [0, b) by adding or subtracting multiples of b
