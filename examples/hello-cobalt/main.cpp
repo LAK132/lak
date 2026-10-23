@@ -387,7 +387,7 @@ struct hello_cobalt_window : virtual public LAK_BASIC_PROGRAM(window_api)
 		{
 			if (ImGui::Button("Compute"))
 				lak::cobalt_append_compute_pass(window().handle(),
-				                               comp->render_pass_node.get())
+				                                comp->render_pass_node.get())
 				  .UNWRAP();
 			if (comp->data_array_captured_output->HasCapturedCounterValue() &&
 			    comp->data_array_captured_output->HasCapturedOutput())
@@ -519,7 +519,9 @@ void LAK_BASIC_PROGRAM(program_handle_event)(lak::event &event)
 {
 	switch (event.type)
 	{
-		case lak::event_type::quit_program: break;
+		case lak::event_type::quit_program:
+			for (auto &inst : LAK_BASIC_PROGRAM(window_instances)()) inst->destroy();
+			break;
 
 		default: break;
 	}

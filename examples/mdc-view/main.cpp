@@ -444,7 +444,16 @@ lak::error_code<int> LAK_BASIC_PROGRAM(program_init)()
 	return lak::ok_t{};
 }
 
-void LAK_BASIC_PROGRAM(program_handle_event)(lak::event &event) {}
+void LAK_BASIC_PROGRAM(program_handle_event)(lak::event &event)
+{
+	switch (event.type)
+	{
+		case lak::event_type::quit_program:
+			if (auto wnd = my_window_ptr.get(); wnd) wnd->destroy();
+			my_window_ptr.reset();
+			break;
+	}
+}
 
 bool LAK_BASIC_PROGRAM(program_loop)(uint64_t counter_delta)
 {
