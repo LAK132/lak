@@ -308,12 +308,22 @@ bool lak::VertSplitter(float &left,
                        float width,
                        float leftMin,
                        float rightMin,
-                       float length)
+                       float length,
+                       bool fix_left)
 {
 	const float thickness = ImGui::GetStyle().FramePadding.x * 2;
-	const float maxLeft   = width - (rightMin + thickness);
-	if (left > maxLeft) left = maxLeft;
-	right = width - (left + thickness);
+	if (fix_left)
+	{
+		const float maxLeft = width - (rightMin + thickness);
+		if (left > maxLeft) left = maxLeft;
+		right = width - (left + thickness);
+	}
+	else
+	{
+		const float maxRight = width - (leftMin + thickness);
+		if (right > maxRight) right = maxRight;
+		left = width - (right + thickness);
+	}
 
 	ImGuiID id    = ImGui::GetID("##Splitter");
 	ImVec2 cursor = ImGui::GetCursorScreenPos();
@@ -337,12 +347,22 @@ bool lak::HoriSplitter(float &top,
                        float height,
                        float topMin,
                        float bottomMin,
-                       float length)
+                       float length,
+                       bool fix_top)
 {
 	const float thickness = ImGui::GetStyle().FramePadding.x * 2;
-	const float maxTop    = height - (bottomMin + thickness);
-	if (top > maxTop) top = maxTop;
-	bottom = height - (top + thickness);
+	if (fix_top)
+	{
+		const float maxTop = height - (bottomMin + thickness);
+		if (top > maxTop) top = maxTop;
+		bottom = height - (top + thickness);
+	}
+	else
+	{
+		const float maxBottom = height - (topMin + thickness);
+		if (bottom > maxBottom) bottom = maxBottom;
+		top = height - (bottom + thickness);
+	}
 
 	ImGuiID id    = ImGui::GetID("##Splitter");
 	ImVec2 cursor = ImGui::GetCursorScreenPos();

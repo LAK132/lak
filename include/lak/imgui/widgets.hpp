@@ -135,14 +135,22 @@ namespace lak
 	                  float width,
 	                  float leftMin  = 8.0f,
 	                  float rightMin = 8.0f,
-	                  float length   = -1.0f);
+	                  float length   = -1.0f,
+	                  bool fix_left  = true);
+	// when adapting to width changes,
+	// fix_left = true:  left is fixed, right side changes size
+	// fix_left = false: right is fixed, left side changes size
 
 	bool HoriSplitter(float &top,
 	                  float &bottom,
 	                  float height,
 	                  float topMin    = 8.0f,
 	                  float bottomMin = 8.0f,
-	                  float length    = -1.0f);
+	                  float length    = -1.0f,
+	                  bool fix_top    = true);
+	// when adapting to width changes,
+	// fix_top = true:  top is fixed, bottom side changes size
+	// fix_top = false: bottom is fixed, top side changes size
 
 	struct vert_split_child
 	{
