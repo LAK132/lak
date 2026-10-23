@@ -157,6 +157,8 @@ void lak::Image(
 	ImVec4 quad_uv;
 	lak::PanZoomViewportBehaviour(
 	  str_id, viewport_rect, scale, quad_uv, &screen_pos, size);
+	pos.x = viewport_rect.x;
+	pos.y = viewport_rect.y;
 	if (tex.GetTexID() != ImTextureID_Invalid)
 		ImGui::GetWindowDrawList()->AddImage(tex,
 		                                     ImVec2(screen_pos.x, screen_pos.y),
