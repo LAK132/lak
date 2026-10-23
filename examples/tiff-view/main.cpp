@@ -16,6 +16,8 @@
 
 #include <filesystem>
 
+lak::optional<std::filesystem::path> init_file;
+
 using load_error  = lak::variant<std::error_code,
                                  lak::err::out_of_data,
                                  lak::err::value_out_of_range>;
@@ -43,7 +45,11 @@ struct my_window : virtual public LAK_BASIC_PROGRAM(window_api)
 	lak::await<load_result> loader;
 	lak::optional<lak::tiff::tiff> tiff;
 
-	virtual void init() override final {}
+	virtual void init() override final
+	{
+		if (init_file.has_value())
+			openfile = lak::exchange(init_file, lak::nullopt);
+	}
 
 	virtual ~my_window() {}
 
@@ -233,6 +239,8 @@ struct my_window : virtual public LAK_BASIC_PROGRAM(window_api)
 
 lak::error_code<int> LAK_BASIC_PROGRAM(program_preinit)(lak::span<char *> args)
 {
+	if (args.size() >= 2) init_file = std::filesystem::path(args[1]);
+
 	return lak::ok_t{};
 }
 
