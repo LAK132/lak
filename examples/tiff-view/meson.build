@@ -14,6 +14,7 @@ executable(
 	],
 	dependencies: [
 		lak_dep,
+		imgui_memory_editor_dep,
 	],
 	build_by_default: false,
 	install: get_option('lak_install_targets').contains('tiff-view'),

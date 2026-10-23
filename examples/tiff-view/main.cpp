@@ -45,6 +45,13 @@ struct my_window : virtual public LAK_BASIC_PROGRAM(window_api)
 	lak::await<load_result> loader;
 	lak::optional<lak::tiff::tiff> tiff;
 
+	lak::array<byte_t> mem_edit_data;
+	lak::optional<lak::span<byte_t>> mem_edit_highlight;
+	MemoryEditor mem_edit;
+
+	float _left_size  = -1.f;
+	float _right_size = -1.f;
+
 	virtual void init() override final
 	{
 		if (init_file.has_value())
@@ -60,7 +67,31 @@ struct my_window : virtual public LAK_BASIC_PROGRAM(window_api)
 			case lak::event_type::close_window: destroy(); break;
 			case lak::event_type::dropfile:
 				if (!openfile) openfile = event.dropfile().path;
+				mem_edit_data.clear();
 				break;
+		}
+	}
+
+	void menu()
+	{
+		if (ImGui::Button("Open file"))
+			pget_open.open_file({}, "TIFF{.tif;.tiff}");
+	}
+
+	void left_region()
+	{
+		if (tiff) draw_tiff(*tiff);
+	}
+
+	void right_region()
+	{
+		mem_edit.DrawContents(mem_edit_data.data(), mem_edit_data.size());
+		if (mem_edit_highlight.has_value())
+		{
+			mem_edit.GotoAddrAndHighlight(
+			  lak::distance(mem_edit_data.begin(), mem_edit_highlight->begin()),
+			  lak::distance(mem_edit_data.begin(), mem_edit_highlight->end()));
+			mem_edit_highlight.reset();
 		}
 	}
 
@@ -68,11 +99,10 @@ struct my_window : virtual public LAK_BASIC_PROGRAM(window_api)
 	{
 		if (ImGui::BeginMenuBar())
 		{
-			if (ImGui::Button("Open file"))
-				pget_open.open_file({}, "TIFF{.tif;.tiff}");
-
+			menu();
 			ImGui::EndMenuBar();
 		}
+
 		if_let_some (auto pget, pget_open()) openfile = lak::move(pget);
 
 		if (!loadfile && openfile)
@@ -93,7 +123,36 @@ struct my_window : virtual public LAK_BASIC_PROGRAM(window_api)
 			}
 		}
 
-		if (tiff) draw_tiff(*tiff);
+		const auto content_size{ImGui::GetContentRegionAvail()};
+
+		if (_left_size <= 0.f || _right_size <= 0.f)
+		{
+			_left_size  = content_size.x / 2;
+			_right_size = content_size.x / 2;
+		}
+
+		lak::VertSplitter(
+		  _left_size, _right_size, content_size.x, 8.f, 8.f, -1.f, false);
+
+		if (ImGui::BeginChild("left",
+		                      ImVec2(_left_size, -1),
+		                      ImGuiChildFlags_Borders,
+		                      ImGuiWindowFlags_NoSavedSettings))
+		{
+			left_region();
+		}
+		ImGui::EndChild();
+
+		ImGui::SameLine();
+
+		if (ImGui::BeginChild("right",
+		                      ImVec2(_right_size, -1),
+		                      ImGuiChildFlags_Borders,
+		                      ImGuiWindowFlags_NoSavedSettings))
+		{
+			right_region();
+		}
+		ImGui::EndChild();
 	}
 
 	void draw_tiff(const lak::tiff::image_file_header &ifh)
@@ -106,23 +165,30 @@ struct my_window : virtual public LAK_BASIC_PROGRAM(window_api)
 		tag.data.visit(
 		  [&]<typename T>(lak::span<T> data)
 		  {
+			  if (ImGui::Button("View data"))
+			  {
+				  mem_edit_data.clear();
+				  auto bytes = lak::span<const byte_t>(data);
+				  mem_edit_data.push_back(bytes.begin(), bytes.end());
+			  }
+
+			  LAK_TREE_NODE2("Data ({}[{}])", TYPE_NAME(T), data.size())
 			  switch (tag.id)
 			  {
 #define LAK_TIFF_STRINGS(NAME, ...)                                           \
 	case lak::tiff::tag_name::NAME: [[fallthrough]];
 				  LAK_FOREACH_STRING_TIFF_TAG(LAK_TIFF_STRINGS)
 #undef LAK_TIFF_STRINGS
-				  lak::Text<u8"{}[{}] = \"{}\"">(
-				    TYPE_NAME(T),
-				    data.size(),
+				  lak::Text<u8"{}">(
 				    lak::string_view(lak::span<const char>(lak::span(data))));
 				  break;
 
 				  default:
-					  lak::Text<u8"{}[{}] = {{{}}}">(
-					    TYPE_NAME(T),
-					    data.size(),
-					    lak::spaced_streamify(u8", "_str, data));
+					  if (data.size() <= 10U)
+						  lak::Text<u8"{{{}}}">(lak::spaced_streamify(u8", "_str, data));
+					  else
+						  lak::Text<u8"{{{}, ...}}">(lak::spaced_streamify(
+						    u8", "_str, lak::span(data).first(100U)));
 					  break;
 			  }
 		  });
@@ -131,11 +197,19 @@ struct my_window : virtual public LAK_BASIC_PROGRAM(window_api)
 	void draw_tiff(const lak::tiff::strip &strip)
 	{
 		lak::Text<u8"Size: {}">(strip.data.size());
+		if (ImGui::Button("View data"))
+		{
+			mem_edit_data = strip.data;
+		}
 	}
 
 	void draw_tiff(const lak::tiff::tile &tile)
 	{
 		lak::Text<u8"Size: {}">(tile.data.size());
+		if (ImGui::Button("View data"))
+		{
+			mem_edit_data = tile.data;
+		}
 	}
 
 	void draw_tiff(const lak::tiff::image_file_directory &ifd)
