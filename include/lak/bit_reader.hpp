@@ -58,6 +58,8 @@ namespace lak
 
 		inline bool empty() const { return _data.empty(); }
 
+		inline void clear() { *this = bit_reader(); }
+
 		inline void reset_data(lak::span<const byte_t> data) { _data = data; }
 
 		inline bool try_accumulate_remaining();
