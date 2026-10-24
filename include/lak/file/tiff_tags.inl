@@ -171,15 +171,16 @@ namespace lak
 	MACRO(ApplicationNotes, __VA_ARGS__)                                        \
 	MACRO(Model2, __VA_ARGS__)                                                  \
 	MACRO(KodakIFD, __VA_ARGS__)                                                \
+	MACRO(ExifOffset, __VA_ARGS__)                                              \
 	MACRO(ExifVersion, __VA_ARGS__)                                             \
-	MACRO(CreateDate, __VA_ARGS__)                                              \
+	MACRO(DateTimeDigitized, __VA_ARGS__)                                       \
 	MACRO(ComponentsConfiguration, __VA_ARGS__)                                 \
 	MACRO(FlashpixVersion, __VA_ARGS__)                                         \
 	MACRO(ColorSpace, __VA_ARGS__)                                              \
-	MACRO(ExifImageWidth, __VA_ARGS__)                                          \
-	MACRO(ExifImageHeight, __VA_ARGS__)                                         \
+	MACRO(PixelXDimension, __VA_ARGS__)                                         \
+	MACRO(PixelYDimension, __VA_ARGS__)                                         \
 	MACRO(RelatedSoundFile, __VA_ARGS__)                                        \
-	MACRO(InteropOffset, __VA_ARGS__)                                           \
+	MACRO(InteropIFD, __VA_ARGS__)                                              \
 	MACRO(ExifFlashEnergy, __VA_ARGS__)                                         \
 	MACRO(ExifExposureIndex, __VA_ARGS__)                                       \
 	MACRO(ExifSensingMethod, __VA_ARGS__)                                       \
@@ -198,8 +199,7 @@ namespace lak
 	MACRO(SubjectDistanceRange, __VA_ARGS__)                                    \
 	MACRO(LensMake, __VA_ARGS__)                                                \
 	MACRO(LensModel, __VA_ARGS__)                                               \
-	MACRO(LensSerialNumber, __VA_ARGS__)                                        \
-	MACRO(ExifOffset, __VA_ARGS__)
+	MACRO(LensSerialNumber, __VA_ARGS__)
 
 #define LAK_FOREACH_DNG_1_1_0_0_TAG_NAME(MACRO, ...)                          \
 	MACRO(DNGVersion, __VA_ARGS__)                                              \
@@ -475,6 +475,7 @@ namespace lak
 	MACRO(0x2BC, ApplicationNotes, EXIF, __VA_ARGS__)                           \
 	MACRO(0x827D, Model2, EXIF, __VA_ARGS__)                                    \
 	MACRO(0x8290, KodakIFD, EXIF, __VA_ARGS__)                                  \
+	MACRO(0x8769, ExifOffset, EXIF, __VA_ARGS__)                                \
 	MACRO(0x9000, ExifVersion, EXIF, __VA_ARGS__)                               \
 	MACRO(0x9004, DateTimeDigitized, EXIF, __VA_ARGS__)                         \
 	MACRO(0x9101, ComponentsConfiguration, EXIF, __VA_ARGS__)                   \
@@ -502,8 +503,7 @@ namespace lak
 	MACRO(0xA40C, SubjectDistanceRange, EXIF, __VA_ARGS__)                      \
 	MACRO(0xA433, LensMake, EXIF, __VA_ARGS__)                                  \
 	MACRO(0xA434, LensModel, EXIF, __VA_ARGS__)                                 \
-	MACRO(0xA435, LensSerialNumber, EXIF, __VA_ARGS__)                          \
-	MACRO(0x8769, ExifOffset, EXIF, __VA_ARGS__)
+	MACRO(0xA435, LensSerialNumber, EXIF, __VA_ARGS__)
 
 #define LAK_FOREACH_DNG_TAG_VALUE(MACRO, ...)                                 \
 	/* 1.1.0.0 */                                                               \
@@ -850,6 +850,7 @@ namespace lak
 #define LAK_FOREACH_EXIF_TAG_TYPES(MACRO, ...)                                \
 	MACRO(Model2, char, lak::dynamic_extent, __VA_ARGS__)                       \
 	MACRO(KodakIFD, uint32_t, 1U, __VA_ARGS__)                                  \
+	MACRO(ExifOffset, uint32_t, 1U, __VA_ARGS__)                                \
 	MACRO(ExifVersion, byte_t, 4U, __VA_ARGS__)                                 \
 	MACRO(DateTimeDigitized, char, 20U, __VA_ARGS__)                            \
 	MACRO(ComponentsConfiguration, byte_t, 4U, __VA_ARGS__)                     \
@@ -879,8 +880,7 @@ namespace lak
 	MACRO(SubjectDistanceRange, uint16_t, 1U, __VA_ARGS__)                      \
 	MACRO(LensMake, char, lak::dynamic_extent, __VA_ARGS__)                     \
 	MACRO(LensModel, char, lak::dynamic_extent, __VA_ARGS__)                    \
-	MACRO(LensSerialNumber, char, lak::dynamic_extent, __VA_ARGS__)             \
-	MACRO(ExifOffset, uint32_t, 1U, __VA_ARGS__)
+	MACRO(LensSerialNumber, char, lak::dynamic_extent, __VA_ARGS__)
 
 #define LAK_FOREACH_DNG_TAG_TYPES(MACRO, ...)                                 \
 	/* 1.1.0.0 */                                                               \
