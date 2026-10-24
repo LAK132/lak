@@ -13,6 +13,13 @@ namespace lak
 	  T,
 	  lak::variant<lak::err::out_of_data, lak::err::value_out_of_range>>;
 
+	// BYTE_ENDIAN = little: next byte packed into MSB
+	//	 BIT_ENDIAN = little:  LSb packed into MSB-LSb
+	//	 BIT_ENDIAN = big:     MSb packed into MSB-LSb (byte-bits reversal)
+	//
+	// BYTE_ENDIAN = big:    next byte packed into LSB
+	//	 BIT_ENDIAN = little:  MSb packed into LSB-MSb
+	//	 BIT_ENDIAN = big:     LSb packed into LSB-MSb (byte-bits reversal)
 	template<lak::endian BYTE_ENDIAN = lak::endian::little,
 	         lak::endian BIT_ENDIAN  = lak::endian::little>
 	struct bit_reader
