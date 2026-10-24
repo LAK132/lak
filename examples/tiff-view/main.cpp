@@ -14,6 +14,8 @@
 #include <lak/string_literals/view.hpp>
 #include <lak/system/file.hpp>
 
+#include <imgui_memory_editor.h>
+
 #include <filesystem>
 
 lak::optional<std::filesystem::path> init_file;
