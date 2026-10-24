@@ -319,9 +319,77 @@ struct lak::format_traits<lak::string<C>, CHAR>
 		  args, lak::string_view<C>(value));
 	}
 };
+
+template<typename CHAR>
+struct lak::format_traits<std::string, CHAR>
+: public lak::format_traits<lak::astring_view, CHAR>
+{
+	using typename lak::format_traits<lak::astring_view, CHAR>::format_args;
+	static lak::string<CHAR> to_string(const format_args &args,
+	                                   const std::string &value)
+	{
+		return lak::format_traits<lak::astring_view, CHAR>::to_string(
+		  args, lak::astring_view(value));
+	}
+};
+
+template<typename CHAR>
+struct lak::format_traits<std::u8string, CHAR>
+: public lak::format_traits<lak::u8string_view, CHAR>
+{
+	using typename lak::format_traits<lak::u8string_view, CHAR>::format_args;
+	static lak::string<CHAR> to_string(const format_args &args,
+	                                   const std::u8string &value)
+	{
+		return lak::format_traits<lak::u8string_view, CHAR>::to_string(
+		  args, lak::u8string_view(value));
+	}
+};
+
+template<typename CHAR>
+struct lak::format_traits<std::u16string, CHAR>
+: public lak::format_traits<lak::u16string_view, CHAR>
+{
+	using typename lak::format_traits<lak::u16string_view, CHAR>::format_args;
+	static lak::string<CHAR> to_string(const format_args &args,
+	                                   const std::u16string &value)
+	{
+		return lak::format_traits<lak::u16string_view, CHAR>::to_string(
+		  args, lak::u16string_view(value));
+	}
+};
+
+template<typename CHAR>
+struct lak::format_traits<std::u32string, CHAR>
+: public lak::format_traits<lak::u32string_view, CHAR>
+{
+	using typename lak::format_traits<lak::u32string_view, CHAR>::format_args;
+	static lak::string<CHAR> to_string(const format_args &args,
+	                                   const std::u32string &value)
+	{
+		return lak::format_traits<lak::u32string_view, CHAR>::to_string(
+		  args, lak::u32string_view(value));
+	}
+};
+
+template<typename CHAR>
+struct lak::format_traits<std::wstring, CHAR>
+: public lak::format_traits<lak::wstring_view, CHAR>
+{
+	using typename lak::format_traits<lak::wstring_view, CHAR>::format_args;
+	static lak::string<CHAR> to_string(const format_args &args,
+	                                   const std::wstring &value)
+	{
+		return lak::format_traits<lak::wstring_view, CHAR>::to_string(
+		  args, lak::wstring_view(value));
+	}
+};
 static_assert(lak::concepts::dynamic_formattable<lak::u8string, char8_t>);
 static_assert(!lak::concepts::static_formattable<lak::u8string, char8_t>);
 static_assert(lak::concepts::formattable<lak::u8string, char8_t>);
+static_assert(lak::concepts::dynamic_formattable<std::u8string, char8_t>);
+static_assert(!lak::concepts::static_formattable<std::u8string, char8_t>);
+static_assert(lak::concepts::formattable<std::u8string, char8_t>);
 
 template<lak::concepts::one_of<LAK_ALL_STD_UNSIGNED_INTEGERS> T, typename CHAR>
 struct lak::format_traits<T, CHAR>
