@@ -77,6 +77,12 @@ namespace lak
 			_value.resize(sz.x * sz.y, val);
 		}
 
+		void clear()
+		{
+			_size = size_type(0, 0);
+			_value.clear();
+		}
+
 		size_type size() const { return _size; }
 
 		size_t contig_size() const { return _value.size(); }
