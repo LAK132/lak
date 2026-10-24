@@ -65,14 +65,38 @@ namespace lak
 		inline constexpr bool is_valid_tag_type_size_v =
 		  lak::tiff::valid_tag_type_size<TAG, T, S>::value;
 
+#define LAK_TIFF_TAG_TYPE(NAME, TYPE, SIZE, ...)                              \
+	static_assert(                                                              \
+	  lak::tiff::                                                               \
+	    is_valid_tag_type_size_v<lak::tiff::tag_name::NAME, TYPE, SIZE>);
+		LAK_FOREACH_TIFF_TAG_TYPES(LAK_TIFF_TAG_TYPE)
+#undef LAK_TIFF_TAG_TYPE
+
 		template<lak::tiff::tag_name TAG, typename T>
-		struct valid_tag_type : lak::false_type
+		consteval bool _is_valid_tag_type()
+		{
+#define LAK_TIFF_TAG_TYPE(NAME, TYPE, ...)                                    \
+	if (TAG == lak::tiff::tag_name::NAME && lak::is_same_v<T, TYPE>) return true;
+			LAK_FOREACH_TIFF_TAG_TYPES(LAK_TIFF_TAG_TYPE)
+#undef LAK_TIFF_TAG_TYPE
+			return false;
+		}
+
+		template<lak::tiff::tag_name TAG, typename T>
+		struct valid_tag_type
+		: lak::bool_type<lak::tiff::_is_valid_tag_type<TAG, T>()>
 		{
 		};
 
 		template<lak::tiff::tag_name TAG, typename T>
 		inline constexpr bool is_valid_tag_type_v =
 		  lak::tiff::valid_tag_type<TAG, T>::value;
+
+#define LAK_TIFF_TAG_TYPE(NAME, TYPE, SIZE, ...)                              \
+	static_assert(                                                              \
+	  lak::tiff::is_valid_tag_type_v<lak::tiff::tag_name::NAME, TYPE>);
+		LAK_FOREACH_TIFF_TAG_TYPES(LAK_TIFF_TAG_TYPE)
+#undef LAK_TIFF_TAG_TYPE
 	}
 }
 
