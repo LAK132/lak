@@ -160,9 +160,10 @@ namespace lak
 
 			if (args[0] == CHAR('.'))
 			{
+				args = args.substr(1U);
+				if (args.empty() || !(args[0] >= CHAR('0') && args[0] <= CHAR('9')))
+					throw "invalid precision";
 				result.precision = 0U;
-				args             = args.substr(1U);
-				if (args.empty()) return result;
 				while (args[0] >= CHAR('0') && args[0] <= CHAR('9'))
 				{
 					result.precision *= 10U;
@@ -436,9 +437,10 @@ struct lak::format_traits<T, CHAR>
 
 		if (args[0] == CHAR('.'))
 		{
+			args = args.substr(1U);
+			if (args.empty() || !(args[0] >= CHAR('0') && args[0] <= CHAR('9')))
+				throw "invalid precision";
 			result.precision = 0U;
-			args             = args.substr(1U);
-			if (args.empty()) return result;
 			while (args[0] >= CHAR('0') && args[0] <= CHAR('9'))
 			{
 				result.precision *= 10U;
@@ -580,9 +582,10 @@ struct lak::format_traits<T, CHAR>
 
 		if (args[0] == CHAR('.'))
 		{
+			args = args.substr(1U);
+			if (args.empty() || !(args[0] >= CHAR('0') && args[0] <= CHAR('9')))
+				throw "invalid precision";
 			result.precision = 0U;
-			args             = args.substr(1U);
-			if (args.empty()) return result;
 			while (args[0] >= CHAR('0') && args[0] <= CHAR('9'))
 			{
 				result.precision *= 10U;
@@ -753,9 +756,10 @@ struct lak::format_traits<T, CHAR>
 
 		if (args[0] == CHAR('.'))
 		{
+			args = args.substr(1U);
+			if (args.empty() || !(args[0] >= CHAR('0') && args[0] <= CHAR('9')))
+				throw "invalid precision";
 			result.precision = 0U;
-			args             = args.substr(1U);
-			if (args.empty()) return result;
 			while (args[0] >= CHAR('0') && args[0] <= CHAR('9'))
 			{
 				result.precision *= 10U;
