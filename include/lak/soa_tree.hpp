@@ -3,6 +3,7 @@
 
 #include "lak/array.hpp"
 #include "lak/concepts.hpp"
+#include "lak/debug.hpp"
 #include "lak/index_set.hpp"
 #include "lak/span.hpp"
 #include "lak/tuple.hpp"
@@ -20,7 +21,7 @@ namespace lak
 		template<lak::concepts::one_of<T...> U>
 		struct pointer
 		{
-			size_t index;
+			size_t index = lak::dynamic_extent;
 
 			inline static pointer make(size_t index)
 			{
@@ -32,7 +33,7 @@ namespace lak
 		struct subspan
 		{
 			pointer<U> begin;
-			size_t size;
+			size_t size = 0U;
 
 			inline static subspan make(size_t begin, size_t size)
 			{
@@ -47,7 +48,7 @@ namespace lak
 			type_index_type type_index;
 			size_t index;
 
-			limited_dyn_pointer()                                       = default;
+			limited_dyn_pointer()                                       = delete;
 			limited_dyn_pointer(const limited_dyn_pointer &)            = default;
 			limited_dyn_pointer &operator=(const limited_dyn_pointer &) = default;
 
@@ -78,7 +79,7 @@ namespace lak
 			limited_dyn_pointer<U...> begin;
 			size_t size;
 
-			limited_dyn_subspan()                                       = default;
+			limited_dyn_subspan()                                       = delete;
 			limited_dyn_subspan(const limited_dyn_subspan &)            = default;
 			limited_dyn_subspan &operator=(const limited_dyn_subspan &) = default;
 
@@ -109,7 +110,7 @@ namespace lak
 			type_index_type type_index;
 			size_t index;
 
-			dyn_pointer()                               = default;
+			dyn_pointer()                               = delete;
 			dyn_pointer(const dyn_pointer &)            = default;
 			dyn_pointer &operator=(const dyn_pointer &) = default;
 
@@ -153,7 +154,7 @@ namespace lak
 			dyn_pointer begin;
 			size_t size;
 
-			dyn_subspan()                               = default;
+			dyn_subspan()                               = delete;
 			dyn_subspan(const dyn_subspan &)            = default;
 			dyn_subspan &operator=(const dyn_subspan &) = default;
 
@@ -223,18 +224,24 @@ namespace lak
 		template<lak::concepts::one_of<T...> U>
 		U &operator[](const pointer<U> &ptr)
 		{
+			BOUNDS_ASSERT_LESS(ptr.index, arrays.template get<index_of<U>>().size());
 			return arrays.template get<index_of<U>>()[ptr.index];
 		}
 
 		template<lak::concepts::one_of<T...> U>
 		const U &operator[](const pointer<U> &ptr) const
 		{
+			BOUNDS_ASSERT_LESS(ptr.index, arrays.template get<index_of<U>>().size());
 			return arrays.template get<index_of<U>>()[ptr.index];
 		}
 
 		template<lak::concepts::one_of<T...> U>
 		lak::span<U> operator[](const subspan<U> &sub)
 		{
+			BOUNDS_ASSERT_LESS_OR_EQUAL(sub.size,
+			                            arrays.template get<index_of<U>>().size());
+			BOUNDS_ASSERT_LESS_OR_EQUAL(
+			  sub.begin.index, arrays.template get<index_of<U>>().size() - sub.size);
 			return lak::span(arrays.template get<index_of<U>>())
 			  .subspan(sub.begin.index, sub.size);
 		}
@@ -242,6 +249,10 @@ namespace lak
 		template<lak::concepts::one_of<T...> U>
 		lak::span<const U> operator[](const subspan<U> &sub) const
 		{
+			BOUNDS_ASSERT_LESS_OR_EQUAL(sub.size,
+			                            arrays.template get<index_of<U>>().size());
+			BOUNDS_ASSERT_LESS_OR_EQUAL(
+			  sub.begin.index, arrays.template get<index_of<U>>().size() - sub.size);
 			return lak::span(arrays.template get<index_of<U>>())
 			  .subspan(sub.begin.index, sub.size);
 		}
@@ -253,6 +264,7 @@ namespace lak
 			  ptr.type_index,
 			  [&]<size_t I>(lak::size_type<I>)
 			  {
+				  BOUNDS_ASSERT_LESS(ptr.index, arrays.template get<I>().size());
 				  return lak::variant<lak::add_lvalue_reference_t<T>...>(
 				    lak::in_place_index_t<I>{}, arrays.template get<I>()[ptr.index]);
 			  });
@@ -265,6 +277,7 @@ namespace lak
 			  ptr.type_index,
 			  [&]<size_t I>(lak::size_type<I>)
 			  {
+				  BOUNDS_ASSERT_LESS(ptr.index, arrays.template get<I>().size());
 				  return lak::variant<lak::add_lvalue_reference_t<T>...>(
 				    lak::in_place_index_t<I>{}, arrays.template get<I>()[ptr.index]);
 			  });
@@ -275,6 +288,11 @@ namespace lak
 			return lak::visit_switch(sub.type_index,
 			                         [&]<size_t I>(lak::size_type<I>)
 			                         {
+				                         BOUNDS_ASSERT_LESS_OR_EQUAL(
+				                           sub.size, arrays.template get<I>().size());
+				                         BOUNDS_ASSERT_LESS_OR_EQUAL(
+				                           sub.begin.index,
+				                           arrays.template get<I>().size() - sub.size);
 				                         return lak::variant<lak::span<T>...>(
 				                           lak::in_place_index_t<I>{},
 				                           lak::span(arrays.template get<I>())
@@ -288,6 +306,11 @@ namespace lak
 			return lak::visit_switch(sub.type_index,
 			                         [&]<size_t I>(lak::size_type<I>)
 			                         {
+				                         BOUNDS_ASSERT_LESS_OR_EQUAL(
+				                           sub.size, arrays.template get<I>().size());
+				                         BOUNDS_ASSERT_LESS_OR_EQUAL(
+				                           sub.begin.index,
+				                           arrays.template get<I>().size() - sub.size);
 				                         return lak::variant<lak::span<T>...>(
 				                           lak::in_place_index_t<I>{},
 				                           lak::span(arrays.template get<I>())
@@ -303,6 +326,7 @@ namespace lak
 			  ptr.type_index,
 			  [&]<size_t I>(lak::size_type<I>)
 			  {
+				  BOUNDS_ASSERT_LESS(ptr.index, arrays.template get<I>().size());
 				  return lak::variant<lak::add_lvalue_reference_t<U>...>(
 				    lak::in_place_index_t<I>{}, arrays.template get<I>()[ptr.index]);
 			  });
@@ -316,6 +340,7 @@ namespace lak
 			  ptr.type_index,
 			  [&]<size_t I>(lak::size_type<I>)
 			  {
+				  BOUNDS_ASSERT_LESS(ptr.index, arrays.template get<I>().size());
 				  return lak::variant<lak::add_lvalue_reference_t<const U>...>(
 				    lak::in_place_index_t<I>{}, arrays.template get<I>()[ptr.index]);
 			  });
@@ -328,6 +353,11 @@ namespace lak
 			return lak::visit_switch(sub.type_index,
 			                         [&]<size_t I>(lak::size_type<I>)
 			                         {
+				                         BOUNDS_ASSERT_LESS_OR_EQUAL(
+				                           sub.size, arrays.template get<I>().size());
+				                         BOUNDS_ASSERT_LESS_OR_EQUAL(
+				                           sub.begin.index,
+				                           arrays.template get<I>().size() - sub.size);
 				                         return lak::variant<lak::span<U>...>(
 				                           lak::in_place_index_t<I>{},
 				                           lak::span(arrays.template get<I>())
@@ -342,6 +372,11 @@ namespace lak
 			return lak::visit_switch(sub.type_index,
 			                         [&]<size_t I>(lak::size_type<I>)
 			                         {
+				                         BOUNDS_ASSERT_LESS_OR_EQUAL(
+				                           sub.size, arrays.template get<I>().size());
+				                         BOUNDS_ASSERT_LESS_OR_EQUAL(
+				                           sub.begin.index,
+				                           arrays.template get<I>().size() - sub.size);
 				                         return lak::variant<lak::span<U>...>(
 				                           lak::in_place_index_t<I>{},
 				                           lak::span(arrays.template get<I>())
