@@ -1,0 +1,39 @@
+nlws = {?lak::dsl::ascii_whitespace?};
+ws = {?lak::dsl::ascii_nonnewline_whitespace?};
+
+section_header = nlws,"[",<{?lak::dsl::negative_char_literal<u8']'>?}>,"]";
+
+wrap_string = ws,<?lak::dsl::until<lak::dsl::one_of_chars_str<U" ,\r\n\t">>?>;
+
+entry_values = wrap_string,{ws,",",<wrap_string>}
+$[](const lak::tuple<lak::u8string_view, lak::array<lak::u8string_view>> &value)
+{
+	const auto &[v0, vn] = value;
+	lak::array<lak::u8string> result;
+	result.reserve(vn.size() + 1U);
+	result.push_back(v0);
+	for (const auto &v : vn) result.push_back(v);
+	return result;
+}$;
+
+entry = nlws,<wrap_string>,ws,"=",ws,<entry_values>
+$[](const lak::tuple<lak::u8string_view, lak::array<lak::u8string>> &value)
+{
+	const auto &[key, values] = value;
+	return lak::wrap::section_entry{
+		.key = key,
+		.values = values,
+	};
+}$;
+
+section = section_header,{entry}
+$[](const lak::tuple<lak::u8string_view, lak::array<lak::wrap::section_entry>> &value)
+{
+	const auto &[name, entries] = value;
+	return lak::wrap::section{
+		.name = name,
+		.entries = entries,
+	};
+}$;
+
+wrap = {section};

@@ -205,6 +205,25 @@ namespace lak
 		         lak::dsl::concepts::parser auto... parsers>
 		inline constexpr auto separated_sequence =
 		  ((parser) + ... + (lak::dsl::capture_2nd<separator, parsers>));
+
+		inline constexpr auto lower_case_boolean =
+		  lak::dsl::replace_str_literal<u8"true", true> |
+		  lak::dsl::replace_str_literal<u8"false", false>;
+		inline constexpr auto upper_case_boolean =
+		  lak::dsl::replace_str_literal<u8"TRUE", true> |
+		  lak::dsl::replace_str_literal<u8"FALSE", false>;
+		inline constexpr auto mixed_case_boolean =
+		  lak::dsl::replace<lak::dsl::one_of_chars<U't', U'T'> +
+		                      lak::dsl::one_of_chars<U'r', U'R'> +
+		                      lak::dsl::one_of_chars<U'u', U'U'> +
+		                      lak::dsl::one_of_chars<U'e', U'E'>,
+		                    true> |
+		  lak::dsl::replace<lak::dsl::one_of_chars<U'f', U'F'> +
+		                      lak::dsl::one_of_chars<U'a', U'A'> +
+		                      lak::dsl::one_of_chars<U'l', U'L'> +
+		                      lak::dsl::one_of_chars<U's', U'S'> +
+		                      lak::dsl::one_of_chars<U'e', U'E'>,
+		                    false>;
 	}
 }
 

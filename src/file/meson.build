@@ -11,6 +11,9 @@ lakfile = static_library(
 			'LAK_OBJ_EBNF_HPP', 'lak', 'obj_parse']),
 		'pnm.cpp',
 		'tiff.cpp',
+		'wrap.cpp',
+		ebnf2cpp.process('wrap.ebnf', extra_args: [
+			'LAK_WRAP_EBNF_HPP', 'lak', 'wrap_parse']),
 		'x3f.cpp',
 	],
 	dependencies: [

@@ -21,6 +21,7 @@ option('lak_install_targets',
 		'ebnf2cpp',
 		'lisk-repl',
 		'mdc2png',
+		'wrap2nix',
 
 		# tests
 		'lak_test',
@@ -38,6 +39,8 @@ option('lak_install_targets',
 		'ebnf2cpp',
 		'lisk-repl',
 		'mdc2png',
+		'wrap2nix',
+
 		'lak_test',
 	],
 	yield: true,

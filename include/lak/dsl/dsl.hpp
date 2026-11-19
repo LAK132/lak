@@ -1640,17 +1640,8 @@ namespace lak
 
 			lak::dsl::result<value_type> parse(lak::u8string_view str) const
 			{
-				if constexpr (lak::dsl::is_eof_v<
+				if constexpr (!lak::dsl::is_eof_v<
 				                lak::remove_cvref_t<decltype(parser)>>)
-				{
-					if (!str.empty())
-						return lak::ok_t<lak::dsl::parse_result<value_type>>{{
-						  .consumed  = str,
-						  .remaining = str.last(0),
-						  .value     = str,
-						}};
-				}
-				else
 				{
 					for (lak::u8string_view rem = str; !rem.empty();
 					     rem                    = rem.substr(1U))
@@ -1667,7 +1658,13 @@ namespace lak
 					}
 				}
 
-				return lak::err_t{lak::err::out_of_data{}};
+				if (str.empty()) return lak::err_t{lak::err::out_of_data{}};
+
+				return lak::ok_t<lak::dsl::parse_result<value_type>>{{
+				  .consumed  = str,
+				  .remaining = str.last(0),
+				  .value     = str,
+				}};
 			}
 		};
 

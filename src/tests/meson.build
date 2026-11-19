@@ -16,6 +16,7 @@ laktestcore = static_library(
 		'file'/'obj.cpp',
 		'file'/'pnm.cpp',
 		'file'/'tiff.cpp',
+		'file'/'wrap.cpp',
 		'system'/'architecture.cpp',
 		'algorithm.cpp',
 		'alloc.cpp',
