@@ -42,7 +42,7 @@ int main(int argc, char **argv)
 		prefix += "::";
 	}
 
-	auto file = lak::rw_mmap_file(source).UNWRAP();
+	auto file = lak::ro_mmap_file(source).UNWRAP();
 
 	auto grammar =
 	  lak::dsl::ebnf
@@ -81,6 +81,20 @@ int main(int argc, char **argv)
 			return lak::fmt<u8"U'{}'">(c);
 		else
 			return lak::fmt<u8"char32_t(0x{:X})">(uint32_t(c));
+	};
+
+	auto find_subsequence_captures =
+	  [&]<typename SEQ>(const lak::ebnf::rule_value &val,
+	                    lak::span<SEQ> sequence)
+	{
+		lak::array<size_t> capture_indices;
+		for (size_t i = 0U; i < sequence[val.index].size(); ++i)
+		{
+			if (grammar.rule_values[sequence[val.index].begin + i].type ==
+			    lak::ebnf::rule_value::value_type::capture)
+				capture_indices.push_back(i);
+		}
+		return capture_indices;
 	};
 
 	for (const auto &rule : grammar.rules)
@@ -153,15 +167,8 @@ int main(int argc, char **argv)
 					{
 						if (strm.template is_scope<decltype(strm)::template_call_scope>())
 							strm.next_template_argument(true);
-						lak::array<size_t> capture_indices;
-						for (size_t i = 0U; i < grammar.concatenations[val.index].size();
-						     ++i)
-						{
-							if (grammar
-							      .rule_values[grammar.concatenations[val.index].begin + i]
-							      .type == capture)
-								capture_indices.push_back(i);
-						}
+						auto capture_indices = find_subsequence_captures(
+						  val, lak::span(grammar.concatenations));
 
 						if (capture_indices.empty())
 						{
@@ -244,6 +251,57 @@ int main(int argc, char **argv)
 						stack.push_back(
 						  {grammar.rule_values[grammar.alternations[val.index].begin +
 						                       (index++)],
+						   0U});
+					}
+					break;
+
+				case unordered:
+					if (index == 0U)
+					{
+						if (strm.template is_scope<decltype(strm)::template_call_scope>())
+							strm.next_template_argument(true);
+						auto capture_indices =
+						  find_subsequence_captures(val, lak::span(grammar.unordereds));
+
+						if (capture_indices.empty())
+						{
+							strm.push_template_call(u8"lak::dsl::unordered"_view);
+						}
+						else if (capture_indices.size() == 1U)
+						{
+							if (size_t i = capture_indices[0U]; i == 0U)
+								strm.push_template_call(
+								  u8"lak::dsl::capture_1st_unordered"_view);
+							else if (i == 1U)
+								strm.push_template_call(
+								  u8"lak::dsl::capture_2nd_unordered"_view);
+							else
+								strm
+								  .push_template_call(u8"lak::dsl::capture_nth_unordered"_view)
+								  .write(lak::fmt<u8"{:d}U">(i))
+								  .next_template_argument(false);
+						}
+						else
+						{
+							strm.push_template_call(
+							  u8"lak::dsl::capture_nths_unordered"_view);
+							strm.push_template_call(u8"lak::index_sequence"_view);
+							for (const auto &i : capture_indices)
+								strm.next_template_argument(false).write(
+								  lak::fmt<u8"{:d}U">(i));
+							strm.pop_template_call().next_template_argument(false);
+						}
+					}
+					if (index >= grammar.unordereds[val.index].size())
+					{
+						strm.pop_template_call();
+						stack.pop_back();
+					}
+					else
+					{
+						stack.push_back(
+						  {grammar
+						     .rule_values[grammar.unordereds[val.index].begin + (index++)],
 						   0U});
 					}
 					break;
