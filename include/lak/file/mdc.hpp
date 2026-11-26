@@ -1,5 +1,5 @@
-#ifndef MDC_RAW_MDC_HPP
-#define MDC_RAW_MDC_HPP
+#ifndef LAK_FILE_MDC_HPP
+#define LAK_FILE_MDC_HPP
 
 #include "lak/array.hpp"
 #include "lak/binary_traits.hpp"
