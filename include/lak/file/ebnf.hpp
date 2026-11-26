@@ -33,6 +33,14 @@ namespace lak
 			size_t size() const { return end - begin; }
 		};
 
+		struct unordered_sequence
+		{
+			size_t begin;
+			size_t end;
+
+			size_t size() const { return end - begin; }
+		};
+
 		struct optional_sequence
 		{
 			size_t index;
@@ -101,6 +109,7 @@ namespace lak
 				rule,
 				concatenation,
 				alternation,
+				unordered,
 				optional,
 				repetition,
 				match_case,
@@ -135,6 +144,7 @@ namespace lak
 			lak::array<lak::ebnf::range_sequence> ranges;
 			lak::array<lak::ebnf::concatenation_sequence> concatenations;
 			lak::array<lak::ebnf::alternation_sequence> alternations;
+			lak::array<lak::ebnf::unordered_sequence> unordereds;
 			lak::array<lak::ebnf::optional_sequence> optionals;
 			lak::array<lak::ebnf::repetition_sequence> repetitions;
 			lak::array<lak::ebnf::match_case> match_cases;

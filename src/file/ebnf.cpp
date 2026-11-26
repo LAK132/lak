@@ -84,6 +84,7 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 			range,
 			concat,
 			altern,
+			unordered,
 			option,
 			repeat,
 			repeat_atl,
@@ -426,6 +427,31 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 		return pop_trailing();
 	};
 
+	auto pop_unordered = [&]() -> lak::error_code<lak::dsl::err::parse>
+	{
+		if (!pop_unused())
+			return lak::err_t{u8"missing final value of unordered"_str};
+
+		const size_t sz = working_tree.back().size();
+
+		if (sz <= working_tree.back().count)
+			return lak::err_t{u8"invalid unordered"_str};
+
+		if (sz < 2U) return lak::err_t{u8"invalid unordered length"_str};
+
+		const size_t begin = pop_values();
+		unused_value.emplace(lak::ebnf::rule_value{
+		  .type  = lak::ebnf::rule_value::value_type::unordered,
+		  .index = result.unordereds.size(),
+		});
+		result.unordereds.push_back({
+		  .begin = begin,
+		  .end   = begin + sz,
+		});
+
+		return pop_trailing();
+	};
+
 	auto pop_concat = [&]() -> lak::error_code<lak::dsl::err::parse>
 	{
 		if (!pop_unused())
@@ -547,6 +573,11 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 				{
 					RES_TRY(pop_altern());
 				}
+				else if (working_tree.back().type ==
+				         working_data::value_type::unordered)
+				{
+					RES_TRY(pop_unordered());
+				}
 				else if (working_tree.back().type == working_data::value_type::replace)
 				{
 					RES_TRY(pop_replace());
@@ -617,6 +648,11 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 				else if (working_tree.back().type == working_data::value_type::altern)
 				{
 					RES_TRY(pop_altern());
+				}
+				else if (working_tree.back().type ==
+				         working_data::value_type::unordered)
+				{
+					RES_TRY(pop_unordered());
 				}
 				else if (working_tree.back().type == working_data::value_type::replace)
 				{
@@ -691,6 +727,11 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 				{
 					RES_TRY(pop_altern());
 				}
+				else if (working_tree.back().type ==
+				         working_data::value_type::unordered)
+				{
+					RES_TRY(pop_unordered());
+				}
 				else if (working_tree.back().type == working_data::value_type::replace)
 				{
 					RES_TRY(pop_replace());
@@ -761,6 +802,11 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 				else if (working_tree.back().type == working_data::value_type::altern)
 				{
 					RES_TRY(pop_altern());
+				}
+				else if (working_tree.back().type ==
+				         working_data::value_type::unordered)
+				{
+					RES_TRY(pop_unordered());
 				}
 				else if (working_tree.back().type == working_data::value_type::replace)
 				{
@@ -928,20 +974,62 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 		}
 		else if (lak::dsl::char_literal<U'+'>.EBNF_PARSE().is_ok())
 		{
-			if (unused_value)
-			{
-				working_tree.push_back({
-				  .type = working_data::value_type::except,
-				});
-
-				working_tree.back().values.push_back(lak::move(*unused_value));
-				unused_value.reset();
-			}
-			else
+			if (!unused_value)
 			{
 				working_tree.push_back({
 				  .type = working_data::value_type::pos_lookahead,
 				});
+			}
+			else
+			{
+				while (true)
+				{
+					size_t s = working_tree.size();
+					if (working_tree.back().type == working_data::value_type::range)
+					{
+						RES_TRY(pop_range());
+					}
+					else if (working_tree.back().type ==
+					         working_data::value_type::replace)
+					{
+						RES_TRY(pop_replace());
+					}
+					else if (working_tree.back().type ==
+					         working_data::value_type::except)
+					{
+						RES_TRY(pop_except());
+					}
+					else if (working_tree.back().type ==
+					         working_data::value_type::neg_lookahead)
+					{
+						RES_TRY(pop_negative_lookahead());
+					}
+					else if (working_tree.back().type ==
+					         working_data::value_type::pos_lookahead)
+					{
+						RES_TRY(pop_positive_lookahead());
+					}
+					else if (working_tree.back().type ==
+					         working_data::value_type::match_case)
+					{
+						RES_TRY(pop_match_case());
+					}
+					else
+						break;
+					ASSERT_GREATER(s, working_tree.size());
+				}
+
+				if (working_tree.back().type != working_data::value_type::unordered)
+				{
+					working_tree.push_back({
+					  .type = working_data::value_type::unordered,
+					});
+				}
+				else
+					++working_tree.back().count;
+
+				if (!pop_unused())
+					return lak::err_t{u8"unexpected unordered delimiter"_str};
 			}
 		}
 		else if (lak::dsl::char_literal<U','>.EBNF_PARSE().is_ok())
@@ -1063,6 +1151,11 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 				{
 					RES_TRY(pop_altern());
 				}
+				else if (working_tree.back().type ==
+				         working_data::value_type::unordered)
+				{
+					RES_TRY(pop_unordered());
+				}
 				else if (working_tree.back().type == working_data::value_type::replace)
 				{
 					RES_TRY(pop_replace());
@@ -1133,6 +1226,11 @@ lak::dsl::result<lak::dsl::ebnf_t::value_type> lak::dsl::ebnf_t::parse(
 				else if (working_tree.back().type == working_data::value_type::altern)
 				{
 					RES_TRY(pop_altern());
+				}
+				else if (working_tree.back().type ==
+				         working_data::value_type::unordered)
+				{
+					RES_TRY(pop_unordered());
 				}
 				else if (working_tree.back().type == working_data::value_type::replace)
 				{
