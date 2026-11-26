@@ -1,0 +1,34 @@
+(* this is a single line comment *)
+(*
+	this is a multi-line comment
+*)
+
+string_match = "string match";
+character_match = 'C';
+hex_lit_match = '\x132';
+newline_lit_match = '\n';
+meow = "meow";
+woof = "woof";
+sequence = '"',meow,'"';
+unordered = meow+woof;
+alternation = "a"|"b"|meow;
+capture_group = "'",<meow>,"'";
+non_capture_group_abc = "a",("b","c");
+non_capture_group_aab = 2*"a","b";
+non_capture_group_abab = 2*("a","b");
+any_a = {"a"};
+at_least_nyaaa = "ny",3+"a";
+at_least_nyanya = 2+("ny","a");
+hello_maybe_bang = "hello",['!'];
+a_to_z = 'a'~'z';
+A_to_Z = 'A'~'Z';
+_0_to_9 = '0'~'9';
+a_to_z_except_b = ('a'~'z')-'b';
+dogs_cats =
+	"dog says: " -> woof |
+	"cat says: " -> meow;
+not_b = -'b';
+ab_a = +"ab","a";
+true_false =
+	("true"|"True"|"TRUE") ^ ?true? |
+	("false"|"False"|"FALSE") ^ ?false?;

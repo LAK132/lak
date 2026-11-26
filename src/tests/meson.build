@@ -11,6 +11,8 @@ laktestcore = static_library(
 		'ebpf'/'assembler.cpp',
 		'ebpf'/'vm.cpp',
 		'file'/'ebnf.cpp',
+		ebnf2cpp.process('file'/'test.ebnf', extra_args: [
+			'LAK_TEST_FILE_EBNF_HPP', 'lak', 'ebnf_test']),
 		'file'/'json.cpp',
 		'file'/'nbt.cpp',
 		'file'/'obj.cpp',
