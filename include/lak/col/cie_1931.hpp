@@ -302,9 +302,9 @@ namespace lak
 				{
 					double weight =
 					  lak::blackbody_radiance(double(entry.wavelength), temperature);
-					result.X += entry.x * weight;
-					result.Y += entry.y * weight;
-					result.Z += entry.z * weight;
+					result.X += float(entry.x * weight);
+					result.Y += float(entry.y * weight);
+					result.Z += float(entry.z * weight);
 				}
 				return result;
 			}
