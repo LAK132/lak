@@ -3,6 +3,7 @@ url = https://github.com/llvm/llvm-project
 revision = llvmorg-15.0.1
 depth = 1
 patch_directory = llvm
+nix-hash = sha256-ntdsAtUhFj3ASbWLs+L1tzBcPLVz/6iA9QPpC+Fw9us=
 
 [provide]
 dependency_names = llvm, llvm-15.0.1

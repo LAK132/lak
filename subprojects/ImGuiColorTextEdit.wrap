@@ -3,6 +3,7 @@ url = https://github.com/BalazsJako/ImGuiColorTextEdit
 revision = ca2f9f1462e3b60e56351bc466acda448c5ea50d
 depth = 1
 patch_directory = ImGuiColorTextEdit
+nix-hash = sha256-+xs8yJdER4k84srMGicyWAEybbR0nSnCxKkvrBVlE6A=
 
 [provide]
 dependency_names = ImGuiColorTextEdit

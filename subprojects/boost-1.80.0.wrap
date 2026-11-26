@@ -3,3 +3,4 @@ url = https://github.com/boostorg/boost
 revision = boost-1.80.0
 depth = 1
 clone-recursive = true
+nix-hash = sha256-Al/hvmqlNnQr6hggMo2yAXVZloIGoyi4usTA5gC+AJI=

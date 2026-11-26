@@ -2,3 +2,4 @@
 url = https://github.com/ValveSoftware/openvr
 revision = v2.12.14
 depth = 1
+nix-hash = sha256-G+xoFIabSbYEaWATGSzHP3SWkaqQhQQ6kMkYfjBXBUU=

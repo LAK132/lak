@@ -3,3 +3,4 @@ url = https://gitlab.com/libeigen/eigen.git
 revision = 3.4.0
 depth = 1
 diff_files = eigen/0001.patch
+nix-hash = sha256-1/4xMetKMDOgZgzz3WMxfHUEpmdAm52RqZvz6i0mLEw=

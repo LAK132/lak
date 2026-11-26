@@ -3,6 +3,7 @@ url = https://github.com/g-truc/glm
 revision = 1.0.2
 depth = 1
 patch_directory = glm
+nix-hash = sha256-A4t/MEisOODzolf6VeAyGD7BXg/RlBO+Z92m/WJSUHc=
 
 [provide]
 dependency_names = glm, glm-1.0.2

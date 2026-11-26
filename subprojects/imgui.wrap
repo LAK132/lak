@@ -3,6 +3,7 @@ url = https://github.com/ocornut/imgui
 revision = v1.92.5
 depth = 1
 patch_directory = imgui
+nix-hash = sha256-GWheBR975dJ9ZGC+G3EIBG5Her6I5mSNS/2NpGDk/F0=
 
 [provide]
 dependency_names = imgui, imgui-1.92.5

@@ -5,6 +5,7 @@ revision = e7b0e279b09f00324126eaca26dbb130da6b5e93
 depth = 1
 patch_directory = imgui-node-editor
 diff_files = 0001-Snap-to-integer-coordinates.patch
+nix-hash = sha256-faWVc0KvFMEhuIw5NyWQ02k7W32HW0qd3gRtDoL1T98=
 
 [provide]
 dependency_names = imgui-node-editor, imgui-node-editor-0.9.4

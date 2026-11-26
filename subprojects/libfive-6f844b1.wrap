@@ -3,6 +3,7 @@ url = https://github.com/libfive/libfive
 revision = 6f844b12188b607d1364eb7742d905d303a5ebed
 depth = 1
 patch_directory = libfive
+nix-hash = sha256-pKM1BaZ2Bx2CRXYGsT23JSWmQ7sF6jnNGlTJUcweIKI=
 
 [provide]
 dependency_names = libfive

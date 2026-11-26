@@ -3,6 +3,7 @@ url = https://github.com/godotengine/godot-cpp
 revision = godot-4.5-stable
 depth = 1
 patch_directory = godot-cpp
+nix-hash = sha256-N7f9MwnSNDBmvaD1JAeVLryrLLgsIwWR4Cclcq5aKcQ=
 
 [provide]
 dependency_names = godot-cpp, godot-cpp-4.5.0

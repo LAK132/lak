@@ -3,6 +3,7 @@ url = https://github.com/pnggroup/libpng
 revision = v1.6.38
 depth = 1
 patch_directory = libpng
+nix-hash = sha256-SZ/M5lkmHpyJWOIUwcX/8E+okunARuDCeSsyXkzU2BI=
 
 [provide]
 dependency_names = libpng, libpng-1.6.38

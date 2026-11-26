@@ -3,6 +3,7 @@ url = https://github.com/LAK132/ImFileDialog
 revision = 381f8ae760b479033d22fac3779898598aa694d9
 depth = 1
 patch_directory = ImFileDialog
+nix-hash = sha256-r3BtMrMBjWw6LrOGzTRhzva/piK/K//UOdtYM1R7SnQ=
 
 [provide]
 dependency_names = ImFileDialog

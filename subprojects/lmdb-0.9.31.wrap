@@ -3,6 +3,7 @@ url = https://github.com/LMDB/lmdb
 revision = LMDB_0.9.31
 depth = 1
 patch_directory = lmdb
+nix-hash = sha256-bHEtlksp5zrrHlKh1EdXIEfbFk4RbtTzkyh3OQbBxH4=
 
 [provide]
 dependency_names = lmdb-0.9.31

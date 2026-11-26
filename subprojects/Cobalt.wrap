@@ -3,3 +3,4 @@ url = https://github.com/LAK132/Cobalt
 revision = dcd0b6985a4b7d9281d0d2f40abadf54b311cd7d
 depth = 1
 diff_files = cobalt/0001-Fix-invalid-linker-argument-in-Vulkan-Loader.patch, cobalt/0002-Allow-overriding-install-dirs.patch, cobalt/0001-Rename-FrameBuffer.cpp-to-FrameBuffer.mm-on-Apple-me.patch, cobalt/0001-put-libs-in-lib-dir.patch
+nix-hash = sha256-uf3we57U7ysYbGIxvVnqUcwLXU87lEg3X3FNwatMMPA=

@@ -2,3 +2,4 @@
 url = https://github.com/libsdl-org/SDL
 revision = release-2.32.10
 depth = 1
+nix-hash = sha256-aG8q/z7kGy2CUHe+sR20ze55zMVF5ZqIArgbZB1CJDo=
