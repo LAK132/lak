@@ -1,6 +1,6 @@
 #include "lak/test.hpp"
 
-#include "lak/file/wrap.hpp"
+#include "lak/file/meson/wrap.hpp"
 
 #include "lak/string_literals/string.hpp"
 #include "lak/string_literals/view.hpp"
@@ -9,14 +9,14 @@ BEGIN_TEST(file_wrap)
 {
 	{
 		auto file = u8""_view;
-		auto wrap = lak::dsl::wrap.parse(file).UNWRAP().value;
+		auto wrap = lak::dsl::meson_wrap.parse(file).UNWRAP().value;
 
 		ASSERT_EQUAL(wrap.size(), 0U);
 	}
 
 	{
 		auto file = u8"[wrap-file]"_view;
-		auto wrap = lak::dsl::wrap.parse(file).UNWRAP().value;
+		auto wrap = lak::dsl::meson_wrap.parse(file).UNWRAP().value;
 
 		ASSERT_EQUAL(wrap.size(), 1U);
 		ASSERT_EQUAL(wrap[0U].name, u8"wrap-file"_str);
@@ -24,7 +24,7 @@ BEGIN_TEST(file_wrap)
 	}
 	{
 		auto file = u8"[wrap-redirect]"_view;
-		auto wrap = lak::dsl::wrap.parse(file).UNWRAP().value;
+		auto wrap = lak::dsl::meson_wrap.parse(file).UNWRAP().value;
 
 		ASSERT_EQUAL(wrap.size(), 1U);
 		ASSERT_EQUAL(wrap[0U].name, u8"wrap-redirect"_str);
@@ -32,7 +32,7 @@ BEGIN_TEST(file_wrap)
 	}
 	{
 		auto file = u8"[wrap-git]"_view;
-		auto wrap = lak::dsl::wrap.parse(file).UNWRAP().value;
+		auto wrap = lak::dsl::meson_wrap.parse(file).UNWRAP().value;
 
 		ASSERT_EQUAL(wrap.size(), 1U);
 		ASSERT_EQUAL(wrap[0U].name, u8"wrap-git"_str);
@@ -40,7 +40,7 @@ BEGIN_TEST(file_wrap)
 	}
 	{
 		auto file = u8"[wrap-svn]"_view;
-		auto wrap = lak::dsl::wrap.parse(file).UNWRAP().value;
+		auto wrap = lak::dsl::meson_wrap.parse(file).UNWRAP().value;
 
 		ASSERT_EQUAL(wrap.size(), 1U);
 		ASSERT_EQUAL(wrap[0U].name, u8"wrap-svn"_str);
@@ -48,7 +48,7 @@ BEGIN_TEST(file_wrap)
 	}
 	{
 		auto file = u8"[wrap-hg]"_view;
-		auto wrap = lak::dsl::wrap.parse(file).UNWRAP().value;
+		auto wrap = lak::dsl::meson_wrap.parse(file).UNWRAP().value;
 
 		ASSERT_EQUAL(wrap.size(), 1U);
 		ASSERT_EQUAL(wrap[0U].name, u8"wrap-hg"_str);
@@ -57,7 +57,7 @@ BEGIN_TEST(file_wrap)
 
 	{
 		auto file = u8"[provide]"_view;
-		auto wrap = lak::dsl::wrap.parse(file).UNWRAP().value;
+		auto wrap = lak::dsl::meson_wrap.parse(file).UNWRAP().value;
 
 		ASSERT_EQUAL(wrap.size(), 1U);
 		ASSERT_EQUAL(wrap[0U].name, u8"provide"_str);
@@ -66,7 +66,7 @@ BEGIN_TEST(file_wrap)
 
 	{
 		auto file = u8"[wrap-file]\n[provide]"_view;
-		auto wrap = lak::dsl::wrap.parse(file).UNWRAP().value;
+		auto wrap = lak::dsl::meson_wrap.parse(file).UNWRAP().value;
 
 		ASSERT_EQUAL(wrap.size(), 2U);
 		ASSERT_EQUAL(wrap[0U].name, u8"wrap-file"_str);
@@ -76,7 +76,7 @@ BEGIN_TEST(file_wrap)
 	}
 	{
 		auto file = u8"[wrap-git]\n[provide]"_view;
-		auto wrap = lak::dsl::wrap.parse(file).UNWRAP().value;
+		auto wrap = lak::dsl::meson_wrap.parse(file).UNWRAP().value;
 
 		ASSERT_EQUAL(wrap.size(), 2U);
 		ASSERT_EQUAL(wrap[0U].name, u8"wrap-git"_str);
@@ -86,7 +86,7 @@ BEGIN_TEST(file_wrap)
 	}
 	{
 		auto file = u8"[wrap-svn]\n[provide]"_view;
-		auto wrap = lak::dsl::wrap.parse(file).UNWRAP().value;
+		auto wrap = lak::dsl::meson_wrap.parse(file).UNWRAP().value;
 
 		ASSERT_EQUAL(wrap.size(), 2U);
 		ASSERT_EQUAL(wrap[0U].name, u8"wrap-svn"_str);
@@ -96,7 +96,7 @@ BEGIN_TEST(file_wrap)
 	}
 	{
 		auto file = u8"[wrap-hg]\n[provide]"_view;
-		auto wrap = lak::dsl::wrap.parse(file).UNWRAP().value;
+		auto wrap = lak::dsl::meson_wrap.parse(file).UNWRAP().value;
 
 		ASSERT_EQUAL(wrap.size(), 2U);
 		ASSERT_EQUAL(wrap[0U].name, u8"wrap-hg"_str);
@@ -109,7 +109,7 @@ BEGIN_TEST(file_wrap)
 		auto file =
 		  u8R"([wrap-redirect]
 		  filename = mysubproj/subprojects/othersubproj.wrap)"_view;
-		auto wrap = lak::dsl::wrap.parse(file).UNWRAP().value;
+		auto wrap = lak::dsl::meson_wrap.parse(file).UNWRAP().value;
 
 		ASSERT_EQUAL(wrap.size(), 1U);
 		ASSERT_EQUAL(wrap[0U].name, u8"wrap-redirect"_str);
@@ -135,7 +135,7 @@ BEGIN_TEST(file_wrap)
 		  source_filename = asdasda
 		  source_hash = 123123
 		  lead_directory_missing = true)"_view;
-		auto wrap = lak::dsl::wrap.parse(file).UNWRAP().value;
+		auto wrap = lak::dsl::meson_wrap.parse(file).UNWRAP().value;
 
 		ASSERT_EQUAL(wrap.size(), 1U);
 		ASSERT_EQUAL(wrap[0U].name, u8"wrap-file"_str);
@@ -200,7 +200,7 @@ BEGIN_TEST(file_wrap)
 		  depth = 2
 		  push-url = git:example/repo
 		  clone-recursive = true)"_view;
-		auto wrap = lak::dsl::wrap.parse(file).UNWRAP().value;
+		auto wrap = lak::dsl::meson_wrap.parse(file).UNWRAP().value;
 
 		ASSERT_EQUAL(wrap.size(), 1U);
 		ASSERT_EQUAL(wrap[0U].name, u8"wrap-git"_str);
@@ -261,7 +261,7 @@ BEGIN_TEST(file_wrap)
 		  method = meson
 		  url = https://example.com/example/repo
 		  revision = v1.3.2)"_view;
-		auto wrap = lak::dsl::wrap.parse(file).UNWRAP().value;
+		auto wrap = lak::dsl::meson_wrap.parse(file).UNWRAP().value;
 
 		ASSERT_EQUAL(wrap.size(), 1U);
 		ASSERT_EQUAL(wrap[0U].name, u8"wrap-svn"_str);
@@ -313,7 +313,7 @@ BEGIN_TEST(file_wrap)
 		  method = meson
 		  url = https://example.com/example/repo
 		  revision = v1.3.2)"_view;
-		auto wrap = lak::dsl::wrap.parse(file).UNWRAP().value;
+		auto wrap = lak::dsl::meson_wrap.parse(file).UNWRAP().value;
 
 		ASSERT_EQUAL(wrap.size(), 1U);
 		ASSERT_EQUAL(wrap[0U].name, u8"wrap-hg"_str);

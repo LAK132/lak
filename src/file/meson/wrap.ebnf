@@ -20,17 +20,17 @@ entry = nlws,<wrap_string>,ws,"=",ws,<entry_values>
 $[](const lak::tuple<lak::u8string_view, lak::array<lak::u8string>> &value)
 {
 	const auto &[key, values] = value;
-	return lak::wrap::section_entry{
+	return lak::meson::wrap::section_entry{
 		.key = key,
 		.values = values,
 	};
 }$;
 
 section = section_header,{entry}
-$[](const lak::tuple<lak::u8string_view, lak::array<lak::wrap::section_entry>> &value)
+$[](const lak::tuple<lak::u8string_view, lak::array<lak::meson::wrap::section_entry>> &value)
 {
 	const auto &[name, entries] = value;
-	return lak::wrap::section{
+	return lak::meson::wrap::section{
 		.name = name,
 		.entries = entries,
 	};
