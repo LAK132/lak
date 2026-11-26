@@ -192,11 +192,22 @@ namespace lak
 		  (*(lak::dsl::str_literal<u8"\\\""> | !lak::dsl::char_literal<U'"'>)) +
 		  lak::dsl::char_literal<U'"'>;
 
+		inline constexpr auto simple_single_quote_str =
+		  lak::dsl::char_literal<U'\''> +
+		  (*(lak::dsl::str_literal<u8"\\'"> | !lak::dsl::char_literal<U'\''>)) +
+		  lak::dsl::char_literal<U'\''>;
+
 		inline constexpr auto capture_simple_c_str =
 		  lak::dsl::capture_2nd<lak::dsl::char_literal<U'"'>,
 		                        *(lak::dsl::str_literal<u8"\\\""> |
 		                          !lak::dsl::char_literal<U'"'>),
 		                        lak::dsl::char_literal<U'"'>>;
+
+		inline constexpr auto capture_simple_single_quote_str =
+		  lak::dsl::capture_2nd<lak::dsl::char_literal<U'\''>,
+		                        *(lak::dsl::str_literal<u8"\\'"> |
+		                          !lak::dsl::char_literal<U'\''>),
+		                        lak::dsl::char_literal<U'\''>>;
 
 		inline constexpr auto simple_identifier =
 		  (lak::dsl::ascii_alpha | lak::dsl::char_literal<U'_'>)+(
