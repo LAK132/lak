@@ -25,6 +25,10 @@ namespace lak
 					return {.x = v.x, .y = v.y};
 				}
 				constexpr lak::vec2f_t to_vec() const { return {x, y}; }
+				constexpr lak::vec3f_t to_vec3() const
+				{
+					return {x, y, 1.f - (x + y)};
+				}
 			};
 
 			struct xyY
