@@ -4,6 +4,8 @@
 *.elf
 *.exe
 
+result
+
 obj/**
 bin/**
 build/**
