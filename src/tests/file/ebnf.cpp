@@ -17,6 +17,7 @@ BEGIN_TEST(ebnf)
 		ASSERT_EQUAL(res.ranges.size(), 0U);
 		ASSERT_EQUAL(res.concatenations.size(), 0U);
 		ASSERT_EQUAL(res.alternations.size(), 0U);
+		ASSERT_EQUAL(res.unordereds.size(), 0U);
 		ASSERT_EQUAL(res.optionals.size(), 0U);
 		ASSERT_EQUAL(res.repetitions.size(), 0U);
 		ASSERT_EQUAL(res.match_cases.size(), 0U);
@@ -41,6 +42,7 @@ BEGIN_TEST(ebnf)
 		ASSERT_EQUAL(res.ranges.size(), 0U);
 		ASSERT_EQUAL(res.concatenations.size(), 0U);
 		ASSERT_EQUAL(res.alternations.size(), 0U);
+		ASSERT_EQUAL(res.unordereds.size(), 0U);
 		ASSERT_EQUAL(res.optionals.size(), 0U);
 		ASSERT_EQUAL(res.repetitions.size(), 0U);
 		ASSERT_EQUAL(res.match_cases.size(), 0U);
@@ -65,6 +67,7 @@ BEGIN_TEST(ebnf)
 		ASSERT_EQUAL(res.ranges.size(), 2U);
 		ASSERT_EQUAL(res.concatenations.size(), 0U);
 		ASSERT_EQUAL(res.alternations.size(), 1U);
+		ASSERT_EQUAL(res.unordereds.size(), 0U);
 		ASSERT_EQUAL(res.optionals.size(), 0U);
 		ASSERT_EQUAL(res.repetitions.size(), 0U);
 		ASSERT_EQUAL(res.match_cases.size(), 0U);
@@ -89,6 +92,7 @@ BEGIN_TEST(ebnf)
 		ASSERT_EQUAL(res.ranges.size(), 0U);
 		ASSERT_EQUAL(res.concatenations.size(), 1U);
 		ASSERT_EQUAL(res.alternations.size(), 1U);
+		ASSERT_EQUAL(res.unordereds.size(), 0U);
 		ASSERT_EQUAL(res.optionals.size(), 0U);
 		ASSERT_EQUAL(res.repetitions.size(), 1U);
 		ASSERT_EQUAL(res.match_cases.size(), 0U);
@@ -134,6 +138,7 @@ BEGIN_TEST(ebnf)
 		ASSERT_EQUAL(res.ranges.size(), 0U);
 		ASSERT_EQUAL(res.concatenations.size(), 0U);
 		ASSERT_EQUAL(res.alternations.size(), 0U);
+		ASSERT_EQUAL(res.unordereds.size(), 0U);
 		ASSERT_EQUAL(res.optionals.size(), 0U);
 		ASSERT_EQUAL(res.repetitions.size(), 0U);
 		ASSERT_EQUAL(res.match_cases.size(), 1U);
@@ -159,6 +164,7 @@ BEGIN_TEST(ebnf)
 		ASSERT_EQUAL(res.ranges.size(), 0U);
 		ASSERT_EQUAL(res.concatenations.size(), 0U);
 		ASSERT_EQUAL(res.alternations.size(), 0U);
+		ASSERT_EQUAL(res.unordereds.size(), 0U);
 		ASSERT_EQUAL(res.optionals.size(), 0U);
 		ASSERT_EQUAL(res.repetitions.size(), 0U);
 		ASSERT_EQUAL(res.match_cases.size(), 2U);
@@ -186,6 +192,7 @@ BEGIN_TEST(ebnf)
 		ASSERT_EQUAL(res.ranges.size(), 0U);
 		ASSERT_EQUAL(res.concatenations.size(), 0U);
 		ASSERT_EQUAL(res.alternations.size(), 1U);
+		ASSERT_EQUAL(res.unordereds.size(), 0U);
 		ASSERT_EQUAL(res.optionals.size(), 0U);
 		ASSERT_EQUAL(res.repetitions.size(), 0U);
 		ASSERT_EQUAL(res.match_cases.size(), 2U);
@@ -210,6 +217,7 @@ BEGIN_TEST(ebnf)
 		ASSERT_EQUAL(res.ranges.size(), 0U);
 		ASSERT_EQUAL(res.concatenations.size(), 1U);
 		ASSERT_EQUAL(res.alternations.size(), 0U);
+		ASSERT_EQUAL(res.unordereds.size(), 0U);
 		ASSERT_EQUAL(res.optionals.size(), 0U);
 		ASSERT_EQUAL(res.repetitions.size(), 0U);
 		ASSERT_EQUAL(res.match_cases.size(), 0U);
@@ -251,6 +259,7 @@ BEGIN_TEST(ebnf)
 		ASSERT_EQUAL(res.ranges.size(), 0U);
 		ASSERT_EQUAL(res.concatenations.size(), 1U);
 		ASSERT_EQUAL(res.alternations.size(), 1U);
+		ASSERT_EQUAL(res.unordereds.size(), 0U);
 		ASSERT_EQUAL(res.optionals.size(), 0U);
 		ASSERT_EQUAL(res.repetitions.size(), 1U);
 		ASSERT_EQUAL(res.match_cases.size(), 0U);
