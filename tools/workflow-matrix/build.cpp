@@ -151,12 +151,12 @@ int main()
 	  },
 
 	  // --- arm64 ---
-	  {
-	    .os      = {.runner = windows_arm_runner,
-	                .system = "windows"s,
-	                .arch   = "arm64"s},
-	    .targets = windows_targets,
-	  },
+	  // {
+	  //   .os      = {.runner = windows_arm_runner,
+	  //               .system = "windows"s,
+	  //               .arch   = "arm64"s},
+	  //   .targets = windows_targets,
+	  // },
 	  // {
 	  //   .os      = {.runner = ubuntu_arm_runner,
 	  //               .system = "ubuntu"s,
